@@ -1,178 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:36327 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726917AbeGMHQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 03:16:54 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <j@w1.fi>, <kvalo@codeaurora.org>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] hostap: hide unused procfs helpers
-Date: Fri, 13 Jul 2018 15:03:17 +0800
-Message-ID: <20180713070317.6724-1-yuehaibing@huawei.com> (sfid-20180713_090351_430308_14CA58F8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:55248 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753598AbeGFI4v (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 04:56:51 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v3 2/6] ath10k: Add support to create boardname for non-bmi target
+Date: Fri,  6 Jul 2018 14:26:19 +0530
+Message-Id: <20180706085622.27945-3-govinds@codeaurora.org> (sfid-20180706_105658_485854_E13FA5D2)
+In-Reply-To: <20180706085622.27945-1-govinds@codeaurora.org>
+References: <20180706085622.27945-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_PROC_FS isn't set, gcc warning this:
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
- static int prism2_registers_proc_show(struct seq_file *m, void *v)
+Add support to create the boardname for non-bmi targets
+like WCN3990, which uses qmi for bdf download. This
+boardname is used to parse the board data from board-2.bin.
 
-drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
- static int prism2_debug_proc_show(struct seq_file *m, void *v)
-            ^
-drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
- static int prism2_stats_proc_show(struct seq_file *m, void *v)
-            ^
-drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
- static int prism2_crypt_proc_show(struct seq_file *m, void *v)
-            ^
-
-fix this by adding #ifdef around them.
-hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
-into #ifdef.
-
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ap.c   |  8 ++++----
- drivers/net/wireless/intersil/hostap/hostap_hw.c   | 17 +++++++----------
- drivers/net/wireless/intersil/hostap/hostap_proc.c | 10 ++++++----
- 3 files changed, 17 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
+ drivers/net/wireless/ath/ath10k/core.h | 2 ++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-index d1884b8..0094b1d 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-@@ -66,7 +66,7 @@ static void prism2_send_mgmt(struct net_device *dev,
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
- 
- 
--#ifndef PRISM2_NO_PROCFS_DEBUG
-+#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
- static int ap_debug_proc_show(struct seq_file *m, void *v)
- {
- 	struct ap_data *ap = PDE_DATA(file_inode(m->file));
-@@ -81,8 +81,7 @@ static int ap_debug_proc_show(struct seq_file *m, void *v)
- 	seq_printf(m, "tx_drop_nonassoc=%u\n", ap->tx_drop_nonassoc);
- 	return 0;
- }
--#endif /* PRISM2_NO_PROCFS_DEBUG */
--
-+#endif
- 
- static void ap_sta_hash_add(struct ap_data *ap, struct sta_info *sta)
- {
-@@ -990,7 +989,7 @@ static void prism2_send_mgmt(struct net_device *dev,
- }
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
- 
--
-+#ifdef CONFIG_PROC_FS
- static int prism2_sta_proc_show(struct seq_file *m, void *v)
- {
- 	struct sta_info *sta = m->private;
-@@ -1059,6 +1058,7 @@ static int prism2_sta_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
-+#endif
- 
- static void handle_add_proc_queue(struct work_struct *work)
- {
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 2720aa3..ad1aa65 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -151,13 +151,6 @@ static int prism2_get_ram_size(local_info_t *local);
- #define HFA384X_MAGIC 0x8A32
- #endif
- 
--
--static u16 hfa384x_read_reg(struct net_device *dev, u16 reg)
--{
--	return HFA384X_INW(reg);
--}
--
--
- static void hfa384x_read_regs(struct net_device *dev,
- 			      struct hfa384x_regs *regs)
- {
-@@ -2897,7 +2890,12 @@ static void hostap_tick_timer(struct timer_list *t)
- }
- 
- 
--#ifndef PRISM2_NO_PROCFS_DEBUG
-+#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
-+static u16 hfa384x_read_reg(struct net_device *dev, u16 reg)
-+{
-+	return HFA384X_INW(reg);
-+}
-+
- static int prism2_registers_proc_show(struct seq_file *m, void *v)
- {
- 	local_info_t *local = m->private;
-@@ -2951,8 +2949,7 @@ static int prism2_registers_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
--#endif /* PRISM2_NO_PROCFS_DEBUG */
--
-+#endif
- 
- struct set_tim_data {
- 	struct list_head list;
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_proc.c b/drivers/net/wireless/intersil/hostap/hostap_proc.c
-index 5b33cca..703d74c 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_proc.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_proc.c
-@@ -11,8 +11,7 @@
- 
- #define PROC_LIMIT (PAGE_SIZE - 80)
- 
--
--#ifndef PRISM2_NO_PROCFS_DEBUG
-+#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
- static int prism2_debug_proc_show(struct seq_file *m, void *v)
- {
- 	local_info_t *local = m->private;
-@@ -43,9 +42,9 @@ static int prism2_debug_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
--#endif /* PRISM2_NO_PROCFS_DEBUG */
--
-+#endif
- 
-+#ifdef CONFIG_PROC_FS
- static int prism2_stats_proc_show(struct seq_file *m, void *v)
- {
- 	local_info_t *local = m->private;
-@@ -82,6 +81,7 @@ static int prism2_stats_proc_show(struct seq_file *m, void *v)
- 
- 	return 0;
- }
-+#endif
- 
- static int prism2_wds_proc_show(struct seq_file *m, void *v)
- {
-@@ -174,6 +174,7 @@ static const struct seq_operations prism2_bss_list_proc_seqops = {
- 	.show	= prism2_bss_list_proc_show,
- };
- 
-+#ifdef CONFIG_PROC_FS
- static int prism2_crypt_proc_show(struct seq_file *m, void *v)
- {
- 	local_info_t *local = m->private;
-@@ -190,6 +191,7 @@ static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 85c58ebbfb26..840e301b6a6e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1440,6 +1440,14 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 		goto out;
  	}
- 	return 0;
- }
-+#endif
  
- static ssize_t prism2_pda_proc_read(struct file *file, char __user *buf,
- 				    size_t count, loff_t *_pos)
++	if (ar->id.qmi_ids_valid) {
++		scnprintf(name, name_len,
++			  "bus=%s,qmi-board-id=%x",
++			  ath10k_bus_str(ar->hif.bus),
++			  ar->id.qmi_board_id);
++		goto out;
++	}
++
+ 	scnprintf(name, name_len,
+ 		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
+ 		  ath10k_bus_str(ar->hif.bus),
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 427ee5752bb0..20f03f3a7080 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -941,7 +941,9 @@ struct ath10k {
+ 		u32 subsystem_device;
+ 
+ 		bool bmi_ids_valid;
++		bool qmi_ids_valid;
+ 		u8 bmi_board_id;
++		u8 qmi_board_id;
+ 		u8 bmi_chip_id;
+ 
+ 		char bdf_ext[ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
 -- 
-2.7.0
+2.17.0
