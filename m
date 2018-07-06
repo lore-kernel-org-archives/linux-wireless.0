@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:45065 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727582AbeGMHkV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 03:40:21 -0400
-Received: by mail-wr1-f65.google.com with SMTP id c4-v6so11378653wrs.12
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2018 00:27:00 -0700 (PDT)
-Subject: Re: [PATCH] hostap: hide unused procfs helpers
-To: YueHaibing <yuehaibing@huawei.com>, j@w1.fi, kvalo@codeaurora.org
-References: <20180713070317.6724-1-yuehaibing@huawei.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, davem@davemloft.net,
-        Randy Dunlap <rdunlap@infradead.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B485441.1080305@broadcom.com> (sfid-20180713_092703_578235_2422D665)
-Date: Fri, 13 Jul 2018 09:26:57 +0200
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46236 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754039AbeGFKhC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 06:37:02 -0400
+Date: Fri, 6 Jul 2018 12:36:58 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/11] Add mt76x0 driver
+Message-ID: <20180706103657.GB2033@redhat.com> (sfid-20180706_123706_192006_7F80364D)
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+ <20180705153216.GE17524@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20180713070317.6724-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180705153216.GE17524@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Randy
+On Thu, Jul 05, 2018 at 05:32:17PM +0200, Lorenzo Bianconi wrote:
+> > My integration efforts can be traced here:
+> > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
+> > 
+> 
+> I just had a brief review of the code and I compiled the driver since at
+> the moment I had no adapter for that chipset.
+> As a remainder for future improvements/integration most of the code in 
+> dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
+> routines in the mt76-usb layer (we need to fill function pointer for chipset
+> related stuff if there are differences with mt76x2u, not looked yet).
+> Moreover mcu code can use utility routines in usb-mcu.c
+> I have not looked at mt76x2 common code yet.
 
-On 7/13/2018 9:03 AM, YueHaibing wrote:
-> When CONFIG_PROC_FS isn't set, gcc warning this:
->
-> drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
->   static int prism2_registers_proc_show(struct seq_file *m, void *v)
->
-> drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
->   static int prism2_debug_proc_show(struct seq_file *m, void *v)
->              ^
-> drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
->   static int prism2_stats_proc_show(struct seq_file *m, void *v)
->              ^
-> drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
->   static int prism2_crypt_proc_show(struct seq_file *m, void *v)
->              ^
->
-> fix this by adding #ifdef around them.
-> hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
-> into #ifdef.
+That's my plan. So far I started to unify common mac/wcid code. If
+someone want to work on some area i.e. dma/tx, usb or mcu, please
+let me know to do not duplicate work.  
 
-There was already a fix for this posted by Randy Dunlap taking a 
-different approach, ie. use __maybe_unused classifier. To be honest I 
-prefer the ifdef approach as it is more explicit and does not feel like 
-a cheat.
-
-Actually some of the functions are between a flag already 
-PRISM2_NO_PROCFS_DEBUG which is in a private header file 
-hostap_config.h. Seems like this would be better placed in Kconfig and 
-depend on CONFIG_PROCFS. Anyway, this driver is old cruft. Maybe some 
-people are still running it, but it is probably not worth the effort so 
-fine with either fix.
-
-Regards,
-Arend
+Thanks for review!
+Stanislaw
