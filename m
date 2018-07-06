@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38850 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387822AbeGWHiT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:35214 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932236AbeGFLkz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 03:38:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 04/11] mt76x0: usb files
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
-        <1530771142-4118-5-git-send-email-sgruszka@redhat.com>
-        <20180705150519.GB17524@localhost.localdomain>
-Date: Mon, 23 Jul 2018 09:38:35 +0300
-In-Reply-To: <20180705150519.GB17524@localhost.localdomain> (Lorenzo
-        Bianconi's message of "Thu, 5 Jul 2018 17:05:20 +0200")
-Message-ID: <87va96tq1g.fsf@purkki.adurom.net> (sfid-20180723_083842_800881_ADF6A35B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 6 Jul 2018 07:40:55 -0400
+Message-ID: <1530877252.3197.5.camel@sipsolutions.net> (sfid-20180706_134057_802141_085F0ABF)
+Subject: Re: [PATCH 2/7] cfg80211: Add new NL command to configure peer
+ specific rssi threshold
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 06 Jul 2018 13:40:52 +0200
+In-Reply-To: <5d7f6ec9ffe0272b41102828f37706db@codeaurora.org>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+         <1528886747-26342-3-git-send-email-tamizhr@codeaurora.org>
+         <1530264578.3481.34.camel@sipsolutions.net>
+         <5d7f6ec9ffe0272b41102828f37706db@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+On Wed, 2018-07-04 at 11:39 +0530, Tamizh chelvam wrote:
+> On 2018-06-29 14:59, Johannes Berg wrote:
+> > On Wed, 2018-06-13 at 16:15 +0530, Tamizh chelvam wrote:
+> > > 
+> > > + * @NL80211_ATTR_STA_MON: Station's connection monitor configuration 
+> > > in a
+> > > + *	nested attribute with %NL80211_ATTR_STA_MON_* sub-attributes.
+> > 
+> > Can't we reuse the existing attributes in this nesting?
+> 
+> This new attributes introduced as per the previous discussion.
+> https://patchwork.kernel.org/patch/10240697/
+> Is my understanding correct ?
 
-> On Jul 05, Stanislaw Gruszka wrote:
->> Add usb files of mt76x0 driver.
->> 
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Yeah ok ... I'm thinking perhaps we could share some part of it, but
+it's not really worth making it more complex due to that.
 
-[...]
+> > Wait, you went to all this effort in the first patch and now you don't
+> > add this to the list?
+> > 
+> No, the list and the rssi_config structure is for multi threshold value 
+> and not for single threshold.
 
->> +static int mt76x0_suspend(struct usb_interface *usb_intf, pm_message_t state)
->> +{
->> +	struct mt76x0_dev *dev = usb_get_intfdata(usb_intf);
->> +
->> +	mt76x0_cleanup(dev);
->
-> Is it necessary to deallocate rx queue here in case of a system suspend?
+Yeah, though I'm still not sure why we need the single threshold thing
+at all. List should always be a superset.
 
-BTW it would really helpful to others if you could edit your quotes. It
-takes some time to find your oneliner from a 450 line message.
-
--- 
-Kalle Valo
+johannes
