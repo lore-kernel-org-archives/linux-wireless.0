@@ -1,93 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54570 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726087AbeG3Hob (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 03:44:31 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH] ath10k: fix kernel panic by moving pci flush after napi_disable
-Date: Mon, 30 Jul 2018 11:40:51 +0530
-Message-Id: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180730_081112_250222_422D5266)
+Received: from mga11.intel.com ([192.55.52.93]:39819 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934201AbeGFS5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 14:57:51 -0400
+Message-ID: <1e031d2cffff65e7ba8390cfa09dac0743371548.camel@intel.com> (sfid-20180706_205754_823266_84FB6C1B)
+Subject: Re: [PATCH] WHENCE: Fix typo Version v3
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Sedat Dilek <sedat.dilek@credativ.de>,
+        linux-wireless@vger.kernel.org
+In-Reply-To: <20180517152011.10322-1-sedat.dilek@credativ.de>
+References: <20180517152011.10322-1-sedat.dilek@credativ.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 Jul 2018 21:57:39 +0300
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When continuously running wifi up/down sequence, the napi poll
-can be scheduled after the CE buffers being freed by ath10k_pci_flush
+Hi,
 
-Steps:
-  In a certain condition, during wifi down below scenario might occur.
+On Thu, 2018-05-17 at 17:20 +0200, Sedat Dilek wrote:
+> I have seen that in the WHENCE file there is "Version" with and
+> without ":", mostly iwlwifi ucodes.
+> 
+> As an example:
+> 
+>  File: iwlwifi-8265-36.ucode
+> -Version 36.e91976c0.0
+> +Version: 36.e91976c0.0
+> 
+> The usual case is "Version:".
+> 
+> This patch is against iwlwifi.git#linux-firmware.
+> 
+> Signed-off-by: Sedat Dilek <sedat.dilek@credativ.de>
+> ---
 
-ath10k_stop->ath10k_hif_stop->napi_schedule->ath10k_pci_flush->napi_poll(napi_synchronize).
+Looks fine, but I guess you should base this on linux-firmware.git and
+send it to linux-firmware@vger.kernel.org.
 
-In the above scenario, CE buffer entries will be freed up and become NULL in
-ath10k_pci_flush. And the napi_poll has been invoked after the flush process
-and it will try to get the skb from the CE buffer entry and perform some action on that.
-Since the CE buffer already cleaned by pci flush this action will create NULL
-pointer dereference and trigger below kernel panic.
-
-Unable to handle kernel NULL pointer dereference at virtual address 0000005c
-PC is at ath10k_pci_htt_rx_cb+0x64/0x3ec [ath10k_pci]
-ath10k_pci_htt_rx_cb [ath10k_pci]
-ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci]
-ath10k_ce_per_engine_service [ath10k_pci]
-ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci]
-ath10k_ce_per_engine_service_any [ath10k_pci]
-ath10k_pci_napi_poll+0x48/0xec [ath10k_pci]
-ath10k_pci_napi_poll [ath10k_pci]
-net_rx_action+0xac/0x160
-net_rx_action
-__do_softirq+0xdc/0x208
-__do_softirq
-irq_exit+0x84/0xe0
-irq_exit
-__handle_domain_irq+0x80/0xa0
-__handle_domain_irq
-gic_handle_irq+0x38/0x5c
-gic_handle_irq
-__irq_usr+0x44/0x60
-
-Tested on QCA4019 and firmware version 10.4.3.2.1.1-00010
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 4 ++--
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index fa39fff..e244dc5 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -660,10 +660,10 @@ static void ath10k_ahb_hif_stop(struct ath10k *ar)
- 	ath10k_ahb_irq_disable(ar);
- 	synchronize_irq(ar_ahb->irq);
- 
--	ath10k_pci_flush(ar);
--
- 	napi_synchronize(&ar->napi);
- 	napi_disable(&ar->napi);
-+
-+	ath10k_pci_flush(ar);
- }
- 
- static int ath10k_ahb_hif_power_up(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index af2cf55..97fa5c7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2068,9 +2068,9 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 
- 	ath10k_pci_irq_disable(ar);
- 	ath10k_pci_irq_sync(ar);
--	ath10k_pci_flush(ar);
- 	napi_synchronize(&ar->napi);
- 	napi_disable(&ar->napi);
-+	ath10k_pci_flush(ar);
- 
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
- 	WARN_ON(ar_pci->ps_wake_refcount > 0);
--- 
-1.9.1
+--
+Cheers,
+Luca.
