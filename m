@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:43540 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726644AbeGKLbs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 07:31:48 -0400
-Received: by mail-lf0-f66.google.com with SMTP id m12-v6so20976142lfc.10
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2018 04:27:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180711131626.732967be@bbrezillon>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
- <20180709200945.30116-5-boris.brezillon@bootlin.com> <20180711131626.732967be@bbrezillon>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 11 Jul 2018 13:27:53 +0200
-Message-ID: <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com> (sfid-20180711_132758_769768_FB547A03)
-Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
- driver when COMPILE_TEST=y
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46752 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753583AbeGFLD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 07:03:57 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 01/12] mt76: add more states
+Date: Fri,  6 Jul 2018 13:03:38 +0200
+Message-Id: <1530875029-26274-2-git-send-email-sgruszka@redhat.com> (sfid-20180706_130401_350472_81012F12)
+In-Reply-To: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
+References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
-<boris.brezillon@bootlin.com> wrote:
-> On Mon,  9 Jul 2018 22:09:25 +0200
-> Boris Brezillon <boris.brezillon@bootlin.com> wrote:
->
->> It just makes NAND maintainers' life easier by allowing them to
->> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
->> enabled.
->>
->> We add a dependency on HAS_IOMEM to make sure the driver compiles
->> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
->> accessors are not defined for this architecture.
->
-> I see that SPARC does not define those accessors either. So I guess we
-> should add depends on !SPARC.
->
-> Arnd, any other way to know when the platform implements
-> {read,write}s{bwl}() accessors?
+Add states needed for mt76x0 driver.
 
-I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
-sparc32 appears to have these, and when Thierry sent the patch
-to implement them everywhere[1], he said that he tested sparc64 as
-well, so either something regressed since then, or his testing
-was incomplete. Either way, the correct answer IMHO would be to
-make it work rather than to add infrastructure around the broken
-configurations.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-      Arnd
-
-[1] https://lwn.net/Articles/604819/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 96e9798bb8a0..7b50d4b7f40e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -187,9 +187,13 @@ struct mt76_rx_tid {
+ enum {
+ 	MT76_STATE_INITIALIZED,
+ 	MT76_STATE_RUNNING,
++	MT76_STATE_MCU_RUNNING,
+ 	MT76_SCANNING,
+ 	MT76_RESET,
+ 	MT76_OFFCHANNEL,
++	MT76_REMOVED,
++	MT76_READING_STATS,
++	MT76_MORE_STATS,
+ };
+ 
+ struct mt76_hw_cap {
+-- 
+1.9.3
