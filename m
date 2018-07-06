@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:60163 "EHLO mail.bootlin.com"
+Received: from mga18.intel.com ([134.134.136.126]:15143 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753810AbeGFOhl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 10:37:41 -0400
-Date: Fri, 6 Jul 2018 16:37:28 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 21/27] bcma: Allow selection of this driver when
- COMPILE_TEST=y
-Message-ID: <20180706163728.30485acd@bbrezillon> (sfid-20180706_163744_464563_8CC67F14)
-In-Reply-To: <87zhz4tox9.fsf@purkki.adurom.net>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-        <20180705094522.12138-22-boris.brezillon@bootlin.com>
-        <87zhz4tox9.fsf@purkki.adurom.net>
+        id S932352AbeGFOt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 10:49:56 -0400
+Date: Fri, 6 Jul 2018 22:48:58 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC PATCH] mt76: mt76x0_burst_read_regs() can be static
+Message-ID: <20180706144857.GA29077@lkp-wsm-ep1> (sfid-20180706_165000_489015_CDED27DD)
+References: <1530875029-26274-13-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530875029-26274-13-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 06 Jul 2018 17:32:50 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> Boris Brezillon <boris.brezillon@bootlin.com> writes:
-> 
-> > This allows us to increase compile-test coverage without having to build
-> > a kernel for MIPS.  That's particularly interesting for subsystem
-> > maintainers that want to test as many drivers as possible in a single
-> > build.
-> >
-> > We also add a dependency on HAS_IOMEM in BCMA_HOST_SOC to make sure the
-> > driver is not selected when the arch does not implement IO accessors.
-> >
-> > Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
-> > ---
-> >  drivers/bcma/Kconfig | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)  
-> 
-> Acked-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> I assume this patch will go via some other tree and I can drop it.
-> 
+Fixes: c1f1ff1a3d63 ("mt76: Kconfig and Makefile for mt76x0 driver")
+Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
+---
+ mcu.c |    4 ++--
+ phy.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Yep. We can create an immutable tag if needed.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+index aafa3f3..0c9da79 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+@@ -341,8 +341,8 @@ int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
+ 					data + cnt, n - cnt);
+ }
+ 
+-int mt76x0_burst_read_regs(struct mt76x0_dev *dev, u32 base,
+-			   struct mt76_reg_pair *data, int n)
++static int mt76x0_burst_read_regs(struct mt76x0_dev *dev, u32 base,
++				  struct mt76_reg_pair *data, int n)
+ {
+ 	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index 0830280..e52a506 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -986,7 +986,7 @@ mt76x0_rf_init(struct mt76x0_dev *dev)
+ 	rf_set(dev, MT_RF(0, 4), 0x80);
+ }
+ 
+-void mt76x0_ant_select(struct mt76x0_dev *dev)
++static void mt76x0_ant_select(struct mt76x0_dev *dev)
+ {
+ 	/* Single antenna mode. */
+ 	mt76_rmw(dev, MT_WLAN_FUN_CTRL, BIT(5), BIT(6));
