@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40266 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726338AbeGSKKT (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:36987 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932498AbeGFFo5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 06:10:19 -0400
-Date: Thu, 19 Jul 2018 12:27:44 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
- '_' in label name
-Message-ID: <20180719092744.5gx2ctgj7etvk7uh@mwanda> (sfid-20180719_112805_764938_5B80AA64)
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
- <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
+        Fri, 6 Jul 2018 01:44:57 -0400
+From: <pkshih@realtek.com>
+To: <gregkh@linuxfoundation.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-kernel@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <jian-hong@endlessm.com>
+Subject: [PATCH] staging: r8822be: Fix RTL8822be can't find any wireless AP
+Date: Fri, 6 Jul 2018 13:44:35 +0800
+Message-ID: <20180706054435.3732-1-pkshih@realtek.com> (sfid-20180706_074511_535648_3102FDC7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh wrote:
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 85af365..8e71c28 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -850,13 +850,13 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
->  		if (wilc->rx_buffer)
->  			buffer = &wilc->rx_buffer[offset];
->  		else
-> -			goto _end_;
-> +			goto end;
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-This isn't related to your patch but this goto doesn't appear to make
-any sort of sense.  I have no idea what was intended.
+RTL8822be can't bring up properly on ASUS X530UN, and dmesg says:
+[ 8.591333] r8822be: module is from the staging directory, the quality
+is unknown, you have been warned.
+[ 8.593122] r8822be 0000:02:00.0: enabling device (0000 -> 0003)
+[ 8.669163] r8822be: Using firmware rtlwifi/rtl8822befw.bin
+[ 9.289939] r8822be: rtlwifi: wireless switch is on
+[ 10.056426] r8822be 0000:02:00.0 wlp2s0: renamed from wlan0
+...
+[ 11.952534] r8822be: halmac_init_hal failed
+[ 11.955933] r8822be: halmac_init_hal failed
+[ 11.956227] r8822be: halmac_init_hal failed
+[ 22.007942] r8822be: halmac_init_hal failed
 
->  
->  		wilc->hif_func->hif_clear_int_ext(wilc,
->  					      DATA_INT_CLR | ENABLE_RX_VMM);
->  		ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
->  
-> -_end_:
-> +end:
->  		if (ret) {
->  			offset += size;
->  			wilc->rx_buffer_offset = offset;
+Jian-Hong reported it works if turn off ASPM with module parameter aspm=0.
+In order to fix this problem kindly, this commit don't turn off aspm but
+enlarge ASPM L1 latency to 7.
 
-regards,
-dan carpenter
+Reported-by: Jian-Hong Pan <jian-hong@endlessm.com>
+Tested-by: Jian-Hong Pan <jian-hong@endlessm.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/staging/rtlwifi/rtl8822be/hw.c | 2 +-
+ drivers/staging/rtlwifi/wifi.h         | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/rtlwifi/rtl8822be/hw.c b/drivers/staging/rtlwifi/rtl8822be/hw.c
+index 7947edb239a1..88ba5b2fea6a 100644
+--- a/drivers/staging/rtlwifi/rtl8822be/hw.c
++++ b/drivers/staging/rtlwifi/rtl8822be/hw.c
+@@ -803,7 +803,7 @@ static void _rtl8822be_enable_aspm_back_door(struct ieee80211_hw *hw)
+ 		return;
+ 
+ 	pci_read_config_byte(rtlpci->pdev, 0x70f, &tmp);
+-	pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | BIT(7));
++	pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | ASPM_L1_LATENCY << 3);
+ 
+ 	pci_read_config_byte(rtlpci->pdev, 0x719, &tmp);
+ 	pci_write_config_byte(rtlpci->pdev, 0x719, tmp | BIT(3) | BIT(4));
+diff --git a/drivers/staging/rtlwifi/wifi.h b/drivers/staging/rtlwifi/wifi.h
+index 012fb618840b..a45f0eb69d3f 100644
+--- a/drivers/staging/rtlwifi/wifi.h
++++ b/drivers/staging/rtlwifi/wifi.h
+@@ -88,6 +88,7 @@
+ #define RTL_USB_MAX_RX_COUNT			100
+ #define QBSS_LOAD_SIZE				5
+ #define MAX_WMMELE_LENGTH			64
++#define ASPM_L1_LATENCY				7
+ 
+ #define TOTAL_CAM_ENTRY				32
+ 
+-- 
+2.15.1
