@@ -1,47 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47476 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731261AbeGaMHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 08:07:00 -0400
-Date: Tue, 31 Jul 2018 12:27:15 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 00/19] add mt76x2u support to mt76 driver
-Message-ID: <20180731102714.GD5009@redhat.com> (sfid-20180731_122724_064102_4EBF9CD2)
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
- <877elb20iv.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <877elb20iv.fsf@purkki.adurom.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:53072 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932569AbeGFM3M (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 08:29:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri,  6 Jul 2018 15:29:05 +0300
+Message-Id: <20180706122905.29883-1-luca@coelho.fi> (sfid-20180706_142916_559002_270A67DD)
+Subject: [[PATCH v2]] mac80211_hwsim: Add support for HE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 12:54:32PM +0300, Kalle Valo wrote:
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-> 
-> > Add usb layer to mt76 driver in order to support mt76x2u based devices.
-> > Move common code between pci and usb in mt76x2-common module in order to
-> > remove pci dependency from usb driver
-> >
-> > Changes since v1:
-> > - rebase on top of wireless-drivers-next master branch
-> > - fix mt7662u fw definitions
-> > - remove unused len variable in mt76x2u_remove_dma_hdr()
-> > - move mt76u_mcu_fw_reset routine in mt76-usb module in order
-> >   to be reused by mt76x0 driver
-> > - move mt76u_mcu_init_rx routine in mt76-usb module in order
-> >   to be reused by mt76x0 driver
-> 
-> My deadline for 4.19 is most likely this Friday (if the merge window
-> starts on Sunday) so I would need to apply these tomorrow by latest to
-> have some time in linux-next. Are everyone happy with this set?
+From: Ilan Peer <ilan.peer@intel.com>
 
-I'm ok with this set. 
+Add support for HE in mac8011_hwsim, conforming with P802.11ax_D2.0.
 
-If I'll post mt76x0 v3 would you take it in this cycle or should
-I rather wait for next one ?
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
-Thanks
-Stanislaw
+In V2:
+
+I fixed compilation issues with the symbols I changed in
+mac80211's patches, namely:
+
+* s/_msc_/_mcs_/
+* s/types/types_mask/
+
+ drivers/net/wireless/mac80211_hwsim.c | 123 ++++++++++++++++++++++++++
+ 1 file changed, 123 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 9825bfd42abc..6126d5ce25ad 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2,6 +2,7 @@
+  * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
+  * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
+  * Copyright (c) 2011, Javier Lopez <jlopex@gmail.com>
++ * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -2517,6 +2518,123 @@ static void hwsim_mcast_new_radio(int id, struct genl_info *info,
+ 	nlmsg_free(mcast_skb);
+ }
+ 
++static const struct ieee80211_sband_iftype_data he_capa_2ghz = {
++	/* TODO: should we support other types, e.g., P2P?*/
++	.types_mask = BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP),
++	.he_cap = {
++		.has_he = true,
++		.he_cap_elem = {
++			.mac_cap_info[0] =
++				IEEE80211_HE_MAC_CAP0_HTC_HE,
++			.mac_cap_info[1] =
++				IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
++				IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_QOS_8,
++			.mac_cap_info[2] =
++				IEEE80211_HE_MAC_CAP2_BSR |
++				IEEE80211_HE_MAC_CAP2_MU_CASCADING |
++				IEEE80211_HE_MAC_CAP2_ACK_EN,
++			.mac_cap_info[3] =
++				IEEE80211_HE_MAC_CAP3_GRP_ADDR_MULTI_STA_BA_DL_MU |
++				IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++				IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_2,
++			.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++			.phy_cap_info[0] =
++				IEEE80211_HE_PHY_CAP0_DUAL_BAND,
++			.phy_cap_info[1] =
++				IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++				IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++				IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++				IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_MAX_NSTS,
++			.phy_cap_info[2] =
++				IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
++				IEEE80211_HE_PHY_CAP2_STBC_TX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_STBC_RX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
++				IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO,
++
++			/* Leave all the other PHY capability bytes unset, as
++			 * DCM, beam forming, RU and PPE threshold information
++			 * are not supported
++			 */
++		},
++		.he_mcs_nss_supp = {
++			.rx_mcs_80 = cpu_to_le16(0xfffa),
++			.tx_mcs_80 = cpu_to_le16(0xfffa),
++			.rx_mcs_160 = cpu_to_le16(0xffff),
++			.tx_mcs_160 = cpu_to_le16(0xffff),
++			.rx_mcs_80p80 = cpu_to_le16(0xffff),
++			.tx_mcs_80p80 = cpu_to_le16(0xffff),
++		},
++	},
++};
++
++static const struct ieee80211_sband_iftype_data he_capa_5ghz = {
++	/* TODO: should we support other types, e.g., P2P?*/
++	.types_mask = BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP),
++	.he_cap = {
++		.has_he = true,
++		.he_cap_elem = {
++			.mac_cap_info[0] =
++				IEEE80211_HE_MAC_CAP0_HTC_HE,
++			.mac_cap_info[1] =
++				IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
++				IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_QOS_8,
++			.mac_cap_info[2] =
++				IEEE80211_HE_MAC_CAP2_BSR |
++				IEEE80211_HE_MAC_CAP2_MU_CASCADING |
++				IEEE80211_HE_MAC_CAP2_ACK_EN,
++			.mac_cap_info[3] =
++				IEEE80211_HE_MAC_CAP3_GRP_ADDR_MULTI_STA_BA_DL_MU |
++				IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++				IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_2,
++			.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++			.phy_cap_info[0] =
++				IEEE80211_HE_PHY_CAP0_DUAL_BAND |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G,
++			.phy_cap_info[1] =
++				IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++				IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++				IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++				IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_MAX_NSTS,
++			.phy_cap_info[2] =
++				IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
++				IEEE80211_HE_PHY_CAP2_STBC_TX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_STBC_RX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
++				IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO,
++
++			/* Leave all the other PHY capability bytes unset, as
++			 * DCM, beam forming, RU and PPE threshold information
++			 * are not supported
++			 */
++		},
++		.he_mcs_nss_supp = {
++			.rx_mcs_80 = cpu_to_le16(0xfffa),
++			.tx_mcs_80 = cpu_to_le16(0xfffa),
++			.rx_mcs_160 = cpu_to_le16(0xfffa),
++			.tx_mcs_160 = cpu_to_le16(0xfffa),
++			.rx_mcs_80p80 = cpu_to_le16(0xfffa),
++			.tx_mcs_80p80 = cpu_to_le16(0xfffa),
++		},
++	},
++};
++
++static void mac80211_hswim_he_capab(struct ieee80211_supported_band *sband)
++{
++	if (sband->band == NL80211_BAND_2GHZ)
++		sband->iftype_data =
++			(struct ieee80211_sband_iftype_data *)&he_capa_2ghz;
++	else if (sband->band == NL80211_BAND_5GHZ)
++		sband->iftype_data =
++			(struct ieee80211_sband_iftype_data *)&he_capa_5ghz;
++	else
++		return;
++
++	sband->n_iftype_data = 1;
++}
++
+ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    struct hwsim_new_radio_params *param)
+ {
+@@ -2678,6 +2796,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband = &data->bands[band];
++
++		sband->band = band;
++
+ 		switch (band) {
+ 		case NL80211_BAND_2GHZ:
+ 			sband->channels = data->channels_2ghz;
+@@ -2734,6 +2855,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		sband->ht_cap.mcs.rx_mask[1] = 0xff;
+ 		sband->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 
++		mac80211_hswim_he_capab(sband);
++
+ 		hw->wiphy->bands[band] = sband;
+ 	}
+ 
+-- 
+2.18.0
