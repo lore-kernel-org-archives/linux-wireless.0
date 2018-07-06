@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37171 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750996AbeGINir (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:35188 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932236AbeGFLiU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 09:38:47 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] airo: remove unused variables len and dev and clean up formatting
-Date: Mon,  9 Jul 2018 14:38:43 +0100
-Message-Id: <20180709133843.15615-1-colin.king@canonical.com> (sfid-20180709_153917_849952_3ACDBB0F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Fri, 6 Jul 2018 07:38:20 -0400
+Message-ID: <1530877097.3197.2.camel@sipsolutions.net> (sfid-20180706_133824_088544_32A69DB4)
+Subject: Re: [PATCH 6/7] cfg80211: Accept multiple RSSI threholds for
+ STA_MON command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 06 Jul 2018 13:38:17 +0200
+In-Reply-To: <0b97dd04efa70ff1016ae6fd2face3a1@codeaurora.org>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+         <1528886747-26342-7-git-send-email-tamizhr@codeaurora.org>
+         <1530265167.3481.45.camel@sipsolutions.net>
+         <0b97dd04efa70ff1016ae6fd2face3a1@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Thu, 2018-07-05 at 13:07 +0530, Tamizh chelvam wrote:
 
-Variables len and dev assigned values but are never used hence they
-are redundant and can be removed.  Also add in white space in for-loop
-and remove some { } braces on if statement.
+> First I've done patch to have single threshold value for AP mode and as 
+> per the previous discussion extended to multiple thresholds also. Here 
+> the intention is to accept one or more than one RSSI thresholds to 
+> monitor. Any thought ?
 
-Cleans up clang warnings:
-warning: variable 'len' set but not used [-Wunused-but-set-variable]
-warning: variable 'dev' set but not used [-Wunused-but-set-variable]
+Is there any point in even offering the API for a single one though? I
+mean - we only implement it in mac80211 now, and there we clearly
+implement multiple, so single would never be used.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/cisco/airo.c    | 8 +++-----
- drivers/net/wireless/cisco/airo_cs.c | 3 ---
- 2 files changed, 3 insertions(+), 8 deletions(-)
+Like I said:
 
-diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
-index 72046e182745..04dd7a936593 100644
---- a/drivers/net/wireless/cisco/airo.c
-+++ b/drivers/net/wireless/cisco/airo.c
-@@ -3419,7 +3419,7 @@ static void airo_handle_rx(struct airo_info *ai)
- 
- static void airo_handle_tx(struct airo_info *ai, u16 status)
- {
--	int i, len = 0, index = -1;
-+	int i, index = -1;
- 	u16 fid;
- 
- 	if (test_bit(FLAG_MPI, &ai->flags)) {
-@@ -3443,11 +3443,9 @@ static void airo_handle_tx(struct airo_info *ai, u16 status)
- 
- 	fid = IN4500(ai, TXCOMPLFID);
- 
--	for(i = 0; i < MAX_FIDS; i++) {
--		if ((ai->fids[i] & 0xffff) == fid) {
--			len = ai->fids[i] >> 16;
-+	for (i = 0; i < MAX_FIDS; i++) {
-+		if ((ai->fids[i] & 0xffff) == fid)
- 			index = i;
--		}
- 	}
- 
- 	if (index != -1) {
-diff --git a/drivers/net/wireless/cisco/airo_cs.c b/drivers/net/wireless/cisco/airo_cs.c
-index d9ed22b4cc6b..3718f958c0fc 100644
---- a/drivers/net/wireless/cisco/airo_cs.c
-+++ b/drivers/net/wireless/cisco/airo_cs.c
-@@ -102,11 +102,8 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev, void *priv_data)
- 
- static int airo_config(struct pcmcia_device *link)
- {
--	struct local_info *dev;
- 	int ret;
- 
--	dev = link->priv;
--
- 	dev_dbg(&link->dev, "airo_config\n");
- 
- 	link->config_flags |= CONF_ENABLE_IRQ | CONF_AUTO_SET_VPP |
--- 
-2.17.1
+> > Or do you expect somebody to actually really need the single threshold
+> > in the near future?
+
+johannes
