@@ -1,108 +1,441 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:63455 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732237AbeGJWJI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 18:09:08 -0400
-From: "Ghorai, Sukumar" <sukumar.ghorai@intel.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        "open list:RFKILL" <linux-wireless@vger.kernel.org>,
-        "Holtmann, Marcel" <marcel.holtmann@intel.com>,
-        "Tumkur Narayan, Chethan" <chethan.tumkur.narayan@intel.com>,
-        "Pierres, Arnaud" <arnaud.pierres@intel.com>
-Subject: RE: RFkill for Bluetooth hard reset
-Date: Tue, 10 Jul 2018 22:07:18 +0000
-Message-ID: <D73ECEF0C711E34A8F972E4B87F540058FB58327@ORSMSX114.amr.corp.intel.com> (sfid-20180711_000805_808649_08416CF1)
-References: <D73ECEF0C711E34A8F972E4B87F540058FB55F8D@ORSMSX114.amr.corp.intel.com>
- <A1EF6CA6-71AB-4EF6-BF59-53450958A6AA@holtmann.org>
-In-Reply-To: <A1EF6CA6-71AB-4EF6-BF59-53450958A6AA@holtmann.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46810 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932418AbeGFLEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 07:04:12 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 11/12] mt76x0: main file
+Date: Fri,  6 Jul 2018 13:03:48 +0200
+Message-Id: <1530875029-26274-12-git-send-email-sgruszka@redhat.com> (sfid-20180706_130430_995165_6D43B891)
+In-Reply-To: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
+References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->-----Original Message-----
->From: Marcel Holtmann [mailto:marcel@holtmann.org]
->Sent: Tuesday, July 10, 2018 11:46 AM
->To: Ghorai, Sukumar <sukumar.ghorai@intel.com>
->Cc: Johannes Berg <johannes@sipsolutions.net>; David S. Miller
-><davem@davemloft.net>; open list:RFKILL <linux-wireless@vger.kernel.org>;
->Holtmann, Marcel <marcel.holtmann@intel.com>; Tumkur Narayan, Chethan
-><chethan.tumkur.narayan@intel.com>
->Subject: Re: RFkill for Bluetooth hard reset
->
->Hi Sukumar,
->
->> We need an option to reset Bluetooth using GPIO toggle for a Linux
->> product when BT connected over USB (HCI interface). i.e I need out of
->> band(OOB) signal for USB to control/reset the BT. hence I opt to add
->> ACPI device in RfKill gpio driver(rfkill-gpio.c).
->>
->> localhost /sys/class/rfkill # ls -l
->> total 0
->> lrwxrwxrwx. 1 root root 0 Jul  8 14:53 rfkill0 ->
->> ../../devices/platform/INTL6205:00/rfkill/rfkill0
->> lrwxrwxrwx. 1 root root 0 Jul  8 14:53 rfkill2 ->
->> ../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ieee80211/phy0/rfki
->> ll2 lrwxrwxrwx. 1 root root 0 Jul  8 15:35 rfkill3 ->
->> ../../devices/pci0000:00/0000:00:14.0/usb1/1-5/1-5:1.0/bluetooth/hci0/
->> rfkill3
->>
->> I try to use RFkill soft block option to hold/reset (toggle) GPIO. And
->> changes in rfkill-gpio.c as follows.
->> 1/ reset pin configured as GPIOD_OUT_LOW, hence HW controller is not
->> out of reset.  I changed to high to work with our controller.
->> How to configured as Low/High as a generic solution?
->>
->> 2/ As per existing implementation, the Shutdown gpio is mandatory for
->> the framework to use. I feel we can make it an optional.
->>
->> 3/ Followed by /sys/class/rfkill/rfkill0/soft (1/0) is not in sync
->> with /sys/class/rfkill/rfkill0/uvent (RFKILL_STATE=0/1)
->>
->> Please guide me to add an ACPI method to toggle the GPIO to reset the
->bluetooth.
-I appreciate how imaginative you are. I appreciate your support.
+Add main file of mt76x0 driver.
 
->if the setup is that when these GPIOs are triggered, then the Bluetooth USB
->device disappears from the USB bus (and with that from sysfs), then it is fine to
->use an external RFKILL switch. This is similar to what Thinkpads used to do.
->
-Platform exposes the ACPI device node. Platform GPIO binds to use for 
-controlling reset lines of Bluetooth controller.  Sets the GPIO address low to 
-chip disable i.e Device(bt controller) will disconnect from the bus. And config
-gpio high triggered bt-chip reset line to boot and host re-enumerate the device. 
-Hence OS UI/application can use the Linux system interface 
-/sys/class/rfkill/rfkillx/ type and state) with airplane-mode or bluetooth OFF/ON. 
-Or similar dbus interface.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c | 403 +++++++++++++++++++++++
+ 1 file changed, 403 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/main.c
 
->It is kinda okay to use RFKILL_TYPE_BLUETOOTH for this, but in reality this is
->RFKILL_TYPE_USB since it is killing the USB device. That Bluetooth gets also
->killed is just a side effect.
-The platform will expose the dedicated ACPI device node (INTL6205) to control 
-all Intel bluetooth controller only, when supported.
-
->One thing that would be nice if ACPI would kinda link the RFKILL switch entry to
->the USB port so that you could relate on which USB device will be actually taken
->off the USB bus.
->
->If this is _not_ killing the USB power to the device and taking it off the bus, then
->this way is all wrong. For wakeup and reset GPIOs, this then needs to be build
->into btusb.c like has been done for all the UART drivers.
-To control the Bluetooth hardware, the driver to a combination of in-band bus
-communication(USB) and coordinate with out-of-band signaling through
-GPIO pins. And still looking for possibility to add the Out-of-band ACPI 
-signaling mechanism to hook with btusb.c. 
-
->Bluetooth at the moment does not have a hard kill switch in its subsystem (like
->WiFi does), but that could be added if the Bluetooth device stays on the bus and
->needs an external RFKILL switch. Bluetooth however does have a soft kill switch,
->but that is not going to help here.
-This GPIO based device (BT- controller) OFF/ON is similar to hard kill, as the device
-disappears from USB bus and followed by re-enumerate after reset (OFF and ON) 
-
->So first of all state what the current behavior and design is.
->
->Regards
->Marcel
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+new file mode 100644
+index 000000000000..0c521f3485c9
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -0,0 +1,403 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
++ * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
++ * Copyright (C) 2018 Stanislaw Gruszka <stf_xl@wp.pl>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ */
++
++#include "mt76x0.h"
++#include "mac.h"
++#include <linux/etherdevice.h>
++
++static int mt76x0_start(struct ieee80211_hw *hw)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	int ret;
++
++	mutex_lock(&dev->mutex);
++
++	ret = mt76x0_mac_start(dev);
++	if (ret)
++		goto out;
++
++	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
++				     MT_CALIBRATE_INTERVAL);
++	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
++				     MT_CALIBRATE_INTERVAL);
++out:
++	mutex_unlock(&dev->mutex);
++	return ret;
++}
++
++static void mt76x0_stop(struct ieee80211_hw *hw)
++{
++	struct mt76x0_dev *dev = hw->priv;
++
++	mutex_lock(&dev->mutex);
++
++	cancel_delayed_work_sync(&dev->cal_work);
++	cancel_delayed_work_sync(&dev->mac_work);
++	mt76x0_mac_stop(dev);
++
++	mutex_unlock(&dev->mutex);
++}
++
++
++static int mt76x0_add_interface(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_vif *mvif = (struct mt76_vif *) vif->drv_priv;
++	unsigned int idx;
++
++	idx = ffs(~dev->vif_mask);
++	if (!idx || idx > 8)
++		return -ENOSPC;
++
++	idx--;
++	dev->vif_mask |= BIT(idx);
++
++	mvif->idx = idx;
++	mvif->group_wcid.idx = GROUP_WCID(idx);
++	mvif->group_wcid.hw_key_idx = -1;
++
++	return 0;
++}
++
++static void mt76x0_remove_interface(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_vif *mvif = (struct mt76_vif *) vif->drv_priv;
++	unsigned int wcid = mvif->group_wcid.idx;
++
++	dev->wcid_mask[wcid / BITS_PER_LONG] &= ~BIT(wcid % BITS_PER_LONG);
++}
++
++static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	int ret = 0;
++
++	mutex_lock(&dev->mutex);
++
++	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
++		if (!(hw->conf.flags & IEEE80211_CONF_MONITOR))
++			dev->rxfilter |= MT_RX_FILTR_CFG_PROMISC;
++		else
++			dev->rxfilter &= ~MT_RX_FILTR_CFG_PROMISC;
++
++		mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		ieee80211_stop_queues(hw);
++		ret = mt76x0_phy_set_channel(dev, &hw->conf.chandef);
++		ieee80211_wake_queues(hw);
++	}
++
++	mutex_unlock(&dev->mutex);
++
++	return ret;
++}
++
++static void
++mt76_configure_filter(struct ieee80211_hw *hw, unsigned int changed_flags,
++		      unsigned int *total_flags, u64 multicast)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	u32 flags = 0;
++
++#define MT76_FILTER(_flag, _hw) do { \
++		flags |= *total_flags & FIF_##_flag;			\
++		dev->rxfilter &= ~(_hw);				\
++		dev->rxfilter |= !(flags & FIF_##_flag) * (_hw);	\
++	} while (0)
++
++	mutex_lock(&dev->mutex);
++
++	dev->rxfilter &= ~MT_RX_FILTR_CFG_OTHER_BSS;
++
++	MT76_FILTER(FCSFAIL, MT_RX_FILTR_CFG_CRC_ERR);
++	MT76_FILTER(PLCPFAIL, MT_RX_FILTR_CFG_PHY_ERR);
++	MT76_FILTER(CONTROL, MT_RX_FILTR_CFG_ACK |
++			     MT_RX_FILTR_CFG_CTS |
++			     MT_RX_FILTR_CFG_CFEND |
++			     MT_RX_FILTR_CFG_CFACK |
++			     MT_RX_FILTR_CFG_BA |
++			     MT_RX_FILTR_CFG_CTRL_RSV);
++	MT76_FILTER(PSPOLL, MT_RX_FILTR_CFG_PSPOLL);
++
++	*total_flags = flags;
++	mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
++
++	mutex_unlock(&dev->mutex);
++}
++
++static void
++mt76x0_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_bss_conf *info, u32 changed)
++{
++	struct mt76x0_dev *dev = hw->priv;
++
++	mutex_lock(&dev->mutex);
++
++	if (changed & BSS_CHANGED_ASSOC)
++		mt76x0_phy_con_cal_onoff(dev, info);
++
++	if (changed & BSS_CHANGED_BSSID) {
++		mt76x0_addr_wr(dev, MT_MAC_BSSID_DW0, info->bssid);
++
++		/* Note: this is a hack because beacon_int is not changed
++		 *	 on leave nor is any more appropriate event generated.
++		 *	 rt2x00 doesn't seem to be bothered though.
++		 */
++		if (is_zero_ether_addr(info->bssid))
++			mt76x0_mac_config_tsf(dev, false, 0);
++	}
++
++	if (changed & BSS_CHANGED_BASIC_RATES) {
++		mt76_wr(dev, MT_LEGACY_BASIC_RATE, info->basic_rates);
++		mt76_wr(dev, MT_HT_FBK_CFG0, 0x65432100);
++		mt76_wr(dev, MT_HT_FBK_CFG1, 0xedcba980);
++		mt76_wr(dev, MT_LG_FBK_CFG0, 0xedcba988);
++		mt76_wr(dev, MT_LG_FBK_CFG1, 0x00002100);
++	}
++
++	if (changed & BSS_CHANGED_BEACON_INT)
++		mt76x0_mac_config_tsf(dev, true, info->beacon_int);
++
++	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
++		mt76x0_mac_set_protection(dev, info->use_cts_prot,
++					   info->ht_operation_mode);
++
++	if (changed & BSS_CHANGED_ERP_PREAMBLE)
++		mt76x0_mac_set_short_preamble(dev, info->use_short_preamble);
++
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		int slottime = info->use_short_slot ? 9 : 20;
++
++		mt76_rmw_field(dev, MT_BKOFF_SLOT_CFG,
++			       MT_BKOFF_SLOT_CFG_SLOTTIME, slottime);
++	}
++
++	if (changed & BSS_CHANGED_ASSOC)
++		mt76x0_phy_recalibrate_after_assoc(dev);
++
++	mutex_unlock(&dev->mutex);
++}
++
++static int
++mt76x0_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		struct ieee80211_sta *sta)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_sta *msta = (struct mt76_sta *) sta->drv_priv;
++	struct mt76_vif *mvif = (struct mt76_vif *) vif->drv_priv;
++	int ret = 0;
++	int idx = 0;
++
++	mutex_lock(&dev->mutex);
++
++	idx = mt76_wcid_alloc(dev->wcid_mask, ARRAY_SIZE(dev->wcid));
++	if (idx < 0) {
++		ret = -ENOSPC;
++		goto out;
++	}
++
++	msta->wcid.idx = idx;
++	msta->wcid.hw_key_idx = -1;
++	mt76x0_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
++	mt76_clear(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
++	rcu_assign_pointer(dev->wcid[idx], &msta->wcid);
++	mt76x0_mac_set_ampdu_factor(dev);
++
++out:
++	mutex_unlock(&dev->mutex);
++
++	return ret;
++}
++
++static int
++mt76x0_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		   struct ieee80211_sta *sta)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_sta *msta = (struct mt76_sta *) sta->drv_priv;
++	int idx = msta->wcid.idx;
++
++	mutex_lock(&dev->mutex);
++	rcu_assign_pointer(dev->wcid[idx], NULL);
++	mt76_set(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
++	dev->wcid_mask[idx / BITS_PER_LONG] &= ~BIT(idx % BITS_PER_LONG);
++	mt76x0_mac_wcid_setup(dev, idx, 0, NULL);
++	mt76x0_mac_set_ampdu_factor(dev);
++	mutex_unlock(&dev->mutex);
++
++	return 0;
++}
++
++static void
++mt76x0_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		   enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
++{
++}
++
++static void
++mt76x0_sw_scan(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif,
++		const u8 *mac_addr)
++{
++	struct mt76x0_dev *dev = hw->priv;
++
++	cancel_delayed_work_sync(&dev->cal_work);
++	mt76x0_agc_save(dev);
++	set_bit(MT76_SCANNING, &dev->mt76.state);
++}
++
++static void
++mt76x0_sw_scan_complete(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif)
++{
++	struct mt76x0_dev *dev = hw->priv;
++
++	mt76x0_agc_restore(dev);
++	clear_bit(MT76_SCANNING, &dev->mt76.state);
++
++	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
++				     MT_CALIBRATE_INTERVAL);
++}
++
++static int
++mt76x0_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++		struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++		struct ieee80211_key_conf *key)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_vif *mvif = (struct mt76_vif *) vif->drv_priv;
++	struct mt76_sta *msta = sta ? (struct mt76_sta *) sta->drv_priv : NULL;
++	struct mt76_wcid *wcid = msta ? &msta->wcid : &mvif->group_wcid;
++	int idx = key->keyidx;
++	int ret;
++
++	if (cmd == SET_KEY) {
++		key->hw_key_idx = wcid->idx;
++		wcid->hw_key_idx = idx;
++	} else {
++		if (idx == wcid->hw_key_idx)
++			wcid->hw_key_idx = -1;
++
++		key = NULL;
++	}
++
++	if (!msta) {
++		if (key || wcid->hw_key_idx == idx) {
++			ret = mt76_mac_wcid_set_key(dev, wcid->idx, key);
++			if (ret)
++				return ret;
++		}
++
++		return mt76_mac_shared_key_setup(dev, mvif->idx, idx, key);
++	}
++
++	return mt76_mac_wcid_set_key(dev, msta->wcid.idx, key);
++}
++
++static int mt76x0_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
++{
++	struct mt76x0_dev *dev = hw->priv;
++
++	mt76_rmw_field(dev, MT_TX_RTS_CFG, MT_TX_RTS_CFG_THRESH, value);
++
++	return 0;
++}
++
++static int
++mt76_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		  struct ieee80211_ampdu_params *params)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct ieee80211_sta *sta = params->sta;
++	enum ieee80211_ampdu_mlme_action action = params->action;
++	u16 tid = params->tid;
++	u16 *ssn = &params->ssn;
++	struct mt76_sta *msta = (struct mt76_sta *) sta->drv_priv;
++
++	WARN_ON(msta->wcid.idx > N_WCIDS);
++
++	switch (action) {
++	case IEEE80211_AMPDU_RX_START:
++		mt76_set(dev, MT_WCID_ADDR(msta->wcid.idx) + 4, BIT(16 + tid));
++		break;
++	case IEEE80211_AMPDU_RX_STOP:
++		mt76_clear(dev, MT_WCID_ADDR(msta->wcid.idx) + 4, BIT(16 + tid));
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		ieee80211_send_bar(vif, sta->addr, tid, msta->agg_ssn[tid]);
++		break;
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
++		break;
++	case IEEE80211_AMPDU_TX_START:
++		msta->agg_ssn[tid] = *ssn << 4;
++		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		break;
++	}
++
++	return 0;
++}
++
++static void
++mt76_sta_rate_tbl_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta)
++{
++	struct mt76x0_dev *dev = hw->priv;
++	struct mt76_sta *msta = (struct mt76_sta *) sta->drv_priv;
++	struct ieee80211_sta_rates *rates;
++	struct ieee80211_tx_rate rate = {};
++
++	rcu_read_lock();
++	rates = rcu_dereference(sta->rates);
++
++	if (!rates)
++		goto out;
++
++	rate.idx = rates->rate[0].idx;
++	rate.flags = rates->rate[0].flags;
++	mt76_mac_wcid_set_rate(dev, &msta->wcid, &rate);
++
++out:
++	rcu_read_unlock();
++}
++
++const struct ieee80211_ops mt76x0_ops = {
++	.tx = mt76x0_tx,
++	.start = mt76x0_start,
++	.stop = mt76x0_stop,
++	.add_interface = mt76x0_add_interface,
++	.remove_interface = mt76x0_remove_interface,
++	.config = mt76x0_config,
++	.configure_filter = mt76_configure_filter,
++	.bss_info_changed = mt76x0_bss_info_changed,
++	.sta_add = mt76x0_sta_add,
++	.sta_remove = mt76x0_sta_remove,
++	.sta_notify = mt76x0_sta_notify,
++	.set_key = mt76x0_set_key,
++	.conf_tx = mt76x0_conf_tx,
++	.sw_scan_start = mt76x0_sw_scan,
++	.sw_scan_complete = mt76x0_sw_scan_complete,
++	.ampdu_action = mt76_ampdu_action,
++	.sta_rate_tbl_update = mt76_sta_rate_tbl_update,
++	.set_rts_threshold = mt76x0_set_rts_threshold,
++};
+-- 
+1.9.3
