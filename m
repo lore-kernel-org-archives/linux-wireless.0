@@ -1,696 +1,1603 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38618 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729568AbeG0OKq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57236 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932328AbeGFI5g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:10:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Fri, 6 Jul 2018 04:57:36 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 15:48:29 +0300
-Message-Id: <20180727124838.25910-8-luca@coelho.fi> (sfid-20180727_144901_852949_F28B8CC6)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: allow masking out memory areas from the fw dump
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v3 6/6] ath10k: Add QMI message handshake for wcn3990 client
+Date: Fri,  6 Jul 2018 14:26:22 +0530
+Message-Id: <20180706085622.27945-6-govinds@codeaurora.org> (sfid-20180706_105743_420442_CC15F670)
+In-Reply-To: <20180706085622.27945-1-govinds@codeaurora.org>
+References: <20180706085622.27945-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
+subsystem. This layer is responsible for communicating qmi control
+messages to wifi fw QMI service using QMI messaging protocol.
 
-Reading and dumping memory areas takes time, and sometimes
-dumping all of the areas isn't necessary.
+Qualcomm MSM Interface(QMI) is a messaging format used to communicate
+between components running between remote processors with underlying
+transport layer based on integrated chipset(shared memory) or
+discrete chipset(PCI/USB/SDIO/UART).
 
-Allow choosing the memory areas which should be dumped.
-
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 284 ++++++++++--------
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  13 +
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  98 +++---
- 7 files changed, 244 insertions(+), 157 deletions(-)
+ drivers/net/wireless/ath/ath10k/Kconfig  |    1 +
+ drivers/net/wireless/ath/ath10k/Makefile |    4 +-
+ drivers/net/wireless/ath/ath10k/core.c   |    6 +-
+ drivers/net/wireless/ath/ath10k/core.h   |    2 +
+ drivers/net/wireless/ath/ath10k/qmi.c    | 1021 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/qmi.h    |  129 +++
+ drivers/net/wireless/ath/ath10k/snoc.c   |  215 ++++-
+ drivers/net/wireless/ath/ath10k/snoc.h   |    4 +
+ 8 files changed, 1372 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index fa283285fcbe..a31a42e673c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -243,39 +243,47 @@ static void iwl_fw_dump_fifos(struct iwl_fw_runtime *fwrt,
- 	if (!iwl_trans_grab_nic_access(fwrt->trans, &flags))
- 		return;
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 54ff5930126c..7bf3615bd89c 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -43,6 +43,7 @@ config ATH10K_USB
+ config ATH10K_SNOC
+ 	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+ 	depends on ATH10K && ARCH_QCOM
++	select QCOM_QMI_HELPERS
+ 	---help---
+ 	  This module adds support for integrated WCN3990 chip connected
+ 	  to system NOC(SNOC). Currently work in progress and will not
+diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
+index 44d60a61b242..66326b949ab1 100644
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -36,7 +36,9 @@ obj-$(CONFIG_ATH10K_USB) += ath10k_usb.o
+ ath10k_usb-y += usb.o
  
--	/* Pull RXF1 */
--	iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->lmac[0].rxfifo1_size, 0, 0);
--	/* Pull RXF2 */
--	iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->rxfifo2_size,
--			  RXF_DIFF_FROM_PREV, 1);
--	/* Pull LMAC2 RXF1 */
--	if (fwrt->smem_cfg.num_lmacs > 1)
--		iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->lmac[1].rxfifo1_size,
--				  LMAC2_PRPH_OFFSET, 2);
--
--	/* Pull TXF data from LMAC1 */
--	for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries; i++) {
--		/* Mark the number of TXF we're pulling now */
--		iwl_trans_write_prph(fwrt->trans, TXF_LARC_NUM, i);
--		iwl_fwrt_dump_txf(fwrt, dump_data, cfg->lmac[0].txfifo_size[i],
--				  0, i);
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RXF)) {
-+		/* Pull RXF1 */
-+		iwl_fwrt_dump_rxf(fwrt, dump_data,
-+				  cfg->lmac[0].rxfifo1_size, 0, 0);
-+		/* Pull RXF2 */
-+		iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->rxfifo2_size,
-+				  RXF_DIFF_FROM_PREV, 1);
-+		/* Pull LMAC2 RXF1 */
-+		if (fwrt->smem_cfg.num_lmacs > 1)
-+			iwl_fwrt_dump_rxf(fwrt, dump_data,
-+					  cfg->lmac[1].rxfifo1_size,
-+					  LMAC2_PRPH_OFFSET, 2);
- 	}
+ obj-$(CONFIG_ATH10K_SNOC) += ath10k_snoc.o
+-ath10k_snoc-y += snoc.o
++ath10k_snoc-y += qmi.o \
++		 qmi_wlfw_v01.o \
++		 snoc.o
  
--	/* Pull TXF data from LMAC2 */
--	if (fwrt->smem_cfg.num_lmacs > 1) {
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXF)) {
-+		/* Pull TXF data from LMAC1 */
- 		for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries; i++) {
- 			/* Mark the number of TXF we're pulling now */
--			iwl_trans_write_prph(fwrt->trans,
--					     TXF_LARC_NUM + LMAC2_PRPH_OFFSET,
--					     i);
-+			iwl_trans_write_prph(fwrt->trans, TXF_LARC_NUM, i);
- 			iwl_fwrt_dump_txf(fwrt, dump_data,
--					  cfg->lmac[1].txfifo_size[i],
--					  LMAC2_PRPH_OFFSET,
--					  i + cfg->num_txfifo_entries);
-+					  cfg->lmac[0].txfifo_size[i], 0, i);
-+		}
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 840e301b6a6e..dfaf7e32ca32 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1145,7 +1145,7 @@ static int ath10k_download_fw(struct ath10k *ar)
+ 	return ret;
+ }
+ 
+-static void ath10k_core_free_board_files(struct ath10k *ar)
++void ath10k_core_free_board_files(struct ath10k *ar)
+ {
+ 	if (!IS_ERR(ar->normal_mode_fw.board))
+ 		release_firmware(ar->normal_mode_fw.board);
+@@ -1154,6 +1154,7 @@ static void ath10k_core_free_board_files(struct ath10k *ar)
+ 	ar->normal_mode_fw.board_data = NULL;
+ 	ar->normal_mode_fw.board_len = 0;
+ }
++EXPORT_SYMBOL(ath10k_core_free_board_files);
+ 
+ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ {
+@@ -1459,7 +1460,7 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 	return 0;
+ }
+ 
+-static int ath10k_core_fetch_board_file(struct ath10k *ar)
++int ath10k_core_fetch_board_file(struct ath10k *ar)
+ {
+ 	char boardname[100], fallback_boardname[100];
+ 	int ret;
+@@ -1497,6 +1498,7 @@ static int ath10k_core_fetch_board_file(struct ath10k *ar)
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "using board api %d\n", ar->bd_api);
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath10k_core_fetch_board_file);
+ 
+ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 				     struct ath10k_fw_file *fw_file)
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 20f03f3a7080..50f026c97365 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1166,5 +1166,7 @@ int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt);
+ void ath10k_core_stop(struct ath10k *ar);
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id);
+ void ath10k_core_unregister(struct ath10k *ar);
++int ath10k_core_fetch_board_file(struct ath10k *ar);
++void ath10k_core_free_board_files(struct ath10k *ar);
+ 
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+new file mode 100644
+index 000000000000..d44f6905bcb9
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -0,0 +1,1021 @@
++/*
++ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+		/* Pull TXF data from LMAC2 */
-+		if (fwrt->smem_cfg.num_lmacs > 1) {
-+			for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries;
-+			     i++) {
-+				/* Mark the number of TXF we're pulling now */
-+				iwl_trans_write_prph(fwrt->trans,
-+						     TXF_LARC_NUM +
-+						     LMAC2_PRPH_OFFSET, i);
-+				iwl_fwrt_dump_txf(fwrt, dump_data,
-+						  cfg->lmac[1].txfifo_size[i],
-+						  LMAC2_PRPH_OFFSET,
-+						  i + cfg->num_txfifo_entries);
-+			}
- 		}
- 	}
- 
--	if (fw_has_capa(&fwrt->fw->ucode_capa,
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_INTERNAL_TXF) &&
-+	    fw_has_capa(&fwrt->fw->ucode_capa,
- 			IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG)) {
- 		/* Pull UMAC internal TXF data from all TXFs */
- 		for (i = 0;
-@@ -600,42 +608,54 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
- 		fifo_data_len = 0;
- 
--		/* Count RXF2 size */
--		if (mem_cfg->rxfifo2_size) {
--			/* Add header info */
--			fifo_data_len += mem_cfg->rxfifo2_size +
--					 sizeof(*dump_data) +
--					 sizeof(struct iwl_fw_error_dump_fifo);
--		}
--
--		/* Count RXF1 sizes */
--		for (i = 0; i < mem_cfg->num_lmacs; i++) {
--			if (!mem_cfg->lmac[i].rxfifo1_size)
--				continue;
--
--			/* Add header info */
--			fifo_data_len += mem_cfg->lmac[i].rxfifo1_size +
--					 sizeof(*dump_data) +
--					 sizeof(struct iwl_fw_error_dump_fifo);
--		}
-+		if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RXF)) {
- 
--		/* Count TXF sizes */
--		for (i = 0; i < mem_cfg->num_lmacs; i++) {
--			int j;
-+			/* Count RXF2 size */
-+			if (mem_cfg->rxfifo2_size) {
-+				/* Add header info */
-+				fifo_data_len +=
-+					mem_cfg->rxfifo2_size +
-+					sizeof(*dump_data) +
-+					sizeof(struct iwl_fw_error_dump_fifo);
-+			}
- 
--			for (j = 0; j < mem_cfg->num_txfifo_entries; j++) {
--				if (!mem_cfg->lmac[i].txfifo_size[j])
-+			/* Count RXF1 sizes */
-+			for (i = 0; i < mem_cfg->num_lmacs; i++) {
-+				if (!mem_cfg->lmac[i].rxfifo1_size)
- 					continue;
- 
- 				/* Add header info */
- 				fifo_data_len +=
--					mem_cfg->lmac[i].txfifo_size[j] +
-+					mem_cfg->lmac[i].rxfifo1_size +
- 					sizeof(*dump_data) +
- 					sizeof(struct iwl_fw_error_dump_fifo);
- 			}
- 		}
- 
--		if (fw_has_capa(&fwrt->fw->ucode_capa,
-+		if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXF)) {
-+			size_t fifo_const_len = sizeof(*dump_data) +
-+				sizeof(struct iwl_fw_error_dump_fifo);
++#include <linux/completion.h>
++#include <linux/device.h>
++#include <linux/debugfs.h>
++#include <linux/idr.h>
++#include <linux/kernel.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/module.h>
++#include <linux/net.h>
++#include <linux/platform_device.h>
++#include <linux/qcom_scm.h>
++#include <linux/string.h>
++#include <net/sock.h>
 +
-+			/* Count TXF sizes */
-+			for (i = 0; i < mem_cfg->num_lmacs; i++) {
-+				int j;
++#include "debug.h"
++#include "snoc.h"
 +
-+				for (j = 0; j < mem_cfg->num_txfifo_entries;
-+				     j++) {
-+					if (!mem_cfg->lmac[i].txfifo_size[j])
-+						continue;
++#define ATH10K_QMI_CLIENT_ID		0x4b4e454c
++#define ATH10K_QMI_TIMEOUT		30
 +
-+					/* Add header info */
-+					fifo_data_len +=
-+						fifo_const_len +
-+						mem_cfg->lmac[i].txfifo_size[j];
-+				}
-+			}
-+		}
++static int ath10k_qmi_map_msa_permission(struct ath10k_qmi *qmi,
++					 struct ath10k_msa_mem_info *mem_info)
++{
++	struct qcom_scm_vmperm dst_perms[3];
++	struct ath10k *ar = qmi->ar;
++	unsigned int src_perms;
++	u32 perm_count;
++	int ret;
 +
-+		if ((fwrt->fw->dbg_dump_mask &
-+		    BIT(IWL_FW_ERROR_DUMP_INTERNAL_TXF)) &&
-+		    fw_has_capa(&fwrt->fw->ucode_capa,
- 				IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG)) {
- 			for (i = 0;
- 			     i < ARRAY_SIZE(mem_cfg->internal_txfifo_size);
-@@ -652,7 +672,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 		}
- 
- 		/* Make room for PRPH registers */
--		if (!fwrt->trans->cfg->gen2) {
-+		if (!fwrt->trans->cfg->gen2 &&
-+		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PRPH)) {
- 			for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr_comm);
- 			     i++) {
- 				/* The range includes both boundaries */
-@@ -667,7 +688,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 		}
- 
- 		if (!fwrt->trans->cfg->gen2 &&
--		    fwrt->trans->cfg->mq_rx_supported) {
-+		    fwrt->trans->cfg->mq_rx_supported &&
-+		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PRPH)) {
- 			for (i = 0; i <
- 				ARRAY_SIZE(iwl_prph_dump_addr_9000); i++) {
- 				/* The range includes both boundaries */
-@@ -681,34 +703,42 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 			}
- 		}
- 
--		if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000)
-+		if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 &&
-+		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RADIO_REG))
- 			radio_len = sizeof(*dump_data) + RADIO_REG_MAX_READ;
- 	}
- 
- 	file_len = sizeof(*dump_file) +
--		   sizeof(*dump_data) * 3 +
--		   sizeof(*dump_smem_cfg) +
- 		   fifo_data_len +
- 		   prph_len +
--		   radio_len +
--		   sizeof(*dump_info);
--
--	/* Make room for the SMEM, if it exists */
--	if (smem_len)
--		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + smem_len;
--
--	/* Make room for the secondary SRAM, if it exists */
--	if (sram2_len)
--		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + sram2_len;
--
--	/* Make room for MEM segments */
--	for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
--		file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
--			    le32_to_cpu(fw_dbg_mem[i].len);
-+		   radio_len;
++	src_perms = BIT(QCOM_SCM_VMID_HLOS);
 +
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_DEV_FW_INFO))
-+		file_len += sizeof(*dump_data) + sizeof(*dump_info);
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM_CFG))
-+		file_len += sizeof(*dump_data) + sizeof(*dump_smem_cfg);
++	dst_perms[0].vmid = QCOM_SCM_VMID_MSS_MSA;
++	dst_perms[0].perm = QCOM_SCM_PERM_RW;
++	dst_perms[1].vmid = QCOM_SCM_VMID_WLAN;
++	dst_perms[1].perm = QCOM_SCM_PERM_RW;
 +
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
-+		/* Make room for the SMEM, if it exists */
-+		if (smem_len)
-+			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
-+				smem_len;
-+
-+		/* Make room for the secondary SRAM, if it exists */
-+		if (sram2_len)
-+			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
-+				sram2_len;
-+
-+		/* Make room for MEM segments */
-+		for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
-+			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
-+				    le32_to_cpu(fw_dbg_mem[i].len);
-+		}
- 	}
- 
- 	/* Make room for fw's virtual image pages, if it exists */
--	if (!fwrt->trans->cfg->gen2 &&
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING) &&
-+	    !fwrt->trans->cfg->gen2 &&
- 	    fwrt->fw->img[fwrt->cur_fw_img].paging_mem_size &&
- 	    fwrt->fw_paging_db[0].fw_paging_block)
- 		file_len += fwrt->num_of_paging_blk *
-@@ -722,12 +752,14 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 			   sizeof(*dump_info) + sizeof(*dump_smem_cfg);
- 	}
- 
--	if (fwrt->dump.desc)
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_ERROR_INFO) &&
-+	    fwrt->dump.desc)
- 		file_len += sizeof(*dump_data) + sizeof(*dump_trig) +
- 			    fwrt->dump.desc->len;
- 
--	if (!fwrt->fw->n_dbg_mem_tlv)
--		file_len += sram_len + sizeof(*dump_mem);
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM) &&
-+	    !fwrt->fw->n_dbg_mem_tlv)
-+		file_len += sizeof(*dump_data) + sram_len + sizeof(*dump_mem);
- 
- 	dump_file = vzalloc(file_len);
- 	if (!dump_file) {
-@@ -740,48 +772,56 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
- 	dump_data = (void *)dump_file->data;
- 
--	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
--	dump_data->len = cpu_to_le32(sizeof(*dump_info));
--	dump_info = (void *)dump_data->data;
--	dump_info->device_family =
--		fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
--			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
--			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
--	dump_info->hw_step = cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
--	memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
--	       sizeof(dump_info->fw_human_readable));
--	strncpy(dump_info->dev_human_readable, fwrt->trans->cfg->name,
--		sizeof(dump_info->dev_human_readable));
--	strncpy(dump_info->bus_human_readable, fwrt->dev->bus->name,
--		sizeof(dump_info->bus_human_readable));
--
--	dump_data = iwl_fw_error_next_data(dump_data);
--
--	/* Dump shared memory configuration */
--	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_CFG);
--	dump_data->len = cpu_to_le32(sizeof(*dump_smem_cfg));
--	dump_smem_cfg = (void *)dump_data->data;
--	dump_smem_cfg->num_lmacs = cpu_to_le32(mem_cfg->num_lmacs);
--	dump_smem_cfg->num_txfifo_entries =
--		cpu_to_le32(mem_cfg->num_txfifo_entries);
--	for (i = 0; i < MAX_NUM_LMAC; i++) {
--		int j;
--
--		for (j = 0; j < TX_FIFO_MAX_NUM; j++)
--			dump_smem_cfg->lmac[i].txfifo_size[j] =
--				cpu_to_le32(mem_cfg->lmac[i].txfifo_size[j]);
--		dump_smem_cfg->lmac[i].rxfifo1_size =
--			cpu_to_le32(mem_cfg->lmac[i].rxfifo1_size);
--	}
--	dump_smem_cfg->rxfifo2_size = cpu_to_le32(mem_cfg->rxfifo2_size);
--	dump_smem_cfg->internal_txfifo_addr =
--		cpu_to_le32(mem_cfg->internal_txfifo_addr);
--	for (i = 0; i < TX_FIFO_INTERNAL_MAX_NUM; i++) {
--		dump_smem_cfg->internal_txfifo_size[i] =
--			cpu_to_le32(mem_cfg->internal_txfifo_size[i]);
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_DEV_FW_INFO)) {
-+		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
-+		dump_data->len = cpu_to_le32(sizeof(*dump_info));
-+		dump_info = (void *)dump_data->data;
-+		dump_info->device_family =
-+			fwrt->trans->cfg->device_family ==
-+			IWL_DEVICE_FAMILY_7000 ?
-+				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
-+				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
-+		dump_info->hw_step =
-+			cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
-+		memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
-+		       sizeof(dump_info->fw_human_readable));
-+		strncpy(dump_info->dev_human_readable, fwrt->trans->cfg->name,
-+			sizeof(dump_info->dev_human_readable) - 1);
-+		strncpy(dump_info->bus_human_readable, fwrt->dev->bus->name,
-+			sizeof(dump_info->bus_human_readable) - 1);
-+
-+		dump_data = iwl_fw_error_next_data(dump_data);
- 	}
- 
--	dump_data = iwl_fw_error_next_data(dump_data);
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM_CFG)) {
-+		/* Dump shared memory configuration */
-+		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_CFG);
-+		dump_data->len = cpu_to_le32(sizeof(*dump_smem_cfg));
-+		dump_smem_cfg = (void *)dump_data->data;
-+		dump_smem_cfg->num_lmacs = cpu_to_le32(mem_cfg->num_lmacs);
-+		dump_smem_cfg->num_txfifo_entries =
-+			cpu_to_le32(mem_cfg->num_txfifo_entries);
-+		for (i = 0; i < MAX_NUM_LMAC; i++) {
-+			int j;
-+			u32 *txf_size = mem_cfg->lmac[i].txfifo_size;
-+
-+			for (j = 0; j < TX_FIFO_MAX_NUM; j++)
-+				dump_smem_cfg->lmac[i].txfifo_size[j] =
-+					cpu_to_le32(txf_size[j]);
-+			dump_smem_cfg->lmac[i].rxfifo1_size =
-+				cpu_to_le32(mem_cfg->lmac[i].rxfifo1_size);
-+		}
-+		dump_smem_cfg->rxfifo2_size =
-+			cpu_to_le32(mem_cfg->rxfifo2_size);
-+		dump_smem_cfg->internal_txfifo_addr =
-+			cpu_to_le32(mem_cfg->internal_txfifo_addr);
-+		for (i = 0; i < TX_FIFO_INTERNAL_MAX_NUM; i++) {
-+			dump_smem_cfg->internal_txfifo_size[i] =
-+				cpu_to_le32(mem_cfg->internal_txfifo_size[i]);
-+		}
-+
-+		dump_data = iwl_fw_error_next_data(dump_data);
++	if (mem_info->secure) {
++		perm_count = 2;
++	} else {
++		dst_perms[2].vmid = QCOM_SCM_VMID_WLAN_CE;
++		dst_perms[2].perm = QCOM_SCM_PERM_RW;
++		perm_count = 3;
 +	}
- 
- 	/* We only dump the FIFOs if the FW is in error state */
- 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
-@@ -790,7 +830,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 			iwl_read_radio_regs(fwrt, &dump_data);
- 	}
- 
--	if (fwrt->dump.desc) {
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_ERROR_INFO) &&
-+	    fwrt->dump.desc) {
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_ERROR_INFO);
- 		dump_data->len = cpu_to_le32(sizeof(*dump_trig) +
- 					     fwrt->dump.desc->len);
-@@ -805,7 +846,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	if (monitor_dump_only)
- 		goto dump_trans_data;
- 
--	if (!fwrt->fw->n_dbg_mem_tlv) {
-+	if (!fwrt->fw->n_dbg_mem_tlv &&
-+	    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
- 		dump_data->len = cpu_to_le32(sram_len + sizeof(*dump_mem));
- 		dump_mem = (void *)dump_data->data;
-@@ -821,6 +863,9 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
- 		bool success;
- 
-+		if (!(fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)))
++
++	ret = qcom_scm_assign_mem(mem_info->addr, mem_info->size,
++				  &src_perms, dst_perms, perm_count);
++	if (ret < 0)
++		ath10k_err(ar, "failed to assign msa map permissions: %d\n", ret);
++
++	return ret;
++}
++
++static int ath10k_qmi_unmap_msa_permission(struct ath10k_qmi *qmi,
++					   struct ath10k_msa_mem_info *mem_info)
++{
++	struct qcom_scm_vmperm dst_perms;
++	struct ath10k *ar = qmi->ar;
++	unsigned int src_perms;
++	int ret;
++
++	src_perms = BIT(QCOM_SCM_VMID_MSS_MSA) | BIT(QCOM_SCM_VMID_WLAN);
++
++	if (!mem_info->secure)
++		src_perms |= BIT(QCOM_SCM_VMID_WLAN_CE);
++
++	dst_perms.vmid = QCOM_SCM_VMID_HLOS;
++	dst_perms.perm = QCOM_SCM_PERM_RW;
++
++	ret = qcom_scm_assign_mem(mem_info->addr, mem_info->size,
++				  &src_perms, &dst_perms, 1);
++	if (ret < 0)
++		ath10k_err(ar, "failed to unmap msa permissions: %d\n", ret);
++
++	return ret;
++}
++
++static int ath10k_qmi_setup_msa_permissions(struct ath10k_qmi *qmi)
++{
++	int ret;
++	int i;
++
++	for (i = 0; i < qmi->nr_mem_region; i++) {
++		ret = ath10k_qmi_map_msa_permission(qmi, &qmi->mem_region[i]);
++		if (ret)
++			goto err_unmap;
++	}
++
++	return 0;
++
++err_unmap:
++	for (i--; i >= 0; i--)
++		ath10k_qmi_unmap_msa_permission(qmi, &qmi->mem_region[i]);
++	return ret;
++}
++
++static void ath10k_qmi_remove_msa_permission(struct ath10k_qmi *qmi)
++{
++	int i;
++
++	for (i = 0; i < qmi->nr_mem_region; i++)
++		ath10k_qmi_unmap_msa_permission(qmi, &qmi->mem_region[i]);
++}
++
++static int ath10k_qmi_msa_mem_info_send_sync_msg(struct ath10k_qmi *qmi)
++{
++	struct wlfw_msa_info_resp_msg_v01 resp = {};
++	struct wlfw_msa_info_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int ret;
++	int i;
++
++	req.msa_addr = qmi->msa_pa;
++	req.size = qmi->msa_mem_size;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_msa_info_resp_msg_v01_ei, &resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_MSA_INFO_REQ_V01,
++			       WLFW_MSA_INFO_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_msa_info_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send msa mem info req: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "msa info req rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (resp.mem_region_info_len > QMI_WLFW_MAX_MEM_REG_V01) {
++		ath10k_err(ar, "invalid memory region length received: %d\n",
++			   resp.mem_region_info_len);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	qmi->nr_mem_region = resp.mem_region_info_len;
++	for (i = 0; i < resp.mem_region_info_len; i++) {
++		qmi->mem_region[i].addr = resp.mem_region_info[i].region_addr;
++		qmi->mem_region[i].size = resp.mem_region_info[i].size;
++		qmi->mem_region[i].secure = resp.mem_region_info[i].secure_flag;
++		ath10k_dbg(ar, ATH10K_DBG_QMI,
++			   "qmi msa mem region %d addr 0x%pa size 0x%x flag 0x%08x\n",
++			   i, &qmi->mem_region[i].addr,
++			   qmi->mem_region[i].size,
++			   qmi->mem_region[i].secure);
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi msa mem info request completed\n");
++	return 0;
++
++out:
++	return ret;
++}
++
++static int ath10k_qmi_msa_ready_send_sync_msg(struct ath10k_qmi *qmi)
++{
++	struct wlfw_msa_ready_resp_msg_v01 resp = {};
++	struct wlfw_msa_ready_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int ret;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_msa_ready_resp_msg_v01_ei, &resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_MSA_READY_REQ_V01,
++			       WLFW_MSA_READY_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_msa_ready_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send msa mem ready request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "msa ready request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi msa mem ready request completed\n");
++	return 0;
++
++out:
++	return ret;
++}
++
++static int ath10k_qmi_bdf_dnld_send_sync(struct ath10k_qmi *qmi)
++{
++	struct wlfw_bdf_download_resp_msg_v01 resp = {};
++	struct wlfw_bdf_download_req_msg_v01 *req;
++	struct ath10k *ar = qmi->ar;
++	unsigned int remaining;
++	struct qmi_txn txn;
++	const u8 *temp;
++	int ret;
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	temp = ar->normal_mode_fw.board_data;
++	remaining = ar->normal_mode_fw.board_len;
++
++	while (remaining) {
++		req->valid = 1;
++		req->file_id_valid = 1;
++		req->file_id = 0;
++		req->total_size_valid = 1;
++		req->total_size = ar->normal_mode_fw.board_len;
++		req->seg_id_valid = 1;
++		req->data_valid = 1;
++		req->end_valid = 1;
++
++		if (remaining > QMI_WLFW_MAX_DATA_SIZE_V01) {
++			req->data_len = QMI_WLFW_MAX_DATA_SIZE_V01;
++		} else {
++			req->data_len = remaining;
++			req->end = 1;
++		}
++
++		memcpy(req->data, temp, req->data_len);
++
++		ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++				   wlfw_bdf_download_resp_msg_v01_ei,
++				   &resp);
++		if (ret < 0)
++			goto out;
++
++		ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++				       QMI_WLFW_BDF_DOWNLOAD_REQ_V01,
++				       WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
++				       wlfw_bdf_download_req_msg_v01_ei, req);
++		if (ret < 0) {
++			qmi_txn_cancel(&txn);
++			goto out;
++		}
++
++		ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++
++		if (ret < 0)
++			goto out;
++
++		if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++			ath10k_err(ar, "failed to download board data file: %d\n",
++				   resp.resp.error);
++			ret = -EINVAL;
++			goto out;
++		}
++
++		remaining -= req->data_len;
++		temp += req->data_len;
++		req->seg_id++;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi bdf download request completed\n");
++
++	kfree(req);
++	return 0;
++
++out:
++	kfree(req);
++	return ret;
++}
++
++static int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
++{
++	struct wlfw_cal_report_resp_msg_v01 resp = {};
++	struct wlfw_cal_report_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int i, j = 0;
++	int ret;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cal_report_resp_msg_v01_ei,
++			   &resp);
++	if (ret < 0)
++		goto out;
++
++	for (i = 0; i < QMI_WLFW_MAX_NUM_CAL_V01; i++) {
++		if (qmi->cal_data[i].total_size &&
++		    qmi->cal_data[i].data) {
++			req.meta_data[j] = qmi->cal_data[i].cal_id;
++			j++;
++		}
++	}
++	req.meta_data_len = j;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_CAL_REPORT_REQ_V01,
++			       WLFW_CAL_REPORT_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_cal_report_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send calibration request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "calibration request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi cal report request completed\n");
++	return 0;
++
++out:
++	return ret;
++}
++
++static int
++ath10k_qmi_mode_send_sync_msg(struct ath10k *ar, enum wlfw_driver_mode_enum_v01 mode)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_qmi *qmi = ar_snoc->qmi;
++	struct wlfw_wlan_mode_resp_msg_v01 resp = {};
++	struct wlfw_wlan_mode_req_msg_v01 req = {};
++	struct qmi_txn txn;
++	int ret;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_wlan_mode_resp_msg_v01_ei,
++			   &resp);
++	if (ret < 0)
++		goto out;
++
++	req.mode = mode;
++	req.hw_debug_valid = 1;
++	req.hw_debug = 0;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_WLAN_MODE_REQ_V01,
++			       WLFW_WLAN_MODE_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_wlan_mode_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send wlan mode %d request: %d\n", mode, ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "more request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi wlan mode req completed: %d\n", mode);
++	return 0;
++
++out:
++	return ret;
++}
++
++static int
++ath10k_qmi_cfg_send_sync_msg(struct ath10k *ar,
++			     struct ath10k_qmi_wlan_enable_cfg *config,
++			     const char *version)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_qmi *qmi = ar_snoc->qmi;
++	struct wlfw_wlan_cfg_resp_msg_v01 resp = {};
++	struct wlfw_wlan_cfg_req_msg_v01 *req;
++	struct qmi_txn txn;
++	int ret;
++	u32 i;
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_wlan_cfg_resp_msg_v01_ei,
++			   &resp);
++	if (ret < 0)
++		goto out;
++
++	req->host_version_valid = 0;
++
++	req->tgt_cfg_valid = 1;
++	if (config->num_ce_tgt_cfg > QMI_WLFW_MAX_NUM_CE_V01)
++		req->tgt_cfg_len = QMI_WLFW_MAX_NUM_CE_V01;
++	else
++		req->tgt_cfg_len = config->num_ce_tgt_cfg;
++	for (i = 0; i < req->tgt_cfg_len; i++) {
++		req->tgt_cfg[i].pipe_num = config->ce_tgt_cfg[i].pipe_num;
++		req->tgt_cfg[i].pipe_dir = config->ce_tgt_cfg[i].pipe_dir;
++		req->tgt_cfg[i].nentries = config->ce_tgt_cfg[i].nentries;
++		req->tgt_cfg[i].nbytes_max = config->ce_tgt_cfg[i].nbytes_max;
++		req->tgt_cfg[i].flags = config->ce_tgt_cfg[i].flags;
++	}
++
++	req->svc_cfg_valid = 1;
++	if (config->num_ce_svc_pipe_cfg > QMI_WLFW_MAX_NUM_SVC_V01)
++		req->svc_cfg_len = QMI_WLFW_MAX_NUM_SVC_V01;
++	else
++		req->svc_cfg_len = config->num_ce_svc_pipe_cfg;
++	for (i = 0; i < req->svc_cfg_len; i++) {
++		req->svc_cfg[i].service_id = config->ce_svc_cfg[i].service_id;
++		req->svc_cfg[i].pipe_dir = config->ce_svc_cfg[i].pipe_dir;
++		req->svc_cfg[i].pipe_num = config->ce_svc_cfg[i].pipe_num;
++	}
++
++	req->shadow_reg_valid = 1;
++	if (config->num_shadow_reg_cfg >
++	    QMI_WLFW_MAX_NUM_SHADOW_REG_V01)
++		req->shadow_reg_len = QMI_WLFW_MAX_NUM_SHADOW_REG_V01;
++	else
++		req->shadow_reg_len = config->num_shadow_reg_cfg;
++
++	memcpy(req->shadow_reg, config->shadow_reg_cfg,
++	       sizeof(struct wlfw_shadow_reg_cfg_s_v01) * req->shadow_reg_len);
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_WLAN_CFG_REQ_V01,
++			       WLFW_WLAN_CFG_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_wlan_cfg_req_msg_v01_ei, req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send config request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "config request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi config request completed\n");
++	kfree(req);
++	return 0;
++
++out:
++	kfree(req);
++	return ret;
++}
++
++int ath10k_qmi_wlan_enable(struct ath10k *ar,
++			   struct ath10k_qmi_wlan_enable_cfg *config,
++			   enum wlfw_driver_mode_enum_v01 mode,
++			   const char *version)
++{
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi mode %d config %p\n",
++		   mode, config);
++
++	ret = ath10k_qmi_cfg_send_sync_msg(ar, config, version);
++	if (ret) {
++		ath10k_err(ar, "failed to send qmi config: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath10k_qmi_mode_send_sync_msg(ar, mode);
++	if (ret) {
++		ath10k_err(ar, "failed to send qmi mode: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++int ath10k_qmi_wlan_disable(struct ath10k *ar)
++{
++	return ath10k_qmi_mode_send_sync_msg(ar, QMI_WLFW_OFF_V01);
++}
++
++static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
++{
++	struct wlfw_cap_resp_msg_v01 *resp;
++	struct wlfw_cap_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int ret;
++
++	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
++	if (!resp)
++		return -ENOMEM;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cap_resp_msg_v01_ei, resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_CAP_REQ_V01,
++			       WLFW_CAP_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_cap_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send capability request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "capablity req rejected: %d\n", resp->resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (resp->chip_info_valid) {
++		qmi->chip_info.chip_id = resp->chip_info.chip_id;
++		qmi->chip_info.chip_family = resp->chip_info.chip_family;
++	}
++
++	if (resp->board_info_valid)
++		qmi->board_info.board_id = resp->board_info.board_id;
++	else
++		qmi->board_info.board_id = 0xFF;
++
++	if (resp->soc_info_valid)
++		qmi->soc_info.soc_id = resp->soc_info.soc_id;
++
++	if (resp->fw_version_info_valid) {
++		qmi->fw_version = resp->fw_version_info.fw_version;
++		strlcpy(qmi->fw_build_timestamp, resp->fw_version_info.fw_build_timestamp,
++			sizeof(qmi->fw_build_timestamp));
++	}
++
++	if (resp->fw_build_id_valid)
++		strlcpy(qmi->fw_build_id, resp->fw_build_id,
++			MAX_BUILD_ID_LEN + 1);
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI,
++		   "qmi chip_id 0x%x chip_family 0x%x board_id 0x%x soc_id 0x%x",
++		   qmi->chip_info.chip_id, qmi->chip_info.chip_family,
++		   qmi->board_info.board_id, qmi->soc_info.soc_id);
++	ath10k_dbg(ar, ATH10K_DBG_QMI,
++		   "qmi fw_version 0x%x fw_build_timestamp %s fw_build_id %s",
++		   qmi->fw_version, qmi->fw_build_timestamp, qmi->fw_build_id);
++
++	kfree(resp);
++	return 0;
++
++out:
++	kfree(resp);
++	return ret;
++}
++
++static int ath10k_qmi_host_cap_send_sync(struct ath10k_qmi *qmi)
++{
++	struct wlfw_host_cap_resp_msg_v01 resp = {};
++	struct wlfw_host_cap_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int ret;
++
++	req.daemon_support_valid = 1;
++	req.daemon_support = 0;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_host_cap_resp_msg_v01_ei, &resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_HOST_CAP_REQ_V01,
++			       WLFW_HOST_CAP_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_host_cap_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send host capability request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "host capability request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi host capablity request completed\n");
++	return 0;
++
++out:
++	return ret;
++}
++
++static int
++ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
++{
++	struct wlfw_ind_register_resp_msg_v01 resp = {};
++	struct wlfw_ind_register_req_msg_v01 req = {};
++	struct ath10k *ar = qmi->ar;
++	struct qmi_txn txn;
++	int ret;
++
++	req.client_id_valid = 1;
++	req.client_id = ATH10K_QMI_CLIENT_ID;
++	req.fw_ready_enable_valid = 1;
++	req.fw_ready_enable = 1;
++	req.msa_ready_enable_valid = 1;
++	req.msa_ready_enable = 1;
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_ind_register_resp_msg_v01_ei, &resp);
++	if (ret < 0)
++		goto out;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_IND_REGISTER_REQ_V01,
++			       WLFW_IND_REGISTER_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_ind_register_req_msg_v01_ei, &req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		ath10k_err(ar, "failed to send indication registed request: %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, ATH10K_QMI_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
++		ath10k_err(ar, "indication request rejected: %d\n", resp.resp.error);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (resp.fw_status_valid) {
++		if (resp.fw_status & QMI_WLFW_FW_READY_V01)
++			qmi->fw_ready = true;
++	}
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi indication register request completed\n");
++	return 0;
++
++out:
++	return ret;
++}
++
++static void ath10k_qmi_event_server_arrive(struct ath10k_qmi *qmi)
++{
++	struct ath10k *ar = qmi->ar;
++	int ret;
++
++	ret = ath10k_qmi_ind_register_send_sync_msg(qmi);
++	if (ret)
++		return;
++
++	if (qmi->fw_ready) {
++		ath10k_snoc_fw_indication(ar, ATH10K_QMI_EVENT_FW_READY_IND);
++		return;
++	}
++
++	ret = ath10k_qmi_host_cap_send_sync(qmi);
++	if (ret)
++		return;
++
++	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
++	if (ret)
++		return;
++
++	ret = ath10k_qmi_setup_msa_permissions(qmi);
++	if (ret)
++		return;
++
++	ret = ath10k_qmi_msa_ready_send_sync_msg(qmi);
++	if (ret)
++		goto err_setup_msa;
++
++	ret = ath10k_qmi_cap_send_sync_msg(qmi);
++	if (ret)
++		goto err_setup_msa;
++
++	return;
++
++err_setup_msa:
++	ath10k_qmi_remove_msa_permission(qmi);
++}
++
++static int ath10k_qmi_fetch_board_file(struct ath10k_qmi *qmi)
++{
++	struct ath10k *ar = qmi->ar;
++
++	ar->hif.bus = ATH10K_BUS_SNOC;
++	ar->id.qmi_ids_valid = true;
++	ar->id.qmi_board_id = qmi->board_info.board_id;
++	ar->hw_params.fw.dir = WCN3990_HW_1_0_FW_DIR;
++
++	return ath10k_core_fetch_board_file(qmi->ar);
++}
++
++static int
++ath10k_qmi_driver_event_post(struct ath10k_qmi *qmi,
++			     enum ath10k_qmi_driver_event_type type,
++			     void *data)
++{
++	struct ath10k_qmi_driver_event *event;
++
++	event = kzalloc(sizeof(*event), GFP_ATOMIC);
++	if (!event)
++		return -ENOMEM;
++
++	event->type = type;
++	event->data = data;
++
++	spin_lock(&qmi->event_lock);
++	list_add_tail(&event->list, &qmi->event_list);
++	spin_unlock(&qmi->event_lock);
++
++	queue_work(qmi->event_wq, &qmi->event_work);
++
++	return 0;
++}
++
++static void ath10k_qmi_event_server_exit(struct ath10k_qmi *qmi)
++{
++	struct ath10k *ar = qmi->ar;
++
++	ath10k_qmi_remove_msa_permission(qmi);
++	ath10k_core_free_board_files(ar);
++	ath10k_snoc_fw_indication(ar, ATH10K_QMI_EVENT_FW_DOWN_IND);
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "wifi fw qmi service disconnected\n");
++}
++
++static void ath10k_qmi_event_msa_ready(struct ath10k_qmi *qmi)
++{
++	int ret;
++
++	ret = ath10k_qmi_fetch_board_file(qmi);
++	if (ret)
++		goto out;
++
++	ret = ath10k_qmi_bdf_dnld_send_sync(qmi);
++	if (ret)
++		goto out;
++
++	ret = ath10k_qmi_send_cal_report_req(qmi);
++
++out:
++	return;
++}
++
++static int ath10k_qmi_event_fw_ready_ind(struct ath10k_qmi *qmi)
++{
++	struct ath10k *ar = qmi->ar;
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "wifi fw ready event received\n");
++	ath10k_snoc_fw_indication(ar, ATH10K_QMI_EVENT_FW_READY_IND);
++
++	return 0;
++}
++
++static void ath10k_qmi_fw_ready_ind(struct qmi_handle *qmi_hdl,
++				    struct sockaddr_qrtr *sq,
++				    struct qmi_txn *txn, const void *data)
++{
++	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
++
++	ath10k_qmi_driver_event_post(qmi, ATH10K_QMI_EVENT_FW_READY_IND, NULL);
++}
++
++static void ath10k_qmi_msa_ready_ind(struct qmi_handle *qmi_hdl,
++				     struct sockaddr_qrtr *sq,
++				     struct qmi_txn *txn, const void *data)
++{
++	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
++
++	ath10k_qmi_driver_event_post(qmi, ATH10K_QMI_EVENT_MSA_READY_IND, NULL);
++}
++
++static struct qmi_msg_handler qmi_msg_handler[] = {
++	{
++		.type = QMI_INDICATION,
++		.msg_id = QMI_WLFW_FW_READY_IND_V01,
++		.ei = wlfw_fw_ready_ind_msg_v01_ei,
++		.decoded_size = sizeof(struct wlfw_fw_ready_ind_msg_v01),
++		.fn = ath10k_qmi_fw_ready_ind,
++	},
++	{
++		.type = QMI_INDICATION,
++		.msg_id = QMI_WLFW_MSA_READY_IND_V01,
++		.ei = wlfw_msa_ready_ind_msg_v01_ei,
++		.decoded_size = sizeof(struct wlfw_msa_ready_ind_msg_v01),
++		.fn = ath10k_qmi_msa_ready_ind,
++	},
++	{}
++};
++
++static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
++				 struct qmi_service *service)
++{
++	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
++	struct sockaddr_qrtr *sq = &qmi->sq;
++	struct ath10k *ar = qmi->ar;
++	int ret;
++
++	sq->sq_family = AF_QIPCRTR;
++	sq->sq_node = service->node;
++	sq->sq_port = service->port;
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "wifi fw qmi service found\n");
++
++	ret = kernel_connect(qmi_hdl->sock, (struct sockaddr *)&qmi->sq,
++			     sizeof(qmi->sq), 0);
++	if (ret) {
++		ath10k_err(ar, "failed to connect to a remote QMI service port\n");
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "qmi wifi fw qmi service connected\n");
++	ath10k_qmi_driver_event_post(qmi, ATH10K_QMI_EVENT_SERVER_ARRIVE, NULL);
++
++	return ret;
++}
++
++static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
++				  struct qmi_service *service)
++{
++	struct ath10k_qmi *qmi =
++		container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
++
++	qmi->fw_ready = false;
++	ath10k_qmi_driver_event_post(qmi, ATH10K_QMI_EVENT_SERVER_EXIT, NULL);
++}
++
++static struct qmi_ops ath10k_qmi_ops = {
++	.new_server = ath10k_qmi_new_server,
++	.del_server = ath10k_qmi_del_server,
++};
++
++static void ath10k_qmi_driver_event_work(struct work_struct *work)
++{
++	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
++					      event_work);
++	struct ath10k_qmi_driver_event *event;
++	struct ath10k *ar = qmi->ar;
++
++	spin_lock(&qmi->event_lock);
++	while (!list_empty(&qmi->event_list)) {
++		event = list_first_entry(&qmi->event_list,
++					 struct ath10k_qmi_driver_event, list);
++		list_del(&event->list);
++		spin_unlock(&qmi->event_lock);
++
++		switch (event->type) {
++		case ATH10K_QMI_EVENT_SERVER_ARRIVE:
++			ath10k_qmi_event_server_arrive(qmi);
 +			break;
++		case ATH10K_QMI_EVENT_SERVER_EXIT:
++			ath10k_qmi_event_server_exit(qmi);
++			break;
++		case ATH10K_QMI_EVENT_FW_READY_IND:
++			ath10k_qmi_event_fw_ready_ind(qmi);
++			break;
++		case ATH10K_QMI_EVENT_MSA_READY_IND:
++			ath10k_qmi_event_msa_ready(qmi);
++			break;
++		default:
++			ath10k_warn(ar, "invalid event type: %d", event->type);
++			break;
++		}
++		kfree(event);
++		spin_lock(&qmi->event_lock);
++	}
++	spin_unlock(&qmi->event_lock);
++}
 +
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
- 		dump_data->len = cpu_to_le32(len + sizeof(*dump_mem));
- 		dump_mem = (void *)dump_data->data;
-@@ -854,7 +899,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 			dump_data = iwl_fw_error_next_data(dump_data);
- 	}
- 
--	if (smem_len) {
-+	if (smem_len && fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
- 		IWL_DEBUG_INFO(fwrt, "WRT SMEM dump\n");
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
- 		dump_data->len = cpu_to_le32(smem_len + sizeof(*dump_mem));
-@@ -867,7 +912,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 		dump_data = iwl_fw_error_next_data(dump_data);
- 	}
- 
--	if (sram2_len) {
-+	if (sram2_len && fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
- 		IWL_DEBUG_INFO(fwrt, "WRT SRAM dump\n");
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
- 		dump_data->len = cpu_to_le32(sram2_len + sizeof(*dump_mem));
-@@ -881,7 +926,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	}
- 
- 	/* Dump fw's virtual image */
--	if (!fwrt->trans->cfg->gen2 &&
-+	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING) &&
-+	    !fwrt->trans->cfg->gen2 &&
- 	    fwrt->fw->img[fwrt->cur_fw_img].paging_mem_size &&
- 	    fwrt->fw_paging_db[0].fw_paging_block) {
- 		IWL_DEBUG_INFO(fwrt, "WRT paging dump\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 9d939cbaf6c6..c967dfbeacaf 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -146,6 +146,9 @@ enum iwl_ucode_tlv_type {
- 	IWL_UCODE_TLV_FW_GSCAN_CAPA	= 50,
- 	IWL_UCODE_TLV_FW_MEM_SEG	= 51,
- 	IWL_UCODE_TLV_IML		= 52,
++static int ath10k_qmi_setup_msa_resources(struct ath10k_qmi *qmi, u32 msa_size)
++{
++	struct ath10k *ar = qmi->ar;
++	struct device *dev = ar->dev;
++	struct device_node *child;
++	struct device_node *node;
++	struct resource r;
++	int ret;
 +
-+	/* TLVs 0x1000-0x2000 are for internal driver usage */
-+	IWL_UCODE_TLV_FW_DBG_DUMP_LST	= 0x1000,
++	child = of_get_child_by_name(dev->of_node, "msa");
++	node = of_parse_phandle(child, "memory-region", 0);
++
++	if (node) {
++		ret = of_address_to_resource(node, 0, &r);
++		if (ret) {
++			dev_err(dev, "failed to resolve msa fixed region\n");
++			return ret;
++		}
++		of_node_put(node);
++
++		qmi->msa_pa = r.start;
++		qmi->msa_mem_size = resource_size(&r);
++		qmi->msa_va = devm_ioremap_wc(dev, qmi->msa_pa, qmi->msa_mem_size);
++		if (!qmi->msa_pa) {
++			dev_err(dev, "failed to map memory region: %pa\n", &r.start);
++			return -EBUSY;
++		}
++	} else {
++		qmi->msa_va = dmam_alloc_coherent(dev, msa_size,
++						  &qmi->msa_pa, GFP_KERNEL);
++		if (!qmi->msa_va) {
++			ath10k_err(ar, "failed to allocate dma memory for msa region\n");
++			return -ENOMEM;
++		}
++		qmi->msa_mem_size = msa_size;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_QMI, "msa pa: %pad , msa va: 0x%p\n",
++		   &qmi->msa_pa,
++		   qmi->msa_va);
++
++	return 0;
++}
++
++int ath10k_qmi_init(struct ath10k *ar, u32 msa_size)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_qmi *qmi;
++	int ret;
++
++	qmi = kzalloc(sizeof(*qmi), GFP_KERNEL);
++	if (!qmi)
++		return -ENOMEM;
++
++	qmi->ar = ar;
++	ar_snoc->qmi = qmi;
++
++	ret = ath10k_qmi_setup_msa_resources(qmi, msa_size);
++	if (ret)
++		goto err;
++
++	ret = qmi_handle_init(&qmi->qmi_hdl,
++			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
++			      &ath10k_qmi_ops, qmi_msg_handler);
++	if (ret)
++		goto err;
++
++	qmi->event_wq = alloc_workqueue("ath10k_qmi_driver_event",
++					WQ_UNBOUND, 1);
++	if (!qmi->event_wq) {
++		ath10k_err(ar, "failed to allocate workqueue\n");
++		ret = -EFAULT;
++		goto err_release_qmi_handle;
++	}
++
++	INIT_LIST_HEAD(&qmi->event_list);
++	spin_lock_init(&qmi->event_lock);
++	INIT_WORK(&qmi->event_work, ath10k_qmi_driver_event_work);
++
++	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
++			     WLFW_SERVICE_VERS_V01, 0);
++	if (ret)
++		goto err_qmi_lookup;
++
++	return 0;
++
++err_qmi_lookup:
++	destroy_workqueue(qmi->event_wq);
++
++err_release_qmi_handle:
++	qmi_handle_release(&qmi->qmi_hdl);
++
++err:
++	kfree(qmi);
++	return ret;
++}
++
++int ath10k_qmi_deinit(struct ath10k *ar)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_qmi *qmi = ar_snoc->qmi;
++
++	cancel_work_sync(&qmi->event_work);
++	destroy_workqueue(qmi->event_wq);
++	qmi_handle_release(&qmi->qmi_hdl);
++	qmi = NULL;
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
+new file mode 100644
+index 000000000000..1efe1d22fc2f
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/qmi.h
+@@ -0,0 +1,129 @@
++/*
++ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef _ATH10K_QMI_H_
++#define _ATH10K_QMI_H_
++
++#include <linux/soc/qcom/qmi.h>
++#include <linux/qrtr.h>
++#include "qmi_wlfw_v01.h"
++
++#define MAX_NUM_MEMORY_REGIONS			2
++#define MAX_TIMESTAMP_LEN			32
++#define MAX_BUILD_ID_LEN			128
++#define MAX_NUM_CAL_V01			5
++
++enum ath10k_qmi_driver_event_type {
++	ATH10K_QMI_EVENT_SERVER_ARRIVE,
++	ATH10K_QMI_EVENT_SERVER_EXIT,
++	ATH10K_QMI_EVENT_FW_READY_IND,
++	ATH10K_QMI_EVENT_FW_DOWN_IND,
++	ATH10K_QMI_EVENT_MSA_READY_IND,
++	ATH10K_QMI_EVENT_MAX,
++};
++
++struct ath10k_msa_mem_info {
++	phys_addr_t addr;
++	u32 size;
++	bool secure;
++};
++
++struct ath10k_qmi_chip_info {
++	u32 chip_id;
++	u32 chip_family;
++};
++
++struct ath10k_qmi_board_info {
++	u32 board_id;
++};
++
++struct ath10k_qmi_soc_info {
++	u32 soc_id;
++};
++
++struct ath10k_qmi_cal_data {
++	u32 cal_id;
++	u32 total_size;
++	u8 *data;
++};
++
++struct ath10k_tgt_pipe_cfg {
++	__le32 pipe_num;
++	__le32 pipe_dir;
++	__le32 nentries;
++	__le32 nbytes_max;
++	__le32 flags;
++	__le32 reserved;
++};
++
++struct ath10k_svc_pipe_cfg {
++	__le32 service_id;
++	__le32 pipe_dir;
++	__le32 pipe_num;
++};
++
++struct ath10k_shadow_reg_cfg {
++	__le16 ce_id;
++	__le16 reg_offset;
++};
++
++struct ath10k_qmi_wlan_enable_cfg {
++	u32 num_ce_tgt_cfg;
++	struct ath10k_tgt_pipe_cfg *ce_tgt_cfg;
++	u32 num_ce_svc_pipe_cfg;
++	struct ath10k_svc_pipe_cfg *ce_svc_cfg;
++	u32 num_shadow_reg_cfg;
++	struct ath10k_shadow_reg_cfg *shadow_reg_cfg;
++};
++
++struct ath10k_qmi_driver_event {
++	struct list_head list;
++	enum ath10k_qmi_driver_event_type type;
++	void *data;
++};
++
++struct ath10k_qmi {
++	struct ath10k *ar;
++	struct qmi_handle qmi_hdl;
++	struct sockaddr_qrtr sq;
++	struct work_struct event_work;
++	struct workqueue_struct *event_wq;
++	struct list_head event_list;
++	spinlock_t event_lock; /* spinlock for qmi event list */
++	u32 nr_mem_region;
++	struct ath10k_msa_mem_info mem_region[MAX_NUM_MEMORY_REGIONS];
++	dma_addr_t msa_pa;
++	u32 msa_mem_size;
++	void *msa_va;
++	struct ath10k_qmi_chip_info chip_info;
++	struct ath10k_qmi_board_info board_info;
++	struct ath10k_qmi_soc_info soc_info;
++	char fw_build_id[MAX_BUILD_ID_LEN + 1];
++	u32 fw_version;
++	bool fw_ready;
++	char fw_build_timestamp[MAX_TIMESTAMP_LEN + 1];
++	struct ath10k_qmi_cal_data cal_data[MAX_NUM_CAL_V01];
++};
++
++int ath10k_qmi_wlan_enable(struct ath10k *ar,
++			   struct ath10k_qmi_wlan_enable_cfg *config,
++			   enum wlfw_driver_mode_enum_v01 mode,
++			   const char *version);
++int ath10k_qmi_wlan_disable(struct ath10k *ar);
++int ath10k_qmi_register_service_notifier(struct notifier_block *nb);
++int ath10k_qmi_init(struct ath10k *ar, u32 msa_size);
++int ath10k_qmi_deinit(struct ath10k *ar);
++
++#endif /* ATH10K_QMI_H */
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index fa1843a7e0fd..f4a0c5342fb1 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -66,6 +66,25 @@ static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+ 	.dma_mask = DMA_BIT_MASK(37),
++	.msa_size = 0x100000,
++};
++
++#define WCN3990_SRC_WR_INDEX_OFFSET 0x3C
++#define WCN3990_DST_WR_INDEX_OFFSET 0x40
++
++static struct ath10k_shadow_reg_cfg target_shadow_reg_cfg_map[] = {
++		{ 0, WCN3990_SRC_WR_INDEX_OFFSET},
++		{ 3, WCN3990_SRC_WR_INDEX_OFFSET},
++		{ 4, WCN3990_SRC_WR_INDEX_OFFSET},
++		{ 5, WCN3990_SRC_WR_INDEX_OFFSET},
++		{ 7, WCN3990_SRC_WR_INDEX_OFFSET},
++		{ 1, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 2, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 7, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 8, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 9, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 10, WCN3990_DST_WR_INDEX_OFFSET},
++		{ 11, WCN3990_DST_WR_INDEX_OFFSET},
  };
  
- struct iwl_ucode_tlv {
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index f4912382b6af..6c5de68b5244 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -299,6 +299,7 @@ struct iwl_fw {
- 	size_t dbg_trigger_tlv_len[FW_DBG_TRIGGER_MAX];
- 	u8 dbg_dest_reg_num;
- 	struct iwl_gscan_capabilities gscan_capa;
-+	u32 dbg_dump_mask;
+ static struct ce_attr host_ce_config_wlan[] = {
+@@ -175,6 +194,128 @@ static struct ce_attr host_ce_config_wlan[] = {
+ 	},
  };
  
- static inline const char *get_fw_dbg_mode_string(int mode)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 38fcc6a9d421..370281e338b2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1043,6 +1043,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 			pieces->dbg_trigger_tlv_len[trigger_id] = tlv_len;
- 			break;
- 			}
-+		case IWL_UCODE_TLV_FW_DBG_DUMP_LST: {
-+			if (tlv_len != sizeof(u32)) {
-+				IWL_ERR(drv,
-+					"dbg lst mask size incorrect, skip\n");
-+				break;
-+			}
++static struct ce_pipe_config target_ce_config_wlan[] = {
++	/* CE0: host->target HTC control and raw streams */
++	{
++		.pipenum = __cpu_to_le32(0),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
 +
-+			drv->fw.dbg_dump_mask =
-+				le32_to_cpup((__le32 *)tlv_data);
-+			break;
-+			}
- 		case IWL_UCODE_TLV_SEC_RT_USNIFFER:
- 			*usniffer_images = true;
- 			iwl_store_ucode_sec(pieces, tlv_data,
-@@ -1316,6 +1327,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	fw->ucode_capa.standard_phy_calibration_size =
- 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
- 	fw->ucode_capa.n_scan_channels = IWL_DEFAULT_SCAN_CHANNELS;
-+	/* dump all fw memory areas by default */
-+	fw->dbg_dump_mask = 0xffffffff;
- 
- 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
- 	if (!pieces)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 9483f76476de..279dd7b7a3fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -771,6 +771,7 @@ struct iwl_trans {
- 	const struct iwl_fw_dbg_dest_tlv_v1 *dbg_dest_tlv;
- 	const struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_CONF_MAX];
- 	struct iwl_fw_dbg_trigger_tlv * const *dbg_trigger_tlv;
-+	u32 dbg_dump_mask;
- 	u8 dbg_dest_reg_num;
- 
- 	enum iwl_plat_pm_mode system_pm_mode;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index f5b117d8c354..99c086048aea 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -746,6 +746,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	memcpy(trans->dbg_conf_tlv, mvm->fw->dbg_conf_tlv,
- 	       sizeof(trans->dbg_conf_tlv));
- 	trans->dbg_trigger_tlv = mvm->fw->dbg_trigger_tlv;
-+	trans->dbg_dump_mask = mvm->fw->dbg_dump_mask;
- 
- 	trans->iml = mvm->fw->iml;
- 	trans->iml_len = mvm->fw->iml_len;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 603458aa2923..7928e8089f42 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -84,6 +84,7 @@
- #include "iwl-scd.h"
- #include "iwl-agn-hw.h"
- #include "fw/error-dump.h"
-+#include "fw/dbg.h"
- #include "internal.h"
- #include "iwl-fh.h"
- 
-@@ -2978,7 +2979,8 @@ static struct iwl_trans_dump_data
- 	u32 monitor_len;
- 	int i, ptr;
- 	bool dump_rbs = test_bit(STATUS_FW_ERROR, &trans->status) &&
--			!trans->cfg->mq_rx_supported;
-+			!trans->cfg->mq_rx_supported &&
-+			trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RB);
- 
- 	/* transport dump header */
- 	len = sizeof(*dump_data);
-@@ -3030,6 +3032,10 @@ static struct iwl_trans_dump_data
- 	}
- 
- 	if (trigger && (trigger->mode & IWL_FW_DBG_TRIGGER_MONITOR_ONLY)) {
-+		if (!(trans->dbg_dump_mask &
-+		      BIT(IWL_FW_ERROR_DUMP_FW_MONITOR)))
-+			return NULL;
++	/* CE1: target->host HTT + HTC control */
++	{
++		.pipenum = __cpu_to_le32(1),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
 +
- 		dump_data = vzalloc(len);
- 		if (!dump_data)
- 			return NULL;
-@@ -3042,15 +3048,20 @@ static struct iwl_trans_dump_data
- 	}
++	/* CE2: target->host WMI */
++	{
++		.pipenum = __cpu_to_le32(2),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(64),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE3: host->target WMI */
++	{
++		.pipenum = __cpu_to_le32(3),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE4: host->target HTT */
++	{
++		.pipenum = __cpu_to_le32(4),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(256),
++		.nbytes_max = __cpu_to_le32(256),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE5: target->host HTT (HIF->HTT) */
++	{
++		.pipenum = __cpu_to_le32(5),
++		.pipedir = __cpu_to_le32(PIPEDIR_OUT),
++		.nentries = __cpu_to_le32(1024),
++		.nbytes_max = __cpu_to_le32(64),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE6: Reserved for target autonomous hif_memcpy */
++	{
++		.pipenum = __cpu_to_le32(6),
++		.pipedir = __cpu_to_le32(PIPEDIR_INOUT),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(16384),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE7 used only by Host */
++	{
++		.pipenum = __cpu_to_le32(7),
++		.pipedir = __cpu_to_le32(4),
++		.nentries = __cpu_to_le32(0),
++		.nbytes_max = __cpu_to_le32(0),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE8 Target to uMC */
++	{
++		.pipenum = __cpu_to_le32(8),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(0),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE9 target->host HTT */
++	{
++		.pipenum = __cpu_to_le32(9),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE10 target->host HTT */
++	{
++		.pipenum = __cpu_to_le32(10),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++
++	/* CE11 target autonomous qcache memcpy */
++	{
++		.pipenum = __cpu_to_le32(11),
++		.pipedir = __cpu_to_le32(PIPEDIR_IN),
++		.nentries = __cpu_to_le32(32),
++		.nbytes_max = __cpu_to_le32(2048),
++		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
++		.reserved = __cpu_to_le32(0),
++	},
++};
++
+ static struct service_to_pipe target_service_to_ce_map_wlan[] = {
+ 	{
+ 		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
+@@ -756,11 +897,47 @@ static int ath10k_snoc_init_pipes(struct ath10k *ar)
  
- 	/* CSR registers */
--	len += sizeof(*data) + IWL_CSR_TO_DUMP;
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_CSR))
-+		len += sizeof(*data) + IWL_CSR_TO_DUMP;
- 
- 	/* FH registers */
--	if (trans->cfg->gen2)
--		len += sizeof(*data) +
--		       (FH_MEM_UPPER_BOUND_GEN2 - FH_MEM_LOWER_BOUND_GEN2);
--	else
--		len += sizeof(*data) +
--		       (FH_MEM_UPPER_BOUND - FH_MEM_LOWER_BOUND);
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FH_REGS)) {
-+		if (trans->cfg->gen2)
-+			len += sizeof(*data) +
-+			       (FH_MEM_UPPER_BOUND_GEN2 -
-+				FH_MEM_LOWER_BOUND_GEN2);
-+		else
-+			len += sizeof(*data) +
-+			       (FH_MEM_UPPER_BOUND -
-+				FH_MEM_LOWER_BOUND);
+ static int ath10k_snoc_wlan_enable(struct ath10k *ar)
+ {
+-	return 0;
++	struct ath10k_tgt_pipe_cfg tgt_cfg[CE_COUNT_MAX];
++	struct ath10k_qmi_wlan_enable_cfg cfg;
++	enum wlfw_driver_mode_enum_v01 mode;
++	int pipe_num;
++
++	for (pipe_num = 0; pipe_num < CE_COUNT_MAX; pipe_num++) {
++		tgt_cfg[pipe_num].pipe_num =
++				target_ce_config_wlan[pipe_num].pipenum;
++		tgt_cfg[pipe_num].pipe_dir =
++				target_ce_config_wlan[pipe_num].pipedir;
++		tgt_cfg[pipe_num].nentries =
++				target_ce_config_wlan[pipe_num].nentries;
++		tgt_cfg[pipe_num].nbytes_max =
++				target_ce_config_wlan[pipe_num].nbytes_max;
++		tgt_cfg[pipe_num].flags =
++				target_ce_config_wlan[pipe_num].flags;
++		tgt_cfg[pipe_num].reserved = 0;
 +	}
++
++	cfg.num_ce_tgt_cfg = sizeof(target_ce_config_wlan) /
++				sizeof(struct ath10k_tgt_pipe_cfg);
++	cfg.ce_tgt_cfg = (struct ath10k_tgt_pipe_cfg *)
++		&tgt_cfg;
++	cfg.num_ce_svc_pipe_cfg = sizeof(target_service_to_ce_map_wlan) /
++				  sizeof(struct ath10k_svc_pipe_cfg);
++	cfg.ce_svc_cfg = (struct ath10k_svc_pipe_cfg *)
++		&target_service_to_ce_map_wlan;
++	cfg.num_shadow_reg_cfg = sizeof(target_shadow_reg_cfg_map) /
++					sizeof(struct ath10k_shadow_reg_cfg);
++	cfg.shadow_reg_cfg = (struct ath10k_shadow_reg_cfg *)
++		&target_shadow_reg_cfg_map;
++
++	mode = QMI_WLFW_MISSION_V01;
++
++	return ath10k_qmi_wlan_enable(ar, &cfg, mode,
++				       NULL);
+ }
  
- 	if (dump_rbs) {
- 		/* Dump RBs is supported only for pre-9000 devices (1 queue) */
-@@ -3066,7 +3077,8 @@ static struct iwl_trans_dump_data
+ static void ath10k_snoc_wlan_disable(struct ath10k *ar)
+ {
++	ath10k_qmi_wlan_disable(ar);
+ }
+ 
+ static void ath10k_snoc_hif_power_down(struct ath10k *ar)
+@@ -948,6 +1125,30 @@ static int ath10k_snoc_resource_init(struct ath10k *ar)
+ 	return ret;
+ }
+ 
++int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	int ret;
++
++	switch (type) {
++	case ATH10K_QMI_EVENT_FW_READY_IND:
++		ret = ath10k_core_register(ar,
++					   ar_snoc->target_info.soc_version);
++		if (ret) {
++			ath10k_err(ar, "failed to register driver core: %d\n",
++				   ret);
++		}
++		break;
++	case ATH10K_QMI_EVENT_FW_DOWN_IND:
++		break;
++	default:
++		ath10k_err(ar, "invalid fw indication: %llx\n", type);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int ath10k_snoc_setup_resource(struct ath10k *ar)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -1272,6 +1473,7 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 	struct ath10k_snoc *ar_snoc;
+ 	struct device *dev;
+ 	struct ath10k *ar;
++	u32 msa_size;
+ 	int ret;
+ 	u32 i;
+ 
+@@ -1303,6 +1505,7 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 	ar_snoc->ar = ar;
+ 	ar_snoc->ce.bus_ops = &ath10k_snoc_bus_ops;
+ 	ar->ce_priv = &ar_snoc->ce;
++	msa_size = drv_data->msa_size;
+ 
+ 	ret = ath10k_snoc_resource_init(ar);
+ 	if (ret) {
+@@ -1341,10 +1544,10 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 		goto err_free_irq;
  	}
  
- 	/* Paged memory for gen2 HW */
--	if (trans->cfg->gen2)
-+	if (trans->cfg->gen2 &&
-+	    trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING))
- 		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++)
- 			len += sizeof(*data) +
- 			       sizeof(struct iwl_fw_error_dump_paging) +
-@@ -3078,41 +3090,51 @@ static struct iwl_trans_dump_data
- 
- 	len = 0;
- 	data = (void *)dump_data->data;
--	data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_TXCMD);
--	txcmd = (void *)data->data;
--	spin_lock_bh(&cmdq->lock);
--	ptr = cmdq->write_ptr;
--	for (i = 0; i < cmdq->n_window; i++) {
--		u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
--		u32 caplen, cmdlen;
--
--		cmdlen = iwl_trans_pcie_get_cmdlen(trans, cmdq->tfds +
--						   trans_pcie->tfd_size * ptr);
--		caplen = min_t(u32, TFD_MAX_PAYLOAD_SIZE, cmdlen);
--
--		if (cmdlen) {
--			len += sizeof(*txcmd) + caplen;
--			txcmd->cmdlen = cpu_to_le32(cmdlen);
--			txcmd->caplen = cpu_to_le32(caplen);
--			memcpy(txcmd->data, cmdq->entries[idx].cmd, caplen);
--			txcmd = (void *)((u8 *)txcmd->data + caplen);
-+
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXCMD)) {
-+		u16 tfd_size = trans_pcie->tfd_size;
-+
-+		data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_TXCMD);
-+		txcmd = (void *)data->data;
-+		spin_lock_bh(&cmdq->lock);
-+		ptr = cmdq->write_ptr;
-+		for (i = 0; i < cmdq->n_window; i++) {
-+			u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
-+			u32 caplen, cmdlen;
-+
-+			cmdlen = iwl_trans_pcie_get_cmdlen(trans,
-+							   cmdq->tfds +
-+							   tfd_size * ptr);
-+			caplen = min_t(u32, TFD_MAX_PAYLOAD_SIZE, cmdlen);
-+
-+			if (cmdlen) {
-+				len += sizeof(*txcmd) + caplen;
-+				txcmd->cmdlen = cpu_to_le32(cmdlen);
-+				txcmd->caplen = cpu_to_le32(caplen);
-+				memcpy(txcmd->data, cmdq->entries[idx].cmd,
-+				       caplen);
-+				txcmd = (void *)((u8 *)txcmd->data + caplen);
-+			}
-+
-+			ptr = iwl_queue_dec_wrap(trans, ptr);
- 		}
-+		spin_unlock_bh(&cmdq->lock);
- 
--		ptr = iwl_queue_dec_wrap(trans, ptr);
-+		data->len = cpu_to_le32(len);
-+		len += sizeof(*data);
-+		data = iwl_fw_error_next_data(data);
+-	ret = ath10k_core_register(ar, drv_data->hw_rev);
++	ret = ath10k_qmi_init(ar, msa_size);
+ 	if (ret) {
+-		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+-		goto err_hw_power_off;
++		ath10k_warn(ar, "failed to register wlfw qmi client: %d\n", ret);
++		goto err_core_destroy;
  	}
--	spin_unlock_bh(&cmdq->lock);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc probe\n");
+@@ -1352,9 +1555,6 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-err_hw_power_off:
+-	ath10k_hw_power_off(ar);
 -
--	data->len = cpu_to_le32(len);
--	len += sizeof(*data);
--	data = iwl_fw_error_next_data(data);
+ err_free_irq:
+ 	ath10k_snoc_free_irq(ar);
  
--	len += iwl_trans_pcie_dump_csr(trans, &data);
--	len += iwl_trans_pcie_fh_regs_dump(trans, &data);
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_CSR))
-+		len += iwl_trans_pcie_dump_csr(trans, &data);
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FH_REGS))
-+		len += iwl_trans_pcie_fh_regs_dump(trans, &data);
- 	if (dump_rbs)
- 		len += iwl_trans_pcie_dump_rbs(trans, &data, num_rbs);
+@@ -1376,6 +1576,7 @@ static int ath10k_snoc_remove(struct platform_device *pdev)
+ 	ath10k_hw_power_off(ar);
+ 	ath10k_snoc_free_irq(ar);
+ 	ath10k_snoc_release_resource(ar);
++	ath10k_qmi_deinit(ar);
+ 	ath10k_core_destroy(ar);
  
- 	/* Paged memory for gen2 HW */
--	if (trans->cfg->gen2) {
-+	if (trans->cfg->gen2 &&
-+	    trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING)) {
- 		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++) {
- 			struct iwl_fw_error_dump_paging *paging;
- 			dma_addr_t addr =
-@@ -3132,8 +3154,8 @@ static struct iwl_trans_dump_data
- 			len += sizeof(*data) + sizeof(*paging) + page_len;
- 		}
- 	}
--
--	len += iwl_trans_pcie_dump_monitor(trans, &data, monitor_len);
-+	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FW_MONITOR))
-+		len += iwl_trans_pcie_dump_monitor(trans, &data, monitor_len);
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
+index f9e530189d48..e1d2d6675556 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.h
++++ b/drivers/net/wireless/ath/ath10k/snoc.h
+@@ -19,10 +19,12 @@
  
- 	dump_data->len = len;
+ #include "hw.h"
+ #include "ce.h"
++#include "qmi.h"
  
+ struct ath10k_snoc_drv_priv {
+ 	enum ath10k_hw_rev hw_rev;
+ 	u64 dma_mask;
++	u32 msa_size;
+ };
+ 
+ struct snoc_state {
+@@ -81,6 +83,7 @@ struct ath10k_snoc {
+ 	struct timer_list rx_post_retry;
+ 	struct ath10k_wcn3990_vreg_info *vreg;
+ 	struct ath10k_wcn3990_clk_info *clk;
++	struct ath10k_qmi *qmi;
+ };
+ 
+ static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
+@@ -90,5 +93,6 @@ static inline struct ath10k_snoc *ath10k_snoc_priv(struct ath10k *ar)
+ 
+ void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value);
+ u32 ath10k_snoc_read32(struct ath10k *ar, u32 offset);
++int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type);
+ 
+ #endif /* _SNOC_H_ */
 -- 
-2.18.0
+2.17.0
