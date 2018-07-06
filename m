@@ -1,95 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41358 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751418AbeGJKzz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 06:55:55 -0400
-Date: Tue, 10 Jul 2018 12:55:51 +0200
-From: Petr Mladek <pmladek@suse.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Dmitry Vyukov <dvyukov@google.com>,
-        syzbot <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
-Subject: Re: INFO: rcu detected stall in llcp_sock_sendmsg
-Message-ID: <20180710105551.ds6weeo7y7keekb5@pathway.suse.cz> (sfid-20180710_125614_971055_6B20B633)
-References: <0000000000000cc1f0057096efe6@google.com>
- <CACT4Y+Zc+UKpGwEEMfKOsZ1s+AAFYFrVmjO0-u7NNjODRiJ7tg@mail.gmail.com>
- <6e2e4cfa-2cde-ec28-933d-1ee17c8b1da9@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:58980 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753615AbeGFJS6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 05:18:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6e2e4cfa-2cde-ec28-933d-1ee17c8b1da9@gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 06 Jul 2018 14:48:56 +0530
+From: Govind Singh <govinds@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Niklas Cassel <niklas.cassel@linaro.org>
+Cc: andy.gross@linaro.org, david.brown@linaro.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        bjorn.andersson@linaro.org
+Subject: Re: [PATCH v2 6/6] ath10k: Add QMI message handshake for wcn3990
+ client
+In-Reply-To: <871sckpcyp.fsf@kamboji.qca.qualcomm.com>
+References: <20180605123732.1993-1-govinds@codeaurora.org>
+ <20180619225158.GE1635@centauri.lan>
+ <871sckpcyp.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <a109c5c9ce936cabadb1b006c79b9746@codeaurora.org> (sfid-20180706_111902_462497_A4F69866)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2018-07-09 14:05:08, Eric Dumazet wrote:
+On 2018-07-03 20:45, Kalle Valo wrote:
+> Niklas Cassel <niklas.cassel@linaro.org> writes:
 > 
+>> On Tue, Jun 05, 2018 at 06:07:32PM +0530, Govind Singh wrote:
+>>> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
+>>> subsystem. This layer is responsible for communicating qmi control
+>>> messages to wifi fw QMI service using QMI messaging protocol.
+>>> 
+>>> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
+>>> between components running between application processor and remote
+>>> processors with underlying transport layer based on integrated
+>>> chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+>>> 
+>>> With this patch-set basic functionality(STA/SAP) can be tested
+>>> with WCN3990 chipset. The changes are verified with the firmware
+>>> WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1 and SDM845 MTP device.
+>>> 
+>>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 > 
-> On 07/09/2018 01:50 PM, Dmitry Vyukov wrote:
-> > On Mon, Jul 9, 2018 at 10:34 PM, syzbot
-> > <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com> wrote:
-> >> Hello,
-> >>
-> >> syzbot found the following crash on:
-> >>
-> >> HEAD commit:    1e4b044d2251 Linux 4.18-rc4
-> >> git tree:       upstream
-> >> console output: https://syzkaller.appspot.com/x/log.txt?x=1414c2c2400000
-> >> kernel config:  https://syzkaller.appspot.com/x/.config?x=25856fac4e580aa7
-> >> dashboard link: https://syzkaller.appspot.com/bug?extid=e9f364d3b15ce41d8451
-> >> compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
-> >>
-> >> Unfortunately, I don't have any reproducer for this crash yet.
-> >>
-> >> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> >> Reported-by: syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com
-> > 
-> > Looks like the problem is actually in nfc, so +nfc maintainers.
+> [...]
 > 
-> Note this issue was discussed before, maybe we should patch NFC without waiting for nfc maintainer.
+>>> --- a/drivers/net/wireless/ath/ath10k/Kconfig
+>>> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+>>> @@ -41,12 +41,13 @@ config ATH10K_USB
+>>>  	  work in progress and will not fully work.
+>>> 
+>>>  config ATH10K_SNOC
+>>> -        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+>>> -        depends on ATH10K && ARCH_QCOM
+>>> -        ---help---
+>>> -          This module adds support for integrated WCN3990 chip 
+>>> connected
+>>> -          to system NOC(SNOC). Currently work in progress and will 
+>>> not
+>>> -          fully work.
+>>> +	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+>>> +	depends on ATH10K && ARCH_QCOM
+>>> +	select QCOM_QMI_HELPERS
+>>> +	---help---
+>>> +	This module adds support for integrated WCN3990 chip connected
+>>> +	to system NOC(SNOC). Currently work in progress and will not
+>>> +	fully work.
+>> 
+>> Hello Govind,
+>> 
+>> Please do clean ups in separate commits.
+>> That way is would be easier to see that the only
+>> functional change here is that you added
+>> select QCOM_QMI_HELPERS.
+>> 
+>> (Also help text should normally be indented by two extra spaces.)
+>> 
+>> I've sent a fix for the mixed tabs/spaces when I tried to
+>> add COMPILE_TEST for this, and Kalle has already picked it up
+>> in his master branch:
+>> https://marc.info/?l=linux-wireless&m=152880359200364
+>> 
+>> So in your next version of this series, this can be reduced to simply
+>> select QCOM_QMI_HELPERS.
+> 
+> BTW, I actually already did this on the pending branch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=0caef5beefb85e6a5aa2a4b60d78253bbe453d7c
+> 
+>> There are some checkpatch warnings on this patch:
+>> 
+>> drivers/net/wireless/ath/ath10k/qmi.c and
+>> drivers/net/wireless/ath/ath10k/qmi.h
+>> is missing SPDX-License-Identifier tag.
+>> 
+>> Several lines in drivers/net/wireless/ath/ath10k/qmi.c
+>> and one line in drivers/net/wireless/ath/ath10k/snoc.c
+>> is over 80 characters.
+> 
+> Yeah, but these can be ignored.
+> 
+>> This patch is quite big, I think that it makes sense to split your 
+>> patch in two.
+>> One that adds the ath10k_qmi_* functions, and a follow up patch
+>> that actually adds the function calls to snoc.c
+> 
+> Yeah, it's big but IMHO not too big. And splitting it up makes
+> functinonal review harder, that's why I prefer it like this.
+> 
+>>> +int ath10k_qmi_wlan_enable(struct ath10k *ar,
+>>> +			   struct ath10k_qmi_wlan_enable_cfg *config,
+>>> +			   enum ath10k_qmi_driver_mode mode,
+>>> +			   const char *version)
+>>> +{
+>>> +	int ret;
+>>> +
+>>> +	ath10k_dbg(ar, ATH10K_DBG_QMI, "mode: %d, config: %p:\n",
+>>> +		   mode, config);
+>>> +
+>>> +	ret = ath10k_qmi_cfg_send_sync_msg(ar, config, version);
+>>> +	if (ret) {
+>>> +		ath10k_err(ar, "wlan qmi config send failed\n");
+>>> +		return ret;
+>>> +	}
+>>> +
+>>> +	ret = ath10k_qmi_mode_send_sync_msg(ar, mode);
+>> 
+>> Sparse tells me that you are mixing enum types.
+>> If this is really what you want, do an explicit cast.
+>> 
+>> drivers/net/wireless/ath/ath10k//qmi.c:504:49: warning: mixing 
+>> different enum types
+>> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum 
+>> ath10k_qmi_driver_mode  versus
+>> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum 
+>> wlfw_driver_mode_enum_v01
+> 
+> Good catch, that can cause subtle bugs. If you really want this, I
+> prefer having a separate helper function with a switch statement making
+> the conversion. This way it's super clear what's happening.
+> 
 
-Do you have any particular solution in mind, please? See below.
+Addressed in v3 version.
 
-> ----------------------------------------------------
+>>> +int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
+>>> +{
+>>> +	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+>>> +	int ret;
+>>> +
+>>> +	switch (type) {
+>>> +	case ATH10K_QMI_EVENT_FW_READY_IND:
+>>> +		ret = ath10k_core_register(ar,
+>>> +					   ar_snoc->target_info.soc_version);
+>>> +		if (ret) {
+>>> +			ath10k_err(ar, "Failed to register driver core: %d\n",
+>>> +				   ret);
+>>> +		}
+>>> +		break;
+>>> +	case ATH10K_QMI_EVENT_FW_DOWN_IND:
+>>> +		break;
+>> 
+>> Perhaps this switch statement should have a default label?
 > 
-> On 06/25/2018 10:12 PM, Sergey Senozhatsky wrote:
-> > On (06/26/18 07:07), Dmitry Vyukov wrote:
-> > [..]
-> >>>  #include <net/nfc/nfc.h>
-> >>> @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
-> >>>                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
-> >>>                                          frag_len + LLCP_HEADER_SIZE, &err);
-> >>>                 if (pdu == NULL) {
-> >>> -                       pr_err("Could not allocate PDU\n");
-> >>> +                       pr_err_ratelimited("Could not allocate PDU\n");
-> >>> +                       cond_resched();
-> >>>                         continue;
-> >>>                 }
-> >>
-> >>
-> >> But this thread is still in an infinite (unkillable?) loop? If yes, we
-> >> are waiting for the next syzbot report 
-> >
-> > The loop is still infinite, correct, but we have a preemption point now.
-> > Sure, net people can come with a much better solution, I'll be happy to
-> > scratch my patch.
-> >
-> 
-> This can not be the right solution, think about current thread being real time,
-> cond_resched() might be a nop.
-> 
-> We should probably not loop at all, or not use MSG_DONTWAIT.
+> Good idea. And add a warning so that we know there was an unknown event
+> which should be added to ath10k.
 
-These two solutions look promising. But they both need to
-get reviewed by someone familiar with the code.
+Addressed in v3 version.
 
-On one hand, nfc_llcp_send_ui_frame() already returns some errors
-before sending anything. But I am not sure how to deal with situation
-when a fragment of the message has already been sent.
-
-Best Regards,
-Petr
+Thanks,
+Govind
