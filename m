@@ -1,227 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56706 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388293AbeGXKAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:16 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 08/10] NFC: st95hf: unify sync/async flags
-Date: Tue, 24 Jul 2018 10:54:24 +0200
-Message-Id: <20180724085426.23999-9-daniel@zonque.org> (sfid-20180724_105458_270938_6370EBEB)
-In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
-References: <20180724085426.23999-1-daniel@zonque.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56158 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753428AbeGFKcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 06:32:47 -0400
+Date: Fri, 6 Jul 2018 12:32:44 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 11/11] mt76: Kconfig and Makefile for mt76x0 driver
+Message-ID: <20180706103244.GA2033@redhat.com> (sfid-20180706_123251_618533_F2A95C81)
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+ <1530771142-4118-12-git-send-email-sgruszka@redhat.com>
+ <20180705145018.GA17524@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180705145018.GA17524@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keep the information whether a command is asynchronous in a boolean flag
-like it is done elsewhere in the code. This way, the enum can go away.
-No function change intended.
+On Thu, Jul 05, 2018 at 04:50:19PM +0200, Lorenzo Bianconi wrote:
+> On Jul 05, Stanislaw Gruszka wrote:
+> > +obj-$(CONFIG_MT76x0U)    += mt76x0.o
+> > +
+> > +mt76x0-objs	= \
+> > +	usb.o init.o main.o mcu.o trace.o dma.o eeprom.o phy.o \
+> 
+> There is no main.c source file, is it a leftover from previous implementation?
+> Moreover compiling the driver (and fixing conflicts with mt76x2u) I have:
+> 
+> ERROR: "mt76x0_ops" [drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.ko] undefined!
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/nfc/st95hf/core.c | 38 ++++++++++++++++----------------------
- drivers/nfc/st95hf/spi.c  | 12 +++++-------
- drivers/nfc/st95hf/spi.h  |  8 +-------
- 3 files changed, 22 insertions(+), 36 deletions(-)
+I somehow missed the patch adding main.c .
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index e7ecc57dde8f..835a1e61c817 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -101,7 +101,7 @@ struct cmd {
- 	unsigned char cmd_id;
- 	unsigned char no_cmd_params;
- 	unsigned char cmd_params[MAX_CMD_PARAMS];
--	enum req_type req;
-+	bool is_sync;
- };
- 
- struct param_list {
-@@ -134,63 +134,62 @@ static const struct cmd cmd_array[] = {
- 		.cmd_len = 0x2,
- 		.cmd_id = ECHO_CMD,
- 		.no_cmd_params = 0,
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO14443A_CONFIG] = {
- 		.cmd_len = 0x7,
- 		.cmd_id = WRITE_REGISTER_CMD,
- 		.no_cmd_params = 0x4,
- 		.cmd_params = {0x3A, 0x00, 0x5A, 0x04},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO14443A_DEMOGAIN] = {
- 		.cmd_len = 0x7,
- 		.cmd_id = WRITE_REGISTER_CMD,
- 		.no_cmd_params = 0x4,
- 		.cmd_params = {0x68, 0x01, 0x01, 0xDF},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO14443B_DEMOGAIN] = {
- 		.cmd_len = 0x7,
- 		.cmd_id = WRITE_REGISTER_CMD,
- 		.no_cmd_params = 0x4,
- 		.cmd_params = {0x68, 0x01, 0x01, 0x51},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO14443A_PROTOCOL_SELECT] = {
- 		.cmd_len = 0x7,
- 		.cmd_id = PROTOCOL_SELECT_CMD,
- 		.no_cmd_params = 0x4,
- 		.cmd_params = {ISO14443A_PROTOCOL_CODE, 0x00, 0x01, 0xA0},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO14443B_PROTOCOL_SELECT] = {
- 		.cmd_len = 0x7,
- 		.cmd_id = PROTOCOL_SELECT_CMD,
- 		.no_cmd_params = 0x4,
- 		.cmd_params = {ISO14443B_PROTOCOL_CODE, 0x01, 0x03, 0xFF},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_WTX_RESPONSE] = {
- 		.cmd_len = 0x6,
- 		.cmd_id = SEND_RECEIVE_CMD,
- 		.no_cmd_params = 0x3,
- 		.cmd_params = {0xF2, 0x00, TRFLAG_NFCA_STD_FRAME_CRC},
--		.req = ASYNC,
- 	},
- 	[CMD_FIELD_OFF] = {
- 		.cmd_len = 0x5,
- 		.cmd_id = PROTOCOL_SELECT_CMD,
- 		.no_cmd_params = 0x2,
- 		.cmd_params = {0x0, 0x0},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- 	[CMD_ISO15693_PROTOCOL_SELECT] = {
- 		.cmd_len = 0x5,
- 		.cmd_id = PROTOCOL_SELECT_CMD,
- 		.no_cmd_params = 0x2,
- 		.cmd_params = {ISO15693_PROTOCOL_CODE, 0x0D},
--		.req = SYNC,
-+		.is_sync = true,
- 	},
- };
- 
-@@ -279,13 +278,13 @@ static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
- 	ret = st95hf_spi_send(&st95context->spicontext,
- 			      spi_cmd_buffer,
- 			      cmd_array[cmd].cmd_len,
--			      cmd_array[cmd].req);
-+			      cmd_array[cmd].is_sync);
- 	if (ret) {
- 		dev_err(dev, "st95hf_spi_send failed with error %d\n", ret);
- 		return ret;
- 	}
- 
--	if (cmd_array[cmd].req == SYNC && recv_res) {
-+	if (cmd_array[cmd].is_sync && recv_res) {
- 		unsigned char st95hf_response_arr[2];
- 
- 		ret = st95hf_spi_recv_response(&st95context->spicontext,
-@@ -480,10 +479,8 @@ static int st95hf_send_spi_reset_sequence(struct st95hf_context *st95context)
- 	int result = 0;
- 	unsigned char reset_cmd = ST95HF_COMMAND_RESET;
- 
--	result = st95hf_spi_send(&st95context->spicontext,
--				 &reset_cmd,
--				 ST95HF_RESET_CMD_LEN,
--				 ASYNC);
-+	result = st95hf_spi_send(&st95context->spicontext, &reset_cmd,
-+				 ST95HF_RESET_CMD_LEN, false);
- 	if (result) {
- 		dev_err(&st95context->spicontext.spidev->dev,
- 			"spi reset sequence cmd error = %d", result);
-@@ -932,8 +929,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 		stcontext->complete_cb_arg.rats = true;
- 
- 	rc = st95hf_spi_send(&stcontext->spicontext, skb->data,
--			     skb->len,
--			     ASYNC);
-+			     skb->len, false);
- 	if (rc) {
- 		dev_err(&stcontext->nfcdev->dev,
- 			"Error %d trying to perform data_exchange", rc);
-@@ -1168,10 +1164,8 @@ static int st95hf_remove(struct spi_device *nfc_spi_dev)
- 	mutex_unlock(&stcontext->rm_lock);
- 
- 	/* next reset the ST95HF controller */
--	result = st95hf_spi_send(&stcontext->spicontext,
--				 &reset_cmd,
--				 ST95HF_RESET_CMD_LEN,
--				 ASYNC);
-+	result = st95hf_spi_send(&stcontext->spicontext, &reset_cmd,
-+				 ST95HF_RESET_CMD_LEN, false);
- 	if (result) {
- 		dev_err(&spictx->spidev->dev,
- 			"ST95HF reset failed in remove() err = %d\n", result);
-diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
-index d5894d4546b1..ef12ed67343f 100644
---- a/drivers/nfc/st95hf/spi.c
-+++ b/drivers/nfc/st95hf/spi.c
-@@ -23,7 +23,7 @@
- int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 		    unsigned char *buffertx,
- 		    int datalen,
--		    enum req_type reqtype)
-+		    bool is_sync)
- {
- 	struct spi_message m;
- 	int result = 0;
-@@ -35,12 +35,10 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 
- 	mutex_lock(&spicontext->spi_lock);
- 
--	if (reqtype == SYNC) {
--		spicontext->req_issync = true;
-+	spicontext->req_issync = is_sync;
-+
-+	if (is_sync)
- 		reinit_completion(&spicontext->done);
--	} else {
--		spicontext->req_issync = false;
--	}
- 
- 	spi_message_init(&m);
- 	spi_message_add_tail(&tx_transfer, &m);
-@@ -52,7 +50,7 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 	}
- 
- 	/* return for asynchronous or no-wait case */
--	if (reqtype == ASYNC) {
-+	if (!is_sync) {
- 		mutex_unlock(&spicontext->spi_lock);
- 		return 0;
- 	}
-diff --git a/drivers/nfc/st95hf/spi.h b/drivers/nfc/st95hf/spi.h
-index 552d220747cd..ede17eef6ab1 100644
---- a/drivers/nfc/st95hf/spi.h
-+++ b/drivers/nfc/st95hf/spi.h
-@@ -44,16 +44,10 @@ struct st95hf_spi_context {
- 	struct mutex spi_lock;
- };
- 
--/* flag to differentiate synchronous & asynchronous spi request */
--enum req_type {
--	SYNC,
--	ASYNC,
--};
--
- int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 		    unsigned char *buffertx,
- 		    int datalen,
--		    enum req_type reqtype);
-+		    bool is_sync);
- 
- int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 			     unsigned char *receivebuff);
--- 
-2.17.1
+Stanislaw
