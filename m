@@ -1,111 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:32959 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388751AbeGXUhZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54894 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753610AbeGFI4h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:25 -0400
-Received: by mail-pl0-f67.google.com with SMTP id 6-v6so2205069plb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:29 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 01/18] sched: fix trailing whitespace
-Date: Tue, 24 Jul 2018 12:29:01 -0700
-Message-Id: <20180724192918.31165-2-sthemmin@microsoft.com> (sfid-20180724_213153_200972_20280F68)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Fri, 6 Jul 2018 04:56:37 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v3 0/6] *** Add support for wifi QMI client handshakes ***
+Date: Fri,  6 Jul 2018 14:26:17 +0530
+Message-Id: <20180706085622.27945-1-govinds@codeaurora.org> (sfid-20180706_105645_020170_35E1654F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove trailing whitespace and blank lines at EOF
+Add QMI client handshakes for Q6 integrated WLAN connectivity subsystem.
+This module is responsible for communicating WLAN control messages to FW
+over QMI interface. This patch series enables the qmi handshakes required for
+WCN3990 chipset.
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/sched/Kconfig        | 4 ++--
- net/sched/Makefile       | 2 +-
- net/sched/act_connmark.c | 1 -
- net/sched/act_pedit.c    | 1 -
- net/sched/cls_basic.c    | 1 -
- 5 files changed, 3 insertions(+), 6 deletions(-)
+QUALCOMM MSM Interface(QMI) provides the control interface between
+components running b/w remote processors with underlying transport layer
+based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
 
-diff --git a/net/sched/Kconfig b/net/sched/Kconfig
-index 7af246764a35..bba71225adbd 100644
---- a/net/sched/Kconfig
-+++ b/net/sched/Kconfig
-@@ -1,6 +1,6 @@
- #
- # Traffic control configuration.
--# 
-+#
- 
- menuconfig NET_SCHED
- 	bool "QoS and/or fair queueing"
-@@ -706,7 +706,7 @@ config NET_CLS_ACT
- 
- config NET_ACT_POLICE
- 	tristate "Traffic Policing"
--        depends on NET_CLS_ACT 
-+        depends on NET_CLS_ACT
-         ---help---
- 	  Say Y here if you want to do traffic policing, i.e. strict
- 	  bandwidth limiting. This action replaces the existing policing
-diff --git a/net/sched/Makefile b/net/sched/Makefile
-index 673ee7d26ff2..910ec7463a36 100644
---- a/net/sched/Makefile
-+++ b/net/sched/Makefile
-@@ -33,7 +33,7 @@ obj-$(CONFIG_NET_SCH_HTB)	+= sch_htb.o
- obj-$(CONFIG_NET_SCH_HFSC)	+= sch_hfsc.o
- obj-$(CONFIG_NET_SCH_RED)	+= sch_red.o
- obj-$(CONFIG_NET_SCH_GRED)	+= sch_gred.o
--obj-$(CONFIG_NET_SCH_INGRESS)	+= sch_ingress.o 
-+obj-$(CONFIG_NET_SCH_INGRESS)	+= sch_ingress.o
- obj-$(CONFIG_NET_SCH_DSMARK)	+= sch_dsmark.o
- obj-$(CONFIG_NET_SCH_SFB)	+= sch_sfb.o
- obj-$(CONFIG_NET_SCH_SFQ)	+= sch_sfq.o
-diff --git a/net/sched/act_connmark.c b/net/sched/act_connmark.c
-index 1e31f0e448e2..2f9bc833d046 100644
---- a/net/sched/act_connmark.c
-+++ b/net/sched/act_connmark.c
-@@ -252,4 +252,3 @@ module_exit(connmark_cleanup_module);
- MODULE_AUTHOR("Felix Fietkau <nbd@openwrt.org>");
- MODULE_DESCRIPTION("Connection tracking mark restoring");
- MODULE_LICENSE("GPL");
--
-diff --git a/net/sched/act_pedit.c b/net/sched/act_pedit.c
-index cc8ffcd1ddb5..9ab5d81aff1a 100644
---- a/net/sched/act_pedit.c
-+++ b/net/sched/act_pedit.c
-@@ -516,4 +516,3 @@ static void __exit pedit_cleanup_module(void)
- 
- module_init(pedit_init_module);
- module_exit(pedit_cleanup_module);
--
-diff --git a/net/sched/cls_basic.c b/net/sched/cls_basic.c
-index 95367f37098d..6a5dce8baf19 100644
---- a/net/sched/cls_basic.c
-+++ b/net/sched/cls_basic.c
-@@ -324,4 +324,3 @@ static void __exit exit_basic(void)
- module_init(init_basic)
- module_exit(exit_basic)
- MODULE_LICENSE("GPL");
--
+QMI client driver implementation is based on qmi framework https://lwn.net/Articles/729924/.
+
+Below is the sequence of qmi handshake.
+
+       QMI CLIENT(APPS)                                         QMI SERVER(FW in Q6)
+
+                         <------wlan service discoverd----
+
+                       -----connect to wlam qmi service----->
+
+                       ------------wlan info request----->
+
+                       <------------wlan info resp------------
+
+                       ------------msa info req-------->
+
+                     <------------msa info resp------------
+
+                     ------------msa ready req-------->
+
+                     <------------msa ready resp------------
+
+                     <------------msa ready indication-------
+
+                     ------------capability req------->
+
+                    <------------capability resp------------
+
+                    ------------qmi bdf req--------->
+
+                     <------------qmi bdf resp------------
+
+                      ------------qmi cal trigger------->
+
+                  <------------ QMI FW ready indication-------
+
+WLAN fw is running in modem Q6 dsp as user PD(protection domain).
+Sequence of user PD loading is as following.
+
+1) Remote proc PIL driver loads the modem fw/ROOT PD.
+2) As part of ROOT pd boot-up it queries to a daemon(pd_mapper) running in apps
+processor to determine how many usre pd's to be loaded by the remote processor(Q6).
+3) Once user pd info is known to remote processor it loads the user pd via tftp
+protocol.
+
+https://github.com/andersson/pd-mapper
+https://github.com/andersson/tqftpserv
+
+Changes in V3:
+	Addressed review comments from v2 version.
+	Removed msa-size from dt binding and added reference to reserved-memory/reserved-memory.txt.
+
+Changes in V2:
+	Removed qmi client driver and integrated qmi client handshakes in snoc platform driver.
+	Addressed comments on v1 version.
+	Switched to ath10k bdf download infra(board-2.bin)
+	Added MSA fixed region support to support unload use-case.
+	Unified logging.
+
+Testing:
+	Tested all qmi handshakes, driver load/unload and STA/SAP sanity testing.
+	Tested HW: SDM845(WCN3990)
+	Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1
+
+
+Govind Singh (5):
+  ath10k: Add qmi service helpers for wcn3990 qmi client
+  dt: bindings: add bindings for msa memory region
+  firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+  ath10k: Add debug mask for QMI layer
+  ath10k: Add QMI message handshake for wcn3990 client
+
+Rakesh Pillai (1):
+  ath10k: Add support to create boardname for non-bmi target
+
+ .../bindings/net/wireless/qcom,ath10k.txt     |   13 +
+ drivers/net/wireless/ath/ath10k/Kconfig       |    1 +
+ drivers/net/wireless/ath/ath10k/Makefile      |    4 +-
+ drivers/net/wireless/ath/ath10k/core.c        |   14 +-
+ drivers/net/wireless/ath/ath10k/core.h        |    4 +
+ drivers/net/wireless/ath/ath10k/debug.h       |    1 +
+ drivers/net/wireless/ath/ath10k/qmi.c         | 1021 ++++++++
+ drivers/net/wireless/ath/ath10k/qmi.h         |  129 +
+ .../net/wireless/ath/ath10k/qmi_wlfw_v01.c    | 2072 +++++++++++++++++
+ .../net/wireless/ath/ath10k/qmi_wlfw_v01.h    |  677 ++++++
+ drivers/net/wireless/ath/ath10k/snoc.c        |  215 +-
+ drivers/net/wireless/ath/ath10k/snoc.h        |    4 +
+ include/linux/qcom_scm.h                      |    4 +-
+ 13 files changed, 4148 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.h
+
 -- 
-2.18.0
+2.17.0
