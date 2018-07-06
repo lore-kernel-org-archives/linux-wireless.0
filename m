@@ -1,115 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728254AbeGVIqT (ORCPT
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:35952 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934112AbeGFSmS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:19 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 20/20] wil6210: fix eDMA RX chaining
-Date: Sun, 22 Jul 2018 10:47:45 +0300
-Message-Id: <1532245665-15249-21-git-send-email-merez@codeaurora.org> (sfid-20180722_095040_217186_0893FE15)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Fri, 6 Jul 2018 14:42:18 -0400
+Received: by mail-ed1-f68.google.com with SMTP id t3-v6so9301026eds.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2018 11:42:17 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: specify some features per firmware version
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180704203130.12086-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B3FB807.1070705@broadcom.com> (sfid-20180706_204222_406774_EDD60775)
+Date: Fri, 6 Jul 2018 20:42:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180704203130.12086-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HW requires Rx buffers to be 4 bytes aligned. Modify the driver to
-meet this requirement.
-Enable OFU rdy valid bug fix, to prevent hang in oful34_rx while
-there is back-pressure from host during RX.
+resending without HTML...
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c      |  7 +++++++
- drivers/net/wireless/ath/wil6210/txrx_edma.c | 13 ++++++-------
- drivers/net/wireless/ath/wil6210/wil6210.h   |  2 ++
- 3 files changed, 15 insertions(+), 7 deletions(-)
+On 7/4/2018 10:31 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> Some features supported by firmware aren't advertised and there is no
+> way for a driver to query them. This includes e.g. monitor mode details.
+>
+> Most firmwares support monitor interface but only the latest ones
+> /announce/ it with a "monitor" flag in the "cap" iovar. There isn't any
+> reliable detection method for older firmwares (BRCMF_C_MONITOR was tried
+> but "it only indicates the core part of the stack supports").
+>
+> Similarly support for tagging monitor frames and building radiotap
+> headers can't be reliably detected for all firmwares.
+>
+> This commit adds table that allows mapping features to firmware version.
+> It adds mappings for 43602a1 and 4366b1 firmwares from
+> linux-firmware.git. Both were confirmed to be passing monitor frames.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 1d4ce8e..7debed6 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1614,6 +1614,13 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 		wil->txrx_ops.configure_interrupt_moderation(wil);
- 
-+		/* Enable OFU rdy valid bug fix, to prevent hang in oful34_rx
-+		 * while there is back-pressure from Host during RX
-+		 */
-+		if (wil->hw_version >= HW_VER_TALYN_MB)
-+			wil_s(wil, RGF_DMA_MISC_CTL,
-+			      BIT_OFUL34_RDY_VALID_BUG_FIX_EN);
-+
- 		rc = wil_restore_vifs(wil);
- 		if (rc) {
- 			wil_err(wil, "failed to restore vifs, rc %d\n", rc);
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-index 9ef2b66..bca61cb 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-@@ -27,6 +27,8 @@
- #include "trace.h"
- 
- #define WIL_EDMA_MAX_DATA_OFFSET (2)
-+/* RX buffer size must be aligned to 4 bytes */
-+#define WIL_EDMA_RX_BUF_LEN_DEFAULT (2048)
- 
- static void wil_tx_desc_unmap_edma(struct device *dev,
- 				   union wil_tx_desc *desc,
-@@ -158,8 +160,7 @@ static int wil_ring_alloc_skb_edma(struct wil6210_priv *wil,
- 				   struct wil_ring *ring, u32 i)
- {
- 	struct device *dev = wil_to_dev(wil);
--	unsigned int sz = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	unsigned int sz = ALIGN(wil->rx_buf_len, 4);
- 	dma_addr_t pa;
- 	u16 buff_id;
- 	struct list_head *active = &wil->rx_buff_mgmt.active;
-@@ -600,7 +601,7 @@ static bool wil_is_rx_idle_edma(struct wil6210_priv *wil)
- static void wil_rx_buf_len_init_edma(struct wil6210_priv *wil)
- {
- 	wil->rx_buf_len = rx_large_buf ?
--		WIL_MAX_ETH_MTU : TXRX_BUF_LEN_DEFAULT - WIL_MAX_MPDU_OVERHEAD;
-+		WIL_MAX_ETH_MTU : WIL_EDMA_RX_BUF_LEN_DEFAULT;
- }
- 
- static int wil_rx_init_edma(struct wil6210_priv *wil, u16 desc_ring_size)
-@@ -633,8 +634,7 @@ static int wil_rx_init_edma(struct wil6210_priv *wil, u16 desc_ring_size)
- 
- 	wil_rx_buf_len_init_edma(wil);
- 
--	max_rx_pl_per_desc = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	max_rx_pl_per_desc = ALIGN(wil->rx_buf_len, 4);
- 
- 	/* Use debugfs dbg_num_rx_srings if set, reserve one sring for TX */
- 	if (wil->num_rx_status_rings > WIL6210_MAX_STATUS_RINGS - 1)
-@@ -869,8 +869,7 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
- 	struct sk_buff *skb;
- 	dma_addr_t pa;
- 	struct wil_ring_rx_data *rxdata = &sring->rx_data;
--	unsigned int sz = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	unsigned int sz = ALIGN(wil->rx_buf_len, 4);
- 	struct wil_net_stats *stats = NULL;
- 	u16 dmalen;
- 	int cid;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 28aa4a7..a683087 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -302,6 +302,8 @@ struct RGF_ICR {
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_FOREVER		BIT(2)
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_CLR			BIT(3)
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_REACHED_TRESH	BIT(4)
-+#define RGF_DMA_MISC_CTL				(0x881d6c)
-+	#define BIT_OFUL34_RDY_VALID_BUG_FIX_EN			BIT(7)
- 
- #define RGF_DMA_PSEUDO_CAUSE		(0x881c68)
- #define RGF_DMA_PSEUDO_CAUSE_MASK_SW	(0x881c6c)
--- 
-1.9.1
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 38 ++++++++++++++++++++++
+>   1 file changed, 38 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> index 4db4d444407a..ab1d9eb1e9dc 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> @@ -93,6 +93,42 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
+>   }
+>   #endif /* DEBUG */
+>
+> +struct brcmf_feat_fwfeat {
+> +	const char * const fwid;
+> +	u32 feat_flags;
+> +};
+> +
+> +static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
+> +	/* brcmfmac43602-pcie.ap.bin from linux-firmware.git ea1178515b88 */
+> +	{ "01-6cb8e269", BIT(BRCMF_FEAT_MONITOR) },
+> +	/* brcmfmac4366b-pcie.bin from linux-firmware.git 52442afee990 */
+> +	{ "01-c47a91a4", BIT(BRCMF_FEAT_MONITOR) },
+> +};
+
+Not sure if people will realize what the sha1 implies here. Can we just 
+drop the comments here?
+
+Regards,
+Arend
