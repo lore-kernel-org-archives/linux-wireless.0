@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:32960 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388607AbeGXUh1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44346 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754035AbeGFOc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:27 -0400
-Received: by mail-pl0-f66.google.com with SMTP id 6-v6so2205092plb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:30 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 02/18] wimax: remove blank lines at EOF
-Date: Tue, 24 Jul 2018 12:29:02 -0700
-Message-Id: <20180724192918.31165-3-sthemmin@microsoft.com> (sfid-20180724_213151_738563_4D7C7847)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Fri, 6 Jul 2018 10:32:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Boris Brezillon <boris.brezillon@bootlin.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 21/27] bcma: Allow selection of this driver when COMPILE_TEST=y
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+        <20180705094522.12138-22-boris.brezillon@bootlin.com>
+Date: Fri, 06 Jul 2018 17:32:50 +0300
+In-Reply-To: <20180705094522.12138-22-boris.brezillon@bootlin.com> (Boris
+        Brezillon's message of "Thu, 5 Jul 2018 11:45:16 +0200")
+Message-ID: <87zhz4tox9.fsf@purkki.adurom.net> (sfid-20180706_163301_305324_CE973A35)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/wimax/Makefile  | 2 --
- net/wimax/debugfs.c | 2 --
- net/wimax/op-msg.c  | 1 -
- net/wimax/stack.c   | 1 -
- 4 files changed, 6 deletions(-)
+Boris Brezillon <boris.brezillon@bootlin.com> writes:
 
-diff --git a/net/wimax/Makefile b/net/wimax/Makefile
-index eb2db0d3b880..c2a71ae487ac 100644
---- a/net/wimax/Makefile
-+++ b/net/wimax/Makefile
-@@ -11,5 +11,3 @@ wimax-y :=		\
- 	stack.o
- 
- wimax-$(CONFIG_DEBUG_FS) += debugfs.o
--
--
-diff --git a/net/wimax/debugfs.c b/net/wimax/debugfs.c
-index 6c9bedb7431e..24514840746e 100644
---- a/net/wimax/debugfs.c
-+++ b/net/wimax/debugfs.c
-@@ -76,5 +76,3 @@ void wimax_debugfs_rm(struct wimax_dev *wimax_dev)
- {
- 	debugfs_remove_recursive(wimax_dev->debugfs_dentry);
- }
--
--
-diff --git a/net/wimax/op-msg.c b/net/wimax/op-msg.c
-index 54aa146930bd..101b2fa3f32e 100644
---- a/net/wimax/op-msg.c
-+++ b/net/wimax/op-msg.c
-@@ -404,4 +404,3 @@ int wimax_gnl_doit_msg_from_user(struct sk_buff *skb, struct genl_info *info)
- 	d_fnend(3, NULL, "(skb %p info %p) = %d\n", skb, info, result);
- 	return result;
- }
--
-diff --git a/net/wimax/stack.c b/net/wimax/stack.c
-index 73dba9c077bb..a6307813b6d5 100644
---- a/net/wimax/stack.c
-+++ b/net/wimax/stack.c
-@@ -630,4 +630,3 @@ module_exit(wimax_subsys_exit);
- MODULE_AUTHOR("Intel Corporation <linux-wimax@intel.com>");
- MODULE_DESCRIPTION("Linux WiMAX stack");
- MODULE_LICENSE("GPL");
--
+> This allows us to increase compile-test coverage without having to build
+> a kernel for MIPS.  That's particularly interesting for subsystem
+> maintainers that want to test as many drivers as possible in a single
+> build.
+>
+> We also add a dependency on HAS_IOMEM in BCMA_HOST_SOC to make sure the
+> driver is not selected when the arch does not implement IO accessors.
+>
+> Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+> ---
+>  drivers/bcma/Kconfig | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+
+I assume this patch will go via some other tree and I can drop it.
+
 -- 
-2.18.0
+Kalle Valo
