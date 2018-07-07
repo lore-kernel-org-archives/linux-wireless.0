@@ -1,48 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:42530 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753551AbeGEX7h (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34095 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752784AbeGGInE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 19:59:37 -0400
-Date: Fri, 06 Jul 2018 08:59:29 +0900 (KST)
-Message-Id: <20180706.085929.1654233959706132594.davem@davemloft.net> (sfid-20180706_015943_966355_CE3D704A)
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: FINAL Reminder: Linux Plumbers Networking Track CFP
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Sat, 7 Jul 2018 04:43:04 -0400
+Received: by mail-wm0-f66.google.com with SMTP id s13-v6so6064643wmc.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2018 01:43:04 -0700 (PDT)
+Date: Sat, 7 Jul 2018 10:38:27 +0200 (CEST)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/11] Add mt76x0 driver
+In-Reply-To: <20180705153216.GE17524@localhost.localdomain>
+Message-ID: <alpine.LNX.2.00.1807071027140.11361@T420s> (sfid-20180707_104311_535366_08DA898B)
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com> <20180705153216.GE17524@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi 
 
-This is the final reminder and the deadline is now only 5 days away,
-so if you plan to make a proposal please send it in soon!
+On Thu, 5 Jul 2018, Lorenzo Bianconi wrote:
 
-This is a call for proposals for the networking track at the 2018
-edition of the Linux Plumbers Conference which will be held in
-Vancouver on November 13th and November 14th.
+> On Jul 05, Stanislaw Gruszka wrote:
+> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
+> > support only STA mode.
+> 
+> Hi Stanislaw,
+> 
+> > 
+> > mt76x0 is based on Jakub's mt7601u driver already included
+> > in the kernel. I would like the driver be integrated as part
+> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
+> > to utilize mt76 code for adding support for MT76x0 PCIe devices
+> > in further development.
+> > 
+> > To do not collide with current mt76x2u work from Lorenzo, I did not
+> > remove some code duplication. This will be done in the future, when
+> > Lorenzo patches will be merged. I plan to do more close integration
+> > with mt76x2u into common mt76 layer and add support for MT76x0 PCIe
+> > devices (i.e. MT7630E). Any help with this work is obviously welcome.
+> > My integration efforts can be traced here:
+> > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
+> > 
+> 
+> I just had a brief review of the code and I compiled the driver since at
+> the moment I had no adapter for that chipset.
+> As a remainder for future improvements/integration most of the code in 
+> dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
+> routines in the mt76-usb layer (we need to fill function pointer for chipset
+> related stuff if there are differences with mt76x2u, not looked yet).
+> Moreover mcu code can use utility routines in usb-mcu.c
+> I have not looked at mt76x2 common code yet.
+> 
+> Regards,
+> Lorenzo
+> 
 
-The LPC Networking Track is a community event, open to everyone, and
-does not require an invitation.
+It is also possible to reuse 
+struct mt76x2_txwi
+struct mt76x2_rxwi
 
-We are seeking talks of 40 minutes in length, accompanied by papers of
-2 to 10 pages in length.
+They have the same memory layout for both mt76x0u and mt76x2u chipsets.
 
-Although proposals on finished work are perfectly acceptable, there is
-even more value for talks on problems, proposals, and proof-of-concept
-solutions that require face-to-face discussions and debate.
+Lorenzo can you move them up to
+mt76.h
+and rename them to
+struct mt76_txwi
+struct mt76_rxwi
 
-Please submit your proposals to the LPC Networking Technical Committee
-at:
+And we can also do this for
+struct mt76x2_vif
 
-	lpc-netdev@vger.kernel.org
-
-Proposals must be submitted by July 11th, and submitters will be
-notified of acceptance by August 15th.
-
-The format of the submission and other details can be found at:
-
-	http://vger.kernel.org/lpc-networking.html
-
-We are looking forward to seeing everyone in November!
+Greetings
+Hans Ulli
