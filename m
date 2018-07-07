@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:64459 "EHLO mga06.intel.com"
+Received: from mail.bootlin.com ([62.4.15.54]:54798 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751440AbeGBFdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jul 2018 01:33:23 -0400
-Date: Mon, 2 Jul 2018 13:32:54 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: kbuild-all@01.org, nbd@nbd.name, linux-wireless@vger.kernel.org,
-        sgruszka@redhat.com
-Subject: Re: [PATCH 12/19] mt76: add mt76x2_tx_common to mt76x2-common module
-Message-ID: <201807021325.70849r2F%fengguang.wu@intel.com> (sfid-20180702_073327_506781_A0007DA1)
-References: <20180701141231.25323-13-lorenzo.bianconi@redhat.com>
+        id S1753447AbeGGPcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 7 Jul 2018 11:32:05 -0400
+Date: Sat, 7 Jul 2018 17:32:03 +0200
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/27] mtd: rawnand: s3c2410: Allow selection of this
+ driver when COMPILE_TEST=y
+Message-ID: <20180707173203.2a9eb05f@bbrezillon> (sfid-20180707_173209_926619_9AAF4BBA)
+In-Reply-To: <20180705094522.12138-6-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+        <20180705094522.12138-6-boris.brezillon@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180701141231.25323-13-lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lorenzo,
+On Thu,  5 Jul 2018 11:45:00 +0200
+Boris Brezillon <boris.brezillon@bootlin.com> wrote:
 
-Thank you for the patch! Perhaps something to improve:
+> It just makes NAND maintainers' life easier by allowing them to
+> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
+> enabled.
+> 
+> We also need to add a dependency on HAS_IOMEM to make sure the driver
+> compiles correctly.
+> 
+> Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+> ---
+>  drivers/mtd/nand/raw/Kconfig | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+> index c6764992cdfc..033900c0c618 100644
+> --- a/drivers/mtd/nand/raw/Kconfig
+> +++ b/drivers/mtd/nand/raw/Kconfig
+> @@ -119,7 +119,8 @@ config MTD_NAND_AU1550
+>  
+>  config MTD_NAND_S3C2410
+>  	tristate "NAND Flash support for Samsung S3C SoCs"
+> -	depends on ARCH_S3C24XX || ARCH_S3C64XX
+> +	depends on ARCH_S3C24XX || ARCH_S3C64XX || COMPILE_TEST
+> +	depends on HAS_IOMEM
 
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on v4.18-rc3 next-20180629]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+Looks like ia64 does not define {read,write}s{b,w,l}() IO accessors.
+I'll just add a 'depends on !IA64' on both s3c2410 and orion to
+address that.
 
-url:    https://github.com/0day-ci/linux/commits/Lorenzo-Bianconi/add-mt76x2u-support-to-mt76-driver/20180701-221609
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-
-smatch warnings:
-drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c:35 mt76x2_tx() warn: always true condition '(wcid->hw_key_idx != -1) => (0-255 != (-1))'
-
-vim +35 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-
-    20	
-    21	void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
-    22		       struct sk_buff *skb)
-    23	{
-    24		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-    25		struct mt76x2_dev *dev = hw->priv;
-    26		struct ieee80211_vif *vif = info->control.vif;
-    27		struct mt76_wcid *wcid = &dev->global_wcid;
-    28	
-    29		if (control->sta) {
-    30			struct mt76x2_sta *msta;
-    31	
-    32			msta = (struct mt76x2_sta *)control->sta->drv_priv;
-    33			wcid = &msta->wcid;
-    34			/* sw encrypted frames */
-  > 35			if (!info->control.hw_key && wcid->hw_key_idx != -1)
-    36				control->sta = NULL;
-    37		}
-    38	
-    39		if (vif && !control->sta) {
-    40			struct mt76x2_vif *mvif;
-    41	
-    42			mvif = (struct mt76x2_vif *)vif->drv_priv;
-    43			wcid = &mvif->group_wcid;
-    44		}
-    45	
-    46		mt76_tx(&dev->mt76, control->sta, wcid, skb);
-    47	}
-    48	EXPORT_SYMBOL_GPL(mt76x2_tx);
-    49	
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>  	help
+>  	  This enables the NAND flash controller on the S3C24xx and S3C64xx
+>  	  SoCs
