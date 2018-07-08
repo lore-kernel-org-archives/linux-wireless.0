@@ -1,91 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42301 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753635AbeGEOuX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 10:50:23 -0400
-Received: by mail-wr1-f68.google.com with SMTP id p1-v6so1332395wrs.9
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2018 07:50:23 -0700 (PDT)
-Date: Thu, 5 Jul 2018 16:50:19 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 11/11] mt76: Kconfig and Makefile for mt76x0 driver
-Message-ID: <20180705145018.GA17524@localhost.localdomain> (sfid-20180705_165228_392653_68F4895B)
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
- <1530771142-4118-12-git-send-email-sgruszka@redhat.com>
+Received: from mail-oln040092069044.outbound.protection.outlook.com ([40.92.69.44]:38483
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753952AbeGHJ50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Jul 2018 05:57:26 -0400
+From: Bernd Edlinger <bernd.edlinger@hotmail.de>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] Add a missing break in parse_station_flags
+Date: Sun, 8 Jul 2018 09:57:22 +0000
+Message-ID: <AM5PR0701MB265751E3A716081292C5224FE4450@AM5PR0701MB2657.eurprd07.prod.outlook.com> (sfid-20180708_115802_424118_3E8FEE4A)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530771142-4118-12-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jul 05, Stanislaw Gruszka wrote:
-> Add Kconfig and Makefiles for mt76x0 driver. Now the driver
-> can be build.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
->  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
->  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
->  3 files changed, 15 insertions(+)
->  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-> index fc05d79c80d0..84854736809a 100644
-> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
-> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-> @@ -1,6 +1,13 @@
->  config MT76_CORE
->  	tristate
->  
-> +config MT76x0U
-> +	tristate "MediaTek MT76x0U (USB) support"
-> +	depends on MAC80211
-> +	depends on USB
-> +	help
-> +	  This adds support for MT7610U-based wireless USB dongles.
-> +
->  config MT76x2E
->  	tristate "MediaTek MT76x2E (PCIe) support"
->  	select MT76_CORE
-> diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-> index a0156bc01dea..08f93127e9e7 100644
-> --- a/drivers/net/wireless/mediatek/mt76/Makefile
-> +++ b/drivers/net/wireless/mediatek/mt76/Makefile
-> @@ -1,4 +1,5 @@
->  obj-$(CONFIG_MT76_CORE) += mt76.o
-> +obj-$(CONFIG_MT76x0U) += mt76x0/
->  obj-$(CONFIG_MT76x2E) += mt76x2e.o
->  
->  mt76-y := \
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-> new file mode 100644
-> index 000000000000..7843908261ba
-> --- /dev/null
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-> @@ -0,0 +1,7 @@
-> +obj-$(CONFIG_MT76x0U)    += mt76x0.o
-> +
-> +mt76x0-objs	= \
-> +	usb.o init.o main.o mcu.o trace.o dma.o eeprom.o phy.o \
-
-There is no main.c source file, is it a leftover from previous implementation?
-Moreover compiling the driver (and fixing conflicts with mt76x2u) I have:
-
-ERROR: "mt76x0_ops" [drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.ko] undefined!
-
-Regards,
-Lorenzo
-
-> +	mac.o util.o debugfs.o tx.o core.o
-> +# ccflags-y := -DDEBUG
-> +CFLAGS_trace.o := -I$(src)
-> -- 
-> 1.9.3
-> 
+SSB3YXMgbG9va2luZyBhdCB1c3VhbGx5IHN1cHByZXNzZWQgZ2NjIHdhcm5pbmdzLA0KWy1XaW1w
+bGljaXQtZmFsbHRocm91Z2g9XSBpbiB0aGlzIGNhc2U6DQoNClRoZSBjb2RlIGRlZmluaXRlbHkg
+bG9va3MgbGlrZSBhIGJyZWFrIGlzIG1pc3NpbmcgaGVyZS4NCkhvd2V2ZXIgSSBhbSBub3QgYWJs
+ZSB0byB0ZXN0IHRoZSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5ULA0Kbm9yIGRvIEkgYWN0dWFs
+bHkga25vdyB3aGF0IG1pZ2h0IGJlIDopDQpTbyBwbGVhc2UgdXNlIHRoaXMgcGF0Y2ggd2l0aCBj
+YXV0aW9uIGFuZCBvbmx5IGlmIHlvdSBhcmUNCmFibGUgdG8gZG8gc29tZSB0ZXN0aW5nLg0KDQpT
+aWduZWQtb2ZmLWJ5OiBCZXJuZCBFZGxpbmdlciA8YmVybmQuZWRsaW5nZXJAaG90bWFpbC5kZT4N
+Ci0tLQ0KICBuZXQvd2lyZWxlc3Mvbmw4MDIxMS5jIHwgMSArDQogIDEgZmlsZSBjaGFuZ2VkLCAx
+IGluc2VydGlvbigrKQ0KDQpkaWZmIC0tZ2l0IGEvbmV0L3dpcmVsZXNzL25sODAyMTEuYyBiL25l
+dC93aXJlbGVzcy9ubDgwMjExLmMNCmluZGV4IDRlZWNlMDYuLjY1MzdiNWQgMTAwNjQ0DQotLS0g
+YS9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQorKysgYi9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQpA
+QCAtNDQwOSw2ICs0NDA5LDcgQEAgc3RhdGljIGludCBwYXJzZV9zdGF0aW9uX2ZsYWdzKHN0cnVj
+dCBnZW5sX2luZm8gKmluZm8sDQogIAkJcGFyYW1zLT5zdGFfZmxhZ3NfbWFzayA9IEJJVChOTDgw
+MjExX1NUQV9GTEFHX0FVVEhFTlRJQ0FURUQpIHwNCiAgCQkJCQkgQklUKE5MODAyMTFfU1RBX0ZM
+QUdfTUZQKSB8DQogIAkJCQkJIEJJVChOTDgwMjExX1NUQV9GTEFHX0FVVEhPUklaRUQpOw0KKwkJ
+YnJlYWs7DQogIAlkZWZhdWx0Og0KICAJCXJldHVybiAtRUlOVkFMOw0KICAJfQ0KLS0gDQoxLjku
+MQ0K
