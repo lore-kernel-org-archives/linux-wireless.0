@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57174 "EHLO mail.bugwerft.de"
+Received: from mail.bootlin.com ([62.4.15.54]:34520 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388407AbeGXLFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 07:05:46 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v3 08/11] NFC: st95hf: re-order command defines
-Date: Tue, 24 Jul 2018 11:59:38 +0200
-Message-Id: <20180724095941.25777-9-daniel@zonque.org> (sfid-20180724_120140_961405_A3578FF9)
-In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
-References: <20180724095941.25777-1-daniel@zonque.org>
+        id S1754153AbeGHNGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Jul 2018 09:06:33 -0400
+Date: Sun, 8 Jul 2018 15:06:30 +0200
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 17/27] mtd: rawnand: fsmc: Allow selection of this
+ driver when COMPILE_TEST=y
+Message-ID: <20180708150630.06367498@bbrezillon> (sfid-20180708_150746_997533_307A02EE)
+In-Reply-To: <20180705094522.12138-18-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+        <20180705094522.12138-18-boris.brezillon@bootlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a small cleanup to bring the command defines in a numerical order.
+On Thu,  5 Jul 2018 11:45:12 +0200
+Boris Brezillon <boris.brezillon@bootlin.com> wrote:
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/nfc/st95hf/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> It just makes NAND maintainers' life easier by allowing them to
+> compile-test this driver without having PLAT_SPEAR, ARCH_NOMADIK,
+> ARCH_U8500 or MACH_U300 enabled.
+> 
+> We also need to add a dependency on HAS_IOMEM to make sure the driver
+> compiles correctly.
+> 
+> Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+> ---
+>  drivers/mtd/nand/raw/Kconfig | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+> index b89bd94a654c..245f1b56b94f 100644
+> --- a/drivers/mtd/nand/raw/Kconfig
+> +++ b/drivers/mtd/nand/raw/Kconfig
+> @@ -502,8 +502,9 @@ config MTD_NAND_JZ4780
+>  
+>  config MTD_NAND_FSMC
+>  	tristate "Support for NAND on ST Micros FSMC"
+> -	depends on OF
+> -	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300
+> +	depends on OF && HAS_IOMEM
+> +	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300 || \
+> +		   COMPILE_TEST
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 7fdad67b1a4d..53447394666b 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -45,10 +45,10 @@
- 
- /* Command Send Interface */
- /* ST95HF_COMMAND_SEND CMD Ids */
--#define ECHO_CMD			0x55
--#define WRITE_REGISTER_CMD		0x9
- #define PROTOCOL_SELECT_CMD		0x2
- #define SEND_RECEIVE_CMD		0x4
-+#define WRITE_REGISTER_CMD		0x9
-+#define ECHO_CMD			0x55
- 
- /* Select protocol codes */
- #define ISO15693_PROTOCOL_CODE		0x1
--- 
-2.17.1
+Looks like we have a conflict on the PC definition when compiling a
+MIPS kernel. I'll add a patch suffixing PC with FSMC_ to avoid that.
+Please don't apply this patch yet. 
+
+>  	help
+>  	  Enables support for NAND Flash chips on the ST Microelectronics
+>  	  Flexible Static Memory Controller (FSMC)
