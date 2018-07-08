@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46900 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754067AbeGGPdL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Jul 2018 11:33:11 -0400
-To: Simon Kelley <simon@thekelleys.org.uk>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        David Miller <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] net/wireless/atmel: fix defined but not used warning
-Message-ID: <d6ed90e1-c41e-d5b6-c892-ea5e1e6ad7e6@infradead.org> (sfid-20180707_173323_317159_C6538E1E)
-Date: Sat, 7 Jul 2018 08:33:09 -0700
+Received: from mail.bootlin.com ([62.4.15.54]:38248 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932545AbeGHVz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Jul 2018 17:55:26 -0400
+Date: Sun, 8 Jul 2018 23:55:23 +0200
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+To: Boris Brezillon <boris.brezillon@bootlin.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        linux-mtd@lists.infradead.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/27] mtd: rawnand: Improve compile-test coverage
+Message-ID: <20180708235523.30faa860@xps13> (sfid-20180708_235529_989515_CAC77CC6)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+Hi Boris,
 
-Fix a build warning in drivers/net/wireless/atmel/ when CONFIG_PROC_FS
-is not enabled by marking the unused function as __maybe_unused.
+Boris Brezillon <boris.brezillon@bootlin.com> wrote on Thu,  5 Jul 2018
+11:44:55 +0200:
 
-../drivers/net/wireless/atmel/atmel.c:1402:12: warning: 'atmel_proc_show' defined but not used [-Wunused-function]
+> Hello,
+> 
+> This is an attempt at adding "depends || COMPILE_TEST" to all NAND
+> drivers that have no compile-time dependencies on arch
+> features/headers.
+> 
+> This will hopefully help us (NAND/MTD maintainers) in detecting build
+> issues earlier. Unfortunately we still have a few drivers that can't
+> easily be modified to be arch independent.
+> 
+> I tried to put all patches that only touch the NAND subsystem first,
+> so that they can be applied even if other patches are being discussed.
+> 
+> Don't hesitate to point any missing dependencies when compiled with
+> COMPILE_TEST. I didn't have any problem when compiling, but that might
+> be because the dependencies were already selected.
+> 
+> I have Question for Geert. I know you worked on HAS_DMA removal when
+> combined with COMPILE_TEST, do you plan to do something similar with
+> HAS_IOMEM?
+> 
+> Regards,
+> 
+> Boris
+> 
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Simon Kelley <simon@thekelleys.org.uk>
-Cc: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/atmel/atmel.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks for the cleanup.
 
---- linux-next-20180706.orig/drivers/net/wireless/atmel/atmel.c
-+++ linux-next-20180706/drivers/net/wireless/atmel/atmel.c
-@@ -39,6 +39,7 @@
- 
- ******************************************************************************/
- 
-+#include <linux/compiler.h>
- #include <linux/interrupt.h>
- 
- #include <linux/kernel.h>
-@@ -1399,7 +1400,7 @@ static int atmel_validate_channel(struct
- 	return 0;
- }
- 
--static int atmel_proc_show(struct seq_file *m, void *v)
-+static int __maybe_unused atmel_proc_show(struct seq_file *m, void *v)
- {
- 	struct atmel_private *priv = m->private;
- 	int i;
+Applied patches 1-4, 6-9, 12-16, 18 and 21 to nand/next.
+
+Waiting a v2 for patches 5 (s3c), 10-11 (orion), 17 (fsmc), and acks
+for the others 19-20, 22-27.
+
+Thanks,
+Miquèl
