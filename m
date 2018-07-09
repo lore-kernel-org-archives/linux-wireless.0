@@ -1,70 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:43712 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbeGKMNX (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:37171 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750996AbeGINir (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 08:13:23 -0400
-Received: by mail-lf0-f67.google.com with SMTP id m12-v6so21069489lfc.10
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2018 05:09:20 -0700 (PDT)
+        Mon, 9 Jul 2018 09:38:47 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] airo: remove unused variables len and dev and clean up formatting
+Date: Mon,  9 Jul 2018 14:38:43 +0100
+Message-Id: <20180709133843.15615-1-colin.king@canonical.com> (sfid-20180709_153917_849952_3ACDBB0F)
 MIME-Version: 1.0
-In-Reply-To: <20180711133236.67726256@bbrezillon>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
- <20180709200945.30116-5-boris.brezillon@bootlin.com> <20180711131626.732967be@bbrezillon>
- <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com> <20180711133236.67726256@bbrezillon>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 11 Jul 2018 14:09:19 +0200
-Message-ID: <CAK8P3a2Ar0itsfXBMDoJwq106KBYT-mx55znVF5cd478FqzJsQ@mail.gmail.com> (sfid-20180711_140925_978324_CBA6B309)
-Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
- driver when COMPILE_TEST=y
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 11, 2018 at 1:32 PM, Boris Brezillon
-<boris.brezillon@bootlin.com> wrote:
-> On Wed, 11 Jul 2018 13:27:53 +0200
-> Arnd Bergmann <arnd@arndb.de> wrote:
->
->> On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
->> <boris.brezillon@bootlin.com> wrote:
->> > On Mon,  9 Jul 2018 22:09:25 +0200
->> > Boris Brezillon <boris.brezillon@bootlin.com> wrote:
->> >
->> >> It just makes NAND maintainers' life easier by allowing them to
->> >> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
->> >> enabled.
->> >>
->> >> We add a dependency on HAS_IOMEM to make sure the driver compiles
->> >> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
->> >> accessors are not defined for this architecture.
->> >
->> > I see that SPARC does not define those accessors either. So I guess we
->> > should add depends on !SPARC.
->> >
->> > Arnd, any other way to know when the platform implements
->> > {read,write}s{bwl}() accessors?
->>
->> I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
->> sparc32 appears to have these, and when Thierry sent the patch
->> to implement them everywhere[1], he said that he tested sparc64 as
->> well, so either something regressed since then, or his testing
->> was incomplete. Either way, the correct answer IMHO would be to
->> make it work rather than to add infrastructure around the broken
->> configurations.
->
-> I guess the same goes for IA64 then.
+From: Colin Ian King <colin.king@canonical.com>
 
-Right. FWIW, I just tried it out and sent the respective arch patches.
+Variables len and dev assigned values but are never used hence they
+are redundant and can be removed.  Also add in white space in for-loop
+and remove some { } braces on if statement.
 
-      Arnd
+Cleans up clang warnings:
+warning: variable 'len' set but not used [-Wunused-but-set-variable]
+warning: variable 'dev' set but not used [-Wunused-but-set-variable]
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/cisco/airo.c    | 8 +++-----
+ drivers/net/wireless/cisco/airo_cs.c | 3 ---
+ 2 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 72046e182745..04dd7a936593 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -3419,7 +3419,7 @@ static void airo_handle_rx(struct airo_info *ai)
+ 
+ static void airo_handle_tx(struct airo_info *ai, u16 status)
+ {
+-	int i, len = 0, index = -1;
++	int i, index = -1;
+ 	u16 fid;
+ 
+ 	if (test_bit(FLAG_MPI, &ai->flags)) {
+@@ -3443,11 +3443,9 @@ static void airo_handle_tx(struct airo_info *ai, u16 status)
+ 
+ 	fid = IN4500(ai, TXCOMPLFID);
+ 
+-	for(i = 0; i < MAX_FIDS; i++) {
+-		if ((ai->fids[i] & 0xffff) == fid) {
+-			len = ai->fids[i] >> 16;
++	for (i = 0; i < MAX_FIDS; i++) {
++		if ((ai->fids[i] & 0xffff) == fid)
+ 			index = i;
+-		}
+ 	}
+ 
+ 	if (index != -1) {
+diff --git a/drivers/net/wireless/cisco/airo_cs.c b/drivers/net/wireless/cisco/airo_cs.c
+index d9ed22b4cc6b..3718f958c0fc 100644
+--- a/drivers/net/wireless/cisco/airo_cs.c
++++ b/drivers/net/wireless/cisco/airo_cs.c
+@@ -102,11 +102,8 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev, void *priv_data)
+ 
+ static int airo_config(struct pcmcia_device *link)
+ {
+-	struct local_info *dev;
+ 	int ret;
+ 
+-	dev = link->priv;
+-
+ 	dev_dbg(&link->dev, "airo_config\n");
+ 
+ 	link->config_flags |= CONF_ENABLE_IRQ | CONF_AUTO_SET_VPP |
+-- 
+2.17.1
