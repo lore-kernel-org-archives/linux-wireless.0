@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752215AbeGDJMx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 05:12:53 -0400
-Subject: [PATCH] ath10k: fix open brace location in
- ath10k_wmi_tlv_op_gen_dbglog_cfg()
-From: Kalle Valo <kvalo@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Jul 2018 12:12:49 +0300
-Message-ID: <153069556911.18112.15554530524319470412.stgit@potku.adurom.net> (sfid-20180704_111258_058713_D0416EB5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.bootlin.com ([62.4.15.54]:41207 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933165AbeGIUKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 16:10:05 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 01/24] mtd: rawnand: atmel: Use uintptr_t casts instead of unsigned int
+Date: Mon,  9 Jul 2018 22:09:22 +0200
+Message-Id: <20180709200945.30116-2-boris.brezillon@bootlin.com> (sfid-20180709_221112_425211_ECF11BC8)
+In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes a recently added checkpatch warning:
+When casting a pointer to an unsigned in, uintptr_t should be used to
+cope with the pointer size differences between 32-bit and 64-bit
+architectures.
 
-wmi-tlv.c:2703: open brace '{' following function definitions go on the next line
+This is needed if we want to allow compilation of this driver when
+COMPILE_TEST=y.
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/mtd/nand/raw/atmel/nand-controller.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index b04f86f8038a..435295dfe0d4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2702,7 +2702,8 @@ ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
+diff --git a/drivers/mtd/nand/raw/atmel/nand-controller.c b/drivers/mtd/nand/raw/atmel/nand-controller.c
+index e686fe73159e..e8f7549d0354 100644
+--- a/drivers/mtd/nand/raw/atmel/nand-controller.c
++++ b/drivers/mtd/nand/raw/atmel/nand-controller.c
+@@ -2050,7 +2050,7 @@ atmel_smc_nand_controller_init(struct atmel_smc_nand_controller *nc)
+ 		return ret;
+ 	}
  
- static struct sk_buff *
- ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u64 module_enable,
--				 u32 log_level) {
-+				 u32 log_level)
-+{
- 	struct wmi_tlv_dbglog_cmd *cmd;
- 	struct wmi_tlv *tlv;
- 	struct sk_buff *skb;
+-	nc->ebi_csa_offs = (unsigned int)match->data;
++	nc->ebi_csa_offs = (uintptr_t)match->data;
+ 
+ 	/*
+ 	 * The at91sam9263 has 2 EBIs, if the NAND controller is under EBI1
+-- 
+2.14.1
