@@ -1,40 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:47877 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726264AbeGRTGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jul 2018 15:06:39 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
-        Ben Greear <greearb@candelatech.com>,
-        SEDE <s.deronne@televic.com>,
-        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Setting tx retry count in ath10k
-In-Reply-To: <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com> <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de> <8b9713fe-7573-f009-d002-13df73315898@televic.com> <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com> <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com> <877els5xax.fsf@toke.dk> <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-Date: Wed, 18 Jul 2018 20:27:17 +0200
-Message-ID: <871sc05ri2.fsf@toke.dk> (sfid-20180718_202734_578427_C3F0A943)
+Received: from youngberry.canonical.com ([91.189.89.112]:36682 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754437AbeGINRY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 09:17:24 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath6kl: remove redundant variables netlen, orig_buf, orig_len, dropped and stats
+Date: Mon,  9 Jul 2018 14:17:20 +0100
+Message-Id: <20180709131720.6668-1-colin.king@canonical.com> (sfid-20180709_151743_740584_14DD824F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jean-Pierre TOSONI <jp.tosoni@acksys.fr> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> @Toke: As you can see in the patch, the value 30 was the fixed value
-> defined in ath9k, I kept it for compatibility only (and that's why I
-> wanted to make it configurable :-)
+Variables netlen, orig_buf, orig_len, dropped and stats are assigned values
+but are never used hence they are redundant and can be removed.
 
-Yup, I'm aware that this is the default from ath9k; doesn't make it any
-less wrong ;)
+Cleans up clang warnings:
+warning: variable 'netlen' set but not used [-Wunused-but-set-variable]
+warning: variable 'orig_buf' set but not used [-Wunused-but-set-variable]
+warning: variable 'orig_len' set but not used [-Wunused-but-set-variable]
+warning: variable 'dropped' set but not used [-Wunused-but-set-variable]
+warning: variable 'stats' set but not used [-Wunused-but-set-variable]
 
-> On another hand, Minstrel in mac80211 seems to vary retries according
-> to what you say, i.e. Minstrel tries to stay below a certain amount of
-> time, but this only applies to short/long retries.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 10 ++--------
+ drivers/net/wireless/ath/ath6kl/main.c     |  3 +--
+ drivers/net/wireless/ath/ath6kl/txrx.c     |  2 --
+ 3 files changed, 3 insertions(+), 12 deletions(-)
 
-Right, haven't had time to poke into what exactly Minstrel does; have
-just observed that it sometimes runs really long. But for most cases
-it's not too bad...
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 546243e11737..434b66829646 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -746,10 +746,8 @@ static int ath6kl_htc_pipe_tx_complete(struct ath6kl *ar, struct sk_buff *skb)
+ 	struct htc_endpoint *ep;
+ 	struct htc_packet *packet;
+ 	u8 ep_id, *netdata;
+-	u32 netlen;
+ 
+ 	netdata = skb->data;
+-	netlen = skb->len;
+ 
+ 	htc_hdr = (struct htc_frame_hdr *) netdata;
+ 
+@@ -855,12 +853,8 @@ static int htc_process_trailer(struct htc_target *target, u8 *buffer,
+ {
+ 	struct htc_credit_report *report;
+ 	struct htc_record_hdr *record;
+-	u8 *record_buf, *orig_buf;
+-	int orig_len, status;
+-
+-	orig_buf = buffer;
+-	orig_len = len;
+-	status = 0;
++	u8 *record_buf;
++	int status = 0;
+ 
+ 	while (len > 0) {
+ 		if (len < sizeof(struct htc_record_hdr)) {
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 808fb30be9ad..0c61dbaa62a4 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -272,7 +272,7 @@ int ath6kl_read_fwlogs(struct ath6kl *ar)
+ {
+ 	struct ath6kl_dbglog_hdr debug_hdr;
+ 	struct ath6kl_dbglog_buf debug_buf;
+-	u32 address, length, dropped, firstbuf, debug_hdr_addr;
++	u32 address, length, firstbuf, debug_hdr_addr;
+ 	int ret, loop;
+ 	u8 *buf;
+ 
+@@ -303,7 +303,6 @@ int ath6kl_read_fwlogs(struct ath6kl *ar)
+ 	address = TARG_VTOP(ar->target_type,
+ 			    le32_to_cpu(debug_hdr.dbuf_addr));
+ 	firstbuf = address;
+-	dropped = le32_to_cpu(debug_hdr.dropped);
+ 	ret = ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 618d12ed4b40..b22ed499f7ba 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1701,7 +1701,6 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 	struct ath6kl_sta *sta;
+ 	struct aggr_info_conn *aggr_conn = NULL;
+ 	struct rxtid *rxtid;
+-	struct rxtid_stats *stats;
+ 	u16 hold_q_size;
+ 	u8 tid, aid;
+ 
+@@ -1722,7 +1721,6 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 		return;
+ 
+ 	rxtid = &aggr_conn->rx_tid[tid];
+-	stats = &aggr_conn->stat[tid];
+ 
+ 	if (win_sz < AGGR_WIN_SZ_MIN || win_sz > AGGR_WIN_SZ_MAX)
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_RX, "%s: win_sz %d, tid %d\n",
+-- 
+2.17.1
