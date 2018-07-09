@@ -1,8 +1,8 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43531 "EHLO mail.bootlin.com"
+Received: from mail.bootlin.com ([62.4.15.54]:41287 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753558AbeGEJps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:48 -0400
+        id S933149AbeGIUKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 16:10:14 -0400
 From: Boris Brezillon <boris.brezillon@bootlin.com>
 To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
         =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
@@ -13,39 +13,36 @@ To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
 Cc: David Woodhouse <dwmw2@infradead.org>,
         Brian Norris <computersforpeace@gmail.com>,
         Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 11/27] mtd: rawnand: orion: Allow selection of this driver when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:06 +0200
-Message-Id: <20180705094522.12138-12-boris.brezillon@bootlin.com> (sfid-20180705_114648_217891_81BBBDE4)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 11/24] mtd: rawnand: sunxi: Make sure ret is initialized in sunxi_nfc_read_byte()
+Date: Mon,  9 Jul 2018 22:09:32 +0200
+Message-Id: <20180709200945.30116-12-boris.brezillon@bootlin.com> (sfid-20180709_221023_307703_FE397FA0)
+In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having PLAT_ORION enabled.
+Fixes the following smatch warning:
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
+drivers/mtd/nand/raw/sunxi_nand.c:551 sunxi_nfc_read_byte() error: uninitialized symbol 'ret'.
 
 Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/mtd/nand/raw/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/mtd/nand/raw/sunxi_nand.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index b1934b415067..a28ffc4013b6 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -381,7 +381,8 @@ config MTD_NAND_PLATFORM
+diff --git a/drivers/mtd/nand/raw/sunxi_nand.c b/drivers/mtd/nand/raw/sunxi_nand.c
+index 99043c3a4fa7..4b11cd4a79be 100644
+--- a/drivers/mtd/nand/raw/sunxi_nand.c
++++ b/drivers/mtd/nand/raw/sunxi_nand.c
+@@ -544,7 +544,7 @@ static void sunxi_nfc_write_buf(struct mtd_info *mtd, const uint8_t *buf,
  
- config MTD_NAND_ORION
- 	tristate "NAND Flash support for Marvell Orion SoC"
--	depends on PLAT_ORION
-+	depends on PLAT_ORION || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  This enables the NAND flash controller on Orion machines.
+ static uint8_t sunxi_nfc_read_byte(struct mtd_info *mtd)
+ {
+-	uint8_t ret;
++	uint8_t ret = 0;
+ 
+ 	sunxi_nfc_read_buf(mtd, &ret, 1);
  
 -- 
 2.14.1
