@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44346 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754035AbeGFOc5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 10:32:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+Received: from mail.bootlin.com ([62.4.15.54]:41331 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933319AbeGIUKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 16:10:16 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
         Richard Weinberger <richard@nod.at>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org,
-        David Woodhouse <dwmw2@infradead.org>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
         Brian Norris <computersforpeace@gmail.com>,
         Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 21/27] bcma: Allow selection of this driver when COMPILE_TEST=y
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-        <20180705094522.12138-22-boris.brezillon@bootlin.com>
-Date: Fri, 06 Jul 2018 17:32:50 +0300
-In-Reply-To: <20180705094522.12138-22-boris.brezillon@bootlin.com> (Boris
-        Brezillon's message of "Thu, 5 Jul 2018 11:45:16 +0200")
-Message-ID: <87zhz4tox9.fsf@purkki.adurom.net> (sfid-20180706_163301_305324_CE973A35)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 18/24] mtd: rawnand: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
+Date: Mon,  9 Jul 2018 22:09:39 +0200
+Message-Id: <20180709200945.30116-19-boris.brezillon@bootlin.com> (sfid-20180709_221048_219073_9BE6B8F6)
+In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Boris Brezillon <boris.brezillon@bootlin.com> writes:
+It just makes maintainers' life easier by allowing them to compile-test
+this driver without having FSL_SOC, ARCH_LAYERSCAPE or SOC_LS1021A
+enabled.
 
-> This allows us to increase compile-test coverage without having to build
-> a kernel for MIPS.  That's particularly interesting for subsystem
-> maintainers that want to test as many drivers as possible in a single
-> build.
->
-> We also add a dependency on HAS_IOMEM in BCMA_HOST_SOC to make sure the
-> driver is not selected when the arch does not implement IO accessors.
->
-> Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
-> ---
->  drivers/bcma/Kconfig | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+We also need to add a dependency on HAS_IOMEM to make sure the
+driver compiles correctly.
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+---
+ drivers/mtd/nand/raw/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I assume this patch will go via some other tree and I can drop it.
-
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index 29d360f984c9..dc6c5aff4172 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -408,7 +408,8 @@ config MTD_NAND_FSL_ELBC
+ 
+ config MTD_NAND_FSL_IFC
+ 	tristate "NAND support for Freescale IFC controller"
+-	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A
++	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	select FSL_IFC
+ 	select MEMORY
+ 	help
 -- 
-Kalle Valo
+2.14.1
