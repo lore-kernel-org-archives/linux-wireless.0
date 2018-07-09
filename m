@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:1826 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388585AbeGXIuJ (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:40777 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932415AbeGIKUj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 04:50:09 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 18/19] wil6210: prevent FW download if HW is configured for secured boot
-Date: Tue, 24 Jul 2018 10:44:39 +0300
-Message-Id: <1532418280-5849-19-git-send-email-merez@codeaurora.org> (sfid-20180724_100227_767289_63F86D8E)
-In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
-References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+        Mon, 9 Jul 2018 06:20:39 -0400
+Received: by mail-wr1-f67.google.com with SMTP id t6-v6so10380484wrn.7
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2018 03:20:39 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: kubakici@wp.pl
+Cc: linux-wireless@vger.kernel.org, dcaratti@redhat.com
+Subject: [PATCH 1/2] mt7601u: use sw encryption for hw unsupported ciphers
+Date: Mon,  9 Jul 2018 12:20:26 +0200
+Message-Id: <ad9cbcd50cdde4ff997a5ce69265f741114e9af0.1531130155.git.lorenzo.bianconi@redhat.com> (sfid-20180709_122042_778672_C7305DE6)
+In-Reply-To: <cover.1531130155.git.lorenzo.bianconi@redhat.com>
+References: <cover.1531130155.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the driver doesn't support secured boot flow, hence
-prevent FW download in case HW is configured for such a flow.
+Fall back to software encryption for hw unsupported ciphers in order
+to enable 802.11w
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mediatek/mt7601u/main.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7ad22df..1d4ce8e 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1560,6 +1560,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (load_fw) {
- 		char board_file[WIL_BOARD_FILE_MAX_NAMELEN];
+diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
+index 7b21016012c3..0f1789020960 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/main.c
++++ b/drivers/net/wireless/mediatek/mt7601u/main.c
+@@ -308,6 +308,17 @@ mt7601u_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	int idx = key->keyidx;
+ 	int ret;
  
-+		if  (wil->secured_boot) {
-+			wil_err(wil, "secured boot is not supported\n");
-+			return -ENOTSUPP;
-+		}
++	/* fall back to sw encryption for unsupported ciphers */
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++	case WLAN_CIPHER_SUITE_WEP104:
++	case WLAN_CIPHER_SUITE_TKIP:
++	case WLAN_CIPHER_SUITE_CCMP:
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
 +
- 		board_file[0] = '\0';
- 		wil_get_board_file(wil, board_file, sizeof(board_file));
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n",
+ 	if (cmd == SET_KEY) {
+ 		key->hw_key_idx = wcid->idx;
+ 		wcid->hw_key_idx = idx;
 -- 
-1.9.1
+2.17.1
