@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53706 "EHLO nbd.name"
+Received: from mail.bootlin.com ([62.4.15.54]:41268 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388030AbeGWRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 13:05:13 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 1/9] ath9k_hw: set spectral scan enable bit on trigger for AR9003+
-Date: Mon, 23 Jul 2018 18:02:52 +0200
-Message-Id: <20180723160300.58024-1-nbd@nbd.name> (sfid-20180723_180334_848350_38479F26)
+        id S933294AbeGIUKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 16:10:07 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 09/24] mtd: rawnand: davinci: Allow selection of this driver when COMPILE_TEST=y
+Date: Mon,  9 Jul 2018 22:09:30 +0200
+Message-Id: <20180709200945.30116-10-boris.brezillon@bootlin.com> (sfid-20180709_221016_181046_AD227A7C)
+In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9002 code and the QCA AR9003+ reference code do the same.
+It just makes NAND maintainers' life easier by allowing them to
+compile-test this driver without having ARCH_DAVINCI or ARCH_KEYSTONE
+enabled.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+We also need to add a dependency on HAS_IOMEM to make sure the
+driver compiles correctly.
+
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/mtd/nand/raw/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index fe5102ca5010..98c5f524a360 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1800,6 +1800,8 @@ static void ar9003_hw_spectral_scan_config(struct ath_hw *ah,
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index efc5dcd5135c..539b0619f53a 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -462,7 +462,8 @@ config MTD_NAND_SH_FLCTL
  
- static void ar9003_hw_spectral_scan_trigger(struct ath_hw *ah)
- {
-+	REG_SET_BIT(ah, AR_PHY_SPECTRAL_SCAN,
-+		    AR_PHY_SPECTRAL_SCAN_ENABLE);
- 	/* Activate spectral scan */
- 	REG_SET_BIT(ah, AR_PHY_SPECTRAL_SCAN,
- 		    AR_PHY_SPECTRAL_SCAN_ACTIVE);
+ config MTD_NAND_DAVINCI
+         tristate "Support NAND on DaVinci/Keystone SoC"
+-        depends on ARCH_DAVINCI || (ARCH_KEYSTONE && TI_AEMIF)
++	depends on ARCH_DAVINCI || (ARCH_KEYSTONE && TI_AEMIF) || COMPILE_TEST
++	depends on HAS_IOMEM
+         help
+ 	  Enable the driver for NAND flash chips on Texas Instruments
+ 	  DaVinci/Keystone processors.
 -- 
-2.17.0
+2.14.1
