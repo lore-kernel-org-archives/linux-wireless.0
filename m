@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38388 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752550AbeGBOkU (ORCPT
+Received: from mail1.bemta24.messagelabs.com ([67.219.250.208]:30960 "EHLO
+        mail1.bemta24.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751132AbeGIF65 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jul 2018 10:40:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: <simon@thekelleys.org.uk>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        <davem@davemloft.net>, <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v2] atmel: using strlcpy() to avoid possible buffer overflows
-References: <20180630063341.9900-1-yuehaibing@huawei.com>
-Date: Mon, 02 Jul 2018 17:40:14 +0300
-In-Reply-To: <20180630063341.9900-1-yuehaibing@huawei.com>
-        (yuehaibing@huawei.com's message of "Sat, 30 Jun 2018 14:33:41 +0800")
-Message-ID: <8736x1snu9.fsf@kamboji.qca.qualcomm.com> (sfid-20180702_164041_417322_10B837AC)
+        Mon, 9 Jul 2018 01:58:57 -0400
+From: "Palanisamy, Rameshbabu" <Rameshbabu.Palanisamy@harman.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: iwlwifi is not working after doing the reboot by pressing RESET
+ button
+Date: Mon, 9 Jul 2018 05:57:51 +0000
+Message-ID: <2f72033224fa47dcad87a69e8bd6a1e1@HIBDWSMB05.ad.harman.com> (sfid-20180709_075901_725387_56D34D75)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> writes:
+Hi Team,
 
-> 'firmware' is a module param which may been longer than firmware_id,
-> so using strlcpy() to guard against overflows. Also priv is allocated
-> with zeroed memory,no need to set firmware_id[0] to '\0'.
->
-> v1 -> v2: remove priv->firmware_id[0] = '\0';
->
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/atmel/atmel.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
 
-The changelog should be after "---" line. I can fix it this time, but in
-the future please use the correct location.
+I am using intel 8265 NGW wifi card in intel leafhill board.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+We have enabled the Intel -wifi card in the Leaf_hill platform. After powering on the device, the wifi module is working fine but it doesn't work when we do the reboot by pressing RESET button.
+We have debug the issue and found that  when we do the hard reboot by pressing the RESET key, the wifi module doesn't detected.
+We have given the  lspci command before and after the hard reboot and the module is not listing in the lspci after hard reboot so we are suspecting that wifi module is not in the proper state due to the hard reboot.
+Could you please help to know what might be the issue.
 
--- 
-Kalle Valo
+
+Thanks,
+Ramesh
