@@ -1,108 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34233 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753621AbeGERGr (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:54442 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbeGIHNu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 13:06:47 -0400
-Subject: Re: [BUG] staging: r8822be: RTL8822be can't find any wireless AP
-To: Pkshih <pkshih@realtek.com>,
-        "drake@endlessm.com" <drake@endlessm.com>
-Cc: Shaofu <shaofu@realtek.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        Birming Chiu <birming@realtek.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "frank@generalsoftwareinc.com" <frank@generalsoftwareinc.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        Steven Ting <steventing@realtek.com>,
-        Tony Chuang <yhchuang@realtek.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>,
-        "jian-hong@endlessm.com" <jian-hong@endlessm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <CAPpJ_ed1oFQW_xmBtetP-ztoL7Z14T6akOSgKJ_8jxogdf3FWg@mail.gmail.com>
- <f3bf0687-76fb-9411-6fa2-e8ef312efb58@lwfinger.net>
- <20180704140933.3dk2ylbntltz6jqd@mwanda>
- <7e95bd6a-97bc-b030-26ce-83da66e5f279@lwfinger.net>
- <CAD8Lp44EG73XQ9omQhH6XiHfm2rMypmndSFyffnf_PVMueTvEA@mail.gmail.com>
- <1530776154.4156.12.camel@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a54fe914-9402-a959-9ae5-540bfec64a14@lwfinger.net> (sfid-20180705_190713_227960_01AAB368)
-Date: Thu, 5 Jul 2018 12:06:43 -0500
-MIME-Version: 1.0
-In-Reply-To: <1530776154.4156.12.camel@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 9 Jul 2018 03:13:50 -0400
+Message-ID: <1531120427.3298.1.camel@sipsolutions.net> (sfid-20180709_091358_873917_57F9C20C)
+Subject: Re: [PATCH v2] mac80211: Fix wlan freezes under load at rekey
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander.wetzel@web.de>
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        s.gottschall@dd-wrt.com
+Date: Mon, 09 Jul 2018 09:13:47 +0200
+In-Reply-To: <da9c6878-56ff-3a63-07cf-dae7813173a2@web.de>
+References: <1523258757.3076.5.camel@sipsolutions.net>
+         <20180515102202.2021-1-alexander.wetzel@web.de>
+         <1529062392.10037.7.camel@sipsolutions.net>
+         <bc327c9b-d5f4-2343-9ca5-932e9295c546@web.de>
+         <1529357234.3092.57.camel@sipsolutions.net>
+         <2de1493a-5439-b9ef-6d06-3895333f01c3@web.de>
+         <1530267147.3481.78.camel@sipsolutions.net>
+         <bb4d75d3-7f90-1b58-9525-3f5a54cd952e@web.de>
+         <1530611484.4735.18.camel@sipsolutions.net>
+         <b1913512-7d33-cd9b-5eb5-4d7f367eb41a@web.de>
+         <1530662787.4735.59.camel@sipsolutions.net>
+         <da9c6878-56ff-3a63-07cf-dae7813173a2@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2018 02:36 AM, Pkshih wrote:
-> On Wed, 2018-07-04 at 10:33 -0500, Daniel Drake wrote:
->> On Wed, Jul 4, 2018 at 10:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> We will have to agree to disagree.
->>>
->>> I have no idea what the vendors are doing that cause some motherboards to
->>> need a different aspm value. What I do know is that we have had to live with
->>> the idiocy of some vendors saving a few pennies by only including a single
->>> antenna, rather than two, and then making a problem by miscoding the EFUSE
->>> bit that indicates which connector is actually in use. As we have no means
->>> that I know about to detect which boxes have the problem, a module parameter
->>> was created, just as in this case.
->>>
->>> I agree that drivers should work "out of the box", but finite resources and
->>> lack of vendor cooperation make this a goal that may not be attainable.
->>
->> As you touched on, the ideal situation is that Realtek solve the
->> issue. Ping-Ke Shih is on CC and I am adding a few more contacts from
->> the commit log. The context is that the r8822 driver fails on several
->> platforms unless setting aspm=0 (the default is 1).
-> 
-> It's hard to have all laptop or motherboards and all rtl8822be modules in my side,
-> so what I can do is to analyze the issue when user encountered.
-> 
->>
->> https://gist.github.com/dsd/20c05f0c6d66ee2ef9bfbb17f93f18ba
->> https://bugzilla.kernel.org/show_bug.cgi?id=199651
->>
->>
->> If we don't get a timely fix from Realtek though, I think there is a
->> key difference between the antenna selection headache and this one. In
->> the antenna case, there isn't a good value that you can set that will
->> work on all systems. If you change the default behaviour you will
->> solve the issue for some users while simultanously introducing the
->> problem on other systems that were previously fine.
->>
->> However in this case, it's highly likely that setting aspm=0 (off) by
->> default would work for everyone. It has the disadvantage of using a
->> bit more power, but especially with the indications that this issue
->> affects a significant number of systems, I think that having the
->> driver working out of the box everywhere is more important. The module
->> parameter can be left in place so that unaffected users that want to
->> save power can set aspm=1.
->>
-> 
-> I think this issue may be due to L1 latency, so below patch would be
-> helpful but not sure because I don't have the same laptop.
-> Is there anyone can help to test?
-> 
-> 
-> diff --git a/drivers/staging/rtlwifi/rtl8822be/hw.c b/drivers/staging/rtlwifi/rtl8822be/hw.c
-> index 7947edb239a1..88ba5b2fea6a 100644
-> --- a/drivers/staging/rtlwifi/rtl8822be/hw.c
-> +++ b/drivers/staging/rtlwifi/rtl8822be/hw.c
-> @@ -803,7 +803,7 @@ static void _rtl8822be_enable_aspm_back_door(struct ieee80211_hw *hw)
->   		return;
->   
->   	pci_read_config_byte(rtlpci->pdev, 0x70f, &tmp);
-> -	pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | BIT(7));
-> +	pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | ASPM_L1_LATENCY << 3);
+Hi,
 
-This patch loses the BIT(7). Did you really mean to do that?
+> I'll try that, but will probably take another week. My main main work
+> station got severe file system corruption, forcing me to reinstall it
+> from scratch. I suspect it was something in the wireless testing kernel
+> 4.18-rc1 (944ae08d4e71) related to either btrfs or the ssd disk but
+> since I needed the system just started over and avoid to run 4.18 if I
+> do not have a full backup...
 
-I now agree that this is a bug. A similar problem had been found in a few boxes 
-with RTL8723BE or RTL8821AE cards, but that it might apply here completely 
-slipped through the ever larger cracks in my mind.
+Ouch. FWIW, it's possible to run inside a VM with PCI(e) devices
+outside, at least on some machines.
 
-Larry
+> > > hostapd or wpa_supplicant are "ordering" mac80211 to install a new key
+> > > and are implementing the state machine and are in a good position to
+> > > handle the fallout... at least theoretically.
+> > 
+> > Ideally it would even know beforehand that we don't want to handle the
+> > PTK rekeying, and then could reconnect instead of going through the
+> > handshake.
+> > 
+> 
+> Don't see how we could do that in the kernel, all the relevant
+> information is handled in the state machine. I guess an API extension
+> telling hostap/supplicant if we can handle rekeys or not would tbe he
+> only way to avoid that.
+
+Right. Not really much point for now I guess.
+
+> > So I think we're probably better off accepting the set_key but not
+> > actually using it, and instead disconnecting... even if that's awkward
+> > and should come with a big comment :-)
+> 
+> Instead of returning an error I'll change the code to accept the rekey
+> but do nothing with it. (Basically delete the new key and keep the old
+> active).
+> And of course calling ieee80211_set_disassoc() prior to return "success".
+
+Right. Did you handle/consider modes other than BSS/P2P client btw?
+
+> Let's see how the supplicant will react on a disassoc while doing a rekey...
+
+Shouldn't matter to it, I'd think.
+
+johannes
