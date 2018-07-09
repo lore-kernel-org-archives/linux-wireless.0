@@ -1,107 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:32963 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752407AbeGAONP (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55828 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932366AbeGIJ0j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:15 -0400
-Received: by mail-wr0-f193.google.com with SMTP id k7-v6so9510805wrq.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:14 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 10/19] mt76: introduce tx_queue_skb function pointer in mt76_bus_ops
-Date: Sun,  1 Jul 2018 16:12:22 +0200
-Message-Id: <20180701141231.25323-11-lorenzo.bianconi@redhat.com> (sfid-20180701_161327_760444_5CDADA6C)
+        Mon, 9 Jul 2018 05:26:39 -0400
+Message-ID: <1531128396.3298.25.camel@sipsolutions.net> (sfid-20180709_112651_398261_4D8D0664)
+Subject: Re: [PATCH] mac80211: restrict delayed tailroom needed decrement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 09 Jul 2018 11:26:36 +0200
+In-Reply-To: <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org>
+References: <1531126681-5146-1-git-send-email-mpubbise@codeaurora.org>
+         <1531126957.3298.23.camel@sipsolutions.net>
+         <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add tx_queue_skb function pointer in mt76_bus_ops since mt76x2u based
-devices do not map mt76x2_txwi on dma buffers and it is not possible
-to reuse mt76_dma_tx_queue_skb() routine to enqueue tx frames to
-hw buffers
+On Mon, 2018-07-09 at 14:54 +0530, Manikanta Pubbisetty wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c  | 1 +
- drivers/net/wireless/mediatek/mt76/mt76.h | 5 +++++
- drivers/net/wireless/mediatek/mt76/tx.c   | 9 +++++----
- 3 files changed, 11 insertions(+), 4 deletions(-)
+> > This describes a scenario where there's *unnecessary* work done, but not
+> > really one where we have something that's *incorrect*?
+> > 
+> 
+> To me at least doing unnecessary things is incorrect :-D, may be we can 
+> change the statement.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6293f21856da..c51da2205b93 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -510,6 +510,7 @@ static const struct mt76_queue_ops mt76_dma_ops = {
- 	.init = mt76_dma_init,
- 	.alloc = mt76_dma_alloc_queue,
- 	.add_buf = mt76_dma_add_buf,
-+	.tx_queue_skb = mt76_dma_tx_queue_skb,
- 	.tx_cleanup = mt76_dma_tx_cleanup,
- 	.rx_reset = mt76_dma_rx_reset,
- 	.kick = mt76_dma_kick_queue,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f37a6f109bf8..9a89a73fcb0f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -30,6 +30,7 @@
- #define MT_RX_BUF_SIZE      2048
- 
- struct mt76_dev;
-+struct mt76_wcid;
- 
- struct mt76_bus_ops {
- 	u32 (*rr)(struct mt76_dev *dev, u32 offset);
-@@ -110,6 +111,10 @@ struct mt76_queue_ops {
- 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
- 		       struct sk_buff *skb, void *txwi);
- 
-+	int (*tx_queue_skb)(struct mt76_dev *dev, struct mt76_queue *q,
-+			    struct sk_buff *skb, struct mt76_wcid *wcid,
-+			    struct ieee80211_sta *sta);
-+
- 	void *(*dequeue)(struct mt76_dev *dev, struct mt76_queue *q, bool flush,
- 			 int *len, u32 *info, bool *more);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index f86501ecf31a..af48d43bb7dc 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -111,7 +111,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	q = &dev->q_tx[qid];
- 
- 	spin_lock_bh(&q->lock);
--	mt76_dma_tx_queue_skb(dev, q, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
- 	dev->queue_ops->kick(dev, q);
- 
- 	if (q->queued > q->ndesc - 8)
-@@ -167,7 +167,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 		info->flags |= IEEE80211_TX_STATUS_EOSP;
- 
- 	mt76_skb_set_moredata(skb, !last);
--	mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, sta);
- }
- 
- void
-@@ -247,7 +247,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 	if (ampdu)
- 		mt76_check_agg_ssn(mtxq, skb);
- 
--	idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+	idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
- 
- 	if (idx < 0)
- 		return idx;
-@@ -282,7 +282,8 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 		if (cur_ampdu)
- 			mt76_check_agg_ssn(mtxq, skb);
- 
--		idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+		idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid,
-+						   txq->sta);
- 		if (idx < 0)
- 			return idx;
- 
--- 
-2.18.0
+Well, I guess it's a question of semantics, but this doesn't really
+result in any observable incorrect behaviour.
+
+> > Are you saying that you found a problem with this? Did this show up in
+> > some sort of measurements?
+> 
+> Not really, I have observed in my testing that there were warnings 
+> whenever a AP_VLAN was brought down; this is done in ieee80211_free_keys.
+> Warnings show up every time we bring down the AP_VLAN interface(using 
+> ifconfig); warnings apart but I thought there would be unnecessary 
+> overhead in the tailroom expansion though the overhead may be trivial.
+
+Except for that maybe :-)
+
+> > > +++ b/net/mac80211/key.c
+> > > @@ -583,7 +583,8 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
+> > >   
+> > >   		ieee80211_debugfs_key_remove(key);
+> > >   
+> > > -		if (delay_tailroom) {
+> > > +		if (delay_tailroom &&
+> > > +		    sdata->vif.type == NL80211_IFTYPE_STATION) {
+> > >   			/* see ieee80211_delayed_tailroom_dec */
+> > >   			sdata->crypto_tx_tailroom_pending_dec++;
+> > >   			schedule_delayed_work(&sdata->dec_tailroom_needed_wk,
+> > 
+> > I think you'd better change the caller, i.e. ieee80211_del_key(), and a
+> > add a comment there that explains what's going on.
+> 
+> Not really sure what you were trying to tell here.
+
+I think you should do
+
+ieee80211_key_destroy(..., type == STATION);
+
+in the caller, instead of hard-coding the thing here.
+
+There may be more places that want the delay, perhaps for other reasons?
+
+johannes
