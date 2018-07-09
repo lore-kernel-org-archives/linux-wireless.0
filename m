@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:48151 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732587AbeGKLgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 07:36:43 -0400
-Date: Wed, 11 Jul 2018 13:32:36 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
- driver when COMPILE_TEST=y
-Message-ID: <20180711133236.67726256@bbrezillon> (sfid-20180711_133313_956875_9FD5CF7C)
-In-Reply-To: <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-        <20180709200945.30116-5-boris.brezillon@bootlin.com>
-        <20180711131626.732967be@bbrezillon>
-        <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:35968 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932445AbeGIMl6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 08:41:58 -0400
+From: Colin King <colin.king@canonical.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        "Luis R . Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath5k: remove redundant pointer rf
+Date: Mon,  9 Jul 2018 13:41:38 +0100
+Message-Id: <20180709124138.14996-1-colin.king@canonical.com> (sfid-20180709_144219_353887_C3B34FF8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 11 Jul 2018 13:27:53 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
-> <boris.brezillon@bootlin.com> wrote:
-> > On Mon,  9 Jul 2018 22:09:25 +0200
-> > Boris Brezillon <boris.brezillon@bootlin.com> wrote:
-> >  
-> >> It just makes NAND maintainers' life easier by allowing them to
-> >> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
-> >> enabled.
-> >>
-> >> We add a dependency on HAS_IOMEM to make sure the driver compiles
-> >> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
-> >> accessors are not defined for this architecture.  
-> >
-> > I see that SPARC does not define those accessors either. So I guess we
-> > should add depends on !SPARC.
-> >
-> > Arnd, any other way to know when the platform implements
-> > {read,write}s{bwl}() accessors?  
-> 
-> I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
-> sparc32 appears to have these, and when Thierry sent the patch
-> to implement them everywhere[1], he said that he tested sparc64 as
-> well, so either something regressed since then, or his testing
-> was incomplete. Either way, the correct answer IMHO would be to
-> make it work rather than to add infrastructure around the broken
-> configurations.
+Pointer rf is being assigned but is never used hence it is redundant
+and can be removed.
 
-I guess the same goes for IA64 then.
+Cleans up two clang warnings:
+warning: variable 'rf' set but not used [-Wunused-but-set-variable]
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b1b8bc326830..ae08572c4b58 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -483,7 +483,6 @@ static u32
+ ath5k_hw_rf_gainf_corr(struct ath5k_hw *ah)
+ {
+ 	u32 mix, step;
+-	u32 *rf;
+ 	const struct ath5k_gain_opt *go;
+ 	const struct ath5k_gain_opt_step *g_step;
+ 	const struct ath5k_rf_reg *rf_regs;
+@@ -502,7 +501,6 @@ ath5k_hw_rf_gainf_corr(struct ath5k_hw *ah)
+ 	if (ah->ah_rf_banks == NULL)
+ 		return 0;
+ 
+-	rf = ah->ah_rf_banks;
+ 	ah->ah_gain.g_f_corr = 0;
+ 
+ 	/* No VGA (Variable Gain Amplifier) override, skip */
+@@ -549,13 +547,10 @@ ath5k_hw_rf_check_gainf_readback(struct ath5k_hw *ah)
+ {
+ 	const struct ath5k_rf_reg *rf_regs;
+ 	u32 step, mix_ovr, level[4];
+-	u32 *rf;
+ 
+ 	if (ah->ah_rf_banks == NULL)
+ 		return false;
+ 
+-	rf = ah->ah_rf_banks;
+-
+ 	if (ah->ah_radio == AR5K_RF5111) {
+ 
+ 		rf_regs = rf_regs_5111;
+-- 
+2.17.1
