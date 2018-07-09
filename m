@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58724 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726820AbeG3PsH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 11:48:07 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:36831 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932755AbeGIQhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 12:37:09 -0400
+Subject: [RFC v2 0/4] Move TXQ scheduling into mac80211
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
+Date: Mon, 09 Jul 2018 18:37:04 +0200
+Message-ID: <153115421866.7447.6363834356268564403.stgit@alrua-x1> (sfid-20180709_183713_722111_6B29BAB3)
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/6] qtnfmac: implement cfg80211 power management callback
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180531091102.28666-4-sergey.matyukevich.os@quantenna.com>
-References: <20180531091102.28666-4-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Message-Id: <20180730141255.A966161D77@smtp.codeaurora.org> (sfid-20180730_161258_689253_36A0E3EE)
-Date: Mon, 30 Jul 2018 14:12:55 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+This is an updated version of my previous patch series to move TXQ
+scheduling into mac80211, allowing more drivers to take advantage of
+airtime fairness scheduling. This version keeps compatibility with the
+old wake_tx_queue API, so drivers can be ported to the new API one at a
+time. For now, only ath9k is changed.
 
-> From: Sergei Maksimenko <smaksimenko@quantenna.com>
-> 
-> Implement set_power_mgmt() callback that forwards power saving
-> settings to the device firmware.
-> 
-> Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
+There's also an update to the scheduling to use a sequence number to
+keep track of scheduling rounds, so drivers have a clean way to loop
+through all queued TXQs exactly once without having to keep track of the
+first TXQ seen in a round.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Finally, the airtime fairness scheduler also incorporates weights into
+the scheduling, which allows userspace to implement policies for how
+airtime is divided between stations. I have a patch series for hostapd
+to implement configurable policies, that I will post separately once the
+kernel side is in place.
 
-4775ad06b56a qtnfmac: implement cfg80211 power management callback
-8f1180e08ed4 qtnfmac: enable multiple SSIDs scan support
+---
 
--- 
-https://patchwork.kernel.org/patch/10440561/
+Toke Høiland-Jørgensen (4):
+      mac80211: Add TXQ scheduling API
+      mac80211: Add airtime accounting and scheduling to TXQs
+      cfg80211: Add airtime statistics and settings
+      ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+ drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
+ drivers/net/wireless/ath/ath9k/debug.c     |    3 
+ drivers/net/wireless/ath/ath9k/debug.h     |    8 -
+ drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
+ drivers/net/wireless/ath/ath9k/init.c      |    3 
+ drivers/net/wireless/ath/ath9k/recv.c      |    9 -
+ drivers/net/wireless/ath/ath9k/xmit.c      |  245 ++++++++--------------------
+ include/net/cfg80211.h                     |   15 +-
+ include/net/mac80211.h                     |   78 ++++++++-
+ include/uapi/linux/nl80211.h               |   17 ++
+ net/mac80211/agg-tx.c                      |    2 
+ net/mac80211/cfg.c                         |    6 +
+ net/mac80211/debugfs.c                     |    3 
+ net/mac80211/debugfs_sta.c                 |   35 ++++
+ net/mac80211/ieee80211_i.h                 |   10 +
+ net/mac80211/main.c                        |    5 +
+ net/mac80211/sta_info.c                    |   42 +++++
+ net/mac80211/sta_info.h                    |   13 +
+ net/mac80211/tx.c                          |  101 ++++++++++++
+ net/wireless/core.c                        |    2 
+ net/wireless/nl80211.c                     |   50 ++++++
+ 21 files changed, 449 insertions(+), 266 deletions(-)
