@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41241 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933245AbeGIUKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:05 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this driver when COMPILE_TEST=y
-Date: Mon,  9 Jul 2018 22:09:25 +0200
-Message-Id: <20180709200945.30116-5-boris.brezillon@bootlin.com> (sfid-20180709_221009_982984_CB6E1540)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39620 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932366AbeGIJho (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jul 2018 05:37:44 -0400
+Subject: Re: [PATCH] mac80211: restrict delayed tailroom needed decrement
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <1531126681-5146-1-git-send-email-mpubbise@codeaurora.org>
+ <1531126957.3298.23.camel@sipsolutions.net>
+ <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org>
+ <1531128396.3298.25.camel@sipsolutions.net>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <fa862aa4-8cc6-ade1-68f8-88941b59a47e@codeaurora.org> (sfid-20180709_113748_964246_E9A1096A)
+Date: Mon, 9 Jul 2018 15:07:40 +0530
+MIME-Version: 1.0
+In-Reply-To: <1531128396.3298.25.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
-enabled.
 
-We add a dependency on HAS_IOMEM to make sure the driver compiles
-correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
-accessors are not defined for this architecture.
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
----
- drivers/mtd/nand/raw/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On 7/9/2018 2:56 PM, Johannes Berg wrote:
+> On Mon, 2018-07-09 at 14:54 +0530, Manikanta Pubbisetty wrote:
+>
+>>> This describes a scenario where there's *unnecessary* work done, but not
+>>> really one where we have something that's *incorrect*?
+>>>
+>> To me at least doing unnecessary things is incorrect :-D, may be we can
+>> change the statement.
+> Well, I guess it's a question of semantics, but this doesn't really
+> result in any observable incorrect behaviour.
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index 1488ad0a0199..e01b3da726c0 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -119,7 +119,8 @@ config MTD_NAND_AU1550
- 
- config MTD_NAND_S3C2410
- 	tristate "NAND Flash support for Samsung S3C SoCs"
--	depends on ARCH_S3C24XX || ARCH_S3C64XX
-+	depends on ARCH_S3C24XX || ARCH_S3C64XX || COMPILE_TEST
-+	depends on HAS_IOMEM && !IA64
- 	help
- 	  This enables the NAND flash controller on the S3C24xx and S3C64xx
- 	  SoCs
--- 
-2.14.1
+Okay.
+
+>>> Are you saying that you found a problem with this? Did this show up in
+>>> some sort of measurements?
+>> Not really, I have observed in my testing that there were warnings
+>> whenever a AP_VLAN was brought down; this is done in ieee80211_free_keys.
+>> Warnings show up every time we bring down the AP_VLAN interface(using
+>> ifconfig); warnings apart but I thought there would be unnecessary
+>> overhead in the tailroom expansion though the overhead may be trivial.
+> Except for that maybe :-)
+
+:-)
+
+>>>> +++ b/net/mac80211/key.c
+>>>> @@ -583,7 +583,8 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
+>>>>    
+>>>>    		ieee80211_debugfs_key_remove(key);
+>>>>    
+>>>> -		if (delay_tailroom) {
+>>>> +		if (delay_tailroom &&
+>>>> +		    sdata->vif.type == NL80211_IFTYPE_STATION) {
+>>>>    			/* see ieee80211_delayed_tailroom_dec */
+>>>>    			sdata->crypto_tx_tailroom_pending_dec++;
+>>>>    			schedule_delayed_work(&sdata->dec_tailroom_needed_wk,
+>>> I think you'd better change the caller, i.e. ieee80211_del_key(), and a
+>>> add a comment there that explains what's going on.
+>> Not really sure what you were trying to tell here.
+> I think you should do
+>
+> ieee80211_key_destroy(..., type == STATION);
+
+Even this would boil down to the same behavior, no?
+
+>
+> in the caller, instead of hard-coding the thing here.
+>
+> There may be more places that want the delay, perhaps for other reasons?
+
+I was going through the source to figure out that; but all that I could 
+understand is this was mainly done to improve roam time.
