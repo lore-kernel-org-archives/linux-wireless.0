@@ -1,70 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:55828 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932366AbeGIJ0j (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35588 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732762AbeGJSnT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 05:26:39 -0400
-Message-ID: <1531128396.3298.25.camel@sipsolutions.net> (sfid-20180709_112651_398261_4D8D0664)
-Subject: Re: [PATCH] mac80211: restrict delayed tailroom needed decrement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jul 2018 11:26:36 +0200
-In-Reply-To: <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org>
-References: <1531126681-5146-1-git-send-email-mpubbise@codeaurora.org>
-         <1531126957.3298.23.camel@sipsolutions.net>
-         <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 10 Jul 2018 14:43:19 -0400
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCHv3] mac80211: add stop/start logic for software TXQs
+Date: Wed, 11 Jul 2018 00:12:53 +0530
+Message-Id: <1531248173-31114-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180710_205131_512815_3473EDA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-07-09 at 14:54 +0530, Manikanta Pubbisetty wrote:
+Sometimes, it is required to stop the transmissions momentarily and
+resume it later; stopping the txqs becomes very critical in scenarios where
+the packet transmission has to be ceased completely. For example, during
+the hardware restart, during off channel operations,
+when initiating CSA(upon detecting a radar on the DFS channel), etc.
 
-> > This describes a scenario where there's *unnecessary* work done, but not
-> > really one where we have something that's *incorrect*?
-> > 
-> 
-> To me at least doing unnecessary things is incorrect :-D, may be we can 
-> change the statement.
+The TX queue stop/start logic in mac80211 works well in stopping the TX
+when drivers make use of netdev queues, i.e, when Qdiscs in network layer
+take care of traffic scheduling. Since the devices implementing
+wake_tx_queue can run without Qdiscs, packets will be handed to mac80211
+directly without queueing them in the netdev queues.
 
-Well, I guess it's a question of semantics, but this doesn't really
-result in any observable incorrect behaviour.
+Also, mac80211 does not invoke any of the
+netif_stop_*/netif_wake_* APIs if wake_tx_queue is implemented.
+Since the queues are not stopped in this case, transmissions can continue
+and this will impact negatively on the operation of the wireless device.
 
-> > Are you saying that you found a problem with this? Did this show up in
-> > some sort of measurements?
-> 
-> Not really, I have observed in my testing that there were warnings 
-> whenever a AP_VLAN was brought down; this is done in ieee80211_free_keys.
-> Warnings show up every time we bring down the AP_VLAN interface(using 
-> ifconfig); warnings apart but I thought there would be unnecessary 
-> overhead in the tailroom expansion though the overhead may be trivial.
+For example,
+During hardware restart, we stop the netdev queues so that packets are
+not sent to the driver. Since ath10k implements wake_tx_queue,
+TX queues will not be stopped and packets might reach the hardware while
+it is restarting; this can make hardware unresponsive and the only
+possible option for recovery is to reboot the entire system.
 
-Except for that maybe :-)
+There is another problem to this, it is observed that the packets
+were sent on the DFS channel for a prolonged duration after radar
+detection impacting the channel closing time.
 
-> > > +++ b/net/mac80211/key.c
-> > > @@ -583,7 +583,8 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
-> > >   
-> > >   		ieee80211_debugfs_key_remove(key);
-> > >   
-> > > -		if (delay_tailroom) {
-> > > +		if (delay_tailroom &&
-> > > +		    sdata->vif.type == NL80211_IFTYPE_STATION) {
-> > >   			/* see ieee80211_delayed_tailroom_dec */
-> > >   			sdata->crypto_tx_tailroom_pending_dec++;
-> > >   			schedule_delayed_work(&sdata->dec_tailroom_needed_wk,
-> > 
-> > I think you'd better change the caller, i.e. ieee80211_del_key(), and a
-> > add a comment there that explains what's going on.
-> 
-> Not really sure what you were trying to tell here.
+We can still invoke netif stop/wake APIs when wake_tx_queue is implemented
+but this could lead to packet drops in network layer; adding stop/start
+logic for software TXQs in mac80211 instead makes more sense; the change
+proposed adds the same in mac80211.
 
-I think you should do
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+V3:
+	* renamed _TXQ_PAUSED to _TXQ_STOP_NETIF_TX
+	* fixed kbuild error
 
-ieee80211_key_destroy(..., type == STATION);
+ include/net/mac80211.h     |   4 ++
+ net/mac80211/ieee80211_i.h |   3 ++
+ net/mac80211/main.c        |   4 ++
+ net/mac80211/tx.c          |  11 ++++-
+ net/mac80211/util.c        | 110 ++++++++++++++++++++++++++++++++++++++++++---
+ 5 files changed, 125 insertions(+), 7 deletions(-)
 
-in the caller, instead of hard-coding the thing here.
-
-There may be more places that want the delay, perhaps for other reasons?
-
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5790f55..e248f5f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1504,6 +1504,8 @@ enum ieee80211_vif_flags {
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void \*).
+  * @txq: the multicast data TX queue (if driver uses the TXQ abstraction)
++ * @txqs_stopped: per AC flag to indicate that intermediate TXQs are stopped,
++ *	protected by fq->lock.
+  */
+ struct ieee80211_vif {
+ 	enum nl80211_iftype type;
+@@ -1528,6 +1530,8 @@ struct ieee80211_vif {
+ 
+ 	unsigned int probe_req_reg;
+ 
++	bool txqs_stopped[IEEE80211_NUM_ACS];
++
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 172aeae..348a52c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -818,6 +818,7 @@ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
+ 	IEEE80211_TXQ_NO_AMSDU,
++	IEEE80211_TXQ_STOP_NETIF_TX,
+ };
+ 
+ /**
+@@ -1226,6 +1227,7 @@ struct ieee80211_local {
+ 
+ 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
++	struct tasklet_struct wake_txqs_tasklet;
+ 
+ 	atomic_t agg_queue_stop[IEEE80211_MAX_QUEUES];
+ 
+@@ -2038,6 +2040,7 @@ void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
+ 			       struct ieee80211_sub_if_data *sdata);
+ void ieee80211_fill_txq_stats(struct cfg80211_txq_stats *txqstats,
+ 			      struct txq_info *txqi);
++void ieee80211_wake_txqs(unsigned long data);
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+ 			 const u8 *extra, size_t extra_len, const u8 *bssid,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4fb2709..e121541 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -668,6 +668,10 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
+ 		     (unsigned long)local);
+ 
++	if (ops->wake_tx_queue)
++		tasklet_init(&local->wake_txqs_tasklet, ieee80211_wake_txqs,
++			     (unsigned long)local);
++
+ 	tasklet_init(&local->tasklet,
+ 		     ieee80211_tasklet_handler,
+ 		     (unsigned long) local);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index cd332e3..0931080 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3466,13 +3466,19 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_tx_data tx;
+ 	ieee80211_tx_result r;
+-	struct ieee80211_vif *vif;
++	struct ieee80211_vif *vif = txq->vif;
+ 
+ 	spin_lock_bh(&fq->lock);
+ 
+-	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
++	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags) ||
++	    test_bit(IEEE80211_TXQ_STOP_NETIF_TX, &txqi->flags))
+ 		goto out;
+ 
++	if (vif->txqs_stopped[ieee80211_ac_from_tid(txq->tid)]) {
++		set_bit(IEEE80211_TXQ_STOP_NETIF_TX, &txqi->flags);
++		goto out;
++	}
++
+ 	/* Make sure fragments stay together. */
+ 	skb = __skb_dequeue(&txqi->frags);
+ 	if (skb)
+@@ -3567,6 +3573,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	IEEE80211_SKB_CB(skb)->control.vif = vif;
++
+ out:
+ 	spin_unlock_bh(&fq->lock);
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3e68132..08426e4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -240,6 +240,99 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+ 
++static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct fq *fq = &local->fq;
++	struct ps_data *ps = NULL;
++	struct txq_info *txqi;
++	struct sta_info *sta;
++	int i;
++
++	spin_lock_bh(&fq->lock);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		ps = &sdata->bss->ps;
++
++	sdata->vif.txqs_stopped[ac] = false;
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata)
++			continue;
++
++		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
++			struct ieee80211_txq *txq = sta->sta.txq[i];
++
++			txqi = to_txq_info(txq);
++
++			if (ac != txq->ac)
++				continue;
++
++			if (!test_and_clear_bit(IEEE80211_TXQ_STOP_NETIF_TX,
++						&txqi->flags))
++				continue;
++
++			spin_unlock_bh(&fq->lock);
++			drv_wake_tx_queue(local, txqi);
++			spin_lock_bh(&fq->lock);
++		}
++	}
++
++	if (!vif->txq)
++		goto out;
++
++	txqi = to_txq_info(vif->txq);
++
++	if (!test_and_clear_bit(IEEE80211_TXQ_STOP_NETIF_TX, &txqi->flags) ||
++	    (ps && atomic_read(&ps->num_sta_ps)) || ac != vif->txq->ac)
++		goto out;
++
++	spin_unlock_bh(&fq->lock);
++
++	drv_wake_tx_queue(local, txqi);
++	return;
++out:
++	spin_unlock_bh(&fq->lock);
++}
++
++void ieee80211_wake_txqs(unsigned long data)
++{
++	struct ieee80211_local *local = (struct ieee80211_local *)data;
++	struct ieee80211_sub_if_data *sdata;
++	int n_acs = IEEE80211_NUM_ACS;
++	unsigned long flags;
++	int i;
++
++	rcu_read_lock();
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++	if (local->hw.queues < IEEE80211_NUM_ACS)
++		n_acs = 1;
++
++	for (i = 0; i < local->hw.queues; i++) {
++		if (local->queue_stop_reasons[i])
++			continue;
++
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++			int ac;
++
++			for (ac = 0; ac < n_acs; ac++) {
++				int ac_queue = sdata->vif.hw_queue[ac];
++
++				if (ac_queue == i ||
++				    sdata->vif.cab_queue == i)
++					__ieee80211_wake_txqs(sdata, ac);
++			}
++		}
++		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++	}
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	rcu_read_unlock();
++}
++
+ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -308,6 +401,9 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+ 		rcu_read_unlock();
+ 	} else
+ 		tasklet_schedule(&local->tx_pending_tasklet);
++
++	if (local->ops->wake_tx_queue)
++		tasklet_schedule(&local->wake_txqs_tasklet);
+ }
+ 
+ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+@@ -351,9 +447,6 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	if (__test_and_set_bit(reason, &local->queue_stop_reasons[queue]))
+ 		return;
+ 
+-	if (local->ops->wake_tx_queue)
+-		return;
+-
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		n_acs = 1;
+ 
+@@ -366,8 +459,15 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 
+ 		for (ac = 0; ac < n_acs; ac++) {
+ 			if (sdata->vif.hw_queue[ac] == queue ||
+-			    sdata->vif.cab_queue == queue)
+-				netif_stop_subqueue(sdata->dev, ac);
++			    sdata->vif.cab_queue == queue) {
++				if (!local->ops->wake_tx_queue) {
++					netif_stop_subqueue(sdata->dev, ac);
++					continue;
++				}
++				spin_lock(&local->fq.lock);
++				sdata->vif.txqs_stopped[ac] = true;
++				spin_unlock(&local->fq.lock);
++			}
+ 		}
+ 	}
+ 	rcu_read_unlock();
+-- 
+2.7.4
