@@ -1,225 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38746 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729568AbeG0O2N (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:28:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 16:06:15 +0300
-Message-Id: <20180727130615.28707-1-luca@coelho.fi> (sfid-20180727_150624_530385_93773BF8)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 16/16] iwlwifi: pcie: split tx to amsdu and non amsdu
+Received: from mx2.suse.de ([195.135.220.15]:41358 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751418AbeGJKzz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jul 2018 06:55:55 -0400
+Date: Tue, 10 Jul 2018 12:55:51 +0200
+From: Petr Mladek <pmladek@suse.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+        syzbot <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+Subject: Re: INFO: rcu detected stall in llcp_sock_sendmsg
+Message-ID: <20180710105551.ds6weeo7y7keekb5@pathway.suse.cz> (sfid-20180710_125614_971055_6B20B633)
+References: <0000000000000cc1f0057096efe6@google.com>
+ <CACT4Y+Zc+UKpGwEEMfKOsZ1s+AAFYFrVmjO0-u7NNjODRiJ7tg@mail.gmail.com>
+ <6e2e4cfa-2cde-ec28-933d-1ee17c8b1da9@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6e2e4cfa-2cde-ec28-933d-1ee17c8b1da9@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Mon 2018-07-09 14:05:08, Eric Dumazet wrote:
+> 
+> 
+> On 07/09/2018 01:50 PM, Dmitry Vyukov wrote:
+> > On Mon, Jul 9, 2018 at 10:34 PM, syzbot
+> > <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com> wrote:
+> >> Hello,
+> >>
+> >> syzbot found the following crash on:
+> >>
+> >> HEAD commit:    1e4b044d2251 Linux 4.18-rc4
+> >> git tree:       upstream
+> >> console output: https://syzkaller.appspot.com/x/log.txt?x=1414c2c2400000
+> >> kernel config:  https://syzkaller.appspot.com/x/.config?x=25856fac4e580aa7
+> >> dashboard link: https://syzkaller.appspot.com/bug?extid=e9f364d3b15ce41d8451
+> >> compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
+> >>
+> >> Unfortunately, I don't have any reproducer for this crash yet.
+> >>
+> >> IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> >> Reported-by: syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com
+> > 
+> > Looks like the problem is actually in nfc, so +nfc maintainers.
+> 
+> Note this issue was discussed before, maybe we should patch NFC without waiting for nfc maintainer.
 
-The code is different enough to justify a split.
+Do you have any particular solution in mind, please? See below.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 149 ++++++++++++------
- 1 file changed, 100 insertions(+), 49 deletions(-)
+> ----------------------------------------------------
+> 
+> On 06/25/2018 10:12 PM, Sergey Senozhatsky wrote:
+> > On (06/26/18 07:07), Dmitry Vyukov wrote:
+> > [..]
+> >>>  #include <net/nfc/nfc.h>
+> >>> @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+> >>>                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+> >>>                                          frag_len + LLCP_HEADER_SIZE, &err);
+> >>>                 if (pdu == NULL) {
+> >>> -                       pr_err("Could not allocate PDU\n");
+> >>> +                       pr_err_ratelimited("Could not allocate PDU\n");
+> >>> +                       cond_resched();
+> >>>                         continue;
+> >>>                 }
+> >>
+> >>
+> >> But this thread is still in an infinite (unkillable?) loop? If yes, we
+> >> are waiting for the next syzbot report 
+> >
+> > The loop is still infinite, correct, but we have a preemption point now.
+> > Sure, net people can come with a much better solution, I'll be happy to
+> > scratch my patch.
+> >
+> 
+> This can not be the right solution, think about current thread being real time,
+> cond_resched() might be a nop.
+> 
+> We should probably not loop at all, or not use MSG_DONTWAIT.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 64db540ad605..b99f33ff9123 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -365,58 +365,89 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
- 	return -EINVAL;
- }
- 
--static
--struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
--					    struct iwl_txq *txq,
--					    struct iwl_device_cmd *dev_cmd,
--					    struct sk_buff *skb,
--					    struct iwl_cmd_meta *out_meta)
-+static struct
-+iwl_tfh_tfd *iwl_pcie_gen2_build_tx_amsdu(struct iwl_trans *trans,
-+					  struct iwl_txq *txq,
-+					  struct iwl_device_cmd *dev_cmd,
-+					  struct sk_buff *skb,
-+					  struct iwl_cmd_meta *out_meta,
-+					  int hdr_len,
-+					  int tx_cmd_len)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
- 	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
- 	dma_addr_t tb_phys;
--	bool amsdu;
--	int i, len, tb1_len, tb2_len, hdr_len;
-+	int len;
- 	void *tb1_addr;
- 
--	memset(tfd, 0, sizeof(*tfd));
-+	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
- 
--	amsdu = ieee80211_is_data_qos(hdr->frame_control) &&
--		(*ieee80211_get_qos_ctl(hdr) &
--		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
-+	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
-+
-+	/*
-+	 * The second TB (tb1) points to the remainder of the TX command
-+	 * and the 802.11 header - dword aligned size
-+	 * (This calculation modifies the TX command, so do it before the
-+	 * setup of the first TB)
-+	 */
-+	len = tx_cmd_len + sizeof(struct iwl_cmd_header) + hdr_len -
-+	      IWL_FIRST_TB_SIZE;
-+
-+	/* do not align A-MSDU to dword as the subframe header aligns it */
-+
-+	/* map the data for TB1 */
-+	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
-+	tb_phys = dma_map_single(trans->dev, tb1_addr, len, DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(trans->dev, tb_phys)))
-+		goto out_err;
-+	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, len);
-+
-+	if (iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
-+				      len + IWL_FIRST_TB_SIZE,
-+				      hdr_len, dev_cmd))
-+		goto out_err;
-+
-+	/* building the A-MSDU might have changed this data, memcpy it now */
-+	memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr, IWL_FIRST_TB_SIZE);
-+	return tfd;
-+
-+out_err:
-+	iwl_pcie_gen2_tfd_unmap(trans, out_meta, tfd);
-+	return NULL;
-+}
-+
-+static struct
-+iwl_tfh_tfd *iwl_pcie_gen2_build_tx(struct iwl_trans *trans,
-+				    struct iwl_txq *txq,
-+				    struct iwl_device_cmd *dev_cmd,
-+				    struct sk_buff *skb,
-+				    struct iwl_cmd_meta *out_meta,
-+				    int hdr_len,
-+				    int tx_cmd_len)
-+{
-+	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
-+	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
-+	dma_addr_t tb_phys;
-+	int i, len, tb1_len, tb2_len;
-+	void *tb1_addr;
- 
- 	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
-+
- 	/* The first TB points to bi-directional DMA data */
--	if (!amsdu)
--		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
--		       IWL_FIRST_TB_SIZE);
-+	memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr, IWL_FIRST_TB_SIZE);
- 
- 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
- 
--	/* there must be data left over for TB1 or this code must be changed */
--	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) < IWL_FIRST_TB_SIZE);
--
- 	/*
- 	 * The second TB (tb1) points to the remainder of the TX command
- 	 * and the 802.11 header - dword aligned size
- 	 * (This calculation modifies the TX command, so do it before the
- 	 * setup of the first TB)
- 	 */
--	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
--		len = sizeof(struct iwl_tx_cmd_gen2);
--	else
--		len = sizeof(struct iwl_tx_cmd_gen3);
-+	len = tx_cmd_len + sizeof(struct iwl_cmd_header) + hdr_len -
-+	      IWL_FIRST_TB_SIZE;
- 
--	len += sizeof(struct iwl_cmd_header) +
--		ieee80211_hdrlen(hdr->frame_control) -
--		IWL_FIRST_TB_SIZE;
--
--	/* do not align A-MSDU to dword as the subframe header aligns it */
--	if (amsdu)
--		tb1_len = len;
--	else
--		tb1_len = ALIGN(len, 4);
-+	tb1_len = ALIGN(len, 4);
- 
- 	/* map the data for TB1 */
- 	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
-@@ -425,23 +456,6 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 		goto out_err;
- 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, tb1_len);
- 
--	hdr_len = ieee80211_hdrlen(hdr->frame_control);
--
--	if (amsdu) {
--		if (iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
--					      tb1_len + IWL_FIRST_TB_SIZE,
--					      hdr_len, dev_cmd))
--			goto out_err;
--
--		/*
--		 * building the A-MSDU might have changed this data, so memcpy
--		 * it now
--		 */
--		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
--		       IWL_FIRST_TB_SIZE);
--		return tfd;
--	}
--
- 	/* set up TFD's third entry to point to remainder of skb's head */
- 	tb2_len = skb_headlen(skb) - hdr_len;
- 
-@@ -483,6 +497,43 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 	return NULL;
- }
- 
-+static
-+struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
-+					    struct iwl_txq *txq,
-+					    struct iwl_device_cmd *dev_cmd,
-+					    struct sk_buff *skb,
-+					    struct iwl_cmd_meta *out_meta)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
-+	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
-+	int len, hdr_len;
-+	bool amsdu;
-+
-+	/* There must be data left over for TB1 or this code must be changed */
-+	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) < IWL_FIRST_TB_SIZE);
-+
-+	memset(tfd, 0, sizeof(*tfd));
-+
-+	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		len = sizeof(struct iwl_tx_cmd_gen2);
-+	else
-+		len = sizeof(struct iwl_tx_cmd_gen3);
-+
-+	amsdu = ieee80211_is_data_qos(hdr->frame_control) &&
-+			(*ieee80211_get_qos_ctl(hdr) &
-+			 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
-+
-+	hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+
-+	if (amsdu)
-+		return iwl_pcie_gen2_build_tx_amsdu(trans, txq, dev_cmd, skb,
-+						    out_meta, hdr_len, len);
-+
-+	return iwl_pcie_gen2_build_tx(trans, txq, dev_cmd, skb, out_meta,
-+				      hdr_len, len);
-+}
-+
- int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			   struct iwl_device_cmd *dev_cmd, int txq_id)
- {
--- 
-2.18.0
+These two solutions look promising. But they both need to
+get reviewed by someone familiar with the code.
+
+On one hand, nfc_llcp_send_ui_frame() already returns some errors
+before sending anything. But I am not sure how to deal with situation
+when a fragment of the message has already been sent.
+
+Best Regards,
+Petr
