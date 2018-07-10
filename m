@@ -1,155 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35032 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388549AbeGXSDm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43680 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933506AbeGJQ1q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 14:03:42 -0400
-Received: by mail-pg1-f194.google.com with SMTP id e6-v6so3312518pgv.2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:56:19 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
-        Eric Biggers <ebiggers@google.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Rabin Vincent <rabinv@axis.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
-        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        qat-linux@intel.com, linux-ppp@vger.kernel.org,
-        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 16/18] rxrpc: Reuse SKCIPHER_REQUEST_ON_STACK buffer
-Date: Tue, 24 Jul 2018 09:49:34 -0700
-Message-Id: <20180724164936.37477-17-keescook@chromium.org> (sfid-20180724_185706_524045_2DD1EEDE)
-In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
-References: <20180724164936.37477-1-keescook@chromium.org>
+        Tue, 10 Jul 2018 12:27:46 -0400
+Subject: Re: [PATCHv2] mac80211: add stop/start logic for software TXQs
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
+ <87o9ffcknp.fsf@toke.dk>
+ <defe411e-1371-6e1c-9414-02fc323c4ec8@codeaurora.org>
+ <87in5ncdzj.fsf@toke.dk>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <b91ace0b-412a-c654-0a03-49ed7138abd0@codeaurora.org> (sfid-20180710_182750_469035_C1B7AB2E)
+Date: Tue, 10 Jul 2018 21:57:42 +0530
+MIME-Version: 1.0
+In-Reply-To: <87in5ncdzj.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The use of SKCIPHER_REQUEST_ON_STACK() will trigger FRAME_WARN warnings
-(when less than 2048) once the VLA is no longer hidden from the check:
 
-net/rxrpc/rxkad.c:398:1: warning: the frame size of 1152 bytes is larger than 1024 bytes [-Wframe-larger-than=]
-net/rxrpc/rxkad.c:242:1: warning: the frame size of 1152 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-This passes the initial SKCIPHER_REQUEST_ON_STACK allocation to the leaf
-functions for reuse. Two requests allocated on the stack is not needed
-when only one is used at a time.
+On 7/10/2018 8:52 PM, Toke Høiland-Jørgensen wrote:
+> Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+>
+>> On 7/10/2018 6:28 PM, Toke Høiland-Jørgensen wrote:
+>>
+>>>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+>>>> index 172aeae..d07f7f9 100644
+>>>> --- a/net/mac80211/ieee80211_i.h
+>>>> +++ b/net/mac80211/ieee80211_i.h
+>>>> @@ -818,6 +818,7 @@ enum txq_info_flags {
+>>>>    	IEEE80211_TXQ_STOP,
+>>>>    	IEEE80211_TXQ_AMPDU,
+>>>>    	IEEE80211_TXQ_NO_AMSDU,
+>>>> +	IEEE80211_TXQ_PAUSED,
+>>>>    };
+>>> I think it would be a good idea to either rename the flags, or at least
+>>> add an explanation somewhere of the difference between a paused and a
+>>> stopped queue...
+>> Initially, the idea was to use IEEE80211_TXQ_STOP flag to indicate that
+>> iTXQs are stopped; since this flag was used in the aggregation code, I
+>> was unsure whether the same flag can be used to indicate the iTXQ stop
+>> condition.
+>> I could not find any better name for this:-).
+> Hmm, yeah, not sure whether the two code paths can stomp on each other
+> if you reuse the flag. It would be neat to be able to reuse it, though...
+>
+> Otherwise, how about renaming the old one to _STOP_AGGR and calling the
+> new one _STOP_NETIF or something?
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- net/rxrpc/rxkad.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+These ones are much better, thanks toke!!
+I would probably like to extend the name to _STOP_NETIF_TX; how about 
+keeping the old one as is  and renaming _TXQ_PAUSED to _TXQ_STOP_NETIF_TX ?
 
-diff --git a/net/rxrpc/rxkad.c b/net/rxrpc/rxkad.c
-index 278ac0807a60..6393391fac86 100644
---- a/net/rxrpc/rxkad.c
-+++ b/net/rxrpc/rxkad.c
-@@ -146,10 +146,10 @@ static int rxkad_prime_packet_security(struct rxrpc_connection *conn)
- static int rxkad_secure_packet_auth(const struct rxrpc_call *call,
- 				    struct sk_buff *skb,
- 				    u32 data_size,
--				    void *sechdr)
-+				    void *sechdr,
-+				    struct skcipher_request *req)
- {
- 	struct rxrpc_skb_priv *sp = rxrpc_skb(skb);
--	SKCIPHER_REQUEST_ON_STACK(req, call->conn->cipher);
- 	struct rxkad_level1_hdr hdr;
- 	struct rxrpc_crypt iv;
- 	struct scatterlist sg;
-@@ -183,12 +183,12 @@ static int rxkad_secure_packet_auth(const struct rxrpc_call *call,
- static int rxkad_secure_packet_encrypt(const struct rxrpc_call *call,
- 				       struct sk_buff *skb,
- 				       u32 data_size,
--				       void *sechdr)
-+				       void *sechdr,
-+				       struct skcipher_request *req)
- {
- 	const struct rxrpc_key_token *token;
- 	struct rxkad_level2_hdr rxkhdr;
- 	struct rxrpc_skb_priv *sp;
--	SKCIPHER_REQUEST_ON_STACK(req, call->conn->cipher);
- 	struct rxrpc_crypt iv;
- 	struct scatterlist sg[16];
- 	struct sk_buff *trailer;
-@@ -296,11 +296,12 @@ static int rxkad_secure_packet(struct rxrpc_call *call,
- 		ret = 0;
- 		break;
- 	case RXRPC_SECURITY_AUTH:
--		ret = rxkad_secure_packet_auth(call, skb, data_size, sechdr);
-+		ret = rxkad_secure_packet_auth(call, skb, data_size, sechdr,
-+					       req);
- 		break;
- 	case RXRPC_SECURITY_ENCRYPT:
- 		ret = rxkad_secure_packet_encrypt(call, skb, data_size,
--						  sechdr);
-+						  sechdr, req);
- 		break;
- 	default:
- 		ret = -EPERM;
-@@ -316,10 +317,10 @@ static int rxkad_secure_packet(struct rxrpc_call *call,
-  */
- static int rxkad_verify_packet_1(struct rxrpc_call *call, struct sk_buff *skb,
- 				 unsigned int offset, unsigned int len,
--				 rxrpc_seq_t seq)
-+				 rxrpc_seq_t seq,
-+				 struct skcipher_request *req)
- {
- 	struct rxkad_level1_hdr sechdr;
--	SKCIPHER_REQUEST_ON_STACK(req, call->conn->cipher);
- 	struct rxrpc_crypt iv;
- 	struct scatterlist sg[16];
- 	struct sk_buff *trailer;
-@@ -402,11 +403,11 @@ static int rxkad_verify_packet_1(struct rxrpc_call *call, struct sk_buff *skb,
-  */
- static int rxkad_verify_packet_2(struct rxrpc_call *call, struct sk_buff *skb,
- 				 unsigned int offset, unsigned int len,
--				 rxrpc_seq_t seq)
-+				 rxrpc_seq_t seq,
-+				 struct skcipher_request *req)
- {
- 	const struct rxrpc_key_token *token;
- 	struct rxkad_level2_hdr sechdr;
--	SKCIPHER_REQUEST_ON_STACK(req, call->conn->cipher);
- 	struct rxrpc_crypt iv;
- 	struct scatterlist _sg[4], *sg;
- 	struct sk_buff *trailer;
-@@ -549,9 +550,9 @@ static int rxkad_verify_packet(struct rxrpc_call *call, struct sk_buff *skb,
- 	case RXRPC_SECURITY_PLAIN:
- 		return 0;
- 	case RXRPC_SECURITY_AUTH:
--		return rxkad_verify_packet_1(call, skb, offset, len, seq);
-+		return rxkad_verify_packet_1(call, skb, offset, len, seq, req);
- 	case RXRPC_SECURITY_ENCRYPT:
--		return rxkad_verify_packet_2(call, skb, offset, len, seq);
-+		return rxkad_verify_packet_2(call, skb, offset, len, seq, req);
- 	default:
- 		return -ENOANO;
- 	}
--- 
-2.17.1
+-Manikanta
