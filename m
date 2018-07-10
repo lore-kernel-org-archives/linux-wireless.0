@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47302 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730422AbeGaMNj (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:40675 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732272AbeGJVNw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 08:13:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 00/19] add mt76x2u support to mt76 driver
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-        <877elb20iv.fsf@purkki.adurom.net> <20180731102714.GD5009@redhat.com>
-Date: Tue, 31 Jul 2018 13:33:55 +0300
-In-Reply-To: <20180731102714.GD5009@redhat.com> (Stanislaw Gruszka's message
-        of "Tue, 31 Jul 2018 12:27:15 +0200")
-Message-ID: <87ftzzae3w.fsf@kamboji.qca.qualcomm.com> (sfid-20180731_123401_685112_FE7B0A6C)
+        Tue, 10 Jul 2018 17:13:52 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w126-v6so45380345oie.7
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 14:12:59 -0700 (PDT)
+Subject: Re: [PATCH v2] mac80211: Fix wlan freezes under load at rekey
+To: Alexander Wetzel <alexander.wetzel@web.de>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        s.gottschall@dd-wrt.com
+References: <1523258757.3076.5.camel@sipsolutions.net>
+ <20180515102202.2021-1-alexander.wetzel@web.de>
+ <1529062392.10037.7.camel@sipsolutions.net>
+ <bc327c9b-d5f4-2343-9ca5-932e9295c546@web.de>
+ <1529357234.3092.57.camel@sipsolutions.net>
+ <2de1493a-5439-b9ef-6d06-3895333f01c3@web.de>
+ <1530267147.3481.78.camel@sipsolutions.net>
+ <bb4d75d3-7f90-1b58-9525-3f5a54cd952e@web.de>
+ <1530611484.4735.18.camel@sipsolutions.net>
+ <b1913512-7d33-cd9b-5eb5-4d7f367eb41a@web.de>
+ <1530662787.4735.59.camel@sipsolutions.net>
+ <da9c6878-56ff-3a63-07cf-dae7813173a2@web.de>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <1139d0cb-28dc-53d2-5371-44dc82fda2db@gmail.com> (sfid-20180710_231511_756627_56DDA513)
+Date: Tue, 10 Jul 2018 16:05:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <da9c6878-56ff-3a63-07cf-dae7813173a2@web.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Hi Alexander,
 
-> On Tue, Jul 31, 2018 at 12:54:32PM +0300, Kalle Valo wrote:
->> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->> 
->> > Add usb layer to mt76 driver in order to support mt76x2u based devices.
->> > Move common code between pci and usb in mt76x2-common module in order to
->> > remove pci dependency from usb driver
->> >
->> > Changes since v1:
->> > - rebase on top of wireless-drivers-next master branch
->> > - fix mt7662u fw definitions
->> > - remove unused len variable in mt76x2u_remove_dma_hdr()
->> > - move mt76u_mcu_fw_reset routine in mt76-usb module in order
->> >   to be reused by mt76x0 driver
->> > - move mt76u_mcu_init_rx routine in mt76-usb module in order
->> >   to be reused by mt76x0 driver
->> 
->> My deadline for 4.19 is most likely this Friday (if the merge window
->> starts on Sunday) so I would need to apply these tomorrow by latest to
->> have some time in linux-next. Are everyone happy with this set?
->
-> I'm ok with this set. 
->
-> If I'll post mt76x0 v3 would you take it in this cycle or should
-> I rather wait for next one ?
+>>> hostapd or wpa_supplicant are "ordering" mac80211 to install a new key
+>>> and are implementing the state machine and are in a good position to
+>>> handle the fallout... at least theoretically.
+>>
+>> Ideally it would even know beforehand that we don't want to handle the
+>> PTK rekeying, and then could reconnect instead of going through the
+>> handshake.
+>>
+> 
+> Don't see how we could do that in the kernel, all the relevant
+> information is handled in the state machine. I guess an API extension
+> telling hostap/supplicant if we can handle rekeys or not would tbe he
+> only way to avoid that.
+> 
 
-I applied Lorenzo's patchset to pending branch in wireless-drivers-next.
-If you can use that as the baseline and submit your patchset by tomorrow
-morning I can try to get it to v4.19. But I'm not promising anything :)
+Can the kernel / driver provide some sort of hint to user space that PTK 
+rekey isn’t supported?  We could then have user space deauthenticate 
+with a big warning about what/why this is happening and try to 
+re-connect to the last used BSS.
 
--- 
-Kalle Valo
+>> So I think we're probably better off accepting the set_key but not
+>> actually using it, and instead disconnecting... even if that's awkward
+>> and should come with a big comment :-)
+> 
+> Instead of returning an error I'll change the code to accept the rekey
+> but do nothing with it. (Basically delete the new key and keep the old
+> active).
+> And of course calling ieee80211_set_disassoc() prior to return "success".
+> 
+> Let's see how the supplicant will react on a disassoc while doing a rekey...
+> 
+
+This sounds pretty awful actually.  Now that wpa_s is not the only game 
+in town, can we stop resorting to these tactics?
+
+Regards,
+-Denis
