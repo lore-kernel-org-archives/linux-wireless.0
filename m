@@ -1,87 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:42068 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730166AbeGYTOd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36758 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751992AbeGJLSt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jul 2018 15:14:33 -0400
-Received: by mail-yb0-f195.google.com with SMTP id c10-v6so3323964ybf.9
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2018 11:01:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gVDotjufLKUW0YuQu2vA4fmU_gqia=ZA4DocW4XHxx0w@mail.gmail.com>
-References: <20180724164936.37477-1-keescook@chromium.org> <20180724164936.37477-11-keescook@chromium.org>
- <CAJZ5v0gVDotjufLKUW0YuQu2vA4fmU_gqia=ZA4DocW4XHxx0w@mail.gmail.com>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 25 Jul 2018 11:01:47 -0700
-Message-ID: <CAGXu5j+NPCc2hq5x7JUwgKYvY6zKN28YdtHbHVapnpgC3GwCsg@mail.gmail.com> (sfid-20180725_200154_485816_DA74D594)
-Subject: Re: [PATCH v6 10/18] x86/power/64: Remove VLA usage
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Eric Biggers <ebiggers@google.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Rabin Vincent <rabinv@axis.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Will Deacon <will.deacon@arm.com>,
-        device-mapper development <dm-devel@redhat.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        linux-crypto <linux-crypto@vger.kernel.org>,
-        drbd-dev@lists.linbit.com,
-        linux-block <linux-block@vger.kernel.org>, qat-linux@intel.com,
-        linux-ppp@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        "open list:ANDROID DRIVERS" <devel@driverdev.osuosl.org>,
-        linux-afs@lists.infradead.org,
-        "open list:NETWORKING DRIVERS (WIRELESS)"
-        <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 10 Jul 2018 07:18:49 -0400
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCHv2] mac80211: restrict delayed tailroom needed decrement
+Date: Tue, 10 Jul 2018 16:48:27 +0530
+Message-Id: <1531221507-28610-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180710_131853_218970_FAC5641A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 25, 2018 at 4:32 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Tue, Jul 24, 2018 at 6:49 PM, Kees Cook <keescook@chromium.org> wrote:
->> In the quest to remove all stack VLA usage from the kernel[1], this
->> removes the discouraged use of AHASH_REQUEST_ON_STACK by switching to
->> shash directly and allocating the descriptor in heap memory (which should
->> be fine: the tfm has already been allocated there too).
->>
->> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> Acked-by: Pavel Machek <pavel@ucw.cz>
->
-> I think I can queue this up if there are no objections from others.
->
-> Do you want me to do that?
+As explained in ieee80211_delayed_tailroom_dec(), during roam,
+keys of the old AP will be destroyed and new keys will be
+installed. Deletion of the old key causes
+crypto_tx_tailroom_needed_cnt to go from 1 to 0 and the new key
+installation causes a transition from 0 to 1.
 
-Sure thing. It looks like the other stand-alone patches like this one
-are getting taken into the non-crypto trees, so that's fine.
+Whenever crypto_tx_tailroom_needed_cnt transitions from 0 to 1,
+we invoke synchronize_net(); the reason for doing this is to avoid
+a race in the TX path as explained in increment_tailroom_need_count().
+This synchronize_net() operation can be slow and can affect the station
+roam time. To avoid this, decrementing the crypto_tx_tailroom_needed_cnt
+is delayed for a while so that upon installation of new key the
+transition would be from 1 to 2 instead of 0 to 1 and thereby
+improving the roam time.
 
-Thanks!
+This is all correct for a STA iftype, but deferring the tailroom_needed
+decrement for other iftypes may be unnecessary.
 
--Kees
+For example, let's consider the case of a 4-addr client connecting to
+an AP for which AP_VLAN interface is also created, let the initial
+value for tailroom_needed on the AP be 1.
 
+* 4-addr client connects to the AP (AP: tailroom_needed = 1)
+* AP will clear old keys, delay decrement of tailroom_needed count
+* AP_VLAN is created, it takes the tailroom count from master
+  (AP_VLAN: tailroom_needed = 1, AP: tailroom_needed = 1)
+* Install new key for the station, assume key is plumbed in the HW,
+  there won't be any change in tailroom_needed count on AP iface
+* Delayed decrement of tailroom_needed count on AP
+  (AP: tailroom_needed = 0, AP_VLAN: tailroom_needed = 1)
+
+Because of the delayed decrement on AP iface, tailroom_needed count goes
+out of sync between AP(master iface) and AP_VLAN(slave iface) and
+there would be unnecessary tailroom created for the packets going
+through AP_VLAN iface.
+
+Also, WARN_ONs were observed while trying to bring down the AP_VLAN
+interface:
+(warn_slowpath_common) (warn_slowpath_null+0x18/0x20)
+(warn_slowpath_null) (ieee80211_free_keys+0x114/0x1e4)
+(ieee80211_free_keys) (ieee80211_del_virtual_monitor+0x51c/0x850)
+(ieee80211_del_virtual_monitor) (ieee80211_stop+0x30/0x3c)
+(ieee80211_stop) (__dev_close_many+0x94/0xb8)
+(__dev_close_many) (dev_close_many+0x5c/0xc8)
+
+Restricting delayed decrement to station interface alone fixes the problem
+and it makes sense to do so because delayed decrement is done to improve
+roam time which is applicable only for client devices.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+V2:
+	* Updated commit log
+	* Addressed V1 comments
+
+ net/mac80211/cfg.c |  2 +-
+ net/mac80211/key.c | 13 ++++++++-----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 02f3672..d25da0e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -495,7 +495,7 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 		goto out_unlock;
+ 	}
+ 
+-	ieee80211_key_free(key, true);
++	ieee80211_key_free(key, sdata->vif.type == NL80211_IFTYPE_STATION);
+ 
+ 	ret = 0;
+  out_unlock:
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ee0d0cc..f7e4c2d 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -657,9 +657,10 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_key *old_key;
+ 	int idx, ret;
+-	bool pairwise;
++	bool pairwise, iftype_sta;
+ 
+ 	pairwise = key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE;
++	iftype_sta  =  sdata->vif.type == NL80211_IFTYPE_STATION;
+ 	idx = key->conf.keyidx;
+ 
+ 	mutex_lock(&sdata->local->key_mtx);
+@@ -688,14 +689,14 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	increment_tailroom_need_count(sdata);
+ 
+ 	ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+-	ieee80211_key_destroy(old_key, true);
++	ieee80211_key_destroy(old_key, iftype_sta);
+ 
+ 	ieee80211_debugfs_key_add(key);
+ 
+ 	if (!local->wowlan) {
+ 		ret = ieee80211_key_enable_hw_accel(key);
+ 		if (ret)
+-			ieee80211_key_free(key, true);
++			ieee80211_key_free(key, iftype_sta);
+ 	} else {
+ 		ret = 0;
+ 	}
+@@ -930,7 +931,8 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
+ 		ieee80211_key_replace(key->sdata, key->sta,
+ 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
+ 				key, NULL);
+-		__ieee80211_key_destroy(key, true);
++		__ieee80211_key_destroy(key, key->sdata->vif.type ==
++					NL80211_IFTYPE_STATION);
+ 	}
+ 
+ 	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+@@ -940,7 +942,8 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
+ 		ieee80211_key_replace(key->sdata, key->sta,
+ 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
+ 				key, NULL);
+-		__ieee80211_key_destroy(key, true);
++		__ieee80211_key_destroy(key, key->sdata->vif.type ==
++					NL80211_IFTYPE_STATION);
+ 	}
+ 
+ 	mutex_unlock(&local->key_mtx);
 -- 
-Kees Cook
-Pixel Security
+2.7.4
