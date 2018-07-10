@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44102 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732086AbeGaOVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 10:21:46 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 13/14] mt76x0: disable HW before probe
-Date: Tue, 31 Jul 2018 14:41:03 +0200
-Message-Id: <1533040864-9026-14-git-send-email-sgruszka@redhat.com> (sfid-20180731_144144_603617_1AD21183)
-In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:37328 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732343AbeGJXmP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jul 2018 19:42:15 -0400
+Received: by mail-pf0-f195.google.com with SMTP id x10-v6so7258230pfm.4
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 16:40:49 -0700 (PDT)
+Date: Tue, 10 Jul 2018 16:40:45 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: Re: [PATCH v3 2/6] ath10k: Add support to create boardname for
+ non-bmi target
+Message-ID: <20180710234043.GA40352@ban.mtv.corp.google.com> (sfid-20180711_014111_772270_94AE0728)
+References: <20180706085622.27945-1-govinds@codeaurora.org>
+ <20180706085622.27945-3-govinds@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180706085622.27945-3-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable HW before probe, otherwise after reboot we will fail
-to initialize MCU.
+Hi Govind,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    | 4 ++++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+On Fri, Jul 06, 2018 at 02:26:19PM +0530, Govind Singh wrote:
+> From: Rakesh Pillai <pillair@codeaurora.org>
+> 
+> Add support to create the boardname for non-bmi targets
+> like WCN3990, which uses qmi for bdf download. This
+> boardname is used to parse the board data from board-2.bin.
+> 
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
+>  drivers/net/wireless/ath/ath10k/core.h | 2 ++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 85c58ebbfb26..840e301b6a6e 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1440,6 +1440,14 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+>  		goto out;
+>  	}
+>  
+> +	if (ar->id.qmi_ids_valid) {
+> +		scnprintf(name, name_len,
+> +			  "bus=%s,qmi-board-id=%x",
+> +			  ath10k_bus_str(ar->hif.bus),
+> +			  ar->id.qmi_board_id);
+> +		goto out;
+> +	}
+> +
+>  	scnprintf(name, name_len,
+>  		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
+>  		  ath10k_bus_str(ar->hif.bus),
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 427ee5752bb0..20f03f3a7080 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -941,7 +941,9 @@ struct ath10k {
+>  		u32 subsystem_device;
+>  
+>  		bool bmi_ids_valid;
+> +		bool qmi_ids_valid;
+>  		u8 bmi_board_id;
+> +		u8 qmi_board_id;
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index b65b76d80906..7cdb3e740522 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -62,7 +62,7 @@
- 		dev_err(dev->mt76.dev, "Error: PLL and XTAL check failed!\n");
- }
- 
--static void mt76x0_chip_onoff(struct mt76x0_dev *dev, bool enable, bool reset)
-+void mt76x0_chip_onoff(struct mt76x0_dev *dev, bool enable, bool reset)
- {
- 	u32 val;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 49b82a23533c..9e60fcb14687 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -288,6 +288,7 @@ int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
- int mt76x0_init_hardware(struct mt76x0_dev *dev);
- int mt76x0_register_device(struct mt76x0_dev *dev);
- void mt76x0_cleanup(struct mt76x0_dev *dev);
-+void mt76x0_chip_onoff(struct mt76x0_dev *dev, bool enable, bool reset);
- 
- int mt76x0_mac_start(struct mt76x0_dev *dev);
- void mt76x0_mac_stop(struct mt76x0_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 0871fdef59c3..7a635cdcbae0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -283,6 +283,10 @@ static int mt76x0_probe(struct usb_interface *usb_intf,
- 	ret = mt76x0_assign_pipes(usb_intf, dev);
- 	if (ret)
- 		goto err;
-+
-+	/* Disable the HW, otherwise MCU fail to initalize on hot reboot */
-+	mt76x0_chip_onoff(dev, false, false);
-+
- 	ret = mt76x0_wait_asic_ready(dev);
- 	if (ret)
- 		goto err;
--- 
-1.9.3
+IIUC, QMI board IDs may be more than 8 bits. (And your qmi.c code seems
+to suggest this as well.) Should this be u32?
+
+Brian
+
+>  		u8 bmi_chip_id;
+>  
+>  		char bdf_ext[ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
+> -- 
+> 2.17.0
+> 
