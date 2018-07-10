@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36334 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754214AbeGIJYL (ORCPT
+Received: from mail-wr1-f44.google.com ([209.85.221.44]:35125 "EHLO
+        mail-wr1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbeGJGz3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 05:24:11 -0400
-Subject: Re: [PATCH] mac80211: restrict delayed tailroom needed decrement
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <1531126681-5146-1-git-send-email-mpubbise@codeaurora.org>
- <1531126957.3298.23.camel@sipsolutions.net>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <99231cb4-8977-c9c4-ff11-0c57899e30b7@codeaurora.org> (sfid-20180709_112416_993380_A1F0EB94)
-Date: Mon, 9 Jul 2018 14:54:07 +0530
+        Tue, 10 Jul 2018 02:55:29 -0400
+Received: by mail-wr1-f44.google.com with SMTP id a3-v6so4086419wrt.2
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jul 2018 23:55:28 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Toke =?ISO-8859-1?Q?H=F8iland=2DJ=F8rgensen?= <toke@toke.dk>
+Cc: simon.wunderlich@openmesh.com,
+        Daniel Bailey <daniel.bailey@openmesh.com>,
+        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: mac80211: AQM and block_tx
+Date: Tue, 10 Jul 2018 08:55:26 +0200
+Message-ID: <4554238.GrJkgPgAWi@bentobox> (sfid-20180710_085538_143124_DD81616F)
+In-Reply-To: <2846230.fHgAC8qB8Q@bentobox>
+References: <2846230.fHgAC8qB8Q@bentobox>
 MIME-Version: 1.0
-In-Reply-To: <1531126957.3298.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; boundary="nextPart2470059.a5NIe2yBfq"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart2470059.a5NIe2yBfq
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
->> For example, let's consider the case of a 4-addr client connecting to
->> an AP for which AP_VLAN interface is also created, let the initial
->> value for tailroom_needed on the AP be 1.
->>
->> * 4-addr client connects to the AP (AP: tailroom_needed = 1)
->> * AP will clear old keys, delay decrement of tailroom_needed count
->> * AP_VLAN is created, it takes the tailroom count from master
->>    (AP_VLAN: tailroom_needed = 1, AP: tailroom_needed = 1)
->> * Install new key for the station, assume key is plumbed in the HW,
->>    there won't be any change in tailroom_needed count on AP iface
->> * Delayed decrement of tailroom_needed count on AP
->>    (AP: tailroom_needed = 0, AP_VLAN: tailroom_needed = 1)
->>
->> Because of the delayed decrement on AP iface, tailroom_needed count goes
->> out of sync between AP(master iface) and AP_VLAN(slave iface) and
->> there would be unnecessary tailroom created for the packets going
->> through AP_VLAN iface.
-> This describes a scenario where there's *unnecessary* work done, but not
-> really one where we have something that's *incorrect*?
->
+On Donnerstag, 5. Juli 2018 10:47:11 CEST Sven Eckelmann wrote:
+> Hi Toke,
+> 
+> we are currently testing DFS with ath10k and noticed that AQM seems to ignore 
+> cfg80211_csa_settings->block_tx. Problem is now that the channel switch is 
+> started on a detected radar
+> 
+>   echo 1 >/sys/kernel/debug/ieee80211/phy1/ath10k/dfs_simulate_radar
+> 
+> NL80211_ATTR_CH_SWITCH_BLOCK_TX is set for the channel switch by hostapd but 
+> the AP still sends QoS data to the client.
+> 
+> Was there a fix for such a problem which I might have missed? I've just worked 
+> around that by setting wake_tx_queue TO NULL in ath10k. This still must be 
+> verified but at least I didn't see any packets anymore on a monitor interface.
 
-To me at least doing unnecessary things is incorrect :-D, may be we can 
-change the statement.
 
-> Are you saying that you found a problem with this? Did this show up in
-> some sort of measurements?
+Just as information, the ath10k Dakota devices went through DFS certification 
+but the AQM had to be disabled. Otherwise we would have had problems with the 
+FCC closing time.
 
-Not really, I have observed in my testing that there were warnings 
-whenever a AP_VLAN was brought down; this is done in ieee80211_free_keys.
-Warnings show up every time we bring down the AP_VLAN interface(using 
-ifconfig); warnings apart but I thought there would be unnecessary 
-overhead in the tailroom expansion though the overhead may be trivial.
+Kind regards,
+	Sven
+--nextPart2470059.a5NIe2yBfq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
->> +++ b/net/mac80211/key.c
->> @@ -583,7 +583,8 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
->>   
->>   		ieee80211_debugfs_key_remove(key);
->>   
->> -		if (delay_tailroom) {
->> +		if (delay_tailroom &&
->> +		    sdata->vif.type == NL80211_IFTYPE_STATION) {
->>   			/* see ieee80211_delayed_tailroom_dec */
->>   			sdata->crypto_tx_tailroom_pending_dec++;
->>   			schedule_delayed_work(&sdata->dec_tailroom_needed_wk,
-> I think you'd better change the caller, i.e. ieee80211_del_key(), and a
-> add a comment there that explains what's going on.
+-----BEGIN PGP SIGNATURE-----
 
-Not really sure what you were trying to tell here.
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAltEWF4ACgkQXYcKB8Em
+e0ZrshAAlfcze8rsFRYWlAD2WX4xZ2jD1Ozi7ZtlZAop8oOOWB5ic6W6WZ7ubzVu
+ofX5M0JTp46TXx6BT6en0OGKXDINYmwR5DpLEpfCHlfK4WGx5Fid79vNOYGI6uaa
+QhjR7jr61e3WQFkIAQeGMNAAWXC+EePjDeePgi1yMr8I4DUWXL4nnEUZkQTzq2ur
+mM7zBDCZWZ5RJ+UQnhNBwSbeOH6LviQsY4dl+Doa6TgGQwpyqgliXu4weDG/sRhM
+tcObUAdqYm+41jFLV4HsEmw741VL+Oxod+VX89+D1yxZtuBQmYBTYwI9Dz8fJnyL
+bHd0YHX/SOC3BNGU6fNChNoD5OvM26yc6IISaQusudp+u2oTVTOsJleGPVnnfRQb
+ey8olS1T789Pofp/+mpmyyMzgriv7sBnKVyQbt6o5xNibZ+Qtn9u+LaiAEfMF3mT
+Qxi3arERm6ZYPGYL8PXxhlfypJHD3UqOcYEsWjXsyZnwEUqL7vUvrnCFGoR/zyV1
+RD9IlB4o3PyZggokkQLrxrDeOe+oZf554dFYYPmW0b5PAQYCFr75ja/qo7rtKPhu
+o1E5B+EfhAxuxSSj8iqcn+pK3kz5gmMAmx9MRO/JhsewdMcuXlHJdhGvUAYQx623
+3gNGNBnHYqIKs1JfnypHMHX2/bRK065p8GDAJTkd7M1sjht0jWs=
+=ysXv
+-----END PGP SIGNATURE-----
 
-Manikanta
+--nextPart2470059.a5NIe2yBfq--
