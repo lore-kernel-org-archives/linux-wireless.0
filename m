@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:55150 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727600AbeGQIPy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jul 2018 04:15:54 -0400
-Subject: Re: Setting tx retry count in ath10k
-To: Ben Greear <greearb@candelatech.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de> (sfid-20180717_094447_116886_E007BE71)
-Date: Tue, 17 Jul 2018 09:39:36 +0200
+Received: from mail.toke.dk ([52.28.52.200]:50475 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753168AbeGJM60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jul 2018 08:58:26 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: Re: [PATCHv2] mac80211: add stop/start logic for software TXQs
+In-Reply-To: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
+References: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
+Date: Tue, 10 Jul 2018 14:58:18 +0200
+Message-ID: <87o9ffcknp.fsf@toke.dk> (sfid-20180710_145829_561983_5C35EC5A)
 MIME-Version: 1.0
-In-Reply-To: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 172aeae..d07f7f9 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -818,6 +818,7 @@ enum txq_info_flags {
+>  	IEEE80211_TXQ_STOP,
+>  	IEEE80211_TXQ_AMPDU,
+>  	IEEE80211_TXQ_NO_AMSDU,
+> +	IEEE80211_TXQ_PAUSED,
+>  };
 
-Am 17.07.2018 um 02:37 schrieb Ben Greear:
-> I spent a bit of time looking into setting the tx retry count in
-> ath10k (wave-1 firmware).=C2=A0 The firmware has support for setting th=
-is as
-> a vdev parameter, and it defaults to '2', at least in my wave-1 firmwar=
-e.
->
-> I enabled propagating the setting from mac80211, ie:
-> iw phy wiphy0 set retry short 2 long 2
->
-> And while debugging this, I noticed that mac80211 has a default of
-> 4, but the ath10k firmware has a default of 2.=C2=A0 Now, I am not sure=
+I think it would be a good idea to either rename the flags, or at least
+add an explanation somewhere of the difference between a paused and a
+stopped queue...
 
-> if I should enable setting the retry count since it will change
-> the behaviour even if users don't set anything.
->
-Maybe I'm wrong, but I have in mind, that 7 retries is the default
-setting of mac80211. Although 2 or even 4 seems to be pretty low for the
-overall retry count, so maybe the values are somehow changed in the
-firmware? From our experiments we know (at least for 802.11n) you need
-for normal operation a retry count of something between 5 - 9, but
-sometimes also 12 or 15 is beneficial.
+>  /**
+> @@ -1226,6 +1227,7 @@ struct ieee80211_local {
+>  
+>  	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+>  	struct tasklet_struct tx_pending_tasklet;
+> +	struct tasklet_struct wake_txqs_tasklet;
 
-We use for our experimental setup mainly ath9k cards and rt28xx nics,
-and with them you need definitely more retries.
+It's not quite clear to me why a tasklet is needed? Couldn't you just
+call the ieee80211_wake_txqs() function at the same place where you
+currently schedule the tasklet?
 
-Nonetheless, I don't think the change from 2 to 4 does really affect the
-behavior in a negative way (if it works as expected).
-
-> Any opinions on this?
->
-> Thanks,
-> Ben
->
-
---=20
-M.Sc. Benjamin Beichler
-
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
-chnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+-Toke
