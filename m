@@ -1,114 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.uni-rostock.de ([139.30.22.72]:54315 "EHLO
-        mx2.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727584AbeGSNWn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55824 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750937AbeGJHNU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 09:22:43 -0400
-Subject: Re: Setting tx retry count in ath10k
-To: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Ben Greear <greearb@candelatech.com>,
-        SEDE <s.deronne@televic.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
- <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
- <8b9713fe-7573-f009-d002-13df73315898@televic.com>
- <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com>
- <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com>
- <877els5xax.fsf@toke.dk>
- <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <c594f50b-a318-fbe2-847b-b76726eb1472@uni-rostock.de> (sfid-20180719_143948_177812_92A89E7D)
-Date: Thu, 19 Jul 2018 14:39:43 +0200
-MIME-Version: 1.0
-In-Reply-To: <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
-Content-Type: text/plain; charset="windows-1252"
+        Tue, 10 Jul 2018 03:13:20 -0400
+From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Subject: [RFCv2 1/2] ath10k: add wmi interface for vdev_set_neighbor_rx_param
+Date: Tue, 10 Jul 2018 12:42:58 +0530
+Message-Id: <1531206779-26517-2-git-send-email-periyasa@codeaurora.org> (sfid-20180710_091323_590624_1F9C70EE)
+In-Reply-To: <1531206779-26517-1-git-send-email-periyasa@codeaurora.org>
+References: <1531206779-26517-1-git-send-email-periyasa@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 18.07.2018 um 19:01 schrieb Jean-Pierre TOSONI:
-> Hi Ben,
->
-> I attached the patch. Please remind that it applies to ath9k.
->
-> At the end there are 3 comments in French, translation follows:
-> 1) " longretry gives directly the transmit count, the +1 is useless.
->      Should rather have -1 to account for the first try"
-> 2) " The retries just made for this frame must be added in to know
->      If the max was overstepped"
-> 3) " Add the 1st try (probably useless).
->      Upstream version adds 1 to A-MPDU retries but I don't understand w=
-hy.
->      Since above I removed the +1 to fix the count, I add +1 here once =
-per
->      frame in case the "+1" is actually hiding a bug in the upstream ve=
-rsion"
->
-> @Toke: As you can see in the patch, the value 30 was the fixed value de=
-fined
->  in ath9k, I kept it for compatibility only (and that's why I wanted to=
- make
->  it configurable :-)
-> On another hand, Minstrel in mac80211 seems to vary retries according t=
-o what
-> you say, i.e. Minstrel tries to stay below a certain amount of time, bu=
-t this
-> only applies to short/long retries.
->
-> Jean-Pierre
-We also experienced the problems regarding the inconsistencies between
-documentation and implementation. I will further throw in another set of
-patches:
-https://github.com/steinwurf/openwrt-patches/tree/master/openwrt-r41097/m=
-ac80211
+Add WMI command interface support for receiving neighbor BSS frames from
+the target. QCA9984, QCA4019 and QCA9888 support this WMI command with the
+capability advertisement through wmi service map.
 
-I think they have have similarities but also other aspects to really
-restrict ath9k to the specified retry limits. This problem is as Toke
-already stated additionally depended on minstrel. It is really sad, that
-all this stuff is offtree and but there is the illusion of an setting in
-the mainline kernel, which firstly will not set the value as documented
-and different drivers will apply them (without warnings) in different way=
-s.
+Hardware tested: QCA9984, QCA4019 and QCA9888
+Firmware tested: 10.4-3.6-xxxxx
 
->> For general internet traffic, a retry count of 30 is way too high; tha=
-t
->> is up to 120 ms of HOL blocking latency. Better to just drop the packe=
-t
->> at that point.
->>
->> Ideally, the retry count should be dynamically calculated in units of
->> time (which would depend on the rate and aggregate size), and also tak=
-e
->> queueing time into account. I've been meaning to experiment with this
->> for minstrel and ath9k, but haven't gotten around to it...
-We have running current research on this topic but focused on the
-effects in 802.11s mesh networks. With multiple(forwarding) wireless
-links, the retry limit have a bigger impact as only in managed mode
-setups, since every forwarding step is doing repeated transmissions. But
-I also totally agree, that the retry count needs to be considered in the
-bufferbloat/airtime queuing stuff, which Toke proposed.
+NOTE: Tested with debug firmware
 
-Nonetheless, since this ambiguities are known, wouldn't it be nice to
-clean up all this patches to enable at least ath9k and ath10k to do the
-right thing, or do anybody can tell why they weren't included the first
-time ?
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 28 +++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.c     | 33 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     | 76 +++++++++++++++++++++++++++++++
+ 3 files changed, 136 insertions(+), 1 deletion(-)
 
-
---=20
-M.Sc. Benjamin Beichler
-
-Universit=E4t Rostock, Fakult=E4t f=FCr Informatik und Elektrotechnik
-Institut f=FCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=DFe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 5ecce04..8444b41 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -214,7 +214,12 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_echo)(struct ath10k *ar, u32 value);
+ 	struct sk_buff *(*gen_pdev_get_tpc_table_cmdid)(struct ath10k *ar,
+ 							u32 param);
+-
++	struct sk_buff *(*gen_vdev_set_neighbor_rx_param)(struct ath10k *ar,
++							  u32 vdev_id,
++							  const u8 *addr,
++							  u32 idx,
++							  u32 action,
++							  u32 type);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -1543,4 +1548,25 @@ struct wmi_ops {
+ 				   ar->wmi.cmd->radar_found_cmdid);
+ }
+ 
++static inline int
++ath10k_wmi_set_neighbor_rx_param(struct ath10k *ar, u32 vdev_id,
++				 const u8 *addr, u32 idx,
++				 u32 action, u32 type)
++{
++	struct sk_buff *skb;
++	u32 cmdid;
++
++	if (!ar->wmi.ops->gen_vdev_set_neighbor_rx_param)
++		return -EOPNOTSUPP;
++
++	cmdid = ar->wmi.cmd->vdev_filter_neighbor_rx_packets_cmdid;
++	skb = ar->wmi.ops->gen_vdev_set_neighbor_rx_param(ar,
++							  vdev_id, addr,
++							  idx, action, type);
++
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb, cmdid);
++}
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 877249a..fe62489 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -8662,6 +8662,37 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	return 0;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_10_4_op_gen_vdev_set_neighbor_rx_param(struct ath10k *ar,
++						  u32 vdev_id,
++						  const u8 *addr,
++						  u32 idx, u32 action,
++						  u32 type)
++{
++	struct wmi_set_vdev_filter_nrp_10_4_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_set_vdev_filter_nrp_10_4_cmd *)skb->data;
++
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->action = __cpu_to_le32(action);
++	cmd->type = __cpu_to_le32(type);
++	cmd->idx = __cpu_to_le32(idx);
++
++	ether_addr_copy(cmd->macaddr.addr, addr);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "vdev id:0x%x Macaddr[0x%x]:[0x%x] idx:0x%x action:0x%x type:0x%x flag:0x%x\n",
++		   cmd->vdev_id, cmd->macaddr.addr[0], cmd->macaddr.addr[5],
++		   cmd->idx, cmd->action, cmd->type, cmd->flag);
++
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -9014,6 +9045,8 @@ static u32 ath10k_wmi_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
+ 	.gen_echo = ath10k_wmi_op_gen_echo,
+ 	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
++	.gen_vdev_set_neighbor_rx_param =
++		ath10k_wmi_10_4_op_gen_vdev_set_neighbor_rx_param,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index d68afb6..bc53d4c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -203,6 +203,13 @@ enum wmi_service {
+ 	WMI_SERVICE_TPC_STATS_FINAL,
+ 	WMI_SERVICE_RESET_CHIP,
+ 	WMI_SERVICE_SPOOF_MAC_SUPPORT,
++	WMI_SERVICE_CFR_CAPTURE_SUPPORT,
++	WMI_SERVICE_TX_DATA_ACK_RSSI,
++	WMI_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
++	WMI_SERVICE_PER_PACKET_SW_ENCRYPT,
++	WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT,
++	WMI_SERVICE_VDEV_BCN_RATE_CONTROL,
++	WMI_SERVICE_VDEV_FILTER_NEIGHBOR,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -350,6 +357,13 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS,
+ 	WMI_10_4_SERVICE_HOST_DFS_CHECK_SUPPORT,
+ 	WMI_10_4_SERVICE_TPC_STATS_FINAL,
++	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
++	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
++	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
++	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
++	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
++	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
++	WMI_10_4_SERVICE_VDEV_FILTER_NEIGHBOR,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -462,6 +476,15 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS);
+ 	SVCSTR(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
++	SVCSTR(WMI_SERVICE_RESET_CHIP);
++	SVCSTR(WMI_SERVICE_CFR_CAPTURE_SUPPORT);
++	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
++	SVCSTR(WMI_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY);
++	SVCSTR(WMI_SERVICE_PER_PACKET_SW_ENCRYPT);
++	SVCSTR(WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT);
++	SVCSTR(WMI_SERVICE_VDEV_BCN_RATE_CONTROL);
++	SVCSTR(WMI_SERVICE_VDEV_FILTER_NEIGHBOR);
++
+ 	default:
+ 		return NULL;
+ 	}
+@@ -770,6 +793,20 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_HOST_DFS_CHECK_SUPPORT, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TPC_STATS_FINAL,
+ 	       WMI_SERVICE_TPC_STATS_FINAL, len);
++	SVCMAP(WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
++	       WMI_SERVICE_CFR_CAPTURE_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
++	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
++	SVCMAP(WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
++	       WMI_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY, len);
++	SVCMAP(WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
++	       WMI_SERVICE_PER_PACKET_SW_ENCRYPT, len);
++	SVCMAP(WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
++	       WMI_SERVICE_PEER_TID_CONFIGS_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
++	       WMI_SERVICE_VDEV_BCN_RATE_CONTROL, len);
++	SVCMAP(WMI_10_4_SERVICE_VDEV_FILTER_NEIGHBOR,
++	       WMI_SERVICE_VDEV_FILTER_NEIGHBOR, len);
+ }
+ 
+ #undef SVCMAP
+@@ -7028,6 +7065,45 @@ struct wmi_pdev_chan_info_req_cmd {
+ 	__le32 reserved;
+ } __packed;
+ 
++/* enum wmi_neighbor_rx_action - Neighbor Rx Packets add/remove filter */
++enum wmi_neighbor_rx_action {
++	WMI_NEIGHBOR_RX_ACTION_ADD = 1,
++	WMI_NEIGHBOR_RX_ACTION_DEL,
++};
++
++/* enum wmi_neighbor_rx_type - Neighbor Rx Packets ap/client addr */
++enum wmi_neighbor_rx_type {
++	WMI_NEIGHBOR_RX_TYPE_BSSID = 1,
++	WMI_NEIGHBOR_RX_TYPE_CLIENT,
++};
++
++/* enum wmi_neighbor_rx_capture_flag - Neighbor Rx Packets flags */
++enum wmi_neighbor_rx_capture_flag {
++	WMI_NEIGHBOR_RX_CAPTURE_ONLY_RX_PKT = 1,
++	WMI_NEIGHBOR_RX_CAPTURE_ONLY_TX_PKT,
++	WMI_NEIGHBOR_RX_CAPTURE_BOTH_TXRX_PKT
++};
++
++/* Filter for Neighbor Rx Packets  */
++struct wmi_set_vdev_filter_nrp_10_4_cmd {
++	__le32 vdev_id;
++
++	/* AP Bssid or Client Mac-addr */
++	struct wmi_mac_addr macaddr;
++
++	/* see enum wmi_neighbor_rx_action */
++	__le32 action;
++
++	/* see enum wmi_neighbor_rx_type */
++	__le32 type;
++
++	/* enum wmi_neighbor_rx_capture_flag */
++	__le32 flag;
++
++	/* BSSID index - index of the BSSID register */
++	__le32 idx;
++} __packed;
++
+ struct ath10k;
+ struct ath10k_vif;
+ struct ath10k_fw_stats_pdev;
+-- 
+1.9.1
