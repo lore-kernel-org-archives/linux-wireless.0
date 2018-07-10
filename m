@@ -1,73 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:39881 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387801AbeGWNCN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 09:02:13 -0400
-Received: by mail-wm0-f68.google.com with SMTP id h20-v6so912664wmb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2018 05:01:20 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: fix regression in parsing NVRAM for multiple
- devices
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180722214625.12101-1-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Aditya Xavier <adityaxavier@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B55C38E.3070003@broadcom.com> (sfid-20180723_140124_141853_E4567A0D)
-Date: Mon, 23 Jul 2018 14:01:18 +0200
+Received: from mail.bootlin.com ([62.4.15.54]:48189 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933267AbeGJRKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jul 2018 13:10:03 -0400
+Date: Tue, 10 Jul 2018 19:10:00 +0200
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+        Linux-MIPS <linux-mips@linux-mips.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 23/24] mtd: rawnand: jz4780: Drop the dependency on
+ MACH_JZ4780
+Message-ID: <20180710191000.2b7c95bb@bbrezillon> (sfid-20180710_191006_507973_04AE685A)
+In-Reply-To: <CANc+2y5vjUpM_ikegaoKTtqehSmBY3y_r+1E6y93AoivRQqmfg@mail.gmail.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+        <20180709200945.30116-24-boris.brezillon@bootlin.com>
+        <CANc+2y5vjUpM_ikegaoKTtqehSmBY3y_r+1E6y93AoivRQqmfg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180722214625.12101-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/22/2018 11:46 PM, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
->
-> NVRAM is designed to work with Broadcom's SDK Linux kernel which fakes
-> PCI domain 0 for all internal MMIO devices. Since official Linux kernel
-> uses platform devices for that purpose there is a mismatch in numbering
-> PCI domains.
->
-> There used to be a fix for that problem but it was accidentally dropped
-> during the last firmware loading rework. That resulted in brcmfmac not
-> being able to extract device specific NVRAM content and all kind of
-> calibration problems.
->
-> Reported-by: Aditya Xavier <adityaxavier@gmail.com>
-> Fixes: 2baa3aaee27f ("brcmfmac: introduce brcmf_fw_alloc_request() function")
-> Cc: stable@vger.kernel.org # v4.17+
+Hi PrasannaKumar,
 
-oops. my bad.
+On Tue, 10 Jul 2018 22:16:50 +0530
+PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com> wrote:
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> index 45928b5b8d97..4fffa6988087 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -1785,7 +1785,8 @@ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
->   	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
->   	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
->   	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
-> -	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus);
-> +	/* NVRAM reserves PCI domain 0 for Broadcom's SDK faked bus */
-> +	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus) + 1;
->   	fwreq->bus_nr = devinfo->pdev->bus->number;
->
->   	return fwreq;
->
+> Hi Boris,
+> 
+> On 10 July 2018 at 01:39, Boris Brezillon <boris.brezillon@bootlin.com>
+> wrote:
+> 
+> > This MACH_JZ4780 dependency is taken care of by JZ4780_NEMC, no need
+> > to repeat it here.
+> >
+> > Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+> > ---
+> >  drivers/mtd/nand/raw/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+> > index 7b5e97719c25..d9cd9608bc2d 100644
+> > --- a/drivers/mtd/nand/raw/Kconfig
+> > +++ b/drivers/mtd/nand/raw/Kconfig
+> > @@ -499,7 +499,7 @@ config MTD_NAND_JZ4740
+> >
+> >  config MTD_NAND_JZ4780
+> >         tristate "Support for NAND on JZ4780 SoC"
+> > -       depends on MACH_JZ4780 && JZ4780_NEMC
+> > +       depends on JZ4780_NEMC
+> >         help
+> >           Enables support for NAND Flash connected to the NEMC on JZ4780
+> > SoC
+> >           based boards, using the BCH controller for hardware error
+> > correction.
+> > --
+> > 2.14.1
+> >
+> >
+> >  
+> JZ4780 has MLC NAND.
+
+Hm, the NAND controller supports both MLC and SLC NANDs. Maybe there
+are only boards with MLC NANDs, but that doesn't mean we should remove
+the driver for the controller. 
+
+> As MLC NAND is not supported in mainline do you think
+> this patch is required? Even wondering if the driver is required at all.
+
+The fact that MLC NANDs are not supported by UBI is not necessarily
+definitive. I have a branch with all the work we've done to add MLC
+support to UBI [1]. If you have time to invest in it, feel free to take
+over this work.
+
+Anyway, the decision to remove this driver is not mine, and this patch
+allows me to at least compile-test this driver.
+
+Regards,
+
+Boris
+
+[1]https://github.com/bbrezillon/linux/commits/nand/mlc
