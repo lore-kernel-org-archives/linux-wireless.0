@@ -1,156 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:37266 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388424AbeGXR5H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37820 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726361AbeGKG51 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 13:57:07 -0400
-Received: by mail-pg1-f196.google.com with SMTP id n7-v6so3305096pgq.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:47 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
-        Eric Biggers <ebiggers@google.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Rabin Vincent <rabinv@axis.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
-        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        qat-linux@intel.com, linux-ppp@vger.kernel.org,
-        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 04/18] dm: Remove VLA usage from hashes
-Date: Tue, 24 Jul 2018 09:49:22 -0700
-Message-Id: <20180724164936.37477-5-keescook@chromium.org> (sfid-20180724_185308_679888_3AB7BB91)
-In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
-References: <20180724164936.37477-1-keescook@chromium.org>
+        Wed, 11 Jul 2018 02:57:27 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 11 Jul 2018 12:24:40 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/7] wireless: Change single cqm_config to rssi config
+ list
+In-Reply-To: <1530877576.3197.11.camel@sipsolutions.net>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+ <1528886747-26342-2-git-send-email-tamizhr@codeaurora.org>
+ <1530264405.3481.31.camel@sipsolutions.net>
+ <32a52d2ea57526cfe8c6311e6e34aaac@codeaurora.org>
+ <1530877576.3197.11.camel@sipsolutions.net>
+Message-ID: <b01b72d2d5796c627d060e0d3a517f3f@codeaurora.org> (sfid-20180711_085445_352268_028412E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the quest to remove all stack VLA usage from the kernel[1], this uses
-the new HASH_MAX_DIGESTSIZE from the crypto layer to allocate the upper
-bounds on stack usage.
+On 2018-07-06 17:16, Johannes Berg wrote:
+> On Wed, 2018-07-04 at 23:46 +0530, Tamizh chelvam wrote:
+> 
+>> > > -	struct cfg80211_cqm_config *cqm_config;
+>> > > +	struct cfg80211_rssi_config *rssi_config;
+>> > > +	struct list_head rssi_config_list;
+>> >
+>> > Why do you need both now? Perhaps instead you should allow a NULL/all-
+>> > ones MAC address for where you have the direct pointer now, and remove
+>> > that? You anyway need to pass something to the peer argument in
+>> >
+>> 
+>> In the current cqm/sta_mon implementation the range_config will be
+>> updated before notify event posted to userspace.
+>> To update the range config for a specific station we need to have this
+>> peer addr based configuration list which holds the thresholds info
+>> to choose the next rssi range.
+>> Or do you want me to handle and store the rssi_config structure in
+>> mac80211 and update it in mac80211 itself ? And simply pass the
+>> notification event to userspace application ?
+> 
+> I don't have any issues with storing it in mac80211 - could attach it 
+> to
+> the station entry there?
+yes.
+> 
+> Come to think of it, that might also clarify the lifetime rules. As it
+> is now, what if the station is removed? What are the lifetime rules for
+> a per-station configuration?
+If we go with mac80211 based approach then the lifetime of the 
+configuration would be for the current connection.
+> 
+> It would almost look like it stays here (or maybe I missed when you
+> remove it from the list when a station is removed), but that doesn't
+> seem like a good idea.
+> 
+> Please document the lifetime rules also in the API, and make sure you
+> implement them properly.
+In AP mode, the lifetime would be for the station's current connection. 
+It will be removed in case of roaming/disconnected.
+> 
+>> > What's the locking scheme for this? It's way more complex now so
+>> > perhaps stick ASSERT_RTNL() in there or so?
+>> >
+>> 
+>> Isn't wdev_lock enough ?
+> 
+> I guess it should be :-) Maybe assert on that, also to document the
+> locking rules.
+Sure
+> 
+>> > >  	/* RSSI reporting disabled? */
+>> > > -	if (!wdev->cqm_config)
+>> > > +	if (!wdev->rssi_config)
+>> > >  		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
+>> >
+>> >
+>> > So I guess the wdev->rssi_config is used for the case of "always use
+>> > this config for any AP you're connected to" or so - but maybe it'd be
+>> > better to track the AP as a station? Then again, I guess we can't force
+>> > userspace to change that.
+> 
+>> Sorry I didn't get your point:( I didn't change anything in the 
+>> station
+>> mode. Functionality remains same for the station mode.
+> 
+> Right, that sort of goes back to my thoughts about lifetime rules too.
+> The rule for stations would be to have it deleted when the station is
+> deleted, but I guess the rule for client-mode is to keep the config
+> active even when roaming?
+> 
+> I was just thinking that you don't need to *store* it like that, you
+> could still - in client mode - store the configuration treating the AP
+> as a (peer) station, perhaps with an ff:ff:ff:ff:ff:ff MAC address or
+> something (instead of using the BSSID, to get lifetime rules adjusted
+> right).
+> 
+Going with mac80211 based storing configuration will remove these list 
+implementation in the cfg80211.
+So, there won't be any MAC address stored for client-mode in cqm_config 
+structure.
 
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+> But now that I'm thinking about how the lifetime rules differ ... 
+> that's
+> probably not worth it.
+> 
+>> > >  	wdev_lock(wdev);
+>> > >  	if (n_thresholds) {
+>> > > -		struct cfg80211_cqm_config *cqm_config;
+>> > > -
+>> > > -		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
+>> > > -				     n_thresholds * sizeof(s32), GFP_KERNEL);
+>> > > -		if (!cqm_config) {
+>> > > +		wdev->rssi_config = cfg80211_get_rssi_config(
+>> > > +						wdev, thresholds,
+>> > > +						n_thresholds, hysteresis,
+>> > > +						wdev->current_bss->pub.bssid);
+>> >
+>> > Here you link it to the BSSID anyway, but do we always have a
+>> > current_bss at this point?
+>> >
+>> 
+>> Oops! I didn't think about that condition. I'll fix that in the next
+>> version.
+> 
+> Again though - see above. I'm not sure it's even correct to link it to
+> the BSSID since until now, I think the configuration would remain 
+> across
+> roaming?
+> 
+As mentioned above storing configuration parameters in mac80211 will 
+avoid this list implementation here.
+So, no need of worrying about those roaming scenario know ?
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/md/dm-integrity.c  | 23 +++++++++++++++++------
- drivers/md/dm-verity-fec.c |  5 ++++-
- 2 files changed, 21 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 86438b2f10dd..884edd7cf1d0 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -521,7 +521,12 @@ static void section_mac(struct dm_integrity_c *ic, unsigned section, __u8 result
- 		}
- 		memset(result + size, 0, JOURNAL_MAC_SIZE - size);
- 	} else {
--		__u8 digest[size];
-+		__u8 digest[HASH_MAX_DIGESTSIZE];
-+
-+		if (WARN_ON(size > sizeof(digest))) {
-+			dm_integrity_io_error(ic, "digest_size", -EINVAL);
-+			goto err;
-+		}
- 		r = crypto_shash_final(desc, digest);
- 		if (unlikely(r)) {
- 			dm_integrity_io_error(ic, "crypto_shash_final", r);
-@@ -1244,7 +1249,7 @@ static void integrity_metadata(struct work_struct *w)
- 		struct bio *bio = dm_bio_from_per_bio_data(dio, sizeof(struct dm_integrity_io));
- 		char *checksums;
- 		unsigned extra_space = unlikely(digest_size > ic->tag_size) ? digest_size - ic->tag_size : 0;
--		char checksums_onstack[ic->tag_size + extra_space];
-+		char checksums_onstack[HASH_MAX_DIGESTSIZE];
- 		unsigned sectors_to_process = dio->range.n_sectors;
- 		sector_t sector = dio->range.logical_sector;
- 
-@@ -1253,8 +1258,14 @@ static void integrity_metadata(struct work_struct *w)
- 
- 		checksums = kmalloc((PAGE_SIZE >> SECTOR_SHIFT >> ic->sb->log2_sectors_per_block) * ic->tag_size + extra_space,
- 				    GFP_NOIO | __GFP_NORETRY | __GFP_NOWARN);
--		if (!checksums)
-+		if (!checksums) {
- 			checksums = checksums_onstack;
-+			if (WARN_ON(extra_space &&
-+				    digest_size > sizeof(checksums_onstack))) {
-+				r = -EINVAL;
-+				goto error;
-+			}
-+		}
- 
- 		__bio_for_each_segment(bv, bio, iter, dio->orig_bi_iter) {
- 			unsigned pos;
-@@ -1466,7 +1477,7 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
- 				} while (++s < ic->sectors_per_block);
- #ifdef INTERNAL_VERIFY
- 				if (ic->internal_hash) {
--					char checksums_onstack[max(crypto_shash_digestsize(ic->internal_hash), ic->tag_size)];
-+					char checksums_onstack[max(HASH_MAX_DIGESTSIZE, MAX_TAG_SIZE)];
- 
- 					integrity_sector_checksum(ic, logical_sector, mem + bv.bv_offset, checksums_onstack);
- 					if (unlikely(memcmp(checksums_onstack, journal_entry_tag(ic, je), ic->tag_size))) {
-@@ -1516,7 +1527,7 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
- 				if (ic->internal_hash) {
- 					unsigned digest_size = crypto_shash_digestsize(ic->internal_hash);
- 					if (unlikely(digest_size > ic->tag_size)) {
--						char checksums_onstack[digest_size];
-+						char checksums_onstack[HASH_MAX_DIGESTSIZE];
- 						integrity_sector_checksum(ic, logical_sector, (char *)js, checksums_onstack);
- 						memcpy(journal_entry_tag(ic, je), checksums_onstack, ic->tag_size);
- 					} else
-@@ -1937,7 +1948,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
- 				    unlikely(from_replay) &&
- #endif
- 				    ic->internal_hash) {
--					char test_tag[max(crypto_shash_digestsize(ic->internal_hash), ic->tag_size)];
-+					char test_tag[max_t(size_t, HASH_MAX_DIGESTSIZE, MAX_TAG_SIZE)];
- 
- 					integrity_sector_checksum(ic, sec + ((l - j) << ic->sb->log2_sectors_per_block),
- 								  (char *)access_journal_data(ic, i, l), test_tag);
-diff --git a/drivers/md/dm-verity-fec.c b/drivers/md/dm-verity-fec.c
-index 684af08d0747..0ce04e5b4afb 100644
---- a/drivers/md/dm-verity-fec.c
-+++ b/drivers/md/dm-verity-fec.c
-@@ -212,12 +212,15 @@ static int fec_read_bufs(struct dm_verity *v, struct dm_verity_io *io,
- 	struct dm_verity_fec_io *fio = fec_io(io);
- 	u64 block, ileaved;
- 	u8 *bbuf, *rs_block;
--	u8 want_digest[v->digest_size];
-+	u8 want_digest[HASH_MAX_DIGESTSIZE];
- 	unsigned n, k;
- 
- 	if (neras)
- 		*neras = 0;
- 
-+	if (WARN_ON(v->digest_size > sizeof(want_digest)))
-+		return -EINVAL;
-+
- 	/*
- 	 * read each of the rsn data blocks that are part of the RS block, and
- 	 * interleave contents to available bufs
--- 
-2.17.1
+Thanks,
+Tamizh.
