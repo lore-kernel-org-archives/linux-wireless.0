@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55162 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729622AbeGMRXo (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36364 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726205AbeGKIKc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 13:23:44 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        kvalo@codeaurora.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  fix vdev-start timeout on error
-Date: Fri, 13 Jul 2018 10:08:03 -0700
-Message-Id: <1531501683-32299-1-git-send-email-greearb@candelatech.com> (sfid-20180713_190817_235277_8CA05587)
+        Wed, 11 Jul 2018 04:10:32 -0400
+Received: by mail-wm0-f68.google.com with SMTP id s14-v6so1543647wmc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2018 01:07:29 -0700 (PDT)
+Date: Wed, 11 Jul 2018 10:07:25 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Sean Wang <sean.wang@mediatek.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v2 00/12] Add mt76x0 driver
+Message-ID: <20180711080721.GA3871@localhost.localdomain> (sfid-20180711_100736_562219_A965B5D1)
+References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
+ <1531205430.26214.8.camel@mtkswgap22>
+ <20180710095222.GA18926@redhat.com>
+ <1531230864.26214.20.camel@mtkswgap22>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1531230864.26214.20.camel@mtkswgap22>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+> On Tue, 2018-07-10 at 11:52 +0200, Stanislaw Gruszka wrote:
+> > On Tue, Jul 10, 2018 at 02:50:30PM +0800, Sean Wang wrote:
+> > > > For full support mt7610.bin firmware blob is need, hopefully with 
+> > > > the permission of Mediatek, the blob will be pushed into linux-firmware
+> > > > git tree.
+> > > > 
+> > > 
+> > > Hi, Stanislaw
+> > > 
+> > > You can feel free to add mt7610.bin firmware blob to linux-firmware with
+> > > the license LICENCE.mediatek I added in [1].
+> > > 
+> > > 
+> > > [1]
+> > > http://lists.infradead.org/pipermail/linux-mediatek/2018-June/013759.html
+> > 
+> > Thank you Sean!
+> > 
+> > I guess there is no problem with similar submission for
+> > mt7662u.bin and mt7662u_rom_patch.bin needed for mt76x2u:
+> > https://marc.info/?l=linux-wireless&m=153045438821562&w=2
+> > 
+> 
 
-The vdev-start-response message should cause the
-completion to fire, even in the error case.  Otherwise,
-the user still gets no useful information and everything
-is blocked until the timeout period.
+Thanks Sean,
 
-Add some warning text to print out the invalid status
-code to aid debugging.
+I will submit mt7662u.bin and mt7662u_rom_patch.bin with LICENCE.mediatek
+soon
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+> Sure, there is no any problem for submitting mt7662u.bin and
+> mt7662u_rom_patch.bin if they are added with LICENCE.mediatek.
+> 
+> Do you or Lorenzo have a plan to add MT7668u support to mt76?
+> MT7668 is a newer wifi device than MT7610u or MT7662u.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index a60de71..ec4cd1e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
- 	ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to parse vdev start event: %d\n", ret);
--		return;
-+		goto out;
- 	}
- 
--	if (WARN_ON(__le32_to_cpu(arg.status)))
--		return;
-+	if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
-+		ath10k_warn(ar, "vdev-start-response reports status error: %d\n",
-+			    __le32_to_cpu(arg.status));
-+		/* Setup is done one way or another though, so we should still
-+		 * do the completion, so don't return here.
-+		 */
-+	}
- 
-+out:
- 	complete(&ar->vdev_setup_done);
- }
- 
--- 
-2.4.11
+Cool, I am interested in adding MT7668u support to mt76 driver.
+Is the adapter available on the market?
+
+Regards,
+Lorenzo
+
+> > Regards
+> > Stanislaw
+> > 
+> > _______________________________________________
+> > Linux-mediatek mailing list
+> > Linux-mediatek@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-mediatek
+> 
+> 
