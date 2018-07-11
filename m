@@ -1,163 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728254AbeGVIqR (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:40827 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732461AbeGKO5l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:17 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 15/20] wil6210: support Talyn specific board file
-Date: Sun, 22 Jul 2018 10:47:40 +0300
-Message-Id: <1532245665-15249-16-git-send-email-merez@codeaurora.org> (sfid-20180722_095038_411161_614B042D)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Wed, 11 Jul 2018 10:57:41 -0400
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 11.4 \(3445.8.2\))
+Subject: Re: RFkill for Bluetooth hard reset
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <D73ECEF0C711E34A8F972E4B87F540058FB58327@ORSMSX114.amr.corp.intel.com>
+Date: Wed, 11 Jul 2018 16:52:55 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        "open list:RFKILL" <linux-wireless@vger.kernel.org>,
+        Marcel Holtmann <marcel.holtmann@intel.com>,
+        "Tumkur Narayan, Chethan" <chethan.tumkur.narayan@intel.com>,
+        "Pierres, Arnaud" <arnaud.pierres@intel.com>
+Message-Id: <E54EB6BD-F1AD-431F-A7ED-6E7006578FD3@holtmann.org> (sfid-20180711_165301_391991_8C71BE72)
+References: <D73ECEF0C711E34A8F972E4B87F540058FB55F8D@ORSMSX114.amr.corp.intel.com>
+ <A1EF6CA6-71AB-4EF6-BF59-53450958A6AA@holtmann.org>
+ <D73ECEF0C711E34A8F972E4B87F540058FB58327@ORSMSX114.amr.corp.intel.com>
+To: "Ghorai, Sukumar" <sukumar.ghorai@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW file name for Talyn device can be different from the default name.
-In such a case use a corresponding board file name.
-If such a board file is not present FW download procedure will fail.
+Hi Sukumar,
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/fw.c       |  3 +++
- drivers/net/wireless/ath/wil6210/main.c     | 35 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/pcie_bus.c |  2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  4 ++++
- 4 files changed, 38 insertions(+), 6 deletions(-)
+>>> We need an option to reset Bluetooth using GPIO toggle for a Linux
+>>> product when BT connected over USB (HCI interface). i.e I need out of
+>>> band(OOB) signal for USB to control/reset the BT. hence I opt to add
+>>> ACPI device in RfKill gpio driver(rfkill-gpio.c).
+>>> 
+>>> localhost /sys/class/rfkill # ls -l
+>>> total 0
+>>> lrwxrwxrwx. 1 root root 0 Jul  8 14:53 rfkill0 ->
+>>> ../../devices/platform/INTL6205:00/rfkill/rfkill0
+>>> lrwxrwxrwx. 1 root root 0 Jul  8 14:53 rfkill2 ->
+>>> ../../devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ieee80211/phy0/rfki
+>>> ll2 lrwxrwxrwx. 1 root root 0 Jul  8 15:35 rfkill3 ->
+>>> ../../devices/pci0000:00/0000:00:14.0/usb1/1-5/1-5:1.0/bluetooth/hci0/
+>>> rfkill3
+>>> 
+>>> I try to use RFkill soft block option to hold/reset (toggle) GPIO. And
+>>> changes in rfkill-gpio.c as follows.
+>>> 1/ reset pin configured as GPIOD_OUT_LOW, hence HW controller is not
+>>> out of reset.  I changed to high to work with our controller.
+>>> How to configured as Low/High as a generic solution?
+>>> 
+>>> 2/ As per existing implementation, the Shutdown gpio is mandatory for
+>>> the framework to use. I feel we can make it an optional.
+>>> 
+>>> 3/ Followed by /sys/class/rfkill/rfkill0/soft (1/0) is not in sync
+>>> with /sys/class/rfkill/rfkill0/uvent (RFKILL_STATE=0/1)
+>>> 
+>>> Please guide me to add an ACPI method to toggle the GPIO to reset the
+>> bluetooth.
+> I appreciate how imaginative you are. I appreciate your support.
+> 
+>> if the setup is that when these GPIOs are triggered, then the Bluetooth USB
+>> device disappears from the USB bus (and with that from sysfs), then it is fine to
+>> use an external RFKILL switch. This is similar to what Thinkpads used to do.
+>> 
+> Platform exposes the ACPI device node. Platform GPIO binds to use for 
+> controlling reset lines of Bluetooth controller.  Sets the GPIO address low to 
+> chip disable i.e Device(bt controller) will disconnect from the bus. And config
+> gpio high triggered bt-chip reset line to boot and host re-enumerate the device. 
+> Hence OS UI/application can use the Linux system interface 
+> /sys/class/rfkill/rfkillx/ type and state) with airplane-mode or bluetooth OFF/ON. 
+> Or similar dbus interface.
+> 
+>> It is kinda okay to use RFKILL_TYPE_BLUETOOTH for this, but in reality this is
+>> RFKILL_TYPE_USB since it is killing the USB device. That Bluetooth gets also
+>> killed is just a side effect.
+> The platform will expose the dedicated ACPI device node (INTL6205) to control 
+> all Intel bluetooth controller only, when supported.
+> 
+>> One thing that would be nice if ACPI would kinda link the RFKILL switch entry to
+>> the USB port so that you could relate on which USB device will be actually taken
+>> off the USB bus.
+>> 
+>> If this is _not_ killing the USB power to the device and taking it off the bus, then
+>> this way is all wrong. For wakeup and reset GPIOs, this then needs to be build
+>> into btusb.c like has been done for all the UART drivers.
+> To control the Bluetooth hardware, the driver to a combination of in-band bus
+> communication(USB) and coordinate with out-of-band signaling through
+> GPIO pins. And still looking for possibility to add the Out-of-band ACPI 
+> signaling mechanism to hook with btusb.c. 
 
-diff --git a/drivers/net/wireless/ath/wil6210/fw.c b/drivers/net/wireless/ath/wil6210/fw.c
-index 540fc20..3e2bbbc 100644
---- a/drivers/net/wireless/ath/wil6210/fw.c
-+++ b/drivers/net/wireless/ath/wil6210/fw.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2014-2015,2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -22,6 +23,8 @@
- MODULE_FIRMWARE(WIL_FW_NAME_DEFAULT);
- MODULE_FIRMWARE(WIL_FW_NAME_SPARROW_PLUS);
- MODULE_FIRMWARE(WIL_BOARD_FILE_NAME);
-+MODULE_FIRMWARE(WIL_FW_NAME_TALYN);
-+MODULE_FIRMWARE(WIL_BRD_NAME_TALYN);
- 
- static
- void wil_memset_toio_32(volatile void __iomem *dst, u32 val,
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7dcbd46..64de679 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -28,6 +28,7 @@
- #define WAIT_FOR_HALP_VOTE_MS 100
- #define WAIT_FOR_SCAN_ABORT_MS 1000
- #define WIL_DEFAULT_NUM_RX_STATUS_RINGS 1
-+#define WIL_BOARD_FILE_MAX_NAMELEN 128
- 
- bool debug_fw; /* = false; */
- module_param(debug_fw, bool, 0444);
-@@ -1161,6 +1162,28 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- 	le32_to_cpus(&r->head);
- }
- 
-+/* construct actual board file name to use */
-+void wil_get_board_file(struct wil6210_priv *wil, char *buf, size_t len)
-+{
-+	const char *board_file;
-+	const char *wil_talyn_fw_name = ftm_mode ? WIL_FW_NAME_FTM_TALYN :
-+			      WIL_FW_NAME_TALYN;
-+
-+	if (wil->board_file) {
-+		board_file = wil->board_file;
-+	} else {
-+		/* If specific FW file is used for Talyn,
-+		 * use specific board file
-+		 */
-+		if (strcmp(wil->wil_fw_name, wil_talyn_fw_name) == 0)
-+			board_file = WIL_BRD_NAME_TALYN;
-+		else
-+			board_file = WIL_BOARD_FILE_NAME;
-+	}
-+
-+	strlcpy(buf, board_file, len);
-+}
-+
- static int wil_get_bl_info(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil->main_ndev;
-@@ -1532,8 +1555,12 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 	wil_set_oob_mode(wil, oob_mode);
- 	if (load_fw) {
-+		char board_file[WIL_BOARD_FILE_MAX_NAMELEN];
-+
-+		board_file[0] = '\0';
-+		wil_get_board_file(wil, board_file, sizeof(board_file));
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n",
--			 wil->wil_fw_name, WIL_BOARD_FILE_NAME);
-+			 wil->wil_fw_name, board_file);
- 
- 		if (!no_flash)
- 			wil_bl_prepare_halt(wil);
-@@ -1545,11 +1572,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 		if (rc)
- 			goto out;
- 		if (wil->brd_file_addr)
--			rc = wil_request_board(wil, WIL_BOARD_FILE_NAME);
-+			rc = wil_request_board(wil, board_file);
- 		else
--			rc = wil_request_firmware(wil,
--						  WIL_BOARD_FILE_NAME,
--						  true);
-+			rc = wil_request_firmware(wil, board_file, true);
- 		if (rc)
- 			goto out;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 095c16f..e44b4ad 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -28,7 +28,7 @@
- module_param(n_msi, int, 0444);
- MODULE_PARM_DESC(n_msi, " Use MSI interrupt: 0 - use INTx, 1 - (default) - single, or 3");
- 
--static bool ftm_mode;
-+bool ftm_mode;
- module_param(ftm_mode, bool, 0444);
- MODULE_PARM_DESC(ftm_mode, " Set factory test mode, default - false");
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 8eca6a8..16ed827 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -37,6 +37,7 @@
- extern bool rx_large_buf;
- extern bool debug_fw;
- extern bool disable_ap_sme;
-+extern bool ftm_mode;
- 
- struct wil6210_priv;
- struct wil6210_vif;
-@@ -52,6 +53,7 @@
- 
- #define WIL_FW_NAME_TALYN "wil6436.fw"
- #define WIL_FW_NAME_FTM_TALYN "wil6436_ftm.fw"
-+#define WIL_BRD_NAME_TALYN "wil6436.brd"
- 
- #define WIL_BOARD_FILE_NAME "wil6210.brd" /* board & radio parameters */
- 
-@@ -1101,6 +1103,8 @@ static inline void wil_c(struct wil6210_priv *wil, u32 reg, u32 val)
- 	wil_w(wil, reg, wil_r(wil, reg) & ~val);
- }
- 
-+void wil_get_board_file(struct wil6210_priv *wil, char *buf, size_t len);
-+
- #if defined(CONFIG_DYNAMIC_DEBUG)
- #define wil_hex_dump_txrx(prefix_str, prefix_type, rowsize,	\
- 			  groupsize, buf, len, ascii)		\
--- 
-1.9.1
+this is where you are wrong. It has nothing to do with Bluetooth in this case. It is the "stabbing in the back" kind of thing that you are doing with the hardware here. It is the "have you tried to switch your PC off and back on" approach. Or if you unplug the hardware and plug it back in.
+
+The problem is that no relation between the ACPI GPIO information and the PCIe card with the USB lines connected exists. If you kill the USB power, then the btusb.ko driver will unregister the hci_dev and thus all device state is gone.
+
+As said above, since this is killing the power, it is fine to do this via an external RFKILL_TYPE_BLUETOOTH switch. However it would be nice if that switch exposes somehow which USB port it is that has its device taken offline.
+
+>> Bluetooth at the moment does not have a hard kill switch in its subsystem (like
+>> WiFi does), but that could be added if the Bluetooth device stays on the bus and
+>> needs an external RFKILL switch. Bluetooth however does have a soft kill switch,
+>> but that is not going to help here.
+> This GPIO based device (BT- controller) OFF/ON is similar to hard kill, as the device
+> disappears from USB bus and followed by re-enumerate after reset (OFF and ON) 
+
+There is a slight difference here if the USB device stays on the bus and is removed from the bus. This is what I am trying to say, there are 3 types of kill switches.
+
+Regards
+
+Marcel
