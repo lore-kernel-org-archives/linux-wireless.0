@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726888AbeG3TgO (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36420 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389066AbeGKPcL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:36:14 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 11 Jul 2018 11:32:11 -0400
+Date: Wed, 11 Jul 2018 09:27:18 -0600
+From: Rob Herring <robh@kernel.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: devicetree@vger.kernel.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, andy.gross@linaro.org,
+        niklas.cassel@linaro.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 3/6] dt: bindings: add bindings for msa memory region
+Message-ID: <20180711152718.GA18470@rob-hp-laptop> (sfid-20180711_172731_232930_42AAEDFF)
+References: <20180706090043.28363-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath10k: add debugfs file warm_hw_reset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1531920860-3236-1-git-send-email-mkenna@codeaurora.org>
-References: <1531920860-3236-1-git-send-email-mkenna@codeaurora.org>
-To: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Message-Id: <20180730180005.B77B360B1A@smtp.codeaurora.org> (sfid-20180730_200048_116741_A7541AAB)
-Date: Mon, 30 Jul 2018 18:00:05 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180706090043.28363-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maharaja Kennadyrajan <mkenna@codeaurora.org> wrote:
-
-> Debugfs support to do hardware warm reset with WMI command
-> WMI_PDEV_PARAM_PDEV_RESET for 10.4 and 10.2.4(if wmi
-> service is enabled in the firmware for backward compatibility).
+On Fri, Jul 06, 2018 at 02:30:43PM +0530, Govind Singh wrote:
+> Add device tree binding documentation details of msa
+> memory region for ath10k qmi client for SDM845/APQ8098
+> SoC into "qcom,ath10k.txt".
 > 
-> This change is purely for debugging purpose when hardware hangs/mutes.
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../bindings/net/wireless/qcom,ath10k.txt           | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 > 
-> This hardware reset won't affect the connectivity but there will be small
-> pause in data traffic. Here we are doing BB/MAC level reset and hence
-> whenever the BB/MAC watchdog is triggered, it does a hardware_chip_reset.
-> So the target will be in the active state.
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 7fd4e8ce4149..87489054aea5 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -57,6 +57,16 @@ Optional properties:
+>  - <supply-name>-supply: handle to the regulator device tree node
+>  			   optional "supply-name" is "vdd-0.8-cx-mx".
+>  
+> += SUBNODES:
+> +wcn3990-wifi node may contain one subnode, named "msa" representing
+> +the fixed msa memory regions used by the wifi firmware running in Q6.
+> +This sub-node must contain:
+
+Why do you need a sub-node? Just add memory-region property.
+
+> +
+> +- memory-region:
+> +	Usage: required
+> +	Value type: <phandle>
+> +	Definition: reference to the reserved-memory for the region
+> +
+>  Example (to supply the calibration data alone):
+>  
+>  In this example, the node is defined as child node of the PCI controller.
+> @@ -149,4 +159,7 @@ wifi@18000000 {
+>  			   <0 140 0 /* CE10 */ >,
+>  			   <0 141 0 /* CE11 */ >;
+>  		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+> +		msa {
+> +			memory-region = <&wifi_msa_mem>;
+> +		};
+>  };
+> -- 
+> 2.17.0
 > 
-> Below command used to warm reset the hardware.
-> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/warm_hw_reset
-> 
-> Tested in QCA988X with firmware ver 10.2.4.70.45
-> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
-> 
-> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-db251d7df457 ath10k: add debugfs file warm_hw_reset
-
--- 
-https://patchwork.kernel.org/patch/10532465/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
