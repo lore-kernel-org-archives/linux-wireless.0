@@ -1,68 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55738 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41836 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750983AbeGJHNL (ORCPT
+        with ESMTP id S1726386AbeGKHGz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 03:13:11 -0400
-From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Subject: [RFCv2 0/2] ath10k: Add QCA vendor command/attr support to filter neighbor BSS frames
-Date: Tue, 10 Jul 2018 12:42:57 +0530
-Message-Id: <1531206779-26517-1-git-send-email-periyasa@codeaurora.org> (sfid-20180710_091316_114502_E8D36C01)
+        Wed, 11 Jul 2018 03:06:55 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 11 Jul 2018 12:34:07 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/7] cfg80211: Add new NL command to configure peer
+ specific rssi threshold
+In-Reply-To: <1530877252.3197.5.camel@sipsolutions.net>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+ <1528886747-26342-3-git-send-email-tamizhr@codeaurora.org>
+ <1530264578.3481.34.camel@sipsolutions.net>
+ <5d7f6ec9ffe0272b41102828f37706db@codeaurora.org>
+ <1530877252.3197.5.camel@sipsolutions.net>
+Message-ID: <c8560bc51468cb1bd3f876aa6906afae@codeaurora.org> (sfid-20180711_090410_512749_C0BB622A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow AP to receive neighbor BSSs frames and user-space can get the
-statistics of the stations associated with neighbor BSSs.
+On 2018-07-06 17:10, Johannes Berg wrote:
+> On Wed, 2018-07-04 at 11:39 +0530, Tamizh chelvam wrote:
+>> On 2018-06-29 14:59, Johannes Berg wrote:
+>> > On Wed, 2018-06-13 at 16:15 +0530, Tamizh chelvam wrote:
+>> > >
+>> > > + * @NL80211_ATTR_STA_MON: Station's connection monitor configuration
+>> > > in a
+>> > > + *	nested attribute with %NL80211_ATTR_STA_MON_* sub-attributes.
+>> >
+>> > Can't we reuse the existing attributes in this nesting?
+>> 
+>> This new attributes introduced as per the previous discussion.
+>> https://patchwork.kernel.org/patch/10240697/
+>> Is my understanding correct ?
+> 
+> Yeah ok ... I'm thinking perhaps we could share some part of it, but
+> it's not really worth making it more complex due to that.
+> 
+Sure, i'll reuse those cqm attributes and event notification enum as 
+well.
 
-User-space can use QCA_NL80211_VENDOR_SUBCMD_BSS_FILTER command to configure
-RX filter to receive frames from stations that are active on the operating
-channel, but not associated with the local device (e.g., STAs associated with
-neighbor APs). Filtering is done based on a list of BSSIDs and STA MAC addresses
-added by the user. This command is also used to fetch statistics of unassociated
-stations. The attributes used with this command are defined in enum
-qca_wlan_vendor_attr_bss_filter.
+>> > Wait, you went to all this effort in the first patch and now you don't
+>> > add this to the list?
+>> >
+>> No, the list and the rssi_config structure is for multi threshold 
+>> value
+>> and not for single threshold.
+> 
+> Yeah, though I'm still not sure why we need the single threshold thing
+> at all.
+For taking steering kind of decision single threshold value can be used 
+to monitor
+the station's rssi.
 
-User can add/delete the filter by specifying the BSSID/STA MAC address in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_MAC_ADDR, filter type as BSSID/STA in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_TYPE and add/delete action in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_ACTION using the QCA vendor command
-QCA_NL80211_VENDOR_SUBCMD_BSS_FILTER.
+> List should always be a superset.
+> 
+I believe superset you meant will accept a signle threshold 
+configuration also from user ?
+If so, we can remove the single threshold api implementation.
 
-User can get the statistics of an unassociated station by specifying the MAC
-address in QCA_WLAN_VENDOR_ATTR_BSS_FILTER_MAC_ADDR, station type in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_TYPE, GET action in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_ACTION using the QCA vendor command
-QCA_NL80211_VENDOR_SUBCMD_BSS_FILTER. User can also get the statistics of all
-unassociated stations by specifying the Broadcast MAC address (ff:ff:ff:ff:ff:ff)
-in QCA_WLAN_VENDOR_ATTR_BSS_FILTER_MAC_ADDR with above procedure. In response,
-ath10k driver specify statistics information nested in
-QCA_WLAN_VENDOR_ATTR_BSS_FILTER_STA_STATS.
-
-NOTE: Tested with debug firmware
-
-v2:
- * Solved kbuild test warning
-
-Karthikeyan Periyasamy (2):
-  ath10k: add wmi interface for vdev_set_neighbor_rx_param
-  ath10k: Add QCA vendor command/attr support to filter neighbor BSS
-    frames
-
- drivers/net/wireless/ath/ath10k/Makefile  |   3 +-
- drivers/net/wireless/ath/ath10k/core.h    |   3 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |   5 +
- drivers/net/wireless/ath/ath10k/mac.c     |  15 +-
- drivers/net/wireless/ath/ath10k/vendor.c  | 770 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/vendor.h  | 289 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  28 +-
- drivers/net/wireless/ath/ath10k/wmi.c     |  33 ++
- drivers/net/wireless/ath/ath10k/wmi.h     |  76 +++
- 9 files changed, 1219 insertions(+), 3 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/vendor.c
- create mode 100644 drivers/net/wireless/ath/ath10k/vendor.h
-
--- 
-1.9.1
+Thanks,
+Tamizh.
