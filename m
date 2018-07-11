@@ -1,87 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:41371 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731358AbeGYXoc (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:43540 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726644AbeGKLbs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jul 2018 19:44:32 -0400
-Received: by mail-wr1-f68.google.com with SMTP id j5-v6so8790626wrr.8
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jul 2018 15:30:45 -0700 (PDT)
-From: bkil <b.K.il.h.u+tigbuh@gmail.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3] wireless-regdb: update rules for Hungary (HU) on 2.4/5/60G, 5725-5875MHz
-Date: Thu, 26 Jul 2018 00:30:37 +0200
-Message-Id: <8307609c48bf9a1755c5933e186dc8938cb6dc79.1532557837.git.b.K.il.h.u+tigbuh@gmail.com> (sfid-20180726_003050_042016_FB523991)
-In-Reply-To: <CAPuHQ=EWtsOs2naY2pLx9D-JJbDr1kc8sisd-JNHiEekJ5ijDQ@mail.gmail.com>
-References: <CAPuHQ=EWtsOs2naY2pLx9D-JJbDr1kc8sisd-JNHiEekJ5ijDQ@mail.gmail.com>
+        Wed, 11 Jul 2018 07:31:48 -0400
+Received: by mail-lf0-f66.google.com with SMTP id m12-v6so20976142lfc.10
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2018 04:27:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20180711131626.732967be@bbrezillon>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+ <20180709200945.30116-5-boris.brezillon@bootlin.com> <20180711131626.732967be@bbrezillon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 11 Jul 2018 13:27:53 +0200
+Message-ID: <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com> (sfid-20180711_132758_769768_FB547A03)
+Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
+ driver when COMPILE_TEST=y
+To: Boris Brezillon <boris.brezillon@bootlin.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* 2400-2483.5M: extend bounds
-* 5150-5250M: extend bounds, add NO-OUTDOOR, no TPC so +3dB
-* 5250-5350M: extend bounds, add NO-OUTDOOR
-* 5470-5725M: extend bounds
-* 5725-5875M: introduce, as EU SRD provisions have been implemented
-* 57-66G: add NO-OUTDOOR
+On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
+<boris.brezillon@bootlin.com> wrote:
+> On Mon,  9 Jul 2018 22:09:25 +0200
+> Boris Brezillon <boris.brezillon@bootlin.com> wrote:
+>
+>> It just makes NAND maintainers' life easier by allowing them to
+>> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
+>> enabled.
+>>
+>> We add a dependency on HAS_IOMEM to make sure the driver compiles
+>> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
+>> accessors are not defined for this architecture.
+>
+> I see that SPARC does not define those accessors either. So I guess we
+> should add depends on !SPARC.
+>
+> Arnd, any other way to know when the platform implements
+> {read,write}s{bwl}() accessors?
 
-Freely available online references have been added hosted by the regulatory
-body in Hungary, the National Media and Infocommunications Authority.
+I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
+sparc32 appears to have these, and when Thierry sent the patch
+to implement them everywhere[1], he said that he tested sparc64 as
+well, so either something regressed since then, or his testing
+was incomplete. Either way, the correct answer IMHO would be to
+make it work rather than to add infrastructure around the broken
+configurations.
 
-To refer to a specific section, you can grep for the frequency in question.
+      Arnd
 
-Translation key:
-"Csak belt=C3=A9ri" / "=C3=89p=C3=BCleten bel=C3=BCli haszn=C3=A1latra korl=
-=C3=A1tozott" =3D indoor only;
-"K=C3=BClt=C3=A9ri =C3=A9s belt=C3=A9ri" =3D both indoor and outdoor;
-"Nem m=C5=B1k=C3=B6d=C5=91 TPC eset=C3=A9n a maxim=C3=A1lis teljes=C3=ADtm=
-=C3=A9nyjellemz=C5=91k 3 dB-lel
-cs=C3=B6kkennek." =3D reduce max power specs by 3dB in case of no TPC;
-"R=C3=B6gz=C3=ADtett k=C3=BClt=C3=A9ri telep=C3=ADt=C3=A9s nem megengedett"=
- =3D no fixed outdoor install
-
-Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
----
- db.txt | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 8963c01..8cf7dee 100644
---- a/db.txt
-+++ b/db.txt
-@@ -581,13 +581,25 @@ country HT: DFS-FCC
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
-=20
-+# http://stir.nmhh.hu/?oldal=3DdokumentumGeneralo&root_rendeletelem_id=3D3=
-&hatalyos=3D1
-+# http://english.nmhh.hu/cikk/297/Eljarasi_tajekoztato_a_24_GHzes_es_az_5_=
-GHzes_savban_mukodo_berendezesek_engedelyezeserol
-+# http://nmhh.hu/dokumentum/319/kis_hatotavolsagu_eszkozok_srdk.pdf
- country HU: DFS-ETSI
--	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=3DETSI
--	(5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=3DETSI
--	(5490 - 5710 @ 160), (27), DFS, wmmrule=3DETSI
--	# 60 GHz band channels 1-4, ref: Etsi En 302 567
--	(57000 - 66000 @ 2160), (40)
-+	# ref: 2006/771/EK, (EU) 2017/1483, MSZ EN 300 328
-+	# additionally: 100mW @ 10MHz channels, 50mW @ 5MHz (max. 10mW/MHz)
-+	(2400 - 2483.5 @ 40), (20)
-+	# ref: 2005/513/EK
-+	# note: TPC not needed @ 5150-5250
-+	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
-+	# note: max would be +3dB with TPC @ 5250-5725
-+	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=3DETSI
-+	(5470 - 5725 @ 160), (27), DFS, wmmrule=3DETSI
-+	# "Short Range Devices (SRD)"
-+	# ref: 2006/771/EK, (EU) 2017/1483, MSZ EN 300 440, MSZ EN 302 064
-+	(5725 - 5875 @ 80), (25 mW)
-+	# 60 GHz band channels 1-4, "Fixed outdoor installation not allowed"
-+	# ref: 2006/771/EK, (EU) 2017/1483, MSZ EN 302 567
-+	(57000 - 66000 @ 2160), (40), NO-OUTDOOR
-=20
- country ID: DFS-JP
- 	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/b=
-wa%205,8%20ghz.pdf
+[1] https://lwn.net/Articles/604819/
