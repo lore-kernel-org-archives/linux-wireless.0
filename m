@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:25495 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388424AbeGXIuB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 04:50:01 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 09/19] wil6210: fix min() compilation errors
-Date: Tue, 24 Jul 2018 10:44:30 +0300
-Message-Id: <1532418280-5849-10-git-send-email-merez@codeaurora.org> (sfid-20180724_094513_547865_CC1F254E)
-In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
-References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+Received: from mail.bootlin.com ([62.4.15.54]:48151 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732587AbeGKLgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jul 2018 07:36:43 -0400
+Date: Wed, 11 Jul 2018 13:32:36 +0200
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
+ driver when COMPILE_TEST=y
+Message-ID: <20180711133236.67726256@bbrezillon> (sfid-20180711_133313_956875_9FD5CF7C)
+In-Reply-To: <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+        <20180709200945.30116-5-boris.brezillon@bootlin.com>
+        <20180711131626.732967be@bbrezillon>
+        <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+On Wed, 11 Jul 2018 13:27:53 +0200
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-With some tool chains compilation fails due to type
-mismatch of the arguments passed to min().
-Use min_t() to solve these compilation errors.
+> On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
+> <boris.brezillon@bootlin.com> wrote:
+> > On Mon,  9 Jul 2018 22:09:25 +0200
+> > Boris Brezillon <boris.brezillon@bootlin.com> wrote:
+> >  
+> >> It just makes NAND maintainers' life easier by allowing them to
+> >> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
+> >> enabled.
+> >>
+> >> We add a dependency on HAS_IOMEM to make sure the driver compiles
+> >> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
+> >> accessors are not defined for this architecture.  
+> >
+> > I see that SPARC does not define those accessors either. So I guess we
+> > should add depends on !SPARC.
+> >
+> > Arnd, any other way to know when the platform implements
+> > {read,write}s{bwl}() accessors?  
+> 
+> I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
+> sparc32 appears to have these, and when Thierry sent the patch
+> to implement them everywhere[1], he said that he tested sparc64 as
+> well, so either something regressed since then, or his testing
+> was incomplete. Either way, the correct answer IMHO would be to
+> make it work rather than to add infrastructure around the broken
+> configurations.
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/fw_inc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/fw_inc.c b/drivers/net/wireless/ath/wil6210/fw_inc.c
-index 718161b..388b3d4 100644
---- a/drivers/net/wireless/ath/wil6210/fw_inc.c
-+++ b/drivers/net/wireless/ath/wil6210/fw_inc.c
-@@ -145,7 +145,7 @@ static int fw_ignore_section(struct wil6210_priv *wil, const void *data,
- 				    capabilities);
- 	bitmap_zero(wil->fw_capabilities, WMI_FW_CAPABILITY_MAX);
- 	memcpy(wil->fw_capabilities, rec->capabilities,
--	       min(sizeof(wil->fw_capabilities), capa_size));
-+	       min_t(size_t, sizeof(wil->fw_capabilities), capa_size));
- 	wil_hex_dump_fw("CAPA", DUMP_PREFIX_OFFSET, 16, 1,
- 			rec->capabilities, capa_size, false);
- 	return 0;
--- 
-1.9.1
+I guess the same goes for IA64 then.
