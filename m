@@ -1,153 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway33.websitewelcome.com ([192.185.145.24]:19863 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752653AbeGDVFz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42054 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726160AbeGKFEJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 17:05:55 -0400
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 2A3E1659B
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Jul 2018 16:05:55 -0500 (CDT)
-Date: Wed, 4 Jul 2018 16:05:53 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] wireless: mark expected switch fall-throughs
-Message-ID: <20180704210553.GA7869@embeddedor.com> (sfid-20180704_230610_929488_E181C288)
+        Wed, 11 Jul 2018 01:04:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 11 Jul 2018 10:31:43 +0530
+From: Govind Singh <govinds@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Brian Norris <briannorris@chromium.org>, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] *** Add support for wifi QMI client handshakes ***
+In-Reply-To: <20180711022425.GI2050@tuxbook-pro>
+References: <20180706085622.27945-1-govinds@codeaurora.org>
+ <20180711012638.GA100410@ban.mtv.corp.google.com>
+ <20180711022425.GI2050@tuxbook-pro>
+Message-ID: <0b1441507d2bb18ae267af65e13d98ec@codeaurora.org> (sfid-20180711_070235_643258_EE679DA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+On 2018-07-11 07:54, Bjorn Andersson wrote:
+> On Tue 10 Jul 18:26 PDT 2018, Brian Norris wrote:
+> 
+>> Hi,
+>> 
+> 
+> Hi Brian,
+> 
+>> On Fri, Jul 06, 2018 at 02:26:17PM +0530, Govind Singh wrote:
+> [..]
+>> > https://github.com/andersson/tqftpserv
+>> 
+>> FWIW, as of today, the tqftpserv implementation is missing a few 
+>> headers
+>> (so it doesn't even build),
+> 
+> Sorry about that, had those lingering in my repository. I've pushed a
+> fix for this.
+> 
+>> and once I hack things such that it can
+>> build, it still doesn't work for me (whereas the closed source version
+>> does). I see some BYE and DEL_CLIENT messages, but no read requests.
+> 
+> I interpret this description as you're not seeing any prints at, beyond
+> the "[TQFTP] got bye" and "[TQFTP] got del_client"?
+> 
+> That would imply that the remote side doesn't even attempt to
+> communicate with tqftpserv.
+> 
+> Are you running pd-mapper (either proprietary or my version), is it
+> complaining about anything?
+> 
+> Can you run qrtr-lookup on the device after booting the modem? So that
+> we see that the tqftpserv is registered properly and that the modem is
+> in an appropriate state?
+> 
+> Regards,
+> Bjorn
 
-Warning level 2 was used: -Wimplicit-fallthrough=2
+For me below sequence is working. PD mapper is bypassed in the modem 
+binary that Brian is using, hence that
+may not be required at this moment.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- net/wireless/chan.c        | 2 ++
- net/wireless/nl80211.c     | 9 +++++++++
- net/wireless/wext-compat.c | 2 ++
- 3 files changed, 13 insertions(+)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 2db713d..145cb51 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -747,6 +747,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	case NL80211_CHAN_WIDTH_20:
- 		if (!ht_cap->ht_supported)
- 			return false;
-+		/* else: fall through */
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 		prohibited_flags |= IEEE80211_CHAN_NO_20MHZ;
- 		width = 20;
-@@ -769,6 +770,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
- 		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
- 			return false;
-+		/* else: fall through */
- 	case NL80211_CHAN_WIDTH_80:
- 		if (!vht_cap->vht_supported)
- 			return false;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e4e5f02..59b0ac5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1676,6 +1676,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 1:
- 		if (nla_put(msg, NL80211_ATTR_CIPHER_SUITES,
- 			    sizeof(u32) * rdev->wiphy.n_cipher_suites,
-@@ -1722,6 +1723,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 2:
- 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SUPPORTED_IFTYPES,
- 					rdev->wiphy.interface_modes))
-@@ -1729,6 +1731,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 3:
- 		nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
- 		if (!nl_bands)
-@@ -1754,6 +1757,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 				state->chan_start++;
- 				if (state->split)
- 					break;
-+				/* else: fall through */
- 			default:
- 				/* add frequencies */
- 				nl_freqs = nla_nest_start(
-@@ -1807,6 +1811,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 4:
- 		nl_cmds = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_COMMANDS);
- 		if (!nl_cmds)
-@@ -1833,6 +1838,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 5:
- 		if (rdev->ops->remain_on_channel &&
- 		    (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL) &&
-@@ -1850,6 +1856,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 6:
- #ifdef CONFIG_PM
- 		if (nl80211_send_wowlan(msg, rdev, state->split))
-@@ -1872,6 +1879,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		state->split_start++;
- 		if (state->split)
- 			break;
-+		/* else: fall through */
- 	case 8:
- 		if ((rdev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
- 		    nla_put_u32(msg, NL80211_ATTR_DEVICE_AP_SME,
-@@ -4466,6 +4474,7 @@ static int parse_station_flags(struct genl_info *info,
- 		params->sta_flags_mask = BIT(NL80211_STA_FLAG_AUTHENTICATED) |
- 					 BIT(NL80211_STA_FLAG_MFP) |
- 					 BIT(NL80211_STA_FLAG_AUTHORIZED);
-+		/* fall through */
- 	default:
- 		return -EINVAL;
- 	}
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 167f702..9db3920 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1333,6 +1333,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 			wstats.qual.qual = sig + 110;
- 			break;
- 		}
-+		/* else: fall through */
- 	case CFG80211_SIGNAL_TYPE_UNSPEC:
- 		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_SIGNAL)) {
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
-@@ -1341,6 +1342,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 			wstats.qual.qual = sinfo.signal;
- 			break;
- 		}
-+		/* else: fall through */
- 	default:
- 		wstats.qual.updated |= IW_QUAL_LEVEL_INVALID;
- 		wstats.qual.updated |= IW_QUAL_QUAL_INVALID;
--- 
-2.7.4
+qrtr-cfg 1
+qrtr-ns
+
+
+mkdir -p /dev/block/bootdevice/by-name/
+ln -s /dev/sda4 /dev/block/bootdevice/by-name/modemst1
+ln -s /dev/sda5 /dev/block/bootdevice/by-name/modemst2
+ln -s /dev/sda6 /dev/block/bootdevice/by-name/fsc
+ln -s /dev/sda7 /dev/block/bootdevice/by-name/fsg
+
+ln -s /var/log/ /readwrite
+ln -s /lib/firmware/wlanmdsp.mbn /readonly/firmware/image/wlanmdsp.mbn
+
+rmt_storage &
+tqftpserv &
+
+
+Thanks,
+Govind
