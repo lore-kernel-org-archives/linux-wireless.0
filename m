@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:60749 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726380AbeGMJpg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 05:45:36 -0400
-Subject: Re: [PATCH 03/10] atmel: hide unused procfs helpers
-To: <simon@thekelleys.org.uk>, <kvalo@codeaurora.org>
-References: <20180713064658.10340-1-yuehaibing@huawei.com>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <ded55181-e1b0-99e9-ac68-2d93fb6168c0@huawei.com> (sfid-20180713_113157_717303_ED93F4C4)
-Date: Fri, 13 Jul 2018 17:31:37 +0800
+Received: from smtp.codeaurora.org ([198.145.29.96]:44784 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732259AbeGKAQI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jul 2018 20:16:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180713064658.10340-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 10 Jul 2018 17:14:33 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <153115422491.7447.12479559048433925372.stgit@alrua-x1>
+References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
+ <153115422491.7447.12479559048433925372.stgit@alrua-x1>
+Message-ID: <361a221dd15e44028fd35440df657a3d@codeaurora.org> (sfid-20180711_021438_222135_F5C7A59B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pls ignore this,my bad.
+On 2018-07-09 09:37, Toke Høiland-Jørgensen wrote:
+[...]
+> +/**
+> + * ieee80211_schedule_txq - add txq to scheduling loop
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from station or virtual interface
+> + * @reset_seqno: Whether to reset the internal scheduling sequence 
+> number,
+> + *               allowing this txq to appear again in the current 
+> scheduling
+> + *               round (see doc for ieee80211_next_txq()).
+> + *
+> + * Returns %true if the txq was actually added to the scheduling,
+> + * %false otherwise.
+> + */
+> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+> +			    struct ieee80211_txq *txq,
+> +			    bool reset_seqno);
+> +
+> +/**
+> + * ieee80211_next_txq - get next tx queue to pull packets from
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @ac: filter returned txqs with this AC number. Pass -1 for no 
+> filtering.
+> + * @inc_seqno: Whether to increase the scheduling sequence number. 
+> Setting this
+> + *             to true signifies the start of a new scheduling round. 
+> Each TXQ
+> + *             will only be returned exactly once in each round 
+> (unless its
+> + *             sequence number is explicitly reset when calling
+> + *             ieee80211_schedule_txq()).
+> + *
+Toke,
 
-On 2018/7/13 14:46, YueHaibing wrote:
-> When CONFIG_PROC_FS isn't set, gcc warning this:
-> 
-> drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
->  static int atmel_proc_show(struct seq_file *m, void *v)
->             ^
-> fix this by adding #ifdef around it.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/atmel/atmel.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-> index b01dc34..3940876 100644
-> --- a/drivers/net/wireless/atmel/atmel.c
-> +++ b/drivers/net/wireless/atmel/atmel.c
-> @@ -1399,6 +1399,7 @@ static int atmel_validate_channel(struct atmel_private *priv, int channel)
->  	return 0;
->  }
->  
-> +#ifdef CONFIG_PROC_FS
->  static int atmel_proc_show(struct seq_file *m, void *v)
->  {
->  	struct atmel_private *priv = m->private;
-> @@ -1481,6 +1482,7 @@ static int atmel_proc_show(struct seq_file *m, void *v)
->  	seq_printf(m, "Current state:\t\t%s\n", s);
->  	return 0;
->  }
-> +#endif
->  
->  static const struct net_device_ops atmel_netdev_ops = {
->  	.ndo_open 		= atmel_open,
-> 
+Seems like seqno is internal to mac80211 and meant for active_txq list 
+manipulation.
+If so, why would drivers have to worry about increment or resetting 
+seqno? IMHO to
+avoid over serving same txq, two lists (activeq and waitq) can be used 
+and always
+add new txq into waitq list. So that driver will not worry about 
+mac80211 txq
+manipulation. Please correct me If Im wrong.
+
+ieee80211_schedule_txq
+    - if schedule_order empty, add txq into waitq list tail.
+
+ieee80211_next_txq
+    - if activeq empty,
+         - move waitq list into activeq
+
+    - if activeq not empty
+         - fetch appropriate txq from activeq
+         - remove txq from activeq list.
+
+    - If txq found, return txq else return NULL
+
+-Rajkumar
