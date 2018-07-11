@@ -1,286 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38814 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729643AbeGaJsn (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:43793 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732310AbeGKB23 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:48:43 -0400
-Received: by mail-wr1-f65.google.com with SMTP id v14-v6so15622975wro.5
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:33 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH v2 09/19] mt76: rename mt76_tx_queue_skb in mt76_dma_tx_queue_skb
-Date: Tue, 31 Jul 2018 10:09:10 +0200
-Message-Id: <5ef0ce00c3f94aab387e7ae0fd1a2a1f37902783.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100956_807483_51DC4304)
-In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+        Tue, 10 Jul 2018 21:28:29 -0400
+Received: by mail-pl0-f66.google.com with SMTP id c41-v6so8396644plj.10
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 18:26:43 -0700 (PDT)
+Date: Tue, 10 Jul 2018 18:26:39 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] *** Add support for wifi QMI client handshakes ***
+Message-ID: <20180711012638.GA100410@ban.mtv.corp.google.com> (sfid-20180711_032652_417432_E73A7A75)
+References: <20180706085622.27945-1-govinds@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180706085622.27945-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76_dma_tx_queue_skb routine in dma.c.
-Remove static qualifier from mt76_get_txwi definition
+Hi,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c      | 74 ++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |  7 +-
- .../net/wireless/mediatek/mt76/mt76x2_tx.c    |  3 +-
- drivers/net/wireless/mediatek/mt76/tx.c       | 84 ++-----------------
- 4 files changed, 85 insertions(+), 83 deletions(-)
+On Fri, Jul 06, 2018 at 02:26:17PM +0530, Govind Singh wrote:
+> Add QMI client handshakes for Q6 integrated WLAN connectivity subsystem.
+> This module is responsible for communicating WLAN control messages to FW
+> over QMI interface. This patch series enables the qmi handshakes required for
+> WCN3990 chipset.
+> 
+> QUALCOMM MSM Interface(QMI) provides the control interface between
+> components running b/w remote processors with underlying transport layer
+> based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+> 
+> QMI client driver implementation is based on qmi framework https://lwn.net/Articles/729924/.
+> 
+> Below is the sequence of qmi handshake.
+> 
+>        QMI CLIENT(APPS)                                         QMI SERVER(FW in Q6)
+> 
+>                          <------wlan service discoverd----
+> 
+>                        -----connect to wlam qmi service----->
+> 
+>                        ------------wlan info request----->
+> 
+>                        <------------wlan info resp------------
+> 
+>                        ------------msa info req-------->
+> 
+>                      <------------msa info resp------------
+> 
+>                      ------------msa ready req-------->
+> 
+>                      <------------msa ready resp------------
+> 
+>                      <------------msa ready indication-------
+> 
+>                      ------------capability req------->
+> 
+>                     <------------capability resp------------
+> 
+>                     ------------qmi bdf req--------->
+> 
+>                      <------------qmi bdf resp------------
+> 
+>                       ------------qmi cal trigger------->
+> 
+>                   <------------ QMI FW ready indication-------
+> 
+> WLAN fw is running in modem Q6 dsp as user PD(protection domain).
+> Sequence of user PD loading is as following.
+> 
+> 1) Remote proc PIL driver loads the modem fw/ROOT PD.
+> 2) As part of ROOT pd boot-up it queries to a daemon(pd_mapper) running in apps
+> processor to determine how many usre pd's to be loaded by the remote processor(Q6).
+> 3) Once user pd info is known to remote processor it loads the user pd via tftp
+> protocol.
+> 
+> https://github.com/andersson/pd-mapper
+> https://github.com/andersson/tqftpserv
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 872b1c53e246..6293f21856da 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -239,6 +239,80 @@ mt76_dma_kick_queue(struct mt76_dev *dev, struct mt76_queue *q)
- 	iowrite32(q->head, &q->regs->cpu_idx);
- }
- 
-+int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
-+			  struct sk_buff *skb, struct mt76_wcid *wcid,
-+			  struct ieee80211_sta *sta)
-+{
-+	struct mt76_queue_entry e;
-+	struct mt76_txwi_cache *t;
-+	struct mt76_queue_buf buf[32];
-+	struct sk_buff *iter;
-+	dma_addr_t addr;
-+	int len;
-+	u32 tx_info = 0;
-+	int n, ret;
-+
-+	t = mt76_get_txwi(dev);
-+	if (!t) {
-+		ieee80211_free_txskb(dev->hw, skb);
-+		return -ENOMEM;
-+	}
-+
-+	dma_sync_single_for_cpu(dev->dev, t->dma_addr, sizeof(t->txwi),
-+				DMA_TO_DEVICE);
-+	ret = dev->drv->tx_prepare_skb(dev, &t->txwi, skb, q, wcid, sta,
-+				       &tx_info);
-+	dma_sync_single_for_device(dev->dev, t->dma_addr, sizeof(t->txwi),
-+				   DMA_TO_DEVICE);
-+	if (ret < 0)
-+		goto free;
-+
-+	len = skb->len - skb->data_len;
-+	addr = dma_map_single(dev->dev, skb->data, len, DMA_TO_DEVICE);
-+	if (dma_mapping_error(dev->dev, addr)) {
-+		ret = -ENOMEM;
-+		goto free;
-+	}
-+
-+	n = 0;
-+	buf[n].addr = t->dma_addr;
-+	buf[n++].len = dev->drv->txwi_size;
-+	buf[n].addr = addr;
-+	buf[n++].len = len;
-+
-+	skb_walk_frags(skb, iter) {
-+		if (n == ARRAY_SIZE(buf))
-+			goto unmap;
-+
-+		addr = dma_map_single(dev->dev, iter->data, iter->len,
-+				      DMA_TO_DEVICE);
-+		if (dma_mapping_error(dev->dev, addr))
-+			goto unmap;
-+
-+		buf[n].addr = addr;
-+		buf[n++].len = iter->len;
-+	}
-+
-+	if (q->queued + (n + 1) / 2 >= q->ndesc - 1)
-+		goto unmap;
-+
-+	return dev->queue_ops->add_buf(dev, q, buf, n, tx_info, skb, t);
-+
-+unmap:
-+	ret = -ENOMEM;
-+	for (n--; n > 0; n--)
-+		dma_unmap_single(dev->dev, buf[n].addr, buf[n].len,
-+				 DMA_TO_DEVICE);
-+
-+free:
-+	e.skb = skb;
-+	e.txwi = t;
-+	dev->drv->tx_complete_skb(dev, q, &e, true);
-+	mt76_put_txwi(dev, t);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mt76_dma_tx_queue_skb);
-+
- static int
- mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q, bool napi)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index eb0fd602b9cb..4d6660b9e451 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -421,9 +421,9 @@ wcid_to_sta(struct mt76_wcid *wcid)
- 	return container_of(ptr, struct ieee80211_sta, drv_priv);
- }
- 
--int mt76_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
--		      struct sk_buff *skb, struct mt76_wcid *wcid,
--		      struct ieee80211_sta *sta);
-+int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
-+			  struct sk_buff *skb, struct mt76_wcid *wcid,
-+			  struct ieee80211_sta *sta);
- 
- void mt76_rx(struct mt76_dev *dev, enum mt76_rxq_id q, struct sk_buff *skb);
- void mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
-@@ -454,6 +454,7 @@ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 
- /* internal */
- void mt76_tx_free(struct mt76_dev *dev);
-+struct mt76_txwi_cache *mt76_get_txwi(struct mt76_dev *dev);
- void mt76_put_txwi(struct mt76_dev *dev, struct mt76_txwi_cache *t);
- void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
- 		      struct napi_struct *napi);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index 241a1513ec55..84a3448ca163 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -289,7 +289,8 @@ void mt76x2_pre_tbtt_tasklet(unsigned long arg)
- 		struct ieee80211_vif *vif = info->control.vif;
- 		struct mt76x2_vif *mvif = (struct mt76x2_vif *) vif->drv_priv;
- 
--		mt76_tx_queue_skb(&dev->mt76, q, skb, &mvif->group_wcid, NULL);
-+		mt76_dma_tx_queue_skb(&dev->mt76, q, skb, &mvif->group_wcid,
-+				      NULL);
- 	}
- 	spin_unlock_bh(&q->lock);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index e96956710fb2..f86501ecf31a 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -51,7 +51,7 @@ __mt76_get_txwi(struct mt76_dev *dev)
- 	return t;
- }
- 
--static struct mt76_txwi_cache *
-+struct mt76_txwi_cache *
- mt76_get_txwi(struct mt76_dev *dev)
- {
- 	struct mt76_txwi_cache *t = __mt76_get_txwi(dev);
-@@ -91,80 +91,6 @@ mt76_txq_get_qid(struct ieee80211_txq *txq)
- 	return txq->ac;
- }
- 
--int mt76_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
--		      struct sk_buff *skb, struct mt76_wcid *wcid,
--		      struct ieee80211_sta *sta)
--{
--	struct mt76_queue_entry e;
--	struct mt76_txwi_cache *t;
--	struct mt76_queue_buf buf[32];
--	struct sk_buff *iter;
--	dma_addr_t addr;
--	int len;
--	u32 tx_info = 0;
--	int n, ret;
--
--	t = mt76_get_txwi(dev);
--	if (!t) {
--		ieee80211_free_txskb(dev->hw, skb);
--		return -ENOMEM;
--	}
--
--	dma_sync_single_for_cpu(dev->dev, t->dma_addr, sizeof(t->txwi),
--				DMA_TO_DEVICE);
--	ret = dev->drv->tx_prepare_skb(dev, &t->txwi, skb, q, wcid, sta,
--				       &tx_info);
--	dma_sync_single_for_device(dev->dev, t->dma_addr, sizeof(t->txwi),
--				   DMA_TO_DEVICE);
--	if (ret < 0)
--		goto free;
--
--	len = skb->len - skb->data_len;
--	addr = dma_map_single(dev->dev, skb->data, len, DMA_TO_DEVICE);
--	if (dma_mapping_error(dev->dev, addr)) {
--		ret = -ENOMEM;
--		goto free;
--	}
--
--	n = 0;
--	buf[n].addr = t->dma_addr;
--	buf[n++].len = dev->drv->txwi_size;
--	buf[n].addr = addr;
--	buf[n++].len = len;
--
--	skb_walk_frags(skb, iter) {
--		if (n == ARRAY_SIZE(buf))
--			goto unmap;
--
--		addr = dma_map_single(dev->dev, iter->data, iter->len,
--				      DMA_TO_DEVICE);
--		if (dma_mapping_error(dev->dev, addr))
--			goto unmap;
--
--		buf[n].addr = addr;
--		buf[n++].len = iter->len;
--	}
--
--	if (q->queued + (n + 1) / 2 >= q->ndesc - 1)
--		goto unmap;
--
--	return dev->queue_ops->add_buf(dev, q, buf, n, tx_info, skb, t);
--
--unmap:
--	ret = -ENOMEM;
--	for (n--; n > 0; n--)
--		dma_unmap_single(dev->dev, buf[n].addr, buf[n].len,
--				 DMA_TO_DEVICE);
--
--free:
--	e.skb = skb;
--	e.txwi = t;
--	dev->drv->tx_complete_skb(dev, q, &e, true);
--	mt76_put_txwi(dev, t);
--	return ret;
--}
--EXPORT_SYMBOL_GPL(mt76_tx_queue_skb);
--
- void
- mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	struct mt76_wcid *wcid, struct sk_buff *skb)
-@@ -185,7 +111,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	q = &dev->q_tx[qid];
- 
- 	spin_lock_bh(&q->lock);
--	mt76_tx_queue_skb(dev, q, skb, wcid, sta);
-+	mt76_dma_tx_queue_skb(dev, q, skb, wcid, sta);
- 	dev->queue_ops->kick(dev, q);
- 
- 	if (q->queued > q->ndesc - 8)
-@@ -241,7 +167,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 		info->flags |= IEEE80211_TX_STATUS_EOSP;
- 
- 	mt76_skb_set_moredata(skb, !last);
--	mt76_tx_queue_skb(dev, hwq, skb, wcid, sta);
-+	mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, sta);
- }
- 
- void
-@@ -321,7 +247,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 	if (ampdu)
- 		mt76_check_agg_ssn(mtxq, skb);
- 
--	idx = mt76_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+	idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
- 
- 	if (idx < 0)
- 		return idx;
-@@ -356,7 +282,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 		if (cur_ampdu)
- 			mt76_check_agg_ssn(mtxq, skb);
- 
--		idx = mt76_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+		idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
- 		if (idx < 0)
- 			return idx;
- 
--- 
-2.17.1
+FWIW, as of today, the tqftpserv implementation is missing a few headers
+(so it doesn't even build), and once I hack things such that it can
+build, it still doesn't work for me (whereas the closed source version
+does). I see some BYE and DEL_CLIENT messages, but no read requests. I
+don't think that qualifies as an open source implementation.
+
+Brian
+
+> Changes in V3:
+> 	Addressed review comments from v2 version.
+> 	Removed msa-size from dt binding and added reference to reserved-memory/reserved-memory.txt.
+> 
+> Changes in V2:
+> 	Removed qmi client driver and integrated qmi client handshakes in snoc platform driver.
+> 	Addressed comments on v1 version.
+> 	Switched to ath10k bdf download infra(board-2.bin)
+> 	Added MSA fixed region support to support unload use-case.
+> 	Unified logging.
+> 
+> Testing:
+> 	Tested all qmi handshakes, driver load/unload and STA/SAP sanity testing.
+> 	Tested HW: SDM845(WCN3990)
+> 	Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1
+> 
+> 
+> Govind Singh (5):
+>   ath10k: Add qmi service helpers for wcn3990 qmi client
+>   dt: bindings: add bindings for msa memory region
+>   firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+>   ath10k: Add debug mask for QMI layer
+>   ath10k: Add QMI message handshake for wcn3990 client
+> 
+> Rakesh Pillai (1):
+>   ath10k: Add support to create boardname for non-bmi target
+> 
+>  .../bindings/net/wireless/qcom,ath10k.txt     |   13 +
+>  drivers/net/wireless/ath/ath10k/Kconfig       |    1 +
+>  drivers/net/wireless/ath/ath10k/Makefile      |    4 +-
+>  drivers/net/wireless/ath/ath10k/core.c        |   14 +-
+>  drivers/net/wireless/ath/ath10k/core.h        |    4 +
+>  drivers/net/wireless/ath/ath10k/debug.h       |    1 +
+>  drivers/net/wireless/ath/ath10k/qmi.c         | 1021 ++++++++
+>  drivers/net/wireless/ath/ath10k/qmi.h         |  129 +
+>  .../net/wireless/ath/ath10k/qmi_wlfw_v01.c    | 2072 +++++++++++++++++
+>  .../net/wireless/ath/ath10k/qmi_wlfw_v01.h    |  677 ++++++
+>  drivers/net/wireless/ath/ath10k/snoc.c        |  215 +-
+>  drivers/net/wireless/ath/ath10k/snoc.h        |    4 +
+>  include/linux/qcom_scm.h                      |    4 +-
+>  13 files changed, 4148 insertions(+), 11 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
+>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
+>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.c
+>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.h
+> 
+> -- 
+> 2.17.0
+> 
