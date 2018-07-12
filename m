@@ -1,102 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41772 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726884AbeG3NHT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 09:07:19 -0400
-Date: Mon, 30 Jul 2018 14:32:31 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: devel@driverdev.osuosl.org, venkateswara.kaja@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
- '_' in label name
-Message-ID: <20180730113231.gwqliakpdgbchrre@mwanda> (sfid-20180730_133249_273129_C9666A57)
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
- <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
- <20180719092744.5gx2ctgj7etvk7uh@mwanda>
- <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
- <20180730084113.fixf2zeb5tgbcovj@mwanda>
- <20180730154024.4324b0cd@ajaysk-VirtualBox>
+Received: from mail-db5eur01on0086.outbound.protection.outlook.com ([104.47.2.86]:60448
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726693AbeGLG3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jul 2018 02:29:13 -0400
+Subject: Re: [PATCH net-next v2 00/11] devlink: Add support for region access
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+References: <1531305788-29420-1-git-send-email-valex@mellanox.com>
+ <20180711114821.1d50ba63@cakuba.lan>
+CC: <netdev@vger.kernel.org>, <jiri@mellanox.com>, <dsahern@gmail.com>,
+        <andrew@lunn.ch>, <rahul.lakkireddy@chelsio.com>,
+        <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+From: Alex Vesker <valex@mellanox.com>
+Message-ID: <c4a47a0e-9bac-b48b-6a25-9ca897ee1b58@mellanox.com> (sfid-20180712_082120_434724_F1E4B27B)
+Date: Thu, 12 Jul 2018 09:21:01 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730154024.4324b0cd@ajaysk-VirtualBox>
+In-Reply-To: <20180711114821.1d50ba63@cakuba.lan>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 03:40:24PM +0530, Ajay Singh wrote:
-> Hi Dan,
-> 
-> On Mon, 30 Jul 2018 11:41:13 +0300
-> Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> 
-> > On Fri, Jul 20, 2018 at 04:35:24AM +0530, Ajay Singh wrote:
-> > > Hi Dan,
-> > > 
-> > > On Thu, 19 Jul 2018 12:27:44 +0300
-> > > Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> > >   
-> > > > On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh wrote:  
-> > > > > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > > > > b/drivers/staging/wilc1000/wilc_wlan.c index 85af365..8e71c28
-> > > > > 100644 --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > > > > +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > > > > @@ -850,13 +850,13 @@ static void
-> > > > > wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status) if
-> > > > > (wilc->rx_buffer) buffer = &wilc->rx_buffer[offset];
-> > > > >  		else
-> > > > > -			goto _end_;
-> > > > > +			goto end;    
-> > > > 
-> > > > This isn't related to your patch but this goto doesn't appear to
-> > > > make any sort of sense.  I have no idea what was intended.
-> > > >   
-> > > 
-> > > Thanks for pointing it out. I will include these changes in separate
-> > > patchset.
-> > > 
-> > > Yes, the position of goto label can be moved just before
-> > > wilc_wlan_handle_rxq(wilc), as 'ret' will always be '0' when goto
-> > > statement is executed.
-> > > 
-> > > Actually earlier there were few more goto statement in this function
-> > > and single label 'end' was used to handle for different cases. But
-> > > in previous cleanup patches those cases were removed.
-> > > Now this function can be further refactor by either moving
-> > > goto label before wilc_wlan_handle_rxq(wilc) or avoid goto use by
-> > > adding the rx_buffer validation along with size check.
-> > > 
-> > > i.e 
-> > > 
-> > > end:
-> > >     wilc_wlan_handle_rxq(wilc)
-> > > 
-> > > 
-> > > OR
-> > > 
-> > > 	if (size > 0 && wilc->rx_buffer) {
-> > > 
-> > > 	....
-> > > 	}
-> > >     	wilc_wlan_handle_rxq(wilc)
-> > >   
-> > 
-> > Actually looking at it now, you could probably just remove the if
-> > statement.  Hopefully wilc->rx_buffer is non-NULL at this point? Is
-> > there really any need to call wilc_wlan_handle_rxq() when we haven't
-> > called wilc_wlan_rxq_add()?
-> > 
-> 
-> Yes, wilc->rx_buffer would be non NULL value as its only one time
-> allocated buffer. wilc_wlan_handle_rxq() was called without
-> wilc_wlan_rxq_add() just as a fail safe to ensure there are no pending
-> packets in the queue.
 
-The only thing is wilc->quit can be set.  Otherwise if ->rx_buffer is
-NULL it would just result in a NULL dereference.  (We are deep into
-hypotheticals here because we're discussing impossible code).
 
-regards,
-dan carpenter
+On 7/11/2018 9:48 PM, Jakub Kicinski wrote:
+> CC: linux-wireless, wifi chips used to have similar problem
+>
+> On Wed, 11 Jul 2018 13:42:57 +0300, Alex Vesker wrote:
+>> This is a proposal which will allow access to driver defined address
+>> regions using devlink. Each device can create its supported address
+>> regions and register them. A device which exposes a region will allow
+>> access to it using devlink.
+>>
+>> The suggested implementation will allow exposing regions to the user,
+>> reading and dumping snapshots taken from different regions.
+>> A snapshot represents a memory image of a region taken by the driver.
+>>
+>> If a device collects a snapshot of an address region it can be later
+>> exposed using devlink region read or dump commands.
+>> This functionality allows for future analyses on the snapshots to be
+>> done.
+>>
+>> The major benefit of this support is not only to provide access to
+>> internal address regions which were inaccessible to the user but also
+>> to provide an additional way to debug complex error states using the
+>> region snapshots.
+>>
+>> Implemented commands:
+>> $ devlink region help
+>> $ devlink region show [ DEV/REGION ]
+>> $ devlink region del DEV/REGION snapshot SNAPSHOT_ID
+>> $ devlink region dump DEV/REGION [ snapshot SNAPSHOT_ID ]
+>> $ devlink region read DEV/REGION [ snapshot SNAPSHOT_ID ]
+>> 	address ADDRESS length length
+> You got me excited with the read without snapshot but then you say below
+> that it's future work :)
+>
+>> Show all of the exposed regions with region sizes:
+>> $ devlink region show
+>> pci/0000:00:05.0/cr-space: size 1048576 snapshot [1 2]
+>> pci/0000:00:05.0/fw-health: size 64 snapshot [1 2]
+>>
+>> Delete a snapshot using:
+>> $ devlink region del pci/0000:00:05.0/cr-space snapshot 1
+>>
+>> Dump a snapshot:
+>> $ devlink region dump pci/0000:00:05.0/fw-health snapshot 1
+>> 0000000000000000 0014 95dc 0014 9514 0035 1670 0034 db30
+>> 0000000000000010 0000 0000 ffff ff04 0029 8c00 0028 8cc8
+>> 0000000000000020 0016 0bb8 0016 1720 0000 0000 c00f 3ffc
+>> 0000000000000030 bada cce5 bada cce5 bada cce5 bada cce5
+>>
+>> Read a specific part of a snapshot:
+>> $ devlink region read pci/0000:00:05.0/fw-health snapshot 1 address 0
+>> 	length 16
+>> 0000000000000000 0014 95dc 0014 9514 0035 1670 0034 db30
+>>
+>> For more information you can check devlink-region.8 man page
+>>
+>> Future:
+>> There is a plan to extend the support to include a write command
+>> as well as performing read and dump live region
+> Reading live region would be very interesting and alleviate the need
+> for complicated ethtool dump marshalling a number of drivers started
+> doing (incl. nfp).  Any plans on that?
+Yes I plan to also support read of live regions.
+Unlike ethtool which works per netdevice this will allow access per PCI 
+device,
+this allows reading region/dump on IPoIB ULP for example, which
+cannot implement a vendor specific dump using ethtool.
+> Write support I'm less excited about :)
