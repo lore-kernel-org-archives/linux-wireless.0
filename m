@@ -1,184 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38464 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730206AbeGZNzi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jul 2018 09:55:38 -0400
-Message-ID: <27cf64cc8a3b6633a19ff83295297ece366b4af7.camel@coelho.fi> (sfid-20180726_143910_895161_8D936844)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Date: Thu, 26 Jul 2018 15:38:54 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-wVFMMqiOLam76hlCX2vE"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2018-05-30
+Received: from szxga07-in.huawei.com ([45.249.212.35]:34450 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727189AbeGMJu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 05:50:58 -0400
+Subject: Re: [PATCH] hostap: hide unused procfs helpers
+To: Arend van Spriel <arend.vanspriel@broadcom.com>, <j@w1.fi>,
+        <kvalo@codeaurora.org>
+References: <20180713070317.6724-1-yuehaibing@huawei.com>
+ <5B485441.1080305@broadcom.com>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>,
+        Randy Dunlap <rdunlap@infradead.org>
+From: YueHaibing <yuehaibing@huawei.com>
+Message-ID: <6ebda7d5-364a-a242-527c-e57ce4888f9b@huawei.com> (sfid-20180713_113718_028696_EA99F755)
+Date: Fri, 13 Jul 2018 17:37:03 +0800
+MIME-Version: 1.0
+In-Reply-To: <5B485441.1080305@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-wVFMMqiOLam76hlCX2vE
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 2018/7/13 15:26, Arend van Spriel wrote:
+> + Randy
+> 
+> On 7/13/2018 9:03 AM, YueHaibing wrote:
+>> When CONFIG_PROC_FS isn't set, gcc warning this:
+>>
+>> drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_registers_proc_show(struct seq_file *m, void *v)
+>>
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_debug_proc_show(struct seq_file *m, void *v)
+>>              ^
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_stats_proc_show(struct seq_file *m, void *v)
+>>              ^
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+>>              ^
+>>
+>> fix this by adding #ifdef around them.
+>> hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
+>> into #ifdef.
+> 
+> There was already a fix for this posted by Randy Dunlap taking a different approach, ie. use __maybe_unused classifier. To be honest I prefer the ifdef approach as it is more explicit and does not feel like a cheat.
+> 
+> Actually some of the functions are between a flag already PRISM2_NO_PROCFS_DEBUG which is in a private header file hostap_config.h. Seems like this would be better placed in Kconfig and depend on CONFIG_PROCFS. Anyway, this driver is old cruft. Maybe some people are still running it, but it is probably not worth the effort so fine with either fix.
+> 
 
-Hi Kalle,
+I dont check Randy's patch. ignore this pls.
 
-This is the first batch of patches intended for v4.19.  It includes the
-two patches sets I sent a few weeks ago, with HE support and new
-hardware (22560) support.  More details about the contents in the tag
-description.
-
-I have sent this out before and kbuildbot this morning, but I didn't
-get any replies from it yet.
-
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit bf9b608e63dfd71ab225c9d4211eb6d8dc582a3b=
-:
-
-  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/a=
-th.git (2018-07-25 10:50:54 +0300)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2018-07-26
-
-for you to fetch changes up to 1a4968d1230c9233f50a89abb3b32d94f81146d0:
-
-  iwlwifi: pcie: support 2k rx buffers (2018-07-26 13:16:18 +0300)
-
-----------------------------------------------------------------
-First batch of iwlwifi patches for 4.19
-
-* Implement 802.11ax D2.0;
-* Changes in the base code to support the new 22560 devices;
-* Support for the new 22560 device family;
-
-----------------------------------------------------------------
-Golan Ben Ami (13):
-      iwlwifi: allow different csr flags for different device families
-      iwlwifi: introduce device family 22560
-      iwlwifi: pcie: allocate and free rx cr's and tr's tails
-      iwlwifi: pcie: support context information for 22560 devices
-      iwlwifi: pcie: update bytes in the byte count table
-      iwlwifi: pcie: start early debug for 22560 devices
-      iwlwifi: update gen3 interrupts - sw error and image response
-      iwlwifi: cancel the injective function between hw pointers to tfd ent=
-ry index
-      iwlwifi: support multiple tfd queue max sizes for different devices
-      iwlwifi: support new tx api
-      iwlwifi: introduce new rx structures used by 22560 RFH
-      iwlwifi: update registers changed for 22560 devices
-      iwlwifi: pcie: support 2k rx buffers
-
-Johannes Berg (1):
-      iwlwifi: 22000 devices: restrict to HT A-MPDU size
-
-Luca Coelho (5):
-      iwlwifi: fw: add FW APIs for HE
-      iwlwifi: add support for IEEE802.11ax
-      iwlwifi: add module parameter to disable 802.11ax
-      iwlwifi: mvm: add radiotap data for HE
-      iwlwifi: add support for 22560 devices
-
- drivers/net/wireless/intel/iwlwifi/Makefile                |   3 +-
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c              |   2 +
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c             | 161 +++++++++=
-++++++++++++++++++++++++------------------
- drivers/net/wireless/intel/iwlwifi/cfg/5000.c              |   1 +
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c              |   3 +
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c              |   1 +
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c              |   1 +
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c              |   1 +
- drivers/net/wireless/intel/iwlwifi/fw/api/commands.h       |   3 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h       |   5 ++
- drivers/net/wireless/intel/iwlwifi/fw/api/mac.h            | 172 +++++++++=
-++++++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h        |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h             |  36 +++++++++=
-+--
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h             |  53 +++++++++=
-++++++--
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h             |  25 ++++++++
- drivers/net/wireless/intel/iwlwifi/fw/smem.c               |   4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h            |   7 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h | 286 +++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++
- drivers/net/wireless/intel/iwlwifi/iwl-context-info.h      |   5 ++
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h               |   5 ++
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c               |   7 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c      |   8 +--
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h                |  28 +++++++--
- drivers/net/wireless/intel/iwlwifi/iwl-modparams.h         |  12 +++-
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c         | 110 +++++++++=
-++++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h             |   2 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c                |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c          |   4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c          | 200 +++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h               |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c               |   9 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c             |  44 +++++++++=
-++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c                |  39 +++++++++=
-++--
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h                |  21 +++++--
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c              | 281 +++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c               |   8 +--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h               |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c                |  48 +++++++++=
-++-----
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c   | 207 +++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c        |  62 ++-------=
------------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c              |   2 -
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h         | 220 +++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c               | 232 +++++++++=
-+++++++++++++++++++++++++++++++++++++----------------------------
- drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c       |  11 +++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c            |  63 +++++++++=
-++++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c          |  58 +++++++++=
-+++++-----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c               |  92 +++++++++=
-++++++++------------
- 47 files changed, 2205 insertions(+), 353 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen=
-3.h
- create mode 100644 drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.=
-c
---=-wVFMMqiOLam76hlCX2vE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIyBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAltZwN4ACgkQoUecoho8
-xfoCNQ/3WRN8Sq/gtCxLDuZ9mldENvuQnl/VtG90EA4Ig5Lff1Pi8Ri5x7N77WNq
-i2WW2KWeZnXB9BRQluEfHqbl02lfDD55ikQZC8oI5tG1W5jeHlUfG/dLtvO52u7Q
-reSafYfRDSFqP7rVicpwo6M8biZ1zQlY3PdfEi6Ejtxps0EeHZ3XsCqsg5b9vYco
-KrSj2E1JsiI4w8m+cuPZurzcS7pBhUDB9jA4diKhPYhHZsq34XUtx0N07HPp1aMr
-uzudJKdtAKB6mQFnECZDfOdBoXY8QJLVxRji022xitqZQi6Z6HmFGN5tLb5tvPua
-M+jyyPNxQn7yJe0BSuX2TPV4kn+szukuitIomkGNShcTAcu9mlWK6r3IAkXYjklC
-PVm2iN9Q4lL6MY4FBHTy+h/Ef63x0x74gt4p+Nc9a6X9OX9mhjmbmvXFFmFbPWiQ
-FNyuLYsGWhF9CdUSceA4KbEo//Yq38Bx/WCrj09FLAws5+rFUFKu8KrS3TcGNTRy
-CTAytH5rVynqTrUIYy1tDAJKTIAA9CdzoABy40RyLsEm95oLr22RvhABs4WmG7yd
-e8wPejUFEKIl/CMncS+GvgGtws6Sid3TYDWc8J+QRxGTPdnwHhQJwVKdT3QRMmwB
-w6gcyT7RYdroaD05+3FBjQJuj6hrMRHw5jNa7ZkQ1Da7dNtD8Q==
-=/q7+
------END PGP SIGNATURE-----
-
---=-wVFMMqiOLam76hlCX2vE--
+> Regards,
+> Arend
+> 
+> .
+> 
