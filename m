@@ -1,109 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:42064 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752619AbeGDUbu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 16:31:50 -0400
-Received: by mail-lf0-f65.google.com with SMTP id u202-v6so5192105lff.9
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 13:31:49 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: specify some features per firmware version
-Date: Wed,  4 Jul 2018 22:31:30 +0200
-Message-Id: <20180704203130.12086-1-zajec5@gmail.com> (sfid-20180704_223154_282986_A683B608)
+Received: from szxga07-in.huawei.com ([45.249.212.35]:60749 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726380AbeGMJpg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 05:45:36 -0400
+Subject: Re: [PATCH 03/10] atmel: hide unused procfs helpers
+To: <simon@thekelleys.org.uk>, <kvalo@codeaurora.org>
+References: <20180713064658.10340-1-yuehaibing@huawei.com>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>
+From: YueHaibing <yuehaibing@huawei.com>
+Message-ID: <ded55181-e1b0-99e9-ac68-2d93fb6168c0@huawei.com> (sfid-20180713_113157_717303_ED93F4C4)
+Date: Fri, 13 Jul 2018 17:31:37 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20180713064658.10340-1-yuehaibing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+pls ignore this,my bad.
 
-Some features supported by firmware aren't advertised and there is no
-way for a driver to query them. This includes e.g. monitor mode details.
-
-Most firmwares support monitor interface but only the latest ones
-/announce/ it with a "monitor" flag in the "cap" iovar. There isn't any
-reliable detection method for older firmwares (BRCMF_C_MONITOR was tried
-but "it only indicates the core part of the stack supports").
-
-Similarly support for tagging monitor frames and building radiotap
-headers can't be reliably detected for all firmwares.
-
-This commit adds table that allows mapping features to firmware version.
-It adds mappings for 43602a1 and 4366b1 firmwares from
-linux-firmware.git. Both were confirmed to be passing monitor frames.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 38 ++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 4db4d444407a..ab1d9eb1e9dc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -93,6 +93,42 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
- }
- #endif /* DEBUG */
- 
-+struct brcmf_feat_fwfeat {
-+	const char * const fwid;
-+	u32 feat_flags;
-+};
-+
-+static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
-+	/* brcmfmac43602-pcie.ap.bin from linux-firmware.git ea1178515b88 */
-+	{ "01-6cb8e269", BIT(BRCMF_FEAT_MONITOR) },
-+	/* brcmfmac4366b-pcie.bin from linux-firmware.git 52442afee990 */
-+	{ "01-c47a91a4", BIT(BRCMF_FEAT_MONITOR) },
-+};
-+
-+static void brcmf_feat_firmware_overrides(struct brcmf_pub *drv)
-+{
-+	const struct brcmf_feat_fwfeat *e;
-+	u32 feat_flags = 0;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(brcmf_feat_fwfeat_map); i++) {
-+		e = &brcmf_feat_fwfeat_map[i];
-+		if (!strcmp(e->fwid, drv->fwver)) {
-+			feat_flags = e->feat_flags;
-+			break;
-+		}
-+	}
-+
-+	if (!feat_flags)
-+		return;
-+
-+	for (i = 0; i < BRCMF_FEAT_LAST; i++)
-+		if (feat_flags & BIT(i))
-+			brcmf_dbg(INFO, "enabling firmware feature: %s\n",
-+				  brcmf_feat_names[i]);
-+	drv->feat_flags |= feat_flags;
-+}
-+
- /**
-  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
-  *
-@@ -253,6 +289,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	}
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
- 
-+	brcmf_feat_firmware_overrides(drvr);
-+
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43236_CHIP_ID:
--- 
-2.13.7
+On 2018/7/13 14:46, YueHaibing wrote:
+> When CONFIG_PROC_FS isn't set, gcc warning this:
+> 
+> drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
+>  static int atmel_proc_show(struct seq_file *m, void *v)
+>             ^
+> fix this by adding #ifdef around it.
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/net/wireless/atmel/atmel.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+> index b01dc34..3940876 100644
+> --- a/drivers/net/wireless/atmel/atmel.c
+> +++ b/drivers/net/wireless/atmel/atmel.c
+> @@ -1399,6 +1399,7 @@ static int atmel_validate_channel(struct atmel_private *priv, int channel)
+>  	return 0;
+>  }
+>  
+> +#ifdef CONFIG_PROC_FS
+>  static int atmel_proc_show(struct seq_file *m, void *v)
+>  {
+>  	struct atmel_private *priv = m->private;
+> @@ -1481,6 +1482,7 @@ static int atmel_proc_show(struct seq_file *m, void *v)
+>  	seq_printf(m, "Current state:\t\t%s\n", s);
+>  	return 0;
+>  }
+> +#endif
+>  
+>  static const struct net_device_ops atmel_netdev_ops = {
+>  	.ndo_open 		= atmel_open,
+> 
