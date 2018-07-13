@@ -1,206 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38734 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730428AbeG0O15 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:27:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 16:05:59 +0300
-Message-Id: <20180727130559.28614-1-luca@coelho.fi> (sfid-20180727_150608_008616_FAEE9C3B)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 15/16] iwlwifi: move some msix and rx functions to a common place
+Received: from nautica.notk.org ([91.121.71.147]:37613 "EHLO nautica.notk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731968AbeGMI06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 04:26:58 -0400
+Date: Fri, 13 Jul 2018 10:13:08 +0200
+From: Dominique Martinet <asmadeus@codewreck.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/18] wireless/ti: change strncpy+truncation to strlcpy
+Message-ID: <20180713081308.GC9638@nautica> (sfid-20180713_101335_129283_43A111EA)
+References: <1531444483-17338-1-git-send-email-asmadeus@codewreck.org>
+ <1531445149-19607-1-git-send-email-asmadeus@codewreck.org>
+ <20180713073810.GA31984@kroah.com>
+ <5B485917.7090102@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5B485917.7090102@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Arend van Spriel wrote on Fri, Jul 13, 2018:
+> The patch adding that script contains a good motivation, but I would want to
+> see that in commit message of every patch or at least the gist of
+> it.
 
-We would like to allow other utlities to init msix and rx.
-Put their declarations in a place accessible to other utilities.
+In retrospect, I definitely agree - I was happy I got coccinelle to work
+and a bit too tired to make rationale decisions when I sent the serie as
+it's not a kind of thing I'm used to.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/internal.h    | 43 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 24 +++--------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 23 ----------
- 3 files changed, 48 insertions(+), 42 deletions(-)
+For the patch you ack'd, in particular, there would be no gcc warning in
+the first place because the source string's size is not known at compile
+time and for some reason gcc does not mind silent truncation in that
+case, so the usefulnes of the patch is fairly limited in the first
+place (it's possibly simpler/good to aim for consistency but that's
+about it). I however didn't take the time to make that analysis for all
+the patches.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index f6726ccef819..b63d44b7cd7c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -45,6 +45,7 @@
- #include "iwl-debug.h"
- #include "iwl-io.h"
- #include "iwl-op-mode.h"
-+#include "iwl-drv.h"
- 
- /* We need 2 entries for the TX command and header, and another one might
-  * be needed for potential data in the SKB's head. The remaining ones can
-@@ -639,6 +640,20 @@ IWL_TRANS_GET_PCIE_TRANS(struct iwl_trans *trans)
- 	return (void *)trans->trans_specific;
- }
- 
-+static inline void iwl_pcie_clear_irq(struct iwl_trans *trans,
-+				      struct msix_entry *entry)
-+{
-+	/*
-+	 * Before sending the interrupt the HW disables it to prevent
-+	 * a nested interrupt. This is done by writing 1 to the corresponding
-+	 * bit in the mask register. After handling the interrupt, it should be
-+	 * re-enabled by clearing this bit. This register is defined as
-+	 * write 1 clear (W1C) register, meaning that it's being clear
-+	 * by writing 1 to the bit.
-+	 */
-+	iwl_write32(trans, CSR_MSIX_AUTOMASK_ST_AD, BIT(entry->entry));
-+}
-+
- static inline struct iwl_trans *
- iwl_trans_pcie_get_trans(struct iwl_trans_pcie *trans_pcie)
- {
-@@ -666,6 +681,11 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id);
- irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id);
- int iwl_pcie_rx_stop(struct iwl_trans *trans);
- void iwl_pcie_rx_free(struct iwl_trans *trans);
-+void iwl_pcie_free_rbs_pool(struct iwl_trans *trans);
-+void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq);
-+int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget);
-+void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
-+			    struct iwl_rxq *rxq);
- 
- /*****************************************************
- * ICT - interrupt handling
-@@ -892,6 +912,29 @@ static inline void *iwl_pcie_get_tfd(struct iwl_trans *trans,
- 	return txq->tfds + trans_pcie->tfd_size * idx;
- }
- 
-+static inline const char *queue_name(struct device *dev,
-+				     struct iwl_trans_pcie *trans_p, int i)
-+{
-+	if (trans_p->shared_vec_mask) {
-+		int vec = trans_p->shared_vec_mask &
-+			  IWL_SHARED_IRQ_FIRST_RSS ? 1 : 0;
-+
-+		if (i == 0)
-+			return DRV_NAME ": shared IRQ";
-+
-+		return devm_kasprintf(dev, GFP_KERNEL,
-+				      DRV_NAME ": queue %d", i + vec);
-+	}
-+	if (i == 0)
-+		return DRV_NAME ": default queue";
-+
-+	if (i == trans_p->alloc_vecs - 1)
-+		return DRV_NAME ": exception";
-+
-+	return devm_kasprintf(dev, GFP_KERNEL,
-+			      DRV_NAME  ": queue %d", i);
-+}
-+
- static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 59bedb461a8c..d017aa2a0a8b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -417,8 +417,8 @@ static struct page *iwl_pcie_rx_alloc_page(struct iwl_trans *trans,
-  * iwl_pcie_rxq_restock. The latter function will update the HW to use the newly
-  * allocated buffers.
-  */
--static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
--				   struct iwl_rxq *rxq)
-+void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
-+			    struct iwl_rxq *rxq)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rx_mem_buffer *rxb;
-@@ -474,7 +474,7 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
- 	}
- }
- 
--static void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
-+void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int i;
-@@ -986,7 +986,7 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
- 	iwl_pcie_enable_rx_wake(trans, true);
- }
- 
--static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
-+void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
- {
- 	lockdep_assert_held(&rxq->lock);
- 
-@@ -996,7 +996,7 @@ static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
- 	rxq->used_count = 0;
- }
- 
--static int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget)
-+int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget)
- {
- 	WARN_ON(1);
- 	return 0;
-@@ -1479,20 +1479,6 @@ static struct iwl_trans_pcie *iwl_pcie_get_trans_pcie(struct msix_entry *entry)
- 	return container_of(entries, struct iwl_trans_pcie, msix_entries[0]);
- }
- 
--static inline void iwl_pcie_clear_irq(struct iwl_trans *trans,
--				      struct msix_entry *entry)
--{
--	/*
--	 * Before sending the interrupt the HW disables it to prevent
--	 * a nested interrupt. This is done by writing 1 to the corresponding
--	 * bit in the mask register. After handling the interrupt, it should be
--	 * re-enabled by clearing this bit. This register is defined as
--	 * write 1 clear (W1C) register, meaning that it's being clear
--	 * by writing 1 to the bit.
--	 */
--	iwl_write32(trans, CSR_MSIX_AUTOMASK_ST_AD, BIT(entry->entry));
--}
--
- /*
-  * iwl_pcie_rx_msix_handle - Main entry function for receiving responses from fw
-  * This interrupt handler should be used with RSS queue only.
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index a54c2bc985ad..7d319b6863fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1709,29 +1709,6 @@ static void iwl_pcie_irq_set_affinity(struct iwl_trans *trans)
- 	}
- }
- 
--static const char *queue_name(struct device *dev,
--			      struct iwl_trans_pcie *trans_p, int i)
--{
--	if (trans_p->shared_vec_mask) {
--		int vec = trans_p->shared_vec_mask &
--			  IWL_SHARED_IRQ_FIRST_RSS ? 1 : 0;
--
--		if (i == 0)
--			return DRV_NAME ": shared IRQ";
--
--		return devm_kasprintf(dev, GFP_KERNEL,
--				      DRV_NAME ": queue %d", i + vec);
--	}
--	if (i == 0)
--		return DRV_NAME ": default queue";
--
--	if (i == trans_p->alloc_vecs - 1)
--		return DRV_NAME ": exception";
--
--	return devm_kasprintf(dev, GFP_KERNEL,
--			      DRV_NAME  ": queue %d", i);
--}
--
- static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
- 				      struct iwl_trans_pcie *trans_pcie)
- {
+> especially as that script is not in the kernel tree yet.
+
+I did think about that, but wasn't sure what was appropriate in this
+case.
+I now think it would have been better to save everyone a dozen of mails
+and wait for the coccinelle patch to land first; but it's a bit late for
+regret :)
+I'll only catter after the coccinelle script until it lands, so if
+anyone is inclined to take one of the rest as they are, great, but
+otherwise feel free to ignore them for now.
+(In particular, this very patch should not remove the first comment
+here, as pointed out by Himanshu Jha in reply to the first patch)
+
+
+Thanks for taking the time to give feedback,
 -- 
-2.18.0
+Dominique Martinet
