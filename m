@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41219 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933180AbeGIUKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:05 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 02/24] mtd: rawnand: atmel: Add an __iomem cast on gen_pool_dma_alloc() call
-Date: Mon,  9 Jul 2018 22:09:23 +0200
-Message-Id: <20180709200945.30116-3-boris.brezillon@bootlin.com> (sfid-20180709_221108_875318_5FF74AEF)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:39201 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730017AbeGMRzN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 13:55:13 -0400
+Received: by mail-lf0-f68.google.com with SMTP id a134-v6so27812353lfe.6
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2018 10:39:36 -0700 (PDT)
+From: roman.stratiienko@globallogic.com
+To: akarwar@marvell.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Roman Stratiienko <roman.stratiienko@globallogic.com>
+Subject: [PATCH] mwifiex: Fix skipped vendor specific IEs
+Date: Fri, 13 Jul 2018 20:37:33 +0300
+Message-Id: <1531503453-27343-1-git-send-email-roman.stratiienko@globallogic.com> (sfid-20180713_193941_533954_A286366C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gen_pool_dma_alloc() return type is void *, while internally, the
-memory region exposed by the sram driver has been mapped with
-ioremap().
+From: Roman Stratiienko <roman.stratiienko@globallogic.com>
 
-Add a void * to void __iomem * cast to make sparse happy.
+Only microsoft specific IE is added by FW
+Let other IEs to pass from userspace
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Roman Stratiienko <roman.stratiienko@globallogic.com>
 ---
- drivers/mtd/nand/raw/atmel/nand-controller.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/ie.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/nand/raw/atmel/nand-controller.c b/drivers/mtd/nand/raw/atmel/nand-controller.c
-index e8f7549d0354..30dae4c9d439 100644
---- a/drivers/mtd/nand/raw/atmel/nand-controller.c
-+++ b/drivers/mtd/nand/raw/atmel/nand-controller.c
-@@ -2219,9 +2219,9 @@ atmel_hsmc_nand_controller_init(struct atmel_hsmc_nand_controller *nc)
- 		return -ENOMEM;
- 	}
- 
--	nc->sram.virt = gen_pool_dma_alloc(nc->sram.pool,
--					    ATMEL_NFC_SRAM_SIZE,
--					    &nc->sram.dma);
-+	nc->sram.virt = (void __iomem *)gen_pool_dma_alloc(nc->sram.pool,
-+							   ATMEL_NFC_SRAM_SIZE,
-+							   &nc->sram.dma);
- 	if (!nc->sram.virt) {
- 		dev_err(nc->base.dev,
- 			"Could not allocate memory from the NFC SRAM pool\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
+index c488c30..c58b345 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ie.c
++++ b/drivers/net/wireless/marvell/mwifiex/ie.c
+@@ -353,8 +353,16 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
+ 		case WLAN_EID_HT_OPERATION:
+ 		case WLAN_EID_VHT_CAPABILITY:
+ 		case WLAN_EID_VHT_OPERATION:
+-		case WLAN_EID_VENDOR_SPECIFIC:
+ 			break;
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Skip only Microsoft IE that added by FW
++			 * Let other vendor specific IE to pass
++			 */
++			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WMM,
++						    (const u8 *)hdr,
++						    hdr->len + sizeof(struct ieee_types_header)))
++				break;
+ 		default:
+ 			memcpy(gen_ie->ie_buffer + ie_len, hdr,
+ 			       hdr->len + sizeof(struct ieee_types_header));
 -- 
-2.14.1
+2.7.4
