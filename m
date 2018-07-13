@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54450 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732086AbeGaOVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 10:21:47 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 14/14] mt76x0: load firmware from mediatek subdir
-Date: Tue, 31 Jul 2018 14:41:04 +0200
-Message-Id: <1533040864-9026-15-git-send-email-sgruszka@redhat.com> (sfid-20180731_144145_299964_8A643CFD)
-In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:55162 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729622AbeGMRXo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 13:23:44 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        kvalo@codeaurora.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  fix vdev-start timeout on error
+Date: Fri, 13 Jul 2018 10:08:03 -0700
+Message-Id: <1531501683-32299-1-git-send-email-greearb@candelatech.com> (sfid-20180713_190817_235277_8CA05587)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware blob will be located in mediatek subdirectory. Add "u" suffix
-to indicate this is USB device firmware.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The vdev-start-response message should cause the
+completion to fire, even in the error case.  Otherwise,
+the user still gets no useful information and everything
+is blocked until the timeout period.
+
+Add some warning text to print out the invalid status
+code to aid debugging.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-index 9e42dfa665de..492e431390a8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-@@ -16,7 +16,7 @@
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index a60de71..ec4cd1e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
+ 	ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to parse vdev start event: %d\n", ret);
+-		return;
++		goto out;
+ 	}
  
- #include "mt76x0.h"
+-	if (WARN_ON(__le32_to_cpu(arg.status)))
+-		return;
++	if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
++		ath10k_warn(ar, "vdev-start-response reports status error: %d\n",
++			    __le32_to_cpu(arg.status));
++		/* Setup is done one way or another though, so we should still
++		 * do the completion, so don't return here.
++		 */
++	}
  
--#define MT7610_FIRMWARE	"mt7610.bin"
-+#define MT7610_FIRMWARE	"mediatek/mt7610u.bin"
++out:
+ 	complete(&ar->vdev_setup_done);
+ }
  
- #define MT_VEND_REQ_MAX_RETRY	10
- #define MT_VEND_REQ_TOUT_MS	300
 -- 
-1.9.3
+2.4.11
