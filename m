@@ -1,162 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:33030 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753212AbeGFHWV (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:40012 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729626AbeGMQ6c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 03:22:21 -0400
-Received: by mail-it0-f67.google.com with SMTP id y124-v6so4476697itc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2018 00:22:21 -0700 (PDT)
+        Fri, 13 Jul 2018 12:58:32 -0400
+Subject: Re: [PATCH] hostap: hide unused procfs helpers
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        YueHaibing <yuehaibing@huawei.com>, j@w1.fi, kvalo@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, davem@davemloft.net
+References: <20180713070317.6724-1-yuehaibing@huawei.com>
+ <5B485441.1080305@broadcom.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <7a2dee6c-eca3-ca0f-8af6-2ecc14f6d0a9@infradead.org> (sfid-20180713_184320_169060_32810EED)
+Date: Fri, 13 Jul 2018 09:43:05 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180706054435.3732-1-pkshih@realtek.com>
-References: <20180706054435.3732-1-pkshih@realtek.com>
-From: Jian-Hong Pan <jian-hong@endlessm.com>
-Date: Fri, 6 Jul 2018 15:22:19 +0800
-Message-ID: <CAPpJ_eeYkzn=d93QwGfxW2difnXrhW4VOUBgGdsRzW1LNE--RA@mail.gmail.com> (sfid-20180706_092238_022802_2135F687)
-Subject: Re: [PATCH] staging: r8822be: Fix RTL8822be can't find any wireless AP
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <5B485441.1080305@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2018-07-06 13:44 GMT+08:00  <pkshih@realtek.com>:
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> RTL8822be can't bring up properly on ASUS X530UN, and dmesg says:
-> [ 8.591333] r8822be: module is from the staging directory, the quality
-> is unknown, you have been warned.
-> [ 8.593122] r8822be 0000:02:00.0: enabling device (0000 -> 0003)
-> [ 8.669163] r8822be: Using firmware rtlwifi/rtl8822befw.bin
-> [ 9.289939] r8822be: rtlwifi: wireless switch is on
-> [ 10.056426] r8822be 0000:02:00.0 wlp2s0: renamed from wlan0
-> ...
-> [ 11.952534] r8822be: halmac_init_hal failed
-> [ 11.955933] r8822be: halmac_init_hal failed
-> [ 11.956227] r8822be: halmac_init_hal failed
-> [ 22.007942] r8822be: halmac_init_hal failed
->
-> Jian-Hong reported it works if turn off ASPM with module parameter aspm=0.
-> In order to fix this problem kindly, this commit don't turn off aspm but
-> enlarge ASPM L1 latency to 7.
+On 07/13/2018 12:26 AM, Arend van Spriel wrote:
+> + Randy
+> 
+> On 7/13/2018 9:03 AM, YueHaibing wrote:
+>> When CONFIG_PROC_FS isn't set, gcc warning this:
+>>
+>> drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_registers_proc_show(struct seq_file *m, void *v)
+>>
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_debug_proc_show(struct seq_file *m, void *v)
+>>              ^
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_stats_proc_show(struct seq_file *m, void *v)
+>>              ^
+>> drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
+>>   static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+>>              ^
+>>
+>> fix this by adding #ifdef around them.
+>> hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
+>> into #ifdef.
+> 
+> There was already a fix for this posted by Randy Dunlap taking a different approach, ie. use __maybe_unused classifier. To be honest I prefer the ifdef approach as it is more explicit and does not feel like a cheat.
 
-I also test this patch on another laptop ASUS X570ZD (AMD Ryzen 7
-2700U with Radeon Vega Mobile Gfx) equipped with Realtek rtl8822be
-wireless.
+Hi,
+You are welcome to merge (or ack or have someone else merge) either of them.
+I'm not counting patches, just trying to help out (in this case by reducing noise).
 
-dev@endless:~$ sudo lspci -nnvvvs 02:00.0
-02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
-Device [10ec:b822]
-Subsystem: AzureWave Device [1a3b:2950]
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0, Cache Line Size: 64 bytes
-Interrupt: pin A routed to IRQ 57
-Region 0: I/O ports at e000 [size=256]
-Region 2: Memory at f7800000 (64-bit, non-prefetchable) [size=64K]
-Capabilities: [40] Power Management version 3
-Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-Address: 00000000fee00000  Data: 0000
-Capabilities: [70] Express (v2) Endpoint, MSI 00
-DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
-ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0.000W
-DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-MaxPayload 128 bytes, MaxReadReq 512 bytes
-DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency
-L0s <2us, L1 <64us
-ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
-LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- CommClk+
-ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-BWMgmt- ABWMgmt-
-DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR+, OBFF
-Via message/WAKE#
-DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis+, LTR+, OBFF Disabled
-LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-Compliance De-emphasis: -6dB
-LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-,
-EqualizationPhase1-
-EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-Capabilities: [100 v2] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq- ACSViol-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq- ACSViol-
-UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-Capabilities: [148 v1] Device Serial Number 00-e0-4c-ff-fe-b8-22-01
-Capabilities: [158 v1] Latency Tolerance Reporting
-Max snoop latency: 1048576ns
-Max no snoop latency: 1048576ns
-Capabilities: [160 v1] L1 PM Substates
-L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-  PortCommonModeRestoreTime=30us PortTPowerOnTime=60us
-L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2- ASPM_L1.1+
-   T_CommonMode=0us LTR1.2_Threshold=0ns
-L1SubCtl2: T_PwrOn=10us
-Kernel driver in use: r8822be
-Kernel modules: r8822be
 
-ASUS X570ZD's WiFi adapter already works correctly without this patch
-originally.
 
-With this patch, it also works correctly again:
-dev@endless:~$ dmesg | grep r8822be
-[   19.662441] r8822be: module is from the staging directory, the
-quality is unknown, you have been warned.
-[   19.664332] r8822be 0000:02:00.0: enabling device (0000 -> 0003)
-[   19.681015] r8822be: Using firmware rtlwifi/rtl8822befw.bin
-[   19.778437] r8822be: rtlwifi: wireless switch is on
-[   19.779919] r8822be 0000:02:00.0 wlp2s0: renamed from wlan0
+> Actually some of the functions are between a flag already PRISM2_NO_PROCFS_DEBUG which is in a private header file hostap_config.h. Seems like this would be better placed in Kconfig and depend on CONFIG_PROCFS. Anyway, this driver is old cruft. Maybe some people are still running it, but it is probably not worth the effort so fine with either fix.
+> 
+> Regards,
+> Arend
 
-Here is the full dmesg
-https://gist.github.com/starnight/920950ca596916e393ce0534added83e
 
-> Reported-by: Jian-Hong Pan <jian-hong@endlessm.com>
-> Tested-by: Jian-Hong Pan <jian-hong@endlessm.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->  drivers/staging/rtlwifi/rtl8822be/hw.c | 2 +-
->  drivers/staging/rtlwifi/wifi.h         | 1 +
->  2 files changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtlwifi/rtl8822be/hw.c b/drivers/staging/rtlwifi/rtl8822be/hw.c
-> index 7947edb239a1..88ba5b2fea6a 100644
-> --- a/drivers/staging/rtlwifi/rtl8822be/hw.c
-> +++ b/drivers/staging/rtlwifi/rtl8822be/hw.c
-> @@ -803,7 +803,7 @@ static void _rtl8822be_enable_aspm_back_door(struct ieee80211_hw *hw)
->                 return;
->
->         pci_read_config_byte(rtlpci->pdev, 0x70f, &tmp);
-> -       pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | BIT(7));
-> +       pci_write_config_byte(rtlpci->pdev, 0x70f, tmp | ASPM_L1_LATENCY << 3);
->
->         pci_read_config_byte(rtlpci->pdev, 0x719, &tmp);
->         pci_write_config_byte(rtlpci->pdev, 0x719, tmp | BIT(3) | BIT(4));
-> diff --git a/drivers/staging/rtlwifi/wifi.h b/drivers/staging/rtlwifi/wifi.h
-> index 012fb618840b..a45f0eb69d3f 100644
-> --- a/drivers/staging/rtlwifi/wifi.h
-> +++ b/drivers/staging/rtlwifi/wifi.h
-> @@ -88,6 +88,7 @@
->  #define RTL_USB_MAX_RX_COUNT                   100
->  #define QBSS_LOAD_SIZE                         5
->  #define MAX_WMMELE_LENGTH                      64
-> +#define ASPM_L1_LATENCY                                7
->
->  #define TOTAL_CAM_ENTRY                                32
->
-> --
-> 2.15.1
->
+-- 
+~Randy
