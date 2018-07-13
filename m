@@ -1,45 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51736 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726655AbeGaIog (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55676 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729982AbeGMR4W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 04:44:36 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 13 Jul 2018 13:56:22 -0400
+Subject: Re: [PATCH] ath10k: fix vdev-start timeout on error
+To: =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
+References: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
+ <CABvG-CUdxFE8NiFfUKyeApm9dXqNWtGUWUBV1q8Fn3WF7zUnuQ@mail.gmail.com>
+ <4f4470db-d044-ef1c-4cc9-aab6bbc812f4@candelatech.com>
+ <CABvG-CUnHfxgUYVe4EVQRGbVSD4Nj9cWkYRJFBaACCurWqEUeA@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org, kvalo@codeaurora.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <78726366-ac9e-41c6-ce51-b378ac3408ec@candelatech.com> (sfid-20180713_194048_979343_54A4EB3C)
+Date: Fri, 13 Jul 2018 10:40:43 -0700
 MIME-Version: 1.0
-Subject: Re: [PATCH] net/wireless/atmel: fix defined but not used warning
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <d6ed90e1-c41e-d5b6-c892-ea5e1e6ad7e6@infradead.org>
-References: <d6ed90e1-c41e-d5b6-c892-ea5e1e6ad7e6@infradead.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Simon Kelley <simon@thekelleys.org.uk>,
-        linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Message-Id: <20180731070545.88C9D6074D@smtp.codeaurora.org> (sfid-20180731_090550_992800_987AA836)
-Date: Tue, 31 Jul 2018 07:05:45 +0000 (UTC)
+In-Reply-To: <CABvG-CUnHfxgUYVe4EVQRGbVSD4Nj9cWkYRJFBaACCurWqEUeA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap <rdunlap@infradead.org> wrote:
+On 07/13/2018 10:37 AM, Michał Kazior wrote:
+> On 13 July 2018 at 19:21, Ben Greear <greearb@candelatech.com> wrote:
+>> On 07/13/2018 10:17 AM, Michał Kazior wrote:
+>>>
+>>> On 13 July 2018 at 19:08,  <greearb@candelatech.com> wrote:
+>>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> The vdev-start-response message should cause the
+>>>> completion to fire, even in the error case.  Otherwise,
+>>>> the user still gets no useful information and everything
+>>>> is blocked until the timeout period.
+>>>>
+>>>> Add some warning text to print out the invalid status
+>>>> code to aid debugging.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
+>>>>  1 file changed, 9 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
+>>>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>>>> index a60de71..ec4cd1e 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>>>> @@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct
+>>>> ath10k *ar, struct sk_buff *skb)
+>>>>         ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
+>>>>         if (ret) {
+>>>>                 ath10k_warn(ar, "failed to parse vdev start event: %d\n",
+>>>> ret);
+>>>> -               return;
+>>>> +               goto out;
+>>>>         }
+>>>>
+>>>> -       if (WARN_ON(__le32_to_cpu(arg.status)))
+>>>> -               return;
+>>>> +       if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
+>>>> +               ath10k_warn(ar, "vdev-start-response reports status
+>>>> error: %d\n",
+>>>> +                           __le32_to_cpu(arg.status));
+>>>> +               /* Setup is done one way or another though, so we should
+>>>> still
+>>>> +                * do the completion, so don't return here.
+>>>> +                */
+>>>> +       }
+>>>>
+>>>> +out:
+>>>>         complete(&ar->vdev_setup_done);
+>>>
+>>>
+>>> With this the waiter can no longer tell if vdev_start succeeded or
+>>> not. It'll always think it succeeded even if arg.status or parsing
+>>> failed. Waiter instead of erroring out will continue to play out happy
+>>> scenario and may end up crashing firmware.
+>>>
+>>> Not stalling is nice, but I'd argue the status should be propagated
+>>> back to the waiter so it can error-check.
+>>
+>>
+>> So, maybe set ar->last_wmi_error = __le32_to_cpu(arg.status) before calling
+>> the complete and change the code that waits for vdev_setup_done to check
+>> that
+>> error code?
+>>
+>> Or, maybe we need an error code specific to this call,
+>> ar->last_wmi_vdev_start_status?
+>
+> Tough call. I can't find any compelling argument to prefer one over
+> the other. Maybe last_wmi_error is a bit too generic?
 
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Fix a build warning in drivers/net/wireless/atmel/ when CONFIG_PROC_FS
-> is not enabled by marking the unused function as __maybe_unused.
-> 
-> ../drivers/net/wireless/atmel/atmel.c:1402:12: warning: 'atmel_proc_show' defined but not used [-Wunused-function]
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Simon Kelley <simon@thekelleys.org.uk>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: netdev@vger.kernel.org
+I was thinking some actions might require multiple wmi calls, and so
+each one we track would need its own variable.
 
-I'll drop this as I take Yue's version instead.
+I'll implement it with a more specific error code and post a new patch.
 
-Patch set to Changes Requested.
+Thanks,
+Ben
 
 -- 
-https://patchwork.kernel.org/patch/10512913/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
