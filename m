@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42774 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727020AbeGaJ1X (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:27:23 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga06-in.huawei.com ([45.249.212.32]:34881 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726917AbeGMHAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 03:00:34 -0400
+From: YueHaibing <yuehaibing@huawei.com>
+To: <simon@thekelleys.org.uk>, <kvalo@codeaurora.org>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH 03/10] atmel: hide unused procfs helpers
+Date: Fri, 13 Jul 2018 14:46:58 +0800
+Message-ID: <20180713064658.10340-1-yuehaibing@huawei.com> (sfid-20180713_084749_018424_86A88798)
 MIME-Version: 1.0
-Subject: Re: [PATCH RESENT] ath10k: Prevent active scans on potential unusable
- channels
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180726135948.29160-1-sven@narfation.org>
-References: <20180726135948.29160-1-sven@narfation.org>
-To: Sven Eckelmann <sven@narfation.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Marek Puzyniak <marek.puzyniak@tieto.com>
-Message-Id: <20180731074821.AC7A160708@smtp.codeaurora.org> (sfid-20180731_094839_781431_97073086)
-Date: Tue, 31 Jul 2018 07:48:21 +0000 (UTC)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven@narfation.org> wrote:
+When CONFIG_PROC_FS isn't set, gcc warning this:
 
-> The QCA4019 hw1.0 firmware 10.4-3.2.1-00050 and 10.4-3.5.3-00053 (and most
-> likely all other) seem to ignore the WMI_CHAN_FLAG_DFS flag during the
-> scan. This results in transmission (probe requests) on channels which are
-> not "available" for transmissions.
-> 
-> Since the firmware is closed source and nothing can be done from our side
-> to fix the problem in it, the driver has to work around this problem. The
-> WMI_CHAN_FLAG_PASSIVE seems to be interpreted by the firmware to not
-> scan actively on a channel unless an AP was detected on it. Simple probe
-> requests will then be transmitted by the STA on the channel.
-> 
-> ath10k must therefore also use this flag when it queues a radar channel for
-> scanning. This should reduce the chance of an active scan when the channel
-> might be "unusable" for transmissions.
-> 
-> Fixes: e8a50f8ba44b ("ath10k: introduce DFS implementation")
-> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
+ static int atmel_proc_show(struct seq_file *m, void *v)
+            ^
+fix this by adding #ifdef around it.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/atmel/atmel.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-3f2591115838 ath10k: prevent active scans on potential unusable channels
-
+diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+index b01dc34..3940876 100644
+--- a/drivers/net/wireless/atmel/atmel.c
++++ b/drivers/net/wireless/atmel/atmel.c
+@@ -1399,6 +1399,7 @@ static int atmel_validate_channel(struct atmel_private *priv, int channel)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PROC_FS
+ static int atmel_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct atmel_private *priv = m->private;
+@@ -1481,6 +1482,7 @@ static int atmel_proc_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "Current state:\t\t%s\n", s);
+ 	return 0;
+ }
++#endif
+ 
+ static const struct net_device_ops atmel_netdev_ops = {
+ 	.ndo_open 		= atmel_open,
 -- 
-https://patchwork.kernel.org/patch/10545939/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.0
