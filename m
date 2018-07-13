@@ -1,61 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43505 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753548AbeGEJpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:47 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 08/27] mtd: rawnand: lpc32xx: Allow selection of these drivers when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:03 +0200
-Message-Id: <20180705094522.12138-9-boris.brezillon@bootlin.com> (sfid-20180705_114559_775617_E534047E)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:36327 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726917AbeGMHQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jul 2018 03:16:54 -0400
+From: YueHaibing <yuehaibing@huawei.com>
+To: <j@w1.fi>, <kvalo@codeaurora.org>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] hostap: hide unused procfs helpers
+Date: Fri, 13 Jul 2018 15:03:17 +0800
+Message-ID: <20180713070317.6724-1-yuehaibing@huawei.com> (sfid-20180713_090351_430308_14CA58F8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test these drivers without having ARCH_LPC32XX enabled.
+When CONFIG_PROC_FS isn't set, gcc warning this:
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
+drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
+ static int prism2_registers_proc_show(struct seq_file *m, void *v)
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
+ static int prism2_debug_proc_show(struct seq_file *m, void *v)
+            ^
+drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
+ static int prism2_stats_proc_show(struct seq_file *m, void *v)
+            ^
+drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
+ static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+            ^
+
+fix this by adding #ifdef around them.
+hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
+into #ifdef.
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/mtd/nand/raw/Kconfig | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intersil/hostap/hostap_ap.c   |  8 ++++----
+ drivers/net/wireless/intersil/hostap/hostap_hw.c   | 17 +++++++----------
+ drivers/net/wireless/intersil/hostap/hostap_proc.c | 10 ++++++----
+ 3 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index 4ff21c8e05d4..d396bb69d515 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -299,7 +299,8 @@ config MTD_NAND_MARVELL
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+index d1884b8..0094b1d 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+@@ -66,7 +66,7 @@ static void prism2_send_mgmt(struct net_device *dev,
+ #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
  
- config MTD_NAND_SLC_LPC32XX
- 	tristate "NXP LPC32xx SLC Controller"
--	depends on ARCH_LPC32XX
-+	depends on ARCH_LPC32XX || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  Enables support for NXP's LPC32XX SLC (i.e. for Single Level Cell
- 	  chips) NAND controller. This is the default for the PHYTEC 3250
-@@ -310,7 +311,8 @@ config MTD_NAND_SLC_LPC32XX
  
- config MTD_NAND_MLC_LPC32XX
- 	tristate "NXP LPC32xx MLC Controller"
--	depends on ARCH_LPC32XX
-+	depends on ARCH_LPC32XX || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  Uses the LPC32XX MLC (i.e. for Multi Level Cell chips) NAND
- 	  controller. This is the default for the WORK92105 controller
+-#ifndef PRISM2_NO_PROCFS_DEBUG
++#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
+ static int ap_debug_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct ap_data *ap = PDE_DATA(file_inode(m->file));
+@@ -81,8 +81,7 @@ static int ap_debug_proc_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "tx_drop_nonassoc=%u\n", ap->tx_drop_nonassoc);
+ 	return 0;
+ }
+-#endif /* PRISM2_NO_PROCFS_DEBUG */
+-
++#endif
+ 
+ static void ap_sta_hash_add(struct ap_data *ap, struct sta_info *sta)
+ {
+@@ -990,7 +989,7 @@ static void prism2_send_mgmt(struct net_device *dev,
+ }
+ #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
+ 
+-
++#ifdef CONFIG_PROC_FS
+ static int prism2_sta_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct sta_info *sta = m->private;
+@@ -1059,6 +1058,7 @@ static int prism2_sta_proc_show(struct seq_file *m, void *v)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ static void handle_add_proc_queue(struct work_struct *work)
+ {
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+index 2720aa3..ad1aa65 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
+@@ -151,13 +151,6 @@ static int prism2_get_ram_size(local_info_t *local);
+ #define HFA384X_MAGIC 0x8A32
+ #endif
+ 
+-
+-static u16 hfa384x_read_reg(struct net_device *dev, u16 reg)
+-{
+-	return HFA384X_INW(reg);
+-}
+-
+-
+ static void hfa384x_read_regs(struct net_device *dev,
+ 			      struct hfa384x_regs *regs)
+ {
+@@ -2897,7 +2890,12 @@ static void hostap_tick_timer(struct timer_list *t)
+ }
+ 
+ 
+-#ifndef PRISM2_NO_PROCFS_DEBUG
++#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
++static u16 hfa384x_read_reg(struct net_device *dev, u16 reg)
++{
++	return HFA384X_INW(reg);
++}
++
+ static int prism2_registers_proc_show(struct seq_file *m, void *v)
+ {
+ 	local_info_t *local = m->private;
+@@ -2951,8 +2949,7 @@ static int prism2_registers_proc_show(struct seq_file *m, void *v)
+ 
+ 	return 0;
+ }
+-#endif /* PRISM2_NO_PROCFS_DEBUG */
+-
++#endif
+ 
+ struct set_tim_data {
+ 	struct list_head list;
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_proc.c b/drivers/net/wireless/intersil/hostap/hostap_proc.c
+index 5b33cca..703d74c 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_proc.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_proc.c
+@@ -11,8 +11,7 @@
+ 
+ #define PROC_LIMIT (PAGE_SIZE - 80)
+ 
+-
+-#ifndef PRISM2_NO_PROCFS_DEBUG
++#if !defined(PRISM2_NO_PROCFS_DEBUG) && defined(CONFIG_PROC_FS)
+ static int prism2_debug_proc_show(struct seq_file *m, void *v)
+ {
+ 	local_info_t *local = m->private;
+@@ -43,9 +42,9 @@ static int prism2_debug_proc_show(struct seq_file *m, void *v)
+ 
+ 	return 0;
+ }
+-#endif /* PRISM2_NO_PROCFS_DEBUG */
+-
++#endif
+ 
++#ifdef CONFIG_PROC_FS
+ static int prism2_stats_proc_show(struct seq_file *m, void *v)
+ {
+ 	local_info_t *local = m->private;
+@@ -82,6 +81,7 @@ static int prism2_stats_proc_show(struct seq_file *m, void *v)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ static int prism2_wds_proc_show(struct seq_file *m, void *v)
+ {
+@@ -174,6 +174,7 @@ static const struct seq_operations prism2_bss_list_proc_seqops = {
+ 	.show	= prism2_bss_list_proc_show,
+ };
+ 
++#ifdef CONFIG_PROC_FS
+ static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+ {
+ 	local_info_t *local = m->private;
+@@ -190,6 +191,7 @@ static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+ 	}
+ 	return 0;
+ }
++#endif
+ 
+ static ssize_t prism2_pda_proc_read(struct file *file, char __user *buf,
+ 				    size_t count, loff_t *_pos)
 -- 
-2.14.1
+2.7.0
