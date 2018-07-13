@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.46.234]:26357 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752874AbeGDXMH (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:35344 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729622AbeGMRdE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 19:12:07 -0400
-Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id F21614C63
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Jul 2018 17:49:28 -0500 (CDT)
-Date: Wed, 4 Jul 2018 17:48:56 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] NFC: pn533: mark expected switch fall-through
-Message-ID: <20180704224856.GA19315@embeddedor.com> (sfid-20180705_011211_196059_2CEB3395)
+        Fri, 13 Jul 2018 13:33:04 -0400
+Received: by mail-qt0-f193.google.com with SMTP id a5-v6so13181132qtp.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2018 10:17:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
+References: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date: Fri, 13 Jul 2018 19:17:32 +0200
+Message-ID: <CABvG-CUdxFE8NiFfUKyeApm9dXqNWtGUWUBV1q8Fn3WF7zUnuQ@mail.gmail.com> (sfid-20180713_191735_901025_F64B654D)
+Subject: Re: [PATCH] ath10k: fix vdev-start timeout on error
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org, kvalo@codeaurora.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+On 13 July 2018 at 19:08,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The vdev-start-response message should cause the
+> completion to fire, even in the error case.  Otherwise,
+> the user still gets no useful information and everything
+> is blocked until the timeout period.
+>
+> Add some warning text to print out the invalid status
+> code to aid debugging.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index a60de71..ec4cd1e 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
+>         ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
+>         if (ret) {
+>                 ath10k_warn(ar, "failed to parse vdev start event: %d\n", ret);
+> -               return;
+> +               goto out;
+>         }
+>
+> -       if (WARN_ON(__le32_to_cpu(arg.status)))
+> -               return;
+> +       if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
+> +               ath10k_warn(ar, "vdev-start-response reports status error: %d\n",
+> +                           __le32_to_cpu(arg.status));
+> +               /* Setup is done one way or another though, so we should still
+> +                * do the completion, so don't return here.
+> +                */
+> +       }
+>
+> +out:
+>         complete(&ar->vdev_setup_done);
 
-Warning level 2 was used: -Wimplicit-fallthrough=2
+With this the waiter can no longer tell if vdev_start succeeded or
+not. It'll always think it succeeded even if arg.status or parsing
+failed. Waiter instead of erroring out will continue to play out happy
+scenario and may end up crashing firmware.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/nfc/pn533/pn533.c | 2 ++
- 1 file changed, 2 insertions(+)
+Not stalling is nice, but I'd argue the status should be propagated
+back to the waiter so it can error-check.
 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index a0cc1cc..1d0eafeb 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -2147,6 +2147,7 @@ static int pn533_transceive(struct nfc_dev *nfc_dev,
- 
- 			break;
- 		}
-+		/* else: fall through */
- 	default:
- 		/* jumbo frame ? */
- 		if (skb->len > PN533_CMD_DATAEXCH_DATA_MAXLEN) {
-@@ -2273,6 +2274,7 @@ static void pn533_wq_mi_recv(struct work_struct *work)
- 
- 			break;
- 		}
-+		/* else: fall through */
- 	default:
- 		skb_put_u8(skb, 1); /*TG*/
- 
--- 
-2.7.4
+
+Michal
