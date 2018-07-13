@@ -1,45 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45188 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932209AbeGCOcX (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:38233 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729982AbeGMRxA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 10:32:23 -0400
-Message-ID: <1530628340.4735.29.camel@sipsolutions.net> (sfid-20180703_163227_516004_57451097)
-Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Date: Tue, 03 Jul 2018 16:32:20 +0200
-In-Reply-To: <87601wfl1u.fsf@toke.dk>
-References: <20180703124725.30917-1-johannes@sipsolutions.net>
-         <87601wfl1u.fsf@toke.dk>
+        Fri, 13 Jul 2018 13:53:00 -0400
+Received: by mail-qt0-f196.google.com with SMTP id c5-v6so27755403qth.5
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2018 10:37:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4f4470db-d044-ef1c-4cc9-aab6bbc812f4@candelatech.com>
+References: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
+ <CABvG-CUdxFE8NiFfUKyeApm9dXqNWtGUWUBV1q8Fn3WF7zUnuQ@mail.gmail.com> <4f4470db-d044-ef1c-4cc9-aab6bbc812f4@candelatech.com>
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date: Fri, 13 Jul 2018 19:37:24 +0200
+Message-ID: <CABvG-CUnHfxgUYVe4EVQRGbVSD4Nj9cWkYRJFBaACCurWqEUeA@mail.gmail.com> (sfid-20180713_193728_734059_EA669065)
+Subject: Re: [PATCH] ath10k: fix vdev-start timeout on error
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org, kvalo@codeaurora.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-07-03 at 16:31 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Since (QoS) NDP frames shouldn't be put into aggregation nor are
-> > assigned real sequence numbers, etc. it's better to treat them as
-> > non-data packets and not put them on the normal TXQs, for example
-> > when building A-MPDUs they need to be treated specially, and they
-> > are more used for management (e.g. to see if the station is alive)
-> > anyway.
-> 
-> No objections to this per se;
+On 13 July 2018 at 19:21, Ben Greear <greearb@candelatech.com> wrote:
+> On 07/13/2018 10:17 AM, Micha=C5=82 Kazior wrote:
+>>
+>> On 13 July 2018 at 19:08,  <greearb@candelatech.com> wrote:
+>>>
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> The vdev-start-response message should cause the
+>>> completion to fire, even in the error case.  Otherwise,
+>>> the user still gets no useful information and everything
+>>> is blocked until the timeout period.
+>>>
+>>> Add some warning text to print out the invalid status
+>>> code to aid debugging.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
+>>>  1 file changed, 9 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
+>>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> index a60de71..ec4cd1e 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> @@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct
+>>> ath10k *ar, struct sk_buff *skb)
+>>>         ret =3D ath10k_wmi_pull_vdev_start(ar, skb, &arg);
+>>>         if (ret) {
+>>>                 ath10k_warn(ar, "failed to parse vdev start event: %d\n=
+",
+>>> ret);
+>>> -               return;
+>>> +               goto out;
+>>>         }
+>>>
+>>> -       if (WARN_ON(__le32_to_cpu(arg.status)))
+>>> -               return;
+>>> +       if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
+>>> +               ath10k_warn(ar, "vdev-start-response reports status
+>>> error: %d\n",
+>>> +                           __le32_to_cpu(arg.status));
+>>> +               /* Setup is done one way or another though, so we shoul=
+d
+>>> still
+>>> +                * do the completion, so don't return here.
+>>> +                */
+>>> +       }
+>>>
+>>> +out:
+>>>         complete(&ar->vdev_setup_done);
+>>
+>>
+>> With this the waiter can no longer tell if vdev_start succeeded or
+>> not. It'll always think it succeeded even if arg.status or parsing
+>> failed. Waiter instead of erroring out will continue to play out happy
+>> scenario and may end up crashing firmware.
+>>
+>> Not stalling is nice, but I'd argue the status should be propagated
+>> back to the waiter so it can error-check.
+>
+>
+> So, maybe set ar->last_wmi_error =3D __le32_to_cpu(arg.status) before cal=
+ling
+> the complete and change the code that waits for vdev_setup_done to check
+> that
+> error code?
+>
+> Or, maybe we need an error code specific to this call,
+> ar->last_wmi_vdev_start_status?
 
-:-)
+Tough call. I can't find any compelling argument to prefer one over
+the other. Maybe last_wmi_error is a bit too generic?
 
-> but didn't we want to move towards
-> everything going through the TXQs? Any progress on that front? :)
 
-Not really. Yes, I wanted to, but it's some massive surgery. Right now
-I'm working on converting iwlwifi, perhaps I'll learn about it more and
-can then do the mac80211 surgery better later.
-
-johannes
+Micha=C5=82
