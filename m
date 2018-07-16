@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57414 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729583AbeGQPlI (ORCPT
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:40887 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728037AbeGPODz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jul 2018 11:41:08 -0400
-Subject: Re: Setting tx retry count in ath10k
-To: SEDE <s.deronne@televic.com>,
-        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
- <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
- <8b9713fe-7573-f009-d002-13df73315898@televic.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com> (sfid-20180717_170806_674025_EE344CC6)
-Date: Tue, 17 Jul 2018 08:07:55 -0700
-MIME-Version: 1.0
-In-Reply-To: <8b9713fe-7573-f009-d002-13df73315898@televic.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 16 Jul 2018 10:03:55 -0400
+Received: by mail-pg1-f195.google.com with SMTP id x5-v6so7514430pgp.7
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2018 06:36:26 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Amol Hanwate <amol.hanwate@redpinesignals.com>
+Subject: [PATCH 6/6] rsi: move init_done flag to end of rsi_91x_init().
+Date: Mon, 16 Jul 2018 19:09:37 +0530
+Message-Id: <1531748377-29215-7-git-send-email-siva8118@gmail.com> (sfid-20180716_153637_466112_33B19657)
+In-Reply-To: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
+References: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Amol Hanwate <amol.hanwate@redpinesignals.com>
 
+common->init_done flag should set after basic initialization. Hence,
+moving init_done flag at end of rsi_91x_init().
 
-On 07/17/2018 12:56 AM, SEDE wrote:
-> Hi,
->
-> In the standard, 7 is the default for the short retry count, 4 is well the default for long retry count.
->
-> In ath10k, there is also non_agg_sw_retry_th to control this, will this still be used?
-> Or what is the difference with rc_num_retries?
->
-> Kind regards,
-> Sébastien.
+Signed-off-by: Amol Hanwate <amol.hanwate@redpinesignals.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The ath10k firmware has no idea of long vs short retries, so I just used the
-long setting.
-
-I will investigate that non_agg_sw_retry_th as well, and I did notice my wave-1
-firmware (at least) uses 15 retries for self-generated frames.  But, in my case,
-those self-gen frames are not much used anyway since I disable firmware keep-alive.
-
-And, I need to see how the mac80211 stack handles its own retries when working
-with ath10k.
-
-Thanks,
-Ben
-
->
->
-> On 2018-07-17 09:39, Benjamin Beichler wrote:
->> Hi,
->>
->> Am 17.07.2018 um 02:37 schrieb Ben Greear:
->>> I spent a bit of time looking into setting the tx retry count in
->>> ath10k (wave-1 firmware).  The firmware has support for setting this as
->>> a vdev parameter, and it defaults to '2', at least in my wave-1 firmware.
->>>
->>> I enabled propagating the setting from mac80211, ie:
->>> iw phy wiphy0 set retry short 2 long 2
->>>
->>> And while debugging this, I noticed that mac80211 has a default of
->>> 4, but the ath10k firmware has a default of 2.  Now, I am not sure
->>> if I should enable setting the retry count since it will change
->>> the behaviour even if users don't set anything.
->>>
->> Maybe I'm wrong, but I have in mind, that 7 retries is the default
->> setting of mac80211. Although 2 or even 4 seems to be pretty low for the
->> overall retry count, so maybe the values are somehow changed in the
->> firmware? From our experiments we know (at least for 802.11n) you need
->> for normal operation a retry count of something between 5 - 9, but
->> sometimes also 12 or 15 is beneficial.
->>
->> We use for our experimental setup mainly ath9k cards and rt28xx nics,
->> and with them you need definitely more retries.
->>
->> Nonetheless, I don't think the change from 2 to 4 does really affect the
->> behavior in a negative way (if it works as expected).
->>
->>> Any opinions on this?
->>>
->>> Thanks,
->>> Ben
->>>
->
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 34a5d9c..01d99ed 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -331,7 +331,6 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ 	spin_lock_init(&adapter->ps_lock);
+ 	timer_setup(&common->roc_timer, rsi_roc_timeout, 0);
+ 	init_completion(&common->wlan_init_completion);
+-	common->init_done = true;
+ 	adapter->device_model = RSI_DEV_9113;
+ 	common->oper_mode = oper_mode;
+ 
+@@ -369,6 +368,7 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
+ 	}
+ #endif
+ 
++	common->init_done = true;
+ 	return adapter;
+ 
+ err:
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.5.5
