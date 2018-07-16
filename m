@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53584 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732036AbeGaIvG (ORCPT
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44255 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727313AbeGPODp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 04:51:06 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH v2 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1530080019-20108-1-git-send-email-gbhat@marvell.com>
-References: <1530080019-20108-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20180731071214.08D7E6071C@smtp.codeaurora.org> (sfid-20180731_091240_881909_9B7F0149)
-Date: Tue, 31 Jul 2018 07:12:14 +0000 (UTC)
+        Mon, 16 Jul 2018 10:03:45 -0400
+Received: by mail-pg1-f194.google.com with SMTP id r1-v6so7515951pgp.11
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2018 06:36:16 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Amol Hanwate <amol.hanwate@redpinesignals.com>
+Subject: [PATCH 3/6] rsi: add firmware support for AP+BT dual mode
+Date: Mon, 16 Jul 2018 19:09:34 +0530
+Message-Id: <1531748377-29215-4-git-send-email-siva8118@gmail.com> (sfid-20180716_153619_285530_53B48064)
+In-Reply-To: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
+References: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-> At present driver spinlock protects iteration of list
-> rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
-> individual items in this list, it uses rx_pkt_lock. But, we can
-> use a single rx_reorder_tbl_lock for both purposes. This patch
-> replaces rx_pkt_lock by rx_reorder_tbl_lock.
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Currently, AP mode will work on only WLAN alone firmware. To give support
+for AP and BT dual mode, adding firmware entry in 'struct ta_metadata'.
+The firmware entry is based on what coex_mode is used in driver and coex
+mode '4' for all AP+BT related functionalities. Hence, added the same.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-5631909364e1 mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
-5188d5453bc9 mwifiex: restructure rx_reorder_tbl_lock usage
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 150c3e6..27e6baf 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -26,6 +26,9 @@ static struct ta_metadata metadata_flash_content[] = {
+ 	{"flash_content", 0x00010000},
+ 	{"rsi/rs9113_wlan_qspi.rps", 0x00010000},
+ 	{"rsi/rs9113_wlan_bt_dual_mode.rps", 0x00010000},
++	{"flash_content", 0x00010000},
++	{"rsi/rs9113_ap_bt_dual_mode.rps", 0x00010000},
++
+ };
+ 
+ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
 -- 
-https://patchwork.kernel.org/patch/10490657/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.5.5
