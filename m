@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727667AbeG3Tdl (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34974 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728037AbeGPODv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:33:41 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] ath6kl: remove redundant variables netlen, orig_buf,
- orig_len, dropped and stats
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180709131720.6668-1-colin.king@canonical.com>
-References: <20180709131720.6668-1-colin.king@canonical.com>
-To: Colin King <colin.king@canonical.com>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180730175733.B6B8B60B15@smtp.codeaurora.org> (sfid-20180730_195743_802288_68773FEC)
-Date: Mon, 30 Jul 2018 17:57:33 +0000 (UTC)
+        Mon, 16 Jul 2018 10:03:51 -0400
+Received: by mail-pf0-f196.google.com with SMTP id q7-v6so25192705pff.2
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2018 06:36:23 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Amol Hanwate <amol.hanwate@redpinesignals.com>
+Subject: [PATCH 5/6] rsi: fill rx_params only once.
+Date: Mon, 16 Jul 2018 19:09:36 +0530
+Message-Id: <1531748377-29215-6-git-send-email-siva8118@gmail.com> (sfid-20180716_153636_882273_ECD49187)
+In-Reply-To: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
+References: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> wrote:
+From: Amol Hanwate <amol.hanwate@redpinesignals.com>
 
-> Variables netlen, orig_buf, orig_len, dropped and stats are assigned values
-> but are never used hence they are redundant and can be removed.
-> 
-> Cleans up clang warnings:
-> warning: variable 'netlen' set but not used [-Wunused-but-set-variable]
-> warning: variable 'orig_buf' set but not used [-Wunused-but-set-variable]
-> warning: variable 'orig_len' set but not used [-Wunused-but-set-variable]
-> warning: variable 'dropped' set but not used [-Wunused-but-set-variable]
-> warning: variable 'stats' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+rx_params are getting updated two times in driver, which is not required.
+Hence, removing duplicate updation of rx_params from rsi_prepare_skb().
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Amol Hanwate <amol.hanwate@redpinesignals.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-619c9700a8fe ath6kl: remove redundant variables netlen, orig_buf, orig_len, dropped and stats
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 1485a0c..34a5d9c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -122,7 +122,6 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+ 				       u8 extended_desc)
+ {
+ 	struct ieee80211_tx_info *info;
+-	struct skb_info *rx_params;
+ 	struct sk_buff *skb = NULL;
+ 	u8 payload_offset;
+ 	struct ieee80211_vif *vif;
+@@ -149,10 +148,6 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+ 	vif = rsi_get_vif(common->priv, wh->addr1);
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-	rx_params = (struct skb_info *)info->driver_data;
+-	rx_params->rssi = rsi_get_rssi(buffer);
+-	rx_params->channel = rsi_get_connected_channel(vif);
+-
+ 	return skb;
+ }
+ 
 -- 
-https://patchwork.kernel.org/patch/10514565/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.5.5
