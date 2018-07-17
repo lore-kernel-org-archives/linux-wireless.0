@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48938 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388441AbeGYCEj (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:60395 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727980AbeGQI3O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 22:04:39 -0400
-Date: Tue, 24 Jul 2018 17:55:31 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Jonathan Cameron <jic23@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-iio@vger.kernel.org,
-        linux-pm@vger.kernel.org, lvs-devel@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
-Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
-Message-Id: <20180724175531.75276cf4e539124aa9e27177@linux-foundation.org> (sfid-20180725_025611_656620_B74946D0)
-In-Reply-To: <aa39b6d15f44555cb79d5ebdef74aeab19003d6a.camel@perches.com>
-References: <20180724111600.4158975-1-arnd@arndb.de>
-        <20180724140010.e24a9964fd340afe2d98a994@linux-foundation.org>
-        <aa39b6d15f44555cb79d5ebdef74aeab19003d6a.camel@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Tue, 17 Jul 2018 04:29:14 -0400
+To: James Prestwood <james.prestwood@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+References: <11bae1aa8b935a170b97650ae61ce236243c1c90.camel@linux.intel.com>
+From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
+Subject: Re: IBSS timeouts
+Message-ID: <9efa23eb-96e8-12e0-990e-5ee0da62742f@green-communications.fr> (sfid-20180717_095758_141459_478B5B64)
+Date: Tue, 17 Jul 2018 09:57:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <11bae1aa8b935a170b97650ae61ce236243c1c90.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Jul 2018 17:13:20 -0700 Joe Perches <joe@perches.com> wrote:
-
-> On Tue, 2018-07-24 at 14:00 -0700, Andrew Morton wrote:
-> > On Tue, 24 Jul 2018 13:13:25 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
-> > > Almost all files in the kernel are either plain text or UTF-8
-> > > encoded. A couple however are ISO_8859-1, usually just a few
-> > > characters in a C comments, for historic reasons.
-> > > This converts them all to UTF-8 for consistency.
-> []
-> > Will we be getting a checkpatch rule to keep things this way?
+On 16/07/2018 21:31, James Prestwood wrote:
+> Hello,
 > 
-> How would that be done?
+> I am a developer for IWD and trying to implement IBSS networks. The
+> initial IBSS_JOIN, 4-way, and setting the keys all works and I am able
+> to connect two stations. The problem is that I am hitting a timeout in
+> the kernel once the connection has succeeded and there are no more
+> frames flowing between stations. I dug around in the kernel and saw
+> there is a 60 second inactivity timeout which is precicely what is
+> happening. After setting the keys 60 seconds go by and I recieve a
+> DEL_STATION (log attached).
+> 
+> My question is: is this timeout expected after the station has been
+> added and the keys are set? If so how does one reset this timeout so
+> the connection can remain alive even if no data is being sent?
+> heartbeat of some kind?
 
-I'm using this, seems to work.
+This is not normal, but it isn't your fault. It's more a problem with your card
+firmware/driver. What card/driver do you have ?
 
-        if ! file $p | grep -q -P ", ASCII text|, UTF-8 Unicode text"
-        then
-                echo $p: weird charset
-        fi
+In IBSS mode, all stations are required to send beacons. The protocol is a bit
+complex to arrange that, every 102.4ms, a station is chosen to emit the beacon.
+
+Receiving beacons from a station is enough to reset its timer, so with a
+properly functioning station, this timer does not expire.
+
+Unfortunately, in the wild, nobody test that IBSS beacons are generated, because
+without them, an open IBSS still appear to work...
