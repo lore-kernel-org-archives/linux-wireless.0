@@ -1,115 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:32652 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388364AbeGXIuK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 04:50:10 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 19/19] wil6210: fix eDMA RX chaining
-Date: Tue, 24 Jul 2018 10:44:40 +0300
-Message-Id: <1532418280-5849-20-git-send-email-merez@codeaurora.org> (sfid-20180724_100227_079273_910ABA9C)
-In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
-References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+Received: from mail-eopbgr20091.outbound.protection.outlook.com ([40.107.2.91]:30669
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727980AbeGQI2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jul 2018 04:28:04 -0400
+Subject: Re: Setting tx retry count in ath10k
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        Ben Greear <greearb@candelatech.com>,
+        ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
+ <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
+From: SEDE <s.deronne@televic.com>
+Message-ID: <8b9713fe-7573-f009-d002-13df73315898@televic.com> (sfid-20180717_095650_423039_C87FC190)
+Date: Tue, 17 Jul 2018 09:56:39 +0200
+MIME-Version: 1.0
+In-Reply-To: <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HW requires Rx buffers to be 4 bytes aligned. Modify the driver to
-meet this requirement.
-Enable OFU rdy valid bug fix, to prevent hang in oful34_rx while
-there is back-pressure from host during RX.
+Hi,
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c      |  7 +++++++
- drivers/net/wireless/ath/wil6210/txrx_edma.c | 13 ++++++-------
- drivers/net/wireless/ath/wil6210/wil6210.h   |  2 ++
- 3 files changed, 15 insertions(+), 7 deletions(-)
+In the standard, 7 is the default for the short retry count, 4 is well 
+the default for long retry count.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 1d4ce8e..7debed6 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1614,6 +1614,13 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 		wil->txrx_ops.configure_interrupt_moderation(wil);
- 
-+		/* Enable OFU rdy valid bug fix, to prevent hang in oful34_rx
-+		 * while there is back-pressure from Host during RX
-+		 */
-+		if (wil->hw_version >= HW_VER_TALYN_MB)
-+			wil_s(wil, RGF_DMA_MISC_CTL,
-+			      BIT_OFUL34_RDY_VALID_BUG_FIX_EN);
-+
- 		rc = wil_restore_vifs(wil);
- 		if (rc) {
- 			wil_err(wil, "failed to restore vifs, rc %d\n", rc);
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-index 9ef2b66..bca61cb 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-@@ -27,6 +27,8 @@
- #include "trace.h"
- 
- #define WIL_EDMA_MAX_DATA_OFFSET (2)
-+/* RX buffer size must be aligned to 4 bytes */
-+#define WIL_EDMA_RX_BUF_LEN_DEFAULT (2048)
- 
- static void wil_tx_desc_unmap_edma(struct device *dev,
- 				   union wil_tx_desc *desc,
-@@ -158,8 +160,7 @@ static int wil_ring_alloc_skb_edma(struct wil6210_priv *wil,
- 				   struct wil_ring *ring, u32 i)
- {
- 	struct device *dev = wil_to_dev(wil);
--	unsigned int sz = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	unsigned int sz = ALIGN(wil->rx_buf_len, 4);
- 	dma_addr_t pa;
- 	u16 buff_id;
- 	struct list_head *active = &wil->rx_buff_mgmt.active;
-@@ -600,7 +601,7 @@ static bool wil_is_rx_idle_edma(struct wil6210_priv *wil)
- static void wil_rx_buf_len_init_edma(struct wil6210_priv *wil)
- {
- 	wil->rx_buf_len = rx_large_buf ?
--		WIL_MAX_ETH_MTU : TXRX_BUF_LEN_DEFAULT - WIL_MAX_MPDU_OVERHEAD;
-+		WIL_MAX_ETH_MTU : WIL_EDMA_RX_BUF_LEN_DEFAULT;
- }
- 
- static int wil_rx_init_edma(struct wil6210_priv *wil, u16 desc_ring_size)
-@@ -633,8 +634,7 @@ static int wil_rx_init_edma(struct wil6210_priv *wil, u16 desc_ring_size)
- 
- 	wil_rx_buf_len_init_edma(wil);
- 
--	max_rx_pl_per_desc = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	max_rx_pl_per_desc = ALIGN(wil->rx_buf_len, 4);
- 
- 	/* Use debugfs dbg_num_rx_srings if set, reserve one sring for TX */
- 	if (wil->num_rx_status_rings > WIL6210_MAX_STATUS_RINGS - 1)
-@@ -869,8 +869,7 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
- 	struct sk_buff *skb;
- 	dma_addr_t pa;
- 	struct wil_ring_rx_data *rxdata = &sring->rx_data;
--	unsigned int sz = wil->rx_buf_len + ETH_HLEN +
--		WIL_EDMA_MAX_DATA_OFFSET;
-+	unsigned int sz = ALIGN(wil->rx_buf_len, 4);
- 	struct wil_net_stats *stats = NULL;
- 	u16 dmalen;
- 	int cid;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 9fc51f7..17c294b 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -302,6 +302,8 @@ struct RGF_ICR {
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_FOREVER		BIT(2)
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_CLR			BIT(3)
- 	#define BIT_DMA_ITR_RX_IDL_CNT_CTL_REACHED_TRESH	BIT(4)
-+#define RGF_DMA_MISC_CTL				(0x881d6c)
-+	#define BIT_OFUL34_RDY_VALID_BUG_FIX_EN			BIT(7)
- 
- #define RGF_DMA_PSEUDO_CAUSE		(0x881c68)
- #define RGF_DMA_PSEUDO_CAUSE_MASK_SW	(0x881c6c)
--- 
-1.9.1
+In ath10k, there is also non_agg_sw_retry_th to control this, will this 
+still be used?
+Or what is the difference with rc_num_retries?
+
+Kind regards,
+Sébastien.
+
+
+On 2018-07-17 09:39, Benjamin Beichler wrote:
+> Hi,
+>
+> Am 17.07.2018 um 02:37 schrieb Ben Greear:
+>> I spent a bit of time looking into setting the tx retry count in
+>> ath10k (wave-1 firmware).  The firmware has support for setting this as
+>> a vdev parameter, and it defaults to '2', at least in my wave-1 firmware.
+>>
+>> I enabled propagating the setting from mac80211, ie:
+>> iw phy wiphy0 set retry short 2 long 2
+>>
+>> And while debugging this, I noticed that mac80211 has a default of
+>> 4, but the ath10k firmware has a default of 2.  Now, I am not sure
+>> if I should enable setting the retry count since it will change
+>> the behaviour even if users don't set anything.
+>>
+> Maybe I'm wrong, but I have in mind, that 7 retries is the default
+> setting of mac80211. Although 2 or even 4 seems to be pretty low for the
+> overall retry count, so maybe the values are somehow changed in the
+> firmware? From our experiments we know (at least for 802.11n) you need
+> for normal operation a retry count of something between 5 - 9, but
+> sometimes also 12 or 15 is beneficial.
+>
+> We use for our experimental setup mainly ath9k cards and rt28xx nics,
+> and with them you need definitely more retries.
+>
+> Nonetheless, I don't think the change from 2 to 4 does really affect the
+> behavior in a negative way (if it works as expected).
+>
+>> Any opinions on this?
+>>
+>> Thanks,
+>> Ben
+>>
