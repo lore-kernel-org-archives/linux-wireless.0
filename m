@@ -1,86 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35866 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932601AbeGIMev (ORCPT
+Received: from mx1.uni-rostock.de ([139.30.22.71]:55150 "EHLO
+        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727600AbeGQIPy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 08:34:51 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: remove redundant pointers 'dev' and 'noa'
-Date: Mon,  9 Jul 2018 13:34:46 +0100
-Message-Id: <20180709123446.14796-1-colin.king@canonical.com> (sfid-20180709_143508_920467_A552198A)
+        Tue, 17 Jul 2018 04:15:54 -0400
+Subject: Re: Setting tx retry count in ath10k
+To: Ben Greear <greearb@candelatech.com>,
+        ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de> (sfid-20180717_094447_116886_E007BE71)
+Date: Tue, 17 Jul 2018 09:39:36 +0200
 MIME-Version: 1.0
+In-Reply-To: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi,
 
-Pointers dev and noa are being assigned but are never used hence they
-are redundant and can be removed.
+Am 17.07.2018 um 02:37 schrieb Ben Greear:
+> I spent a bit of time looking into setting the tx retry count in
+> ath10k (wave-1 firmware).=C2=A0 The firmware has support for setting th=
+is as
+> a vdev parameter, and it defaults to '2', at least in my wave-1 firmwar=
+e.
+>
+> I enabled propagating the setting from mac80211, ie:
+> iw phy wiphy0 set retry short 2 long 2
+>
+> And while debugging this, I noticed that mac80211 has a default of
+> 4, but the ath10k firmware has a default of 2.=C2=A0 Now, I am not sure=
 
-Cleans up clang warnings:
-warning: variable 'dev' set but not used [-Wunused-but-set-variable]
-warning: variable 'noa' set but not used [-Wunused-but-set-variable]
+> if I should enable setting the retry count since it will change
+> the behaviour even if users don't set anything.
+>
+Maybe I'm wrong, but I have in mind, that 7 retries is the default
+setting of mac80211. Although 2 or even 4 seems to be pretty low for the
+overall retry count, so maybe the values are somehow changed in the
+firmware? From our experiments we know (at least for 802.11n) you need
+for normal operation a retry count of something between 5 - 9, but
+sometimes also 12 or 15 is beneficial.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ath/ath10k/ahb.c     | 5 -----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- 2 files changed, 7 deletions(-)
+We use for our experimental setup mainly ath9k cards and rt28xx nics,
+and with them you need definitely more retries.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index fa39ffffd34d..c9bd0e2b5db7 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -133,11 +133,8 @@ static void ath10k_ahb_clock_deinit(struct ath10k *ar)
- static int ath10k_ahb_clock_enable(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
--	struct device *dev;
- 	int ret;
- 
--	dev = &ar_ahb->pdev->dev;
--
- 	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk) ||
- 	    IS_ERR_OR_NULL(ar_ahb->ref_clk) ||
- 	    IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
-@@ -451,12 +448,10 @@ static int ath10k_ahb_resource_init(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 	struct platform_device *pdev;
--	struct device *dev;
- 	struct resource *res;
- 	int ret;
- 
- 	pdev = ar_ahb->pdev;
--	dev = &pdev->dev;
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	if (!res) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 8c49a26fc571..fc0f98487d11 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1785,7 +1785,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- {
- 	struct wmi_tlv_vdev_start_cmd *cmd;
- 	struct wmi_channel *ch;
--	struct wmi_p2p_noa_descriptor *noa;
- 	struct wmi_tlv *tlv;
- 	struct sk_buff *skb;
- 	size_t len;
-@@ -1843,7 +1842,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	tlv = ptr;
- 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
- 	tlv->len = 0;
--	noa = (void *)tlv->value;
- 
- 	/* Note: This is a nested TLV containing:
- 	 * [wmi_tlv][wmi_p2p_noa_descriptor][wmi_tlv]..
--- 
-2.17.1
+Nonetheless, I don't think the change from 2 to 4 does really affect the
+behavior in a negative way (if it works as expected).
+
+> Any opinions on this?
+>
+> Thanks,
+> Ben
+>
+
+--=20
+M.Sc. Benjamin Beichler
+
+Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
+chnik
+Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
+
+University of Rostock, Department of CS and EE
+Institute of Applied Microelectronics and CE
+
+Richard-Wagner-Stra=C3=9Fe 31
+18119 Rostock
+Deutschland/Germany
+
+phone: +49 (0) 381 498 - 7278
+email: Benjamin.Beichler@uni-rostock.de
+www: http://www.imd.uni-rostock.de/
