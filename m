@@ -1,164 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:41064 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388944AbeGXUht (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:49 -0400
-Received: by mail-pl0-f67.google.com with SMTP id w8-v6so2191997ply.8
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:52 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 14/18] decnet: whitespace fixes
-Date: Tue, 24 Jul 2018 12:29:14 -0700
-Message-Id: <20180724192918.31165-15-sthemmin@microsoft.com> (sfid-20180724_213035_213212_FCDA526B)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+Received: from mout.perfora.net ([74.208.4.197]:34861 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729686AbeGQSjW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jul 2018 14:39:22 -0400
+Subject: Re: IBSS timeouts
+To: James Prestwood <james.prestwood@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+References: <11bae1aa8b935a170b97650ae61ce236243c1c90.camel@linux.intel.com>
+ <9efa23eb-96e8-12e0-990e-5ee0da62742f@green-communications.fr>
+ <1531844370.3250.12.camel@linux.intel.com>
+From: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+Message-ID: <705e163a-5a1a-ea63-473b-90e6bc5c0152@green-communications.fr> (sfid-20180717_200537_927560_7BAE67C7)
+Date: Tue, 17 Jul 2018 20:05:24 +0200
+MIME-Version: 1.0
+In-Reply-To: <1531844370.3250.12.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove trailing whitespace and extra lines at EOF
+On 17/07/2018 18:19, James Prestwood wrote:
+> On Tue, 2018-07-17 at 09:57 +0200, Nicolas Cavallari wrote:
+>> This is not normal, but it isn't your fault. It's more a problem with
+>> your card
+>> firmware/driver. What card/driver do you have ?
+> 
+> One side has an Intel 7260 and the other has an Atheros 9462. It seems
+> to only be the 7260 that is getting the DEL_STATION events after the
+> timeout. I haven't seen the Ath 9k behave like this.
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/decnet/Kconfig              | 1 -
- net/decnet/Makefile             | 1 -
- net/decnet/TODO                 | 5 ++---
- net/decnet/dn_fib.c             | 2 --
- net/decnet/dn_nsp_in.c          | 1 -
- net/decnet/dn_nsp_out.c         | 1 -
- net/decnet/dn_route.c           | 1 -
- net/decnet/dn_rules.c           | 2 --
- net/decnet/netfilter/Makefile   | 1 -
- net/decnet/netfilter/dn_rtmsg.c | 1 -
- 10 files changed, 2 insertions(+), 14 deletions(-)
+It's not clear who is seeing the DEL_STATION for which station.
+Your trace hints at 6C:71:D9:0D:6E:4B not sending beacons.  A wireless
+capture should confirm this.
 
-diff --git a/net/decnet/Kconfig b/net/decnet/Kconfig
-index f3393e154f0f..dcc74956badd 100644
---- a/net/decnet/Kconfig
-+++ b/net/decnet/Kconfig
-@@ -40,4 +40,3 @@ config DECNET_ROUTER
- 	  to work.
- 
- 	  See <file:Documentation/networking/decnet.txt> for more information.
--
-diff --git a/net/decnet/Makefile b/net/decnet/Makefile
-index 9e38122d942b..07b38e441b2d 100644
---- a/net/decnet/Makefile
-+++ b/net/decnet/Makefile
-@@ -8,4 +8,3 @@ decnet-$(CONFIG_DECNET_ROUTER) += dn_fib.o dn_rules.o dn_table.o
- decnet-y += sysctl_net_decnet.o
- 
- obj-$(CONFIG_NETFILTER) += netfilter/
--
-diff --git a/net/decnet/TODO b/net/decnet/TODO
-index ebb5ac69d128..358e9eb49016 100644
---- a/net/decnet/TODO
-+++ b/net/decnet/TODO
-@@ -16,14 +16,14 @@ Steve's quick list of things that need finishing off:
- 
-  o Verify errors etc. against POSIX 1003.1g (draft)
- 
-- o Using send/recvmsg() to get at connect/disconnect data (POSIX 1003.1g) 
-+ o Using send/recvmsg() to get at connect/disconnect data (POSIX 1003.1g)
-    [maybe this should be done at socket level... the control data in the
-     send/recvmsg() calls should simply be a vector of set/getsockopt()
-     calls]
- 
-  o check MSG_CTRUNC is set where it should be.
- 
-- o Find all the commonality between DECnet and IPv4 routing code and extract 
-+ o Find all the commonality between DECnet and IPv4 routing code and extract
-    it into a small library of routines. [probably a project for 2.7.xx]
- 
-  o Add perfect socket hashing - an idea suggested by Paul Koning. Currently
-@@ -38,4 +38,3 @@ Steve's quick list of things that need finishing off:
-  o DECnet sendpages() function
- 
-  o AIO for DECnet
--
-diff --git a/net/decnet/dn_fib.c b/net/decnet/dn_fib.c
-index fce94cbd4378..f78fe58eafc8 100644
---- a/net/decnet/dn_fib.c
-+++ b/net/decnet/dn_fib.c
-@@ -797,5 +797,3 @@ void __init dn_fib_init(void)
- 	rtnl_register_module(THIS_MODULE, PF_DECnet, RTM_DELROUTE,
- 			     dn_fib_rtm_delroute, NULL, 0);
- }
--
--
-diff --git a/net/decnet/dn_nsp_in.c b/net/decnet/dn_nsp_in.c
-index 34aba55ed573..2fb5e055ba25 100644
---- a/net/decnet/dn_nsp_in.c
-+++ b/net/decnet/dn_nsp_in.c
-@@ -912,4 +912,3 @@ int dn_nsp_backlog_rcv(struct sock *sk, struct sk_buff *skb)
- 
- 	return NET_RX_SUCCESS;
- }
--
-diff --git a/net/decnet/dn_nsp_out.c b/net/decnet/dn_nsp_out.c
-index 56a52a004c56..a1779de6bd9c 100644
---- a/net/decnet/dn_nsp_out.c
-+++ b/net/decnet/dn_nsp_out.c
-@@ -701,4 +701,3 @@ void dn_nsp_send_conninit(struct sock *sk, unsigned char msgflg)
- 
- 	dn_nsp_send(skb);
- }
--
-diff --git a/net/decnet/dn_route.c b/net/decnet/dn_route.c
-index e74765024d88..3107a2e24e6b 100644
---- a/net/decnet/dn_route.c
-+++ b/net/decnet/dn_route.c
-@@ -1925,4 +1925,3 @@ void __exit dn_route_cleanup(void)
- 	remove_proc_entry("decnet_cache", init_net.proc_net);
- 	dst_entries_destroy(&dn_dst_ops);
- }
--
-diff --git a/net/decnet/dn_rules.c b/net/decnet/dn_rules.c
-index 72236695db3d..4a4e3c17740c 100644
---- a/net/decnet/dn_rules.c
-+++ b/net/decnet/dn_rules.c
-@@ -256,5 +256,3 @@ void __exit dn_fib_rules_cleanup(void)
- 	rtnl_unlock();
- 	rcu_barrier();
- }
--
--
-diff --git a/net/decnet/netfilter/Makefile b/net/decnet/netfilter/Makefile
-index 255c1ae9daeb..b579e52130aa 100644
---- a/net/decnet/netfilter/Makefile
-+++ b/net/decnet/netfilter/Makefile
-@@ -3,4 +3,3 @@
- #
- 
- obj-$(CONFIG_DECNET_NF_GRABULATOR) += dn_rtmsg.o
--
-diff --git a/net/decnet/netfilter/dn_rtmsg.c b/net/decnet/netfilter/dn_rtmsg.c
-index ab395e55cd78..a4faacadd8a8 100644
---- a/net/decnet/netfilter/dn_rtmsg.c
-+++ b/net/decnet/netfilter/dn_rtmsg.c
-@@ -158,4 +158,3 @@ MODULE_ALIAS_NET_PF_PROTO(PF_NETLINK, NETLINK_DNRTMSG);
- 
- module_init(dn_rtmsg_init);
- module_exit(dn_rtmsg_fini);
--
--- 
-2.18.0
+>> In IBSS mode, all stations are required to send beacons. The protocol
+>> is a bit
+>> complex to arrange that, every 102.4ms, a station is chosen to emit
+>> the beacon.
+>>
+>> Receiving beacons from a station is enough to reset its timer, so
+>> with a
+>> properly functioning station, this timer does not expire.
+>>
+>> Unfortunately, in the wild, nobody test that IBSS beacons are
+>> generated, because
+>> without them, an open IBSS still appear to work...
+> Hmm, so how does one mitigate this? Manually sending beacons? That
+> would get messy if some cards do it automatically and some don't.
+
+Sending null frames could do the trick, i'm not sure userspace is
+allowed to send them with cmd_frame in IBSS mode through.
+
+That, or asking the manufacturer to fix their driver :)
+
+> Something else I forgot to mention/ask in my original email was about
+> deauthentication. If one station does a LEAVE_IBSS, the other side
+> doesn't recieve a DEL_STATION until that 60 second inactivity timeout.
+> If we explicitly leave should the kernel send a deauth automatically? I
+> know wpa_supplicant explicitly sends a deauth, but I wasn't sure if
+> this was working around a bug or if it was the intended to be that way.
+
+wpa_supplicant sends a deauth when leaving an ibss ? I haven't seen any
+code doing that. I don't know why it does that.
