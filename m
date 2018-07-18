@@ -1,107 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41259 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932764AbeGIUKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:07 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 07/24] mtd: rawnand: davinci: Stop doing iomem pointer <-> u32 conversions
-Date: Mon,  9 Jul 2018 22:09:28 +0200
-Message-Id: <20180709200945.30116-8-boris.brezillon@bootlin.com> (sfid-20180709_221014_124172_B7466F60)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:62472 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726625AbeGSGqe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jul 2018 02:46:34 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/23] staging: wilc1000: remove unnecessary blank line between variable declaration
+Date: Thu, 19 Jul 2018 04:15:10 +0530
+Message-ID: <1531953919-20804-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080512_594580_65033ABC)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no point in doing this sort of conversion since pointers can
-we can replace |= by += operations which are perfectly valid on
-pointers.
+Cleanup patch to remove the unnecessary blank line between variables
+declaration inside the function.
 
-This is done in preparation of COMPILE_TEST addition to the NAND_DAVINCI
-Kconfig entry, since building for x86 generates a several warnings
-because of inappropriate u32 <-> void * conversions (pointers are 64bits
-large on x86_64).
-
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/mtd/nand/raw/davinci_nand.c | 23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c              | 1 -
+ drivers/staging/wilc1000/linux_wlan.c             | 1 -
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ----
+ 3 files changed, 6 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/davinci_nand.c b/drivers/mtd/nand/raw/davinci_nand.c
-index cd12e5abafde..9cd36a750965 100644
---- a/drivers/mtd/nand/raw/davinci_nand.c
-+++ b/drivers/mtd/nand/raw/davinci_nand.c
-@@ -60,8 +60,7 @@ struct davinci_nand_info {
- 	void __iomem		*base;
- 	void __iomem		*vaddr;
- 
--	uint32_t		ioaddr;
--	uint32_t		current_cs;
-+	void __iomem		*current_cs;
- 
- 	uint32_t		mask_chipsel;
- 	uint32_t		mask_ale;
-@@ -102,17 +101,17 @@ static void nand_davinci_hwcontrol(struct mtd_info *mtd, int cmd,
- 				   unsigned int ctrl)
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index bd09611..14405bf 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -147,7 +147,6 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
  {
- 	struct davinci_nand_info	*info = to_davinci_nand(mtd);
--	uint32_t			addr = info->current_cs;
-+	void __iomem			*addr = info->current_cs;
- 	struct nand_chip		*nand = mtd_to_nand(mtd);
- 
- 	/* Did the control lines change? */
- 	if (ctrl & NAND_CTRL_CHANGE) {
- 		if ((ctrl & NAND_CTRL_CLE) == NAND_CTRL_CLE)
--			addr |= info->mask_cle;
-+			addr += info->mask_cle;
- 		else if ((ctrl & NAND_CTRL_ALE) == NAND_CTRL_ALE)
--			addr |= info->mask_ale;
-+			addr += info->mask_ale;
- 
--		nand->IO_ADDR_W = (void __iomem __force *)addr;
-+		nand->IO_ADDR_W = addr;
- 	}
- 
- 	if (cmd != NAND_CMD_NONE)
-@@ -122,14 +121,14 @@ static void nand_davinci_hwcontrol(struct mtd_info *mtd, int cmd,
- static void nand_davinci_select_chip(struct mtd_info *mtd, int chip)
- {
- 	struct davinci_nand_info	*info = to_davinci_nand(mtd);
--	uint32_t			addr = info->ioaddr;
-+
-+	info->current_cs = info->vaddr;
- 
- 	/* maybe kick in a second chipselect */
- 	if (chip > 0)
--		addr |= info->mask_chipsel;
--	info->current_cs = addr;
-+		info->current_cs += info->mask_chipsel;
- 
--	info->chip.IO_ADDR_W = (void __iomem __force *)addr;
-+	info->chip.IO_ADDR_W = info->current_cs;
- 	info->chip.IO_ADDR_R = info->chip.IO_ADDR_W;
- }
- 
-@@ -680,9 +679,7 @@ static int nand_davinci_probe(struct platform_device *pdev)
- 	info->chip.bbt_md	= pdata->bbt_md;
- 	info->timing		= pdata->timing;
- 
--	info->ioaddr		= (uint32_t __force) vaddr;
+ 	u32 rtap_len, ret = 0;
+ 	struct wilc_wfi_mon_priv  *mon_priv;
 -
--	info->current_cs	= info->ioaddr;
-+	info->current_cs	= info->vaddr;
- 	info->core_chipsel	= pdata->core_chipsel;
- 	info->mask_chipsel	= pdata->mask_chipsel;
+ 	struct sk_buff *skb2;
+ 	struct wilc_wfi_radiotap_cb_hdr *cb_hdr;
  
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 84d3145..8f77435 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -780,7 +780,6 @@ static int mac_init_fn(struct net_device *ndev)
+ static int wilc_mac_open(struct net_device *ndev)
+ {
+ 	struct wilc_vif *vif;
+-
+ 	unsigned char mac_add[ETH_ALEN] = {0};
+ 	int ret = 0;
+ 	int i = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ebe7adc2..43003d8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1250,7 +1250,6 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ {
+ 	u32 i;
+ 	s32 ret = 0;
+-
+ 	struct wilc_priv *priv = wiphy_priv(wiphy);
+ 
+ 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+@@ -1315,7 +1314,6 @@ static inline void wilc_wfi_cfg_parse_ch_attr(u8 *buf, u8 ch_list_attr_idx,
+ static void wilc_wfi_cfg_parse_rx_action(u8 *buf, u32 len)
+ {
+ 	u32 index = 0;
+-
+ 	u8 op_channel_attr_index = 0;
+ 	u8 channel_list_attr_index = 0;
+ 
+@@ -1338,7 +1336,6 @@ static void wilc_wfi_cfg_parse_tx_action(u8 *buf, u32 len, bool oper_ch,
+ 					 u8 iftype)
+ {
+ 	u32 index = 0;
+-
+ 	u8 op_channel_attr_index = 0;
+ 	u8 channel_list_attr_index = 0;
+ 
+@@ -2261,7 +2258,6 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net,
+ int wilc_init_host_int(struct net_device *net)
+ {
+ 	int ret = 0;
+-
+ 	struct wilc_priv *priv;
+ 
+ 	priv = wdev_priv(net->ieee80211_ptr);
 -- 
-2.14.1
+2.7.4
