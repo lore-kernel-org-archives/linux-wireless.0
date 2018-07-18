@@ -1,146 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38086 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730002AbeGQBgf (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:17168 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729925AbeGSGqp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jul 2018 21:36:35 -0400
+        Thu, 19 Jul 2018 02:46:45 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 17/23] staging: wilc1000: avoid forward declaration for handle_scan_done()
+Date: Thu, 19 Jul 2018 04:15:13 +0530
+Message-ID: <1531953919-20804-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080522_199824_07196EAC)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 16 Jul 2018 18:06:36 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <87h8l39rv8.fsf@toke.dk>
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
- <153115422491.7447.12479559048433925372.stgit@alrua-x1>
- <361a221dd15e44028fd35440df657a3d@codeaurora.org> <87lgahbisu.fsf@toke.dk>
- <8d8160cd9c804d1b00ba4e234c8f1520@codeaurora.org> <87k1q09hf1.fsf@toke.dk>
- <f8038c8ea281b365ec560cae0dd1ec0f@codeaurora.org> <87h8l39rv8.fsf@toke.dk>
-Message-ID: <01fe0f526e992563e3b1f450f8acc9e4@codeaurora.org> (sfid-20180717_030640_731457_31592F0C)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-07-13 06:39, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
-[...]
+Reorder the function position in host interface to avoid forward
+declaration of handle_scan_done().
 
->> Hmm... I thought driver will call ieee80211_schedule_txq when it runs
->> out of hardware descriptor and break the loop. The serving txq will be
->> added back to head of activeq list. no?
-> 
-> Yes, and then the next one will be serviced... It's basically:
-> 
-> while (!hwq_is_full()) {
->  txq = next_txq():
->  build_one_aggr(txq); // may or may not succeed
->  if (!empty(txq))
->    schedule_txq(txq);
-> }
-> 
-> It is not generally predictable how many times this will loop before
-> exiting...
-> 
-Agree.. It would be better If the driver does not worry about txq 
-sequence
-numbering. Perhaps one more API (ieee80211_first_txq) could solve this.
-Will leave it to you.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 77 +++++++++++++++----------------
+ 1 file changed, 38 insertions(+), 39 deletions(-)
 
->>>> 
->>>> ieee80211_txq_get_depth
->>>>       - return deficit status along with frm_cnt
->>>> 
->>>> ieee80211_reorder_txq
->>>>       - if txq deficit > 0
->>>>             - return;
->>>>       - if txq is last
->>>>              - return
->>>>       - delete txq from list
->>>>       - move it to tail
->>>>       - update deficit by quantum
->>>> 
->>>> ath10k_htt_rx_tx_fetch_ind
->>>>       - get txq deficit status
->>>>       - if txq deficit > 0
->>>>             - dequeue skb
->>>>       - else if deficit < 0
->>>>             - return NULL
->>>> 
->>>> Please share your thoughts.
->>> 
->>> Hmm, not sure exactly how this would work; seems a little 
->>> complicated?
->>> Also, I'd rather if drivers were completely oblivious to the deficit;
->>> that is a bit of an implementation detail...
->>> 
->> Agree.. Initially I thought of adding deficit check in
->> ieee80211_tx_dequeue.
->> But It will be overhead of taking activeq_lock for every skbs. Perhaps
->> it can be renamed as allowed_to_dequeue instead of deficit.
->> 
->>> We could have an ieee80211_txq_may_pull(); or maybe just have
->>> ieee80211_tx_dequeue() return NULL if the deficit is negative?
->>> 
->> As I said earlier, checking deficit for every skb will be an overhead.
->> It should be done once before accessing txq.
-> 
-> Well, it could conceivably be done in a way that doesn't require taking
-> the activeq_lock. Adding another STOP flag to the TXQ, for instance.
-> From an API point of view I think that is more consistent with what we
-> have already...
-> 
-
-Make sense. ieee80211_txq_may_pull would be better place to decide 
-whether
-given txq is allowed for transmission. It also makes drivers do not have 
-to
-worry about deficit. Still I may need ieee80211_reorder_txq API after
-processing txq. isn't it?
-
->>> the reasonable thing for the driver to do, then, would be to ask
->>> ieee80211_next_txq() for another TXQ to pull from if the current one
->>> doesn't work for whatever reason.
->>> 
->>> Would that work for push-pull mode?
->>> 
->> Not really. Driver shouldn't send other txq data instead of asked one.
-> 
-> I didn't necessarily mean immediately. As long as it does it 
-> eventually.
-> If a TXQ's deficit runs negative, that TXQ will not be allowed to send
-> again until its deficit has been restored to positive through enough
-> cycles of the loop in next_txq().
-> 
-
-Thats true. Are you suggesting to run the loop until the txq deficit 
-becomes
-positive?
-
->> In MU-MIMO, firmware will query N packets from given set of {STA,TID}.
->> So the driver not supposed to send other txq's data.
-> 
-> Hmm, it'll actually be interesting to see how the airtime fairness
-> scheduler interacts with MU-MIMO. I'm not quite sure that it'll be in a
-> good way; the DRR scheduler generally only restores one TXQ to positive
-> deficit at a time, so it may be that MU-MIMO will break completely and
-> we'll have to come up with another scheduling algorithm.
-> 
-
-In push-pull method, driver reports to firmware that number of frames
-queued for each tid per station by wake_tx_queue. Later firmware will 
-query
-N frames from each TID and after dequeue driver will update remaining 
-frames
-for that tid. In ATF case, when driver is not able to dequeue frames, 
-driver
-will simply update remaining frames. The consecutive fetch_ind get 
-opportunity
-to dequeue the frames. By This way, transmission for serving client will 
-be paused
-for a while and opportunity will be given to others.
-
--Rajkumar
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 85ecba8..eabe5c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -199,7 +199,6 @@ static u32 clients_count;
+ 
+ static void *host_int_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt);
+ 
+ /* 'msg' should be free by the caller for syc */
+ static struct host_if_msg*
+@@ -724,6 +723,44 @@ static void handle_cfg_param(struct work_struct *work)
+ 	kfree(msg);
+ }
+ 
++static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
++{
++	s32 result = 0;
++	u8 abort_running_scan;
++	struct wid wid;
++	struct host_if_drv *hif_drv = vif->hif_drv;
++	struct user_scan_req *scan_req;
++
++	if (evt == SCAN_EVENT_ABORTED) {
++		abort_running_scan = 1;
++		wid.id = WID_ABORT_RUNNING_SCAN;
++		wid.type = WID_CHAR;
++		wid.val = (s8 *)&abort_running_scan;
++		wid.size = sizeof(char);
++
++		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
++					      wilc_get_vif_idx(vif));
++
++		if (result) {
++			netdev_err(vif->ndev, "Failed to set abort running\n");
++			result = -EFAULT;
++		}
++	}
++
++	if (!hif_drv) {
++		netdev_err(vif->ndev, "Driver handler is NULL\n");
++		return result;
++	}
++
++	scan_req = &hif_drv->usr_scan_req;
++	if (scan_req->scan_result) {
++		scan_req->scan_result(evt, NULL, scan_req->arg, NULL);
++		scan_req->scan_result = NULL;
++	}
++
++	return result;
++}
++
+ static void handle_scan(struct work_struct *work)
+ {
+ 	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
+@@ -841,44 +878,6 @@ static void handle_scan(struct work_struct *work)
+ 	kfree(msg);
+ }
+ 
+-static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
+-{
+-	s32 result = 0;
+-	u8 abort_running_scan;
+-	struct wid wid;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-	struct user_scan_req *scan_req;
+-
+-	if (evt == SCAN_EVENT_ABORTED) {
+-		abort_running_scan = 1;
+-		wid.id = WID_ABORT_RUNNING_SCAN;
+-		wid.type = WID_CHAR;
+-		wid.val = (s8 *)&abort_running_scan;
+-		wid.size = sizeof(char);
+-
+-		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-					      wilc_get_vif_idx(vif));
+-
+-		if (result) {
+-			netdev_err(vif->ndev, "Failed to set abort running\n");
+-			result = -EFAULT;
+-		}
+-	}
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "Driver handler is NULL\n");
+-		return result;
+-	}
+-
+-	scan_req = &hif_drv->usr_scan_req;
+-	if (scan_req->scan_result) {
+-		scan_req->scan_result(evt, NULL, scan_req->arg, NULL);
+-		scan_req->scan_result = NULL;
+-	}
+-
+-	return result;
+-}
+-
+ u8 wilc_connected_ssid[6] = {0};
+ static void handle_connect(struct work_struct *work)
+ {
+-- 
+2.7.4
