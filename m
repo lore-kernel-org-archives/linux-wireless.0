@@ -1,169 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:53268 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932997AbeGDMF2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 08:05:28 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v9] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Wed,  4 Jul 2018 14:05:19 +0200
-Message-Id: <20180704120519.6479-1-s.gottschall@dd-wrt.com> (sfid-20180704_140531_822923_6AB9BCA4)
+Received: from mail.bootlin.com ([62.4.15.54]:37793 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726067AbeGRHuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jul 2018 03:50:35 -0400
+Date: Wed, 18 Jul 2018 09:13:32 +0200
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+To: Boris Brezillon <boris.brezillon@bootlin.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        linux-mtd@lists.infradead.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 00/24] mtd: rawnand: Improve compile-test coverage
+Message-ID: <20180718091332.53da4898@xps13> (sfid-20180718_091414_087000_F2D9AC3E)
+In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Hi Boris,
 
-current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
-to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
-initialized the parameter with wrong masked values.
-This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
-if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
-to the QCA sourcecodes.
+Boris Brezillon <boris.brezillon@bootlin.com> wrote on Mon,  9 Jul 2018
+22:09:21 +0200:
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+> Hello,
+> 
+> This is an attempt at adding "depends || COMPILE_TEST" to all NAND
+> drivers that have no compile-time dependencies on arch
+> features/headers.
+> 
+> This will hopefully help us (NAND/MTD maintainers) in detecting build
+> issues earlier. Unfortunately we still have a few drivers that can't
+> easily be modified to be arch independent.
+> 
+> I tried to put all patches that only touch the NAND subsystem first,
+> so that they can be applied even if other patches are being discussed.
+> 
+> Don't hesitate to point any missing dependencies when compiled with
+> COMPILE_TEST. I didn't have any problem when compiling, but that might
+> be because the dependencies were already selected.
+> 
+> In this v2, I tried to fix all warnings/errors reported by kbuild/0day
+> robots. The only remaining ones are those in omap_elm.c which seems to
+> do some weird cpu_to_be32() conversions. I guess I could replace those
+> by iowrite32be() calls (or just add (__force __u32)), but I don't want
+> to risk a regression on this driver, so I'm just leaving it for someone
+> else to fix :P.
+> 
+> Regards,
+> 
+> Boris
+> 
+> Changes in v2:
+> - Fix a few problems reported by kbuild robots and Stephen Rothwell
+> 
+> Boris Brezillon (24):
+>   mtd: rawnand: atmel: Use uintptr_t casts instead of unsigned int
+>   mtd: rawnand: atmel: Add an __iomem cast on gen_pool_dma_alloc() call
+>   mtd: rawnand: atmel: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: s3c2410: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: orion: Avoid direct inclusion of asm headers
+>   mtd: rawnand: orion: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: davinci: Stop doing iomem pointer <-> u32 conversions
+>   mtd: rawnand: davinci: Use uintptr_t casts instead of unsigned ones
+>   mtd: rawnand: davinci: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: sunxi: Add an U suffix to NFC_PAGE_OP definition
+>   mtd: rawnand: sunxi: Make sure ret is initialized in
+>     sunxi_nfc_read_byte()
+>   mtd: rawnand: sunxi: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: fscm: Avoid collision on PC def when compiling for MIPS
+>   mtd: rawnand: fsmc: Use uintptr_t casts instead of unsigned ones
+>   mtd: rawnand: fsmc: Allow selection of this driver when COMPILE_TEST=y
+>   memory: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
+>   mtd: rawnand: fsl_ifc: Add an __iomem specifier on eccstat_regs
+>   mtd: rawnand: fsl_ifc: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   MIPS: txx9: Move the ndfc.h header to include/linux/platform_data/txx9
+>   mtd: rawnand: txx9ndfmc: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   MIPS: jz4740: Move jz4740_nand.h header to
+>     include/linux/platform_data/jz4740
+>   mtd: rawnand: jz4740: Allow selection of this driver when
+>     COMPILE_TEST=y
+>   mtd: rawnand: jz4780: Drop the dependency on MACH_JZ4780
+>   memory: jz4780-nemc: Allow selection of this driver when
+>     COMPILE_TEST=y
+> 
+>  arch/mips/jz4740/board-qi_lb60.c                   |  3 +-
+>  arch/mips/txx9/generic/setup.c                     |  2 +-
+>  arch/mips/txx9/generic/setup_tx4938.c              |  2 +-
+>  arch/mips/txx9/generic/setup_tx4939.c              |  2 +-
+>  drivers/memory/Kconfig                             |  6 ++--
+>  drivers/mtd/nand/raw/Kconfig                       | 33 ++++++++++++++--------
+>  drivers/mtd/nand/raw/atmel/nand-controller.c       |  8 +++---
+>  drivers/mtd/nand/raw/davinci_nand.c                | 33 ++++++++++------------
+>  drivers/mtd/nand/raw/fsl_ifc_nand.c                |  2 +-
+>  drivers/mtd/nand/raw/fsmc_nand.c                   | 33 +++++++++++-----------
+>  drivers/mtd/nand/raw/jz4740_nand.c                 |  2 +-
+>  drivers/mtd/nand/raw/orion_nand.c                  |  2 +-
+>  drivers/mtd/nand/raw/sunxi_nand.c                  |  4 +--
+>  drivers/mtd/nand/raw/txx9ndfmc.c                   |  2 +-
+>  .../linux/platform_data/jz4740}/jz4740_nand.h      |  4 +--
+>  .../linux/platform_data}/txx9/ndfmc.h              |  6 ++--
+>  16 files changed, 77 insertions(+), 67 deletions(-)
+>  rename {arch/mips/include/asm/mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h (91%)
+>  rename {arch/mips/include/asm => include/linux/platform_data}/txx9/ndfmc.h (91%)
+> 
 
-v2: remove debug messages
-v3: apply some cosmetics, update documentation
-v4: fix compile warning and truncate nss to maximum of 2x2 since current chipsets only support 2x2 at vht160
-v5: handle maximum nss for chipsets supportig vht160 with 1x1 only
-v7: use more simple code variant and take care about hw/sw chainmask configuration
-v8: fix some code style issues
-v9: use SM/MS macros from code.h to simplify shift/mask handling
----
- drivers/net/wireless/ath/ath10k/mac.c | 54 +++++++++++++++++++--------
- drivers/net/wireless/ath/ath10k/wmi.c |  7 +---
- drivers/net/wireless/ath/ath10k/wmi.h | 14 ++++++-
- 3 files changed, 52 insertions(+), 23 deletions(-)
+Series applied with some typo fixes in the commit log as well as a
+proper indentation forced in drivers/mtd/nand/raw/Kconfig.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 95243b48a179..853a566672e7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2467,7 +2467,7 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 	const u16 *vht_mcs_mask;
- 	u8 ampdu_factor;
- 	u8 max_nss, vht_mcs;
--	int i;
-+	int i, nss160;
- 
- 	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
- 		return;
-@@ -2527,23 +2527,45 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
- 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
-+	arg->peer_bw_rxnss_override = 0;
-+	nss160 = 1; /* 1x1 default config for VHT160 */
- 
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
-+	/* only local 4x4 configuration do support 2x2 for VHT160,
-+	 * everything else must use 1x1 
-+	 */
- 
--	if (arg->peer_vht_rates.rx_max_rate &&
--	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
--		switch (arg->peer_vht_rates.rx_max_rate) {
--		case 1560:
--			/* Must be 2x2 at 160Mhz is all it can do. */
--			arg->peer_bw_rxnss_override = 2;
--			break;
--		case 780:
--			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
--			arg->peer_bw_rxnss_override = 1;
--			break;
--		}
-+	if (ar->cfg_rx_chainmask == 15)
-+		nss160 = arg->peer_num_spatial_streams <= 2 ? 1 : 2;
-+
-+	/* if peer provides 1x1 nss160 information using max rate
-+	 * vht information, we reduce local nss160 to 1x1.
-+	 * consider that it has been observed that some client
-+	 * devices provide zero here, no matter which transmission
-+	 * rate is possible. in that case the local nss configuration 
-+	 * will be used at maxmimum configuration possible. (see above)
-+	 */
-+
-+	if (arg->peer_vht_rates.rx_max_rate == 780)
-+		nss160 = 1;
-+
-+	/* in case if peer is connected with vht160 or vht80+80,
-+         * we need to properly adjust rxnss parameters otherwise 
-+	 * firmware will raise a assert 
-+	 */
-+	switch (arg->peer_phymode) {
-+	case MODE_11AC_VHT80_80:
-+		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
-+	/* fall through */
-+	case MODE_11AC_VHT160:
-+		arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
-+		break;
-+	default:
-+		break;
- 	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x peer_bw_rxnss_override 0x%x\n",
-+		   sta->addr, arg->peer_max_mpdu, arg->peer_flags, 
-+		   arg->peer_bw_rxnss_override);
- }
- 
- static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
-@@ -2695,9 +2717,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
- 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
-+	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
--	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 877249ac6fd4..8fda7e9cca46 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7293,12 +7293,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
- 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
- 
- 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
--	if (arg->peer_bw_rxnss_override)
--		cmd->peer_bw_rxnss_override =
--			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
--				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
--	else
--		cmd->peer_bw_rxnss_override = 0;
-+	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
- }
- 
- static int
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index d68afb65402a..2780ac8442e4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6352,7 +6352,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
- 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
- } __packed;
- 
--#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
-+#define BW_NSS_FWCONF_MAP_ENABLE	BIT(31)
-+#define BW_NSS_FWCONF_MAP_160MHZ_LSB	(0)
-+#define BW_NSS_FWCONF_MAP_160MHZ_MASK	(0x00000007)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_LSB	(3)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_MASK (0x00000038)
-+#define BW_NSS_FWCONF_MAP_MASK		(0x0000003F)
-+
-+#define GET_BW_NSS_FWCONF_160(x)	(MS(x, BW_NSS_FWCONF_MAP_160MHZ) + 1)
-+#define GET_BW_NSS_FWCONF_80_80(x)	(MS(x, BW_NSS_FWCONF_MAP_80_80MHZ) + 1)
-+
-+/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-+#define BW_NSS_FWCONF_160(x)		(BW_NSS_FWCONF_MAP_ENABLE | SM(x - 1, BW_NSS_FWCONF_MAP_160MHZ))
-+#define BW_NSS_FWCONF_80_80(x)		(BW_NSS_FWCONF_MAP_ENABLE | SM(x - 1, BW_NSS_FWCONF_MAP_80_80MHZ))
- 
- struct wmi_10_4_peer_assoc_complete_cmd {
- 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
--- 
-2.17.1
+Thanks,
+Miquèl
