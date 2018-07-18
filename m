@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39840 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729784AbeGaLeH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 07:34:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: Re: [PATCH v2 00/19] add mt76x2u support to mt76 driver
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-Date: Tue, 31 Jul 2018 12:54:32 +0300
-In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com> (Lorenzo
-        Bianconi's message of "Tue, 31 Jul 2018 10:09:01 +0200")
-Message-ID: <877elb20iv.fsf@purkki.adurom.net> (sfid-20180731_115439_304924_C5906098)
+Received: from mail.toke.dk ([52.28.52.200]:47877 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726264AbeGRTGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jul 2018 15:06:39 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
+        Ben Greear <greearb@candelatech.com>,
+        SEDE <s.deronne@televic.com>,
+        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Setting tx retry count in ath10k
+In-Reply-To: <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com> <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de> <8b9713fe-7573-f009-d002-13df73315898@televic.com> <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com> <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com> <877els5xax.fsf@toke.dk> <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Date: Wed, 18 Jul 2018 20:27:17 +0200
+Message-ID: <871sc05ri2.fsf@toke.dk> (sfid-20180718_202734_578427_C3F0A943)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+Jean-Pierre TOSONI <jp.tosoni@acksys.fr> writes:
 
-> Add usb layer to mt76 driver in order to support mt76x2u based devices.
-> Move common code between pci and usb in mt76x2-common module in order to
-> remove pci dependency from usb driver
->
-> Changes since v1:
-> - rebase on top of wireless-drivers-next master branch
-> - fix mt7662u fw definitions
-> - remove unused len variable in mt76x2u_remove_dma_hdr()
-> - move mt76u_mcu_fw_reset routine in mt76-usb module in order
->   to be reused by mt76x0 driver
-> - move mt76u_mcu_init_rx routine in mt76-usb module in order
->   to be reused by mt76x0 driver
+> @Toke: As you can see in the patch, the value 30 was the fixed value
+> defined in ath9k, I kept it for compatibility only (and that's why I
+> wanted to make it configurable :-)
 
-My deadline for 4.19 is most likely this Friday (if the merge window
-starts on Sunday) so I would need to apply these tomorrow by latest to
-have some time in linux-next. Are everyone happy with this set?
+Yup, I'm aware that this is the default from ath9k; doesn't make it any
+less wrong ;)
 
--- 
-Kalle Valo
+> On another hand, Minstrel in mac80211 seems to vary retries according
+> to what you say, i.e. Minstrel tries to stay below a certain amount of
+> time, but this only applies to short/long retries.
+
+Right, haven't had time to poke into what exactly Minstrel does; have
+just observed that it sometimes runs really long. But for most cases
+it's not too bad...
+
+-Toke
