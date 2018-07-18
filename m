@@ -1,82 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:37008 "EHLO www.osadl.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727193AbeGNSD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jul 2018 14:03:27 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: htt_tx: move lock into id_get function
-Date: Sat, 14 Jul 2018 19:38:20 +0200
-Message-Id: <1531589900-29220-1-git-send-email-hofrat@osadl.org> (sfid-20180714_194427_813976_265ED28E)
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:62492 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728087AbeGSGqU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jul 2018 02:46:20 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/23] staging: wilc1000: remove unnecessary elements from 'wilc_priv' struct
+Date: Thu, 19 Jul 2018 04:15:06 +0530
+Message-ID: <1531953919-20804-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080501_177342_D75D18BB)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- This is only code refactoring as all call sites of 
-ath10k_htt_tx_alloc_msdu_id() take the same lock it can be moved into the
-id_get function and the assertion dropped.
+Remove unused elements from 'wilc_priv' structure.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
-Found during code review
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 7 -------
+ 2 files changed, 11 deletions(-)
 
-Patch was compile tested with: x86_64_defconfig + CONFIG_ATH10K=y
-(with a number of sparse warnings "expression using sizeof(void)")
-
-Patch is against 4.18-rc4 (localversion-next is next-20180713)
-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 89157c5..8a2aa2d 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -208,10 +208,10 @@ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb)
- 	struct ath10k *ar = htt->ar;
- 	int ret;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8f1c595..1a27e81 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2276,8 +2276,6 @@ int wilc_init_host_int(struct net_device *net)
+ 	}
+ 	op_ifcs++;
  
--	lockdep_assert_held(&htt->tx_lock);
+-	priv->auto_rate_adjusted = false;
 -
-+	spin_lock_bh(&htt->tx_lock);
- 	ret = idr_alloc(&htt->pending_tx, skb, 0,
- 			htt->max_num_pending_tx, GFP_ATOMIC);
-+	spin_unlock_bh(&htt->tx_lock);
+ 	priv->p2p_listen_state = false;
  
- 	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx alloc msdu_id %d\n", ret);
+ 	mutex_init(&priv->scan_req_lock);
+@@ -2297,8 +2295,6 @@ int wilc_deinit_host_int(struct net_device *net)
+ 	priv = wdev_priv(net->ieee80211_ptr);
+ 	vif = netdev_priv(priv->dev);
  
-@@ -1077,9 +1077,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	len += sizeof(cmd->hdr);
- 	len += sizeof(cmd->mgmt_tx);
+-	priv->auto_rate_adjusted = false;
+-
+ 	priv->p2p_listen_state = false;
  
--	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
--	spin_unlock_bh(&htt->tx_lock);
- 	if (res < 0)
- 		goto err;
+ 	op_ifcs--;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 22f3486..87f8cdc 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -74,14 +74,10 @@ struct wilc_priv {
  
-@@ -1161,9 +1159,7 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
- 	struct htt_msdu_ext_desc *ext_desc = NULL;
- 	struct htt_msdu_ext_desc *ext_desc_t = NULL;
+ 	u8 associated_bss[ETH_ALEN];
+ 	struct sta_info assoc_stainfo;
+-	struct net_device_stats stats;
+-	u8 monitor_flag;
+-	int status;
+ 	struct sk_buff *skb;
+ 	struct net_device *dev;
+ 	struct host_if_drv *hif_drv;
+ 	struct host_if_pmkid_attr pmkid_list;
+-	struct wilc_wfi_stats netstats;
+ 	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
+ 	u8 wep_key_len[4];
+ 	/* The real interface that the monitor is on */
+@@ -91,9 +87,6 @@ struct wilc_priv {
+ 	u8 wilc_groupkey;
+ 	/* mutexes */
+ 	struct mutex scan_req_lock;
+-	/*  */
+-	bool auto_rate_adjusted;
+-
+ 	bool p2p_listen_state;
  
--	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
--	spin_unlock_bh(&htt->tx_lock);
- 	if (res < 0)
- 		goto err;
- 
-@@ -1363,9 +1359,7 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
- 	struct htt_msdu_ext_desc_64 *ext_desc = NULL;
- 	struct htt_msdu_ext_desc_64 *ext_desc_t = NULL;
- 
--	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
--	spin_unlock_bh(&htt->tx_lock);
- 	if (res < 0)
- 		goto err;
- 
+ };
 -- 
-2.1.4
+2.7.4
