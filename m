@@ -1,167 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:39048 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726443AbeG3Vl3 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1269 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbeGSGpx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 17:41:29 -0400
-Received: by mail-oi0-f44.google.com with SMTP id d189-v6so23589613oib.6
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2018 13:04:53 -0700 (PDT)
+        Thu, 19 Jul 2018 02:45:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/23] staging: wilc1000: remove enum connect_status instead use ieee80211_statuscode
+Date: Thu, 19 Jul 2018 04:14:58 +0530
+Message-ID: <1531953919-20804-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080430_960538_14AE624C)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <b3a42b0c-4e8a-b1fe-56eb-74eb7e71deaf@candelatech.com>
-References: <8ecda6f3-68ab-5752-c8de-4086d21ba309@candelatech.com>
- <EB834EF3-21B2-4E6F-BEA8-1411407310F0@fami-braun.de> <0896f150-13f8-daae-c956-f60a2f7feeaf@neratec.com>
- <b3a42b0c-4e8a-b1fe-56eb-74eb7e71deaf@candelatech.com>
-From: Tom Psyborg <pozega.tomislav@gmail.com>
-Date: Mon, 30 Jul 2018 22:04:52 +0200
-Message-ID: <CAKR_QVKz5dZeL6dfstmXA7eghKc=1PNPvKQH7Qvha9H0OehEJQ@mail.gmail.com> (sfid-20180730_220456_119012_2F4C0BF1)
-Subject: Re: ath9k and 16 VAP interfaces?
-To: Ben Greear <greearb@candelatech.com>
-Cc: Matthias May <matthias.may@neratec.com>, michael-dev@fami-braun.de,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/alternative; boundary="0000000000007bbb8705723cf9ba"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0000000000007bbb8705723cf9ba
-Content-Type: text/plain; charset="UTF-8"
+Cleanup patch to remove the use of enum 'connect_status' and instead use
+predefined 'ieee80211_statuscode' for error code values.
 
-this is how i enabled it on htc target:
-https://github.com/torvalds/linux/pull/574
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c       |  4 +++-
+ drivers/staging/wilc1000/coreconfigurator.h       | 20 --------------------
+ drivers/staging/wilc1000/host_interface.c         |  6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
+ 4 files changed, 7 insertions(+), 25 deletions(-)
 
-On 30 July 2018 at 16:34, Ben Greear <greearb@candelatech.com> wrote:
-
->
->
-> On 07/30/2018 04:13 AM, Matthias May wrote:
->
->> On 30/07/18 11:40, michael-dev@fami-braun.de wrote:
->>
->>> Do you mean AP interfaces as required for multiple BSS/SSIDs?
->>>
->>> I'm running a patched ath9k to have hostapd run >8 BSS on a single radio.
->>> It works fine since years.
->>>
->>
-> Yes, I'd love to see any patches you can share on this as well.
->
-> Thanks,
-> Ben
->
->
->
->>> Regards,
->>> M. Braun
->>>
->>>
->>> Am 27. Juli 2018 15:35:28 MESZ schrieb Ben Greear <
->>> greearb@candelatech.com>:
->>>
->>>> Hello,
->>>>
->>>> Has anyone tried making ath9k able to support 16 vAP interfaces on a
->>>> single
->>>> radio?  I seem to recall that there were limitations regarding beacon
->>>> timers and such, and that is why the current limit is 8?
->>>>
->>>> Thanks,
->>>> Ben
->>>>
->>>> --
->>>> Ben Greear <greearb@candelatech.com>
->>>> Candela Technologies Inc  http://www.candelatech.com
->>>>
->>>
->>>
->> Are these patches available somewhere?
->> I'm interested to play with them :)
->>
->> BR
->> Matthias
->>
->>
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-
---0000000000007bbb8705723cf9ba
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">this is how i enabled it on htc target: <a href=3D"https:/=
-/github.com/torvalds/linux/pull/574">https://github.com/torvalds/linux/pull=
-/574</a><span class=3D"sewuaq5cj8zgk32"></span><span class=3D"sewiybm83cm6k=
-9e"></span><br></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
-te">On 30 July 2018 at 16:34, Ben Greear <span dir=3D"ltr">&lt;<a href=3D"m=
-ailto:greearb@candelatech.com" target=3D"_blank">greearb@candelatech.com</a=
->&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 =
-0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D""><br>
-<br>
-On 07/30/2018 04:13 AM, Matthias May wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-On 30/07/18 11:40, <a href=3D"mailto:michael-dev@fami-braun.de" target=3D"_=
-blank">michael-dev@fami-braun.de</a> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-Do you mean AP interfaces as required for multiple BSS/SSIDs?<br>
-<br>
-I&#39;m running a patched ath9k to have hostapd run &gt;8 BSS on a single r=
-adio.<br>
-It works fine since years.<br>
-</blockquote></blockquote>
-<br></span>
-Yes, I&#39;d love to see any patches you can share on this as well.<br>
-<br>
-Thanks,<br>
-Ben<div class=3D"HOEnZb"><div class=3D"h5"><br>
-<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><blockquote class=3D"gmail_quote" style=3D"m=
-argin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<br>
-Regards,<br>
-M. Braun<br>
-<br>
-<br>
-Am 27. Juli 2018 15:35:28 MESZ schrieb Ben Greear &lt;<a href=3D"mailto:gre=
-earb@candelatech.com" target=3D"_blank">greearb@candelatech.com</a>&gt;:<br=
->
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-Hello,<br>
-<br>
-Has anyone tried making ath9k able to support 16 vAP interfaces on a<br>
-single<br>
-radio?=C2=A0 I seem to recall that there were limitations regarding beacon<=
-br>
-timers and such, and that is why the current limit is 8?<br>
-<br>
-Thanks,<br>
-Ben<br>
-<br>
---<br>
-Ben Greear &lt;<a href=3D"mailto:greearb@candelatech.com" target=3D"_blank"=
->greearb@candelatech.com</a>&gt;<br>
-Candela Technologies Inc=C2=A0 <a href=3D"http://www.candelatech.com" rel=
-=3D"noreferrer" target=3D"_blank">http://www.candelatech.com</a><br>
-</blockquote>
-<br>
-</blockquote>
-<br>
-Are these patches available somewhere?<br>
-I&#39;m interested to play with them :)<br>
-<br>
-BR<br>
-Matthias<br>
-<br>
-</blockquote>
-<br>
--- <br>
-Ben Greear &lt;<a href=3D"mailto:greearb@candelatech.com" target=3D"_blank"=
->greearb@candelatech.com</a>&gt;<br>
-Candela Technologies Inc=C2=A0 <a href=3D"http://www.candelatech.com" rel=
-=3D"noreferrer" target=3D"_blank">http://www.candelatech.com</a><br>
-</div></div></blockquote></div><br></div>
-
---0000000000007bbb8705723cf9ba--
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 0063895..a987953 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -1,4 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
++#include <linux/ieee80211.h>
++
+ #include "coreconfigurator.h"
+ 
+ #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
+@@ -316,7 +318,7 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 	u16 ies_len = 0;
+ 
+ 	ret_conn_info->status = get_asoc_status(buffer);
+-	if (ret_conn_info->status == SUCCESSFUL_STATUSCODE) {
++	if (ret_conn_info->status == WLAN_STATUS_SUCCESS) {
+ 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		ies_len = buffer_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
+ 					AID_LEN);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 55b5531..90d3d65 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -24,26 +24,6 @@
+ #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
+ #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+ 
+-enum connect_status {
+-	SUCCESSFUL_STATUSCODE    = 0,
+-	UNSPEC_FAIL              = 1,
+-	UNSUP_CAP                = 10,
+-	REASOC_NO_ASOC           = 11,
+-	FAIL_OTHER               = 12,
+-	UNSUPT_ALG               = 13,
+-	AUTH_SEQ_FAIL            = 14,
+-	CHLNG_FAIL               = 15,
+-	AUTH_TIMEOUT             = 16,
+-	AP_FULL                  = 17,
+-	UNSUP_RATE               = 18,
+-	SHORT_PREAMBLE_UNSUP     = 19,
+-	PBCC_UNSUP               = 20,
+-	CHANNEL_AGIL_UNSUP       = 21,
+-	SHORT_SLOT_UNSUP         = 25,
+-	OFDM_DSSS_UNSUP          = 26,
+-	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+-};
+-
+ struct rssi_history_buffer {
+ 	bool full;
+ 	u8 index;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 918d06e..9b5bf3c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1336,7 +1336,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 	}
+ 
+ 	if (mac_status == MAC_STATUS_CONNECTED &&
+-	    conn_info.status != SUCCESSFUL_STATUSCODE) {
++	    conn_info.status != WLAN_STATUS_SUCCESS) {
+ 		netdev_err(vif->ndev,
+ 			   "Received MAC status is MAC_STATUS_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
+ 		eth_zero_addr(wilc_connected_ssid);
+@@ -1349,7 +1349,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 		memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
+ 
+ 		if (mac_status == MAC_STATUS_CONNECTED &&
+-		    conn_info.status == SUCCESSFUL_STATUSCODE) {
++		    conn_info.status == WLAN_STATUS_SUCCESS) {
+ 			memcpy(hif_drv->assoc_bssid,
+ 			       hif_drv->usr_conn_req.bssid, ETH_ALEN);
+ 		}
+@@ -1369,7 +1369,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 					  hif_drv->usr_conn_req.arg);
+ 
+ 	if (mac_status == MAC_STATUS_CONNECTED &&
+-	    conn_info.status == SUCCESSFUL_STATUSCODE) {
++	    conn_info.status == WLAN_STATUS_SUCCESS) {
+ 		wilc_set_power_mgmt(vif, 0, 0);
+ 
+ 		hif_drv->hif_state = HOST_IF_CONNECTED;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e96163f..f90b9b6 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -489,7 +489,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 		connect_status = conn_info->status;
+ 
+ 		if (mac_status == MAC_STATUS_DISCONNECTED &&
+-		    conn_info->status == SUCCESSFUL_STATUSCODE) {
++		    conn_info->status == WLAN_STATUS_SUCCESS) {
+ 			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+ 			wilc_wlan_set_bssid(priv->dev, null_bssid,
+ 					    STATION_MODE);
+-- 
+2.7.4
