@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56724 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388302AbeGXKAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:17 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>,
-        devicetree@vger.kernel.org
-Subject: [PATCH v2 10/10] NFC: st95hf: add of match table
-Date: Tue, 24 Jul 2018 10:54:26 +0200
-Message-Id: <20180724085426.23999-11-daniel@zonque.org> (sfid-20180724_105458_830537_7DFA683D)
-In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
-References: <20180724085426.23999-1-daniel@zonque.org>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:34849 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728087AbeGSGqR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jul 2018 02:46:17 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/23] staging: wilc1000: remove unused elements in 'wilc' struct
+Date: Thu, 19 Jul 2018 04:15:05 +0530
+Message-ID: <1531953919-20804-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080500_554273_2327F7A3)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a match table for device tree compatible strings. Interestingly, a
-document describing the bindings already exists since a while, but users
-currently rely on the implicit matching in the drivers core. Let's be
-explicit and add a real match table.
+Cleanup patch to remove unused elements from 'wilc' struct.
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
-Cc: devicetree@vger.kernel.org
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/nfc/st95hf/core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ----
+ drivers/staging/wilc1000/wilc_wlan.c          | 6 ------
+ 2 files changed, 10 deletions(-)
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 4db3c020921c..5a01b454fbc4 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -1012,6 +1012,12 @@ static const struct spi_device_id st95hf_id[] = {
- };
- MODULE_DEVICE_TABLE(spi, st95hf_id);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index fe18ae9..22f3486 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -157,12 +157,8 @@ struct wilc {
  
-+static const struct of_device_id st95hf_of_match[] = {
-+	{ .compatible = "st,st95hf", },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, st95hf_of_match);
-+
- static int st95hf_probe(struct spi_device *nfc_spi_dev)
- {
- 	int ret;
-@@ -1189,6 +1195,7 @@ static struct spi_driver st95hf_driver = {
- 	.driver = {
- 		.name = "st95hf",
- 		.owner = THIS_MODULE,
-+		.of_match_table = st95hf_of_match,
- 	},
- 	.id_table = st95hf_id,
- 	.probe = st95hf_probe,
+ 	struct txq_entry_t txq_head;
+ 	int txq_entries;
+-	int txq_exit;
+ 
+ 	struct rxq_entry_t rxq_head;
+-	int rxq_exit;
+-
+-	unsigned char eth_src_address[NUM_CONCURRENT_IFC][6];
+ 
+ 	const struct firmware *firmware;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8e71c28..c77e5c8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -527,7 +527,6 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 	wilc = vif->wilc;
+ 
+ 	txb = wilc->tx_buffer;
+-	wilc->txq_exit = 0;
+ 
+ 	if (wilc->quit)
+ 		goto out;
+@@ -713,7 +712,6 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ out:
+ 	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 
+-	wilc->txq_exit = 1;
+ 	*txq_count = wilc->txq_entries;
+ 	return ret;
+ }
+@@ -780,8 +778,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 	u8 *buffer;
+ 	struct rxq_entry_t *rqe;
+ 
+-	wilc->rxq_exit = 0;
+-
+ 	do {
+ 		if (wilc->quit) {
+ 			complete(&wilc->cfg_event);
+@@ -797,8 +793,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 
+ 		kfree(rqe);
+ 	} while (1);
+-
+-	wilc->rxq_exit = 1;
+ }
+ 
+ static void wilc_unknown_isr_ext(struct wilc *wilc)
 -- 
-2.17.1
+2.7.4
