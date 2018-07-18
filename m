@@ -1,57 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51528 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933169AbeGJMjm (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:22969 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726625AbeGSGq2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 08:39:42 -0400
-Subject: Re: mac80211: AQM and block_tx
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
-Cc: simon.wunderlich@openmesh.com,
-        Daniel Bailey <daniel.bailey@openmesh.com>,
-        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
-        linux-wireless@vger.kernel.org
-References: <2846230.fHgAC8qB8Q@bentobox> <4554238.GrJkgPgAWi@bentobox>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <51cebb7e-52cf-0421-a4c9-cad7a6f30035@codeaurora.org> (sfid-20180710_143958_215338_79CF9C00)
-Date: Tue, 10 Jul 2018 18:09:37 +0530
+        Thu, 19 Jul 2018 02:46:28 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/23] staging: wilc1000: remove the mutliple #define used for same macro
+Date: Thu, 19 Jul 2018 04:15:08 +0530
+Message-ID: <1531953919-20804-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080506_816602_06708224)
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <4554238.GrJkgPgAWi@bentobox>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Moved the same #define in common header file instead of having their
+declartion in different files.
 
+Below macros are moved to header file:
+TCP_ACK_FILTER_LINK_SPEED_THRESH
+DEFAULT_LINK_SPEED
+GET_PKT_OFFSET
 
-On 7/10/2018 12:25 PM, Sven Eckelmann wrote:
-> On Donnerstag, 5. Juli 2018 10:47:11 CEST Sven Eckelmann wrote:
->> Hi Toke,
->>
->> we are currently testing DFS with ath10k and noticed that AQM seems to ignore
->> cfg80211_csa_settings->block_tx. Problem is now that the channel switch is
->> started on a detected radar
->>
->>    echo 1 >/sys/kernel/debug/ieee80211/phy1/ath10k/dfs_simulate_radar
->>
->> NL80211_ATTR_CH_SWITCH_BLOCK_TX is set for the channel switch by hostapd but
->> the AP still sends QoS data to the client.
->>
->> Was there a fix for such a problem which I might have missed? I've just worked
->> around that by setting wake_tx_queue TO NULL in ath10k. This still must be
->> verified but at least I didn't see any packets anymore on a monitor interface.
->
-> Just as information, the ath10k Dakota devices went through DFS certification
-> but the AQM had to be disabled. Otherwise we would have had problems with the
-> FCC closing time.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c         | 3 ---
+ drivers/staging/wilc1000/linux_mon.c              | 1 -
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 -----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 5 +++++
+ 4 files changed, 5 insertions(+), 9 deletions(-)
 
-I am working on a patch which takes care of stopping the iTXQs after 
-detecting a radar(covering other scenarios where stopping iTXQs is 
-important)
-and there by making sure packets are not transmitted.
-
-The patch is still under discussion but it's worth trying the patch 
-given below and see if it fixes the DFS channel closing time issue; you 
-need not disable AQM while trying this patch.
-https://patchwork.kernel.org/patch/10516887/
-
--Manikanta
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0ffe205..8649225 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -6,9 +6,6 @@
+ 
+ #define FALSE_FRMWR_CHANNEL			100
+ 
+-#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+-#define DEFAULT_LINK_SPEED			72
+-
+ #define REAL_JOIN_REQ				0
+ 
+ struct host_if_wpa_attr {
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 1c7e6e1..bd09611 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -20,7 +20,6 @@ static u8 bssid[6];
+ 
+ #define IEEE80211_RADIOTAP_F_TX_RTS	0x0004  /* used rts/cts handshake */
+ #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001  /* failed due to excessive*/
+-#define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+ 
+ #define TX_RADIOTAP_PRESENT ((1 << IEEE80211_RADIOTAP_RATE) |	\
+ 			     (1 << IEEE80211_RADIOTAP_TX_FLAGS))
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1a27e81..e561dce 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -77,11 +77,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
+ 
+-#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+-#define DEFAULT_LINK_SPEED			72
+-
+-#define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+-
+ static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+ static u32 last_scanned_cnt;
+ struct timer_list wilc_during_ip_timer;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 87f8cdc..765681a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -21,6 +21,11 @@
+ 
+ #define NUM_REG_FRAME				2
+ 
++#define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
++#define DEFAULT_LINK_SPEED			72
++
++#define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
++
+ struct wilc_wfi_stats {
+ 	unsigned long rx_packets;
+ 	unsigned long tx_packets;
+-- 
+2.7.4
