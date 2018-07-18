@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0086.outbound.protection.outlook.com ([104.47.2.86]:60448
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726693AbeGLG3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jul 2018 02:29:13 -0400
-Subject: Re: [PATCH net-next v2 00/11] devlink: Add support for region access
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-References: <1531305788-29420-1-git-send-email-valex@mellanox.com>
- <20180711114821.1d50ba63@cakuba.lan>
-CC: <netdev@vger.kernel.org>, <jiri@mellanox.com>, <dsahern@gmail.com>,
-        <andrew@lunn.ch>, <rahul.lakkireddy@chelsio.com>,
-        <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-From: Alex Vesker <valex@mellanox.com>
-Message-ID: <c4a47a0e-9bac-b48b-6a25-9ca897ee1b58@mellanox.com> (sfid-20180712_082120_434724_F1E4B27B)
-Date: Thu, 12 Jul 2018 09:21:01 +0300
+Received: from mout.kundenserver.de ([212.227.126.187]:41308 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726514AbeGRI1r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jul 2018 04:27:47 -0400
+To: Ben Greear <greearb@candelatech.com>,
+        James Prestwood <james.prestwood@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+References: <11bae1aa8b935a170b97650ae61ce236243c1c90.camel@linux.intel.com>
+ <9efa23eb-96e8-12e0-990e-5ee0da62742f@green-communications.fr>
+ <ebc28805-53ae-071b-8c95-6f8caea40676@candelatech.com>
+ <2e189a50-e8f0-0628-4819-27b07b04dd45@green-communications.fr>
+ <4038c2b7-314e-d87b-ebb6-48a03c1edcb3@candelatech.com>
+From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
+Subject: Re: IBSS timeouts
+Message-ID: <62d013ad-72dc-70bf-46cd-a426146a47c6@green-communications.fr> (sfid-20180718_095114_124056_71BFBCB5)
+Date: Wed, 18 Jul 2018 09:50:57 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180711114821.1d50ba63@cakuba.lan>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <4038c2b7-314e-d87b-ebb6-48a03c1edcb3@candelatech.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 18/07/2018 01:53, Ben Greear wrote:
+> On 07/17/2018 10:44 AM, Nicolas Cavallari wrote:
+>> On 17/07/2018 17:02, Ben Greear wrote:
+>>> On 07/17/2018 12:57 AM, Nicolas Cavallari wrote:
+>>>> In IBSS mode, all stations are required to send beacons. The protocol
+>>>> is a bit
+>>>> complex to arrange that, every 102.4ms, a station is chosen to emit
+>>>> the beacon.
+>>>
+>>> I'm not sure this part is correct.  In practice, it seems to often
+>>> happen this way,
+>>> but last time I read the spec on this it seems like it is supposed to
+>>> sort of negotiate
+>>> and not have all ibss stations beaconning.
+>>
+>> Well, in 802.11-2016, section 11.1.3.5 is clear: "All members of the
+>> IBSS participate in beacon generation."
+>>
+>> On each TBTT, each station must wait for a random delay before
+>> transmitting, and the first one to transmit wins.
+>>
+>> In theory...
+>>
+> 
+> See 11.1.3.5, section d and e.  I think this means that if it receives a beacon while
+> waiting to transmit one, then it cancels its intent to transmit the beacon.  So
+> while they 'participate', they may not actually generate beacons?
+> 
+> I could be wrong about my interpretation of this however, and I am not sure how it
+> is actually implemented.
 
+The a to g sections are done at each TBTT. If another station sent a beacon,
+then by section d) we lost and we don't transmit.  Since the random number in b)
+is generated at each TBTT and uses a uniform distribution, all station have a
+chance to win.
 
-On 7/11/2018 9:48 PM, Jakub Kicinski wrote:
-> CC: linux-wireless, wifi chips used to have similar problem
->
-> On Wed, 11 Jul 2018 13:42:57 +0300, Alex Vesker wrote:
->> This is a proposal which will allow access to driver defined address
->> regions using devlink. Each device can create its supported address
->> regions and register them. A device which exposes a region will allow
->> access to it using devlink.
->>
->> The suggested implementation will allow exposing regions to the user,
->> reading and dumping snapshots taken from different regions.
->> A snapshot represents a memory image of a region taken by the driver.
->>
->> If a device collects a snapshot of an address region it can be later
->> exposed using devlink region read or dump commands.
->> This functionality allows for future analyses on the snapshots to be
->> done.
->>
->> The major benefit of this support is not only to provide access to
->> internal address regions which were inaccessible to the user but also
->> to provide an additional way to debug complex error states using the
->> region snapshots.
->>
->> Implemented commands:
->> $ devlink region help
->> $ devlink region show [ DEV/REGION ]
->> $ devlink region del DEV/REGION snapshot SNAPSHOT_ID
->> $ devlink region dump DEV/REGION [ snapshot SNAPSHOT_ID ]
->> $ devlink region read DEV/REGION [ snapshot SNAPSHOT_ID ]
->> 	address ADDRESS length length
-> You got me excited with the read without snapshot but then you say below
-> that it's future work :)
->
->> Show all of the exposed regions with region sizes:
->> $ devlink region show
->> pci/0000:00:05.0/cr-space: size 1048576 snapshot [1 2]
->> pci/0000:00:05.0/fw-health: size 64 snapshot [1 2]
->>
->> Delete a snapshot using:
->> $ devlink region del pci/0000:00:05.0/cr-space snapshot 1
->>
->> Dump a snapshot:
->> $ devlink region dump pci/0000:00:05.0/fw-health snapshot 1
->> 0000000000000000 0014 95dc 0014 9514 0035 1670 0034 db30
->> 0000000000000010 0000 0000 ffff ff04 0029 8c00 0028 8cc8
->> 0000000000000020 0016 0bb8 0016 1720 0000 0000 c00f 3ffc
->> 0000000000000030 bada cce5 bada cce5 bada cce5 bada cce5
->>
->> Read a specific part of a snapshot:
->> $ devlink region read pci/0000:00:05.0/fw-health snapshot 1 address 0
->> 	length 16
->> 0000000000000000 0014 95dc 0014 9514 0035 1670 0034 db30
->>
->> For more information you can check devlink-region.8 man page
->>
->> Future:
->> There is a plan to extend the support to include a write command
->> as well as performing read and dump live region
-> Reading live region would be very interesting and alleviate the need
-> for complicated ethtool dump marshalling a number of drivers started
-> doing (incl. nfp).  Any plans on that?
-Yes I plan to also support read of live regions.
-Unlike ethtool which works per netdevice this will allow access per PCI 
-device,
-this allows reading region/dump on IPoIB ULP for example, which
-cannot implement a vendor specific dump using ethtool.
-> Write support I'm less excited about :)
+Considering a BI of 102.4ms, a timeout of 60s and a 100% idle network, a station
+must lose 585 times to start risking being deleted.  The probability of that
+happening for a given station in a IBSS with N station is (1-1/n)**585.  Even
+with 50 stations, it's only twice as much as the probability to be struck by
+lightning.  And it does not account for losses, which will cause more beacon to
+be transmitted.
