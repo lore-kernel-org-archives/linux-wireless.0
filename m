@@ -1,52 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41329 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933315AbeGIUKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:16 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 16/24] memory: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
-Date: Mon,  9 Jul 2018 22:09:37 +0200
-Message-Id: <20180709200945.30116-17-boris.brezillon@bootlin.com> (sfid-20180709_221047_373827_D102A985)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44440 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730622AbeGROM1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jul 2018 10:12:27 -0400
+From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Subject: [PATCH] ath10k: add debugfs file warm_hw_reset
+Date: Wed, 18 Jul 2018 19:04:20 +0530
+Message-Id: <1531920860-3236-1-git-send-email-mkenna@codeaurora.org> (sfid-20180718_153440_607072_FEC3A1D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes maintainers' life easier by allowing them to compile-test
-this driver without having FSL_SOC, ARCH_LAYERSCAPE or SOC_LS1021A
-enabled.
+Debugfs support to do hardware warm reset with WMI command
+WMI_PDEV_PARAM_PDEV_RESET for 10.4 and 10.2.4(if wmi
+service is enabled in the firmware for backward compatibility).
 
-We also need to add a dependency on HAS_IOMEM to make sure the
-driver compiles correctly.
+This change is purely for debugging purpose when hardware hangs/mutes.
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+This hardware reset won't affect the connectivity but there will be small
+pause in data traffic. Here we are doing BB/MAC level reset and hence
+whenever the BB/MAC watchdog is triggered, it does a hardware_chip_reset.
+So the target will be in the active state.
+
+Below command used to warm reset the hardware.
+echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/warm_hw_reset
+
+Tested in QCA988X with firmware ver 10.2.4.70.45
+Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
+
+Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
 ---
- drivers/memory/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/debug.c | 49 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c   |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   | 16 ++++++++++-
+ 3 files changed, 65 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/memory/Kconfig b/drivers/memory/Kconfig
-index 8d731d6c3e54..78457ab2cbc4 100644
---- a/drivers/memory/Kconfig
-+++ b/drivers/memory/Kconfig
-@@ -116,7 +116,8 @@ config FSL_CORENET_CF
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 4926722..0baaad9 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2297,6 +2297,52 @@ static ssize_t ath10k_tpc_stats_final_read(struct file *file,
+ 	.llseek = default_llseek,
+ };
  
- config FSL_IFC
- 	bool
--	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A
-+	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A || COMPILE_TEST
-+	depends on HAS_IOMEM
++static ssize_t ath10k_write_warm_hw_reset(struct file *file,
++					  const char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct ath10k *ar = file->private_data;
++	int ret;
++	bool val;
++
++	if (kstrtobool_from_user(user_buf, count, &val))
++		return -EFAULT;
++
++	if (!val)
++		return -EINVAL;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state != ATH10K_STATE_ON) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
++
++	if (!(test_bit(WMI_SERVICE_RESET_CHIP, ar->wmi.svc_map)))
++		ath10k_warn(ar, "wmi service for reset chip is not available\n");
++
++	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->pdev_reset,
++					WMI_RST_MODE_WARM_RESET);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to enable warm hw reset: %d\n", ret);
++		goto exit;
++	}
++
++	ret = count;
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_warm_hw_reset = {
++	.write = ath10k_write_warm_hw_reset,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
+@@ -2425,6 +2471,9 @@ int ath10k_debug_register(struct ath10k *ar)
+ 				    ar->debug.debugfs_phy, ar,
+ 				    &fops_tpc_stats_final);
  
- config JZ4780_NEMC
- 	bool "Ingenic JZ4780 SoC NEMC driver"
++	debugfs_create_file("warm_hw_reset", 0600, ar->debug.debugfs_phy, ar,
++			    &fops_warm_hw_reset);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 877249a..2fb972e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1333,7 +1333,7 @@
+ 	.enable_per_tid_ampdu = WMI_PDEV_PARAM_UNSUPPORTED,
+ 	.cca_threshold = WMI_PDEV_PARAM_UNSUPPORTED,
+ 	.rts_fixed_rate = WMI_PDEV_PARAM_UNSUPPORTED,
+-	.pdev_reset = WMI_PDEV_PARAM_UNSUPPORTED,
++	.pdev_reset = WMI_10X_PDEV_PARAM_PDEV_RESET,
+ 	.wapi_mbssid_offset = WMI_PDEV_PARAM_UNSUPPORTED,
+ 	.arp_srcaddr = WMI_PDEV_PARAM_UNSUPPORTED,
+ 	.arp_dstaddr = WMI_PDEV_PARAM_UNSUPPORTED,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index d68afb6..e24d869 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -462,6 +462,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS);
+ 	SVCSTR(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
++	SVCSTR(WMI_SERVICE_RESET_CHIP);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -3934,7 +3935,11 @@ enum wmi_10x_pdev_param {
+ 	WMI_10X_PDEV_PARAM_REMOVE_MCAST2UCAST_BUFFER,
+ 	WMI_10X_PDEV_PARAM_PEER_STA_PS_STATECHG_ENABLE,
+ 	WMI_10X_PDEV_PARAM_RTS_FIXED_RATE,
+-	WMI_10X_PDEV_PARAM_CAL_PERIOD
++	WMI_10X_PDEV_PARAM_CAL_PERIOD,
++	WMI_10X_PDEV_PARAM_ATF_STRICT_SCH,
++	WMI_10X_PDEV_PARAM_ATF_SCHED_DURATION,
++	WMI_10X_PDEV_PARAM_SET_PROMISC_MODE_CMDID,
++	WMI_10X_PDEV_PARAM_PDEV_RESET
+ };
+ 
+ enum wmi_10_4_pdev_param {
+@@ -6501,6 +6506,15 @@ struct wmi_force_fw_hang_cmd {
+ 	__le32 delay_ms;
+ } __packed;
+ 
++enum wmi_pdev_reset_mode_type {
++	WMI_RST_MODE_TX_FLUSH = 1,
++	WMI_RST_MODE_WARM_RESET,
++	WMI_RST_MODE_COLD_RESET,
++	WMI_RST_MODE_WARM_RESET_RESTORE_CAL,
++	WMI_RST_MODE_COLD_RESET_RESTORE_CAL,
++	WMI_RST_MODE_MAX,
++};
++
+ enum ath10k_dbglog_level {
+ 	ATH10K_DBGLOG_LEVEL_VERBOSE = 0,
+ 	ATH10K_DBGLOG_LEVEL_INFO = 1,
 -- 
-2.14.1
+1.9.1
