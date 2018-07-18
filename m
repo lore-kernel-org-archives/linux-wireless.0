@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:40343 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752437AbeGAONM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51724 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730885AbeGRQiy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:12 -0400
-Received: by mail-wr0-f195.google.com with SMTP id t6-v6so686793wrn.7
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:12 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 08/19] mt76x2: add buffer len to mt76x2_mac_write_txwi signature
-Date: Sun,  1 Jul 2018 16:12:20 +0200
-Message-Id: <20180701141231.25323-9-lorenzo.bianconi@redhat.com> (sfid-20180701_161326_906868_4D2FCE12)
+        Wed, 18 Jul 2018 12:38:54 -0400
+Subject: Re: Setting tx retry count in ath10k
+To: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
+        SEDE <s.deronne@televic.com>,
+        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        ath10k <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
+ <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
+ <8b9713fe-7573-f009-d002-13df73315898@televic.com>
+ <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com>
+ <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com> (sfid-20180718_180024_977565_AC01D24A)
+Date: Wed, 18 Jul 2018 09:00:19 -0700
+MIME-Version: 1.0
+In-Reply-To: <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add frame length to mt76x2_mac_write_txwi routine signature and do not
-fetch it from skb since txwi data structure is added at the beginning of
-the skb for usb based devices and mt76x2_mac_write_txwi will be shared
-between pci and usb related code
+On 07/18/2018 08:50 AM, Jean-Pierre TOSONI wrote:
+> Hi,
+>
+> We made retries configurable in our mac80211+ath9k system, and we ended with 3 counts:
+> 1) short retry count, defaults to 4
+> 2) long retrys count, defauts to 7
+> 3) software retry count, defaults to 30
+> This last one is used separately for each frame in an aggregated frame, since they can be separately acknowledged.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c  | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Did you have to change code for #3, and if so, can you share the patch?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index 7dceadd279a1..c0323cf66fdc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -167,7 +167,7 @@ void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
- 
- void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
--			   struct ieee80211_sta *sta)
-+			   struct ieee80211_sta *sta, int len)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
-@@ -254,7 +254,7 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 		txwi_flags |= MT_TXWI_FLAGS_TS;
- 
- 	txwi->flags |= cpu_to_le16(txwi_flags);
--	txwi->len_ctl = cpu_to_le16(skb->len);
-+	txwi->len_ctl = cpu_to_le16(len);
- }
- 
- static void mt76x2_remove_hdr_pad(struct sk_buff *skb, int len)
-@@ -732,7 +732,7 @@ mt76_write_beacon(struct mt76x2_dev *dev, int offset, struct sk_buff *skb)
- 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x2_txwi)))
- 		return -ENOSPC;
- 
--	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL);
-+	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
- 
- 	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
- 	offset += sizeof(txwi);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index c048cd06df6b..5af0107ba748 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -166,7 +166,7 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
- 			  void *rxi);
- void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
--			   struct ieee80211_sta *sta);
-+			   struct ieee80211_sta *sta, int len);
- void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
- int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
- 			    struct ieee80211_key_conf *key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index 560376dd1133..241a1513ec55 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -159,7 +159,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 	if (q == &dev->mt76.q_tx[MT_TXQ_PSD] && wcid && wcid->idx < 128)
- 		mt76x2_mac_wcid_set_drop(dev, wcid->idx, false);
- 
--	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta);
-+	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta, skb->len);
- 
- 	ret = mt76x2_insert_hdr_pad(skb);
- 	if (ret < 0)
+I wonder also if retries should be different for different types of data.  For instance,
+if someone is using UDP, maybe they don't care so much about lost packets and would
+prefer a lower retry count.  Or, maybe IP type-of-service could be taken into account
+and retry frames different amounts based on ToS?
+
+Thanks,
+Ben
+
+>
+> Regards,
+> Jean-Pierre
+>
+>> -----Message d'origine-----
+>> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] De la part de
+>> Ben Greear
+>> Envoyé : mardi 17 juillet 2018 17:08
+>> À : SEDE; Benjamin Beichler; ath10k; linux-wireless@vger.kernel.org
+>> Objet : Re: Setting tx retry count in ath10k
+>>
+>>
+>>
+>> On 07/17/2018 12:56 AM, SEDE wrote:
+>>> Hi,
+>>>
+>>> In the standard, 7 is the default for the short retry count, 4 is well the default for long retry
+>> count.
+>>>
+>>> In ath10k, there is also non_agg_sw_retry_th to control this, will this still be used?
+>>> Or what is the difference with rc_num_retries?
+>>>
+>>> Kind regards,
+>>> Sébastien.
+>>
+>> The ath10k firmware has no idea of long vs short retries, so I just used the
+>> long setting.
+>>
+>> I will investigate that non_agg_sw_retry_th as well, and I did notice my wave-1
+>> firmware (at least) uses 15 retries for self-generated frames.  But, in my case,
+>> those self-gen frames are not much used anyway since I disable firmware keep-alive.
+>>
+>> And, I need to see how the mac80211 stack handles its own retries when working
+>> with ath10k.
+>>
+>> Thanks,
+>> Ben
+>>
+>>>
+>>>
+>>> On 2018-07-17 09:39, Benjamin Beichler wrote:
+>>>> Hi,
+>>>>
+>>>> Am 17.07.2018 um 02:37 schrieb Ben Greear:
+>>>>> I spent a bit of time looking into setting the tx retry count in
+>>>>> ath10k (wave-1 firmware).  The firmware has support for setting this as
+>>>>> a vdev parameter, and it defaults to '2', at least in my wave-1 firmware.
+>>>>>
+>>>>> I enabled propagating the setting from mac80211, ie:
+>>>>> iw phy wiphy0 set retry short 2 long 2
+>>>>>
+>>>>> And while debugging this, I noticed that mac80211 has a default of
+>>>>> 4, but the ath10k firmware has a default of 2.  Now, I am not sure
+>>>>> if I should enable setting the retry count since it will change
+>>>>> the behaviour even if users don't set anything.
+>>>>>
+>>>> Maybe I'm wrong, but I have in mind, that 7 retries is the default
+>>>> setting of mac80211. Although 2 or even 4 seems to be pretty low for the
+>>>> overall retry count, so maybe the values are somehow changed in the
+>>>> firmware? From our experiments we know (at least for 802.11n) you need
+>>>> for normal operation a retry count of something between 5 - 9, but
+>>>> sometimes also 12 or 15 is beneficial.
+>>>>
+>>>> We use for our experimental setup mainly ath9k cards and rt28xx nics,
+>>>> and with them you need definitely more retries.
+>>>>
+>>>> Nonetheless, I don't think the change from 2 to 4 does really affect the
+>>>> behavior in a negative way (if it works as expected).
+>>>>
+>>>>> Any opinions on this?
+>>>>>
+>>>>> Thanks,
+>>>>> Ben
+>>>>>
+>>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+
+
 -- 
-2.18.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
