@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35588 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388762AbeGXWIa (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:60747 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726338AbeGSJSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 18:08:30 -0400
-Date: Tue, 24 Jul 2018 14:00:10 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Joe Perches <joe@perches.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Jonathan Cameron <jic23@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-iio@vger.kernel.org,
-        linux-pm@vger.kernel.org, lvs-devel@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
-Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
-Message-Id: <20180724140010.e24a9964fd340afe2d98a994@linux-foundation.org> (sfid-20180724_230028_916834_CD5C3CD5)
-In-Reply-To: <20180724111600.4158975-1-arnd@arndb.de>
-References: <20180724111600.4158975-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Thu, 19 Jul 2018 05:18:54 -0400
+Subject: Re: [PATCH 00/23] staging: wilc1000: cleanup patch to follow linux
+ coding style
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <4645c136-eaad-01a9-cebe-abff6f4dce3e@microchip.com> (sfid-20180719_103700_799543_6023B27B)
+Date: Thu, 19 Jul 2018 11:36:45 +0300
+MIME-Version: 1.0
+In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Jul 2018 13:13:25 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 
-> Almost all files in the kernel are either plain text or UTF-8
-> encoded. A couple however are ISO_8859-1, usually just a few
-> characters in a C comments, for historic reasons.
+
+On 19.07.2018 01:44, Ajay Singh wrote:
+> This patch series contains modification to follow Linux coding style &
+> cleanup change to remove unused variables and enums.
+> Few patches also contain changes to remove unnecessary typecast.
 > 
-> This converts them all to UTF-8 for consistency.
-
-Was "consistency" the only rationale?  The discussion is now outside my
-memory horizon but I thought there were other reasons.
-
-Will we be getting a checkpatch rule to keep things this way?
+> Ajay Singh (23):
+>   staging: wilc1000: remove unused enum declaration
+>   staging: wilc1000: remove enum connect_status instead use
+>     ieee80211_statuscode
+>   staging: wilc1000: remove extra enum defined for data rates
+>   staging: wilc1000: remove extra enums defined for ieee80211_eid
+>   staging: wilc1000: rename goto to avoid leading '_' in label name
+>   staging: wilc1000: rename enum CURRENT_TXRATE to use lowercase
+>   staging: wilc1000: rename enum SITESURVEY to use lowercase
+>   staging: wilc1000: rename enum AUTHTYPE to use lowercase
+>   staging: wilc1000: remove unused elements in 'wilc' struct
+>   staging: wilc1000: remove unnecessary elements from 'wilc_priv' struct
+>   staging: wilc1000: removed unused element from wilc_cfg_frame struct
+>   staging: wilc1000: remove the mutliple #define used for same macro
+>   staging: wilc1000: use lowercase for 'IFC_UP' struct element name
+>   staging: wilc1000: remove unnecessary blank line between variable
+>     declaration
+>   staging: wilc1000: use single space before opening brances '{'
+>   staging: wilc1000: remove unnecessary type used for wid id
+>   staging: wilc1000: avoid forward declaration for handle_scan_done()
+>   staging: wilc1000: avoid host_int_get_assoc_res_info() forward
+>     declaration
+>   staging: wilc1000: avoid forward declaration of
+>     host_int_parse_join_bss_param()
+>   staging: wilc1000: avoid setting default value for variable at
+>     declaration
+>   staging: wilc1000: use 'int' inplace of 's32' date type
+>   staging: wilc1000: remove unnecessary 'NULL' check from cfg80211_ops
+>     callbacks
+>   staging: wilc1000: move variable assignment along with its declaration
+> 
+>  drivers/staging/wilc1000/coreconfigurator.c       |  84 +--
+>  drivers/staging/wilc1000/coreconfigurator.h       |  20 -
+>  drivers/staging/wilc1000/host_interface.c         | 696 +++++++++++-----------
+>  drivers/staging/wilc1000/host_interface.h         |  20 +-
+>  drivers/staging/wilc1000/linux_mon.c              |   2 -
+>  drivers/staging/wilc1000/linux_wlan.c             | 122 ++--
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 307 +++-------
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  16 +-
+>  drivers/staging/wilc1000/wilc_wlan.c              |  65 +-
+>  drivers/staging/wilc1000/wilc_wlan.h              |   3 -
+>  drivers/staging/wilc1000/wilc_wlan_if.h           |  56 +-
+>  11 files changed, 517 insertions(+), 874 deletions(-)
+> 
