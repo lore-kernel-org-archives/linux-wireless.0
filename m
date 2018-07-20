@@ -1,49 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:10142 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732452AbeG0LXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 07:23:44 -0400
-Subject: Re: [PATCH 03/10] atmel: hide unused procfs helpers
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20180713064658.10340-1-yuehaibing@huawei.com>
- <ded55181-e1b0-99e9-ac68-2d93fb6168c0@huawei.com>
- <87va91vxnr.fsf@codeaurora.org>
-CC: <simon@thekelleys.org.uk>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        <davem@davemloft.net>, <rdunlap@infradead.org>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <3684c95c-6df1-183e-8940-807dfb49e5bb@huawei.com> (sfid-20180727_120626_903608_8112B190)
-Date: Fri, 27 Jul 2018 18:02:29 +0800
-MIME-Version: 1.0
-In-Reply-To: <87va91vxnr.fsf@codeaurora.org>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2765 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733198AbeGTULa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jul 2018 16:11:30 -0400
+From: Amar Singhal <asinghal@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: jouni@codeaurora.org, jjohnson@codeaurora.org,
+        linux-wireless@vger.kernel.org,
+        Amar Singhal <asinghal@codeaurora.org>
+Subject: [PATCH] cfg80211: Do not ignore user regulatory hint
+Date: Fri, 20 Jul 2018 12:15:18 -0700
+Message-Id: <1532114118-32141-1-git-send-email-asinghal@codeaurora.org> (sfid-20180720_212155_515377_E5293AE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018/7/27 17:24, Kalle Valo wrote:
-> (fixing top posting)
-> 
-> YueHaibing <yuehaibing@huawei.com> writes:
-> 
->> On 2018/7/13 14:46, YueHaibing wrote:
->>> When CONFIG_PROC_FS isn't set, gcc warning this:
->>>
->>> drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
->>>  static int atmel_proc_show(struct seq_file *m, void *v)
->>>             ^
->>> fix this by adding #ifdef around it.
->>>
->>> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
->>
->> pls ignore this,my bad.
-> 
-> Why should I drop this? Does the patch have something wrong which I'm
-> missing?
+Currently user regulatory hint is ignored if all wiphys
+in the system are self managed. But the hint is not ignored
+if there is no wiphy in the system. This affects the global
+regulatory setting. Global regulatory setting needs to be
+maintained so that it can be applied to a new wiphy entering
+the system. Therefore, do not ignore user regulatory setting
+even if all wiphys in the system are self managed.
 
-No,the patch is ok,just because I find this issue has a fix patch from Randy.
+Signed-off-by: Amar Singhal <asinghal@codeaurora.org>
+---
+ net/wireless/reg.c | 28 +++-------------------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-> 
-> I'm asking because I prefer this over Randy's version:
-> 
-> https://patchwork.kernel.org/patch/10512913/
-> 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index bbe6298..4fc66a1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2240,7 +2240,9 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 		 * as some drivers used this to restore its orig_* reg domain.
+ 		 */
+ 		if (initiator == NL80211_REGDOM_SET_BY_CORE &&
+-		    wiphy->regulatory_flags & REGULATORY_CUSTOM_REG)
++		    wiphy->regulatory_flags & REGULATORY_CUSTOM_REG &&
++		    !(wiphy->regulatory_flags &
++		      REGULATORY_WIPHY_SELF_MANAGED))
+ 			reg_call_notifier(wiphy, lr);
+ 		return;
+ 	}
+@@ -2787,26 +2789,6 @@ static void notify_self_managed_wiphys(struct regulatory_request *request)
+ 	}
+ }
+ 
+-static bool reg_only_self_managed_wiphys(void)
+-{
+-	struct cfg80211_registered_device *rdev;
+-	struct wiphy *wiphy;
+-	bool self_managed_found = false;
+-
+-	ASSERT_RTNL();
+-
+-	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
+-		wiphy = &rdev->wiphy;
+-		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+-			self_managed_found = true;
+-		else
+-			return false;
+-	}
+-
+-	/* make sure at least one self-managed wiphy exists */
+-	return self_managed_found;
+-}
+-
+ /*
+  * Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_*
+  * Regulatory hints come on a first come first serve basis and we
+@@ -2839,10 +2821,6 @@ static void reg_process_pending_hints(void)
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	notify_self_managed_wiphys(reg_request);
+-	if (reg_only_self_managed_wiphys()) {
+-		reg_free_request(reg_request);
+-		return;
+-	}
+ 
+ 	reg_process_hint(reg_request);
+ 
+-- 
+1.9.1
