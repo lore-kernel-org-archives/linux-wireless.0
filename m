@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43613 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753609AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:59 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
+Received: from youngberry.canonical.com ([91.189.89.112]:34859 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388036AbeGTTGL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jul 2018 15:06:11 -0400
+From: Colin King <colin.king@canonical.com>
+To: Samuel Ortiz <sameo@linux.intel.com>,
+        Amit Pundir <amit.pundir@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH 23/27] mtd: rawnand: txx9ndfmc: Allow selection of this driver when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:18 +0200
-Message-Id: <20180705094522.12138-24-boris.brezillon@bootlin.com> (sfid-20180705_120226_125484_F2CDF406)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] nfc: fdp: remove redundant pointer 'client'
+Date: Fri, 20 Jul 2018 19:16:43 +0100
+Message-Id: <20180720181643.21340-1-colin.king@canonical.com> (sfid-20180720_201658_860349_0429BE09)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having SOC_TX4938 or SOC_TX4939
-enabled.
+From: Colin Ian King <colin.king@canonical.com>
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
+Pointer 'client' is being assigned but is never used hence it is
+redundant and can be removed.
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Cleans up clang warning:
+warning: variable 'client' set but not used [-Wunused-but-set-variable]
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/mtd/nand/raw/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/nfc/fdp/i2c.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index 3e74e4ef2678..1579e62d8856 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -471,7 +471,8 @@ config MTD_NAND_DAVINCI
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index 70a970c7375c..5d3ea63e405f 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -210,7 +210,6 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
+ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
+ {
+ 	struct fdp_i2c_phy *phy = phy_id;
+-	struct i2c_client *client;
+ 	struct sk_buff *skb;
+ 	int r;
  
- config MTD_NAND_TXX9NDFMC
- 	tristate "NAND Flash support for TXx9 SoC"
--	depends on SOC_TX4938 || SOC_TX4939
-+	depends on SOC_TX4938 || SOC_TX4939 || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  This enables the NAND flash controller on the TXx9 SoCs.
+@@ -219,8 +218,6 @@ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
+ 		return IRQ_NONE;
+ 	}
  
+-	client = phy->i2c_dev;
+-
+ 	r = fdp_nci_i2c_read(phy, &skb);
+ 
+ 	if (r == -EREMOTEIO)
 -- 
-2.14.1
+2.17.1
