@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34984 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47544 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752077AbeGEGMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 02:12:41 -0400
+        id S1727167AbeGTLSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jul 2018 07:18:11 -0400
+Date: Fri, 20 Jul 2018 12:30:32 +0200
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
 Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
         Jakub Kicinski <kubakici@wp.pl>,
         Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 01/11] mt76: add more states
-Date: Thu,  5 Jul 2018 08:12:12 +0200
-Message-Id: <1530771142-4118-2-git-send-email-sgruszka@redhat.com> (sfid-20180705_081245_451236_578968DB)
-In-Reply-To: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/11] Add mt76x0 driver
+Message-ID: <20180720103032.GA1791@redhat.com> (sfid-20180720_123038_570050_9BFCA6F7)
 References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+ <20180705153216.GE17524@localhost.localdomain>
+ <alpine.LNX.2.00.1807071027140.11361@T420s>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1807071027140.11361@T420s>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add states needed for mt76x0 driver.
+On Sat, Jul 07, 2018 at 10:38:27AM +0200, Hans Ulli Kroll wrote:
+> > > My integration efforts can be traced here:
+> > > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
+> > > 
+> > 
+> > I just had a brief review of the code and I compiled the driver since at
+> > the moment I had no adapter for that chipset.
+> > As a remainder for future improvements/integration most of the code in 
+> > dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
+> > routines in the mt76-usb layer (we need to fill function pointer for chipset
+> > related stuff if there are differences with mt76x2u, not looked yet).
+> > Moreover mcu code can use utility routines in usb-mcu.c
+> > I have not looked at mt76x2 common code yet.
+> > 
+> > Regards,
+> > Lorenzo
+> > 
+> 
+> It is also possible to reuse 
+> struct mt76x2_txwi
+> struct mt76x2_rxwi
+> 
+> They have the same memory layout for both mt76x0u and mt76x2u chipsets.
+> 
+> Lorenzo can you move them up to
+> mt76.h
+> and rename them to
+> struct mt76_txwi
+> struct mt76_rxwi
+> 
+> And we can also do this for
+> struct mt76x2_vif
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h | 4 ++++
- 1 file changed, 4 insertions(+)
+For the record. I unified bunch of mac80211 callbacks and mac/wcid functions
+and structures (including structures pointed above) into new mt76xx_lib
+module. I also rebased the changes on top of latest wireless-drivers-next
+master and mt76x2u patches in new branch mt76x0-draft-v2:
+https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 96e9798bb8a0..7b50d4b7f40e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -187,9 +187,13 @@ struct mt76_rx_tid {
- enum {
- 	MT76_STATE_INITIALIZED,
- 	MT76_STATE_RUNNING,
-+	MT76_STATE_MCU_RUNNING,
- 	MT76_SCANNING,
- 	MT76_RESET,
- 	MT76_OFFCHANNEL,
-+	MT76_REMOVED,
-+	MT76_READING_STATS,
-+	MT76_MORE_STATS,
- };
- 
- struct mt76_hw_cap {
--- 
-1.9.3
+Regards
+Stanislaw
