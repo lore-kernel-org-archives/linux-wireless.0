@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:49872 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388071AbeGWPBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 11:01:54 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 01/10] Revert "NFC: st95hf: drop illegal kfree_skb()"
-Date: Mon, 23 Jul 2018 16:00:06 +0200
-Message-Id: <20180723140015.11663-2-daniel@zonque.org> (sfid-20180723_160033_716600_8B813CD7)
-In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
-References: <20180723140015.11663-1-daniel@zonque.org>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35779 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728088AbeGTVTU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jul 2018 17:19:20 -0400
+Received: by mail-io0-f196.google.com with SMTP id w11-v6so5392815iob.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2018 13:29:27 -0700 (PDT)
+MIME-Version: 1.0
+References: <1532088098-8483-1-git-send-email-ajay.kathat@microchip.com> <1532088098-8483-5-git-send-email-ajay.kathat@microchip.com>
+In-Reply-To: <1532088098-8483-5-git-send-email-ajay.kathat@microchip.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Fri, 20 Jul 2018 22:29:14 +0200
+Message-ID: <CACRpkdb8eBPUdRU7DMMY_X+Qxqz5eV3rsGwcBVxd89q5_jix9w@mail.gmail.com> (sfid-20180720_222930_884682_714FACFE)
+Subject: Re: [PATCH 4/4] staging: wilc1000: use descriptor-based interface for GPIO
+To: ajay.kathat@microchip.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        devel@driverdev.osuosl.org, Greg KH <gregkh@linuxfoundation.org>,
+        ganesh.krishna@microchip.com, venkateswara.kaja@microchip.com,
+        aditya.shankar@microchip.com, adham.abozaeid@microchip.com,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit c99f996b2ba49 ("NFC: st95hf: drop illegal
-kfree_skb()").
+On Fri, Jul 20, 2018 at 2:02 PM Ajay Singh <ajay.kathat@microchip.com> wrote:
 
-It turns out that the st95hf_in_send_cmd() is in fact the sole owner of
-this skb, and by not freeing it here, we not only causing a memory leak
-but also mess up the refcount of the socket that holds it. This will in
-turn lead to activated targets not being cleaned up, even after
-stopping userspace processes.
+> Now making use of descriptor-based interface instead of integer-based
+> interface for IRQ GPIO.
+> Added device tree binding reference for WILC SDIO and SPI interface
+> module. Also moved the code to free gpio descriptor in module remove
+> as the reference was fetched in probe function.
+> Updated the TODO file
+>
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 
-The memory corruption that I was hunting was caused by another
-kfree_skb(). This will be fixed in a later commit.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
-Fixes: c99f996b2ba49 ("NFC: st95hf: drop illegal kfree_skb()")
----
- drivers/nfc/st95hf/core.c | 2 ++
- 1 file changed, 2 insertions(+)
+Thanks Ajay!
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 36ef0e905ba3..bc1a2070f9bb 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -991,6 +991,8 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 		goto free_skb_resp;
- 	}
- 
-+	kfree_skb(skb);
-+
- 	return rc;
- 
- free_skb_resp:
--- 
-2.17.1
+Yours,
+Linus Walleij
