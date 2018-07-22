@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41295 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933169AbeGIUKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:14 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 10/24] mtd: rawnand: sunxi: Add an U suffix to NFC_PAGE_OP definition
-Date: Mon,  9 Jul 2018 22:09:31 +0200
-Message-Id: <20180709200945.30116-11-boris.brezillon@bootlin.com> (sfid-20180709_221019_568317_E396049D)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:40272 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727996AbeGVIqJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Jul 2018 04:46:09 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 04/20] wil6210: fix temperature debugfs
+Date: Sun, 22 Jul 2018 10:47:29 +0300
+Message-Id: <1532245665-15249-5-git-send-email-merez@codeaurora.org> (sfid-20180722_095025_205771_8ACB4DC1)
+In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes the "warning: large integer implicitly truncated to unsigned type
-[-Woverflow]" warning when compiled for x86.
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-This is needed in order to allow compiling this driver when
-COMPILE_TEST=y.
+For negative temperatures, "temp" debugfs is showing wrong values.
+Use signed types so proper calculations is done for sub zero
+temperatures.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/mtd/nand/raw/sunxi_nand.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/sunxi_nand.c b/drivers/mtd/nand/raw/sunxi_nand.c
-index d831a141a196..99043c3a4fa7 100644
---- a/drivers/mtd/nand/raw/sunxi_nand.c
-+++ b/drivers/mtd/nand/raw/sunxi_nand.c
-@@ -127,7 +127,7 @@
- #define NFC_CMD_TYPE_MSK	GENMASK(31, 30)
- #define NFC_NORMAL_OP		(0 << 30)
- #define NFC_ECC_OP		(1 << 30)
--#define NFC_PAGE_OP		(2 << 30)
-+#define NFC_PAGE_OP		(2U << 30)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 5d1e48d..4356b32 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1388,7 +1388,7 @@ static int wil_bf_seq_open(struct inode *inode, struct file *file)
+ };
  
- /* define bit use in NFC_RCMD_SET */
- #define NFC_READ_CMD_MSK	GENMASK(7, 0)
+ /*---------temp------------*/
+-static void print_temp(struct seq_file *s, const char *prefix, u32 t)
++static void print_temp(struct seq_file *s, const char *prefix, s32 t)
+ {
+ 	switch (t) {
+ 	case 0:
+@@ -1396,7 +1396,8 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
+ 		seq_printf(s, "%s N/A\n", prefix);
+ 	break;
+ 	default:
+-		seq_printf(s, "%s %d.%03d\n", prefix, t / 1000, t % 1000);
++		seq_printf(s, "%s %s%d.%03d\n", prefix, (t < 0 ? "-" : ""),
++			   abs(t / 1000), abs(t % 1000));
+ 		break;
+ 	}
+ }
+@@ -1404,7 +1405,7 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
+ static int wil_temp_debugfs_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+-	u32 t_m, t_r;
++	s32 t_m, t_r;
+ 	int rc = wmi_get_temperature(wil, &t_m, &t_r);
+ 
+ 	if (rc) {
 -- 
-2.14.1
+1.9.1
