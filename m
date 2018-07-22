@@ -1,329 +1,359 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:40272 "EHLO
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728220AbeGVIqS (ORCPT
+        by vger.kernel.org with ESMTP id S1727837AbeGVIqJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:18 -0400
+        Sun, 22 Jul 2018 04:46:09 -0400
 From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ahmad Masri <amasri@codeaurora.org>,
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
         Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 17/20] wil6210: align to latest auto generated wmi.h
-Date: Sun, 22 Jul 2018 10:47:42 +0300
-Message-Id: <1532245665-15249-18-git-send-email-merez@codeaurora.org> (sfid-20180722_095040_792585_1AF167B0)
+Subject: [PATCH 03/20] wil6210: add TX latency statistics
+Date: Sun, 22 Jul 2018 10:47:28 +0300
+Message-Id: <1532245665-15249-4-git-send-email-merez@codeaurora.org> (sfid-20180722_095026_106965_2C0239C7)
 In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ahmad Masri <amasri@codeaurora.org>
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-Align to latest version of the auto generated wmi file
-describing the interface with FW.
+Collect statistics of TX latency. The latency is measured from the time
+the HW gets aware of new SKB to transmit until the HW indicates tx
+complete for this SKB.
+The statistics are shown via new "tx_latency" debugfs.
 
-Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.h | 200 ++++++++++++++++++++++++++++++++-
- 1 file changed, 197 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 125 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/main.c      |   1 +
+ drivers/net/wireless/ath/wil6210/txrx.c      |  38 ++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h      |   2 +
+ drivers/net/wireless/ath/wil6210/txrx_edma.c |   8 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  14 +++
+ 6 files changed, 188 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 719f310..139acb2 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -101,6 +101,8 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_FT_ROAMING			= 21,
- 	WMI_FW_CAPABILITY_BACK_WIN_SIZE_64		= 22,
- 	WMI_FW_CAPABILITY_AMSDU				= 23,
-+	WMI_FW_CAPABILITY_RAW_MODE			= 24,
-+	WMI_FW_CAPABILITY_TX_REQ_EXT			= 25,
- 	WMI_FW_CAPABILITY_MAX,
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 99b1fc5..5d1e48d 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1800,6 +1800,126 @@ static int wil_mids_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
  };
  
-@@ -135,6 +137,12 @@ enum wmi_command_id {
- 	WMI_SET_WSC_STATUS_CMDID			= 0x41,
- 	WMI_PXMT_RANGE_CFG_CMDID			= 0x42,
- 	WMI_PXMT_SNR2_RANGE_CFG_CMDID			= 0x43,
-+	WMI_RADAR_GENERAL_CONFIG_CMDID			= 0x100,
-+	WMI_RADAR_CONFIG_SELECT_CMDID			= 0x101,
-+	WMI_RADAR_PARAMS_CONFIG_CMDID			= 0x102,
-+	WMI_RADAR_SET_MODE_CMDID			= 0x103,
-+	WMI_RADAR_CONTROL_CMDID				= 0x104,
-+	WMI_RADAR_PCI_CONTROL_CMDID			= 0x105,
- 	WMI_MEM_READ_CMDID				= 0x800,
- 	WMI_MEM_WR_CMDID				= 0x801,
- 	WMI_ECHO_CMDID					= 0x803,
-@@ -175,6 +183,10 @@ enum wmi_command_id {
- 	WMI_SET_PCP_CHANNEL_CMDID			= 0x829,
- 	WMI_GET_PCP_CHANNEL_CMDID			= 0x82A,
- 	WMI_SW_TX_REQ_CMDID				= 0x82B,
-+	/* Event is shared between WMI_SW_TX_REQ_CMDID and
-+	 * WMI_SW_TX_REQ_EXT_CMDID
-+	 */
-+	WMI_SW_TX_REQ_EXT_CMDID				= 0x82C,
- 	WMI_MLME_PUSH_CMDID				= 0x835,
- 	WMI_BEAMFORMING_MGMT_CMDID			= 0x836,
- 	WMI_BF_TXSS_MGMT_CMDID				= 0x837,
-@@ -559,6 +571,109 @@ struct wmi_pxmt_snr2_range_cfg_cmd {
- 	s8 snr2range_arr[2];
- } __packed;
- 
-+/* WMI_RADAR_GENERAL_CONFIG_CMDID */
-+struct wmi_radar_general_config_cmd {
-+	/* Number of pulses (CIRs) in FW FIFO to initiate pulses transfer
-+	 * from FW to Host
-+	 */
-+	__le32 fifo_watermark;
-+	/* In unit of us, in the range [100, 1000000] */
-+	__le32 t_burst;
-+	/* Valid in the range [1, 32768], 0xFFFF means infinite */
-+	__le32 n_bursts;
-+	/* In unit of 330Mhz clk, in the range [4, 2000]*330 */
-+	__le32 t_pulse;
-+	/* In the range of [1,4096] */
-+	__le16 n_pulses;
-+	/* Number of taps after cTap per CIR */
-+	__le16 n_samples;
-+	/* Offset from the main tap (0 = zero-distance). In the range of [0,
-+	 * 255]
-+	 */
-+	u8 first_sample_offset;
-+	/* Number of Pulses to average, 1, 2, 4, 8 */
-+	u8 pulses_to_avg;
-+	/* Number of adjacent taps to average, 1, 2, 4, 8 */
-+	u8 samples_to_avg;
-+	/* The index to config general params */
-+	u8 general_index;
-+	u8 reserved[4];
-+} __packed;
++static int wil_tx_latency_debugfs_show(struct seq_file *s, void *data)
++__acquires(&p->tid_rx_lock) __releases(&p->tid_rx_lock)
++{
++	struct wil6210_priv *wil = s->private;
++	int i, bin;
 +
-+/* WMI_RADAR_CONFIG_SELECT_CMDID */
-+struct wmi_radar_config_select_cmd {
-+	/* Select the general params index to use */
-+	u8 general_index;
-+	u8 reserved[3];
-+	/* 0 means don't update burst_active_vector */
-+	__le32 burst_active_vector;
-+	/* 0 means don't update pulse_active_vector */
-+	__le32 pulse_active_vector;
-+} __packed;
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++		struct wil_sta_info *p = &wil->sta[i];
++		char *status = "unknown";
++		u8 aid = 0;
++		u8 mid;
 +
-+/* WMI_RADAR_PARAMS_CONFIG_CMDID */
-+struct wmi_radar_params_config_cmd {
-+	/* The burst index selected to config */
-+	u8 burst_index;
-+	/* 0-not active, 1-active */
-+	u8 burst_en;
-+	/* The pulse index selected to config */
-+	u8 pulse_index;
-+	/* 0-not active, 1-active */
-+	u8 pulse_en;
-+	/* TX RF to use on current pulse */
-+	u8 tx_rfc_idx;
-+	u8 tx_sector;
-+	/* Offset from calibrated value.(expected to be 0)(value is row in
-+	 * Gain-LUT, not dB)
-+	 */
-+	s8 tx_rf_gain_comp;
-+	/* expected to be 0 */
-+	s8 tx_bb_gain_comp;
-+	/* RX RF to use on current pulse */
-+	u8 rx_rfc_idx;
-+	u8 rx_sector;
-+	/* Offset from calibrated value.(expected to be 0)(value is row in
-+	 * Gain-LUT, not dB)
-+	 */
-+	s8 rx_rf_gain_comp;
-+	/* Value in dB.(expected to be 0) */
-+	s8 rx_bb_gain_comp;
-+	/* Offset from calibrated value.(expected to be 0) */
-+	s8 rx_timing_offset;
-+	u8 reserved[3];
-+} __packed;
++		if (!p->tx_latency_bins)
++			continue;
 +
-+/* WMI_RADAR_SET_MODE_CMDID */
-+struct wmi_radar_set_mode_cmd {
-+	/* 0-disable/1-enable */
-+	u8 enable;
-+	/* enum wmi_channel */
-+	u8 channel;
-+	/* In the range of [0,7], 0xff means use default */
-+	u8 tx_rfc_idx;
-+	/* In the range of [0,7], 0xff means use default */
-+	u8 rx_rfc_idx;
-+} __packed;
++		switch (p->status) {
++		case wil_sta_unused:
++			status = "unused   ";
++			break;
++		case wil_sta_conn_pending:
++			status = "pending  ";
++			break;
++		case wil_sta_connected:
++			status = "connected";
++			aid = p->aid;
++			break;
++		}
++		mid = (p->status != wil_sta_unused) ? p->mid : U8_MAX;
++		seq_printf(s, "[%d] %pM %s MID %d AID %d\n", i, p->addr, status,
++			   mid, aid);
 +
-+/* WMI_RADAR_CONTROL_CMDID */
-+struct wmi_radar_control_cmd {
-+	/* 0-stop/1-start */
-+	u8 start;
-+	u8 reserved[3];
-+} __packed;
++		if (p->status == wil_sta_connected) {
++			u64 num_packets = 0;
++			u64 tx_latency_avg = p->stats.tx_latency_total_us;
 +
-+/* WMI_RADAR_PCI_CONTROL_CMDID */
-+struct wmi_radar_pci_control_cmd {
-+	/* pcie host buffer start address */
-+	__le64 base_addr;
-+	/* pcie host control block address */
-+	__le64 control_block_addr;
-+	/* pcie host buffer size */
-+	__le32 buffer_size;
-+	__le32 reserved;
-+} __packed;
++			seq_puts(s, "Tx/Latency bin:");
++			for (bin = 0; bin < WIL_NUM_LATENCY_BINS; bin++) {
++				seq_printf(s, " %lld",
++					   p->tx_latency_bins[bin]);
++				num_packets += p->tx_latency_bins[bin];
++			}
++			seq_puts(s, "\n");
++			if (!num_packets)
++				continue;
++			do_div(tx_latency_avg, num_packets);
++			seq_printf(s, "Tx/Latency min/avg/max (us): %d/%lld/%d",
++				   p->stats.tx_latency_min_us,
++				   tx_latency_avg,
++				   p->stats.tx_latency_max_us);
 +
- /* WMI_RF_MGMT_CMDID */
- enum wmi_rf_mgmt_type {
- 	WMI_RF_MGMT_W_DISABLE	= 0x00,
-@@ -696,12 +811,18 @@ struct wmi_pcp_start_cmd {
- 	u8 pcp_max_assoc_sta;
- 	u8 hidden_ssid;
- 	u8 is_go;
--	u8 reserved0[5];
-+	/* enum wmi_channel WMI_CHANNEL_9..WMI_CHANNEL_12 */
-+	u8 edmg_channel;
-+	u8 raw_mode;
-+	u8 reserved[3];
- 	/* A-BFT length override if non-0 */
- 	u8 abft_len;
- 	/* enum wmi_ap_sme_offload_mode_e */
- 	u8 ap_sme_offload_mode;
- 	u8 network_type;
-+	/* enum wmi_channel WMI_CHANNEL_1..WMI_CHANNEL_6; for EDMG this is
-+	 * the primary channel number
-+	 */
- 	u8 channel;
- 	u8 disable_sec_offload;
- 	u8 disable_sec;
-@@ -714,6 +835,17 @@ struct wmi_sw_tx_req_cmd {
- 	u8 payload[0];
- } __packed;
- 
-+/* WMI_SW_TX_REQ_EXT_CMDID */
-+struct wmi_sw_tx_req_ext_cmd {
-+	u8 dst_mac[WMI_MAC_LEN];
-+	__le16 len;
-+	__le16 duration_ms;
-+	/* Channel to use, 0xFF for currently active channel */
-+	u8 channel;
-+	u8 reserved[5];
-+	u8 payload[0];
-+} __packed;
++			seq_puts(s, "\n");
++		}
++	}
 +
- /* WMI_VRING_SWITCH_TIMING_CONFIG_CMDID */
- struct wmi_vring_switch_timing_config_cmd {
- 	/* Set vring timing configuration:
-@@ -740,6 +872,7 @@ struct wmi_vring_cfg_schd {
- enum wmi_vring_cfg_encap_trans_type {
- 	WMI_VRING_ENC_TYPE_802_3	= 0x00,
- 	WMI_VRING_ENC_TYPE_NATIVE_WIFI	= 0x01,
-+	WMI_VRING_ENC_TYPE_NONE		= 0x02,
++	return 0;
++}
++
++static int wil_tx_latency_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_tx_latency_debugfs_show,
++			   inode->i_private);
++}
++
++static ssize_t wil_tx_latency_write(struct file *file, const char __user *buf,
++				    size_t len, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct wil6210_priv *wil = s->private;
++	int val, rc, i;
++	bool enable;
++
++	rc = kstrtoint_from_user(buf, len, 0, &val);
++	if (rc) {
++		wil_err(wil, "Invalid argument\n");
++		return rc;
++	}
++	if (val == 1)
++		/* default resolution */
++		val = 500;
++	if (val && (val < 50 || val > 1000)) {
++		wil_err(wil, "Invalid resolution %d\n", val);
++		return -EINVAL;
++	}
++
++	enable = !!val;
++	if (wil->tx_latency == enable)
++		return len;
++
++	wil_info(wil, "%s TX latency measurements (resolution %dusec)\n",
++		 enable ? "Enabling" : "Disabling", val);
++
++	if (enable) {
++		size_t sz = sizeof(u64) * WIL_NUM_LATENCY_BINS;
++
++		wil->tx_latency_res = val;
++		for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++			struct wil_sta_info *sta = &wil->sta[i];
++
++			kfree(sta->tx_latency_bins);
++			sta->tx_latency_bins = kzalloc(sz, GFP_KERNEL);
++			if (!sta->tx_latency_bins)
++				return -ENOMEM;
++			sta->stats.tx_latency_min_us = U32_MAX;
++			sta->stats.tx_latency_max_us = 0;
++			sta->stats.tx_latency_total_us = 0;
++		}
++	}
++	wil->tx_latency = enable;
++
++	return len;
++}
++
++static const struct file_operations fops_tx_latency = {
++	.open		= wil_tx_latency_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.write		= wil_tx_latency_write,
++	.llseek		= seq_lseek,
++};
++
+ static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
+ 				     size_t count, loff_t *ppos)
+ {
+@@ -2133,6 +2253,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"srings",	0444,		&fops_srings},
+ 	{"status_msg",	0444,		&fops_status_msg},
+ 	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
++	{"tx_latency",	0644,		&fops_tx_latency},
  };
  
- enum wmi_vring_cfg_ds_cfg {
-@@ -1151,8 +1284,8 @@ struct wmi_echo_cmd {
- } __packed;
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -2249,10 +2370,14 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
  
- /* WMI_DEEP_ECHO_CMDID
-- * Check FW and ucode are alive
-- * Returned event: WMI_ECHO_RSP_EVENTID
-+ * Check FW and uCode is alive
-+ * Returned event: WMI_DEEP_ECHO_RSP_EVENTID
+ void wil6210_debugfs_remove(struct wil6210_priv *wil)
+ {
++	int i;
++
+ 	debugfs_remove_recursive(wil->debug);
+ 	wil->debug = NULL;
+ 
+ 	kfree(wil->dbg_data.data_arr);
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++)
++		kfree(wil->sta[i].tx_latency_bins);
+ 
+ 	/* free pmc memory without sending command to fw, as it will
+ 	 * be reset on the way down anyway
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 4de19bd..7e4ccd9 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -278,6 +278,7 @@ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
+ 	}
+ 	/* statistics */
+ 	memset(&sta->stats, 0, sizeof(sta->stats));
++	sta->stats.tx_latency_min_us = U32_MAX;
+ }
+ 
+ static bool wil_vif_is_connected(struct wil6210_priv *wil, u8 mid)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 9ac8674..6707af6 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1693,6 +1693,11 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct wil6210_vif *vif,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, vring->hwtail, vring->swhead);
+ 	return 0;
+ 
+@@ -1844,6 +1849,11 @@ static int __wil_tx_ring(struct wil6210_priv *wil, struct wil6210_vif *vif,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, ring->hwtail, ring->swhead);
+ 
+ 	return 0;
+@@ -2065,6 +2075,31 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	return NET_XMIT_DROP;
+ }
+ 
++void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
++			 struct wil_sta_info *sta)
++{
++	int skb_time_us;
++	int bin;
++
++	if (!wil->tx_latency)
++		return;
++
++	if (ktime_to_ms(*(ktime_t *)&skb->cb) == 0)
++		return;
++
++	skb_time_us = ktime_us_delta(ktime_get(), *(ktime_t *)&skb->cb);
++	bin = skb_time_us / wil->tx_latency_res;
++	bin = min_t(int, bin, WIL_NUM_LATENCY_BINS - 1);
++
++	wil_dbg_txrx(wil, "skb time %dus => bin %d\n", skb_time_us, bin);
++	sta->tx_latency_bins[bin]++;
++	sta->stats.tx_latency_total_us += skb_time_us;
++	if (skb_time_us < sta->stats.tx_latency_min_us)
++		sta->stats.tx_latency_min_us = skb_time_us;
++	if (skb_time_us > sta->stats.tx_latency_max_us)
++		sta->stats.tx_latency_max_us = skb_time_us;
++}
++
+ /**
+  * Clean up transmitted skb's from the Tx VRING
+  *
+@@ -2151,6 +2186,9 @@ int wil_tx_complete(struct wil6210_vif *vif, int ringid)
+ 					if (stats) {
+ 						stats->tx_packets++;
+ 						stats->tx_bytes += skb->len;
++
++						wil_tx_latency_calc(wil, skb,
++							&wil->sta[cid]);
+ 					}
+ 				} else {
+ 					ndev->stats.tx_errors++;
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 3dfd7f9..9d83be4 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -620,5 +620,7 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 			   struct wil_tid_ampdu_rx *r);
+ void wil_tx_data_init(struct wil_ring_tx_data *txdata);
+ void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil);
++void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
++			 struct wil_sta_info *sta);
+ 
+ #endif /* WIL6210_TXRX_H */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index b5d399f..2ea9767 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -1217,6 +1217,9 @@ int wil_tx_sring_handler(struct wil6210_priv *wil,
+ 					if (stats) {
+ 						stats->tx_packets++;
+ 						stats->tx_bytes += skb->len;
++
++						wil_tx_latency_calc(wil, skb,
++							&wil->sta[cid]);
+ 					}
+ 				} else {
+ 					ndev->stats.tx_errors++;
+@@ -1467,6 +1470,11 @@ static int __wil_tx_ring_tso_edma(struct wil6210_priv *wil,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, ring->hwtail, ring->swhead);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 002d336..1a7a1ad 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -55,6 +55,8 @@
+ #define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
+ #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
+ 
++#define WIL_NUM_LATENCY_BINS 200
++
+ /* maximum number of virtual interfaces the driver supports
+  * (including the main interface)
   */
- struct wmi_deep_echo_cmd {
- 	__le32 value;
-@@ -1527,6 +1660,52 @@ struct wmi_set_multi_directed_omnis_config_event {
- 	u8 reserved[3];
- } __packed;
- 
-+/* WMI_RADAR_GENERAL_CONFIG_EVENTID */
-+struct wmi_radar_general_config_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_RADAR_CONFIG_SELECT_EVENTID */
-+struct wmi_radar_config_select_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+	/* In unit of bytes */
-+	__le32 fifo_size;
-+	/* In unit of bytes */
-+	__le32 pulse_size;
-+} __packed;
-+
-+/* WMI_RADAR_PARAMS_CONFIG_EVENTID */
-+struct wmi_radar_params_config_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_RADAR_SET_MODE_EVENTID */
-+struct wmi_radar_set_mode_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_RADAR_CONTROL_EVENTID */
-+struct wmi_radar_control_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_RADAR_PCI_CONTROL_EVENTID */
-+struct wmi_radar_pci_control_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
- /* WMI_SET_LONG_RANGE_CONFIG_CMDID */
- struct wmi_set_long_range_config_cmd {
- 	__le32 reserved;
-@@ -1759,10 +1938,17 @@ enum wmi_event_id {
- 	WMI_REPORT_STATISTICS_EVENTID			= 0x100B,
- 	WMI_FT_AUTH_STATUS_EVENTID			= 0x100C,
- 	WMI_FT_REASSOC_STATUS_EVENTID			= 0x100D,
-+	WMI_RADAR_GENERAL_CONFIG_EVENTID		= 0x1100,
-+	WMI_RADAR_CONFIG_SELECT_EVENTID			= 0x1101,
-+	WMI_RADAR_PARAMS_CONFIG_EVENTID			= 0x1102,
-+	WMI_RADAR_SET_MODE_EVENTID			= 0x1103,
-+	WMI_RADAR_CONTROL_EVENTID			= 0x1104,
-+	WMI_RADAR_PCI_CONTROL_EVENTID			= 0x1105,
- 	WMI_RD_MEM_RSP_EVENTID				= 0x1800,
- 	WMI_FW_READY_EVENTID				= 0x1801,
- 	WMI_EXIT_FAST_MEM_ACC_MODE_EVENTID		= 0x200,
- 	WMI_ECHO_RSP_EVENTID				= 0x1803,
-+	WMI_DEEP_ECHO_RSP_EVENTID			= 0x1804,
- 	/* deprecated */
- 	WMI_FS_TUNE_DONE_EVENTID			= 0x180A,
- 	/* deprecated */
-@@ -1788,6 +1974,9 @@ enum wmi_event_id {
- 	WMI_DELBA_EVENTID				= 0x1826,
- 	WMI_GET_SSID_EVENTID				= 0x1828,
- 	WMI_GET_PCP_CHANNEL_EVENTID			= 0x182A,
-+	/* Event is shared between WMI_SW_TX_REQ_CMDID and
-+	 * WMI_SW_TX_REQ_EXT_CMDID
+@@ -552,6 +554,9 @@ struct wil_net_stats {
+ 	unsigned long	rx_bytes;
+ 	unsigned long	tx_bytes;
+ 	unsigned long	tx_errors;
++	u32 tx_latency_min_us;
++	u32 tx_latency_max_us;
++	u64 tx_latency_total_us;
+ 	unsigned long	rx_dropped;
+ 	unsigned long	rx_non_data_frame;
+ 	unsigned long	rx_short_frame;
+@@ -712,6 +717,13 @@ struct wil_sta_info {
+ 	u8 mid;
+ 	enum wil_sta_status status;
+ 	struct wil_net_stats stats;
++	/**
++	 * 20 latency bins. 1st bin counts packets with latency
++	 * of 0..tx_latency_res, last bin counts packets with latency
++	 * of 19*tx_latency_res and above.
++	 * tx_latency_res is configured from "tx_latency" debug-fs.
 +	 */
- 	WMI_SW_TX_COMPLETE_EVENTID			= 0x182B,
- 	WMI_BEAMFORMING_MGMT_DONE_EVENTID		= 0x1836,
- 	WMI_BF_TXSS_MGMT_DONE_EVENTID			= 0x1837,
-@@ -2539,6 +2728,11 @@ struct wmi_echo_rsp_event {
- 	__le32 echoed_value;
- } __packed;
++	u64 *tx_latency_bins;
+ 	/* Rx BACK */
+ 	struct wil_tid_ampdu_rx *tid_rx[WIL_STA_TID_NUM];
+ 	spinlock_t tid_rx_lock; /* guarding tid_rx array */
+@@ -943,6 +955,8 @@ struct wil6210_priv {
+ 	u8 wakeup_trigger;
+ 	struct wil_suspend_stats suspend_stats;
+ 	struct wil_debugfs_data dbg_data;
++	bool tx_latency; /* collect TX latency measurements */
++	size_t tx_latency_res; /* bin resolution in usec */
  
-+/* WMI_DEEP_ECHO_RSP_EVENTID */
-+struct wmi_deep_echo_rsp_event {
-+	__le32 echoed_value;
-+} __packed;
-+
- /* WMI_RF_PWR_ON_DELAY_RSP_EVENTID */
- struct wmi_rf_pwr_on_delay_rsp_event {
- 	/* wmi_fw_status */
+ 	void *platform_handle;
+ 	struct wil_platform_ops platform_ops;
 -- 
 1.9.1
