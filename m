@@ -1,152 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:44100 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752949AbeGCV4C (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728058AbeGVIqP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 17:56:02 -0400
-Received: by mail-pf0-f196.google.com with SMTP id j3-v6so1616581pfh.11
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2018 14:56:02 -0700 (PDT)
-Date: Tue, 3 Jul 2018 14:55:57 -0700
-From: Brian Norris <briannorris@chromium.org>
+        Sun, 22 Jul 2018 04:46:15 -0400
+From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Govind Singh <govinds@codeaurora.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, andy.gross@linaro.org
-Subject: Re: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
-Message-ID: <20180703215556.GA15106@ban.mtv.corp.google.com> (sfid-20180703_235625_068269_04459F97)
-References: <20180605123304.31969-1-govinds@codeaurora.org>
- <20180619021742.GA17220@rodete-desktop-imager.corp.google.com>
- <87woucnxkh.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87woucnxkh.fsf@kamboji.qca.qualcomm.com>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 13/20] wil6210: support max aggregation window size 64
+Date: Sun, 22 Jul 2018 10:47:38 +0300
+Message-Id: <1532245665-15249-14-git-send-email-merez@codeaurora.org> (sfid-20180722_095041_410625_B684CE90)
+In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+FW can support BACK window size 64 for performance improvements.
+A new FW capability is added for notifying the host on the increased
+max BACK win size support.
+Defining WIL_MAX_AGG_WSIZE_64 and WIL_MAX_AMPDU_SIZE_128 to be used
+in this case.
 
-On Tue, Jul 03, 2018 at 06:33:34PM +0300, Kalle Valo wrote:
-> Brian Norris <briannorris@chromium.org> writes:
-> > On Tue, Jun 05, 2018 at 06:03:04PM +0530, Govind Singh wrote:
-> >> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
-> >> This module is responsible for communicating WLAN control messages to FW
-> >> over QMI interface.
-> >> 
-> >> QUALCOMM MSM Interface(QMI) provides the control interface between
-> >> components running b/w remote processors with underlying transport layer
-> >> based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
-> >
-> > So this seems to imply QMI would work with transports that are not
-> > integrated. Except, your code is directly calling SNOC (one of your
-> > integrated chipset interfaces) code from the QMI driver. Correct? I
-> > suppose that's OK for now, but it's a little misleading. If you actually
-> > intend this to support multiple transports, then you might instead want
-> > a callback interface for this.
-> 
-> Sure. But do we even know that the QMI interfaces are even compatible?
-> AFAIK QMI is just an RPC protocol, so there's no guarantee about
-> interface stability. So I don't see the need to support other interfaces
-> until we know exactly what we need to implement.
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c       | 9 +++++++++
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 8 ++++----
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 5 +++++
+ drivers/net/wireless/ath/wil6210/wmi.h        | 1 +
+ 4 files changed, 19 insertions(+), 4 deletions(-)
 
-I think my questions were meant more of clarifying questions rather than
-proper suggestions. If your explanation is correct, then I'd figure this
-language should mention that we're implementing a handshake specific to
-SNOC (or WCN3990), instead of appearing to be agnostic.
-
-> >> QMI client driver implementation is based on qmi frmework https://lwn.net/Articles/729924/.
-> >> 
-> >> Below is the sequence of qmi handshake.
-> >> 
-> >>        QMI CLIENT(APPS)                                         QMI SERVER(FW in Q6)
-> >> 
-> >>                          <------wlan service discoverd----
-> >> 
-> >>                        -----connect to wlam qmi service----->
-> >> 
-> >>                        ------------wlan info request----->
-> >> 
-> >>                        <------------wlan info resp------------
-> >> 
-> >>                        ------------msa info req-------->
-> >> 
-> >>                      <------------msa info resp------------
-> >> 
-> >>                      ------------msa ready req-------->
-> >> 
-> >>                      <------------msa ready resp------------
-> >> 
-> >>                      <------------msa ready indication-------
-> >> 
-> >>                      ------------capability req------->
-> >> 
-> >>                     <------------capability resp------------
-> >> 
-> >>                     ------------qmi bdf req--------->
-> >> 
-> >>                      <------------qmi bdf resp------------
-> >> 
-> >>                       ------------qmi cal trigger------->
-> >> 
-> >>                   <------------ QMI FW ready indication-------
-> >
-> > Let's see if I'm interpreting this right:
-> >
-> >  * The above process is just initiating a handshake with the QMI
-> >    service and doesn't actually do any loading of firmware on its own;
-> >    it just hands things off to the SNOC client driver (and ath10k core)
-> >    once the firmware is magically ready (??)
-> >  * The ATH10K_FW_FEATURE_NON_BMI flag you added previously basically
-> >    provides a way for a driver (and now we see which driver; it's this
-> >    QMI / SNOC driver) to completely sidestep the typicaly in-kernel
-> >    firmware load implementation; in fact, the kernel only reads the
-> >    WLAN firmware just to parse some feature flags, not to actually
-> >    program it to the device
-> >  * Some yet-unmentioned proprietary app is involved to handle
-> >    sideloading the actual firmware from user space
-> >
-> > Is this correct? If not, please correct me. But if it is:
-> >
-> >  * When does the user space app actually load the WLAN firmware? I'm not
-> >    sure I can place it in the above diagram.
-
-BTW, I think Govind answered most of these questions, but IMO, those
-sorts of clarifying bits should be in the documentation here. Maybe in
-the cover letter here, but also in either the patch description(s) or
-code comments. It's nice to retain some of this architectural
-description in the git history somehow -- particularly, to note what
-outside dependencies there are.
-
-> >  * Is there any open source implementation of this? How am I supposed to
-> >    actually use this driver, if it relies on proprietary components that
-> >    I can't review and aren't really even mentioned?
-> >
-> > I hope I'm sorely wrong on this. But if I'm not, I don't see why this
-> > driver should be merged at all. Linux drivers should be self-sufficient
-> > wherever possible, and I don't see a good reason why this driver can't
-> > manage actually loading the WLAN firmware on its own, similar to how the
-> > BMI component of the ath10k driver loads firmware for other ath10k
-> > transports. But even more importantly: I believe this driver is hiding
-> > the fact that it relies on undocumented proprietary components to run on
-> > the CPU [1] just to make use of it at all.
-> 
-> First of all, thanks for bringing this up! I was aware of the need of
-> user space tools to download the firmware to Q6 but I assumed they were
-> Open Source, which to my surprise they were not. An upstream driver
-> definitely needs to have open user space components so that anyone can
-> use it, and hence I cannot apply these until that's solved. Luckily
-> Bjorn has been working on that and he has done good progress on those,
-> though I think there were some issues still.
-
-Good to hear Bjorn is working on this. I've been asking through other
-channels too, and I don't have anything more than lip service. In fact,
-I've been told the opposite at times -- that I won't get source. But
-then, I'm quite aware that the right hand often doesn't know what the
-left hand is doing ;)
-
-Anything you and Bjorn can do to help push this along would be great,
-because while I'd love to have this driver upstream, this is a huge
-sticking point for me.
-
-Thanks,
-Brian
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 9495c6c..a949e91 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1141,6 +1141,15 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ 
+ 		wil->platform_ops.set_features(wil->platform_handle, features);
+ 	}
++
++	if (test_bit(WMI_FW_CAPABILITY_BACK_WIN_SIZE_64,
++		     wil->fw_capabilities)) {
++		wil->max_agg_wsize = WIL_MAX_AGG_WSIZE_64;
++		wil->max_ampdu_size = WIL_MAX_AMPDU_SIZE_128;
++	} else {
++		wil->max_agg_wsize = WIL_MAX_AGG_WSIZE;
++		wil->max_ampdu_size = WIL_MAX_AMPDU_SIZE;
++	}
+ }
+ 
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index ba4e93f..b608aa1 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -297,7 +297,7 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ /* ADDBA processing */
+ static u16 wil_agg_size(struct wil6210_priv *wil, u16 req_agg_wsize)
+ {
+-	u16 max_agg_size = min_t(u16, WIL_MAX_AGG_WSIZE, WIL_MAX_AMPDU_SIZE /
++	u16 max_agg_size = min_t(u16, wil->max_agg_wsize, wil->max_ampdu_size /
+ 				 (mtu_max + WIL_MAX_MPDU_OVERHEAD));
+ 
+ 	if (!req_agg_wsize)
+@@ -364,11 +364,11 @@ int wil_addba_rx_request(struct wil6210_priv *wil, u8 mid,
+ 	if (status == WLAN_STATUS_SUCCESS) {
+ 		if (req_agg_wsize == 0) {
+ 			wil_dbg_misc(wil, "Suggest BACK wsize %d\n",
+-				     WIL_MAX_AGG_WSIZE);
+-			agg_wsize = WIL_MAX_AGG_WSIZE;
++				     wil->max_agg_wsize);
++			agg_wsize = wil->max_agg_wsize;
+ 		} else {
+ 			agg_wsize = min_t(u16,
+-					  WIL_MAX_AGG_WSIZE, req_agg_wsize);
++					  wil->max_agg_wsize, req_agg_wsize);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 1857fb2..8eca6a8 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -90,6 +90,8 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ #define WIL6210_NAPI_BUDGET	(16) /* arbitrary */
+ #define WIL_MAX_AMPDU_SIZE	(64 * 1024) /* FW/HW limit */
+ #define WIL_MAX_AGG_WSIZE	(32) /* FW/HW limit */
++#define WIL_MAX_AMPDU_SIZE_128	(128 * 1024) /* FW/HW limit */
++#define WIL_MAX_AGG_WSIZE_64	(64) /* FW/HW limit */
+ #define WIL6210_MAX_STATUS_RINGS	(8)
+ 
+ /* Hardware offload block adds the following:
+@@ -1013,6 +1015,9 @@ struct wil6210_priv {
+ 	u8 boot_config;
+ 
+ 	struct wil_fw_stats_global fw_stats_global;
++
++	u32 max_agg_wsize;
++	u32 max_ampdu_size;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 00cf3c4..719f310 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -99,6 +99,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_AP_SME_OFFLOAD_NONE		= 19,
+ 	WMI_FW_CAPABILITY_MULTI_VIFS			= 20,
+ 	WMI_FW_CAPABILITY_FT_ROAMING			= 21,
++	WMI_FW_CAPABILITY_BACK_WIN_SIZE_64		= 22,
+ 	WMI_FW_CAPABILITY_AMSDU				= 23,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+-- 
+1.9.1
