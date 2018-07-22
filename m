@@ -1,94 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17429 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726361AbeG2OrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jul 2018 10:47:17 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Randy Dunlap <rdunlap@infradead.org>, joe@perches.com
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v4] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
-Date: Sun, 29 Jul 2018 16:16:56 +0300
-Message-Id: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com> (sfid-20180729_151800_237600_B7984910)
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727966AbeGVIqJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Jul 2018 04:46:09 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 02/20] wil6210: drop Rx packets with L2 error indication from HW
+Date: Sun, 22 Jul 2018 10:47:27 +0300
+Message-Id: <1532245665-15249-3-git-send-email-merez@codeaurora.org> (sfid-20180722_095057_687501_C3CB8531)
+In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
-looks not so convenient due to additional driver_data field attached.
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
-possible form. For example,
+Due to recent change in FW, driver will be notified of corrupted Rx
+packets (e.g. MIC error).
+Drop such packets before they are delivered to network stack.
 
-  before:
-
-    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-
-  after:
-
-    { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
-
-Drivers can be converted later on in independent way.
-
-While here, remove the unused macro with the same name
-from Ralink wireless driver.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 12 ++++----
+ drivers/net/wireless/ath/wil6210/txrx.c      | 22 ++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 16 ++++------
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 44 +++++++++++++++-------------
+ 4 files changed, 55 insertions(+), 39 deletions(-)
 
-- Add vend to the device (Bjorn)
-
-Bjorn, this also looks good.
-
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
- include/linux/pci.h                            | 15 +++++++++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-index bc0ca5f58f38..283e2e607bba 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-@@ -27,12 +27,6 @@
- #include <linux/io.h>
- #include <linux/pci.h>
- 
--/*
-- * This variable should be used with the
-- * pci_driver structure initialization.
-- */
--#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 7d62126..99b1fc5 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1734,13 +1734,11 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 				   p->stats.rx_short_frame,
+ 				   p->stats.rx_large_frame,
+ 				   p->stats.rx_replay);
 -
- /*
-  * PCI driver handlers.
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d0961aefdbae..fe060114a647 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -825,6 +825,21 @@ struct pci_driver {
- 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+-			if (wil->use_enhanced_dma_hw)
+-				seq_printf(s,
+-					   "mic error  %lu, key error %lu, amsdu error %lu\n",
+-					   p->stats.rx_mic_error,
+-					   p->stats.rx_key_error,
+-					   p->stats.rx_amsdu_error);
++			seq_printf(s,
++				   "mic error %lu, key error %lu, amsdu error %lu\n",
++				   p->stats.rx_mic_error,
++				   p->stats.rx_key_error,
++				   p->stats.rx_amsdu_error);
  
-+/**
-+ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
-+ * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
-+ * @dev: the device name (without PCI_DEVICE_ID_<vend>_ prefix)
-+ * @data: the driver data to be filled
-+ *
-+ * This macro is used to create a struct pci_device_id that matches a
-+ * specific PCI device.  The subvendor, and subdevice fields will be set
-+ * to PCI_ANY_ID.
-+ */
-+#define PCI_DEVICE_DATA(vend, dev, data) \
-+	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##vend##_##dev, \
-+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
-+	.driver_data = (kernel_ulong_t)(data)
+ 			seq_puts(s, "Rx/MCS:");
+ 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index ad40a96..9ac8674 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -678,6 +678,21 @@ static int wil_rx_crypto_check(struct wil6210_priv *wil, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
++static int wil_rx_error_check(struct wil6210_priv *wil, struct sk_buff *skb,
++			      struct wil_net_stats *stats)
++{
++	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
 +
- enum {
- 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
- 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
++	if ((d->dma.status & RX_DMA_STATUS_ERROR) &&
++	    (d->dma.error & RX_DMA_ERROR_MIC)) {
++		stats->rx_mic_error++;
++		wil_dbg_txrx(wil, "MIC error, dropping packet\n");
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
+ static void wil_get_netif_rx_params(struct sk_buff *skb, int *cid,
+ 				    int *security)
+ {
+@@ -736,6 +751,12 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
+ 		goto stats;
+ 	}
+ 
++	/* check errors reported by HW and update statistics */
++	if (unlikely(wil->txrx_ops.rx_error_check(wil, skb, stats))) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
+ 	if (wdev->iftype == NL80211_IFTYPE_AP && !vif->ap_isolate) {
+ 		if (mcast) {
+ 			/* send multicast frames both to higher layers in
+@@ -2212,6 +2233,7 @@ void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil)
+ 	wil->txrx_ops.get_netif_rx_params =
+ 		wil_get_netif_rx_params;
+ 	wil->txrx_ops.rx_crypto_check = wil_rx_crypto_check;
++	wil->txrx_ops.rx_error_check = wil_rx_error_check;
+ 	wil->txrx_ops.is_rx_idle = wil_is_rx_idle;
+ 	wil->txrx_ops.rx_fini = wil_rx_fini;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 1940347..b5d399f 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -795,14 +795,15 @@ static int wil_check_bar(struct wil6210_priv *wil, void *msg, int cid,
+ 	return -EAGAIN;
+ }
+ 
+-static int wil_rx_edma_check_errors(struct wil6210_priv *wil, void *msg,
+-				    struct wil_net_stats *stats,
+-				    struct sk_buff *skb)
++static int wil_rx_error_check_edma(struct wil6210_priv *wil,
++				   struct sk_buff *skb,
++				   struct wil_net_stats *stats)
+ {
+ 	int error;
+ 	int l2_rx_status;
+ 	int l3_rx_status;
+ 	int l4_rx_status;
++	void *msg = wil_skb_rxstatus(skb);
+ 
+ 	error = wil_rx_status_get_error(msg);
+ 	if (!error) {
+@@ -865,7 +866,6 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 	struct wil_net_stats *stats = NULL;
+ 	u16 dmalen;
+ 	int cid;
+-	int rc;
+ 	bool eop, headstolen;
+ 	int delta;
+ 	u8 dr_bit;
+@@ -937,13 +937,6 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 		goto skipping;
+ 	}
+ 
+-	/* Check and treat errors reported by HW */
+-	rc = wil_rx_edma_check_errors(wil, msg, stats, skb);
+-	if (rc) {
+-		rxdata->skipping = true;
+-		goto skipping;
+-	}
+-
+ 	if (unlikely(dmalen > sz)) {
+ 		wil_err(wil, "Rx size too large: %d bytes!\n", dmalen);
+ 		stats->rx_large_frame++;
+@@ -1593,6 +1586,7 @@ void wil_init_txrx_ops_edma(struct wil6210_priv *wil)
+ 	wil->txrx_ops.get_reorder_params = wil_get_reorder_params_edma;
+ 	wil->txrx_ops.get_netif_rx_params = wil_get_netif_rx_params_edma;
+ 	wil->txrx_ops.rx_crypto_check = wil_rx_crypto_check_edma;
++	wil->txrx_ops.rx_error_check = wil_rx_error_check_edma;
+ 	wil->txrx_ops.is_rx_idle = wil_is_rx_idle_edma;
+ 	wil->txrx_ops.rx_fini = wil_rx_fini_edma;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 9b1467c..002d336 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -543,6 +543,27 @@ struct wil_status_ring {
+ 	struct wil_ring_rx_data rx_data;
+ };
+ 
++#define WIL_STA_TID_NUM (16)
++#define WIL_MCS_MAX (12) /* Maximum MCS supported */
++
++struct wil_net_stats {
++	unsigned long	rx_packets;
++	unsigned long	tx_packets;
++	unsigned long	rx_bytes;
++	unsigned long	tx_bytes;
++	unsigned long	tx_errors;
++	unsigned long	rx_dropped;
++	unsigned long	rx_non_data_frame;
++	unsigned long	rx_short_frame;
++	unsigned long	rx_large_frame;
++	unsigned long	rx_replay;
++	unsigned long	rx_mic_error;
++	unsigned long	rx_key_error; /* eDMA specific */
++	unsigned long	rx_amsdu_error; /* eDMA specific */
++	u16 last_mcs_rx;
++	u64 rx_per_mcs[WIL_MCS_MAX + 1];
++};
++
+ /**
+  * struct tx_rx_ops - different TX/RX ops for legacy and enhanced
+  * DMA flow
+@@ -576,6 +597,8 @@ struct wil_txrx_ops {
+ 	void (*get_netif_rx_params)(struct sk_buff *skb,
+ 				    int *cid, int *security);
+ 	int (*rx_crypto_check)(struct wil6210_priv *wil, struct sk_buff *skb);
++	int (*rx_error_check)(struct wil6210_priv *wil, struct sk_buff *skb,
++			      struct wil_net_stats *stats);
+ 	bool (*is_rx_idle)(struct wil6210_priv *wil);
+ 	irqreturn_t (*irq_rx)(int irq, void *cookie);
+ };
+@@ -676,27 +699,6 @@ enum wil_sta_status {
+ 	wil_sta_connected = 2,
+ };
+ 
+-#define WIL_STA_TID_NUM (16)
+-#define WIL_MCS_MAX (12) /* Maximum MCS supported */
+-
+-struct wil_net_stats {
+-	unsigned long	rx_packets;
+-	unsigned long	tx_packets;
+-	unsigned long	rx_bytes;
+-	unsigned long	tx_bytes;
+-	unsigned long	tx_errors;
+-	unsigned long	rx_dropped;
+-	unsigned long	rx_non_data_frame;
+-	unsigned long	rx_short_frame;
+-	unsigned long	rx_large_frame;
+-	unsigned long	rx_replay;
+-	unsigned long	rx_mic_error; /* eDMA specific */
+-	unsigned long	rx_key_error; /* eDMA specific */
+-	unsigned long	rx_amsdu_error; /* eDMA specific */
+-	u16 last_mcs_rx;
+-	u64 rx_per_mcs[WIL_MCS_MAX + 1];
+-};
+-
+ /**
+  * struct wil_sta_info - data for peer
+  *
 -- 
-2.18.0
+1.9.1
