@@ -1,141 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:40603 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729643AbeGaJse (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728006AbeGVIqL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:48:34 -0400
-Received: by mail-wr1-f66.google.com with SMTP id h15-v6so15592668wrs.7
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:26 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH v2 01/19] mt76: move MT_TXD_INFO, MT_MCU_MSG and MT_RX_FCE_INFO defs in dma.h
-Date: Tue, 31 Jul 2018 10:09:02 +0200
-Message-Id: <bcf24fdbf8a3d023fc716e65dc190756232f0645.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100929_974489_E56270CB)
-In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+        Sun, 22 Jul 2018 04:46:11 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Gidon Studinski <gidons@codeaurora.org>
+Subject: [PATCH 05/20] wil6210: fix RX checksum report to network stack
+Date: Sun, 22 Jul 2018 10:47:30 +0300
+Message-Id: <1532245665-15249-6-git-send-email-merez@codeaurora.org> (sfid-20180722_095027_322151_7BC0C521)
+In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since MT_TXD_INFO, MT_MCU_MSG and MT_RX_FCE_INFO definitions are in
-common between mt76x2u, mt76x2 and mt76x0u move them in dma.h in order
-to reuse usb code supporting mt76x2u and mt76x0u based devices
+Currently the driver sets CHECKSUM_UNNECESSARY only in case the HW
+doesn't report checksum error.
+As ip_summed value is not initialized it is not clear what
+the driver will report to the network stack in case of HW checksum
+error or in case HW doesn't calculate checksum.
+Initialize ip_summed to CHECKSUM_NONE to guarantee checksum
+calculation by the network stack in the above cases.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.h      | 38 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x2_dma.h   | 38 -------------------
- 2 files changed, 38 insertions(+), 38 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 5 +++--
+ drivers/net/wireless/ath/wil6210/txrx.c      | 8 ++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 8 ++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 1 +
+ 4 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
-index 1dad39697929..14cfb2dbca25 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/dma.h
-@@ -25,6 +25,34 @@
- #define MT_DMA_CTL_LAST_SEC0		BIT(30)
- #define MT_DMA_CTL_DMA_DONE		BIT(31)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4356b32..f2eab39 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1736,10 +1736,11 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 				   p->stats.rx_large_frame,
+ 				   p->stats.rx_replay);
+ 			seq_printf(s,
+-				   "mic error %lu, key error %lu, amsdu error %lu\n",
++				   "mic error %lu, key error %lu, amsdu error %lu, csum error %lu\n",
+ 				   p->stats.rx_mic_error,
+ 				   p->stats.rx_key_error,
+-				   p->stats.rx_amsdu_error);
++				   p->stats.rx_amsdu_error,
++				   p->stats.rx_csum_err);
  
-+#define MT_TXD_INFO_LEN			GENMASK(15, 0)
-+#define MT_TXD_INFO_NEXT_VLD		BIT(16)
-+#define MT_TXD_INFO_TX_BURST		BIT(17)
-+#define MT_TXD_INFO_80211		BIT(19)
-+#define MT_TXD_INFO_TSO			BIT(20)
-+#define MT_TXD_INFO_CSO			BIT(21)
-+#define MT_TXD_INFO_WIV			BIT(24)
-+#define MT_TXD_INFO_QSEL		GENMASK(26, 25)
-+#define MT_TXD_INFO_DPORT		GENMASK(29, 27)
-+#define MT_TXD_INFO_TYPE		GENMASK(31, 30)
+ 			seq_puts(s, "Rx/MCS:");
+ 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 6707af6..6a7943e 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -281,6 +281,12 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct wil_ring *vring,
+ 	skb_reserve(skb, headroom);
+ 	skb_put(skb, sz);
+ 
++	/**
++	 * Make sure that the network stack calculates checksum for packets
++	 * which failed the HW checksum calculation
++	 */
++	skb->ip_summed = CHECKSUM_NONE;
 +
-+#define MT_RX_FCE_INFO_LEN		GENMASK(13, 0)
-+#define MT_RX_FCE_INFO_SELF_GEN		BIT(15)
-+#define MT_RX_FCE_INFO_CMD_SEQ		GENMASK(19, 16)
-+#define MT_RX_FCE_INFO_EVT_TYPE		GENMASK(23, 20)
-+#define MT_RX_FCE_INFO_PCIE_INTR	BIT(24)
-+#define MT_RX_FCE_INFO_QSEL		GENMASK(26, 25)
-+#define MT_RX_FCE_INFO_D_PORT		GENMASK(29, 27)
-+#define MT_RX_FCE_INFO_TYPE		GENMASK(31, 30)
+ 	pa = dma_map_single(dev, skb->data, skb->len, DMA_FROM_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev, pa))) {
+ 		kfree_skb(skb);
+@@ -569,6 +575,8 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 		 * mis-calculates TCP checksum - if it should be 0x0,
+ 		 * it writes 0xffff in violation of RFC 1624
+ 		 */
++		else
++			stats->rx_csum_err++;
+ 	}
+ 
+ 	if (snaplen) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 2ea9767..9ef2b66 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -182,6 +182,12 @@ static int wil_ring_alloc_skb_edma(struct wil6210_priv *wil,
+ 
+ 	skb_put(skb, sz);
+ 
++	/**
++	 * Make sure that the network stack calculates checksum for packets
++	 * which failed the HW checksum calculation
++	 */
++	skb->ip_summed = CHECKSUM_NONE;
 +
-+/* MCU request message header  */
-+#define MT_MCU_MSG_LEN			GENMASK(15, 0)
-+#define MT_MCU_MSG_CMD_SEQ		GENMASK(19, 16)
-+#define MT_MCU_MSG_CMD_TYPE		GENMASK(26, 20)
-+#define MT_MCU_MSG_PORT			GENMASK(29, 27)
-+#define MT_MCU_MSG_TYPE			GENMASK(31, 30)
-+#define MT_MCU_MSG_TYPE_CMD		BIT(30)
-+
- struct mt76_desc {
- 	__le32 buf0;
- 	__le32 ctrl;
-@@ -32,6 +60,16 @@ struct mt76_desc {
- 	__le32 info;
- } __packed __aligned(4);
+ 	pa = dma_map_single(dev, skb->data, skb->len, DMA_FROM_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev, pa))) {
+ 		kfree_skb(skb);
+@@ -847,6 +853,8 @@ static int wil_rx_error_check_edma(struct wil6210_priv *wil,
+ 	 * mis-calculates TCP checksum - if it should be 0x0,
+ 	 * it writes 0xffff in violation of RFC 1624
+ 	 */
++	else
++		stats->rx_csum_err++;
  
-+enum dma_msg_port {
-+	WLAN_PORT,
-+	CPU_RX_PORT,
-+	CPU_TX_PORT,
-+	HOST_PORT,
-+	VIRTUAL_CPU_RX_PORT,
-+	VIRTUAL_CPU_TX_PORT,
-+	DISCARD,
-+};
-+
- int mt76_dma_attach(struct mt76_dev *dev);
- void mt76_dma_cleanup(struct mt76_dev *dev);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-index e9d426bbf91a..da294558c268 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-@@ -19,34 +19,6 @@
- 
- #include "dma.h"
- 
--#define MT_TXD_INFO_LEN			GENMASK(15, 0)
--#define MT_TXD_INFO_NEXT_VLD		BIT(16)
--#define MT_TXD_INFO_TX_BURST		BIT(17)
--#define MT_TXD_INFO_80211		BIT(19)
--#define MT_TXD_INFO_TSO			BIT(20)
--#define MT_TXD_INFO_CSO			BIT(21)
--#define MT_TXD_INFO_WIV			BIT(24)
--#define MT_TXD_INFO_QSEL		GENMASK(26, 25)
--#define MT_TXD_INFO_DPORT		GENMASK(29, 27)
--#define MT_TXD_INFO_TYPE		GENMASK(31, 30)
--
--#define MT_RX_FCE_INFO_LEN		GENMASK(13, 0)
--#define MT_RX_FCE_INFO_SELF_GEN		BIT(15)
--#define MT_RX_FCE_INFO_CMD_SEQ		GENMASK(19, 16)
--#define MT_RX_FCE_INFO_EVT_TYPE		GENMASK(23, 20)
--#define MT_RX_FCE_INFO_PCIE_INTR	BIT(24)
--#define MT_RX_FCE_INFO_QSEL		GENMASK(26, 25)
--#define MT_RX_FCE_INFO_D_PORT		GENMASK(29, 27)
--#define MT_RX_FCE_INFO_TYPE		GENMASK(31, 30)
--
--/* MCU request message header  */
--#define MT_MCU_MSG_LEN			GENMASK(15, 0)
--#define MT_MCU_MSG_CMD_SEQ		GENMASK(19, 16)
--#define MT_MCU_MSG_CMD_TYPE		GENMASK(26, 20)
--#define MT_MCU_MSG_PORT			GENMASK(29, 27)
--#define MT_MCU_MSG_TYPE			GENMASK(31, 30)
--#define MT_MCU_MSG_TYPE_CMD		BIT(30)
--
- enum mt76x2_qsel {
- 	MT_QSEL_MGMT,
- 	MT_QSEL_HCCA,
-@@ -54,14 +26,4 @@ enum mt76x2_qsel {
- 	MT_QSEL_EDCA_2,
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 1a7a1ad..b06cba5 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -565,6 +565,7 @@ struct wil_net_stats {
+ 	unsigned long	rx_mic_error;
+ 	unsigned long	rx_key_error; /* eDMA specific */
+ 	unsigned long	rx_amsdu_error; /* eDMA specific */
++	unsigned long	rx_csum_err;
+ 	u16 last_mcs_rx;
+ 	u64 rx_per_mcs[WIL_MCS_MAX + 1];
  };
- 
--enum dma_msg_port {
--	WLAN_PORT,
--	CPU_RX_PORT,
--	CPU_TX_PORT,
--	HOST_PORT,
--	VIRTUAL_CPU_RX_PORT,
--	VIRTUAL_CPU_TX_PORT,
--	DISCARD,
--};
--
- #endif
 -- 
-2.17.1
+1.9.1
