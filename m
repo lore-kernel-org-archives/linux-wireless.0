@@ -1,94 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:3576 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727011AbeGTFPX (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728270AbeGVIqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jul 2018 01:15:23 -0400
-Date: Fri, 20 Jul 2018 04:35:24 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
-        <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
- '_' in label name
-Message-ID: <20180720043524.5a8d1c7e@ajaysk-VirtualBox> (sfid-20180720_062943_054074_85BEE2FF)
-In-Reply-To: <20180719092744.5gx2ctgj7etvk7uh@mwanda>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-        <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
-        <20180719092744.5gx2ctgj7etvk7uh@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Sun, 22 Jul 2018 04:46:16 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 16/20] wil6210: set default 3-MSI
+Date: Sun, 22 Jul 2018 10:47:41 +0300
+Message-Id: <1532245665-15249-17-git-send-email-merez@codeaurora.org> (sfid-20180722_095037_790217_714BB7EF)
+In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
-On Thu, 19 Jul 2018 12:27:44 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Single MSI is the current default configuration.
+With multiple MSI interrupts configuration, Tx/Rx processing could
+run in parallel on different CPU cores and allow better balance
+between the cores.
 
-> On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh wrote:
-> > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > b/drivers/staging/wilc1000/wilc_wlan.c index 85af365..8e71c28 100644
-> > --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > @@ -850,13 +850,13 @@ static void wilc_wlan_handle_isr_ext(struct
-> > wilc *wilc, u32 int_status) if (wilc->rx_buffer)
-> >  			buffer = &wilc->rx_buffer[offset];
-> >  		else
-> > -			goto _end_;
-> > +			goto end;  
-> 
-> This isn't related to your patch but this goto doesn't appear to make
-> any sort of sense.  I have no idea what was intended.
-> 
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks for pointing it out. I will include these changes in separate
-patchset.
-
-Yes, the position of goto label can be moved just before
-wilc_wlan_handle_rxq(wilc), as 'ret' will always be '0' when goto
-statement is executed.
-
-Actually earlier there were few more goto statement in this function
-and single label 'end' was used to handle for different cases. But in
-previous cleanup patches those cases were removed.
-Now this function can be further refactor by either moving
-goto label before wilc_wlan_handle_rxq(wilc) or avoid goto use by
-adding the rx_buffer validation along with size check.
-
-i.e 
-
-end:
-    wilc_wlan_handle_rxq(wilc)
-
-
-OR
-
-	if (size > 0 && wilc->rx_buffer) {
-
-	....
-	}
-    	wilc_wlan_handle_rxq(wilc)
-
-	
-
-> >  
-> >  		wilc->hif_func->hif_clear_int_ext(wilc,
-> >  					      DATA_INT_CLR |
-> > ENABLE_RX_VMM); ret = wilc->hif_func->hif_block_rx_ext(wilc, 0,
-> > buffer, size); 
-> > -_end_:
-> > +end:
-> >  		if (ret) {
-> >  			offset += size;
-> >  			wilc->rx_buffer_offset = offset;  
-> 
-> regards,
-> dan carpenter
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index e44b4ad..89119e7 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -24,9 +24,9 @@
+ #include <linux/rtnetlink.h>
+ #include <linux/pm_runtime.h>
+ 
+-static int n_msi = 1;
++static int n_msi = 3;
+ module_param(n_msi, int, 0444);
+-MODULE_PARM_DESC(n_msi, " Use MSI interrupt: 0 - use INTx, 1 - (default) - single, or 3");
++MODULE_PARM_DESC(n_msi, " Use MSI interrupt: 0 - use INTx, 1 - single, or 3 - (default) ");
+ 
+ bool ftm_mode;
+ module_param(ftm_mode, bool, 0444);
+-- 
+1.9.1
