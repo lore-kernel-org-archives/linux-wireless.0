@@ -1,95 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57128 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388471AbeGXLFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 07:05:39 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v3 04/11] NFC: st95hf: remove logging from spi functions
-Date: Tue, 24 Jul 2018 11:59:34 +0200
-Message-Id: <20180724095941.25777-5-daniel@zonque.org> (sfid-20180724_120138_680737_6EBAAA2E)
-In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
-References: <20180724095941.25777-1-daniel@zonque.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:44046 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728313AbeGVDlJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 21 Jul 2018 23:41:09 -0400
+Subject: Re: Does Linux kernel 4.18-rc5 have drivers for IEEE 802.11AC Wave 2
+ USB Wireless Adapters?
+To: Turritopsis Dohrnii Teo En Ming
+        <turritopsis.dohrnii@teo-en-ming.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <de6161f3fe0549fba89f81d8db571981@teo-en-ming.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <9e3f493b-f7a7-c493-9bae-ac3038c29ada@infradead.org> (sfid-20180722_044628_487801_1D1DDB06)
+Date: Sat, 21 Jul 2018 19:46:10 -0700
+MIME-Version: 1.0
+In-Reply-To: <de6161f3fe0549fba89f81d8db571981@teo-en-ming.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callers of these functions already log on errors, and there's no
-need to do it from two places.
+[adding linux-wireless mailing list]
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/nfc/st95hf/spi.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+On 07/20/2018 08:49 PM, Turritopsis Dohrnii Teo En Ming wrote:
+> Good morning from Singapore,
+> 
+> Does Linux kernel 4.18-rc5 have drivers for IEEE 802.11AC Wave 2 USB Wireless Adapters?
+> 
+> I noted that Linux usually has poor support for USB Wireless AC Adapters.
+> 
+> Thank you.     
+>  
+>  ===BEGIN SIGNATURE=== 
+> Turritopsis Dohrnii Teo En Ming's Academic Qualifications as at 30 Oct 2017 
+> [1] https://tdtemcerts.wordpress.com/ 
+> [2] http://tdtemcerts.blogspot.sg/ 
+> [3] https://www.scribd.com/user/270125049/Teo-En-Ming 
+> ===END SIGNATURE=== 
 
-diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
-index e2d3bbcc8c34..d5894d4546b1 100644
---- a/drivers/nfc/st95hf/spi.c
-+++ b/drivers/nfc/st95hf/spi.c
-@@ -47,8 +47,6 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 
- 	result = spi_sync(spidev, &m);
- 	if (result) {
--		dev_err(&spidev->dev, "error: sending cmd to st95hf using SPI = %d\n",
--			result);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return result;
- 	}
-@@ -62,12 +60,10 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 	result = wait_for_completion_timeout(&spicontext->done,
- 					     msecs_to_jiffies(1000));
- 	/* check for timeout or success */
--	if (!result) {
--		dev_err(&spidev->dev, "error: response not ready timeout\n");
-+	if (!result)
- 		result = -ETIMEDOUT;
--	} else {
-+	else
- 		result = 0;
--	}
- 
- 	mutex_unlock(&spicontext->spi_lock);
- 
-@@ -79,7 +75,7 @@ EXPORT_SYMBOL_GPL(st95hf_spi_send);
- int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 			     unsigned char *receivebuff)
- {
--	int len = 0;
-+	int ret, len;
- 	struct spi_transfer tx_takedata;
- 	struct spi_message m;
- 	struct spi_device *spidev = spicontext->spidev;
-@@ -89,8 +85,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 		{.rx_buf = receivebuff, .len = 2, .cs_change = 1,},
- 	};
- 
--	int ret = 0;
--
- 	memset(&tx_takedata, 0x0, sizeof(struct spi_transfer));
- 
- 	mutex_lock(&spicontext->spi_lock);
-@@ -102,8 +96,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 
- 	ret = spi_sync(spidev, &m);
- 	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data length error = %d\n",
--			ret);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return ret;
- 	}
-@@ -127,11 +119,8 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 	ret = spi_sync(spidev, &m);
- 
- 	mutex_unlock(&spicontext->spi_lock);
--	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data read error = %d\n",
--			ret);
-+	if (ret)
- 		return ret;
--	}
- 
- 	return len;
- }
+
 -- 
-2.17.1
+~Randy
