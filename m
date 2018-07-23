@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:34273 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731492AbeGRRAy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jul 2018 13:00:54 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Ben Greear <greearb@candelatech.com>,
-        Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
-        SEDE <s.deronne@televic.com>,
-        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Setting tx retry count in ath10k
-In-Reply-To: <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com> <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de> <8b9713fe-7573-f009-d002-13df73315898@televic.com> <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com> <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com>
-Date: Wed, 18 Jul 2018 18:21:58 +0200
-Message-ID: <877els5xax.fsf@toke.dk> (sfid-20180718_182332_194898_3D950AAC)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:39183 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388083AbeGWOde (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 10:33:34 -0400
+Received: by mail-lj1-f195.google.com with SMTP id l15-v6so561999lji.6
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2018 06:32:17 -0700 (PDT)
+From: roman.stratiienko@globallogic.com
+To: akarwar@marvell.com
+Cc: nishants@marvell.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Roman Stratiienko <roman.stratiienko@globallogic.com>
+Subject: [PATCH] mwifiex: Fix skipped vendor specific IEs
+Date: Mon, 23 Jul 2018 16:31:39 +0300
+Message-Id: <1532352699-3232-1-git-send-email-roman.stratiienko@globallogic.com> (sfid-20180723_153332_151603_B897A18E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Roman Stratiienko <roman.stratiienko@globallogic.com>
 
-> On 07/18/2018 08:50 AM, Jean-Pierre TOSONI wrote:
->> Hi,
->>
->> We made retries configurable in our mac80211+ath9k system, and we ended with 3 counts:
->> 1) short retry count, defaults to 4
->> 2) long retrys count, defauts to 7
->> 3) software retry count, defaults to 30
->> This last one is used separately for each frame in an aggregated frame, since they can be separately acknowledged.
->
-> Did you have to change code for #3, and if so, can you share the patch?
->
-> I wonder also if retries should be different for different types of
-> data. For instance, if someone is using UDP, maybe they don't care so
-> much about lost packets and would prefer a lower retry count. Or,
-> maybe IP type-of-service could be taken into account and retry frames
-> different amounts based on ToS?
+Only microsoft specific IE is added by FW
+Let other IEs to pass from userspace
 
-For general internet traffic, a retry count of 30 is way too high; that
-is up to 120 ms of HOL blocking latency. Better to just drop the packet
-at that point.
+Signed-off-by: Roman Stratiienko <roman.stratiienko@globallogic.com>
+---
+ drivers/net/wireless/marvell/mwifiex/ie.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Ideally, the retry count should be dynamically calculated in units of
-time (which would depend on the rate and aggregate size), and also take
-queueing time into account. I've been meaning to experiment with this
-for minstrel and ath9k, but haven't gotten around to it...
-
--Toke
+diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
+index c488c30..c58b345 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ie.c
++++ b/drivers/net/wireless/marvell/mwifiex/ie.c
+@@ -353,8 +353,16 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
+ 		case WLAN_EID_HT_OPERATION:
+ 		case WLAN_EID_VHT_CAPABILITY:
+ 		case WLAN_EID_VHT_OPERATION:
+-		case WLAN_EID_VENDOR_SPECIFIC:
+ 			break;
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Skip only Microsoft IE that added by FW
++			 * Let other vendor specific IE to pass
++			 */
++			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WMM,
++						    (const u8 *)hdr,
++						    hdr->len + sizeof(struct ieee_types_header)))
++				break;
+ 		default:
+ 			memcpy(gen_ie->ie_buffer + ie_len, hdr,
+ 			       hdr->len + sizeof(struct ieee_types_header));
+-- 
+2.7.4
