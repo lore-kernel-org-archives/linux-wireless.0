@@ -1,188 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:39874 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388748AbeGXR5U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 13:57:20 -0400
-Received: by mail-pg1-f193.google.com with SMTP id g2-v6so3297741pgs.6
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:59 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
-        Eric Biggers <ebiggers@google.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Rabin Vincent <rabinv@axis.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
-        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        qat-linux@intel.com, linux-ppp@vger.kernel.org,
-        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 15/18] staging: rtl8192e: ieee80211: Convert from ahash to shash
-Date: Tue, 24 Jul 2018 09:49:33 -0700
-Message-Id: <20180724164936.37477-16-keescook@chromium.org> (sfid-20180724_185028_493200_4DB2D4D6)
-In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
-References: <20180724164936.37477-1-keescook@chromium.org>
+Received: from mail.bugwerft.de ([46.23.86.59]:49942 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388123AbeGWPCC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:02:02 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 08/10] NFC: st95hf: unify sync/async flags
+Date: Mon, 23 Jul 2018 16:00:13 +0200
+Message-Id: <20180723140015.11663-9-daniel@zonque.org> (sfid-20180723_160041_293690_4C08846B)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an identical change to the wireless/lib80211 of the same name.
-In preparing to remove all stack VLA usage from the kernel[1], this
-removes the discouraged use of AHASH_REQUEST_ON_STACK in favor of
-the smaller SHASH_DESC_ON_STACK by converting from ahash-wrapped-shash
-to direct shash. By removing a layer of indirection this both improves
-performance and reduces stack usage. The stack allocation will be made
-a fixed size in a later patch to the crypto subsystem.
+Keep the information whether a command is asynchronous in a boolean flag
+everywhere in the code. This way, the enum can go away.
 
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
-
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/staging/rtl8192e/rtllib_crypt_tkip.c | 56 ++++++++++----------
- 1 file changed, 28 insertions(+), 28 deletions(-)
+ drivers/nfc/st95hf/core.c | 38 ++++++++++++++++----------------------
+ drivers/nfc/st95hf/spi.c  | 12 +++++-------
+ drivers/nfc/st95hf/spi.h  |  8 +-------
+ 3 files changed, 22 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-index ae103b0b7a2a..9f18be14dda6 100644
---- a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-+++ b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-@@ -50,9 +50,9 @@ struct rtllib_tkip_data {
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index e7ecc57dde8f..835a1e61c817 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -101,7 +101,7 @@ struct cmd {
+ 	unsigned char cmd_id;
+ 	unsigned char no_cmd_params;
+ 	unsigned char cmd_params[MAX_CMD_PARAMS];
+-	enum req_type req;
++	bool is_sync;
+ };
  
- 	int key_idx;
- 	struct crypto_skcipher *rx_tfm_arc4;
--	struct crypto_ahash *rx_tfm_michael;
-+	struct crypto_shash *rx_tfm_michael;
- 	struct crypto_skcipher *tx_tfm_arc4;
--	struct crypto_ahash *tx_tfm_michael;
-+	struct crypto_shash *tx_tfm_michael;
- 	/* scratch buffers for virt_to_page() (crypto API) */
- 	u8 rx_hdr[16];
- 	u8 tx_hdr[16];
-@@ -74,8 +74,7 @@ static void *rtllib_tkip_init(int key_idx)
- 		goto fail;
+ struct param_list {
+@@ -134,63 +134,62 @@ static const struct cmd cmd_array[] = {
+ 		.cmd_len = 0x2,
+ 		.cmd_id = ECHO_CMD,
+ 		.no_cmd_params = 0,
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO14443A_CONFIG] = {
+ 		.cmd_len = 0x7,
+ 		.cmd_id = WRITE_REGISTER_CMD,
+ 		.no_cmd_params = 0x4,
+ 		.cmd_params = {0x3A, 0x00, 0x5A, 0x04},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO14443A_DEMOGAIN] = {
+ 		.cmd_len = 0x7,
+ 		.cmd_id = WRITE_REGISTER_CMD,
+ 		.no_cmd_params = 0x4,
+ 		.cmd_params = {0x68, 0x01, 0x01, 0xDF},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO14443B_DEMOGAIN] = {
+ 		.cmd_len = 0x7,
+ 		.cmd_id = WRITE_REGISTER_CMD,
+ 		.no_cmd_params = 0x4,
+ 		.cmd_params = {0x68, 0x01, 0x01, 0x51},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO14443A_PROTOCOL_SELECT] = {
+ 		.cmd_len = 0x7,
+ 		.cmd_id = PROTOCOL_SELECT_CMD,
+ 		.no_cmd_params = 0x4,
+ 		.cmd_params = {ISO14443A_PROTOCOL_CODE, 0x00, 0x01, 0xA0},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO14443B_PROTOCOL_SELECT] = {
+ 		.cmd_len = 0x7,
+ 		.cmd_id = PROTOCOL_SELECT_CMD,
+ 		.no_cmd_params = 0x4,
+ 		.cmd_params = {ISO14443B_PROTOCOL_CODE, 0x01, 0x03, 0xFF},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_WTX_RESPONSE] = {
+ 		.cmd_len = 0x6,
+ 		.cmd_id = SEND_RECEIVE_CMD,
+ 		.no_cmd_params = 0x3,
+ 		.cmd_params = {0xF2, 0x00, TRFLAG_NFCA_STD_FRAME_CRC},
+-		.req = ASYNC,
+ 	},
+ 	[CMD_FIELD_OFF] = {
+ 		.cmd_len = 0x5,
+ 		.cmd_id = PROTOCOL_SELECT_CMD,
+ 		.no_cmd_params = 0x2,
+ 		.cmd_params = {0x0, 0x0},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ 	[CMD_ISO15693_PROTOCOL_SELECT] = {
+ 		.cmd_len = 0x5,
+ 		.cmd_id = PROTOCOL_SELECT_CMD,
+ 		.no_cmd_params = 0x2,
+ 		.cmd_params = {ISO15693_PROTOCOL_CODE, 0x0D},
+-		.req = SYNC,
++		.is_sync = true,
+ 	},
+ };
+ 
+@@ -279,13 +278,13 @@ static int st95hf_send_recv_cmd(struct st95hf_context *st95context,
+ 	ret = st95hf_spi_send(&st95context->spicontext,
+ 			      spi_cmd_buffer,
+ 			      cmd_array[cmd].cmd_len,
+-			      cmd_array[cmd].req);
++			      cmd_array[cmd].is_sync);
+ 	if (ret) {
+ 		dev_err(dev, "st95hf_spi_send failed with error %d\n", ret);
+ 		return ret;
  	}
  
--	priv->tx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
- 	if (IS_ERR(priv->tx_tfm_michael)) {
- 		pr_debug("Could not allocate crypto API michael_mic\n");
- 		priv->tx_tfm_michael = NULL;
-@@ -90,8 +89,7 @@ static void *rtllib_tkip_init(int key_idx)
- 		goto fail;
- 	}
+-	if (cmd_array[cmd].req == SYNC && recv_res) {
++	if (cmd_array[cmd].is_sync && recv_res) {
+ 		unsigned char st95hf_response_arr[2];
  
--	priv->rx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
- 	if (IS_ERR(priv->rx_tfm_michael)) {
- 		pr_debug("Could not allocate crypto API michael_mic\n");
- 		priv->rx_tfm_michael = NULL;
-@@ -101,9 +99,9 @@ static void *rtllib_tkip_init(int key_idx)
+ 		ret = st95hf_spi_recv_response(&st95context->spicontext,
+@@ -480,10 +479,8 @@ static int st95hf_send_spi_reset_sequence(struct st95hf_context *st95context)
+ 	int result = 0;
+ 	unsigned char reset_cmd = ST95HF_COMMAND_RESET;
  
- fail:
- 	if (priv) {
--		crypto_free_ahash(priv->tx_tfm_michael);
-+		crypto_free_shash(priv->tx_tfm_michael);
- 		crypto_free_skcipher(priv->tx_tfm_arc4);
--		crypto_free_ahash(priv->rx_tfm_michael);
-+		crypto_free_shash(priv->rx_tfm_michael);
- 		crypto_free_skcipher(priv->rx_tfm_arc4);
- 		kfree(priv);
- 	}
-@@ -117,9 +115,9 @@ static void rtllib_tkip_deinit(void *priv)
- 	struct rtllib_tkip_data *_priv = priv;
+-	result = st95hf_spi_send(&st95context->spicontext,
+-				 &reset_cmd,
+-				 ST95HF_RESET_CMD_LEN,
+-				 ASYNC);
++	result = st95hf_spi_send(&st95context->spicontext, &reset_cmd,
++				 ST95HF_RESET_CMD_LEN, false);
+ 	if (result) {
+ 		dev_err(&st95context->spicontext.spidev->dev,
+ 			"spi reset sequence cmd error = %d", result);
+@@ -932,8 +929,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 		stcontext->complete_cb_arg.rats = true;
  
- 	if (_priv) {
--		crypto_free_ahash(_priv->tx_tfm_michael);
-+		crypto_free_shash(_priv->tx_tfm_michael);
- 		crypto_free_skcipher(_priv->tx_tfm_arc4);
--		crypto_free_ahash(_priv->rx_tfm_michael);
-+		crypto_free_shash(_priv->rx_tfm_michael);
- 		crypto_free_skcipher(_priv->rx_tfm_arc4);
- 	}
- 	kfree(priv);
-@@ -504,29 +502,31 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- }
+ 	rc = st95hf_spi_send(&stcontext->spicontext, skb->data,
+-			     skb->len,
+-			     ASYNC);
++			     skb->len, false);
+ 	if (rc) {
+ 		dev_err(&stcontext->nfcdev->dev,
+ 			"Error %d trying to perform data_exchange", rc);
+@@ -1168,10 +1164,8 @@ static int st95hf_remove(struct spi_device *nfc_spi_dev)
+ 	mutex_unlock(&stcontext->rm_lock);
  
- 
--static int michael_mic(struct crypto_ahash *tfm_michael, u8 *key, u8 *hdr,
-+static int michael_mic(struct crypto_shash *tfm_michael, u8 *key, u8 *hdr,
- 		       u8 *data, size_t data_len, u8 *mic)
+ 	/* next reset the ST95HF controller */
+-	result = st95hf_spi_send(&stcontext->spicontext,
+-				 &reset_cmd,
+-				 ST95HF_RESET_CMD_LEN,
+-				 ASYNC);
++	result = st95hf_spi_send(&stcontext->spicontext, &reset_cmd,
++				 ST95HF_RESET_CMD_LEN, false);
+ 	if (result) {
+ 		dev_err(&spictx->spidev->dev,
+ 			"ST95HF reset failed in remove() err = %d\n", result);
+diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
+index d5894d4546b1..ef12ed67343f 100644
+--- a/drivers/nfc/st95hf/spi.c
++++ b/drivers/nfc/st95hf/spi.c
+@@ -23,7 +23,7 @@
+ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
+ 		    unsigned char *buffertx,
+ 		    int datalen,
+-		    enum req_type reqtype)
++		    bool is_sync)
  {
--	AHASH_REQUEST_ON_STACK(req, tfm_michael);
--	struct scatterlist sg[2];
-+	SHASH_DESC_ON_STACK(desc, tfm_michael);
- 	int err;
+ 	struct spi_message m;
+ 	int result = 0;
+@@ -35,12 +35,10 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
  
--	if (tfm_michael == NULL) {
--		pr_warn("michael_mic: tfm_michael == NULL\n");
--		return -1;
--	}
--	sg_init_table(sg, 2);
--	sg_set_buf(&sg[0], hdr, 16);
--	sg_set_buf(&sg[1], data, data_len);
-+	desc->tfm = tfm_michael;
-+	desc->flags = 0;
+ 	mutex_lock(&spicontext->spi_lock);
  
--	if (crypto_ahash_setkey(tfm_michael, key, 8))
-+	if (crypto_shash_setkey(tfm_michael, key, 8))
- 		return -1;
- 
--	ahash_request_set_tfm(req, tfm_michael);
--	ahash_request_set_callback(req, 0, NULL, NULL);
--	ahash_request_set_crypt(req, sg, mic, data_len + 16);
--	err = crypto_ahash_digest(req);
--	ahash_request_zero(req);
-+	err = crypto_shash_init(desc);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_update(desc, hdr, 16);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_update(desc, data, data_len);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_final(desc, mic);
+-	if (reqtype == SYNC) {
+-		spicontext->req_issync = true;
++	spicontext->req_issync = is_sync;
 +
-+out:
-+	shash_desc_zero(desc);
- 	return err;
- }
++	if (is_sync)
+ 		reinit_completion(&spicontext->done);
+-	} else {
+-		spicontext->req_issync = false;
+-	}
  
-@@ -663,9 +663,9 @@ static int rtllib_tkip_set_key(void *key, int len, u8 *seq, void *priv)
- {
- 	struct rtllib_tkip_data *tkey = priv;
- 	int keyidx;
--	struct crypto_ahash *tfm = tkey->tx_tfm_michael;
-+	struct crypto_shash *tfm = tkey->tx_tfm_michael;
- 	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
--	struct crypto_ahash *tfm3 = tkey->rx_tfm_michael;
-+	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
- 	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
+ 	spi_message_init(&m);
+ 	spi_message_add_tail(&tx_transfer, &m);
+@@ -52,7 +50,7 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
+ 	}
  
- 	keyidx = tkey->key_idx;
+ 	/* return for asynchronous or no-wait case */
+-	if (reqtype == ASYNC) {
++	if (!is_sync) {
+ 		mutex_unlock(&spicontext->spi_lock);
+ 		return 0;
+ 	}
+diff --git a/drivers/nfc/st95hf/spi.h b/drivers/nfc/st95hf/spi.h
+index 552d220747cd..ede17eef6ab1 100644
+--- a/drivers/nfc/st95hf/spi.h
++++ b/drivers/nfc/st95hf/spi.h
+@@ -44,16 +44,10 @@ struct st95hf_spi_context {
+ 	struct mutex spi_lock;
+ };
+ 
+-/* flag to differentiate synchronous & asynchronous spi request */
+-enum req_type {
+-	SYNC,
+-	ASYNC,
+-};
+-
+ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
+ 		    unsigned char *buffertx,
+ 		    int datalen,
+-		    enum req_type reqtype);
++		    bool is_sync);
+ 
+ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
+ 			     unsigned char *receivebuff);
 -- 
 2.17.1
