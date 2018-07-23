@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:50667 "EHLO mail.toke.dk"
+Received: from mail.bugwerft.de ([46.23.86.59]:49964 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932290AbeGDIZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 04:25:22 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Peter Oh <peter.oh@bowerswilkins.com>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
-In-Reply-To: <1530690856.3324.2.camel@sipsolutions.net>
-References: <20180703124725.30917-1-johannes@sipsolutions.net> <e9813f60-5cf5-a4bf-5906-623282319991@bowerswilkins.com> <1530661681.4735.51.camel@sipsolutions.net> <87zhz7ea1s.fsf@toke.dk> <1530690856.3324.2.camel@sipsolutions.net>
-Date: Wed, 04 Jul 2018 10:25:18 +0200
-Message-ID: <87o9fne7bl.fsf@toke.dk> (sfid-20180704_102539_526927_BDE21214)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        id S2388125AbeGWPCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:02:04 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>,
+        devicetree@vger.kernel.org
+Subject: [PATCH 10/10] NFC: st95hf: add of match table
+Date: Mon, 23 Jul 2018 16:00:15 +0200
+Message-Id: <20180723140015.11663-11-daniel@zonque.org> (sfid-20180723_160045_815969_3D6F8247)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Add a match table for device tree compatible strings. Interestingly, a
+document describing the bindings already exists since a while, but users
+currently reply on the implicit matching in the drivers core.
 
-> On Wed, 2018-07-04 at 09:26 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> > I see no evidence of ath9k doing this correctly, so this might fix a
->> > bug there, but I may have missed it.
->>=20
->> ath9k does check for this, in ath_tx_sched_aggr() and in
->> ath_tx_form_aggr(); it'll check for the IEEE80211_TX_CTL_AMPDU flag, and
->> stop building the current aggregate if the flag is not set.
->
-> Ok, thanks. Nevertheless, I guess it's more efficient to not stop the
-> aggregate on encountering a (QoS-)NDP :-)
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Cc: devicetree@vger.kernel.org
+---
+ drivers/nfc/st95hf/core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Oh, absolutely! :)
-
--Toke
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 4db3c020921c..5a01b454fbc4 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -1012,6 +1012,12 @@ static const struct spi_device_id st95hf_id[] = {
+ };
+ MODULE_DEVICE_TABLE(spi, st95hf_id);
+ 
++static const struct of_device_id st95hf_of_match[] = {
++	{ .compatible = "st,st95hf", },
++	{}
++};
++MODULE_DEVICE_TABLE(of, st95hf_of_match);
++
+ static int st95hf_probe(struct spi_device *nfc_spi_dev)
+ {
+ 	int ret;
+@@ -1189,6 +1195,7 @@ static struct spi_driver st95hf_driver = {
+ 	.driver = {
+ 		.name = "st95hf",
+ 		.owner = THIS_MODULE,
++		.of_match_table = st95hf_of_match,
+ 	},
+ 	.id_table = st95hf_id,
+ 	.probe = st95hf_probe,
+-- 
+2.17.1
