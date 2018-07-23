@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36395 "EHLO mail.toke.dk"
+Received: from nbd.name ([46.4.11.11]:53672 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933359AbeGJPW1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 11:22:27 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2] mac80211: add stop/start logic for software TXQs
-In-Reply-To: <defe411e-1371-6e1c-9414-02fc323c4ec8@codeaurora.org>
-References: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org> <87o9ffcknp.fsf@toke.dk> <defe411e-1371-6e1c-9414-02fc323c4ec8@codeaurora.org>
-Date: Tue, 10 Jul 2018 17:22:24 +0200
-Message-ID: <87in5ncdzj.fsf@toke.dk> (sfid-20180710_172230_614449_7C5ECE84)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        id S2387963AbeGWRFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 13:05:12 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 9/9] ath9k: fix more-data flag for buffered multicast packets
+Date: Mon, 23 Jul 2018 18:03:00 +0200
+Message-Id: <20180723160300.58024-9-nbd@nbd.name> (sfid-20180723_180333_728756_B8FCD6A9)
+In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
+References: <20180723160300.58024-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+The flag needs to be cleared for the last packet in the list, not the
+first one. Fixes some issues with multicast packet loss for powersave
+clients connected to an ath9k AP.
 
-> On 7/10/2018 6:28 PM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
->>> index 172aeae..d07f7f9 100644
->>> --- a/net/mac80211/ieee80211_i.h
->>> +++ b/net/mac80211/ieee80211_i.h
->>> @@ -818,6 +818,7 @@ enum txq_info_flags {
->>>   	IEEE80211_TXQ_STOP,
->>>   	IEEE80211_TXQ_AMPDU,
->>>   	IEEE80211_TXQ_NO_AMSDU,
->>> +	IEEE80211_TXQ_PAUSED,
->>>   };
->> I think it would be a good idea to either rename the flags, or at least
->> add an explanation somewhere of the difference between a paused and a
->> stopped queue...
->
-> Initially, the idea was to use IEEE80211_TXQ_STOP flag to indicate that=20
-> iTXQs are stopped; since this flag was used in the aggregation code, I=20
-> was unsure whether the same flag can be used to indicate the iTXQ stop=20
-> condition.
-> I could not find any better name for this:-).
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-Hmm, yeah, not sure whether the two code paths can stomp on each other
-if you reuse the flag. It would be neat to be able to reuse it, though...
-
-Otherwise, how about renaming the old one to _STOP_AGGR and calling the
-new one _STOP_NETIF or something?
-
->>>   /**
->>> @@ -1226,6 +1227,7 @@ struct ieee80211_local {
->>>=20=20=20
->>>   	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
->>>   	struct tasklet_struct tx_pending_tasklet;
->>> +	struct tasklet_struct wake_txqs_tasklet;
->> It's not quite clear to me why a tasklet is needed? Couldn't you just
->> call the ieee80211_wake_txqs() function at the same place where you
->> currently schedule the tasklet?
->
-> Since driver can also invoke wake_queues() operation; there can be a=20
-> possible deadlock situation. At least, in ath10k there was deadlock on=20
-> the "htt->tx_lock"; wake_queues() is invoked by taking the tx_lock and=20
-> the same lock is acquired again in wake_tx_queue().
-> Also, by deferring wake_txqs(), drivers can safely invoke wake_queues().
-
-Right, that makes sense :)
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bae0f6c045e1..43b6c8508e49 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2436,7 +2436,6 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		.txq = sc->beacon.cabq
+ 	};
+ 	struct ath_tx_info info = {};
+-	struct ieee80211_hdr *hdr;
+ 	struct ath_buf *bf_tail = NULL;
+ 	struct ath_buf *bf;
+ 	LIST_HEAD(bf_q);
+@@ -2480,15 +2479,10 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (list_empty(&bf_q))
+ 		return;
+ 
+-	bf = list_first_entry(&bf_q, struct ath_buf, list);
+-	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
+-
+-	if (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_MOREDATA)) {
+-		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+-		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+-			sizeof(*hdr), DMA_TO_DEVICE);
+-	}
++	bf = list_last_entry(&bf_q, struct ath_buf, list);
++	ath9k_set_moredata(sc, bf, false);
+ 
++	bf = list_first_entry(&bf_q, struct ath_buf, list);
+ 	ath_txq_lock(sc, txctl.txq);
+ 	ath_tx_fill_desc(sc, bf, txctl.txq, 0);
+ 	ath_tx_txqaddbuf(sc, txctl.txq, &bf_q, false);
+-- 
+2.17.0
