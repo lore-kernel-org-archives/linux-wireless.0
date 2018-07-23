@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35198 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932236AbeGFLjp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 07:39:45 -0400
-Message-ID: <1530877182.3197.3.camel@sipsolutions.net> (sfid-20180706_133948_279693_C22EDECE)
-Subject: Re: [PATCH 4/7] cfg80211: Add support to notify station's rssi
- level crossing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 06 Jul 2018 13:39:42 +0200
-In-Reply-To: <b87dc6cea56faee0a3570d90b4e6d42a@codeaurora.org>
-References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
-         <1528886747-26342-5-git-send-email-tamizhr@codeaurora.org>
-         <1530264922.3481.40.camel@sipsolutions.net>
-         <b87dc6cea56faee0a3570d90b4e6d42a@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53690 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387963AbeGWRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 13:05:13 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 3/9] ath9k: force rx_clear when disabling rx
+Date: Mon, 23 Jul 2018 18:02:54 +0200
+Message-Id: <20180723160300.58024-3-nbd@nbd.name> (sfid-20180723_180323_210355_FAD0265B)
+In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
+References: <20180723160300.58024-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-07-04 at 11:43 +0530, Tamizh chelvam wrote:
+From: Felix Fietkau <nbd@openwrt.org>
 
-> > > --- a/include/uapi/linux/nl80211.h
-> > > +++ b/include/uapi/linux/nl80211.h
-> > > @@ -1249,6 +1249,7 @@ enum nl80211_commands {
-> > >  	NL80211_CMD_CONTROL_PORT_FRAME,
-> > > 
-> > >  	NL80211_CMD_SET_STA_MON,
-> > > +	NL80211_CMD_NOTIFY_STA_MON,
-> > 
-> > Missing documentation - but again, why not unify it with the existing
-> > event? Or can't we because that might confuse older applications?
-> > Perhaps anyway we should unicast these notifications? Not sure though,
-> > perhaps one app could set them up and the other might care?
-> > 
-> 
-> This new command introduced as per the previous discussion
-> https://patchwork.kernel.org/patch/10168685/
-> https://patchwork.kernel.org/patch/10240697/
-> 
-> Is my understanding correct ?
+This makes stopping Rx more reliable and should reduce the frequency of
+Rx related DMA stop warnings. Don't use rx_clear in TX99 mode.
 
-I guess you're right. To my defense, this was like almost half a year
-ago :)
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-> I just referred this code from cfg80211_prepare_cqm. Do you want me to 
-> change this to struct based?
-
-Please, I guess we can fix up cqm too later.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 58d02c19b6d0..c9d2bf3fa135 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -678,13 +678,18 @@ void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning)
+ 
+ 	ath9k_ani_reset(ah, is_scanning);
+ 
+-	REG_CLR_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
++	REG_CLR_BIT(ah, AR_DIAG_SW,
++		    AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT | AR_DIAG_FORCE_RX_CLEAR);
+ }
+ EXPORT_SYMBOL(ath9k_hw_startpcureceive);
+ 
+ void ath9k_hw_abortpcurecv(struct ath_hw *ah)
+ {
+-	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_RX_ABORT | AR_DIAG_RX_DIS);
++	u32 reg = AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT;
++
++	if (!IS_ENABLED(CPTCFG_ATH9K_TX99))
++		reg |= AR_DIAG_FORCE_RX_CLEAR;
++	REG_SET_BIT(ah, AR_DIAG_SW, reg);
+ 
+ 	ath9k_hw_disable_mib_counters(ah);
+ }
+-- 
+2.17.0
