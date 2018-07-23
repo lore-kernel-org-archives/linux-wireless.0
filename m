@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38253 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726366AbeGLI6u (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43628 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387933AbeGWKbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jul 2018 04:58:50 -0400
-Received: by mail-wr1-f65.google.com with SMTP id m1-v6so8106161wrg.5
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jul 2018 01:50:12 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: fix CCK protection control frame rate
-Date: Thu, 12 Jul 2018 10:50:01 +0200
-Message-Id: <cd663daf364d7967b3a8d9fd7f213139c959d0c1.1531385150.git.lorenzo.bianconi@redhat.com> (sfid-20180712_105015_615015_83AB59B4)
-In-Reply-To: <cover.1531385150.git.lorenzo.bianconi@redhat.com>
-References: <cover.1531385150.git.lorenzo.bianconi@redhat.com>
+        Mon, 23 Jul 2018 06:31:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bernd Edlinger <bernd.edlinger@hotmail.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] Add a missing break in parse_station_flags
+References: <AM5PR0701MB265751E3A716081292C5224FE4450@AM5PR0701MB2657.eurprd07.prod.outlook.com>
+Date: Mon, 23 Jul 2018 12:30:41 +0300
+In-Reply-To: <AM5PR0701MB265751E3A716081292C5224FE4450@AM5PR0701MB2657.eurprd07.prod.outlook.com>
+        (Bernd Edlinger's message of "Sun, 8 Jul 2018 09:57:22 +0000")
+Message-ID: <87r2juti2m.fsf@purkki.adurom.net> (sfid-20180723_113104_876299_2FC43B00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 11M as tx rate for CCK protection control frames
+Bernd Edlinger <bernd.edlinger@hotmail.de> writes:
 
-Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+> I was looking at usually suppressed gcc warnings,
+> [-Wimplicit-fallthrough=] in this case:
+>
+> The code definitely looks like a break is missing here.
+> However I am not able to test the NL80211_IFTYPE_MESH_POINT,
+> nor do I actually know what might be :)
+> So please use this patch with caution and only if you are
+> able to do some testing.
+>
+> Signed-off-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
+> ---
+>   net/wireless/nl80211.c | 1 +
+>   1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 79ab93613e06..8ab9788464e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -84,7 +84,13 @@ mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
- static void
- mt76_write_mac_initvals(struct mt76x2_dev *dev)
- {
--#define DEFAULT_PROT_CFG				\
-+#define DEFAULT_PROT_CFG_CCK				\
-+	(FIELD_PREP(MT_PROT_CFG_RATE, 0x3) |		\
-+	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |		\
-+	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
-+	 MT_PROT_CFG_RTS_THRESH)
-+
-+#define DEFAULT_PROT_CFG_OFDM				\
- 	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
- 	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
- 	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
-@@ -159,8 +165,8 @@ mt76_write_mac_initvals(struct mt76x2_dev *dev)
- 		{ MT_HT_CTRL_CFG,		0x000001ff },
- 	};
- 	struct mt76x2_reg_pair prot_vals[] = {
--		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG },
--		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG },
-+		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG_CCK },
-+		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG_OFDM },
- 		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
- 		{ MT_MM40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
- 		{ MT_GF20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
+You should use prefix "nl80211: " in the title.
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
+
 -- 
-2.17.1
+Kalle Valo
