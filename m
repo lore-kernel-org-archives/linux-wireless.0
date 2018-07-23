@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34174 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727313AbeGPODt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jul 2018 10:03:49 -0400
-Received: by mail-pf0-f194.google.com with SMTP id k19-v6so931804pfi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2018 06:36:19 -0700 (PDT)
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Amol Hanwate <amol.hanwate@redpinesignals.com>
-Subject: [PATCH 4/6] rsi: Correct RSI_NEEDED_HEADROOM in mac80211_attach.
-Date: Mon, 16 Jul 2018 19:09:35 +0530
-Message-Id: <1531748377-29215-5-git-send-email-siva8118@gmail.com> (sfid-20180716_153622_832052_D80AD2A7)
-In-Reply-To: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
-References: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
+Received: from mail.bugwerft.de ([46.23.86.59]:49888 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388071AbeGWPBz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:01:55 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 02/10] NFC: st95hf: drop nfcdev_free
+Date: Mon, 23 Jul 2018 16:00:07 +0200
+Message-Id: <20180723140015.11663-3-daniel@zonque.org> (sfid-20180723_160034_756251_557CEB48)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amol Hanwate <amol.hanwate@redpinesignals.com>
+This flag is unneccesary. We can just nullify `ddev' instead after we freed
+it.
 
-Currently, RSI_NEEDED_HEADROOM is '80' for rsi driver, which is wrong.
-As per rsi internal frame format, the RSI_NEEDED_HEADROOM shall be '84',
-which is 64(dword_align) + 4(extended_desc) + 16(frame_desc).
-Hence, corrected the needed headroom.
-
-Signed-off-by: Amol Hanwate <amol.hanwate@redpinesignals.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/net/wireless/rsi/rsi_mgmt.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/nfc/st95hf/core.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 1462093..359fbdf 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -22,7 +22,7 @@
- #include "rsi_main.h"
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index bc1a2070f9bb..d58424ab5c48 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -220,8 +220,6 @@ struct st95_digital_cmd_complete_arg {
+  *	from threaded ISR. Usage of this mutex avoids any race between
+  *	deletion of the object from st95hf_remove() and its access from
+  *	the threaded ISR.
+- * @nfcdev_free: flag to have the state of nfc device object.
+- *	[alive | died]
+  * @current_protocol: current nfc protocol.
+  * @current_rf_tech: current rf technology.
+  * @fwi: frame waiting index, received in reply of RATS according to
+@@ -237,7 +235,6 @@ struct st95hf_context {
+ 	unsigned char sendrcv_trflag;
+ 	struct semaphore exchange_lock;
+ 	struct mutex rm_lock;
+-	bool nfcdev_free;
+ 	u8 current_protocol;
+ 	u8 current_rf_tech;
+ 	int fwi;
+@@ -820,8 +817,8 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 		goto end;
+ 	}
  
- #define MAX_MGMT_PKT_SIZE               512
--#define RSI_NEEDED_HEADROOM             80
-+#define RSI_NEEDED_HEADROOM             84
- #define RSI_RCV_BUFFER_LEN              2000
+-	/* if stcontext->nfcdev_free is true, it means remove already ran */
+-	if (stcontext->nfcdev_free) {
++	/* if stcontext->ddev is %NULL, it means remove already ran */
++	if (!stcontext->ddev) {
+ 		result = -ENODEV;
+ 		goto end;
+ 	}
+@@ -1220,7 +1217,7 @@ static int st95hf_remove(struct spi_device *nfc_spi_dev)
  
- #define RSI_11B_MODE                    0
+ 	nfc_digital_unregister_device(stcontext->ddev);
+ 	nfc_digital_free_device(stcontext->ddev);
+-	stcontext->nfcdev_free = true;
++	stcontext->ddev = NULL;
+ 
+ 	mutex_unlock(&stcontext->rm_lock);
+ 
 -- 
-2.5.5
+2.17.1
