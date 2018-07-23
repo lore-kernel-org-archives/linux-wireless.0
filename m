@@ -1,171 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58980 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753615AbeGFJS6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 05:18:58 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 06 Jul 2018 14:48:56 +0530
-From: Govind Singh <govinds@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Niklas Cassel <niklas.cassel@linaro.org>
-Cc: andy.gross@linaro.org, david.brown@linaro.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        bjorn.andersson@linaro.org
-Subject: Re: [PATCH v2 6/6] ath10k: Add QMI message handshake for wcn3990
- client
-In-Reply-To: <871sckpcyp.fsf@kamboji.qca.qualcomm.com>
-References: <20180605123732.1993-1-govinds@codeaurora.org>
- <20180619225158.GE1635@centauri.lan>
- <871sckpcyp.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <a109c5c9ce936cabadb1b006c79b9746@codeaurora.org> (sfid-20180706_111902_462497_A4F69866)
+Received: from mail.bugwerft.de ([46.23.86.59]:49930 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388125AbeGWPCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:02:00 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 06/10] NFC: st95hf: move skb allocation to ISR
+Date: Mon, 23 Jul 2018 16:00:11 +0200
+Message-Id: <20180723140015.11663-7-daniel@zonque.org> (sfid-20180723_160040_730357_CAAAC5E0)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-07-03 20:45, Kalle Valo wrote:
-> Niklas Cassel <niklas.cassel@linaro.org> writes:
-> 
->> On Tue, Jun 05, 2018 at 06:07:32PM +0530, Govind Singh wrote:
->>> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
->>> subsystem. This layer is responsible for communicating qmi control
->>> messages to wifi fw QMI service using QMI messaging protocol.
->>> 
->>> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
->>> between components running between application processor and remote
->>> processors with underlying transport layer based on integrated
->>> chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
->>> 
->>> With this patch-set basic functionality(STA/SAP) can be tested
->>> with WCN3990 chipset. The changes are verified with the firmware
->>> WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1 and SDM845 MTP device.
->>> 
->>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> 
-> [...]
-> 
->>> --- a/drivers/net/wireless/ath/ath10k/Kconfig
->>> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
->>> @@ -41,12 +41,13 @@ config ATH10K_USB
->>>  	  work in progress and will not fully work.
->>> 
->>>  config ATH10K_SNOC
->>> -        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
->>> -        depends on ATH10K && ARCH_QCOM
->>> -        ---help---
->>> -          This module adds support for integrated WCN3990 chip 
->>> connected
->>> -          to system NOC(SNOC). Currently work in progress and will 
->>> not
->>> -          fully work.
->>> +	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
->>> +	depends on ATH10K && ARCH_QCOM
->>> +	select QCOM_QMI_HELPERS
->>> +	---help---
->>> +	This module adds support for integrated WCN3990 chip connected
->>> +	to system NOC(SNOC). Currently work in progress and will not
->>> +	fully work.
->> 
->> Hello Govind,
->> 
->> Please do clean ups in separate commits.
->> That way is would be easier to see that the only
->> functional change here is that you added
->> select QCOM_QMI_HELPERS.
->> 
->> (Also help text should normally be indented by two extra spaces.)
->> 
->> I've sent a fix for the mixed tabs/spaces when I tried to
->> add COMPILE_TEST for this, and Kalle has already picked it up
->> in his master branch:
->> https://marc.info/?l=linux-wireless&m=152880359200364
->> 
->> So in your next version of this series, this can be reduced to simply
->> select QCOM_QMI_HELPERS.
-> 
-> BTW, I actually already did this on the pending branch:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=0caef5beefb85e6a5aa2a4b60d78253bbe453d7c
-> 
->> There are some checkpatch warnings on this patch:
->> 
->> drivers/net/wireless/ath/ath10k/qmi.c and
->> drivers/net/wireless/ath/ath10k/qmi.h
->> is missing SPDX-License-Identifier tag.
->> 
->> Several lines in drivers/net/wireless/ath/ath10k/qmi.c
->> and one line in drivers/net/wireless/ath/ath10k/snoc.c
->> is over 80 characters.
-> 
-> Yeah, but these can be ignored.
-> 
->> This patch is quite big, I think that it makes sense to split your 
->> patch in two.
->> One that adds the ath10k_qmi_* functions, and a follow up patch
->> that actually adds the function calls to snoc.c
-> 
-> Yeah, it's big but IMHO not too big. And splitting it up makes
-> functinonal review harder, that's why I prefer it like this.
-> 
->>> +int ath10k_qmi_wlan_enable(struct ath10k *ar,
->>> +			   struct ath10k_qmi_wlan_enable_cfg *config,
->>> +			   enum ath10k_qmi_driver_mode mode,
->>> +			   const char *version)
->>> +{
->>> +	int ret;
->>> +
->>> +	ath10k_dbg(ar, ATH10K_DBG_QMI, "mode: %d, config: %p:\n",
->>> +		   mode, config);
->>> +
->>> +	ret = ath10k_qmi_cfg_send_sync_msg(ar, config, version);
->>> +	if (ret) {
->>> +		ath10k_err(ar, "wlan qmi config send failed\n");
->>> +		return ret;
->>> +	}
->>> +
->>> +	ret = ath10k_qmi_mode_send_sync_msg(ar, mode);
->> 
->> Sparse tells me that you are mixing enum types.
->> If this is really what you want, do an explicit cast.
->> 
->> drivers/net/wireless/ath/ath10k//qmi.c:504:49: warning: mixing 
->> different enum types
->> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum 
->> ath10k_qmi_driver_mode  versus
->> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum 
->> wlfw_driver_mode_enum_v01
-> 
-> Good catch, that can cause subtle bugs. If you really want this, I
-> prefer having a separate helper function with a switch statement making
-> the conversion. This way it's super clear what's happening.
-> 
+The driver currently assumes that interrupts can only occur between the
+time when when a command has been sent to the device and the response
+to it.
 
-Addressed in v3 version.
+This assumption, however, is wrong. The antenna of the chip is likely to
+catch a lot of environmental noise, and once in a while, the device will
+latch the interrupt to signal a protocol error, and keep it latched until
+the response bytes are read from the chip.
 
->>> +int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
->>> +{
->>> +	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
->>> +	int ret;
->>> +
->>> +	switch (type) {
->>> +	case ATH10K_QMI_EVENT_FW_READY_IND:
->>> +		ret = ath10k_core_register(ar,
->>> +					   ar_snoc->target_info.soc_version);
->>> +		if (ret) {
->>> +			ath10k_err(ar, "Failed to register driver core: %d\n",
->>> +				   ret);
->>> +		}
->>> +		break;
->>> +	case ATH10K_QMI_EVENT_FW_DOWN_IND:
->>> +		break;
->> 
->> Perhaps this switch statement should have a default label?
-> 
-> Good idea. And add a warning so that we know there was an unknown event
-> which should be added to ath10k.
+As the code currently stands, skbs for responses are only prepared when
+a command is sent, and the ISR bails out early if that wasn't the case.
+Hence, the interrupt remains latched, and no further communication with
+device is possible.
 
-Addressed in v3 version.
+To fix this, move the call to nfc_alloc_recv_skb() from
+st95hf_in_send_cmd() to st95hf_irq_thread_handler() so we can always read
+back the interrupt reason.
 
-Thanks,
-Govind
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/nfc/st95hf/core.c | 36 ++++++------------------------------
+ 1 file changed, 6 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 6761ab90f68d..99f84ddfdfef 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -196,7 +196,6 @@ static const struct cmd cmd_array[] = {
+ 
+ /* st95_digital_cmd_complete_arg stores client context */
+ struct st95_digital_cmd_complete_arg {
+-	struct sk_buff *skb_resp;
+ 	nfc_digital_cmd_complete_t complete_cb;
+ 	void *cb_usrarg;
+ 	bool rats;
+@@ -783,12 +782,10 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 
+ 	spidevice = &stcontext->spicontext.spidev->dev;
+ 	cb_arg = &stcontext->complete_cb_arg;
+-	skb_resp = cb_arg->skb_resp;
+ 
+-	if (unlikely(!skb_resp)) {
+-		WARN(1, "unknown context in ST95HF ISR");
++	skb_resp = nfc_alloc_recv_skb(MAX_RESPONSE_BUFFER_SIZE, GFP_KERNEL);
++	if (WARN_ON(!skb_resp))
+ 		return IRQ_NONE;
+-	}
+ 
+ 	mutex_lock(&stcontext->rm_lock);
+ 	res_len = st95hf_spi_recv_response(&stcontext->spicontext,
+@@ -838,12 +835,6 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 	/* call digital layer callback */
+ 	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
+ 
+-	/*
+-	 * This skb is now owned by the core layer.
+-	 * Make sure not to use it again.
+-	 */
+-	cb_arg->skb_resp = NULL;
+-
+ 	/* up the semaphore before returning */
+ 	mutex_unlock(&stcontext->rm_lock);
+ 
+@@ -913,15 +904,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 			      void *arg)
+ {
+ 	struct st95hf_context *stcontext = nfc_digital_get_drvdata(ddev);
+-	int rc;
+-	struct sk_buff *skb_resp;
+-	int len_data_to_tag = 0;
+-
+-	skb_resp = nfc_alloc_recv_skb(MAX_RESPONSE_BUFFER_SIZE, GFP_KERNEL);
+-	if (!skb_resp) {
+-		rc = -ENOMEM;
+-		goto error;
+-	}
++	int rc, len_data_to_tag = 0;
+ 
+ 	switch (stcontext->current_rf_tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+@@ -933,8 +916,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 		len_data_to_tag = skb->len;
+ 		break;
+ 	default:
+-		rc = -EINVAL;
+-		goto free_skb_resp;
++		return -EINVAL;
+ 	}
+ 
+ 	skb_push(skb, 3);
+@@ -942,7 +924,6 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	skb->data[1] = SEND_RECEIVE_CMD;
+ 	skb->data[2] = len_data_to_tag;
+ 
+-	stcontext->complete_cb_arg.skb_resp = skb_resp;
+ 	stcontext->complete_cb_arg.cb_usrarg = arg;
+ 	stcontext->complete_cb_arg.complete_cb = cb;
+ 
+@@ -956,17 +937,12 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	if (rc) {
+ 		dev_err(&stcontext->nfcdev->dev,
+ 			"Error %d trying to perform data_exchange", rc);
+-		goto free_skb_resp;
++		return rc;
+ 	}
+ 
+ 	kfree_skb(skb);
+ 
+-	return rc;
+-
+-free_skb_resp:
+-	kfree_skb(skb_resp);
+-error:
+-	return rc;
++	return 0;
+ }
+ 
+ /* p2p will be supported in a later release ! */
+-- 
+2.17.1
