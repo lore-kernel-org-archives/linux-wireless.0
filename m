@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57294 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56486 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933359AbeGJPEr (ORCPT
+        with ESMTP id S2388043AbeGWKHs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 11:04:47 -0400
-Subject: Re: [PATCHv2] mac80211: add stop/start logic for software TXQs
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
- <87o9ffcknp.fsf@toke.dk>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <defe411e-1371-6e1c-9414-02fc323c4ec8@codeaurora.org> (sfid-20180710_170451_607752_4A4DF8D3)
-Date: Tue, 10 Jul 2018 20:34:38 +0530
+        Mon, 23 Jul 2018 06:07:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 04/11] mt76x0: usb files
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+        <1530771142-4118-5-git-send-email-sgruszka@redhat.com>
+        <20180705150519.GB17524@localhost.localdomain>
+        <87va96tq1g.fsf@purkki.adurom.net>
+        <CAJ0CqmV_pPrKnRvcCrn-pUNGgJ9bDoFY+H2u0eokOayX7N08oA@mail.gmail.com>
+Date: Mon, 23 Jul 2018 12:07:30 +0300
+In-Reply-To: <CAJ0CqmV_pPrKnRvcCrn-pUNGgJ9bDoFY+H2u0eokOayX7N08oA@mail.gmail.com>
+        (Lorenzo Bianconi's message of "Mon, 23 Jul 2018 10:57:02 +0200")
+Message-ID: <87pnzexqul.fsf@codeaurora.org> (sfid-20180723_110739_349432_082D4820)
 MIME-Version: 1.0
-In-Reply-To: <87o9ffcknp.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/10/2018 6:28 PM, Toke Høiland-Jørgensen wrote:
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
->> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
->> index 172aeae..d07f7f9 100644
->> --- a/net/mac80211/ieee80211_i.h
->> +++ b/net/mac80211/ieee80211_i.h
->> @@ -818,6 +818,7 @@ enum txq_info_flags {
->>   	IEEE80211_TXQ_STOP,
->>   	IEEE80211_TXQ_AMPDU,
->>   	IEEE80211_TXQ_NO_AMSDU,
->> +	IEEE80211_TXQ_PAUSED,
->>   };
-> I think it would be a good idea to either rename the flags, or at least
-> add an explanation somewhere of the difference between a paused and a
-> stopped queue...
+>>
+>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+>>
+>> > On Jul 05, Stanislaw Gruszka wrote:
+>> >> Add usb files of mt76x0 driver.
+>> >>
+>> >> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>>
+>> [...]
+>>
+>> >> +static int mt76x0_suspend(struct usb_interface *usb_intf, pm_message_t state)
+>> >> +{
+>> >> +    struct mt76x0_dev *dev = usb_get_intfdata(usb_intf);
+>> >> +
+>> >> +    mt76x0_cleanup(dev);
+>> >
+>> > Is it necessary to deallocate rx queue here in case of a system suspend?
+>>
+>> BTW it would really helpful to others if you could edit your quotes. It
+>> takes some time to find your oneliner from a 450 line message.
+>
+> Ack sorry, I will be more verbose next time :).
 
-Initially, the idea was to use IEEE80211_TXQ_STOP flag to indicate that 
-iTXQs are stopped; since this flag was used in the aggregation code, I 
-was unsure whether the same flag can be used to indicate the iTXQ stop 
-condition.
-I could not find any better name for this:-).
+I think you misunderstood, I actually was asking to be less verbose :)
 
-Johannes, any thought?
+The oneliner was just fine. I was just suggesting that instead of
+sending a message with 400 lines trim the unnecessary quotation and just
+send a shorter 50 line message. That way you save a lot of time (and
+avoid frustration) for the people reading your mail.
 
->>   /**
->> @@ -1226,6 +1227,7 @@ struct ieee80211_local {
->>   
->>   	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
->>   	struct tasklet_struct tx_pending_tasklet;
->> +	struct tasklet_struct wake_txqs_tasklet;
-> It's not quite clear to me why a tasklet is needed? Couldn't you just
-> call the ieee80211_wake_txqs() function at the same place where you
-> currently schedule the tasklet?
-
-Since driver can also invoke wake_queues() operation; there can be a 
-possible deadlock situation. At least, in ath10k there was deadlock on 
-the "htt->tx_lock"; wake_queues() is invoked by taking the tx_lock and 
-the same lock is acquired again in wake_tx_queue().
-Also, by deferring wake_txqs(), drivers can safely invoke wake_queues().
-
--Manikanta
+-- 
+Kalle Valo
