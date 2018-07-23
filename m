@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56770 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727135AbeGaI5l (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 04:57:41 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] ipw2x00: remove redundant variables len, ret,
- reason and crypt
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180711071212.3018-1-colin.king@canonical.com>
-References: <20180711071212.3018-1-colin.king@canonical.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        netdev@vger.kernel.org
-Message-Id: <20180731071847.4839760397@smtp.codeaurora.org> (sfid-20180731_091900_324051_155ACDD4)
-Date: Tue, 31 Jul 2018 07:18:47 +0000 (UTC)
+Received: from mail.bugwerft.de ([46.23.86.59]:49938 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388127AbeGWPCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:02:00 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 07/10] NFC: st95hf: re-order command defines
+Date: Mon, 23 Jul 2018 16:00:12 +0200
+Message-Id: <20180723140015.11663-8-daniel@zonque.org> (sfid-20180723_160040_177874_6448ABAD)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> wrote:
+Just a small cleanup to bring the command defines in a numerical order.
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variables len, ret, reason and crypt are assigned values that
-> are never read, hence they are redundant and can be removed.
-> 
-> Note: For the variable ret, a return code is being assigned, but
-> this is not returned and 0 is currently being returned, I believe
-> this is OK.
-> 
-> Cleans up clang warnings:
-> warning: variable 'len' set but not used [-Wunused-but-set-variable]
-> variable 'ret' set but not used [-Wunused-but-set-variable]
-> warning: variable 'reason' set but not used [-Wunused-but-set-variable]
-> warning: variable 'crypt' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/nfc/st95hf/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-0e139e97f58e ipw2x00: remove redundant variables len, ret, reason and crypt
-
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 99f84ddfdfef..e7ecc57dde8f 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -45,10 +45,10 @@
+ 
+ /* Command Send Interface */
+ /* ST95HF_COMMAND_SEND CMD Ids */
+-#define ECHO_CMD			0x55
+-#define WRITE_REGISTER_CMD		0x9
+ #define PROTOCOL_SELECT_CMD		0x2
+ #define SEND_RECEIVE_CMD		0x4
++#define WRITE_REGISTER_CMD		0x9
++#define ECHO_CMD			0x55
+ 
+ /* Select protocol codes */
+ #define ISO15693_PROTOCOL_CODE		0x1
 -- 
-https://patchwork.kernel.org/patch/10518849/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
