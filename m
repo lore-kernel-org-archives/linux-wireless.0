@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:43022 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388832AbeGXUhe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38850 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387822AbeGWHiT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:34 -0400
-Received: by mail-pg1-f194.google.com with SMTP id v13-v6so3568615pgr.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:38 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 06/18] xfrm: remove blank lines at EOF
-Date: Tue, 24 Jul 2018 12:29:06 -0700
-Message-Id: <20180724192918.31165-7-sthemmin@microsoft.com> (sfid-20180724_212949_206895_9BDE4523)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Mon, 23 Jul 2018 03:38:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 04/11] mt76x0: usb files
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+        <1530771142-4118-5-git-send-email-sgruszka@redhat.com>
+        <20180705150519.GB17524@localhost.localdomain>
+Date: Mon, 23 Jul 2018 09:38:35 +0300
+In-Reply-To: <20180705150519.GB17524@localhost.localdomain> (Lorenzo
+        Bianconi's message of "Thu, 5 Jul 2018 17:05:20 +0200")
+Message-ID: <87va96tq1g.fsf@purkki.adurom.net> (sfid-20180723_083842_800881_ADF6A35B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/xfrm/Kconfig     | 1 -
- net/xfrm/xfrm_user.c | 1 -
- 2 files changed, 2 deletions(-)
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-diff --git a/net/xfrm/Kconfig b/net/xfrm/Kconfig
-index 286ed25c1a69..eab952cca7d0 100644
---- a/net/xfrm/Kconfig
-+++ b/net/xfrm/Kconfig
-@@ -87,4 +87,3 @@ config NET_KEY_MIGRATE
- 	  <draft-sugimoto-mip6-pfkey-migrate>.
- 
- 	  If unsure, say N.
--
-diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c
-index 080035f056d9..09cceab450b8 100644
---- a/net/xfrm/xfrm_user.c
-+++ b/net/xfrm/xfrm_user.c
-@@ -3280,4 +3280,3 @@ module_init(xfrm_user_init);
- module_exit(xfrm_user_exit);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS_NET_PF_PROTO(PF_NETLINK, NETLINK_XFRM);
--
+> On Jul 05, Stanislaw Gruszka wrote:
+>> Add usb files of mt76x0 driver.
+>> 
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+[...]
+
+>> +static int mt76x0_suspend(struct usb_interface *usb_intf, pm_message_t state)
+>> +{
+>> +	struct mt76x0_dev *dev = usb_get_intfdata(usb_intf);
+>> +
+>> +	mt76x0_cleanup(dev);
+>
+> Is it necessary to deallocate rx queue here in case of a system suspend?
+
+BTW it would really helpful to others if you could edit your quotes. It
+takes some time to find your oneliner from a 450 line message.
+
 -- 
-2.18.0
+Kalle Valo
