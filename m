@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:60747 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726338AbeGSJSy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 05:18:54 -0400
-Subject: Re: [PATCH 00/23] staging: wilc1000: cleanup patch to follow linux
- coding style
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <4645c136-eaad-01a9-cebe-abff6f4dce3e@microchip.com> (sfid-20180719_103700_799543_6023B27B)
-Date: Thu, 19 Jul 2018 11:36:45 +0300
-MIME-Version: 1.0
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:53702 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388146AbeGWRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 13:05:13 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 8/9] ath9k_hw: fix channel maximum power level test
+Date: Mon, 23 Jul 2018 18:02:59 +0200
+Message-Id: <20180723160300.58024-8-nbd@nbd.name> (sfid-20180723_180324_368897_DE815911)
+In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
+References: <20180723160300.58024-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+The tx power applied by set_txpower is limited by the CTL (conformance
+test limit) entries in the EEPROM. These can change based on the user
+configured regulatory domain.
+Depending on the EEPROM data this can cause the tx power to become too
+limited, if the original regdomain CTLs impose lower limits than the CTLs
+of the user configured regdomain.
 
+To fix this issue, set the initial channel limits without any CTL
+restrictions and only apply the CTL at run time when setting the channel
+and the real tx power.
 
-On 19.07.2018 01:44, Ajay Singh wrote:
-> This patch series contains modification to follow Linux coding style &
-> cleanup change to remove unused variables and enums.
-> Few patches also contain changes to remove unnecessary typecast.
-> 
-> Ajay Singh (23):
->   staging: wilc1000: remove unused enum declaration
->   staging: wilc1000: remove enum connect_status instead use
->     ieee80211_statuscode
->   staging: wilc1000: remove extra enum defined for data rates
->   staging: wilc1000: remove extra enums defined for ieee80211_eid
->   staging: wilc1000: rename goto to avoid leading '_' in label name
->   staging: wilc1000: rename enum CURRENT_TXRATE to use lowercase
->   staging: wilc1000: rename enum SITESURVEY to use lowercase
->   staging: wilc1000: rename enum AUTHTYPE to use lowercase
->   staging: wilc1000: remove unused elements in 'wilc' struct
->   staging: wilc1000: remove unnecessary elements from 'wilc_priv' struct
->   staging: wilc1000: removed unused element from wilc_cfg_frame struct
->   staging: wilc1000: remove the mutliple #define used for same macro
->   staging: wilc1000: use lowercase for 'IFC_UP' struct element name
->   staging: wilc1000: remove unnecessary blank line between variable
->     declaration
->   staging: wilc1000: use single space before opening brances '{'
->   staging: wilc1000: remove unnecessary type used for wid id
->   staging: wilc1000: avoid forward declaration for handle_scan_done()
->   staging: wilc1000: avoid host_int_get_assoc_res_info() forward
->     declaration
->   staging: wilc1000: avoid forward declaration of
->     host_int_parse_join_bss_param()
->   staging: wilc1000: avoid setting default value for variable at
->     declaration
->   staging: wilc1000: use 'int' inplace of 's32' date type
->   staging: wilc1000: remove unnecessary 'NULL' check from cfg80211_ops
->     callbacks
->   staging: wilc1000: move variable assignment along with its declaration
-> 
->  drivers/staging/wilc1000/coreconfigurator.c       |  84 +--
->  drivers/staging/wilc1000/coreconfigurator.h       |  20 -
->  drivers/staging/wilc1000/host_interface.c         | 696 +++++++++++-----------
->  drivers/staging/wilc1000/host_interface.h         |  20 +-
->  drivers/staging/wilc1000/linux_mon.c              |   2 -
->  drivers/staging/wilc1000/linux_wlan.c             | 122 ++--
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 307 +++-------
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  16 +-
->  drivers/staging/wilc1000/wilc_wlan.c              |  65 +-
->  drivers/staging/wilc1000/wilc_wlan.h              |   3 -
->  drivers/staging/wilc1000/wilc_wlan_if.h           |  56 +-
->  11 files changed, 517 insertions(+), 874 deletions(-)
-> 
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1665066f4e24..9dc866404eca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2942,16 +2942,19 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
+ 	struct ieee80211_channel *channel;
+ 	int chan_pwr, new_pwr;
++	u16 ctl = NO_CTL;
+ 
+ 	if (!chan)
+ 		return;
+ 
++	if (!test)
++		ctl = ath9k_regd_get_ctl(reg, chan);
++
+ 	channel = chan->chan;
+ 	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
+ 	new_pwr = min_t(int, chan_pwr, reg->power_limit);
+ 
+-	ah->eep_ops->set_txpower(ah, chan,
+-				 ath9k_regd_get_ctl(reg, chan),
++	ah->eep_ops->set_txpower(ah, chan, ctl,
+ 				 get_antenna_gain(ah, chan), new_pwr, test);
+ }
+ 
+-- 
+2.17.0
