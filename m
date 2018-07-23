@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37658 "EHLO mail.kernel.org"
+Received: from mail.bugwerft.de ([46.23.86.59]:49872 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729335AbeGYVGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jul 2018 17:06:06 -0400
-Subject: [PATCH v1 4/4] PCI: Remove unnecessary include of <linux/pci-aspm.h>
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 25 Jul 2018 14:52:54 -0500
-Message-ID: <153254837478.92573.14742111987549518973.stgit@bhelgaas-glaptop.roam.corp.google.com> (sfid-20180725_215311_636417_B6F8882B)
-In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S2388071AbeGWPBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 11:01:54 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 01/10] Revert "NFC: st95hf: drop illegal kfree_skb()"
+Date: Mon, 23 Jul 2018 16:00:06 +0200
+Message-Id: <20180723140015.11663-2-daniel@zonque.org> (sfid-20180723_160033_716600_8B813CD7)
+In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
+References: <20180723140015.11663-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+This reverts commit c99f996b2ba49 ("NFC: st95hf: drop illegal
+kfree_skb()").
 
-Several PCI core files include pci-aspm.h even though they don't need
-anything provided by that file.  Remove the unnecessary includes of it.
+It turns out that the st95hf_in_send_cmd() is in fact the sole owner of
+this skb, and by not freeing it here, we not only causing a memory leak
+but also mess up the refcount of the socket that holds it. This will in
+turn lead to activated targets not being cleaned up, even after
+stopping userspace processes.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The memory corruption that I was hunting was caused by another
+kfree_skb(). This will be fixed in a later commit.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Fixes: c99f996b2ba49 ("NFC: st95hf: drop illegal kfree_skb()")
 ---
- drivers/pci/pci-sysfs.c |    1 -
- drivers/pci/pci.c       |    1 -
- drivers/pci/probe.c     |    1 -
- drivers/pci/remove.c    |    1 -
- 4 files changed, 4 deletions(-)
+ drivers/nfc/st95hf/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0c4653c1d2ce..91337faae60d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -23,7 +23,6 @@
- #include <linux/fs.h>
- #include <linux/capability.h>
- #include <linux/security.h>
--#include <linux/pci-aspm.h>
- #include <linux/slab.h>
- #include <linux/vgaarb.h>
- #include <linux/pm_runtime.h>
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f5c6ab14fb31..7c2f0e682fc0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -23,7 +23,6 @@
- #include <linux/string.h>
- #include <linux/log2.h>
- #include <linux/logic_pio.h>
--#include <linux/pci-aspm.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
- #include <linux/device.h>
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e32de4b..1ed2852dee21 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -13,7 +13,6 @@
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/cpumask.h>
--#include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
- #include <linux/hypervisor.h>
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 6f072eae4f7a..01ec7fcb5634 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -1,7 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
- #include <linux/pci.h>
- #include <linux/module.h>
--#include <linux/pci-aspm.h>
- #include "pci.h"
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 36ef0e905ba3..bc1a2070f9bb 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -991,6 +991,8 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 		goto free_skb_resp;
+ 	}
  
- static void pci_free_resources(struct pci_dev *dev)
++	kfree_skb(skb);
++
+ 	return rc;
+ 
+ free_skb_resp:
+-- 
+2.17.1
