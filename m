@@ -1,305 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727996AbeGVIqN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40994 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388998AbeGWNfy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:13 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 08/20] wil6210: add 3-MSI support
-Date: Sun, 22 Jul 2018 10:47:33 +0300
-Message-Id: <1532245665-15249-9-git-send-email-merez@codeaurora.org> (sfid-20180722_095028_650102_DAD4ABD7)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Mon, 23 Jul 2018 09:35:54 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, andy.gross@linaro.org, robh@kernel.org,
+        devicetree@vger.kernel.org, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v4 3/6] dt: bindings: add bindings for msa memory region
+Date: Mon, 23 Jul 2018 18:04:25 +0530
+Message-Id: <20180723123428.12993-4-govinds@codeaurora.org> (sfid-20180723_143532_739088_3379CF82)
+In-Reply-To: <20180723123428.12993-1-govinds@codeaurora.org>
+References: <20180723123428.12993-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Add device tree binding documentation details of msa
+memory region for ath10k qmi client for SDM845/APQ8098
+SoC into "qcom,ath10k.txt".
 
-Extend MSI support to 3-MSI in order to load balance the tx\rx
-interrupts between different cores.
-use_msi module parameter has changed to n_msi. Usage:
-- Set n_msi to 0 for using INTx
-- Set n_msi to 1 for using single MSI
-- Set n_msi to 3 for using 3-MSI
-
-In 3-MSI configuration MSI 0 is used for TX interrupts, MSI 1
-is used for RX interrupts and MSI 2 is used for MISC interrupts.
-
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c    | 64 ++++++++++++++++++++++---
- drivers/net/wireless/ath/wil6210/main.c         |  3 ++
- drivers/net/wireless/ath/wil6210/pcie_bus.c     | 60 +++++++++++++++++------
- drivers/net/wireless/ath/wil6210/wil6210.h      |  3 +-
- drivers/net/wireless/ath/wil6210/wil_platform.h |  1 +
- 5 files changed, 110 insertions(+), 21 deletions(-)
+ .../devicetree/bindings/net/wireless/qcom,ath10k.txt        | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index d7e112d..5d287a8 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -625,6 +625,15 @@ static irqreturn_t wil6210_irq_misc_thread(int irq, void *cookie)
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 7fd4e8ce4149..2196d1ab3c8c 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -56,6 +56,11 @@ Optional properties:
+ 				     the length can vary between hw versions.
+ - <supply-name>-supply: handle to the regulator device tree node
+ 			   optional "supply-name" is "vdd-0.8-cx-mx".
++- memory-region:
++	Usage: optional
++	Value type: <phandle>
++	Definition: reference to the reserved-memory for the msa region
++		    used by the wifi firmware running in Q6.
  
- 	wil6210_unmask_irq_misc(wil, false);
+ Example (to supply the calibration data alone):
  
-+	/* in non-triple MSI case, this is done inside wil6210_thread_irq
-+	 * because it has to be done after unmasking the pseudo.
-+	 */
-+	if (wil->n_msi == 3 && wil->suspend_resp_rcvd) {
-+		wil_dbg_irq(wil, "set suspend_resp_comp to true\n");
-+		wil->suspend_resp_comp = true;
-+		wake_up_interruptible(&wil->wq);
-+	}
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -782,6 +791,40 @@ static irqreturn_t wil6210_hardirq(int irq, void *cookie)
- 	return rc;
- }
- 
-+static int wil6210_request_3msi(struct wil6210_priv *wil, int irq)
-+{
-+	int rc;
-+
-+	/* IRQ's are in the following order:
-+	 * - Tx
-+	 * - Rx
-+	 * - Misc
-+	 */
-+	rc = request_irq(irq, wil->txrx_ops.irq_tx, IRQF_SHARED,
-+			 WIL_NAME "_tx", wil);
-+	if (rc)
-+		return rc;
-+
-+	rc = request_irq(irq + 1, wil->txrx_ops.irq_rx, IRQF_SHARED,
-+			 WIL_NAME "_rx", wil);
-+	if (rc)
-+		goto free0;
-+
-+	rc = request_threaded_irq(irq + 2, wil6210_irq_misc,
-+				  wil6210_irq_misc_thread,
-+				  IRQF_SHARED, WIL_NAME "_misc", wil);
-+	if (rc)
-+		goto free1;
-+
-+	return 0;
-+free1:
-+	free_irq(irq + 1, wil);
-+free0:
-+	free_irq(irq, wil);
-+
-+	return rc;
-+}
-+
- /* can't use wil_ioread32_and_clear because ICC value is not set yet */
- static inline void wil_clear32(void __iomem *addr)
- {
-@@ -822,11 +865,12 @@ void wil6210_clear_halp(struct wil6210_priv *wil)
- 	wil6210_unmask_halp(wil);
- }
- 
--int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi)
-+int wil6210_init_irq(struct wil6210_priv *wil, int irq)
- {
- 	int rc;
- 
--	wil_dbg_misc(wil, "init_irq: %s\n", use_msi ? "MSI" : "INTx");
-+	wil_dbg_misc(wil, "init_irq: %s, n_msi=%d\n",
-+		     wil->n_msi ? "MSI" : "INTx", wil->n_msi);
- 
- 	if (wil->use_enhanced_dma_hw) {
- 		wil->txrx_ops.irq_tx = wil6210_irq_tx_edma;
-@@ -835,10 +879,14 @@ int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi)
- 		wil->txrx_ops.irq_tx = wil6210_irq_tx;
- 		wil->txrx_ops.irq_rx = wil6210_irq_rx;
- 	}
--	rc = request_threaded_irq(irq, wil6210_hardirq,
--				  wil6210_thread_irq,
--				  use_msi ? 0 : IRQF_SHARED,
--				  WIL_NAME, wil);
-+
-+	if (wil->n_msi == 3)
-+		rc = wil6210_request_3msi(wil, irq);
-+	else
-+		rc = request_threaded_irq(irq, wil6210_hardirq,
-+					  wil6210_thread_irq,
-+					  wil->n_msi ? 0 : IRQF_SHARED,
-+					  WIL_NAME, wil);
- 	return rc;
- }
- 
-@@ -848,4 +896,8 @@ void wil6210_fini_irq(struct wil6210_priv *wil, int irq)
- 
- 	wil_mask_irq(wil);
- 	free_irq(irq, wil);
-+	if (wil->n_msi == 3) {
-+		free_irq(irq + 1, wil);
-+		free_irq(irq + 2, wil);
-+	}
- }
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7e4ccd9..9495c6c 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1136,6 +1136,9 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- 				     wil->platform_capa)) ?
- 			BIT(WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL) : 0;
- 
-+		if (wil->n_msi == 3)
-+			features |= BIT(WIL_PLATFORM_FEATURE_TRIPLE_MSI);
-+
- 		wil->platform_ops.set_features(wil->platform_handle, features);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 7192d9a..095c16f 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -24,9 +24,9 @@
- #include <linux/rtnetlink.h>
- #include <linux/pm_runtime.h>
- 
--static bool use_msi = true;
--module_param(use_msi, bool, 0444);
--MODULE_PARM_DESC(use_msi, " Use MSI interrupt, default - true");
-+static int n_msi = 1;
-+module_param(n_msi, int, 0444);
-+MODULE_PARM_DESC(n_msi, " Use MSI interrupt: 0 - use INTx, 1 - (default) - single, or 3");
- 
- static bool ftm_mode;
- module_param(ftm_mode, bool, 0444);
-@@ -150,12 +150,24 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 
- void wil_disable_irq(struct wil6210_priv *wil)
- {
--	disable_irq(wil->pdev->irq);
-+	int irq = wil->pdev->irq;
-+
-+	disable_irq(irq);
-+	if (wil->n_msi == 3) {
-+		disable_irq(irq + 1);
-+		disable_irq(irq + 2);
-+	}
- }
- 
- void wil_enable_irq(struct wil6210_priv *wil)
- {
--	enable_irq(wil->pdev->irq);
-+	int irq = wil->pdev->irq;
-+
-+	enable_irq(irq);
-+	if (wil->n_msi == 3) {
-+		enable_irq(irq + 1);
-+		enable_irq(irq + 2);
-+	}
- }
- 
- static void wil_remove_all_additional_vifs(struct wil6210_priv *wil)
-@@ -182,28 +194,47 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	 * and only MSI should be used
- 	 */
- 	int msi_only = pdev->msi_enabled;
--	bool _use_msi = use_msi;
- 
- 	wil_dbg_misc(wil, "if_pcie_enable\n");
- 
- 	pci_set_master(pdev);
- 
--	wil_dbg_misc(wil, "Setup %s interrupt\n", use_msi ? "MSI" : "INTx");
-+	/* how many MSI interrupts to request? */
-+	switch (n_msi) {
-+	case 3:
-+	case 1:
-+		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", n_msi);
-+		break;
-+	case 0:
-+		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-+		break;
-+	default:
-+		wil_err(wil, "Invalid n_msi=%d, default to 1\n", n_msi);
-+		n_msi = 1;
-+	}
-+
-+	if (n_msi == 3 &&
-+	    pci_alloc_irq_vectors(pdev, n_msi, n_msi, PCI_IRQ_MSI) < n_msi) {
-+		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-+		n_msi = 1;
-+	}
- 
--	if (use_msi && pci_enable_msi(pdev)) {
-+	if (n_msi == 1 && pci_enable_msi(pdev)) {
- 		wil_err(wil, "pci_enable_msi failed, use INTx\n");
--		_use_msi = false;
-+		n_msi = 0;
- 	}
- 
--	if (!_use_msi && msi_only) {
-+	wil->n_msi = n_msi;
-+
-+	if (wil->n_msi == 0 && msi_only) {
- 		wil_err(wil, "Interrupt pin not routed, unable to use INTx\n");
- 		rc = -ENODEV;
- 		goto stop_master;
- 	}
- 
--	rc = wil6210_init_irq(wil, pdev->irq, _use_msi);
-+	rc = wil6210_init_irq(wil, pdev->irq);
- 	if (rc)
--		goto stop_master;
-+		goto release_vectors;
- 
- 	/* need reset here to obtain MAC */
- 	mutex_lock(&wil->mutex);
-@@ -216,8 +247,9 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 
-  release_irq:
- 	wil6210_fini_irq(wil, pdev->irq);
--	/* safe to call if no MSI */
--	pci_disable_msi(pdev);
-+ release_vectors:
-+	/* safe to call if no allocation */
-+	pci_free_irq_vectors(pdev);
-  stop_master:
- 	pci_clear_master(pdev);
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 00719a0..379f7ce 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -874,6 +874,7 @@ struct wil6210_priv {
- 	u32 bar_size;
- 	struct wiphy *wiphy;
- 	struct net_device *main_ndev;
-+	int n_msi;
- 	void __iomem *csr;
- 	DECLARE_BITMAP(status, wil_status_last);
- 	u8 fw_version[ETHTOOL_FWVERS_LEN];
-@@ -1206,7 +1207,7 @@ int wil_addba_rx_request(struct wil6210_priv *wil, u8 mid,
- int wil_addba_tx_request(struct wil6210_priv *wil, u8 ringid, u16 wsize);
- 
- void wil6210_clear_irq(struct wil6210_priv *wil);
--int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi);
-+int wil6210_init_irq(struct wil6210_priv *wil, int irq);
- void wil6210_fini_irq(struct wil6210_priv *wil, int irq);
- void wil_mask_irq(struct wil6210_priv *wil);
- void wil_unmask_irq(struct wil6210_priv *wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
-index 177026e..bca0906 100644
---- a/drivers/net/wireless/ath/wil6210/wil_platform.h
-+++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
-@@ -29,6 +29,7 @@ enum wil_platform_event {
- 
- enum wil_platform_features {
- 	WIL_PLATFORM_FEATURE_FW_EXT_CLK_CONTROL = 0,
-+	WIL_PLATFORM_FEATURE_TRIPLE_MSI = 1,
- 	WIL_PLATFORM_FEATURE_MAX,
+@@ -149,4 +154,5 @@ wifi@18000000 {
+ 			   <0 140 0 /* CE10 */ >,
+ 			   <0 141 0 /* CE11 */ >;
+ 		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++		memory-region = <&wifi_msa_mem>;
  };
- 
 -- 
-1.9.1
+2.17.0
