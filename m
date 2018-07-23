@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:30616 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729891AbeGSGqH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45284 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388217AbeGWNiA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 02:46:07 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/23] staging: wilc1000: rename enum CURRENT_TXRATE to use lowercase
-Date: Thu, 19 Jul 2018 04:15:02 +0530
-Message-ID: <1531953919-20804-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080458_830703_B7EB057B)
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 23 Jul 2018 09:38:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 23 Jul 2018 18:06:58 +0530
+From: Govind Singh <govinds@codeaurora.org>
+To: Rob Herring <robh@kernel.org>
+Cc: devicetree@vger.kernel.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, andy.gross@linaro.org,
+        niklas.cassel@linaro.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 3/6] dt: bindings: add bindings for msa memory region
+In-Reply-To: <20180711152718.GA18470@rob-hp-laptop>
+References: <20180706090043.28363-1-govinds@codeaurora.org>
+ <20180711152718.GA18470@rob-hp-laptop>
+Message-ID: <5ba59b76dfcc8ba997ce7b0ea880329c@codeaurora.org> (sfid-20180723_143715_568177_1F7F8CED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to rename enums in lowercase to follow linux coding style.
+Hi Rob,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/host_interface.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On 2018-07-11 20:57, Rob Herring wrote:
+> On Fri, Jul 06, 2018 at 02:30:43PM +0530, Govind Singh wrote:
+>> Add device tree binding documentation details of msa
+>> memory region for ath10k qmi client for SDM845/APQ8098
+>> SoC into "qcom,ath10k.txt".
+>> 
+>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>> ---
+>>  .../bindings/net/wireless/qcom,ath10k.txt           | 13 
+>> +++++++++++++
+>>  1 file changed, 13 insertions(+)
+>> 
+>> diff --git 
+>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt 
+>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> index 7fd4e8ce4149..87489054aea5 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> @@ -57,6 +57,16 @@ Optional properties:
+>>  - <supply-name>-supply: handle to the regulator device tree node
+>>  			   optional "supply-name" is "vdd-0.8-cx-mx".
+>> 
+>> += SUBNODES:
+>> +wcn3990-wifi node may contain one subnode, named "msa" representing
+>> +the fixed msa memory regions used by the wifi firmware running in Q6.
+>> +This sub-node must contain:
+> 
+> Why do you need a sub-node? Just add memory-region property.
+> 
+Fixed in v4 version.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7309b7e..cc64b14 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -695,7 +695,7 @@ static void handle_cfg_param(struct work_struct *work)
- 		i++;
- 	}
- 	if (param->flag & CURRENT_TX_RATE) {
--		enum CURRENT_TXRATE curr_tx_rate = param->curr_tx_rate;
-+		enum current_tx_rate curr_tx_rate = param->curr_tx_rate;
- 
- 		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1 ||
- 		    curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5 ||
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 3cd97dd..64fc269 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -81,7 +81,7 @@ struct host_if_pmkid_attr {
- 	struct host_if_pmkid pmkidlist[WILC_MAX_NUM_PMKIDS];
- };
- 
--enum CURRENT_TXRATE {
-+enum current_tx_rate {
- 	AUTORATE	= 0,
- 	MBPS_1		= 1,
- 	MBPS_2		= 2,
-@@ -118,7 +118,7 @@ struct cfg_param_attr {
- 	u8 scan_source;
- 	u16 active_scan_time;
- 	u16 passive_scan_time;
--	enum CURRENT_TXRATE curr_tx_rate;
-+	enum current_tx_rate curr_tx_rate;
- 
- };
- 
--- 
-2.7.4
+Thanks,
+Govind
