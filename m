@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45672 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753216AbeGEIlp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 04:41:45 -0400
-Date: Thu, 5 Jul 2018 11:41:26 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH] staging: wilc1000: fix static checker warning to unlock
- mutex in wilc_deinit()
-Message-ID: <20180705084126.jbqiduxkq7257asu@mwanda> (sfid-20180705_104148_157158_446A746A)
-References: <1530762533-30510-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530762533-30510-1-git-send-email-ajay.kathat@microchip.com>
+Received: from nbd.name ([46.4.11.11]:53706 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388030AbeGWRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 13:05:13 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/9] ath9k_hw: set spectral scan enable bit on trigger for AR9003+
+Date: Mon, 23 Jul 2018 18:02:52 +0200
+Message-Id: <20180723160300.58024-1-nbd@nbd.name> (sfid-20180723_180334_848350_38479F26)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 05, 2018 at 09:18:53AM +0530, Ajay Singh wrote:
-> Fix for static checker warning inconsistent returns of
-> 'hif_deinit_lock'(more details [1]).
-> 
-> "drivers/staging/wilc1000/host_interface.c:3390 wilc_deinit()
->               warn: inconsistent returns 'hif_deinit_lock'."
-> 
-> Introduced in "ff52a57a7a42: staging: wilc1000: move the allocation of
-> cmd out of wilc_enqueue_cmd()".
+AR9002 code and the QCA AR9003+ reference code do the same.
 
-Can you use the Fixes tag so it's machine parseable?
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Fixes: ff52a57a7a42 ("staging: wilc1000: move the allocation of cmd out of wilc_enqueue_cmd()")
-
-With the fixes tag, say someone pulls ff52a57a7a42 into their code, they
-will know to pull this patch as well.  Also scientists will be able to
-measure the time between bug and fix and write a scholarly paper about
-it.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index fe5102ca5010..98c5f524a360 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1800,6 +1800,8 @@ static void ar9003_hw_spectral_scan_config(struct ath_hw *ah,
+ 
+ static void ar9003_hw_spectral_scan_trigger(struct ath_hw *ah)
+ {
++	REG_SET_BIT(ah, AR_PHY_SPECTRAL_SCAN,
++		    AR_PHY_SPECTRAL_SCAN_ENABLE);
+ 	/* Activate spectral scan */
+ 	REG_SET_BIT(ah, AR_PHY_SPECTRAL_SCAN,
+ 		    AR_PHY_SPECTRAL_SCAN_ACTIVE);
+-- 
+2.17.0
