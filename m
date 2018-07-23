@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36221 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752745AbeGCOgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 10:36:19 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
-In-Reply-To: <1530628340.4735.29.camel@sipsolutions.net>
-References: <20180703124725.30917-1-johannes@sipsolutions.net> <87601wfl1u.fsf@toke.dk> <1530628340.4735.29.camel@sipsolutions.net>
-Date: Tue, 03 Jul 2018 16:36:12 +0200
-Message-ID: <8736x0fktf.fsf@toke.dk> (sfid-20180703_163623_475588_DDC65CDD)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:39881 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387801AbeGWNCN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jul 2018 09:02:13 -0400
+Received: by mail-wm0-f68.google.com with SMTP id h20-v6so912664wmb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jul 2018 05:01:20 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: fix regression in parsing NVRAM for multiple
+ devices
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180722214625.12101-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        Aditya Xavier <adityaxavier@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B55C38E.3070003@broadcom.com> (sfid-20180723_140124_141853_E4567A0D)
+Date: Mon, 23 Jul 2018 14:01:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180722214625.12101-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Tue, 2018-07-03 at 16:31 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> > From: Johannes Berg <johannes.berg@intel.com>
->> >=20
->> > Since (QoS) NDP frames shouldn't be put into aggregation nor are
->> > assigned real sequence numbers, etc. it's better to treat them as
->> > non-data packets and not put them on the normal TXQs, for example
->> > when building A-MPDUs they need to be treated specially, and they
->> > are more used for management (e.g. to see if the station is alive)
->> > anyway.
->>=20
->> No objections to this per se;
+On 7/22/2018 11:46 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 >
-> :-)
+> NVRAM is designed to work with Broadcom's SDK Linux kernel which fakes
+> PCI domain 0 for all internal MMIO devices. Since official Linux kernel
+> uses platform devices for that purpose there is a mismatch in numbering
+> PCI domains.
 >
->> but didn't we want to move towards
->> everything going through the TXQs? Any progress on that front? :)
+> There used to be a fix for that problem but it was accidentally dropped
+> during the last firmware loading rework. That resulted in brcmfmac not
+> being able to extract device specific NVRAM content and all kind of
+> calibration problems.
 >
-> Not really. Yes, I wanted to, but it's some massive surgery. Right now
-> I'm working on converting iwlwifi, perhaps I'll learn about it more
-> and can then do the mac80211 surgery better later.
+> Reported-by: Aditya Xavier <adityaxavier@gmail.com>
+> Fixes: 2baa3aaee27f ("brcmfmac: introduce brcmf_fw_alloc_request() function")
+> Cc: stable@vger.kernel.org # v4.17+
 
-Right, sounds good! Looking forward to the iwlwifi conversion :)
+oops. my bad.
 
--Toke
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> index 45928b5b8d97..4fffa6988087 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -1785,7 +1785,8 @@ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
+>   	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
+>   	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
+>   	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
+> -	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus);
+> +	/* NVRAM reserves PCI domain 0 for Broadcom's SDK faked bus */
+> +	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus) + 1;
+>   	fwreq->bus_nr = devinfo->pdev->bus->number;
+>
+>   	return fwreq;
+>
