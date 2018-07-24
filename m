@@ -1,108 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54949 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389211AbeG0WFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:05:14 -0400
-Message-ID: <d38f06dccb3bd129bec6d34a5ad3e93e2fa01bec.camel@linux.intel.com> (sfid-20180727_224143_043289_3DEC4A32)
-Subject: Re: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe
- device ID entry
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Fri, 27 Jul 2018 23:41:31 +0300
-In-Reply-To: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
-References: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0213.hostedemail.com ([216.40.44.213]:40568 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2388397AbeGXSiy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 14:38:54 -0400
+Message-ID: <1bdc706ae86039c4ffcff39698251424d54af116.camel@perches.com> (sfid-20180724_193144_452653_60B90F55)
+Subject: Re: [PATCH v6 18/18] crypto: Remove AHASH_REQUEST_ON_STACK
+From: Joe Perches <joe@perches.com>
+To: Kees Cook <keescook@chromium.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Arnd Bergmann <arnd@arndb.de>, Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 24 Jul 2018 10:31:13 -0700
+In-Reply-To: <20180724164936.37477-19-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
+         <20180724164936.37477-19-keescook@chromium.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-07-27 at 23:39 +0300, Andy Shevchenko wrote:
-> There are a lot of examples in the kernel where PCI_VDEVICE() is used
-> and still
-> looks not so convenient due to additional driver_data field attached.
-> 
-> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in
-> shortest
-> possible form. For example,
-> 
->   before:
-> 
->     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
->       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-> 
->   after:
-> 
->     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
-> 
-> Drivers can be converted later on in independent way.
-> 
-> While here, remove the unused macro with the same name
-> from Ralink wireless driver.
+On Tue, 2018-07-24 at 09:49 -0700, Kees Cook wrote:
+> All users of AHASH_REQUEST_ON_STACK have been removed from the kernel, so
+> drop it entirely so no VLAs get reintroduced by future users.
 
-Skip this, it missed one comma.
-Will send v2 soon.
-
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
->  include/linux/pci.h                            | 15 +++++++++++++++
->  2 files changed, 15 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> index bc0ca5f58f38..283e2e607bba 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> @@ -27,12 +27,6 @@
->  #include <linux/io.h>
->  #include <linux/pci.h>
->  
-> -/*
-> - * This variable should be used with the
-> - * pci_driver structure initialization.
-> - */
-> -#define PCI_DEVICE_DATA(__ops)	.driver_data =
-> (kernel_ulong_t)(__ops)
-> -
->  /*
->   * PCI driver handlers.
->   */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d0961aefdbae..af29a32865c5 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -825,6 +825,21 @@ struct pci_driver {
->  	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
->  	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
->  
-> +/**
-> + * PCI_DEVICE_DATA - macro used to describe a specific PCI device in
-> very short form
-> + * @vend: the vendor name
-> + * @dev: the device name (without PCI_DEVICE_ID_ prefix)
-> + * @data: the driver data to be filled
-> + *
-> + * This macro is used to create a struct pci_device_id that matches a
-> + * specific PCI device.  The subvendor, and subdevice fields will be
-> set
-> + * to PCI_ANY_ID.
-> + */
-> +#define PCI_DEVICE_DATA(vend, dev, data) \
-> +	.vendor = PCI_VENDOR_ID_##vend, .device =
-> PCI_DEVICE_ID_##dev, \
-> +	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0 \
-> +	.driver_data = (kernel_ulong_t)(data)
-> +
->  enum {
->  	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore
-> firmware setup */
->  	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign
-> all bus numbers */
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+checkpatch has a test for that.
+It could now be removed as well.
+---
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 34e4683de7a3..a3517334d661 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -796,7 +796,7 @@ our $declaration_macros = qr{(?x:
+ 	(?:$Storage\s+)?(?:[A-Z_][A-Z0-9]*_){0,2}(?:DEFINE|DECLARE)(?:_[A-Z0-9]+){1,6}\s*\(|
+ 	(?:$Storage\s+)?[HLP]?LIST_HEAD\s*\(|
+ 	(?:$Storage\s+)?${Type}\s+uninitialized_var\s*\(|
+-	(?:SKCIPHER_REQUEST|SHASH_DESC|AHASH_REQUEST)_ON_STACK\s*\(
++	(?:SKCIPHER_REQUEST|SHASH_DESC)_ON_STACK\s*\(
+ )};
