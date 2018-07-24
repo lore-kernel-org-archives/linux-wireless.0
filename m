@@ -1,384 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55804 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731256AbeGNSv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jul 2018 14:51:26 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        stable@vger.kernel.org, Ivan Safonov <insafonov@gmail.com>
-Subject: [PATCH 4.17 REGRESSION fix] Revert "staging:r8188eu: Use lib80211 to support TKIP"
-Date: Sat, 14 Jul 2018 20:31:26 +0200
-Message-Id: <20180714183126.20765-2-hdegoede@redhat.com> (sfid-20180714_203135_297744_AB2C8913)
-In-Reply-To: <20180714183126.20765-1-hdegoede@redhat.com>
-References: <20180714183126.20765-1-hdegoede@redhat.com>
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:39492 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388534AbeGXSDm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 14:03:42 -0400
+Received: by mail-pg1-f193.google.com with SMTP id g2-v6so3308742pgs.6
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:56:19 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 17/18] crypto: ccm: Remove VLA usage
+Date: Tue, 24 Jul 2018 09:49:35 -0700
+Message-Id: <20180724164936.37477-18-keescook@chromium.org> (sfid-20180724_185707_076161_B7DB60DA)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit b83b8b1881c4 ("staging:r8188eu: Use lib80211 to support TKIP")
-is causing 2 problems for me:
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
-1) One boot the wifi on a laptop with a r8188eu wifi device would not
-   connect and dmesg contained an oops about scheduling while atomic
-   pointing to the tkip code. This went away after reverting the commit.
+In the quest to remove all stack VLA usage from the kernel[1], this
+drops AHASH_REQUEST_ON_STACK by preallocated the ahash request area
+with the skcipher area (which are not used at the same time).
 
-2) I reverted the revert to try and get the oops from 1. again to be able
-   to add it to this commit message. But now the system did connect to the
-   wifi only to print a whole bunch of oopses, followed by a hardfreeze a
-   few seconds later. Subsequent reboots also all lead to scenario 2. Until
-   I reverted the commit again.
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 
-Revert the commit fixes both issues making the laptop usable again.
-
-Cc: stable@vger.kernel.org
-Cc: Ivan Safonov <insafonov@gmail.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/staging/rtl8188eu/Kconfig             |   1 -
- drivers/staging/rtl8188eu/core/rtw_recv.c     | 161 +++++++++++++-----
- drivers/staging/rtl8188eu/core/rtw_security.c |  92 +++++-----
- 3 files changed, 160 insertions(+), 94 deletions(-)
+ crypto/ccm.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8188eu/Kconfig b/drivers/staging/rtl8188eu/Kconfig
-index 673fdce25530..ff7832798a77 100644
---- a/drivers/staging/rtl8188eu/Kconfig
-+++ b/drivers/staging/rtl8188eu/Kconfig
-@@ -7,7 +7,6 @@ config R8188EU
- 	select LIB80211
- 	select LIB80211_CRYPT_WEP
- 	select LIB80211_CRYPT_CCMP
--	select LIB80211_CRYPT_TKIP
- 	---help---
- 	This option adds the Realtek RTL8188EU USB device such as TP-Link TL-WN725N.
- 	If built as a module, it will be called r8188eu.
-diff --git a/drivers/staging/rtl8188eu/core/rtw_recv.c b/drivers/staging/rtl8188eu/core/rtw_recv.c
-index 05936a45eb93..c6857a5be12a 100644
---- a/drivers/staging/rtl8188eu/core/rtw_recv.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_recv.c
-@@ -23,7 +23,6 @@
- #include <mon.h>
- #include <wifi.h>
- #include <linux/vmalloc.h>
--#include <net/lib80211.h>
+diff --git a/crypto/ccm.c b/crypto/ccm.c
+index 0a083342ec8c..b242fd0d3262 100644
+--- a/crypto/ccm.c
++++ b/crypto/ccm.c
+@@ -50,7 +50,10 @@ struct crypto_ccm_req_priv_ctx {
+ 	u32 flags;
+ 	struct scatterlist src[3];
+ 	struct scatterlist dst[3];
+-	struct skcipher_request skreq;
++	union {
++		struct ahash_request ahreq;
++		struct skcipher_request skreq;
++	};
+ };
  
- #define ETHERNET_HEADER_SIZE	14	/*  Ethernet Header Length */
- #define LLC_HEADER_SIZE			6	/*  LLC Header Length */
-@@ -221,20 +220,31 @@ u32 rtw_free_uc_swdec_pending_queue(struct adapter *adapter)
- static int recvframe_chkmic(struct adapter *adapter,
- 			    struct recv_frame *precvframe)
- {
--	int res = _SUCCESS;
--	struct rx_pkt_attrib *prxattrib = &precvframe->attrib;
--	struct sta_info *stainfo = rtw_get_stainfo(&adapter->stapriv, prxattrib->ta);
-+	int	i, res = _SUCCESS;
-+	u32	datalen;
-+	u8	miccode[8];
-+	u8	bmic_err = false, brpt_micerror = true;
-+	u8	*pframe, *payload, *pframemic;
-+	u8	*mickey;
-+	struct	sta_info		*stainfo;
-+	struct	rx_pkt_attrib	*prxattrib = &precvframe->attrib;
-+	struct	security_priv	*psecuritypriv = &adapter->securitypriv;
-+
-+	struct mlme_ext_priv	*pmlmeext = &adapter->mlmeextpriv;
-+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-+
-+	stainfo = rtw_get_stainfo(&adapter->stapriv, &prxattrib->ta[0]);
+ struct cbcmac_tfm_ctx {
+@@ -181,7 +184,7 @@ static int crypto_ccm_auth(struct aead_request *req, struct scatterlist *plain,
+ 	struct crypto_ccm_req_priv_ctx *pctx = crypto_ccm_reqctx(req);
+ 	struct crypto_aead *aead = crypto_aead_reqtfm(req);
+ 	struct crypto_ccm_ctx *ctx = crypto_aead_ctx(aead);
+-	AHASH_REQUEST_ON_STACK(ahreq, ctx->mac);
++	struct ahash_request *ahreq = &pctx->ahreq;
+ 	unsigned int assoclen = req->assoclen;
+ 	struct scatterlist sg[3];
+ 	u8 *odata = pctx->odata;
+@@ -427,7 +430,7 @@ static int crypto_ccm_init_tfm(struct crypto_aead *tfm)
+ 	crypto_aead_set_reqsize(
+ 		tfm,
+ 		align + sizeof(struct crypto_ccm_req_priv_ctx) +
+-		crypto_skcipher_reqsize(ctr));
++		max(crypto_ahash_reqsize(mac), crypto_skcipher_reqsize(ctr)));
  
- 	if (prxattrib->encrypt == _TKIP_) {
-+		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
-+			 ("\n %s: prxattrib->encrypt==_TKIP_\n", __func__));
-+		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
-+			 ("\n %s: da=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
-+			  __func__, prxattrib->ra[0], prxattrib->ra[1], prxattrib->ra[2],
-+			  prxattrib->ra[3], prxattrib->ra[4], prxattrib->ra[5]));
-+
-+		/* calculate mic code */
- 		if (stainfo) {
--			int key_idx;
--			const int iv_len = 8, icv_len = 4, key_length = 32;
--			struct sk_buff *skb = precvframe->pkt;
--			u8 key[32], iv[8], icv[4], *pframe = skb->data;
--			void *crypto_private = NULL;
--			struct lib80211_crypto_ops *crypto_ops = try_then_request_module(lib80211_get_crypto_ops("TKIP"), "lib80211_crypt_tkip");
--			struct security_priv *psecuritypriv = &adapter->securitypriv;
--
- 			if (IS_MCAST(prxattrib->ra)) {
- 				if (!psecuritypriv) {
- 					res = _FAIL;
-@@ -243,58 +253,115 @@ static int recvframe_chkmic(struct adapter *adapter,
- 					DBG_88E("\n %s: didn't install group key!!!!!!!!!!\n", __func__);
- 					goto exit;
- 				}
--				key_idx = prxattrib->key_index;
--				memcpy(key, psecuritypriv->dot118021XGrpKey[key_idx].skey, 16);
--				memcpy(key + 16, psecuritypriv->dot118021XGrprxmickey[key_idx].skey, 16);
-+				mickey = &psecuritypriv->dot118021XGrprxmickey[prxattrib->key_index].skey[0];
-+
-+				RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
-+					 ("\n %s: bcmc key\n", __func__));
- 			} else {
--				key_idx = 0;
--				memcpy(key, stainfo->dot118021x_UncstKey.skey, 16);
--				memcpy(key + 16, stainfo->dot11tkiprxmickey.skey, 16);
-+				mickey = &stainfo->dot11tkiprxmickey.skey[0];
-+				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+					 ("\n %s: unicast key\n", __func__));
- 			}
+ 	return 0;
  
--			if (!crypto_ops) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
-+			/* icv_len included the mic code */
-+			datalen = precvframe->pkt->len-prxattrib->hdrlen -
-+				  prxattrib->iv_len-prxattrib->icv_len-8;
-+			pframe = precvframe->pkt->data;
-+			payload = pframe+prxattrib->hdrlen+prxattrib->iv_len;
- 
--			memcpy(iv, pframe + prxattrib->hdrlen, iv_len);
--			memcpy(icv, pframe + skb->len - icv_len, icv_len);
--			memmove(pframe + iv_len, pframe, prxattrib->hdrlen);
-+			RT_TRACE(_module_rtl871x_recv_c_, _drv_info_, ("\n prxattrib->iv_len=%d prxattrib->icv_len=%d\n", prxattrib->iv_len, prxattrib->icv_len));
-+			rtw_seccalctkipmic(mickey, pframe, payload, datalen, &miccode[0],
-+					   (unsigned char)prxattrib->priority); /* care the length of the data */
- 
--			skb_pull(skb, iv_len);
--			skb_trim(skb, skb->len - icv_len);
-+			pframemic = payload+datalen;
- 
--			crypto_private = crypto_ops->init(key_idx);
--			if (!crypto_private) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
--			if (crypto_ops->set_key(key, key_length, NULL, crypto_private) < 0) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
--			if (crypto_ops->decrypt_msdu(skb, key_idx, prxattrib->hdrlen, crypto_private)) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
-+			bmic_err = false;
-+
-+			for (i = 0; i < 8; i++) {
-+				if (miccode[i] != *(pframemic+i)) {
-+					RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+						 ("%s: miccode[%d](%02x)!=*(pframemic+%d)(%02x) ",
-+						  __func__, i, miccode[i], i, *(pframemic + i)));
-+					bmic_err = true;
-+				}
- 			}
- 
--			memmove(pframe, pframe + iv_len, prxattrib->hdrlen);
--			skb_push(skb, iv_len);
--			skb_put(skb, icv_len);
-+			if (bmic_err) {
-+				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+					 ("\n *(pframemic-8)-*(pframemic-1)=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
-+					 *(pframemic-8), *(pframemic-7), *(pframemic-6),
-+					 *(pframemic-5), *(pframemic-4), *(pframemic-3),
-+					 *(pframemic-2), *(pframemic-1)));
-+				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+					 ("\n *(pframemic-16)-*(pframemic-9)=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
-+					 *(pframemic-16), *(pframemic-15), *(pframemic-14),
-+					 *(pframemic-13), *(pframemic-12), *(pframemic-11),
-+					 *(pframemic-10), *(pframemic-9)));
-+				{
-+					uint i;
- 
--			memcpy(pframe + prxattrib->hdrlen, iv, iv_len);
--			memcpy(pframe + skb->len - icv_len, icv, icv_len);
-+					RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+						 ("\n ======demp packet (len=%d)======\n",
-+						 precvframe->pkt->len));
-+					for (i = 0; i < precvframe->pkt->len; i += 8) {
-+						RT_TRACE(_module_rtl871x_recv_c_,
-+							 _drv_err_,
-+							 ("0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x",
-+							 *(precvframe->pkt->data+i),
-+							 *(precvframe->pkt->data+i+1),
-+							 *(precvframe->pkt->data+i+2),
-+							 *(precvframe->pkt->data+i+3),
-+							 *(precvframe->pkt->data+i+4),
-+							 *(precvframe->pkt->data+i+5),
-+							 *(precvframe->pkt->data+i+6),
-+							 *(precvframe->pkt->data+i+7)));
-+					}
-+					RT_TRACE(_module_rtl871x_recv_c_,
-+						 _drv_err_,
-+						 ("\n ====== demp packet end [len=%d]======\n",
-+						 precvframe->pkt->len));
-+					RT_TRACE(_module_rtl871x_recv_c_,
-+						 _drv_err_,
-+						 ("\n hrdlen=%d,\n",
-+						 prxattrib->hdrlen));
-+				}
- 
--exit_lib80211_tkip:
--			if (crypto_ops && crypto_private)
--				crypto_ops->deinit(crypto_private);
-+				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
-+					 ("ra=0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x psecuritypriv->binstallGrpkey=%d ",
-+					 prxattrib->ra[0], prxattrib->ra[1], prxattrib->ra[2],
-+					 prxattrib->ra[3], prxattrib->ra[4], prxattrib->ra[5], psecuritypriv->binstallGrpkey));
-+
-+				/*  double check key_index for some timing issue , */
-+				/*  cannot compare with psecuritypriv->dot118021XGrpKeyid also cause timing issue */
-+				if ((IS_MCAST(prxattrib->ra) == true)  && (prxattrib->key_index != pmlmeinfo->key_index))
-+					brpt_micerror = false;
-+
-+				if ((prxattrib->bdecrypted) && (brpt_micerror)) {
-+					rtw_handle_tkip_mic_err(adapter, (u8)IS_MCAST(prxattrib->ra));
-+					RT_TRACE(_module_rtl871x_recv_c_, _drv_err_, (" mic error :prxattrib->bdecrypted=%d ", prxattrib->bdecrypted));
-+					DBG_88E(" mic error :prxattrib->bdecrypted=%d\n", prxattrib->bdecrypted);
-+				} else {
-+					RT_TRACE(_module_rtl871x_recv_c_, _drv_err_, (" mic error :prxattrib->bdecrypted=%d ", prxattrib->bdecrypted));
-+					DBG_88E(" mic error :prxattrib->bdecrypted=%d\n", prxattrib->bdecrypted);
-+				}
-+				res = _FAIL;
-+			} else {
-+				/* mic checked ok */
-+				if ((!psecuritypriv->bcheck_grpkey) && (IS_MCAST(prxattrib->ra))) {
-+					psecuritypriv->bcheck_grpkey = true;
-+					RT_TRACE(_module_rtl871x_recv_c_, _drv_err_, ("psecuritypriv->bcheck_grpkey = true"));
-+				}
-+			}
- 		} else {
- 			RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
- 				 ("%s: rtw_get_stainfo==NULL!!!\n", __func__));
- 		}
-+
-+		skb_trim(precvframe->pkt, precvframe->pkt->len - 8);
- 	}
- 
- exit:
-+
- 	return res;
- }
- 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_security.c b/drivers/staging/rtl8188eu/core/rtw_security.c
-index bfe0b217e679..67a2490f055e 100644
---- a/drivers/staging/rtl8188eu/core/rtw_security.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_security.c
-@@ -650,71 +650,71 @@ u32	rtw_tkip_encrypt(struct adapter *padapter, u8 *pxmitframe)
- 	return res;
- }
- 
-+/* The hlen isn't include the IV */
- u32 rtw_tkip_decrypt(struct adapter *padapter, u8 *precvframe)
--{
--	struct rx_pkt_attrib *prxattrib = &((struct recv_frame *)precvframe)->attrib;
--	u32 res = _SUCCESS;
-+{																	/*  exclude ICV */
-+	u16 pnl;
-+	u32 pnh;
-+	u8   rc4key[16];
-+	u8   ttkey[16];
-+	u8	crc[4];
-+	struct arc4context mycontext;
-+	int			length;
-+
-+	u8	*pframe, *payload, *iv, *prwskey;
-+	union pn48 dot11txpn;
-+	struct	sta_info		*stainfo;
-+	struct	rx_pkt_attrib	 *prxattrib = &((struct recv_frame *)precvframe)->attrib;
-+	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
-+	u32		res = _SUCCESS;
-+
-+
-+	pframe = (unsigned char *)((struct recv_frame *)precvframe)->pkt->data;
- 
- 	/* 4 start to decrypt recvframe */
- 	if (prxattrib->encrypt == _TKIP_) {
--		struct sta_info *stainfo = rtw_get_stainfo(&padapter->stapriv, prxattrib->ta);
--
-+		stainfo = rtw_get_stainfo(&padapter->stapriv, &prxattrib->ta[0]);
- 		if (stainfo) {
--			int key_idx;
--			const int iv_len = 8, icv_len = 4, key_length = 32;
--			void *crypto_private = NULL;
--			struct sk_buff *skb = ((struct recv_frame *)precvframe)->pkt;
--			u8 key[32], iv[8], icv[4], *pframe = skb->data;
--			struct lib80211_crypto_ops *crypto_ops = try_then_request_module(lib80211_get_crypto_ops("TKIP"), "lib80211_crypt_tkip");
--			struct security_priv *psecuritypriv = &padapter->securitypriv;
--
- 			if (IS_MCAST(prxattrib->ra)) {
- 				if (!psecuritypriv->binstallGrpkey) {
- 					res = _FAIL;
- 					DBG_88E("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
- 					goto exit;
- 				}
--				key_idx = prxattrib->key_index;
--				memcpy(key, psecuritypriv->dot118021XGrpKey[key_idx].skey, 16);
--				memcpy(key + 16, psecuritypriv->dot118021XGrprxmickey[key_idx].skey, 16);
-+				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
- 			} else {
--				key_idx = 0;
--				memcpy(key, stainfo->dot118021x_UncstKey.skey, 16);
--				memcpy(key + 16, stainfo->dot11tkiprxmickey.skey, 16);
-+				RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("%s: stainfo!= NULL!!!\n", __func__));
-+				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
- 			}
- 
--			if (!crypto_ops) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
-+			iv = pframe+prxattrib->hdrlen;
-+			payload = pframe+prxattrib->iv_len+prxattrib->hdrlen;
-+			length = ((struct recv_frame *)precvframe)->pkt->len-prxattrib->hdrlen-prxattrib->iv_len;
- 
--			memcpy(iv, pframe + prxattrib->hdrlen, iv_len);
--			memcpy(icv, pframe + skb->len - icv_len, icv_len);
-+			GET_TKIP_PN(iv, dot11txpn);
- 
--			crypto_private = crypto_ops->init(key_idx);
--			if (!crypto_private) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
--			if (crypto_ops->set_key(key, key_length, NULL, crypto_private) < 0) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
--			if (crypto_ops->decrypt_mpdu(skb, prxattrib->hdrlen, crypto_private)) {
--				res = _FAIL;
--				goto exit_lib80211_tkip;
--			}
-+			pnl = (u16)(dot11txpn.val);
-+			pnh = (u32)(dot11txpn.val>>16);
- 
--			memmove(pframe, pframe + iv_len, prxattrib->hdrlen);
--			skb_push(skb, iv_len);
--			skb_put(skb, icv_len);
-+			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
-+			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
- 
--			memcpy(pframe + prxattrib->hdrlen, iv, iv_len);
--			memcpy(pframe + skb->len - icv_len, icv, icv_len);
-+			/* 4 decrypt payload include icv */
- 
--exit_lib80211_tkip:
--			if (crypto_ops && crypto_private)
--				crypto_ops->deinit(crypto_private);
-+			arcfour_init(&mycontext, rc4key, 16);
-+			arcfour_encrypt(&mycontext, payload, payload, length);
-+
-+			*((__le32 *)crc) = getcrc32(payload, length-4);
-+
-+			if (crc[3] != payload[length-1] ||
-+			    crc[2] != payload[length-2] ||
-+			    crc[1] != payload[length-3] ||
-+			    crc[0] != payload[length-4]) {
-+				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+					 ("rtw_wep_decrypt:icv error crc (%4ph)!=payload (%4ph)\n",
-+					 &crc, &payload[length-4]));
-+				res = _FAIL;
-+			}
- 		} else {
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt: stainfo==NULL!!!\n"));
- 			res = _FAIL;
 -- 
 2.17.1
