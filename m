@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1.mo2.mail-out.ovh.net ([46.105.63.121]:56073 "EHLO
-        1.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725886AbeGaXI5 (ORCPT
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:46540 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388858AbeGXUhi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 19:08:57 -0400
-Received: from player794.ha.ovh.net (unknown [10.109.160.153])
-        by mo2.mail-out.ovh.net (Postfix) with ESMTP id E0551146BE8
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 22:11:00 +0200 (CEST)
-From: Alexander Wetzel <alexander@wetzel-home.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        s.gottschall@dd-wrt.com, denkenz@gmail.com,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH v4 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
-Date: Tue, 31 Jul 2018 22:10:28 +0200
-Message-Id: <20180731201030.2619-2-alexander@wetzel-home.de> (sfid-20180731_232643_430927_45D7A866)
-In-Reply-To: <20180731201030.2619-1-alexander@wetzel-home.de>
-References: <20180731201030.2619-1-alexander@wetzel-home.de>
+        Tue, 24 Jul 2018 16:37:38 -0400
+Received: by mail-pf1-f193.google.com with SMTP id u24-v6so1078025pfn.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:41 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 08/18] sctp: whitespace fixes
+Date: Tue, 24 Jul 2018 12:29:08 -0700
+Message-Id: <20180724192918.31165-9-sthemmin@microsoft.com> (sfid-20180724_213109_617073_77E9807C)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers able to replace a in-use should set
-NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
-hostapd or wpa_supplicant) to rekey the PTK without a full
-disassociation. The userspace must detect a PTK rekey attempt and only
-go ahead with the rekey if the driver has set this flag. When the driver
-is not supporting the feature the userspace has to perform
-a re-association.
+Remove blank line at EOF and trailing whitespace.
 
-Ignoring this flag and continuing to rekey the connection can still
-work but has to be considered insecure and broken. It can leak cleartext
-packets or freeze the connection and is only supported to allow the
-userspace to be updated.
-
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 ---
- include/uapi/linux/nl80211.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/sctp/Kconfig         | 4 ++--
+ net/sctp/sm_sideeffect.c | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7acc16f34942..b41b9ade0449 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
-  *	except for supported rates from the probe request content if requested
-  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
-  *
-+ * @NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE: Driver/device confirm that they are
-+ *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
-+ *      if this flag is not set. Ignoring this can leak clear text packets and/or
-+ *      freeze the connection.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -5259,6 +5264,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_TXQS,
- 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
- 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
-+	NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE,
+diff --git a/net/sctp/Kconfig b/net/sctp/Kconfig
+index c740b189d4ba..950ecf6e7439 100644
+--- a/net/sctp/Kconfig
++++ b/net/sctp/Kconfig
+@@ -41,8 +41,8 @@ config SCTP_DBG_OBJCNT
+ 	bool "SCTP: Debug object counts"
+ 	depends on PROC_FS
+ 	help
+-	  If you say Y, this will enable debugging support for counting the 
+-	  type of objects that are currently allocated.  This is useful for 
++	  If you say Y, this will enable debugging support for counting the
++	  type of objects that are currently allocated.  This is useful for
+ 	  identifying memory leaks. This debug information can be viewed by
+ 	  'cat /proc/net/sctp/sctp_dbg_objcnt'
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/sctp/sm_sideeffect.c b/net/sctp/sm_sideeffect.c
+index 298112ca8c06..85d393090238 100644
+--- a/net/sctp/sm_sideeffect.c
++++ b/net/sctp/sm_sideeffect.c
+@@ -1827,4 +1827,3 @@ static int sctp_cmd_interpreter(enum sctp_event event_type,
+ 	error = -ENOMEM;
+ 	goto out;
+ }
+-
 -- 
 2.18.0
