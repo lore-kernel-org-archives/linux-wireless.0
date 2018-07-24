@@ -1,92 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:40667 "EHLO mga06.intel.com"
+Received: from mail.bugwerft.de ([46.23.86.59]:56700 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389317AbeG0WNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:13:23 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Randy Dunlap <rdunlap@infradead.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
-Date: Fri, 27 Jul 2018 23:49:44 +0300
-Message-Id: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com> (sfid-20180727_224954_150026_6F456554)
+        id S2388293AbeGXKAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 06:00:13 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 07/10] NFC: st95hf: re-order command defines
+Date: Tue, 24 Jul 2018 10:54:23 +0200
+Message-Id: <20180724085426.23999-8-daniel@zonque.org> (sfid-20180724_105456_655120_B02B2062)
+In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
+References: <20180724085426.23999-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
-looks not so convenient due to additional driver_data field attached.
+Just a small cleanup to bring the command defines in a numerical order.
 
-Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
-possible form. For example,
-
-  before:
-
-    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-
-  after:
-
-    { PCI_DEVICE_DATA(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties) },
-
-Drivers can be converted later on in independent way.
-
-While here, remove the unused macro with the same name
-from Ralink wireless driver.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
+ drivers/nfc/st95hf/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-- fix commit message (Randy)
-
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
- include/linux/pci.h                            | 15 +++++++++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-index bc0ca5f58f38..283e2e607bba 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-@@ -27,12 +27,6 @@
- #include <linux/io.h>
- #include <linux/pci.h>
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 99f84ddfdfef..e7ecc57dde8f 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -45,10 +45,10 @@
  
--/*
-- * This variable should be used with the
-- * pci_driver structure initialization.
-- */
--#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
--
- /*
-  * PCI driver handlers.
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d0961aefdbae..754da6f9adb3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -825,6 +825,21 @@ struct pci_driver {
- 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+ /* Command Send Interface */
+ /* ST95HF_COMMAND_SEND CMD Ids */
+-#define ECHO_CMD			0x55
+-#define WRITE_REGISTER_CMD		0x9
+ #define PROTOCOL_SELECT_CMD		0x2
+ #define SEND_RECEIVE_CMD		0x4
++#define WRITE_REGISTER_CMD		0x9
++#define ECHO_CMD			0x55
  
-+/**
-+ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
-+ * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
-+ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
-+ * @data: the driver data to be filled
-+ *
-+ * This macro is used to create a struct pci_device_id that matches a
-+ * specific PCI device.  The subvendor, and subdevice fields will be set
-+ * to PCI_ANY_ID.
-+ */
-+#define PCI_DEVICE_DATA(vend, dev, data) \
-+	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
-+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
-+	.driver_data = (kernel_ulong_t)(data)
-+
- enum {
- 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
- 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
+ /* Select protocol codes */
+ #define ISO15693_PROTOCOL_CODE		0x1
 -- 
-2.18.0
+2.17.1
