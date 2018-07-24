@@ -1,612 +1,499 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36608 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731047AbeGaJss (ORCPT
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:40437 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388741AbeGXR5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:48:48 -0400
-Received: by mail-wm0-f65.google.com with SMTP id w24-v6so624111wmc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:38 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH v2 14/19] mt76: add mt76x2_init_common to mt76x2-common module
-Date: Tue, 31 Jul 2018 10:09:15 +0200
-Message-Id: <ebd384f561668418bfbc5bdbee2925d442104931.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100958_457341_693E9743)
-In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+        Tue, 24 Jul 2018 13:57:19 -0400
+Received: by mail-pg1-f194.google.com with SMTP id x5-v6so3302474pgp.7
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:58 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 12/18] drbd: Convert from ahash to shash
+Date: Tue, 24 Jul 2018 09:49:30 -0700
+Message-Id: <20180724164936.37477-13-keescook@chromium.org> (sfid-20180724_185133_950015_DD592D64)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move init related code shared between mt76x2 and mt76x2u in
-mt76x2-common module
+In preparing to remove all stack VLA usage from the kernel[1], this
+removes the discouraged use of AHASH_REQUEST_ON_STACK in favor of
+the smaller SHASH_DESC_ON_STACK by converting from ahash-wrapped-shash
+to direct shash. By removing a layer of indirection this both improves
+performance and reduces stack usage. The stack allocation will be made
+a fixed size in a later patch to the crypto subsystem.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile   |   3 +-
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |   6 +
- .../net/wireless/mediatek/mt76/mt76x2_init.c  | 238 ----------------
- .../mediatek/mt76/mt76x2_init_common.c        | 259 ++++++++++++++++++
- 4 files changed, 267 insertions(+), 239 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+ drivers/block/drbd/drbd_int.h      | 13 +++----
+ drivers/block/drbd/drbd_main.c     | 14 ++++----
+ drivers/block/drbd/drbd_nl.c       | 39 +++++++--------------
+ drivers/block/drbd/drbd_receiver.c | 35 ++++++++++---------
+ drivers/block/drbd/drbd_worker.c   | 56 +++++++++++++-----------------
+ 5 files changed, 69 insertions(+), 88 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index bedb671200ea..8342b4d38220 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -8,7 +8,8 @@ mt76-y := \
- CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
+index bc4ed2ed40a2..97d8e290c2be 100644
+--- a/drivers/block/drbd/drbd_int.h
++++ b/drivers/block/drbd/drbd_int.h
+@@ -726,10 +726,10 @@ struct drbd_connection {
+ 	struct list_head transfer_log;	/* all requests not yet fully processed */
  
- mt76x2-common-y := \
--	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o
-+	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
-+	mt76x2_init_common.o
+ 	struct crypto_shash *cram_hmac_tfm;
+-	struct crypto_ahash *integrity_tfm;  /* checksums we compute, updates protected by connection->data->mutex */
+-	struct crypto_ahash *peer_integrity_tfm;  /* checksums we verify, only accessed from receiver thread  */
+-	struct crypto_ahash *csums_tfm;
+-	struct crypto_ahash *verify_tfm;
++	struct crypto_shash *integrity_tfm;  /* checksums we compute, updates protected by connection->data->mutex */
++	struct crypto_shash *peer_integrity_tfm;  /* checksums we verify, only accessed from receiver thread  */
++	struct crypto_shash *csums_tfm;
++	struct crypto_shash *verify_tfm;
+ 	void *int_dig_in;
+ 	void *int_dig_vv;
  
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 6c5dd106057d..556a2961860b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -218,6 +218,8 @@ static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
- 
- extern const struct ieee80211_ops mt76x2_ops;
- 
-+extern struct ieee80211_rate mt76x2_rates[12];
-+
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
- int mt76x2_register_device(struct mt76x2_dev *dev);
- void mt76x2_init_debugfs(struct mt76x2_dev *dev);
-@@ -286,5 +288,9 @@ bool mt76x2_mac_load_tx_status(struct mt76x2_dev *dev,
- 			       struct mt76x2_tx_status *stat);
- void mt76x2_send_tx_status(struct mt76x2_dev *dev,
- 			   struct mt76x2_tx_status *stat, u8 *update);
-+void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable);
-+void mt76x2_init_txpower(struct mt76x2_dev *dev,
-+			 struct ieee80211_supported_band *sband);
-+void mt76_write_mac_initvals(struct mt76x2_dev *dev);
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 309e55cf347c..b814391f79ac 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -19,11 +19,6 @@
- #include "mt76x2_eeprom.h"
- #include "mt76x2_mcu.h"
- 
--struct mt76x2_reg_pair {
--	u32 reg;
--	u32 value;
--};
--
- static void
- mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
- {
-@@ -42,113 +37,6 @@ mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
- 	mt76_wr(dev, MT_PBF_RX_MAX_PCNT, 0xfebf);
+@@ -1533,8 +1533,9 @@ static inline void ov_out_of_sync_print(struct drbd_device *device)
  }
  
--static void
--mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
--		       const struct mt76x2_reg_pair *data, int len)
--{
--	while (len > 0) {
--		mt76_wr(dev, data->reg, data->value);
--		len--;
--		data++;
--	}
--}
--
--static void
--mt76_write_mac_initvals(struct mt76x2_dev *dev)
--{
--#define DEFAULT_PROT_CFG_CCK				\
--	(FIELD_PREP(MT_PROT_CFG_RATE, 0x3) |		\
--	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |		\
--	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
--	 MT_PROT_CFG_RTS_THRESH)
--
--#define DEFAULT_PROT_CFG_OFDM				\
--	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
--	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
--	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
--	 MT_PROT_CFG_RTS_THRESH)
--
--#define DEFAULT_PROT_CFG_20				\
--	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
--	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
--	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
--	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x17))
--
--#define DEFAULT_PROT_CFG_40				\
--	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2084) |		\
--	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
--	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
--	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f))
--
--	static const struct mt76x2_reg_pair vals[] = {
--		/* Copied from MediaTek reference source */
--		{ MT_PBF_SYS_CTRL,		0x00080c00 },
--		{ MT_PBF_CFG,			0x1efebcff },
--		{ MT_FCE_PSE_CTRL,		0x00000001 },
--		{ MT_MAC_SYS_CTRL,		0x0000000c },
--		{ MT_MAX_LEN_CFG,		0x003e3f00 },
--		{ MT_AMPDU_MAX_LEN_20M1S,	0xaaa99887 },
--		{ MT_AMPDU_MAX_LEN_20M2S,	0x000000aa },
--		{ MT_XIFS_TIME_CFG,		0x33a40d0a },
--		{ MT_BKOFF_SLOT_CFG,		0x00000209 },
--		{ MT_TBTT_SYNC_CFG,		0x00422010 },
--		{ MT_PWR_PIN_CFG,		0x00000000 },
--		{ 0x1238,			0x001700c8 },
--		{ MT_TX_SW_CFG0,		0x00101001 },
--		{ MT_TX_SW_CFG1,		0x00010000 },
--		{ MT_TX_SW_CFG2,		0x00000000 },
--		{ MT_TXOP_CTRL_CFG,		0x0400583f },
--		{ MT_TX_RTS_CFG,		0x00100020 },
--		{ MT_TX_TIMEOUT_CFG,		0x000a2290 },
--		{ MT_TX_RETRY_CFG,		0x47f01f0f },
--		{ MT_EXP_ACK_TIME,		0x002c00dc },
--		{ MT_TX_PROT_CFG6,		0xe3f42004 },
--		{ MT_TX_PROT_CFG7,		0xe3f42084 },
--		{ MT_TX_PROT_CFG8,		0xe3f42104 },
--		{ MT_PIFS_TX_CFG,		0x00060fff },
--		{ MT_RX_FILTR_CFG,		0x00015f97 },
--		{ MT_LEGACY_BASIC_RATE,		0x0000017f },
--		{ MT_HT_BASIC_RATE,		0x00004003 },
--		{ MT_PN_PAD_MODE,		0x00000003 },
--		{ MT_TXOP_HLDR_ET,		0x00000002 },
--		{ 0xa44,			0x00000000 },
--		{ MT_HEADER_TRANS_CTRL_REG,	0x00000000 },
--		{ MT_TSO_CTRL,			0x00000000 },
--		{ MT_AUX_CLK_CFG,		0x00000000 },
--		{ MT_DACCLK_EN_DLY_CFG,		0x00000000 },
--		{ MT_TX_ALC_CFG_4,		0x00000000 },
--		{ MT_TX_ALC_VGA3,		0x00000000 },
--		{ MT_TX_PWR_CFG_0,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_1,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_2,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_3,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_4,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_7,		0x3a3a3a3a },
--		{ MT_TX_PWR_CFG_8,		0x0000003a },
--		{ MT_TX_PWR_CFG_9,		0x0000003a },
--		{ MT_EFUSE_CTRL,		0x0000d000 },
--		{ MT_PAUSE_ENABLE_CONTROL1,	0x0000000a },
--		{ MT_FCE_WLAN_FLOW_CONTROL1,	0x60401c18 },
--		{ MT_WPDMA_DELAY_INT_CFG,	0x94ff0000 },
--		{ MT_TX_SW_CFG3,		0x00000004 },
--		{ MT_HT_FBK_TO_LEGACY,		0x00001818 },
--		{ MT_VHT_HT_FBK_CFG1,		0xedcba980 },
--		{ MT_PROT_AUTO_TX_CFG,		0x00830083 },
--		{ MT_HT_CTRL_CFG,		0x000001ff },
--	};
--	struct mt76x2_reg_pair prot_vals[] = {
--		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG_CCK },
--		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG_OFDM },
--		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
--		{ MT_MM40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
--		{ MT_GF20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
--		{ MT_GF40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
--	};
--
--	mt76x2_write_reg_pairs(dev, vals, ARRAY_SIZE(vals));
--	mt76x2_write_reg_pairs(dev, prot_vals, ARRAY_SIZE(prot_vals));
--}
--
- static void
- mt76x2_fixup_xtal(struct mt76x2_dev *dev)
+ 
+-extern void drbd_csum_bio(struct crypto_ahash *, struct bio *, void *);
+-extern void drbd_csum_ee(struct crypto_ahash *, struct drbd_peer_request *, void *);
++extern void drbd_csum_bio(struct crypto_shash *, struct bio *, void *);
++extern void drbd_csum_ee(struct crypto_shash *, struct drbd_peer_request *,
++			 void *);
+ /* worker callbacks */
+ extern int w_e_end_data_req(struct drbd_work *, int);
+ extern int w_e_end_rsdata_req(struct drbd_work *, int);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index a80809bd3057..ccb54791d39c 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -1377,7 +1377,7 @@ void drbd_send_ack_dp(struct drbd_peer_device *peer_device, enum drbd_packet cmd
+ 		      struct p_data *dp, int data_size)
  {
-@@ -441,45 +329,6 @@ void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
- 		       MT_TX_TIMEOUT_CFG_ACKTO, ackto);
+ 	if (peer_device->connection->peer_integrity_tfm)
+-		data_size -= crypto_ahash_digestsize(peer_device->connection->peer_integrity_tfm);
++		data_size -= crypto_shash_digestsize(peer_device->connection->peer_integrity_tfm);
+ 	_drbd_send_ack(peer_device, cmd, dp->sector, cpu_to_be32(data_size),
+ 		       dp->block_id);
+ }
+@@ -1690,7 +1690,7 @@ int drbd_send_dblock(struct drbd_peer_device *peer_device, struct drbd_request *
+ 	sock = &peer_device->connection->data;
+ 	p = drbd_prepare_command(peer_device, sock);
+ 	digest_size = peer_device->connection->integrity_tfm ?
+-		      crypto_ahash_digestsize(peer_device->connection->integrity_tfm) : 0;
++		      crypto_shash_digestsize(peer_device->connection->integrity_tfm) : 0;
+ 
+ 	if (!p)
+ 		return -EIO;
+@@ -1796,7 +1796,7 @@ int drbd_send_block(struct drbd_peer_device *peer_device, enum drbd_packet cmd,
+ 	p = drbd_prepare_command(peer_device, sock);
+ 
+ 	digest_size = peer_device->connection->integrity_tfm ?
+-		      crypto_ahash_digestsize(peer_device->connection->integrity_tfm) : 0;
++		      crypto_shash_digestsize(peer_device->connection->integrity_tfm) : 0;
+ 
+ 	if (!p)
+ 		return -EIO;
+@@ -2561,11 +2561,11 @@ void conn_free_crypto(struct drbd_connection *connection)
+ {
+ 	drbd_free_sock(connection);
+ 
+-	crypto_free_ahash(connection->csums_tfm);
+-	crypto_free_ahash(connection->verify_tfm);
++	crypto_free_shash(connection->csums_tfm);
++	crypto_free_shash(connection->verify_tfm);
+ 	crypto_free_shash(connection->cram_hmac_tfm);
+-	crypto_free_ahash(connection->integrity_tfm);
+-	crypto_free_ahash(connection->peer_integrity_tfm);
++	crypto_free_shash(connection->integrity_tfm);
++	crypto_free_shash(connection->peer_integrity_tfm);
+ 	kfree(connection->int_dig_in);
+ 	kfree(connection->int_dig_vv);
+ 
+diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+index b4f02768ba47..d15703b1ffe8 100644
+--- a/drivers/block/drbd/drbd_nl.c
++++ b/drivers/block/drbd/drbd_nl.c
+@@ -2303,10 +2303,10 @@ check_net_options(struct drbd_connection *connection, struct net_conf *new_net_c
  }
  
--static void
--mt76x2_set_wlan_state(struct mt76x2_dev *dev, bool enable)
+ struct crypto {
+-	struct crypto_ahash *verify_tfm;
+-	struct crypto_ahash *csums_tfm;
++	struct crypto_shash *verify_tfm;
++	struct crypto_shash *csums_tfm;
+ 	struct crypto_shash *cram_hmac_tfm;
+-	struct crypto_ahash *integrity_tfm;
++	struct crypto_shash *integrity_tfm;
+ };
+ 
+ static int
+@@ -2324,36 +2324,21 @@ alloc_shash(struct crypto_shash **tfm, char *tfm_name, int err_alg)
+ 	return NO_ERROR;
+ }
+ 
+-static int
+-alloc_ahash(struct crypto_ahash **tfm, char *tfm_name, int err_alg)
 -{
--	u32 val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
+-	if (!tfm_name[0])
+-		return NO_ERROR;
 -
--	if (enable)
--		val |= (MT_WLAN_FUN_CTRL_WLAN_EN |
--			MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
--	else
--		val &= ~(MT_WLAN_FUN_CTRL_WLAN_EN |
--			 MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
--
--	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
--	udelay(20);
--}
--
--static void
--mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
--{
--	u32 val;
--
--	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
--
--	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;
--
--	if (val & MT_WLAN_FUN_CTRL_WLAN_EN) {
--		val |= MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
--		mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
--		udelay(20);
--
--		val &= ~MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
+-	*tfm = crypto_alloc_ahash(tfm_name, 0, CRYPTO_ALG_ASYNC);
+-	if (IS_ERR(*tfm)) {
+-		*tfm = NULL;
+-		return err_alg;
 -	}
 -
--	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
--	udelay(20);
--
--	mt76x2_set_wlan_state(dev, enable);
+-	return NO_ERROR;
 -}
 -
- int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ static enum drbd_ret_code
+ alloc_crypto(struct crypto *crypto, struct net_conf *new_net_conf)
  {
- 	static const u16 beacon_offsets[16] = {
-@@ -601,34 +450,6 @@ static void mt76x2_regd_notifier(struct wiphy *wiphy,
- 	mt76x2_dfs_set_domain(dev, request->dfs_region);
+ 	char hmac_name[CRYPTO_MAX_ALG_NAME];
+ 	enum drbd_ret_code rv;
+ 
+-	rv = alloc_ahash(&crypto->csums_tfm, new_net_conf->csums_alg,
++	rv = alloc_shash(&crypto->csums_tfm, new_net_conf->csums_alg,
+ 			 ERR_CSUMS_ALG);
+ 	if (rv != NO_ERROR)
+ 		return rv;
+-	rv = alloc_ahash(&crypto->verify_tfm, new_net_conf->verify_alg,
++	rv = alloc_shash(&crypto->verify_tfm, new_net_conf->verify_alg,
+ 			 ERR_VERIFY_ALG);
+ 	if (rv != NO_ERROR)
+ 		return rv;
+-	rv = alloc_ahash(&crypto->integrity_tfm, new_net_conf->integrity_alg,
++	rv = alloc_shash(&crypto->integrity_tfm, new_net_conf->integrity_alg,
+ 			 ERR_INTEGRITY_ALG);
+ 	if (rv != NO_ERROR)
+ 		return rv;
+@@ -2371,9 +2356,9 @@ alloc_crypto(struct crypto *crypto, struct net_conf *new_net_conf)
+ static void free_crypto(struct crypto *crypto)
+ {
+ 	crypto_free_shash(crypto->cram_hmac_tfm);
+-	crypto_free_ahash(crypto->integrity_tfm);
+-	crypto_free_ahash(crypto->csums_tfm);
+-	crypto_free_ahash(crypto->verify_tfm);
++	crypto_free_shash(crypto->integrity_tfm);
++	crypto_free_shash(crypto->csums_tfm);
++	crypto_free_shash(crypto->verify_tfm);
  }
  
--#define CCK_RATE(_idx, _rate) {					\
--	.bitrate = _rate,					\
--	.flags = IEEE80211_RATE_SHORT_PREAMBLE,			\
--	.hw_value = (MT_PHY_TYPE_CCK << 8) | _idx,		\
--	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + _idx),	\
--}
--
--#define OFDM_RATE(_idx, _rate) {				\
--	.bitrate = _rate,					\
--	.hw_value = (MT_PHY_TYPE_OFDM << 8) | _idx,		\
--	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | _idx,	\
--}
--
--static struct ieee80211_rate mt76x2_rates[] = {
--	CCK_RATE(0, 10),
--	CCK_RATE(1, 20),
--	CCK_RATE(2, 55),
--	CCK_RATE(3, 110),
--	OFDM_RATE(0, 60),
--	OFDM_RATE(1, 90),
--	OFDM_RATE(2, 120),
--	OFDM_RATE(3, 180),
--	OFDM_RATE(4, 240),
--	OFDM_RATE(5, 360),
--	OFDM_RATE(6, 480),
--	OFDM_RATE(7, 540),
--};
--
- static const struct ieee80211_iface_limit if_limits[] = {
- 	{
- 		.max = 1,
-@@ -705,65 +526,6 @@ static void mt76x2_led_set_brightness(struct led_classdev *led_cdev,
- 		mt76x2_led_set_config(mt76, 0xff, 0);
+ int drbd_adm_net_opts(struct sk_buff *skb, struct genl_info *info)
+@@ -2450,17 +2435,17 @@ int drbd_adm_net_opts(struct sk_buff *skb, struct genl_info *info)
+ 	rcu_assign_pointer(connection->net_conf, new_net_conf);
+ 
+ 	if (!rsr) {
+-		crypto_free_ahash(connection->csums_tfm);
++		crypto_free_shash(connection->csums_tfm);
+ 		connection->csums_tfm = crypto.csums_tfm;
+ 		crypto.csums_tfm = NULL;
+ 	}
+ 	if (!ovr) {
+-		crypto_free_ahash(connection->verify_tfm);
++		crypto_free_shash(connection->verify_tfm);
+ 		connection->verify_tfm = crypto.verify_tfm;
+ 		crypto.verify_tfm = NULL;
+ 	}
+ 
+-	crypto_free_ahash(connection->integrity_tfm);
++	crypto_free_shash(connection->integrity_tfm);
+ 	connection->integrity_tfm = crypto.integrity_tfm;
+ 	if (connection->cstate >= C_WF_REPORT_PARAMS && connection->agreed_pro_version >= 100)
+ 		/* Do this without trying to take connection->data.mutex again.  */
+diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
+index be9450f5ad1c..76243e9ef277 100644
+--- a/drivers/block/drbd/drbd_receiver.c
++++ b/drivers/block/drbd/drbd_receiver.c
+@@ -1732,7 +1732,7 @@ static int receive_Barrier(struct drbd_connection *connection, struct packet_inf
  }
  
--static void
--mt76x2_init_txpower(struct mt76x2_dev *dev,
--		    struct ieee80211_supported_band *sband)
--{
--	struct ieee80211_channel *chan;
--	struct mt76x2_tx_power_info txp;
--	struct mt76_rate_power t = {};
--	int target_power;
--	int i;
--
--	for (i = 0; i < sband->n_channels; i++) {
--		chan = &sband->channels[i];
--
--		mt76x2_get_power_info(dev, &txp, chan);
--
--		target_power = max_t(int, (txp.chain[0].target_power +
--					   txp.chain[0].delta),
--					  (txp.chain[1].target_power +
--					   txp.chain[1].delta));
--
--		mt76x2_get_rate_power(dev, &t, chan);
--
--		chan->max_power = mt76x2_get_max_rate_power(&t) +
--				  target_power;
--		chan->max_power /= 2;
--
--		/* convert to combined output power on 2x2 devices */
--		chan->max_power += 3;
--	}
--}
--
--void mt76x2_init_device(struct mt76x2_dev *dev)
--{
--	struct ieee80211_hw *hw = mt76_hw(dev);
--
--	hw->queues = 4;
--	hw->max_rates = 1;
--	hw->max_report_rates = 7;
--	hw->max_rate_tries = 1;
--	hw->extra_tx_headroom = 2;
--
--	hw->sta_data_size = sizeof(struct mt76x2_sta);
--	hw->vif_data_size = sizeof(struct mt76x2_vif);
--
--	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
--	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
--
--	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--
--	dev->chainmask = 0x202;
--	dev->global_wcid.idx = 255;
--	dev->global_wcid.hw_key_idx = -1;
--	dev->slottime = 9;
--
--	/* init antenna configuration */
--	dev->mt76.antenna_mask = 3;
--}
--
- int mt76x2_register_device(struct mt76x2_dev *dev)
+ /* quick wrapper in case payload size != request_size (write same) */
+-static void drbd_csum_ee_size(struct crypto_ahash *h,
++static void drbd_csum_ee_size(struct crypto_shash *h,
+ 			      struct drbd_peer_request *r, void *d,
+ 			      unsigned int payload_size)
  {
- 	struct ieee80211_hw *hw = mt76_hw(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-new file mode 100644
-index 000000000000..324b2a4b8b67
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-@@ -0,0 +1,259 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+@@ -1769,7 +1769,7 @@ read_in_block(struct drbd_peer_device *peer_device, u64 id, sector_t sector,
+ 
+ 	digest_size = 0;
+ 	if (!trim && peer_device->connection->peer_integrity_tfm) {
+-		digest_size = crypto_ahash_digestsize(peer_device->connection->peer_integrity_tfm);
++		digest_size = crypto_shash_digestsize(peer_device->connection->peer_integrity_tfm);
+ 		/*
+ 		 * FIXME: Receive the incoming digest into the receive buffer
+ 		 *	  here, together with its struct p_data?
+@@ -1905,7 +1905,7 @@ static int recv_dless_read(struct drbd_peer_device *peer_device, struct drbd_req
+ 
+ 	digest_size = 0;
+ 	if (peer_device->connection->peer_integrity_tfm) {
+-		digest_size = crypto_ahash_digestsize(peer_device->connection->peer_integrity_tfm);
++		digest_size = crypto_shash_digestsize(peer_device->connection->peer_integrity_tfm);
+ 		err = drbd_recv_all_warn(peer_device->connection, dig_in, digest_size);
+ 		if (err)
+ 			return err;
+@@ -3540,7 +3540,7 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+ 	int p_proto, p_discard_my_data, p_two_primaries, cf;
+ 	struct net_conf *nc, *old_net_conf, *new_net_conf = NULL;
+ 	char integrity_alg[SHARED_SECRET_MAX] = "";
+-	struct crypto_ahash *peer_integrity_tfm = NULL;
++	struct crypto_shash *peer_integrity_tfm = NULL;
+ 	void *int_dig_in = NULL, *int_dig_vv = NULL;
+ 
+ 	p_proto		= be32_to_cpu(p->protocol);
+@@ -3621,7 +3621,7 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+ 		 * change.
+ 		 */
+ 
+-		peer_integrity_tfm = crypto_alloc_ahash(integrity_alg, 0, CRYPTO_ALG_ASYNC);
++		peer_integrity_tfm = crypto_alloc_shash(integrity_alg, 0, CRYPTO_ALG_ASYNC);
+ 		if (IS_ERR(peer_integrity_tfm)) {
+ 			peer_integrity_tfm = NULL;
+ 			drbd_err(connection, "peer data-integrity-alg %s not supported\n",
+@@ -3629,7 +3629,7 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+ 			goto disconnect;
+ 		}
+ 
+-		hash_size = crypto_ahash_digestsize(peer_integrity_tfm);
++		hash_size = crypto_shash_digestsize(peer_integrity_tfm);
+ 		int_dig_in = kmalloc(hash_size, GFP_KERNEL);
+ 		int_dig_vv = kmalloc(hash_size, GFP_KERNEL);
+ 		if (!(int_dig_in && int_dig_vv)) {
+@@ -3659,7 +3659,7 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+ 	mutex_unlock(&connection->resource->conf_update);
+ 	mutex_unlock(&connection->data.mutex);
+ 
+-	crypto_free_ahash(connection->peer_integrity_tfm);
++	crypto_free_shash(connection->peer_integrity_tfm);
+ 	kfree(connection->int_dig_in);
+ 	kfree(connection->int_dig_vv);
+ 	connection->peer_integrity_tfm = peer_integrity_tfm;
+@@ -3677,7 +3677,7 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+ disconnect_rcu_unlock:
+ 	rcu_read_unlock();
+ disconnect:
+-	crypto_free_ahash(peer_integrity_tfm);
++	crypto_free_shash(peer_integrity_tfm);
+ 	kfree(int_dig_in);
+ 	kfree(int_dig_vv);
+ 	conn_request_state(connection, NS(conn, C_DISCONNECTING), CS_HARD);
+@@ -3689,15 +3689,16 @@ static int receive_protocol(struct drbd_connection *connection, struct packet_in
+  * return: NULL (alg name was "")
+  *         ERR_PTR(error) if something goes wrong
+  *         or the crypto hash ptr, if it worked out ok. */
+-static struct crypto_ahash *drbd_crypto_alloc_digest_safe(const struct drbd_device *device,
++static struct crypto_shash *drbd_crypto_alloc_digest_safe(
++		const struct drbd_device *device,
+ 		const char *alg, const char *name)
+ {
+-	struct crypto_ahash *tfm;
++	struct crypto_shash *tfm;
+ 
+ 	if (!alg[0])
+ 		return NULL;
+ 
+-	tfm = crypto_alloc_ahash(alg, 0, CRYPTO_ALG_ASYNC);
++	tfm = crypto_alloc_shash(alg, 0, 0);
+ 	if (IS_ERR(tfm)) {
+ 		drbd_err(device, "Can not allocate \"%s\" as %s (reason: %ld)\n",
+ 			alg, name, PTR_ERR(tfm));
+@@ -3750,8 +3751,8 @@ static int receive_SyncParam(struct drbd_connection *connection, struct packet_i
+ 	struct drbd_device *device;
+ 	struct p_rs_param_95 *p;
+ 	unsigned int header_size, data_size, exp_max_sz;
+-	struct crypto_ahash *verify_tfm = NULL;
+-	struct crypto_ahash *csums_tfm = NULL;
++	struct crypto_shash *verify_tfm = NULL;
++	struct crypto_shash *csums_tfm = NULL;
+ 	struct net_conf *old_net_conf, *new_net_conf = NULL;
+ 	struct disk_conf *old_disk_conf = NULL, *new_disk_conf = NULL;
+ 	const int apv = connection->agreed_pro_version;
+@@ -3898,14 +3899,14 @@ static int receive_SyncParam(struct drbd_connection *connection, struct packet_i
+ 			if (verify_tfm) {
+ 				strcpy(new_net_conf->verify_alg, p->verify_alg);
+ 				new_net_conf->verify_alg_len = strlen(p->verify_alg) + 1;
+-				crypto_free_ahash(peer_device->connection->verify_tfm);
++				crypto_free_shash(peer_device->connection->verify_tfm);
+ 				peer_device->connection->verify_tfm = verify_tfm;
+ 				drbd_info(device, "using verify-alg: \"%s\"\n", p->verify_alg);
+ 			}
+ 			if (csums_tfm) {
+ 				strcpy(new_net_conf->csums_alg, p->csums_alg);
+ 				new_net_conf->csums_alg_len = strlen(p->csums_alg) + 1;
+-				crypto_free_ahash(peer_device->connection->csums_tfm);
++				crypto_free_shash(peer_device->connection->csums_tfm);
+ 				peer_device->connection->csums_tfm = csums_tfm;
+ 				drbd_info(device, "using csums-alg: \"%s\"\n", p->csums_alg);
+ 			}
+@@ -3949,9 +3950,9 @@ static int receive_SyncParam(struct drbd_connection *connection, struct packet_i
+ 	mutex_unlock(&connection->resource->conf_update);
+ 	/* just for completeness: actually not needed,
+ 	 * as this is not reached if csums_tfm was ok. */
+-	crypto_free_ahash(csums_tfm);
++	crypto_free_shash(csums_tfm);
+ 	/* but free the verify_tfm again, if csums_tfm did not work out */
+-	crypto_free_ahash(verify_tfm);
++	crypto_free_shash(verify_tfm);
+ 	conn_request_state(peer_device->connection, NS(conn, C_DISCONNECTING), CS_HARD);
+ 	return -EIO;
+ }
+diff --git a/drivers/block/drbd/drbd_worker.c b/drivers/block/drbd/drbd_worker.c
+index 1476cb3439f4..62dd3700dd84 100644
+--- a/drivers/block/drbd/drbd_worker.c
++++ b/drivers/block/drbd/drbd_worker.c
+@@ -295,60 +295,54 @@ void drbd_request_endio(struct bio *bio)
+ 		complete_master_bio(device, &m);
+ }
+ 
+-void drbd_csum_ee(struct crypto_ahash *tfm, struct drbd_peer_request *peer_req, void *digest)
++void drbd_csum_ee(struct crypto_shash *tfm, struct drbd_peer_request *peer_req, void *digest)
+ {
+-	AHASH_REQUEST_ON_STACK(req, tfm);
+-	struct scatterlist sg;
++	SHASH_DESC_ON_STACK(desc, tfm);
+ 	struct page *page = peer_req->pages;
+ 	struct page *tmp;
+ 	unsigned len;
+ 
+-	ahash_request_set_tfm(req, tfm);
+-	ahash_request_set_callback(req, 0, NULL, NULL);
++	desc->tfm = tfm;
++	desc->flags = 0;
+ 
+-	sg_init_table(&sg, 1);
+-	crypto_ahash_init(req);
++	crypto_shash_init(desc);
+ 
+ 	while ((tmp = page_chain_next(page))) {
+ 		/* all but the last page will be fully used */
+-		sg_set_page(&sg, page, PAGE_SIZE, 0);
+-		ahash_request_set_crypt(req, &sg, NULL, sg.length);
+-		crypto_ahash_update(req);
++		crypto_shash_update(desc, page_to_virt(page), PAGE_SIZE);
+ 		page = tmp;
+ 	}
+ 	/* and now the last, possibly only partially used page */
+ 	len = peer_req->i.size & (PAGE_SIZE - 1);
+-	sg_set_page(&sg, page, len ?: PAGE_SIZE, 0);
+-	ahash_request_set_crypt(req, &sg, digest, sg.length);
+-	crypto_ahash_finup(req);
+-	ahash_request_zero(req);
++	crypto_shash_update(desc, page_to_virt(page), len ?: PAGE_SIZE);
 +
-+#include "mt76x2.h"
-+#include "mt76x2_eeprom.h"
++	crypto_shash_final(desc, digest);
++	shash_desc_zero(desc);
+ }
+ 
+-void drbd_csum_bio(struct crypto_ahash *tfm, struct bio *bio, void *digest)
++void drbd_csum_bio(struct crypto_shash *tfm, struct bio *bio, void *digest)
+ {
+-	AHASH_REQUEST_ON_STACK(req, tfm);
+-	struct scatterlist sg;
++	SHASH_DESC_ON_STACK(desc, tfm);
+ 	struct bio_vec bvec;
+ 	struct bvec_iter iter;
+ 
+-	ahash_request_set_tfm(req, tfm);
+-	ahash_request_set_callback(req, 0, NULL, NULL);
++	desc->tfm = tfm;
++	desc->flags = 0;
+ 
+-	sg_init_table(&sg, 1);
+-	crypto_ahash_init(req);
++	crypto_shash_init(desc);
+ 
+ 	bio_for_each_segment(bvec, bio, iter) {
+-		sg_set_page(&sg, bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+-		ahash_request_set_crypt(req, &sg, NULL, sg.length);
+-		crypto_ahash_update(req);
++		crypto_shash_update(desc, (u8 *)page_to_virt(bvec.bv_page) +
++					  bvec.bv_offset,
++				    bvec.bv_len);
 +
-+#define CCK_RATE(_idx, _rate) {					\
-+	.bitrate = _rate,					\
-+	.flags = IEEE80211_RATE_SHORT_PREAMBLE,			\
-+	.hw_value = (MT_PHY_TYPE_CCK << 8) | _idx,		\
-+	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + _idx),	\
-+}
-+
-+#define OFDM_RATE(_idx, _rate) {				\
-+	.bitrate = _rate,					\
-+	.hw_value = (MT_PHY_TYPE_OFDM << 8) | _idx,		\
-+	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | _idx,	\
-+}
-+
-+struct ieee80211_rate mt76x2_rates[] = {
-+	CCK_RATE(0, 10),
-+	CCK_RATE(1, 20),
-+	CCK_RATE(2, 55),
-+	CCK_RATE(3, 110),
-+	OFDM_RATE(0, 60),
-+	OFDM_RATE(1, 90),
-+	OFDM_RATE(2, 120),
-+	OFDM_RATE(3, 180),
-+	OFDM_RATE(4, 240),
-+	OFDM_RATE(5, 360),
-+	OFDM_RATE(6, 480),
-+	OFDM_RATE(7, 540),
-+};
-+EXPORT_SYMBOL_GPL(mt76x2_rates);
-+
-+struct mt76x2_reg_pair {
-+	u32 reg;
-+	u32 value;
-+};
-+
-+static void
-+mt76x2_set_wlan_state(struct mt76x2_dev *dev, bool enable)
-+{
-+	u32 val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
-+
-+	if (enable)
-+		val |= (MT_WLAN_FUN_CTRL_WLAN_EN |
-+			MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
-+	else
-+		val &= ~(MT_WLAN_FUN_CTRL_WLAN_EN |
-+			 MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
-+
-+	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
-+	udelay(20);
-+}
-+
-+void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
-+{
-+	u32 val;
-+
-+	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
-+
-+	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;
-+
-+	if (val & MT_WLAN_FUN_CTRL_WLAN_EN) {
-+		val |= MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
-+		mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
-+		udelay(20);
-+
-+		val &= ~MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
-+	}
-+
-+	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
-+	udelay(20);
-+
-+	mt76x2_set_wlan_state(dev, enable);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_reset_wlan);
-+
-+static void
-+mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
-+		       const struct mt76x2_reg_pair *data, int len)
-+{
-+	while (len > 0) {
-+		mt76_wr(dev, data->reg, data->value);
-+		len--;
-+		data++;
-+	}
-+}
-+
-+void mt76_write_mac_initvals(struct mt76x2_dev *dev)
-+{
-+#define DEFAULT_PROT_CFG_CCK				\
-+	(FIELD_PREP(MT_PROT_CFG_RATE, 0x3) |		\
-+	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |		\
-+	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
-+	 MT_PROT_CFG_RTS_THRESH)
-+
-+#define DEFAULT_PROT_CFG_OFDM				\
-+	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
-+	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
-+	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
-+	 MT_PROT_CFG_RTS_THRESH)
-+
-+#define DEFAULT_PROT_CFG_20				\
-+	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
-+	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
-+	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
-+	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x17))
-+
-+#define DEFAULT_PROT_CFG_40				\
-+	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2084) |		\
-+	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
-+	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
-+	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f))
-+
-+	static const struct mt76x2_reg_pair vals[] = {
-+		/* Copied from MediaTek reference source */
-+		{ MT_PBF_SYS_CTRL,		0x00080c00 },
-+		{ MT_PBF_CFG,			0x1efebcff },
-+		{ MT_FCE_PSE_CTRL,		0x00000001 },
-+		{ MT_MAC_SYS_CTRL,		0x0000000c },
-+		{ MT_MAX_LEN_CFG,		0x003e3f00 },
-+		{ MT_AMPDU_MAX_LEN_20M1S,	0xaaa99887 },
-+		{ MT_AMPDU_MAX_LEN_20M2S,	0x000000aa },
-+		{ MT_XIFS_TIME_CFG,		0x33a40d0a },
-+		{ MT_BKOFF_SLOT_CFG,		0x00000209 },
-+		{ MT_TBTT_SYNC_CFG,		0x00422010 },
-+		{ MT_PWR_PIN_CFG,		0x00000000 },
-+		{ 0x1238,			0x001700c8 },
-+		{ MT_TX_SW_CFG0,		0x00101001 },
-+		{ MT_TX_SW_CFG1,		0x00010000 },
-+		{ MT_TX_SW_CFG2,		0x00000000 },
-+		{ MT_TXOP_CTRL_CFG,		0x0400583f },
-+		{ MT_TX_RTS_CFG,		0x00100020 },
-+		{ MT_TX_TIMEOUT_CFG,		0x000a2290 },
-+		{ MT_TX_RETRY_CFG,		0x47f01f0f },
-+		{ MT_EXP_ACK_TIME,		0x002c00dc },
-+		{ MT_TX_PROT_CFG6,		0xe3f42004 },
-+		{ MT_TX_PROT_CFG7,		0xe3f42084 },
-+		{ MT_TX_PROT_CFG8,		0xe3f42104 },
-+		{ MT_PIFS_TX_CFG,		0x00060fff },
-+		{ MT_RX_FILTR_CFG,		0x00015f97 },
-+		{ MT_LEGACY_BASIC_RATE,		0x0000017f },
-+		{ MT_HT_BASIC_RATE,		0x00004003 },
-+		{ MT_PN_PAD_MODE,		0x00000003 },
-+		{ MT_TXOP_HLDR_ET,		0x00000002 },
-+		{ 0xa44,			0x00000000 },
-+		{ MT_HEADER_TRANS_CTRL_REG,	0x00000000 },
-+		{ MT_TSO_CTRL,			0x00000000 },
-+		{ MT_AUX_CLK_CFG,		0x00000000 },
-+		{ MT_DACCLK_EN_DLY_CFG,		0x00000000 },
-+		{ MT_TX_ALC_CFG_4,		0x00000000 },
-+		{ MT_TX_ALC_VGA3,		0x00000000 },
-+		{ MT_TX_PWR_CFG_0,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_1,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_2,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_3,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_4,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_7,		0x3a3a3a3a },
-+		{ MT_TX_PWR_CFG_8,		0x0000003a },
-+		{ MT_TX_PWR_CFG_9,		0x0000003a },
-+		{ MT_EFUSE_CTRL,		0x0000d000 },
-+		{ MT_PAUSE_ENABLE_CONTROL1,	0x0000000a },
-+		{ MT_FCE_WLAN_FLOW_CONTROL1,	0x60401c18 },
-+		{ MT_WPDMA_DELAY_INT_CFG,	0x94ff0000 },
-+		{ MT_TX_SW_CFG3,		0x00000004 },
-+		{ MT_HT_FBK_TO_LEGACY,		0x00001818 },
-+		{ MT_VHT_HT_FBK_CFG1,		0xedcba980 },
-+		{ MT_PROT_AUTO_TX_CFG,		0x00830083 },
-+		{ MT_HT_CTRL_CFG,		0x000001ff },
-+	};
-+	struct mt76x2_reg_pair prot_vals[] = {
-+		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG_CCK },
-+		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG_OFDM },
-+		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
-+		{ MT_MM40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
-+		{ MT_GF20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
-+		{ MT_GF40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
-+	};
-+
-+	mt76x2_write_reg_pairs(dev, vals, ARRAY_SIZE(vals));
-+	mt76x2_write_reg_pairs(dev, prot_vals, ARRAY_SIZE(prot_vals));
-+}
-+EXPORT_SYMBOL_GPL(mt76_write_mac_initvals);
-+
-+void mt76x2_init_device(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_hw *hw = mt76_hw(dev);
-+
-+	hw->queues = 4;
-+	hw->max_rates = 1;
-+	hw->max_report_rates = 7;
-+	hw->max_rate_tries = 1;
-+	hw->extra_tx_headroom = 2;
-+
-+	hw->sta_data_size = sizeof(struct mt76x2_sta);
-+	hw->vif_data_size = sizeof(struct mt76x2_vif);
-+
-+	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
-+	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
-+
-+	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	dev->chainmask = 0x202;
-+	dev->global_wcid.idx = 255;
-+	dev->global_wcid.hw_key_idx = -1;
-+	dev->slottime = 9;
-+
-+	/* init antenna configuration */
-+	dev->mt76.antenna_mask = 3;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_init_device);
-+
-+void mt76x2_init_txpower(struct mt76x2_dev *dev,
-+			 struct ieee80211_supported_band *sband)
-+{
-+	struct ieee80211_channel *chan;
-+	struct mt76x2_tx_power_info txp;
-+	struct mt76_rate_power t = {};
-+	int target_power;
-+	int i;
-+
-+	for (i = 0; i < sband->n_channels; i++) {
-+		chan = &sband->channels[i];
-+
-+		mt76x2_get_power_info(dev, &txp, chan);
-+
-+		target_power = max_t(int, (txp.chain[0].target_power +
-+					   txp.chain[0].delta),
-+					  (txp.chain[1].target_power +
-+					   txp.chain[1].delta));
-+
-+		mt76x2_get_rate_power(dev, &t, chan);
-+
-+		chan->max_power = mt76x2_get_max_rate_power(&t) +
-+				  target_power;
-+		chan->max_power /= 2;
-+
-+		/* convert to combined output power on 2x2 devices */
-+		chan->max_power += 3;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_init_txpower);
+ 		/* REQ_OP_WRITE_SAME has only one segment,
+ 		 * checksum the payload only once. */
+ 		if (bio_op(bio) == REQ_OP_WRITE_SAME)
+ 			break;
+ 	}
+-	ahash_request_set_crypt(req, NULL, digest, 0);
+-	crypto_ahash_final(req);
+-	ahash_request_zero(req);
++	crypto_shash_final(desc, digest);
++	shash_desc_zero(desc);
+ }
+ 
+ /* MAYBE merge common code with w_e_end_ov_req */
+@@ -367,7 +361,7 @@ static int w_e_send_csum(struct drbd_work *w, int cancel)
+ 	if (unlikely((peer_req->flags & EE_WAS_ERROR) != 0))
+ 		goto out;
+ 
+-	digest_size = crypto_ahash_digestsize(peer_device->connection->csums_tfm);
++	digest_size = crypto_shash_digestsize(peer_device->connection->csums_tfm);
+ 	digest = kmalloc(digest_size, GFP_NOIO);
+ 	if (digest) {
+ 		sector_t sector = peer_req->i.sector;
+@@ -1205,7 +1199,7 @@ int w_e_end_csum_rs_req(struct drbd_work *w, int cancel)
+ 		 * a real fix would be much more involved,
+ 		 * introducing more locking mechanisms */
+ 		if (peer_device->connection->csums_tfm) {
+-			digest_size = crypto_ahash_digestsize(peer_device->connection->csums_tfm);
++			digest_size = crypto_shash_digestsize(peer_device->connection->csums_tfm);
+ 			D_ASSERT(device, digest_size == di->digest_size);
+ 			digest = kmalloc(digest_size, GFP_NOIO);
+ 		}
+@@ -1255,7 +1249,7 @@ int w_e_end_ov_req(struct drbd_work *w, int cancel)
+ 	if (unlikely(cancel))
+ 		goto out;
+ 
+-	digest_size = crypto_ahash_digestsize(peer_device->connection->verify_tfm);
++	digest_size = crypto_shash_digestsize(peer_device->connection->verify_tfm);
+ 	digest = kmalloc(digest_size, GFP_NOIO);
+ 	if (!digest) {
+ 		err = 1;	/* terminate the connection in case the allocation failed */
+@@ -1327,7 +1321,7 @@ int w_e_end_ov_reply(struct drbd_work *w, int cancel)
+ 	di = peer_req->digest;
+ 
+ 	if (likely((peer_req->flags & EE_WAS_ERROR) == 0)) {
+-		digest_size = crypto_ahash_digestsize(peer_device->connection->verify_tfm);
++		digest_size = crypto_shash_digestsize(peer_device->connection->verify_tfm);
+ 		digest = kmalloc(digest_size, GFP_NOIO);
+ 		if (digest) {
+ 			drbd_csum_ee(peer_device->connection->verify_tfm, peer_req, digest);
 -- 
 2.17.1
