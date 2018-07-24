@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53698 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388144AbeGWRFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 13:05:13 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 6/9] ath9k: report tx status on EOSP
-Date: Mon, 23 Jul 2018 18:02:57 +0200
-Message-Id: <20180723160300.58024-6-nbd@nbd.name> (sfid-20180723_180323_771028_AE9A9FAD)
-In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
-References: <20180723160300.58024-1-nbd@nbd.name>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:46265 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388967AbeGXUhx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 16:37:53 -0400
+Received: by mail-pl0-f68.google.com with SMTP id t17-v6so2190845ply.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:56 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 16/18] bpfilter: remove trailing newline
+Date: Tue, 24 Jul 2018 12:29:16 -0700
+Message-Id: <20180724192918.31165-17-sthemmin@microsoft.com> (sfid-20180724_213025_531319_04AC9198)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes missed indications of end of U-APSD service period to mac80211
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/bpfilter/Kconfig       | 1 -
+ net/ipv4/bpfilter/Makefile | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 56a0d1b7527a..d366170f01cf 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -86,7 +86,8 @@ static void ath_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sta *sta = info->status.status_driver_data[0];
- 
--	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+	if (info->flags & (IEEE80211_TX_CTL_REQ_TX_STATUS |
-+			   IEEE80211_TX_STATUS_EOSP)) {
- 		ieee80211_tx_status(hw, skb);
- 		return;
- 	}
+diff --git a/net/bpfilter/Kconfig b/net/bpfilter/Kconfig
+index 76deb6615883..e558b46596c4 100644
+--- a/net/bpfilter/Kconfig
++++ b/net/bpfilter/Kconfig
+@@ -13,4 +13,3 @@ config BPFILTER_UMH
+ 	help
+ 	  This builds bpfilter kernel module with embedded user mode helper
+ endif
+-
+diff --git a/net/ipv4/bpfilter/Makefile b/net/ipv4/bpfilter/Makefile
+index ce262d76cc48..e9e42f99725e 100644
+--- a/net/ipv4/bpfilter/Makefile
++++ b/net/ipv4/bpfilter/Makefile
+@@ -1,2 +1 @@
+ obj-$(CONFIG_BPFILTER) += sockopt.o
+-
 -- 
-2.17.0
+2.18.0
