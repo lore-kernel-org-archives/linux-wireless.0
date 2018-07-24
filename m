@@ -1,57 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42262 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932392AbeGCPp5 (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:25495 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388453AbeGXIt4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 11:45:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: andy.gross@linaro.org
-Cc: Govind Singh <govinds@codeaurora.org>, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 5/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-References: <20180605123709.1882-1-govinds@codeaurora.org>
-Date: Tue, 03 Jul 2018 18:45:52 +0300
-In-Reply-To: <20180605123709.1882-1-govinds@codeaurora.org> (Govind Singh's
-        message of "Tue, 5 Jun 2018 18:07:09 +0530")
-Message-ID: <87k1qcnwzz.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_174602_279213_8A9B408E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 24 Jul 2018 04:49:56 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 01/19] wil6210: Rx multicast packets duplicate detection
+Date: Tue, 24 Jul 2018 10:44:22 +0300
+Message-Id: <1532418280-5849-2-git-send-email-merez@codeaurora.org> (sfid-20180724_100227_932376_6E243468)
+In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> writes:
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-> Add WLAN related VMID's to support wlan driver to set up
-> the remote's permissions call via TrustZone.
->
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  include/linux/qcom_scm.h | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
-> index b401b962afff..da63d84e1e91 100644
-> --- a/include/linux/qcom_scm.h
-> +++ b/include/linux/qcom_scm.h
-> @@ -1,4 +1,4 @@
-> -/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
-> +/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
->   * Copyright (C) 2015 Linaro Ltd.
->   *
->   * This program is free software; you can redistribute it and/or modify
-> @@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
->  
->  #define QCOM_SCM_VMID_HLOS       0x3
->  #define QCOM_SCM_VMID_MSS_MSA    0xF
-> +#define QCOM_SCM_VMID_WLAN       0x18
-> +#define QCOM_SCM_VMID_WLAN_CE    0x19
+Store the last received multicast sequence number (SN) part of the TID
+info. Drop Rx multicast packets with retry bit set which their SN
+is equal to the last received.
 
-Andy, it would be easiest if I can apply this directly to my ath.git
-tree. Can I get your ack for this?
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  7 ++++---
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 23 ++++++++++++++++-------
+ drivers/net/wireless/ath/wil6210/txrx.c       |  3 ++-
+ drivers/net/wireless/ath/wil6210/txrx.h       |  5 +++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.c  |  3 ++-
+ drivers/net/wireless/ath/wil6210/txrx_edma.h  |  6 ++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  6 +++++-
+ 7 files changed, 40 insertions(+), 13 deletions(-)
 
-BTW, I didn't find include/linux/qcom_scm.h from MAINTAINERS file. It
-would be good to add that.
-
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 58ce044..7d62126 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1640,6 +1640,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 	int i;
+ 	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
+ 	unsigned long long drop_dup = r->drop_dup, drop_old = r->drop_old;
++	unsigned long long drop_dup_mcast = r->drop_dup_mcast;
+ 
+ 	seq_printf(s, "([%2d]) 0x%03x [", r->buf_size, r->head_seq_num);
+ 	for (i = 0; i < r->buf_size; i++) {
+@@ -1649,9 +1650,9 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? '*' : '_');
+ 	}
+ 	seq_printf(s,
+-		   "] total %llu drop %llu (dup %llu + old %llu) last 0x%03x\n",
+-		   r->total, drop_dup + drop_old, drop_dup, drop_old,
+-		   r->ssn_last_drop);
++		   "] total %llu drop %llu (dup %llu + old %llu + dup mcast %llu) last 0x%03x\n",
++		   r->total, drop_dup + drop_old + drop_dup_mcast, drop_dup,
++		   drop_old, drop_dup_mcast, r->ssn_last_drop);
+ }
+ 
+ static void wil_print_rxtid_crypto(struct seq_file *s, int tid,
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 22475a1..ba4e93f 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -95,7 +95,7 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
+ {
+ 	struct wil6210_vif *vif;
+ 	struct net_device *ndev;
+-	int tid, cid, mid, mcast;
++	int tid, cid, mid, mcast, retry;
+ 	u16 seq;
+ 	struct wil_sta_info *sta;
+ 	struct wil_tid_ampdu_rx *r;
+@@ -103,7 +103,7 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
+ 	int index;
+ 
+ 	wil->txrx_ops.get_reorder_params(wil, skb, &tid, &cid, &mid, &seq,
+-					 &mcast);
++					 &mcast, &retry);
+ 	sta = &wil->sta[cid];
+ 
+ 	wil_dbg_txrx(wil, "MID %d CID %d TID %d Seq 0x%03x mcast %01x\n",
+@@ -117,11 +117,6 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
+ 	}
+ 	ndev = vif_to_ndev(vif);
+ 
+-	if (unlikely(mcast)) {
+-		wil_netif_rx_any(skb, ndev);
+-		return;
+-	}
+-
+ 	spin_lock(&sta->tid_rx_lock);
+ 
+ 	r = sta->tid_rx[tid];
+@@ -130,6 +125,19 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
+ 		goto out;
+ 	}
+ 
++	if (unlikely(mcast)) {
++		if (retry && seq == r->mcast_last_seq) {
++			r->drop_dup_mcast++;
++			wil_dbg_txrx(wil, "Rx drop: dup mcast seq 0x%03x\n",
++				     seq);
++			dev_kfree_skb(skb);
++			goto out;
++		}
++		r->mcast_last_seq = seq;
++		wil_netif_rx_any(skb, ndev);
++		goto out;
++	}
++
+ 	r->total++;
+ 	hseq = r->head_seq_num;
+ 
+@@ -262,6 +270,7 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 	r->buf_size = size;
+ 	r->stored_mpdu_num = 0;
+ 	r->first_time = true;
++	r->mcast_last_seq = U16_MAX;
+ 	return r;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 2098f3c..ad40a96 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -2180,7 +2180,7 @@ static inline void wil_tx_fini(struct wil6210_priv *wil) {}
+ 
+ static void wil_get_reorder_params(struct wil6210_priv *wil,
+ 				   struct sk_buff *skb, int *tid, int *cid,
+-				   int *mid, u16 *seq, int *mcast)
++				   int *mid, u16 *seq, int *mcast, int *retry)
+ {
+ 	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
+ 
+@@ -2189,6 +2189,7 @@ static void wil_get_reorder_params(struct wil6210_priv *wil,
+ 	*mid = wil_rxdesc_mid(d);
+ 	*seq = wil_rxdesc_seq(d);
+ 	*mcast = wil_rxdesc_mcast(d);
++	*retry = wil_rxdesc_retry(d);
+ }
+ 
+ void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index f361423..3dfd7f9 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -500,6 +500,11 @@ static inline int wil_rxdesc_ext_subtype(struct vring_rx_desc *d)
+ 	return WIL_GET_BITS(d->mac.d0, 28, 31);
+ }
+ 
++static inline int wil_rxdesc_retry(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d0, 31, 31);
++}
++
+ static inline int wil_rxdesc_key_id(struct vring_rx_desc *d)
+ {
+ 	return WIL_GET_BITS(d->mac.d1, 4, 5);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 95f38e6..1940347 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -503,7 +503,7 @@ static int wil_init_rx_desc_ring(struct wil6210_priv *wil, u16 desc_ring_size,
+ static void wil_get_reorder_params_edma(struct wil6210_priv *wil,
+ 					struct sk_buff *skb, int *tid,
+ 					int *cid, int *mid, u16 *seq,
+-					int *mcast)
++					int *mcast, int *retry)
+ {
+ 	struct wil_rx_status_extended *s = wil_skb_rxstatus(skb);
+ 
+@@ -512,6 +512,7 @@ static void wil_get_reorder_params_edma(struct wil6210_priv *wil,
+ 	*mid = wil_rx_status_get_mid(s);
+ 	*seq = le16_to_cpu(wil_rx_status_get_seq(wil, s));
+ 	*mcast = wil_rx_status_get_mcast(s);
++	*retry = wil_rx_status_get_retry(s);
+ }
+ 
+ static void wil_get_netif_rx_params_edma(struct sk_buff *skb, int *cid,
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.h b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+index e86fc2d..a7fe929 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.h
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+@@ -471,6 +471,12 @@ static inline __le16 wil_rx_status_get_seq(struct wil6210_priv *wil, void *msg)
+ 	return ((struct wil_rx_status_extended *)msg)->ext.seq_num;
+ }
+ 
++static inline u8 wil_rx_status_get_retry(void *msg)
++{
++	/* retry bit is missing in EDMA HW. return 1 to be on the safe side */
++	return 1;
++}
++
+ static inline int wil_rx_status_get_mid(void *msg)
+ {
+ 	if (!(((struct wil_rx_status_compressed *)msg)->d0 &
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d963c76..9b1467c 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -572,7 +572,7 @@ struct wil_txrx_ops {
+ 				 u16 agg_wsize, u16 timeout);
+ 	void (*get_reorder_params)(struct wil6210_priv *wil,
+ 				   struct sk_buff *skb, int *tid, int *cid,
+-				   int *mid, u16 *seq, int *mcast);
++				   int *mid, u16 *seq, int *mcast, int *retry);
+ 	void (*get_netif_rx_params)(struct sk_buff *skb,
+ 				    int *cid, int *security);
+ 	int (*rx_crypto_check)(struct wil6210_priv *wil, struct sk_buff *skb);
+@@ -625,6 +625,8 @@ enum { /* for wil6210_priv.status */
+  * @drop_dup: duplicate frames dropped for this reorder buffer
+  * @drop_old: old frames dropped for this reorder buffer
+  * @first_time: true when this buffer used 1-st time
++ * @mcast_last_seq: sequence number (SN) of last received multicast packet
++ * @drop_dup_mcast: duplicate multicast frames dropped for this reorder buffer
+  */
+ struct wil_tid_ampdu_rx {
+ 	struct sk_buff **reorder_buf;
+@@ -638,6 +640,8 @@ struct wil_tid_ampdu_rx {
+ 	unsigned long long drop_dup;
+ 	unsigned long long drop_old;
+ 	bool first_time; /* is it 1-st time this buffer used? */
++	u16 mcast_last_seq; /* multicast dup detection */
++	unsigned long long drop_dup_mcast;
+ };
+ 
+ /**
 -- 
-Kalle Valo
+1.9.1
