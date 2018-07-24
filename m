@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:51938 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754548AbeGJDOS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 23:14:18 -0400
-Date: Mon, 9 Jul 2018 20:14:10 -0700
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, dcaratti@redhat.com
-Subject: Re: [PATCH 0/2] enable 802.11w in mt7601u driver
-Message-ID: <20180709201410.67a77f31@cakuba.lan> (sfid-20180710_051426_708849_BF9C948F)
-In-Reply-To: <cover.1531130155.git.lorenzo.bianconi@redhat.com>
-References: <cover.1531130155.git.lorenzo.bianconi@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33110 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388461AbeGXRU5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 13:20:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, twooden@rivetnetworks.com,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: add more card IDs for 9000 series
+References: <1531824236-25442-1-git-send-email-emmanuel.grumbach@intel.com>
+        <20180724160131.40A276085F@smtp.codeaurora.org>
+Date: Tue, 24 Jul 2018 19:13:42 +0300
+In-Reply-To: <20180724160131.40A276085F@smtp.codeaurora.org> (Kalle Valo's
+        message of "Tue, 24 Jul 2018 16:01:31 +0000 (UTC)")
+Message-ID: <8760148vd5.fsf@purkki.adurom.net> (sfid-20180724_181350_164387_3B7E7C42)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon,  9 Jul 2018 12:20:25 +0200, Lorenzo Bianconi wrote:
-> Lorenzo Bianconi (1):
->   mt7601u: use sw encryption for hw unsupported ciphers
-> 
-> Davide Caratti (1):
->   mt7601u: expose 802.11w support
-> 
->  drivers/net/wireless/mediatek/mt7601u/init.c |  1 +
->  drivers/net/wireless/mediatek/mt7601u/main.c | 11 +++++++++++
->  2 files changed, 12 insertions(+)
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
+> Emmanuel Grumbach <emmanuel.grumbach@intel.com> wrote:
+>
+>> Add new device IDs for the 9000 series.
+>> 
+>> Cc: stable@vger.kernel.org [4.14+]
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> Patch applied to wireless-drivers.git, thanks.
+>
+> 2586f5ddcf5d iwlwifi: add more card IDs for 9000 series
+
+Ignore that, this is not yet applied due to incorrect format in stable
+field. I'll fix the field and reapply it later.
+
+-- 
+Kalle Valo
