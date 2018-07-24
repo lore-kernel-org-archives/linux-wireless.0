@@ -1,137 +1,359 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57150 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388425AbeGXLFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 07:05:43 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v3 06/11] NFC: st95hf: move skb allocation to ISR
-Date: Tue, 24 Jul 2018 11:59:36 +0200
-Message-Id: <20180724095941.25777-7-daniel@zonque.org> (sfid-20180724_120139_787330_C2B140D8)
-In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
-References: <20180724095941.25777-1-daniel@zonque.org>
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:25299 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388510AbeGXIt6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 04:49:58 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 03/19] wil6210: add TX latency statistics
+Date: Tue, 24 Jul 2018 10:44:24 +0300
+Message-Id: <1532418280-5849-4-git-send-email-merez@codeaurora.org> (sfid-20180724_094512_935910_77A670F8)
+In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver currently assumes that interrupts can only occur between the
-time when when a command has been sent to the device and the response
-to it.
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-This assumption, however, is wrong. The antenna of the chip is likely to
-catch a lot of environmental noise, and once in a while, the device will
-latch the interrupt to signal a protocol error, and keep it latched until
-the response bytes are read from the chip.
+Collect statistics of TX latency. The latency is measured from the time
+the HW gets aware of new SKB to transmit until the HW indicates tx
+complete for this SKB.
+The statistics are shown via new "tx_latency" debugfs.
 
-As the code currently stands, skbs for responses are only prepared when
-a command is sent, and the ISR bails out early if that wasn't the case.
-Hence, the interrupt remains latched, and no further communication with
-device is possible.
-
-To fix this, move the call to nfc_alloc_recv_skb() from
-st95hf_in_send_cmd() to st95hf_irq_thread_handler() and always read back
-the interrupt reason.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/nfc/st95hf/core.c | 36 ++++++------------------------------
- 1 file changed, 6 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 125 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/main.c      |   1 +
+ drivers/net/wireless/ath/wil6210/txrx.c      |  38 ++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h      |   2 +
+ drivers/net/wireless/ath/wil6210/txrx_edma.c |   8 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  14 +++
+ 6 files changed, 188 insertions(+)
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 6761ab90f68d..99f84ddfdfef 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -196,7 +196,6 @@ static const struct cmd cmd_array[] = {
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 99b1fc5..5d1e48d 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1800,6 +1800,126 @@ static int wil_mids_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
+ };
  
- /* st95_digital_cmd_complete_arg stores client context */
- struct st95_digital_cmd_complete_arg {
--	struct sk_buff *skb_resp;
- 	nfc_digital_cmd_complete_t complete_cb;
- 	void *cb_usrarg;
- 	bool rats;
-@@ -783,12 +782,10 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
- 
- 	spidevice = &stcontext->spicontext.spidev->dev;
- 	cb_arg = &stcontext->complete_cb_arg;
--	skb_resp = cb_arg->skb_resp;
- 
--	if (unlikely(!skb_resp)) {
--		WARN(1, "unknown context in ST95HF ISR");
-+	skb_resp = nfc_alloc_recv_skb(MAX_RESPONSE_BUFFER_SIZE, GFP_KERNEL);
-+	if (WARN_ON(!skb_resp))
- 		return IRQ_NONE;
--	}
- 
- 	mutex_lock(&stcontext->rm_lock);
- 	res_len = st95hf_spi_recv_response(&stcontext->spicontext,
-@@ -838,12 +835,6 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
- 	/* call digital layer callback */
- 	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
- 
--	/*
--	 * This skb is now owned by the core layer.
--	 * Make sure not to use it again.
--	 */
--	cb_arg->skb_resp = NULL;
--
- 	/* up the semaphore before returning */
- 	mutex_unlock(&stcontext->rm_lock);
- 
-@@ -913,15 +904,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 			      void *arg)
- {
- 	struct st95hf_context *stcontext = nfc_digital_get_drvdata(ddev);
--	int rc;
--	struct sk_buff *skb_resp;
--	int len_data_to_tag = 0;
--
--	skb_resp = nfc_alloc_recv_skb(MAX_RESPONSE_BUFFER_SIZE, GFP_KERNEL);
--	if (!skb_resp) {
--		rc = -ENOMEM;
--		goto error;
--	}
-+	int rc, len_data_to_tag = 0;
- 
- 	switch (stcontext->current_rf_tech) {
- 	case NFC_DIGITAL_RF_TECH_106A:
-@@ -933,8 +916,7 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 		len_data_to_tag = skb->len;
- 		break;
- 	default:
--		rc = -EINVAL;
--		goto free_skb_resp;
-+		return -EINVAL;
- 	}
- 
- 	skb_push(skb, 3);
-@@ -942,7 +924,6 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 	skb->data[1] = SEND_RECEIVE_CMD;
- 	skb->data[2] = len_data_to_tag;
- 
--	stcontext->complete_cb_arg.skb_resp = skb_resp;
- 	stcontext->complete_cb_arg.cb_usrarg = arg;
- 	stcontext->complete_cb_arg.complete_cb = cb;
- 
-@@ -956,17 +937,12 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
- 	if (rc) {
- 		dev_err(&stcontext->nfcdev->dev,
- 			"Error %d trying to perform data_exchange", rc);
--		goto free_skb_resp;
-+		return rc;
- 	}
- 
- 	kfree_skb(skb);
- 
--	return rc;
--
--free_skb_resp:
--	kfree_skb(skb_resp);
--error:
--	return rc;
++static int wil_tx_latency_debugfs_show(struct seq_file *s, void *data)
++__acquires(&p->tid_rx_lock) __releases(&p->tid_rx_lock)
++{
++	struct wil6210_priv *wil = s->private;
++	int i, bin;
++
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++		struct wil_sta_info *p = &wil->sta[i];
++		char *status = "unknown";
++		u8 aid = 0;
++		u8 mid;
++
++		if (!p->tx_latency_bins)
++			continue;
++
++		switch (p->status) {
++		case wil_sta_unused:
++			status = "unused   ";
++			break;
++		case wil_sta_conn_pending:
++			status = "pending  ";
++			break;
++		case wil_sta_connected:
++			status = "connected";
++			aid = p->aid;
++			break;
++		}
++		mid = (p->status != wil_sta_unused) ? p->mid : U8_MAX;
++		seq_printf(s, "[%d] %pM %s MID %d AID %d\n", i, p->addr, status,
++			   mid, aid);
++
++		if (p->status == wil_sta_connected) {
++			u64 num_packets = 0;
++			u64 tx_latency_avg = p->stats.tx_latency_total_us;
++
++			seq_puts(s, "Tx/Latency bin:");
++			for (bin = 0; bin < WIL_NUM_LATENCY_BINS; bin++) {
++				seq_printf(s, " %lld",
++					   p->tx_latency_bins[bin]);
++				num_packets += p->tx_latency_bins[bin];
++			}
++			seq_puts(s, "\n");
++			if (!num_packets)
++				continue;
++			do_div(tx_latency_avg, num_packets);
++			seq_printf(s, "Tx/Latency min/avg/max (us): %d/%lld/%d",
++				   p->stats.tx_latency_min_us,
++				   tx_latency_avg,
++				   p->stats.tx_latency_max_us);
++
++			seq_puts(s, "\n");
++		}
++	}
++
 +	return 0;
++}
++
++static int wil_tx_latency_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_tx_latency_debugfs_show,
++			   inode->i_private);
++}
++
++static ssize_t wil_tx_latency_write(struct file *file, const char __user *buf,
++				    size_t len, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct wil6210_priv *wil = s->private;
++	int val, rc, i;
++	bool enable;
++
++	rc = kstrtoint_from_user(buf, len, 0, &val);
++	if (rc) {
++		wil_err(wil, "Invalid argument\n");
++		return rc;
++	}
++	if (val == 1)
++		/* default resolution */
++		val = 500;
++	if (val && (val < 50 || val > 1000)) {
++		wil_err(wil, "Invalid resolution %d\n", val);
++		return -EINVAL;
++	}
++
++	enable = !!val;
++	if (wil->tx_latency == enable)
++		return len;
++
++	wil_info(wil, "%s TX latency measurements (resolution %dusec)\n",
++		 enable ? "Enabling" : "Disabling", val);
++
++	if (enable) {
++		size_t sz = sizeof(u64) * WIL_NUM_LATENCY_BINS;
++
++		wil->tx_latency_res = val;
++		for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++			struct wil_sta_info *sta = &wil->sta[i];
++
++			kfree(sta->tx_latency_bins);
++			sta->tx_latency_bins = kzalloc(sz, GFP_KERNEL);
++			if (!sta->tx_latency_bins)
++				return -ENOMEM;
++			sta->stats.tx_latency_min_us = U32_MAX;
++			sta->stats.tx_latency_max_us = 0;
++			sta->stats.tx_latency_total_us = 0;
++		}
++	}
++	wil->tx_latency = enable;
++
++	return len;
++}
++
++static const struct file_operations fops_tx_latency = {
++	.open		= wil_tx_latency_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.write		= wil_tx_latency_write,
++	.llseek		= seq_lseek,
++};
++
+ static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
+ 				     size_t count, loff_t *ppos)
+ {
+@@ -2133,6 +2253,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"srings",	0444,		&fops_srings},
+ 	{"status_msg",	0444,		&fops_status_msg},
+ 	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
++	{"tx_latency",	0644,		&fops_tx_latency},
+ };
+ 
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -2249,10 +2370,14 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
+ 
+ void wil6210_debugfs_remove(struct wil6210_priv *wil)
+ {
++	int i;
++
+ 	debugfs_remove_recursive(wil->debug);
+ 	wil->debug = NULL;
+ 
+ 	kfree(wil->dbg_data.data_arr);
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++)
++		kfree(wil->sta[i].tx_latency_bins);
+ 
+ 	/* free pmc memory without sending command to fw, as it will
+ 	 * be reset on the way down anyway
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 4de19bd..7e4ccd9 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -278,6 +278,7 @@ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
+ 	}
+ 	/* statistics */
+ 	memset(&sta->stats, 0, sizeof(sta->stats));
++	sta->stats.tx_latency_min_us = U32_MAX;
  }
  
- /* p2p will be supported in a later release ! */
+ static bool wil_vif_is_connected(struct wil6210_priv *wil, u8 mid)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 9ac8674..6707af6 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1693,6 +1693,11 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct wil6210_vif *vif,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, vring->hwtail, vring->swhead);
+ 	return 0;
+ 
+@@ -1844,6 +1849,11 @@ static int __wil_tx_ring(struct wil6210_priv *wil, struct wil6210_vif *vif,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, ring->hwtail, ring->swhead);
+ 
+ 	return 0;
+@@ -2065,6 +2075,31 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	return NET_XMIT_DROP;
+ }
+ 
++void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
++			 struct wil_sta_info *sta)
++{
++	int skb_time_us;
++	int bin;
++
++	if (!wil->tx_latency)
++		return;
++
++	if (ktime_to_ms(*(ktime_t *)&skb->cb) == 0)
++		return;
++
++	skb_time_us = ktime_us_delta(ktime_get(), *(ktime_t *)&skb->cb);
++	bin = skb_time_us / wil->tx_latency_res;
++	bin = min_t(int, bin, WIL_NUM_LATENCY_BINS - 1);
++
++	wil_dbg_txrx(wil, "skb time %dus => bin %d\n", skb_time_us, bin);
++	sta->tx_latency_bins[bin]++;
++	sta->stats.tx_latency_total_us += skb_time_us;
++	if (skb_time_us < sta->stats.tx_latency_min_us)
++		sta->stats.tx_latency_min_us = skb_time_us;
++	if (skb_time_us > sta->stats.tx_latency_max_us)
++		sta->stats.tx_latency_max_us = skb_time_us;
++}
++
+ /**
+  * Clean up transmitted skb's from the Tx VRING
+  *
+@@ -2151,6 +2186,9 @@ int wil_tx_complete(struct wil6210_vif *vif, int ringid)
+ 					if (stats) {
+ 						stats->tx_packets++;
+ 						stats->tx_bytes += skb->len;
++
++						wil_tx_latency_calc(wil, skb,
++							&wil->sta[cid]);
+ 					}
+ 				} else {
+ 					ndev->stats.tx_errors++;
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 3dfd7f9..9d83be4 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -620,5 +620,7 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 			   struct wil_tid_ampdu_rx *r);
+ void wil_tx_data_init(struct wil_ring_tx_data *txdata);
+ void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil);
++void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
++			 struct wil_sta_info *sta);
+ 
+ #endif /* WIL6210_TXRX_H */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index b5d399f..2ea9767 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -1217,6 +1217,9 @@ int wil_tx_sring_handler(struct wil6210_priv *wil,
+ 					if (stats) {
+ 						stats->tx_packets++;
+ 						stats->tx_bytes += skb->len;
++
++						wil_tx_latency_calc(wil, skb,
++							&wil->sta[cid]);
+ 					}
+ 				} else {
+ 					ndev->stats.tx_errors++;
+@@ -1467,6 +1470,11 @@ static int __wil_tx_ring_tso_edma(struct wil6210_priv *wil,
+ 	 */
+ 	wmb();
+ 
++	if (wil->tx_latency)
++		*(ktime_t *)&skb->cb = ktime_get();
++	else
++		memset(skb->cb, 0, sizeof(ktime_t));
++
+ 	wil_w(wil, ring->hwtail, ring->swhead);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 002d336..1a7a1ad 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -55,6 +55,8 @@
+ #define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
+ #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
+ 
++#define WIL_NUM_LATENCY_BINS 200
++
+ /* maximum number of virtual interfaces the driver supports
+  * (including the main interface)
+  */
+@@ -552,6 +554,9 @@ struct wil_net_stats {
+ 	unsigned long	rx_bytes;
+ 	unsigned long	tx_bytes;
+ 	unsigned long	tx_errors;
++	u32 tx_latency_min_us;
++	u32 tx_latency_max_us;
++	u64 tx_latency_total_us;
+ 	unsigned long	rx_dropped;
+ 	unsigned long	rx_non_data_frame;
+ 	unsigned long	rx_short_frame;
+@@ -712,6 +717,13 @@ struct wil_sta_info {
+ 	u8 mid;
+ 	enum wil_sta_status status;
+ 	struct wil_net_stats stats;
++	/**
++	 * 20 latency bins. 1st bin counts packets with latency
++	 * of 0..tx_latency_res, last bin counts packets with latency
++	 * of 19*tx_latency_res and above.
++	 * tx_latency_res is configured from "tx_latency" debug-fs.
++	 */
++	u64 *tx_latency_bins;
+ 	/* Rx BACK */
+ 	struct wil_tid_ampdu_rx *tid_rx[WIL_STA_TID_NUM];
+ 	spinlock_t tid_rx_lock; /* guarding tid_rx array */
+@@ -943,6 +955,8 @@ struct wil6210_priv {
+ 	u8 wakeup_trigger;
+ 	struct wil_suspend_stats suspend_stats;
+ 	struct wil_debugfs_data dbg_data;
++	bool tx_latency; /* collect TX latency measurements */
++	size_t tx_latency_res; /* bin resolution in usec */
+ 
+ 	void *platform_handle;
+ 	struct wil_platform_ops platform_ops;
 -- 
-2.17.1
+1.9.1
