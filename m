@@ -1,35 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44606 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726911AbeG3QGb (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:41609 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388462AbeGXS7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 12:06:31 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 24 Jul 2018 14:59:05 -0400
+Received: by mail-yw0-f195.google.com with SMTP id q129-v6so1848580ywg.8
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 10:51:29 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] mt7601u: use sw encryption for hw unsupported ciphers
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <ad9cbcd50cdde4ff997a5ce69265f741114e9af0.1531130155.git.lorenzo.bianconi@redhat.com>
-References: <ad9cbcd50cdde4ff997a5ce69265f741114e9af0.1531130155.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: kubakici@wp.pl, linux-wireless@vger.kernel.org, dcaratti@redhat.com
-Message-Id: <20180730143115.5651761E66@smtp.codeaurora.org> (sfid-20180730_163118_586450_FF0140A4)
-Date: Mon, 30 Jul 2018 14:31:15 +0000 (UTC)
+In-Reply-To: <CAKv+Gu-D9FrOrFU0EmkPA52vrywCGZkFP9vUsyEovdby9dLj0g@mail.gmail.com>
+References: <20180724164936.37477-1-keescook@chromium.org> <20180724164936.37477-18-keescook@chromium.org>
+ <CAKv+Gu-D9FrOrFU0EmkPA52vrywCGZkFP9vUsyEovdby9dLj0g@mail.gmail.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Tue, 24 Jul 2018 10:51:27 -0700
+Message-ID: <CAGXu5j+-AwHdGZ7Be854WyEQoK2p57JPuTgSXcFq7GOzUtJGEA@mail.gmail.com> (sfid-20180724_195146_077771_0F0AE9B6)
+Subject: Re: [PATCH v6 17/18] crypto: ccm: Remove VLA usage
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        linux-pm <linux-pm@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE"
+        <linux-crypto@vger.kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block <linux-block@vger.kernel.org>, qat-linux@intel.com,
+        linux-ppp@vger.kernel.org,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        "open list:ANDROID DRIVERS" <devel@driverdev.osuosl.org>,
+        linux-afs@lists.infradead.org,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+On Tue, Jul 24, 2018 at 9:57 AM, Ard Biesheuvel
+<ard.biesheuvel@linaro.org> wrote:
+> On 24 July 2018 at 18:49, Kees Cook <keescook@chromium.org> wrote:
+>> From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>>
+>> In the quest to remove all stack VLA usage from the kernel[1], this
+>> drops AHASH_REQUEST_ON_STACK by preallocated the ahash request area
+>> with the skcipher area (which are not used at the same time).
+>>
+>
+> -EGRAMMAR
 
-> Fall back to software encryption for hw unsupported ciphers in order
-> to enable 802.11w
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Whoops. Will fix my poor sentence merging. :)
 
-2 patches applied to wireless-drivers-next.git, thanks.
-
-03d677c50ad7 mt7601u: use sw encryption for hw unsupported ciphers
-53c2cb8df327 mt7601u: expose 802.11w support
+-Kees
 
 -- 
-https://patchwork.kernel.org/patch/10514171/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kees Cook
+Pixel Security
