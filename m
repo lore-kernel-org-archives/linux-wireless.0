@@ -1,77 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:32809 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932392AbeGDJyx (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:43092 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388578AbeGXR5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 05:54:53 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v2] ath10k: fix band_center_freq handling for VHT160 in recent firmwares
-Date: Wed,  4 Jul 2018 11:54:44 +0200
-Message-Id: <20180704095444.662-1-s.gottschall@dd-wrt.com> (sfid-20180704_115600_206930_28B07A72)
+        Tue, 24 Jul 2018 13:57:11 -0400
+Received: by mail-pl0-f67.google.com with SMTP id x6-v6so333469plv.10
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:51 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 08/18] crypto: skcipher: Remove VLA usage for SKCIPHER_REQUEST_ON_STACK
+Date: Tue, 24 Jul 2018 09:49:26 -0700
+Message-Id: <20180724164936.37477-9-keescook@chromium.org> (sfid-20180724_185221_700314_A5D979E3)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+In the quest to remove all stack VLA usage from the kernel[1], this
+caps the skcipher request size similar to other limits and adds a sanity
+check at registration. Looking at instrumented tcrypt output, the largest
+is for lrw:
 
-Starting with firmware 10.4.3.4.x series QCA changed the handling of the channel property band_center_freq1 and band_center_freq2 in vht160 operation mode
-likelly for backward compatibility with vht80 only capable clients.
-This patch adjusts the handling to get vht160 to work again with official QCA firmwares newer than 3.3
-consider that this patch will not work with older firmwares anymore. to avoid undefined behaviour we disable vht160 capability for outdated firmwares
+	crypt: testing lrw(aes)
+	crypto_skcipher_set_reqsize: 8
+	crypto_skcipher_set_reqsize: 88
+	crypto_skcipher_set_reqsize: 472
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 
-v2: fix trailing whitespace issue and fix some typos within the commit note
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |  7 -------
- drivers/net/wireless/ath/ath10k/wmi.c | 11 ++++++++---
- 2 files changed, 8 insertions(+), 10 deletions(-)
+ include/crypto/internal/skcipher.h | 1 +
+ include/crypto/skcipher.h          | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 95243b48a179..46885b915eb7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4442,13 +4442,6 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 		vht_cap.cap |= val;
- 	}
+diff --git a/include/crypto/internal/skcipher.h b/include/crypto/internal/skcipher.h
+index e42f7063f245..5035482cbe68 100644
+--- a/include/crypto/internal/skcipher.h
++++ b/include/crypto/internal/skcipher.h
+@@ -130,6 +130,7 @@ static inline struct crypto_skcipher *crypto_spawn_skcipher(
+ static inline void crypto_skcipher_set_reqsize(
+ 	struct crypto_skcipher *skcipher, unsigned int reqsize)
+ {
++	BUG_ON(reqsize > SKCIPHER_MAX_REQSIZE);
+ 	skcipher->reqsize = reqsize;
+ }
  
--	/* Currently the firmware seems to be buggy, don't enable 80+80
--	 * mode until that's resolved.
--	 */
--	if ((ar->vht_cap_info & IEEE80211_VHT_CAP_SHORT_GI_160) &&
--	    (ar->vht_cap_info & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) == 0)
--		vht_cap.cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
--
- 	mcs_map = 0;
- 	for (i = 0; i < 8; i++) {
- 		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 877249ac6fd4..e2adf34effb3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1677,13 +1677,18 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 		flags |= WMI_CHAN_FLAG_HT40_PLUS;
- 	if (arg->chan_radar)
- 		flags |= WMI_CHAN_FLAG_DFS;
--
-+	ch->band_center_freq2 = 0;
- 	ch->mhz = __cpu_to_le32(arg->freq);
- 	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
- 	if (arg->mode == MODE_11AC_VHT80_80)
- 		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq2);
--	else
--		ch->band_center_freq2 = 0;
-+	if (arg->mode == MODE_11AC_VHT160)  {
-+		if (arg->freq < arg->band_center_freq1)
-+			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 - 40);
-+		else
-+			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 + 40);
-+		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq1);
-+	}
- 	ch->min_power = arg->min_power;
- 	ch->max_power = arg->max_power;
- 	ch->reg_power = arg->max_reg_power;
+diff --git a/include/crypto/skcipher.h b/include/crypto/skcipher.h
+index 2f327f090c3e..c48e194438cf 100644
+--- a/include/crypto/skcipher.h
++++ b/include/crypto/skcipher.h
+@@ -139,9 +139,11 @@ struct skcipher_alg {
+ 	struct crypto_alg base;
+ };
+ 
++#define SKCIPHER_MAX_REQSIZE	472
++
+ #define SKCIPHER_REQUEST_ON_STACK(name, tfm) \
+ 	char __##name##_desc[sizeof(struct skcipher_request) + \
+-		crypto_skcipher_reqsize(tfm)] CRYPTO_MINALIGN_ATTR; \
++		SKCIPHER_MAX_REQSIZE] CRYPTO_MINALIGN_ATTR; \
+ 	struct skcipher_request *name = (void *)__##name##_desc
+ 
+ /**
 -- 
 2.17.1
