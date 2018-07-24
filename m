@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:54212 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753600AbeGDLMw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 07:12:52 -0400
-Received: by mail-wm0-f65.google.com with SMTP id b188-v6so5409358wme.3
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 04:12:52 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org
-Subject: Re: [PATCH v8] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Wed, 04 Jul 2018 13:12:47 +0200
-Message-ID: <4756311.uatpdkZPGZ@bentobox> (sfid-20180704_131308_343817_70BF9C97)
-In-Reply-To: <0cff058a-3c4b-6617-a034-3df706ba3a32@dd-wrt.com>
-References: <20180704092953.32572-1-s.gottschall@dd-wrt.com> <5630152.jDWN9V3RzB@bentobox> <0cff058a-3c4b-6617-a034-3df706ba3a32@dd-wrt.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart4613126.Xrykp8NhWn"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Received: from mail.bugwerft.de ([46.23.86.59]:57090 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726367AbeGXLFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 07:05:33 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v3 01/11] Revert "NFC: st95hf: drop illegal kfree_skb()"
+Date: Tue, 24 Jul 2018 11:59:31 +0200
+Message-Id: <20180724095941.25777-2-daniel@zonque.org> (sfid-20180724_120136_983613_87124ABD)
+In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
+References: <20180724095941.25777-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4613126.Xrykp8NhWn
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+This reverts commit c99f996b2ba49 ("NFC: st95hf: drop illegal
+kfree_skb()").
 
-On Mittwoch, 4. Juli 2018 12:48:06 CEST Sebastian Gottschall wrote:
-[...]
-> can you explain your request? the macros are unchanged and just 
-> reformated for maximum line length restriction. the values have been 
-> taken from QCA's wmi header
+It turns out that the st95hf_in_send_cmd() is in fact the sole owner of
+this skb, and by not freeing it here, we not only causing a memory leak
+but also mess up the refcount of the socket that holds it. This will in
+turn lead to activated targets not being cleaned up, even after
+stopping userspace processes.
 
-You use long shift and mask statements in your patch. But you didn't use the 
-macros which are there to shorten them. So please check the macros SM and MS 
-from core.h and adjust your code accordingly. The code which I've pasted does 
-this (with an unintentionally added a copy and paste error).
+The memory corruption that I was hunting was caused by another
+kfree_skb(). This will be fixed in a later commit.
 
-Kind regards,
-	Sven
---nextPart4613126.Xrykp8NhWn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Fixes: c99f996b2ba49 ("NFC: st95hf: drop illegal kfree_skb()")
+---
+ drivers/nfc/st95hf/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAls8q68ACgkQXYcKB8Em
-e0bf/g//fxPfMA/832a0efxxrOMpj4CKzfuYK7nE0hNB8BmwxptLxbf+IHO2IuYB
-QX4+dPcSf/kJcjPCtg7tv0FaV+BOfQdPfl+O52qclTaiL2IjzNXEyB0pLcXAwk8u
-FtLUj9XSI0+vxhrqJTM2RR7ce1BqZp0cFH39zjxFeJhklE7qGBd0CxvllcWBdl0h
-oOBTFPIcXsp5W2MZ/6U+K/8yHXLgdOVw2A5MUVy+2wvVJgIegfBm7/17jhMZWBUQ
-yO0TBvBTT/CgoEGrSL8wtYHiT0t2c8bX30hKyZ6Ryn7HDB6z1nTLAMSEGqbAXEXj
-3+hQUCtEY0mF4nuXpUQyUpGISrXMtRiH10AuBpsxyUZ+fxxUVWXX9KKrbZtl2XD+
-+at1p/YIcR7HfAB/hVrR1RUQa+FJ2yqUpp5EHSjWNFuEICOfKDyTnV/8hKgnDU0g
-/qOQq2Saaqvq+wzqQ6kOX8gFa/bLcSSMlhDIyiSlCua3eaYdja/Ogjq2RCtS73BY
-sdccmOHzhEfC/2FgZZNRTeuUm/JB2MOxU7VPSBiZzftjqu69QwM8N/fzS1DwyVoj
-yl2Y3W8QCJCnBirc5rEhOitgM9vzXB70805dq6AmOowCLbhPUPcdndYyAfdA/wof
-0iPB68l11/8ufvUCNnzh7pYwM57KM89+1KW7A05/DOZWXHjuM1Q=
-=jIJr
------END PGP SIGNATURE-----
-
---nextPart4613126.Xrykp8NhWn--
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 36ef0e905ba3..bc1a2070f9bb 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -991,6 +991,8 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 		goto free_skb_resp;
+ 	}
+ 
++	kfree_skb(skb);
++
+ 	return rc;
+ 
+ free_skb_resp:
+-- 
+2.17.1
