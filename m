@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729409AbeGaJD1 (ORCPT
+Received: from shards.monkeyblade.net ([23.128.96.9]:53434 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388225AbeGXFfQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:03:27 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] wlcore: Set rx_status boottime_ns field on rx
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1532709023-1237-1-git-send-email-loic.poulain@linaro.org>
-References: <1532709023-1237-1-git-send-email-loic.poulain@linaro.org>
-To: Loic Poulain <loic.poulain@linaro.org>
-Cc: linux-wireless@vger.kernel.org,
-        Loic Poulain <loic.poulain@linaro.org>
-Message-Id: <20180731072431.B7F3460AFF@smtp.codeaurora.org> (sfid-20180731_092448_779265_F67D114C)
-Date: Tue, 31 Jul 2018 07:24:31 +0000 (UTC)
+        Tue, 24 Jul 2018 01:35:16 -0400
+Date: Mon, 23 Jul 2018 21:30:45 -0700 (PDT)
+Message-Id: <20180723.213045.1551890180320899013.davem@davemloft.net> (sfid-20180724_063057_772885_0EC64305)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2018-07-23
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87tvopx3pm.fsf@kamboji.qca.qualcomm.com>
+References: <87tvopx3pm.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Loic Poulain <loic.poulain@linaro.org> wrote:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 23 Jul 2018 20:27:17 +0300
 
-> When receiving a beacon or probe response, we should update the
-> boottime_ns field which is the timestamp the frame was received at.
-> (cf mac80211.h)
+> this first pull request for 4.19 got delayed as I was on vacation for
+> two weeks. I was supposed to send this before my vacation but didn't
+> manage to do it due to other urgent stuff, but I'll try to catch up with
+> everything this week so that we get everything ready on time for 4.19.
 > 
-> This fixes a scanning issue with Android since it relies on this
-> timestamp to determine when the AP has been seen for the last time
-> (via the nl80211 BSS_LAST_SEEN_BOOTTIME parameter).
-> 
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> More info in the signed tag below and please let me know if there are
+> any problems.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-37a634f60fd6 wlcore: Set rx_status boottime_ns field on rx
-
--- 
-https://patchwork.kernel.org/patch/10547433/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks Kalle.
