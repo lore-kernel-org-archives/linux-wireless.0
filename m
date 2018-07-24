@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6801 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726356AbeG2OUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jul 2018 10:20:22 -0400
-Message-ID: <c68d62cb07f66c6d82bf958e1d521dd570527d26.camel@linux.intel.com> (sfid-20180729_145003_096866_BDEA73A6)
-Subject: Re: [PATCH v3] PCI: Add PCI_DEVICE_DATA() macro to fully describe
- device ID entry
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Randy Dunlap <rdunlap@infradead.org>
-Date: Sun, 29 Jul 2018 15:49:49 +0300
-In-Reply-To: <20180727211041.GF173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com>
-         <20180727211041.GF173328@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.63.242]:57694 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388351AbeGXIXH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 04:23:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-07-24
+Date: Tue, 24 Jul 2018 09:16:57 +0200
+Message-Id: <20180724071658.9464-1-johannes@sipsolutions.net> (sfid-20180724_091814_663738_7F9291F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-07-27 at 16:10 -0500, Bjorn Helgaas wrote:
-> On Fri, Jul 27, 2018 at 11:49:44PM +0300, Andy Shevchenko wrote:
-> > There are a lot of examples in the kernel where PCI_VDEVICE() is
-> > used and still
-> > looks not so convenient due to additional driver_data field
-> > attached.
-> > 
-> > Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry
-> > in shortest
-> > possible form. For example,
-> > 
-> >   before:
-> > 
-> >     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-> >       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-> > 
-> >   after:
-> > 
-> >     { PCI_DEVICE_DATA(INTEL, INTEL_MRFLD,
-> > &dwc3_pci_mrfld_properties) },
-> 
-> Most device IDs include the vendor ID; did you consider pasting the
-> vendor ID string into the device ID, so you would end up with this?
-> 
->     { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
+Hi Dave,
 
-While it makes it slightly shorter, it breaks consistency among such
-macros. I don't see any of them is using something like
-PCI_DEVICE_ID_##vend##dev.
+After a long delay (I'm still on vacation & bonding leave until
+mid August and forgot), here are a few fixes for the current
+release cycle.
 
-Though I see few users outside of PCI subsystem that reinvent above
-line.
+Please pull and let me know if there's any problem.
 
-Do you think variant with ##vend##dev is better? I will update it for v4
-if needed.
-
-> I don't absolutely love either PCI_VDEVICE or PCI_DEVICE_DATA because
-> grep doesn't work as well to find uses of the symbol, but the existing
-> 2300 uses of PCI_VDEVICE are telling me pretty loudly to just get over
-> it :)
+Thanks,
+johannes
 
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+
+The following changes since commit d0fbad0aec1df29717fab736eb24c8a49cf2c70b:
+
+  Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2018-07-02 12:40:59 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-07-24
+
+for you to fetch changes up to e31f6456c01c76f154e1b25cd54df97809a49edb:
+
+  cfg80211: never ignore user regulatory hint (2018-07-24 09:11:31 +0200)
+
+----------------------------------------------------------------
+Only a few fixes:
+ * always keep regulatory user hint
+ * add missing break statement in station flags parsing
+ * fix non-linear SKBs in port-control-over-nl80211
+ * reconfigure VLAN stations during HW restart
+
+----------------------------------------------------------------
+Amar Singhal (1):
+      cfg80211: never ignore user regulatory hint
+
+Bernd Edlinger (1):
+      nl80211: Add a missing break in parse_station_flags
+
+Denis Kenzior (1):
+      nl80211/mac80211: allow non-linear skb in rx_control_port
+
+mpubbise@codeaurora.org (1):
+      mac80211: add stations tied to AP_VLANs during hw reconfig
+
+ include/net/cfg80211.h | 12 ++++++------
+ net/mac80211/rx.c      |  5 +----
+ net/mac80211/util.c    |  3 ++-
+ net/wireless/nl80211.c | 25 ++++++++++++++++---------
+ net/wireless/reg.c     | 28 +++-------------------------
+ net/wireless/trace.h   | 18 ++++++++++--------
+ 6 files changed, 38 insertions(+), 53 deletions(-)
