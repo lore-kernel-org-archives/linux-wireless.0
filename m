@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59328 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729592AbeGaJBd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:01:33 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.bugwerft.de ([46.23.86.59]:56616 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388218AbeGXKAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 06:00:04 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 00/10] NFC: A bunch of cleanups for st95hf
+Date: Tue, 24 Jul 2018 10:54:16 +0200
+Message-Id: <20180724085426.23999-1-daniel@zonque.org> (sfid-20180724_105445_929506_1EC334BB)
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] brcmfmac: specify some features per firmware version
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180709045543.15031-1-zajec5@gmail.com>
-References: <20180709045543.15031-1-zajec5@gmail.com>
-To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20180731072238.3120E606AC@smtp.codeaurora.org> (sfid-20180731_092320_801868_0F6A8063)
-Date: Tue, 31 Jul 2018 07:22:38 +0000 (UTC)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
+This is a series of patches for the ST95HF driver.
 
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Some features supported by firmware aren't advertised and there is no
-> way for a driver to query them. This includes e.g. monitor mode details.
-> 
-> Most firmwares support monitor interface but only the latest ones
-> /announce/ it with a "monitor" flag in the "cap" iovar. There isn't any
-> reliable detection method for older firmwares (BRCMF_C_MONITOR was tried
-> but "it only indicates the core part of the stack supports").
-> 
-> Similarly support for tagging monitor frames and building radiotap
-> headers can't be reliably detected for all firmwares.
-> 
-> This commit adds table that allows mapping features to firmware version.
-> It adds mappings for 43602a1 and 4366b1 firmwares from
-> linux-firmware.git. Both were confirmed to be passing monitor frames.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Patch #1 reverts a change that I have submitted earlier and which is
+sitting in nfc-next already. Given that the tree hasn't been sent out
+for being merged yet, it could also still be removed with rebasing, in
+which case #1 is not necessary of course.
 
-Patch applied to wireless-drivers-next.git, thanks.
+The changes are all rather simple and are explained in their individual
+commit logs.
 
-1e591c56a65f brcmfmac: specify some features per firmware version
+Note that this series builds upon the patch titled "nfc: st95hf: remove
+redundant pointers 'dev' and 'nfcddev'" that Colin posted the other day.
+
+
+Thanks,
+Daniel
+
+Changelog:
+
+v1 → v2:
+
+ * Improved commit logs, identical patch content.
+
+
+Daniel Mack (10):
+  Revert "NFC: st95hf: drop illegal kfree_skb()"
+  NFC: st95hf: drop nfcdev_free
+  NFC: st95hf: drop illegal kfree_skb() in IRQ handler
+  NFC: st95hf: remove logging from spi functions
+  NFC: st95hf: remove exchange_lock
+  NFC: st95hf: move skb allocation to ISR
+  NFC: st95hf: re-order command defines
+  NFC: st95hf: unify sync/async flags
+  NFC: st95hf: two small style nits
+  NFC: st95hf: add of match table
+
+ drivers/nfc/st95hf/core.c | 135 +++++++++++---------------------------
+ drivers/nfc/st95hf/spi.c  |  31 +++------
+ drivers/nfc/st95hf/spi.h  |   8 +--
+ 3 files changed, 49 insertions(+), 125 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10513497/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
