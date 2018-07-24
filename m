@@ -1,124 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:37793 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726067AbeGRHuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jul 2018 03:50:35 -0400
-Date: Wed, 18 Jul 2018 09:13:32 +0200
-From: Miquel Raynal <miquel.raynal@bootlin.com>
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        linux-mtd@lists.infradead.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 00/24] mtd: rawnand: Improve compile-test coverage
-Message-ID: <20180718091332.53da4898@xps13> (sfid-20180718_091414_087000_F2D9AC3E)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:46235 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388795AbeGXUha (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 16:37:30 -0400
+Received: by mail-pl0-f67.google.com with SMTP id t17-v6so2190446ply.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:34 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 04/18] llc: fix whitespace issues
+Date: Tue, 24 Jul 2018 12:29:04 -0700
+Message-Id: <20180724192918.31165-5-sthemmin@microsoft.com> (sfid-20180724_213152_624613_75764587)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Boris,
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+---
+ net/llc/Kconfig  | 2 +-
+ net/llc/Makefile | 2 +-
+ net/llc/llc_if.c | 1 -
+ 3 files changed, 2 insertions(+), 3 deletions(-)
 
-Boris Brezillon <boris.brezillon@bootlin.com> wrote on Mon,  9 Jul 2018
-22:09:21 +0200:
-
-> Hello,
-> 
-> This is an attempt at adding "depends || COMPILE_TEST" to all NAND
-> drivers that have no compile-time dependencies on arch
-> features/headers.
-> 
-> This will hopefully help us (NAND/MTD maintainers) in detecting build
-> issues earlier. Unfortunately we still have a few drivers that can't
-> easily be modified to be arch independent.
-> 
-> I tried to put all patches that only touch the NAND subsystem first,
-> so that they can be applied even if other patches are being discussed.
-> 
-> Don't hesitate to point any missing dependencies when compiled with
-> COMPILE_TEST. I didn't have any problem when compiling, but that might
-> be because the dependencies were already selected.
-> 
-> In this v2, I tried to fix all warnings/errors reported by kbuild/0day
-> robots. The only remaining ones are those in omap_elm.c which seems to
-> do some weird cpu_to_be32() conversions. I guess I could replace those
-> by iowrite32be() calls (or just add (__force __u32)), but I don't want
-> to risk a regression on this driver, so I'm just leaving it for someone
-> else to fix :P.
-> 
-> Regards,
-> 
-> Boris
-> 
-> Changes in v2:
-> - Fix a few problems reported by kbuild robots and Stephen Rothwell
-> 
-> Boris Brezillon (24):
->   mtd: rawnand: atmel: Use uintptr_t casts instead of unsigned int
->   mtd: rawnand: atmel: Add an __iomem cast on gen_pool_dma_alloc() call
->   mtd: rawnand: atmel: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: s3c2410: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: orion: Avoid direct inclusion of asm headers
->   mtd: rawnand: orion: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: davinci: Stop doing iomem pointer <-> u32 conversions
->   mtd: rawnand: davinci: Use uintptr_t casts instead of unsigned ones
->   mtd: rawnand: davinci: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: sunxi: Add an U suffix to NFC_PAGE_OP definition
->   mtd: rawnand: sunxi: Make sure ret is initialized in
->     sunxi_nfc_read_byte()
->   mtd: rawnand: sunxi: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: fscm: Avoid collision on PC def when compiling for MIPS
->   mtd: rawnand: fsmc: Use uintptr_t casts instead of unsigned ones
->   mtd: rawnand: fsmc: Allow selection of this driver when COMPILE_TEST=y
->   memory: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
->   mtd: rawnand: fsl_ifc: Add an __iomem specifier on eccstat_regs
->   mtd: rawnand: fsl_ifc: Allow selection of this driver when
->     COMPILE_TEST=y
->   MIPS: txx9: Move the ndfc.h header to include/linux/platform_data/txx9
->   mtd: rawnand: txx9ndfmc: Allow selection of this driver when
->     COMPILE_TEST=y
->   MIPS: jz4740: Move jz4740_nand.h header to
->     include/linux/platform_data/jz4740
->   mtd: rawnand: jz4740: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: jz4780: Drop the dependency on MACH_JZ4780
->   memory: jz4780-nemc: Allow selection of this driver when
->     COMPILE_TEST=y
-> 
->  arch/mips/jz4740/board-qi_lb60.c                   |  3 +-
->  arch/mips/txx9/generic/setup.c                     |  2 +-
->  arch/mips/txx9/generic/setup_tx4938.c              |  2 +-
->  arch/mips/txx9/generic/setup_tx4939.c              |  2 +-
->  drivers/memory/Kconfig                             |  6 ++--
->  drivers/mtd/nand/raw/Kconfig                       | 33 ++++++++++++++--------
->  drivers/mtd/nand/raw/atmel/nand-controller.c       |  8 +++---
->  drivers/mtd/nand/raw/davinci_nand.c                | 33 ++++++++++------------
->  drivers/mtd/nand/raw/fsl_ifc_nand.c                |  2 +-
->  drivers/mtd/nand/raw/fsmc_nand.c                   | 33 +++++++++++-----------
->  drivers/mtd/nand/raw/jz4740_nand.c                 |  2 +-
->  drivers/mtd/nand/raw/orion_nand.c                  |  2 +-
->  drivers/mtd/nand/raw/sunxi_nand.c                  |  4 +--
->  drivers/mtd/nand/raw/txx9ndfmc.c                   |  2 +-
->  .../linux/platform_data/jz4740}/jz4740_nand.h      |  4 +--
->  .../linux/platform_data}/txx9/ndfmc.h              |  6 ++--
->  16 files changed, 77 insertions(+), 67 deletions(-)
->  rename {arch/mips/include/asm/mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h (91%)
->  rename {arch/mips/include/asm => include/linux/platform_data}/txx9/ndfmc.h (91%)
-> 
-
-Series applied with some typo fixes in the commit log as well as a
-proper indentation forced in drivers/mtd/nand/raw/Kconfig.
-
-Thanks,
-Miquèl
+diff --git a/net/llc/Kconfig b/net/llc/Kconfig
+index b91c65108162..176a6c1521a5 100644
+--- a/net/llc/Kconfig
++++ b/net/llc/Kconfig
+@@ -6,5 +6,5 @@ config LLC2
+ 	tristate "ANSI/IEEE 802.2 LLC type 2 Support"
+ 	select LLC
+ 	help
+-	  This is a Logical Link Layer type 2, connection oriented support. 
++	  This is a Logical Link Layer type 2, connection oriented support.
+ 	  Select this if you want to have support for PF_LLC sockets.
+diff --git a/net/llc/Makefile b/net/llc/Makefile
+index 4e260cff3c5d..5e0ef436daae 100644
+--- a/net/llc/Makefile
++++ b/net/llc/Makefile
+@@ -4,7 +4,7 @@
+ # Copyright (c) 1997 by Procom Technology,Inc.
+ #		2001-2003 by Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+ #
+-# This program can be redistributed or modified under the terms of the 
++# This program can be redistributed or modified under the terms of the
+ # GNU General Public License as published by the Free Software Foundation.
+ # This program is distributed without any warranty or implied warranty
+ # of merchantability or fitness for a particular purpose.
+diff --git a/net/llc/llc_if.c b/net/llc/llc_if.c
+index 6daf391b3e84..8db03c2d5440 100644
+--- a/net/llc/llc_if.c
++++ b/net/llc/llc_if.c
+@@ -151,4 +151,3 @@ int llc_send_disc(struct sock *sk)
+ 	sock_put(sk);
+ 	return rc;
+ }
+-
+-- 
+2.18.0
