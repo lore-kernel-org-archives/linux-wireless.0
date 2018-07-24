@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:35344 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729622AbeGMRdE (ORCPT
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:43150 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388244AbeGXMyF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 13:33:04 -0400
-Received: by mail-qt0-f193.google.com with SMTP id a5-v6so13181132qtp.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jul 2018 10:17:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
-References: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
-From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-Date: Fri, 13 Jul 2018 19:17:32 +0200
-Message-ID: <CABvG-CUdxFE8NiFfUKyeApm9dXqNWtGUWUBV1q8Fn3WF7zUnuQ@mail.gmail.com> (sfid-20180713_191735_901025_F64B654D)
-Subject: Re: [PATCH] ath10k: fix vdev-start timeout on error
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, kvalo@codeaurora.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 24 Jul 2018 08:54:05 -0400
+Received: by mail-lf1-f66.google.com with SMTP id f135-v6so1037249lfg.10
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 04:48:00 -0700 (PDT)
+From: roman.stratiienko@globallogic.com
+To: akarwar@marvell.com
+Cc: nishants@marvell.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, sergei.shtylyov@cogentembedded.com,
+        Roman Stratiienko <roman.stratiienko@globallogic.com>
+Subject: [PATCH] mwifiex: Fix skipped vendor specific IEs
+Date: Tue, 24 Jul 2018 14:47:27 +0300
+Message-Id: <1532432847-2885-1-git-send-email-roman.stratiienko@globallogic.com> (sfid-20180724_134807_228224_9539F28F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 July 2018 at 19:08,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> The vdev-start-response message should cause the
-> completion to fire, even in the error case.  Otherwise,
-> the user still gets no useful information and everything
-> is blocked until the timeout period.
->
-> Add some warning text to print out the invalid status
-> code to aid debugging.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index a60de71..ec4cd1e 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
->         ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
->         if (ret) {
->                 ath10k_warn(ar, "failed to parse vdev start event: %d\n", ret);
-> -               return;
-> +               goto out;
->         }
->
-> -       if (WARN_ON(__le32_to_cpu(arg.status)))
-> -               return;
-> +       if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
-> +               ath10k_warn(ar, "vdev-start-response reports status error: %d\n",
-> +                           __le32_to_cpu(arg.status));
-> +               /* Setup is done one way or another though, so we should still
-> +                * do the completion, so don't return here.
-> +                */
-> +       }
->
-> +out:
->         complete(&ar->vdev_setup_done);
+From: Roman Stratiienko <roman.stratiienko@globallogic.com>
 
-With this the waiter can no longer tell if vdev_start succeeded or
-not. It'll always think it succeeded even if arg.status or parsing
-failed. Waiter instead of erroring out will continue to play out happy
-scenario and may end up crashing firmware.
+Mwifiex firmware inserts only Microsoft information element
+Allow other vendor specific IEs to pass from userspace
 
-Not stalling is nice, but I'd argue the status should be propagated
-back to the waiter so it can error-check.
+Signed-off-by: Roman Stratiienko <roman.stratiienko@globallogic.com>
+---
+ drivers/net/wireless/marvell/mwifiex/ie.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-
-Michal
+diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
+index b10baac..75cbd60 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ie.c
++++ b/drivers/net/wireless/marvell/mwifiex/ie.c
+@@ -355,8 +355,14 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
+ 		case WLAN_EID_HT_OPERATION:
+ 		case WLAN_EID_VHT_CAPABILITY:
+ 		case WLAN_EID_VHT_OPERATION:
+-		case WLAN_EID_VENDOR_SPECIFIC:
+ 			break;
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Skip only Microsoft WMM IE */
++			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WMM,
++						    (const u8 *)hdr,
++						    hdr->len + sizeof(struct ieee_types_header)))
++				break;
+ 		default:
+ 			memcpy(gen_ie->ie_buffer + ie_len, hdr,
+ 			       hdr->len + sizeof(struct ieee_types_header));
+-- 
+2.7.4
