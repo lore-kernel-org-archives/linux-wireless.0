@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43530 "EHLO mail.bootlin.com"
+Received: from mail.bugwerft.de ([46.23.86.59]:56716 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753560AbeGEJps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:48 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 10/27] mtd: rawnand: orion: Avoid direct inclusion of asm headers
-Date: Thu,  5 Jul 2018 11:45:05 +0200
-Message-Id: <20180705094522.12138-11-boris.brezillon@bootlin.com> (sfid-20180705_114648_783353_E2C16929)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+        id S2388302AbeGXKAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 06:00:15 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 09/10] NFC: st95hf: two small style nits
+Date: Tue, 24 Jul 2018 10:54:25 +0200
+Message-Id: <20180724085426.23999-10-daniel@zonque.org> (sfid-20180724_105457_726915_0E58736F)
+In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
+References: <20180724085426.23999-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include linux/sizes.h instead of asm/sizes.h to make code completely
-arch independent.
+Address two minor style issues that I came across while working on the
+driver.
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/mtd/nand/raw/orion_nand.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/nfc/st95hf/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/nand/raw/orion_nand.c b/drivers/mtd/nand/raw/orion_nand.c
-index 7825fd3ce66b..c54d865c1ba1 100644
---- a/drivers/mtd/nand/raw/orion_nand.c
-+++ b/drivers/mtd/nand/raw/orion_nand.c
-@@ -18,7 +18,7 @@
- #include <linux/clk.h>
- #include <linux/err.h>
- #include <linux/io.h>
--#include <asm/sizes.h>
-+#include <linux/sizes.h>
- #include <linux/platform_data/mtd-orion_nand.h>
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 835a1e61c817..4db3c020921c 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -662,7 +662,8 @@ static int st95hf_error_handling(struct st95hf_context *stcontext,
+ 			result = -ETIMEDOUT;
+ 		else
+ 			result = -EIO;
+-	return  result;
++
++		return result;
+ 	}
  
- struct orion_nand_info {
+ 	/* Check for CRC err only if CRC is present in the tag response */
+@@ -844,6 +845,7 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 	/* call of callback with error */
+ 	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
+ 	mutex_unlock(&stcontext->rm_lock);
++
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
-2.14.1
+2.17.1
