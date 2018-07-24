@@ -1,84 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37328 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732343AbeGJXmP (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:43081 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388415AbeGXR5F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 19:42:15 -0400
-Received: by mail-pf0-f195.google.com with SMTP id x10-v6so7258230pfm.4
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 16:40:49 -0700 (PDT)
-Date: Tue, 10 Jul 2018 16:40:45 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: bjorn.andersson@linaro.org, david.brown@linaro.org,
-        andy.gross@linaro.org, niklas.cassel@linaro.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: Re: [PATCH v3 2/6] ath10k: Add support to create boardname for
- non-bmi target
-Message-ID: <20180710234043.GA40352@ban.mtv.corp.google.com> (sfid-20180711_014111_772270_94AE0728)
-References: <20180706085622.27945-1-govinds@codeaurora.org>
- <20180706085622.27945-3-govinds@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180706085622.27945-3-govinds@codeaurora.org>
+        Tue, 24 Jul 2018 13:57:05 -0400
+Received: by mail-pl0-f65.google.com with SMTP id x6-v6so333362plv.10
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:44 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 02/18] crypto: cbc: Remove VLA usage
+Date: Tue, 24 Jul 2018 09:49:20 -0700
+Message-Id: <20180724164936.37477-3-keescook@chromium.org> (sfid-20180724_184947_272999_62055B85)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Govind,
+In the quest to remove all stack VLA usage from the kernel[1], this
+uses the upper bounds on blocksize. Since this is always a cipher
+blocksize, use the existing cipher max blocksize.
 
-On Fri, Jul 06, 2018 at 02:26:19PM +0530, Govind Singh wrote:
-> From: Rakesh Pillai <pillair@codeaurora.org>
-> 
-> Add support to create the boardname for non-bmi targets
-> like WCN3990, which uses qmi for bdf download. This
-> boardname is used to parse the board data from board-2.bin.
-> 
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
->  drivers/net/wireless/ath/ath10k/core.h | 2 ++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 85c58ebbfb26..840e301b6a6e 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -1440,6 +1440,14 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
->  		goto out;
->  	}
->  
-> +	if (ar->id.qmi_ids_valid) {
-> +		scnprintf(name, name_len,
-> +			  "bus=%s,qmi-board-id=%x",
-> +			  ath10k_bus_str(ar->hif.bus),
-> +			  ar->id.qmi_board_id);
-> +		goto out;
-> +	}
-> +
->  	scnprintf(name, name_len,
->  		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
->  		  ath10k_bus_str(ar->hif.bus),
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 427ee5752bb0..20f03f3a7080 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -941,7 +941,9 @@ struct ath10k {
->  		u32 subsystem_device;
->  
->  		bool bmi_ids_valid;
-> +		bool qmi_ids_valid;
->  		u8 bmi_board_id;
-> +		u8 qmi_board_id;
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 
-IIUC, QMI board IDs may be more than 8 bits. (And your qmi.c code seems
-to suggest this as well.) Should this be u32?
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ include/crypto/cbc.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Brian
-
->  		u8 bmi_chip_id;
->  
->  		char bdf_ext[ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
-> -- 
-> 2.17.0
-> 
+diff --git a/include/crypto/cbc.h b/include/crypto/cbc.h
+index f5b8bfc22e6d..47db0aac2ab9 100644
+--- a/include/crypto/cbc.h
++++ b/include/crypto/cbc.h
+@@ -113,7 +113,9 @@ static inline int crypto_cbc_decrypt_inplace(
+ 	unsigned int bsize = crypto_skcipher_blocksize(tfm);
+ 	unsigned int nbytes = walk->nbytes;
+ 	u8 *src = walk->src.virt.addr;
+-	u8 last_iv[bsize];
++	u8 last_iv[MAX_CIPHER_BLOCKSIZE];
++
++	BUG_ON(bsize > sizeof(last_iv));
+ 
+ 	/* Start of the last block. */
+ 	src += nbytes - (nbytes & (bsize - 1)) - bsize;
+-- 
+2.17.1
