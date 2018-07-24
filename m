@@ -1,70 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727966AbeGVIqK (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:34342 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388774AbeGXUh2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:10 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 06/20] wil6210: support Talyn specific FW file
-Date: Sun, 22 Jul 2018 10:47:31 +0300
-Message-Id: <1532245665-15249-7-git-send-email-merez@codeaurora.org> (sfid-20180722_095026_738282_9F90A7D1)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Tue, 24 Jul 2018 16:37:28 -0400
+Received: by mail-pl0-f66.google.com with SMTP id f6-v6so2203576plo.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:32 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 03/18] rds: remove trailing whitespace and blank lines
+Date: Tue, 24 Jul 2018 12:29:03 -0700
+Message-Id: <20180724192918.31165-4-sthemmin@microsoft.com> (sfid-20180724_213151_128195_17C0BBF3)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW file name for Talyn device is different from the default name.
-This patch searches for Talyn specific FW file name and fallback
-to the default FW file in case it is not present.
-
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 8 ++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  | 3 +++
- 2 files changed, 11 insertions(+)
+ net/rds/Kconfig          | 1 -
+ net/rds/Makefile         | 1 -
+ net/rds/ib.c             | 1 -
+ net/rds/message.c        | 1 -
+ net/rds/rdma_transport.c | 1 -
+ net/rds/tcp.c            | 1 -
+ net/rds/transport.c      | 1 -
+ 7 files changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 8b148cb..7192d9a 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -93,6 +93,10 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		if (wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1) &
- 		    BIT_NO_FLASH_INDICATION)
- 			set_bit(hw_capa_no_flash, wil->hw_capa);
-+		wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_TALYN :
-+			      WIL_FW_NAME_TALYN;
-+		if (wil_fw_verify_file_exists(wil, wil_fw_name))
-+			wil->wil_fw_name = wil_fw_name;
- 		break;
- 	case JTAG_DEV_ID_TALYN_MB:
- 		wil->hw_name = "Talyn-MB";
-@@ -104,6 +108,10 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		set_bit(hw_capa_no_flash, wil->hw_capa);
- 		wil->use_enhanced_dma_hw = true;
- 		wil->use_rx_hw_reordering = true;
-+		wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_TALYN :
-+			      WIL_FW_NAME_TALYN;
-+		if (wil_fw_verify_file_exists(wil, wil_fw_name))
-+			wil->wil_fw_name = wil_fw_name;
- 		break;
- 	default:
- 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b06cba5..00719a0 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -50,6 +50,9 @@
- #define WIL_FW_NAME_SPARROW_PLUS "wil6210_sparrow_plus.fw"
- #define WIL_FW_NAME_FTM_SPARROW_PLUS "wil6210_sparrow_plus_ftm.fw"
+diff --git a/net/rds/Kconfig b/net/rds/Kconfig
+index bffde4b46c5d..41f75563b54b 100644
+--- a/net/rds/Kconfig
++++ b/net/rds/Kconfig
+@@ -24,4 +24,3 @@ config RDS_DEBUG
+         bool "RDS debugging messages"
+ 	depends on RDS
+         default n
+-
+diff --git a/net/rds/Makefile b/net/rds/Makefile
+index b5d568bd479c..e647f9de104a 100644
+--- a/net/rds/Makefile
++++ b/net/rds/Makefile
+@@ -15,4 +15,3 @@ rds_tcp-y :=		tcp.o tcp_connect.o tcp_listen.o tcp_recv.o \
+ 			tcp_send.o tcp_stats.o
  
-+#define WIL_FW_NAME_TALYN "wil6436.fw"
-+#define WIL_FW_NAME_FTM_TALYN "wil6436_ftm.fw"
-+
- #define WIL_BOARD_FILE_NAME "wil6210.brd" /* board & radio parameters */
+ ccflags-$(CONFIG_RDS_DEBUG)	:=	-DRDS_DEBUG
+-
+diff --git a/net/rds/ib.c b/net/rds/ib.c
+index 63d95ea7cdff..a4245c42d43b 100644
+--- a/net/rds/ib.c
++++ b/net/rds/ib.c
+@@ -568,4 +568,3 @@ int rds_ib_init(void)
+ }
  
- #define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
+ MODULE_LICENSE("GPL");
+-
+diff --git a/net/rds/message.c b/net/rds/message.c
+index a35f76971984..4b00b1152a5f 100644
+--- a/net/rds/message.c
++++ b/net/rds/message.c
+@@ -514,4 +514,3 @@ void rds_message_unmapped(struct rds_message *rm)
+ 	wake_up_interruptible(&rm->m_flush_wait);
+ }
+ EXPORT_SYMBOL_GPL(rds_message_unmapped);
+-
+diff --git a/net/rds/rdma_transport.c b/net/rds/rdma_transport.c
+index bd67e55354f4..ad78929036ef 100644
+--- a/net/rds/rdma_transport.c
++++ b/net/rds/rdma_transport.c
+@@ -281,4 +281,3 @@ module_exit(rds_rdma_exit);
+ MODULE_AUTHOR("Oracle Corporation <rds-devel@oss.oracle.com>");
+ MODULE_DESCRIPTION("RDS: IB transport");
+ MODULE_LICENSE("Dual BSD/GPL");
+-
+diff --git a/net/rds/tcp.c b/net/rds/tcp.c
+index 7028d6e51947..f23925af0b8d 100644
+--- a/net/rds/tcp.c
++++ b/net/rds/tcp.c
+@@ -717,4 +717,3 @@ module_init(rds_tcp_init);
+ MODULE_AUTHOR("Oracle Corporation <rds-devel@oss.oracle.com>");
+ MODULE_DESCRIPTION("RDS: TCP transport");
+ MODULE_LICENSE("Dual BSD/GPL");
+-
+diff --git a/net/rds/transport.c b/net/rds/transport.c
+index c9788dbce441..46f709a4b577 100644
+--- a/net/rds/transport.c
++++ b/net/rds/transport.c
+@@ -159,4 +159,3 @@ unsigned int rds_trans_stats_info_copy(struct rds_info_iterator *iter,
+ 
+ 	return total;
+ }
+-
 -- 
-1.9.1
+2.18.0
