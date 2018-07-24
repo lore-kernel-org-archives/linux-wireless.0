@@ -1,64 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lithops.sigma-star.at ([195.201.40.130]:32912 "EHLO
-        lithops.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932782AbeGFOkw (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:37391 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388457AbeGYAhK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 10:40:52 -0400
-From: Richard Weinberger <richard@nod.at>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Boris Brezillon <boris.brezillon@bootlin.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Linux MIPS Mailing List <linux-mips@linux-mips.org>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        MTD Maling List <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH 00/27] mtd: rawnand: Improve compile-test coverage
-Date: Fri, 06 Jul 2018 16:40:43 +0200
-Message-ID: <7117646.l97x2Qa6kB@blindfold> (sfid-20180706_164056_822994_1992B231)
-In-Reply-To: <CAMuHMdU2pFmhWvR6ZvvjmL6FdTWKQysJ31SW-FEvcdbi5mQhGA@mail.gmail.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com> <CAMuHMdU2pFmhWvR6ZvvjmL6FdTWKQysJ31SW-FEvcdbi5mQhGA@mail.gmail.com>
+        Tue, 24 Jul 2018 20:37:10 -0400
+Date: Tue, 24 Jul 2018 17:28:18 -0600
+From: Rob Herring <robh@kernel.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, andy.gross@linaro.org,
+        devicetree@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 3/6] dt: bindings: add bindings for msa memory region
+Message-ID: <20180724232818.GA26318@rob-hp-laptop> (sfid-20180725_012823_356481_B7CCB25B)
+References: <20180723123428.12993-1-govinds@codeaurora.org>
+ <20180723123428.12993-4-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180723123428.12993-4-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 5. Juli 2018, 12:25:42 CEST schrieb Geert Uytterhoeven:
-> Hi Boris,
+On Mon, Jul 23, 2018 at 06:04:25PM +0530, Govind Singh wrote:
+> Add device tree binding documentation details of msa
+> memory region for ath10k qmi client for SDM845/APQ8098
+> SoC into "qcom,ath10k.txt".
 > 
-> On Thu, Jul 5, 2018 at 12:09 PM Boris Brezillon
-> <boris.brezillon@bootlin.com> wrote:
-> > This is an attempt at adding "depends || COMPILE_TEST" to all NAND
-> > drivers that have no compile-time dependencies on arch
-> > features/headers.
-> >
-> > This will hopefully help us (NAND/MTD maintainers) in detecting build
-> > issues earlier. Unfortunately we still have a few drivers that can't
-> > easily be modified to be arch independent.
-> >
-> > I tried to put all patches that only touch the NAND subsystem first,
-> > so that they can be applied even if other patches are being discussed.
-> >
-> > Don't hesitate to point any missing dependencies when compiled with
-> > COMPILE_TEST. I didn't have any problem when compiling, but that might
-> > be because the dependencies were already selected.
-> >
-> > I have Question for Geert. I know you worked on HAS_DMA removal when
-> > combined with COMPILE_TEST, do you plan to do something similar with
-> > HAS_IOMEM?
-> 
-> No plans for that.
-> 
-> NO_IOMEM is Richard's itch, now s390 has gained PCI support.
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../devicetree/bindings/net/wireless/qcom,ath10k.txt        | 6 ++++++
+>  1 file changed, 6 insertions(+)
 
-Since COMPILE_TEST depends on !UML not so much anymore :-)
-
-> NO_DMA matters for UML and Sun-3.
-
-Yeah.
-
-Thanks,
-//richard
+Reviewed-by: Rob Herring <robh@kernel.org>
