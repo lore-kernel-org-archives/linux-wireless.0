@@ -1,107 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38696 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730314AbeG0OLF (ORCPT
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:44785 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388674AbeGXR5R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:11:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 15:48:32 +0300
-Message-Id: <20180727124838.25910-11-luca@coelho.fi> (sfid-20180727_144920_298571_79BFF450)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 10/16] iwlwifi: pcie: don't access periphery registers when not available
+        Tue, 24 Jul 2018 13:57:17 -0400
+Received: by mail-pg1-f196.google.com with SMTP id r1-v6so3293563pgp.11
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:56 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 14/18] staging: rtl8192u: ieee80211: Convert from ahash to shash
+Date: Tue, 24 Jul 2018 09:49:32 -0700
+Message-Id: <20180724164936.37477-15-keescook@chromium.org> (sfid-20180724_185027_936436_B214B00C)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is an identical change to the wireless/lib80211 of the same name.
+In preparing to remove all stack VLA usage from the kernel[1], this
+removes the discouraged use of AHASH_REQUEST_ON_STACK in favor of
+the smaller SHASH_DESC_ON_STACK by converting from ahash-wrapped-shash
+to direct shash. By removing a layer of indirection this both improves
+performance and reduces stack usage. The stack allocation will be made
+a fixed size in a later patch to the crypto subsystem.
 
-The periphery can't be accessed before we set the
-INIT_DONE bit which initializes the device.
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 
-A previous patch added a reconfiguration of the MSI-X
-tables upon resume, but at that point in the flow,
-INIT_DONE wasn't set. Since the reconfiguration of the
-MSI-X tables require periphery access, it failed.
-
-The difference between WoWLAN and without WoWLAN is that
-in WoWLAN, iwl_trans_pcie_d3_suspend clears the INIT_DONE
-without clearing the STATUS_DEVICE_ENABLED bit in the
-software status. Because of that, the resume code thinks
-that the device is enabled, but the INIT_DONE bit has been
-cleared.
-
-To fix this, don't reconfigure the MSI-X tables in case
-WoWLAN is enabled. It will be done in
-iwl_trans_pcie_d3_resume anyway.
-
-Fixes: 52848a79b9d2 ("iwlwifi: pcie: reconfigure MSI-X HW on resume")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  4 ++++
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 24 +++++++++----------
- 2 files changed, 16 insertions(+), 12 deletions(-)
+ .../rtl8192u/ieee80211/ieee80211_crypt_tkip.c | 57 +++++++++----------
+ 1 file changed, 28 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 651975bc159b..51a2e2deea9c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -994,6 +994,10 @@ static int iwl_pci_resume(struct device *device)
- 	if (!trans->op_mode)
- 		return 0;
+diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
+index a7efaae4e25a..1088fa0aee0e 100644
+--- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
++++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
+@@ -54,9 +54,9 @@ struct ieee80211_tkip_data {
+ 	int key_idx;
  
-+	/* In WOWLAN, let iwl_trans_pcie_d3_resume do the rest of the work */
-+	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status))
-+		return 0;
-+
- 	/* reconfigure the MSI-X mapping to get the correct IRQ for rfkill */
- 	iwl_pcie_conf_msix_hw(trans_pcie);
+ 	struct crypto_skcipher *rx_tfm_arc4;
+-	struct crypto_ahash *rx_tfm_michael;
++	struct crypto_shash *rx_tfm_michael;
+ 	struct crypto_skcipher *tx_tfm_arc4;
+-	struct crypto_ahash *tx_tfm_michael;
++	struct crypto_shash *tx_tfm_michael;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 7928e8089f42..a54c2bc985ad 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1563,18 +1563,6 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- 
- 	iwl_pcie_enable_rx_wake(trans, true);
- 
--	/*
--	 * Reconfigure IVAR table in case of MSIX or reset ict table in
--	 * MSI mode since HW reset erased it.
--	 * Also enables interrupts - none will happen as
--	 * the device doesn't know we're waking it up, only when
--	 * the opmode actually tells it after this call.
--	 */
--	iwl_pcie_conf_msix_hw(trans_pcie);
--	if (!trans_pcie->msix_enabled)
--		iwl_pcie_reset_ict(trans);
--	iwl_enable_interrupts(trans);
--
- 	iwl_set_bit(trans, CSR_GP_CNTRL,
- 		    BIT(trans->cfg->csr->flag_mac_access_req));
- 	iwl_set_bit(trans, CSR_GP_CNTRL,
-@@ -1592,6 +1580,18 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- 		return ret;
+ 	/* scratch buffers for virt_to_page() (crypto API) */
+ 	u8 rx_hdr[16], tx_hdr[16];
+@@ -80,8 +80,7 @@ static void *ieee80211_tkip_init(int key_idx)
+ 		goto fail;
  	}
  
-+	/*
-+	 * Reconfigure IVAR table in case of MSIX or reset ict table in
-+	 * MSI mode since HW reset erased it.
-+	 * Also enables interrupts - none will happen as
-+	 * the device doesn't know we're waking it up, only when
-+	 * the opmode actually tells it after this call.
-+	 */
-+	iwl_pcie_conf_msix_hw(trans_pcie);
-+	if (!trans_pcie->msix_enabled)
-+		iwl_pcie_reset_ict(trans);
-+	iwl_enable_interrupts(trans);
-+
- 	iwl_pcie_set_pwr(trans, false);
+-	priv->tx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
+-			CRYPTO_ALG_ASYNC);
++	priv->tx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
+ 	if (IS_ERR(priv->tx_tfm_michael)) {
+ 		printk(KERN_DEBUG "ieee80211_crypt_tkip: could not allocate "
+ 				"crypto API michael_mic\n");
+@@ -98,8 +97,7 @@ static void *ieee80211_tkip_init(int key_idx)
+ 		goto fail;
+ 	}
  
- 	if (!reset) {
+-	priv->rx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
+-			CRYPTO_ALG_ASYNC);
++	priv->rx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
+ 	if (IS_ERR(priv->rx_tfm_michael)) {
+ 		printk(KERN_DEBUG "ieee80211_crypt_tkip: could not allocate "
+ 				"crypto API michael_mic\n");
+@@ -111,9 +109,9 @@ static void *ieee80211_tkip_init(int key_idx)
+ 
+ fail:
+ 	if (priv) {
+-		crypto_free_ahash(priv->tx_tfm_michael);
++		crypto_free_shash(priv->tx_tfm_michael);
+ 		crypto_free_skcipher(priv->tx_tfm_arc4);
+-		crypto_free_ahash(priv->rx_tfm_michael);
++		crypto_free_shash(priv->rx_tfm_michael);
+ 		crypto_free_skcipher(priv->rx_tfm_arc4);
+ 		kfree(priv);
+ 	}
+@@ -127,9 +125,9 @@ static void ieee80211_tkip_deinit(void *priv)
+ 	struct ieee80211_tkip_data *_priv = priv;
+ 
+ 	if (_priv) {
+-		crypto_free_ahash(_priv->tx_tfm_michael);
++		crypto_free_shash(_priv->tx_tfm_michael);
+ 		crypto_free_skcipher(_priv->tx_tfm_arc4);
+-		crypto_free_ahash(_priv->rx_tfm_michael);
++		crypto_free_shash(_priv->rx_tfm_michael);
+ 		crypto_free_skcipher(_priv->rx_tfm_arc4);
+ 	}
+ 	kfree(priv);
+@@ -500,30 +498,31 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
+ 	return keyidx;
+ }
+ 
+-static int michael_mic(struct crypto_ahash *tfm_michael, u8 *key, u8 *hdr,
++static int michael_mic(struct crypto_shash *tfm_michael, u8 *key, u8 *hdr,
+ 		       u8 *data, size_t data_len, u8 *mic)
+ {
+-	AHASH_REQUEST_ON_STACK(req, tfm_michael);
+-	struct scatterlist sg[2];
++	SHASH_DESC_ON_STACK(desc, tfm_michael);
+ 	int err;
+ 
+-	if (tfm_michael == NULL) {
+-		printk(KERN_WARNING "michael_mic: tfm_michael == NULL\n");
+-		return -1;
+-	}
+-
+-	sg_init_table(sg, 2);
+-	sg_set_buf(&sg[0], hdr, 16);
+-	sg_set_buf(&sg[1], data, data_len);
++	desc->tfm = tfm_michael;
++	desc->flags = 0;
+ 
+-	if (crypto_ahash_setkey(tfm_michael, key, 8))
++	if (crypto_shash_setkey(tfm_michael, key, 8))
+ 		return -1;
+ 
+-	ahash_request_set_tfm(req, tfm_michael);
+-	ahash_request_set_callback(req, 0, NULL, NULL);
+-	ahash_request_set_crypt(req, sg, mic, data_len + 16);
+-	err = crypto_ahash_digest(req);
+-	ahash_request_zero(req);
++	err = crypto_shash_init(desc);
++	if (err)
++		goto out;
++	err = crypto_shash_update(desc, hdr, 16);
++	if (err)
++		goto out;
++	err = crypto_shash_update(desc, data, data_len);
++	if (err)
++		goto out;
++	err = crypto_shash_final(desc, mic);
++
++out:
++	shash_desc_zero(desc);
+ 	return err;
+ }
+ 
+@@ -663,9 +662,9 @@ static int ieee80211_tkip_set_key(void *key, int len, u8 *seq, void *priv)
+ {
+ 	struct ieee80211_tkip_data *tkey = priv;
+ 	int keyidx;
+-	struct crypto_ahash *tfm = tkey->tx_tfm_michael;
++	struct crypto_shash *tfm = tkey->tx_tfm_michael;
+ 	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
+-	struct crypto_ahash *tfm3 = tkey->rx_tfm_michael;
++	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
+ 	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
+ 
+ 	keyidx = tkey->key_idx;
 -- 
-2.18.0
+2.17.1
