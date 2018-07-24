@@ -1,154 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:45394 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752317AbeGAONH (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:41064 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388940AbeGXUhv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:07 -0400
-Received: by mail-wr0-f194.google.com with SMTP id u7-v6so13002379wrn.12
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:06 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 03/19] mt76x2: move utility routines in mt76x2.h
-Date: Sun,  1 Jul 2018 16:12:15 +0200
-Message-Id: <20180701141231.25323-4-lorenzo.bianconi@redhat.com> (sfid-20180701_161316_269017_0940F0E1)
+        Tue, 24 Jul 2018 16:37:51 -0400
+Received: by mail-pl0-f65.google.com with SMTP id w8-v6so2192027ply.8
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:54 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 15/18] sunrpc: whitespace fixes
+Date: Tue, 24 Jul 2018 12:29:15 -0700
+Message-Id: <20180724192918.31165-16-sthemmin@microsoft.com> (sfid-20180724_213026_321541_52BBC09A)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to reuse them supporting mt76x2u based devices, move
-mt76x2_wait_for_mac, wait_for_wpdma and mt76x2_channel_silent in
-mt76x2.h
+Remove trailing whitespace and blank line at EOF
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h   | 40 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x2_init.c  | 28 -------------
- .../net/wireless/mediatek/mt76/mt76x2_phy.c   |  9 -----
- 3 files changed, 40 insertions(+), 37 deletions(-)
+ net/sunrpc/auth_gss/auth_gss.c          | 2 +-
+ net/sunrpc/auth_gss/gss_generic_token.c | 1 -
+ net/sunrpc/auth_gss/gss_krb5_crypto.c   | 1 -
+ net/sunrpc/auth_gss/gss_krb5_keys.c     | 1 -
+ net/sunrpc/auth_gss/gss_krb5_seal.c     | 1 -
+ net/sunrpc/auth_gss/gss_krb5_unseal.c   | 1 -
+ net/sunrpc/auth_gss/gss_krb5_wrap.c     | 1 -
+ net/sunrpc/auth_gss/svcauth_gss.c       | 2 +-
+ net/sunrpc/backchannel_rqst.c           | 1 -
+ net/sunrpc/clnt.c                       | 2 +-
+ net/sunrpc/rpcb_clnt.c                  | 2 +-
+ net/sunrpc/stats.c                      | 1 -
+ net/sunrpc/sunrpc.h                     | 1 -
+ net/sunrpc/xprt.c                       | 2 +-
+ net/sunrpc/xprtsock.c                   | 1 -
+ 15 files changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 71fcfa44fb2e..8824c617cbd2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -159,6 +159,23 @@ struct mt76x2_sta {
- 	int inactive_count;
- };
+diff --git a/net/sunrpc/auth_gss/auth_gss.c b/net/sunrpc/auth_gss/auth_gss.c
+index be8f103d22fd..b67ad98a36a6 100644
+--- a/net/sunrpc/auth_gss/auth_gss.c
++++ b/net/sunrpc/auth_gss/auth_gss.c
+@@ -1571,7 +1571,7 @@ static int gss_cred_is_negative_entry(struct rpc_cred *cred)
+ 	if (test_bit(RPCAUTH_CRED_NEGATIVE, &cred->cr_flags)) {
+ 		unsigned long now = jiffies;
+ 		unsigned long begin, expire;
+-		struct gss_cred *gss_cred; 
++		struct gss_cred *gss_cred;
  
-+static inline bool mt76x2_wait_for_mac(struct mt76x2_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < 500; i++) {
-+		switch (mt76_rr(dev, MT_MAC_CSR0)) {
-+		case 0:
-+		case ~0:
-+			break;
-+		default:
-+			return true;
-+		}
-+		usleep_range(5000, 10000);
-+	}
-+	return false;
-+}
-+
- static inline bool is_mt7612(struct mt76x2_dev *dev)
- {
- 	return mt76_chip(&dev->mt76) == 0x7612;
-@@ -166,6 +183,14 @@ static inline bool is_mt7612(struct mt76x2_dev *dev)
- 
- void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
- 
-+static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
-+
-+	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+		chan->dfs_state != NL80211_DFS_AVAILABLE);
-+}
-+
- static inline void mt76x2_irq_enable(struct mt76x2_dev *dev, u32 mask)
- {
- 	mt76x2_set_irq_mask(dev, 0, mask);
-@@ -176,6 +201,21 @@ static inline void mt76x2_irq_disable(struct mt76x2_dev *dev, u32 mask)
- 	mt76x2_set_irq_mask(dev, mask, 0);
+ 		gss_cred = container_of(cred, struct gss_cred, gc_base);
+ 		begin = gss_cred->gc_upcall_timestamp;
+diff --git a/net/sunrpc/auth_gss/gss_generic_token.c b/net/sunrpc/auth_gss/gss_generic_token.c
+index 254defe446a7..fe97f3106536 100644
+--- a/net/sunrpc/auth_gss/gss_generic_token.c
++++ b/net/sunrpc/auth_gss/gss_generic_token.c
+@@ -231,4 +231,3 @@ g_verify_token_header(struct xdr_netobj *mech, int *body_size,
  }
  
-+static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll_msec(dev, MT_MAC_STATUS,
-+			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-+			      0, 100);
-+}
-+
-+static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
-+			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
-+			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
-+			 0, 1000);
-+}
-+
- extern const struct ieee80211_ops mt76x2_ops;
- 
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 79ab93613e06..6a7db3f88153 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -24,34 +24,6 @@ struct mt76x2_reg_pair {
- 	u32 value;
- };
- 
--static bool
--mt76x2_wait_for_mac(struct mt76x2_dev *dev)
--{
--	int i;
+ EXPORT_SYMBOL_GPL(g_verify_token_header);
 -
--	for (i = 0; i < 500; i++) {
--		switch (mt76_rr(dev, MT_MAC_CSR0)) {
--		case 0:
--		case ~0:
--			break;
--		default:
--			return true;
--		}
--		usleep_range(5000, 10000);
--	}
--
--	return false;
--}
--
--static bool
--wait_for_wpdma(struct mt76x2_dev *dev)
--{
--	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
--			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
--			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
--			 0, 1000);
--}
--
- static void
- mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 20ffa6a40d39..9a7b50f0005d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -176,15 +176,6 @@ void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
- 		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
+diff --git a/net/sunrpc/auth_gss/gss_krb5_crypto.c b/net/sunrpc/auth_gss/gss_krb5_crypto.c
+index 8654494b4d0a..a1acee106faa 100644
+--- a/net/sunrpc/auth_gss/gss_krb5_crypto.c
++++ b/net/sunrpc/auth_gss/gss_krb5_crypto.c
+@@ -1077,4 +1077,3 @@ krb5_rc4_setup_enc_key(struct krb5_ctx *kctx, struct crypto_skcipher *cipher,
+ 	dprintk("%s: returning %d\n", __func__, err);
+ 	return err;
  }
+-
+diff --git a/net/sunrpc/auth_gss/gss_krb5_keys.c b/net/sunrpc/auth_gss/gss_krb5_keys.c
+index 870133146026..f7fe2d2b851f 100644
+--- a/net/sunrpc/auth_gss/gss_krb5_keys.c
++++ b/net/sunrpc/auth_gss/gss_krb5_keys.c
+@@ -324,4 +324,3 @@ u32 gss_krb5_aes_make_key(const struct gss_krb5_enctype *gk5e,
+ err_out:
+ 	return ret;
+ }
+-
+diff --git a/net/sunrpc/auth_gss/gss_krb5_seal.c b/net/sunrpc/auth_gss/gss_krb5_seal.c
+index 94a2b3f082a8..eaad9bc7a0bd 100644
+--- a/net/sunrpc/auth_gss/gss_krb5_seal.c
++++ b/net/sunrpc/auth_gss/gss_krb5_seal.c
+@@ -229,4 +229,3 @@ gss_get_mic_kerberos(struct gss_ctx *gss_ctx, struct xdr_buf *text,
+ 		return gss_get_mic_v2(ctx, text, token);
+ 	}
+ }
+-
+diff --git a/net/sunrpc/auth_gss/gss_krb5_unseal.c b/net/sunrpc/auth_gss/gss_krb5_unseal.c
+index b601a73cc9db..ef2b25b86d2f 100644
+--- a/net/sunrpc/auth_gss/gss_krb5_unseal.c
++++ b/net/sunrpc/auth_gss/gss_krb5_unseal.c
+@@ -225,4 +225,3 @@ gss_verify_mic_kerberos(struct gss_ctx *gss_ctx,
+ 		return gss_verify_mic_v2(ctx, message_buffer, read_token);
+ 	}
+ }
+-
+diff --git a/net/sunrpc/auth_gss/gss_krb5_wrap.c b/net/sunrpc/auth_gss/gss_krb5_wrap.c
+index a737c2da0837..286fd22404f2 100644
+--- a/net/sunrpc/auth_gss/gss_krb5_wrap.c
++++ b/net/sunrpc/auth_gss/gss_krb5_wrap.c
+@@ -623,4 +623,3 @@ gss_unwrap_kerberos(struct gss_ctx *gctx, int offset, struct xdr_buf *buf)
+ 		return gss_unwrap_kerberos_v2(kctx, offset, buf);
+ 	}
+ }
+-
+diff --git a/net/sunrpc/auth_gss/svcauth_gss.c b/net/sunrpc/auth_gss/svcauth_gss.c
+index 5089dbb96d58..860f2a1bbb67 100644
+--- a/net/sunrpc/auth_gss/svcauth_gss.c
++++ b/net/sunrpc/auth_gss/svcauth_gss.c
+@@ -1389,7 +1389,7 @@ static void destroy_use_gss_proxy_proc_entry(struct net *net)
+ 	struct sunrpc_net *sn = net_generic(net, sunrpc_net_id);
  
--static bool
--mt76x2_channel_silent(struct mt76x2_dev *dev)
--{
--	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+ 	if (sn->use_gssp_proc) {
+-		remove_proc_entry("use-gss-proxy", sn->proc_net_rpc); 
++		remove_proc_entry("use-gss-proxy", sn->proc_net_rpc);
+ 		clear_gssp_clnt(sn);
+ 	}
+ }
+diff --git a/net/sunrpc/backchannel_rqst.c b/net/sunrpc/backchannel_rqst.c
+index c2c68a15b59d..3c15a99b9700 100644
+--- a/net/sunrpc/backchannel_rqst.c
++++ b/net/sunrpc/backchannel_rqst.c
+@@ -362,4 +362,3 @@ void xprt_complete_bc_request(struct rpc_rqst *req, uint32_t copied)
+ 	wake_up(&bc_serv->sv_cb_waitq);
+ 	spin_unlock(&bc_serv->sv_cb_lock);
+ }
 -
--	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
--		chan->dfs_state != NL80211_DFS_AVAILABLE);
--}
--
- static bool
- mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
+diff --git a/net/sunrpc/clnt.c b/net/sunrpc/clnt.c
+index d839c33ae7d9..3818e4d55c66 100644
+--- a/net/sunrpc/clnt.c
++++ b/net/sunrpc/clnt.c
+@@ -892,7 +892,7 @@ rpc_free_client(struct rpc_clnt *clnt)
+ /*
+  * Free an RPC client
+  */
+-static struct rpc_clnt * 
++static struct rpc_clnt *
+ rpc_free_auth(struct rpc_clnt *clnt)
  {
+ 	if (clnt->cl_auth == NULL)
+diff --git a/net/sunrpc/rpcb_clnt.c b/net/sunrpc/rpcb_clnt.c
+index c526f8fb37c9..c7872bc13860 100644
+--- a/net/sunrpc/rpcb_clnt.c
++++ b/net/sunrpc/rpcb_clnt.c
+@@ -213,7 +213,7 @@ static void rpcb_set_local(struct net *net, struct rpc_clnt *clnt,
+ 	sn->rpcb_local_clnt = clnt;
+ 	sn->rpcb_local_clnt4 = clnt4;
+ 	sn->rpcb_is_af_local = is_af_local ? 1 : 0;
+-	smp_wmb(); 
++	smp_wmb();
+ 	sn->rpcb_users = 1;
+ 	dprintk("RPC:       created new rpcb local clients (rpcb_local_clnt: "
+ 		"%p, rpcb_local_clnt4: %p) for net %x%s\n",
+diff --git a/net/sunrpc/stats.c b/net/sunrpc/stats.c
+index f68aa46c9dd7..86f316503c7c 100644
+--- a/net/sunrpc/stats.c
++++ b/net/sunrpc/stats.c
+@@ -310,4 +310,3 @@ void rpc_proc_exit(struct net *net)
+ 	dprintk("RPC:       unregistering /proc/net/rpc\n");
+ 	remove_proc_entry("rpc", net->proc_net);
+ }
+-
+diff --git a/net/sunrpc/sunrpc.h b/net/sunrpc/sunrpc.h
+index 09a0315ea77b..c9bacb3c930f 100644
+--- a/net/sunrpc/sunrpc.h
++++ b/net/sunrpc/sunrpc.h
+@@ -57,4 +57,3 @@ int svc_send_common(struct socket *sock, struct xdr_buf *xdr,
+ int rpc_clients_notifier_register(void);
+ void rpc_clients_notifier_unregister(void);
+ #endif /* _NET_SUNRPC_SUNRPC_H */
+-
+diff --git a/net/sunrpc/xprt.c b/net/sunrpc/xprt.c
+index 3fabf9f6a0f9..a8db2e3f8904 100644
+--- a/net/sunrpc/xprt.c
++++ b/net/sunrpc/xprt.c
+@@ -880,7 +880,7 @@ static void xprt_wait_on_pinned_rqst(struct rpc_rqst *req)
+ __must_hold(&req->rq_xprt->recv_lock)
+ {
+ 	struct rpc_task *task = req->rq_task;
+-	
++
+ 	if (task && test_bit(RPC_TASK_MSG_RECV, &task->tk_runstate)) {
+ 		spin_unlock(&req->rq_xprt->recv_lock);
+ 		set_bit(RPC_TASK_MSG_RECV_WAIT, &task->tk_runstate);
+diff --git a/net/sunrpc/xprtsock.c b/net/sunrpc/xprtsock.c
+index 9e1c5024aba9..6b7539c0466e 100644
+--- a/net/sunrpc/xprtsock.c
++++ b/net/sunrpc/xprtsock.c
+@@ -3375,4 +3375,3 @@ module_param_named(tcp_max_slot_table_entries, xprt_max_tcp_slot_table_entries,
+ 		   max_slot_table_size, 0644);
+ module_param_named(udp_slot_table_entries, xprt_udp_slot_table_entries,
+ 		   slot_table_size, 0644);
+-
 -- 
 2.18.0
