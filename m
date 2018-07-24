@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:41789 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387808AbeGWJOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 05:14:34 -0400
-Message-ID: <cd311a1b46eca9b9238a8071a211a7974154ac31.camel@linux.intel.com> (sfid-20180723_101442_319607_A94055AE)
-Subject: Re: [PATCH] nfc: fdp: remove redundant pointer 'client'
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Colin King <colin.king@canonical.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Amit Pundir <amit.pundir@linaro.org>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 23 Jul 2018 11:12:39 +0300
-In-Reply-To: <20180720181643.21340-1-colin.king@canonical.com>
-References: <20180720181643.21340-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:41915 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388895AbeGXUhn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 16:37:43 -0400
+Received: by mail-pg1-f194.google.com with SMTP id z8-v6so3564284pgu.8
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:47 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 11/18] atm: remove blank lines at EOF
+Date: Tue, 24 Jul 2018 12:29:11 -0700
+Message-Id: <20180724192918.31165-12-sthemmin@microsoft.com> (sfid-20180724_213052_844177_550F999A)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-07-20 at 19:16 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Pointer 'client' is being assigned but is never used hence it is
-> redundant and can be removed.
-> 
-> Cleans up clang warning:
-> warning: variable 'client' set but not used [-Wunused-but-set-
-> variable]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+---
+ net/atm/mpoa_proc.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Oh, thanks! It seems I had missed this when did a refactoring.
-
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/fdp/i2c.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-> index 70a970c7375c..5d3ea63e405f 100644
-> --- a/drivers/nfc/fdp/i2c.c
-> +++ b/drivers/nfc/fdp/i2c.c
-> @@ -210,7 +210,6 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy
-> *phy, struct sk_buff **skb)
->  static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
->  {
->  	struct fdp_i2c_phy *phy = phy_id;
-> -	struct i2c_client *client;
->  	struct sk_buff *skb;
->  	int r;
->  
-> @@ -219,8 +218,6 @@ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int
-> irq, void *phy_id)
->  		return IRQ_NONE;
->  	}
->  
-> -	client = phy->i2c_dev;
-> -
->  	r = fdp_nci_i2c_read(phy, &skb);
->  
->  	if (r == -EREMOTEIO)
-
+diff --git a/net/atm/mpoa_proc.c b/net/atm/mpoa_proc.c
+index b93cc0f18292..46d6cd9a36ae 100644
+--- a/net/atm/mpoa_proc.c
++++ b/net/atm/mpoa_proc.c
+@@ -307,9 +307,3 @@ void mpc_proc_clean(void)
+ }
+ 
+ #endif /* CONFIG_PROC_FS */
+-
+-
+-
+-
+-
+-
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.18.0
