@@ -1,164 +1,627 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:33486 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752461AbeGAONQ (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:42741 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388510AbeGXIuD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:16 -0400
-Received: by mail-wm0-f47.google.com with SMTP id z6-v6so5710567wma.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:16 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 11/19] mt76: introduce mt76x2-common module
-Date: Sun,  1 Jul 2018 16:12:23 +0200
-Message-Id: <20180701141231.25323-12-lorenzo.bianconi@redhat.com> (sfid-20180701_161330_163194_CA97DF4C)
+        Tue, 24 Jul 2018 04:50:03 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 10/19] wil6210: add support for link statistics
+Date: Tue, 24 Jul 2018 10:44:31 +0300
+Message-Id: <1532418280-5849-11-git-send-email-merez@codeaurora.org> (sfid-20180724_094515_761709_1BDDEE89)
+In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to remove usb dependency from pcie code, add mt76x2-common as
-a container of shared code between mt76x2 and mt76x2u. Add eeprom code
-to mt76x2-common module
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Driver can request FW to report link statistics using
+WMI_LINK_STATS_CMDID.
+FW will report statistics with WMI_LINK_STATS_EVENTID.
+Two categories of statistics defined: basic and global.
+
+New "link_stats" debugfs is used for requesting basic statistics
+report (write) and for reading the basic statistics (read).
+"link_stats_global" debugfs is used for requesting and reading the
+global statistics.
+
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/Kconfig         |  5 +++++
- drivers/net/wireless/mediatek/mt76/Makefile        |  6 +++++-
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 13 +++++++++++--
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h |  1 +
- 4 files changed, 22 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 219 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h |  12 ++
+ drivers/net/wireless/ath/wil6210/wmi.c     | 165 ++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h     |  57 +++++---
+ 4 files changed, 437 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index fc05d79c80d0..1e5c6af6afa2 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -1,9 +1,14 @@
- config MT76_CORE
- 	tristate
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index f2eab39..51c3330 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1922,6 +1922,223 @@ static ssize_t wil_tx_latency_write(struct file *file, const char __user *buf,
+ 	.llseek		= seq_lseek,
+ };
  
-+config MT76x2_COMMON
-+	tristate
-+	depends on MT76_CORE
++static void wil_link_stats_print_basic(struct wil6210_vif *vif,
++				       struct seq_file *s,
++				       struct wmi_link_stats_basic *basic)
++{
++	char per[5] = "?";
 +
- config MT76x2E
- 	tristate "MediaTek MT76x2E (PCIe) support"
- 	select MT76_CORE
-+	select MT76x2_COMMON
- 	depends on MAC80211
- 	depends on PCI
- 	---help---
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index a0156bc01dea..57feda501a51 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -1,4 +1,5 @@
- obj-$(CONFIG_MT76_CORE) += mt76.o
-+obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
- obj-$(CONFIG_MT76x2E) += mt76x2e.o
- 
- mt76-y := \
-@@ -6,10 +7,13 @@ mt76-y := \
- 
- CFLAGS_trace.o := -I$(src)
- 
-+mt76x2-common-y := \
-+	mt76x2_eeprom.o
++	if (basic->per_average != 0xff)
++		snprintf(per, sizeof(per), "%d%%", basic->per_average);
 +
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
- 	mt76x2_main.o mt76x2_init.o mt76x2_debugfs.o mt76x2_tx.o \
--	mt76x2_core.o mt76x2_mac.o mt76x2_eeprom.o mt76x2_mcu.o mt76x2_phy.o \
-+	mt76x2_core.o mt76x2_mac.o mt76x2_mcu.o mt76x2_phy.o \
- 	mt76x2_dfs.o mt76x2_trace.o
- 
- CFLAGS_mt76x2_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index 95d5f7d888f0..1753bcb36356 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -40,8 +40,7 @@ mt76x2_eeprom_get_macaddr(struct mt76x2_dev *dev)
- 	return 0;
- }
- 
--static void
--mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
-+void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
++	seq_printf(s, "CID %d {\n"
++		   "\tTxMCS %d TxTpt %d\n"
++		   "\tGoodput(rx:tx) %d:%d\n"
++		   "\tRxBcastFrames %d\n"
++		   "\tRSSI %d SQI %d SNR %d PER %s\n"
++		   "\tRx RFC %d Ant num %d\n"
++		   "\tSectors(rx:tx) my %d:%d peer %d:%d\n"
++		   "}\n",
++		   basic->cid,
++		   basic->bf_mcs, le32_to_cpu(basic->tx_tpt),
++		   le32_to_cpu(basic->rx_goodput),
++		   le32_to_cpu(basic->tx_goodput),
++		   le32_to_cpu(basic->rx_bcast_frames),
++		   basic->rssi, basic->sqi, basic->snr, per,
++		   basic->selected_rfc, basic->rx_effective_ant_num,
++		   basic->my_rx_sector, basic->my_tx_sector,
++		   basic->other_rx_sector, basic->other_tx_sector);
++}
++
++static void wil_link_stats_print_global(struct wil6210_priv *wil,
++					struct seq_file *s,
++					struct wmi_link_stats_global *global)
++{
++	seq_printf(s, "Frames(rx:tx) %d:%d\n"
++		   "BA Frames(rx:tx) %d:%d\n"
++		   "Beacons %d\n"
++		   "Rx Errors (MIC:CRC) %d:%d\n"
++		   "Tx Errors (no ack) %d\n",
++		   le32_to_cpu(global->rx_frames),
++		   le32_to_cpu(global->tx_frames),
++		   le32_to_cpu(global->rx_ba_frames),
++		   le32_to_cpu(global->tx_ba_frames),
++		   le32_to_cpu(global->tx_beacons),
++		   le32_to_cpu(global->rx_mic_errors),
++		   le32_to_cpu(global->rx_crc_errors),
++		   le32_to_cpu(global->tx_fail_no_ack));
++}
++
++static void wil_link_stats_debugfs_show_vif(struct wil6210_vif *vif,
++					    struct seq_file *s)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct wmi_link_stats_basic *stats;
++	int i;
++
++	if (!vif->fw_stats_ready) {
++		seq_puts(s, "no statistics\n");
++		return;
++	}
++
++	seq_printf(s, "TSF %lld\n", vif->fw_stats_tsf);
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++		if (wil->sta[i].status == wil_sta_unused)
++			continue;
++		if (wil->sta[i].mid != vif->mid)
++			continue;
++
++		stats = &wil->sta[i].fw_stats_basic;
++		wil_link_stats_print_basic(vif, s, stats);
++	}
++}
++
++static int wil_link_stats_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	struct wil6210_vif *vif;
++	int i, rc;
++
++	rc = mutex_lock_interruptible(&wil->vif_mutex);
++	if (rc)
++		return rc;
++
++	/* iterate over all MIDs and show per-cid statistics. Then show the
++	 * global statistics
++	 */
++	for (i = 0; i < wil->max_vifs; i++) {
++		vif = wil->vifs[i];
++
++		seq_printf(s, "MID %d ", i);
++		if (!vif) {
++			seq_puts(s, "unused\n");
++			continue;
++		}
++
++		wil_link_stats_debugfs_show_vif(vif, s);
++	}
++
++	mutex_unlock(&wil->vif_mutex);
++
++	return 0;
++}
++
++static int wil_link_stats_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_link_stats_debugfs_show, inode->i_private);
++}
++
++static ssize_t wil_link_stats_write(struct file *file, const char __user *buf,
++				    size_t len, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct wil6210_priv *wil = s->private;
++	int cid, interval, rc, i;
++	struct wil6210_vif *vif;
++	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
++
++	if (!kbuf)
++		return -ENOMEM;
++
++	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
++	if (rc != len) {
++		kfree(kbuf);
++		return rc >= 0 ? -EIO : rc;
++	}
++
++	kbuf[len] = '\0';
++	/* specify cid (use -1 for all cids) and snapshot interval in ms */
++	rc = sscanf(kbuf, "%d %d", &cid, &interval);
++	kfree(kbuf);
++	if (rc < 0)
++		return rc;
++	if (rc < 2 || interval < 0)
++		return -EINVAL;
++
++	wil_info(wil, "request link statistics, cid %d interval %d\n",
++		 cid, interval);
++
++	rc = mutex_lock_interruptible(&wil->vif_mutex);
++	if (rc)
++		return rc;
++
++	for (i = 0; i < wil->max_vifs; i++) {
++		vif = wil->vifs[i];
++		if (!vif)
++			continue;
++
++		rc = wmi_link_stats_cfg(vif, WMI_LINK_STATS_TYPE_BASIC,
++					(cid == -1 ? 0xff : cid), interval);
++		if (rc)
++			wil_err(wil, "link statistics failed for mid %d\n", i);
++	}
++	mutex_unlock(&wil->vif_mutex);
++
++	return len;
++}
++
++static const struct file_operations fops_link_stats = {
++	.open		= wil_link_stats_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.write		= wil_link_stats_write,
++	.llseek		= seq_lseek,
++};
++
++static int
++wil_link_stats_global_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++
++	if (!wil->fw_stats_global.ready)
++		return 0;
++
++	seq_printf(s, "TSF %lld\n", wil->fw_stats_global.tsf);
++	wil_link_stats_print_global(wil, s, &wil->fw_stats_global.stats);
++
++	return 0;
++}
++
++static int
++wil_link_stats_global_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_link_stats_global_debugfs_show,
++			   inode->i_private);
++}
++
++static ssize_t
++wil_link_stats_global_write(struct file *file, const char __user *buf,
++			    size_t len, loff_t *ppos)
++{
++	struct seq_file *s = file->private_data;
++	struct wil6210_priv *wil = s->private;
++	int interval, rc;
++	struct wil6210_vif *vif = ndev_to_vif(wil->main_ndev);
++
++	/* specify snapshot interval in ms */
++	rc = kstrtoint_from_user(buf, len, 0, &interval);
++	if (rc || interval < 0) {
++		wil_err(wil, "Invalid argument\n");
++		return -EINVAL;
++	}
++
++	wil_info(wil, "request global link stats, interval %d\n", interval);
++
++	rc = wmi_link_stats_cfg(vif, WMI_LINK_STATS_TYPE_GLOBAL, 0, interval);
++	if (rc)
++		wil_err(wil, "global link stats failed %d\n", rc);
++
++	return rc ? rc : len;
++}
++
++static const struct file_operations fops_link_stats_global = {
++	.open		= wil_link_stats_global_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.write		= wil_link_stats_global_write,
++	.llseek		= seq_lseek,
++};
++
+ static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
+ 				     size_t count, loff_t *ppos)
  {
- 	u16 val = mt76x2_eeprom_get(dev, MT_EE_NIC_CONF_0);
+@@ -2256,6 +2473,8 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"status_msg",	0444,		&fops_status_msg},
+ 	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
+ 	{"tx_latency",	0644,		&fops_tx_latency},
++	{"link_stats",	0644,		&fops_link_stats},
++	{"link_stats_global",	0644,	&fops_link_stats_global},
+ };
  
-@@ -58,6 +57,7 @@ mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
- 		break;
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 379f7ce..e87c889 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -728,6 +728,7 @@ struct wil_sta_info {
+ 	 * tx_latency_res is configured from "tx_latency" debug-fs.
+ 	 */
+ 	u64 *tx_latency_bins;
++	struct wmi_link_stats_basic fw_stats_basic;
+ 	/* Rx BACK */
+ 	struct wil_tid_ampdu_rx *tid_rx[WIL_STA_TID_NUM];
+ 	spinlock_t tid_rx_lock; /* guarding tid_rx array */
+@@ -842,6 +843,8 @@ struct wil6210_vif {
+ 	struct mutex probe_client_mutex; /* protect @probe_client_pending */
+ 	struct work_struct probe_client_worker;
+ 	int net_queue_stopped; /* netif_tx_stop_all_queues invoked */
++	bool fw_stats_ready; /* per-cid statistics are ready inside sta_info */
++	u64 fw_stats_tsf; /* measurement timestamp */
+ };
+ 
+ /**
+@@ -869,6 +872,12 @@ struct wil_rx_buff_mgmt {
+ 	unsigned long free_list_empty_cnt; /* statistics */
+ };
+ 
++struct wil_fw_stats_global {
++	bool ready;
++	u64 tsf; /* measurement timestamp */
++	struct wmi_link_stats_global stats;
++};
++
+ struct wil6210_priv {
+ 	struct pci_dev *pdev;
+ 	u32 bar_size;
+@@ -1002,6 +1011,8 @@ struct wil6210_priv {
+ 	bool use_rx_hw_reordering;
+ 	bool secured_boot;
+ 	u8 boot_config;
++
++	struct wil_fw_stats_global fw_stats_global;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
+@@ -1201,6 +1212,7 @@ int wmi_ps_dev_profile_cfg(struct wil6210_priv *wil,
+ int wmi_port_allocate(struct wil6210_priv *wil, u8 mid,
+ 		      const u8 *mac, enum nl80211_iftype iftype);
+ int wmi_port_delete(struct wil6210_priv *wil, u8 mid);
++int wmi_link_stats_cfg(struct wil6210_vif *vif, u32 type, u8 cid, u32 interval);
+ int wil_addba_rx_request(struct wil6210_priv *wil, u8 mid,
+ 			 u8 cidxtid, u8 dialog_token, __le16 ba_param_set,
+ 			 __le16 ba_timeout, __le16 ba_seq_ctrl);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 71056c8..45a71fd 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -464,6 +464,8 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_BCAST_DESC_RING_ADD_CMD";
+ 	case WMI_CFG_DEF_RX_OFFLOAD_CMDID:
+ 		return "WMI_CFG_DEF_RX_OFFLOAD_CMD";
++	case WMI_LINK_STATS_CMDID:
++		return "WMI_LINK_STATS_CMD";
+ 	default:
+ 		return "Untracked CMD";
  	}
+@@ -598,6 +600,10 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_RX_DESC_RING_CFG_DONE_EVENT";
+ 	case WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENTID:
+ 		return "WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENT";
++	case WMI_LINK_STATS_CONFIG_DONE_EVENTID:
++		return "WMI_LINK_STATS_CONFIG_DONE_EVENT";
++	case WMI_LINK_STATS_EVENTID:
++		return "WMI_LINK_STATS_EVENT";
+ 	default:
+ 		return "Untracked EVENT";
+ 	}
+@@ -1329,6 +1335,130 @@ static void wmi_evt_delba(struct wil6210_vif *vif, int id, void *d, int len)
+ 	cfg80211_sched_scan_results(wiphy, 0);
  }
-+EXPORT_SYMBOL_GPL(mt76x2_eeprom_parse_hw_cap);
  
- static int
- mt76x2_efuse_read(struct mt76x2_dev *dev, u16 addr, u8 *data)
-@@ -415,6 +415,7 @@ void mt76x2_read_rx_gain(struct mt76x2_dev *dev)
- 
- 	dev->cal.rx.lna_gain = mt76x2_sign_extend(lna, 8);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_read_rx_gain);
- 
- static s8
- mt76x2_rate_power_val(u8 val)
-@@ -482,6 +483,7 @@ void mt76x2_get_rate_power(struct mt76x2_dev *dev, struct mt76_rate_power *t,
- 		val >>= 8;
- 	t->vht[8] = t->vht[9] = mt76x2_rate_power_val(val >> 8);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_rate_power);
- 
- int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
- {
-@@ -493,6 +495,7 @@ int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_max_rate_power);
- 
- static void
- mt76x2_get_power_info_2g(struct mt76x2_dev *dev, struct mt76x2_tx_power_info *t,
-@@ -600,6 +603,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- 	t->delta_bw40 = mt76x2_rate_power_val(bw40);
- 	t->delta_bw80 = mt76x2_rate_power_val(bw80);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_power_info);
- 
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
- {
-@@ -632,6 +636,7 @@ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_temp_comp);
- 
- bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
- {
-@@ -642,6 +647,7 @@ bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
- 	else
- 		return !(conf0 & MT_EE_NIC_CONF_0_PA_INT_2G);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_ext_pa_enabled);
- 
- int mt76x2_eeprom_init(struct mt76x2_dev *dev)
- {
-@@ -658,3 +664,6 @@ int mt76x2_eeprom_init(struct mt76x2_dev *dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_eeprom_init);
++static void wil_link_stats_store_basic(struct wil6210_vif *vif,
++				       struct wmi_link_stats_basic *basic)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	u8 cid = basic->cid;
++	struct wil_sta_info *sta;
 +
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-index aa0b0c040375..0f3e4d2f4fee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-@@ -155,6 +155,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t);
- bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band);
- void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
-+void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev);
++	if (cid < 0 || cid >= WIL6210_MAX_CID) {
++		wil_err(wil, "invalid cid %d\n", cid);
++		return;
++	}
++
++	sta = &wil->sta[cid];
++	sta->fw_stats_basic = *basic;
++}
++
++static void wil_link_stats_store_global(struct wil6210_vif *vif,
++					struct wmi_link_stats_global *global)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++
++	wil->fw_stats_global.stats = *global;
++}
++
++static void wmi_link_stats_parse(struct wil6210_vif *vif, u64 tsf,
++				 bool has_next, void *payload,
++				 size_t payload_size)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	size_t hdr_size = sizeof(struct wmi_link_stats_record);
++	size_t stats_size, record_size, expected_size;
++	struct wmi_link_stats_record *hdr;
++
++	if (payload_size < hdr_size) {
++		wil_err(wil, "link stats wrong event size %zu\n", payload_size);
++		return;
++	}
++
++	while (payload_size >= hdr_size) {
++		hdr = payload;
++		stats_size = le16_to_cpu(hdr->record_size);
++		record_size = hdr_size + stats_size;
++
++		if (payload_size < record_size) {
++			wil_err(wil, "link stats payload ended unexpectedly, size %zu < %zu\n",
++				payload_size, record_size);
++			return;
++		}
++
++		switch (hdr->record_type_id) {
++		case WMI_LINK_STATS_TYPE_BASIC:
++			expected_size = sizeof(struct wmi_link_stats_basic);
++			if (stats_size < expected_size) {
++				wil_err(wil, "link stats invalid basic record size %zu < %zu\n",
++					stats_size, expected_size);
++				return;
++			}
++			if (vif->fw_stats_ready) {
++				/* clean old statistics */
++				vif->fw_stats_tsf = 0;
++				vif->fw_stats_ready = 0;
++			}
++
++			wil_link_stats_store_basic(vif, payload + hdr_size);
++
++			if (!has_next) {
++				vif->fw_stats_tsf = tsf;
++				vif->fw_stats_ready = 1;
++			}
++
++			break;
++		case WMI_LINK_STATS_TYPE_GLOBAL:
++			expected_size = sizeof(struct wmi_link_stats_global);
++			if (stats_size < sizeof(struct wmi_link_stats_global)) {
++				wil_err(wil, "link stats invalid global record size %zu < %zu\n",
++					stats_size, expected_size);
++				return;
++			}
++
++			if (wil->fw_stats_global.ready) {
++				/* clean old statistics */
++				wil->fw_stats_global.tsf = 0;
++				wil->fw_stats_global.ready = 0;
++			}
++
++			wil_link_stats_store_global(vif, payload + hdr_size);
++
++			if (!has_next) {
++				wil->fw_stats_global.tsf = tsf;
++				wil->fw_stats_global.ready = 1;
++			}
++
++			break;
++		default:
++			break;
++		}
++
++		/* skip to next record */
++		payload += record_size;
++		payload_size -= record_size;
++	}
++}
++
++static void
++wmi_evt_link_stats(struct wil6210_vif *vif, int id, void *d, int len)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct wmi_link_stats_event *evt = d;
++	size_t payload_size;
++
++	if (len < offsetof(struct wmi_link_stats_event, payload)) {
++		wil_err(wil, "stats event way too short %d\n", len);
++		return;
++	}
++	payload_size = le16_to_cpu(evt->payload_size);
++	if (len < sizeof(struct wmi_link_stats_event) + payload_size) {
++		wil_err(wil, "stats event too short %d\n", len);
++		return;
++	}
++
++	wmi_link_stats_parse(vif, le64_to_cpu(evt->tsf), evt->has_next,
++			     evt->payload, payload_size);
++}
++
+ /**
+  * Some events are ignored for purpose; and need not be interpreted as
+  * "unhandled events"
+@@ -1359,6 +1489,7 @@ static void wmi_evt_ignore(struct wil6210_vif *vif, int id, void *d, int len)
+ 	{WMI_RING_EN_EVENTID,		wmi_evt_ring_en},
+ 	{WMI_DATA_PORT_OPEN_EVENTID,		wmi_evt_ignore},
+ 	{WMI_SCHED_SCAN_RESULT_EVENTID,		wmi_evt_sched_scan_result},
++	{WMI_LINK_STATS_EVENTID,		wmi_evt_link_stats},
+ };
  
- static inline bool
- mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
+ /*
+@@ -3242,3 +3373,37 @@ int wil_wmi_bcast_desc_ring_add(struct wil6210_vif *vif, int ring_id)
+ 
+ 	return 0;
+ }
++
++int wmi_link_stats_cfg(struct wil6210_vif *vif, u32 type, u8 cid, u32 interval)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct wmi_link_stats_cmd cmd = {
++		.record_type_mask = cpu_to_le32(type),
++		.cid = cid,
++		.action = WMI_LINK_STATS_SNAPSHOT,
++		.interval_msec = cpu_to_le32(interval),
++	};
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_link_stats_config_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++	int rc;
++
++	rc = wmi_call(wil, WMI_LINK_STATS_CMDID, vif->mid, &cmd, sizeof(cmd),
++		      WMI_LINK_STATS_CONFIG_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "WMI_LINK_STATS_CMDID failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "Link statistics config failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 13f6f621..00cf3c4 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -1715,9 +1715,7 @@ enum wmi_link_stats_action {
+ /* WMI_LINK_STATS_EVENT record identifiers */
+ enum wmi_link_stats_record_type {
+ 	WMI_LINK_STATS_TYPE_BASIC	= 0x01,
+-	WMI_LINK_STATS_TYPE_MAC		= 0x02,
+-	WMI_LINK_STATS_TYPE_PHY		= 0x04,
+-	WMI_LINK_STATS_TYPE_OTA		= 0x08,
++	WMI_LINK_STATS_TYPE_GLOBAL	= 0x02,
+ };
+ 
+ /* WMI_LINK_STATS_CMDID */
+@@ -1731,7 +1729,7 @@ struct wmi_link_stats_cmd {
+ 	/* wmi_link_stats_action_e */
+ 	u8 action;
+ 	u8 reserved[6];
+-	/* for WMI_LINK_STATS_PERIODIC */
++	/* range = 100 - 10000 */
+ 	__le32 interval_msec;
+ } __packed;
+ 
+@@ -3779,32 +3777,59 @@ struct wmi_link_stats_config_done_event {
+ 
+ /* WMI_LINK_STATS_EVENTID */
+ struct wmi_link_stats_event {
++	__le64 tsf;
+ 	__le16 payload_size;
+ 	u8 has_next;
+ 	u8 reserved[5];
+-	/* a stream of records, e.g. wmi_link_stats_basic_s */
++	/* a stream of wmi_link_stats_record_s */
+ 	u8 payload[0];
+ } __packed;
+ 
+-/* WMI_LINK_STATS_EVENT record struct */
+-struct wmi_link_stats_basic {
+-	/* WMI_LINK_STATS_TYPE_BASIC */
++/* WMI_LINK_STATS_EVENT */
++struct wmi_link_stats_record {
++	/* wmi_link_stats_record_type_e */
+ 	u8 record_type_id;
++	u8 reserved;
++	__le16 record_size;
++	u8 record[0];
++} __packed;
++
++/* WMI_LINK_STATS_TYPE_BASIC */
++struct wmi_link_stats_basic {
+ 	u8 cid;
+-	/* 0: fail; 1: OK; 2: retrying */
+-	u8 bf_status;
+ 	s8 rssi;
+ 	u8 sqi;
++	u8 bf_mcs;
++	u8 per_average;
+ 	u8 selected_rfc;
+-	__le16 bf_mcs;
++	u8 rx_effective_ant_num;
++	u8 my_rx_sector;
++	u8 my_tx_sector;
++	u8 other_rx_sector;
++	u8 other_tx_sector;
++	u8 reserved[7];
++	/* 1/4 Db units */
++	__le16 snr;
+ 	__le32 tx_tpt;
+ 	__le32 tx_goodput;
+ 	__le32 rx_goodput;
+-	__le16 my_rx_sector;
+-	__le16 my_tx_sector;
+-	__le16 other_rx_sector;
+-	__le16 other_tx_sector;
+-	__le32 reserved[2];
++	__le32 bf_count;
++	__le32 rx_bcast_frames;
++} __packed;
++
++/* WMI_LINK_STATS_TYPE_GLOBAL */
++struct wmi_link_stats_global {
++	/* all ack-able frames */
++	__le32 rx_frames;
++	/* all ack-able frames */
++	__le32 tx_frames;
++	__le32 rx_ba_frames;
++	__le32 tx_ba_frames;
++	__le32 tx_beacons;
++	__le32 rx_mic_errors;
++	__le32 rx_crc_errors;
++	__le32 tx_fail_no_ack;
++	u8 reserved[8];
+ } __packed;
+ 
+ /* WMI_SET_GRANT_MCS_EVENTID */
 -- 
-2.18.0
+1.9.1
