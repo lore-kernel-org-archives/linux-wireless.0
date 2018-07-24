@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:52172 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388075AbeG0RH3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 13:07:29 -0400
-Subject: Re: [PATCH 03/10] atmel: hide unused procfs helpers
-To: Kalle Valo <kvalo@codeaurora.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Cc: simon@thekelleys.org.uk, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        davem@davemloft.net
-References: <20180713064658.10340-1-yuehaibing@huawei.com>
- <ded55181-e1b0-99e9-ac68-2d93fb6168c0@huawei.com>
- <87va91vxnr.fsf@codeaurora.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <e6100005-2c8e-b1b9-2870-b8ca2d61fe30@infradead.org> (sfid-20180727_174521_103895_5752D7D8)
-Date: Fri, 27 Jul 2018 08:44:54 -0700
-MIME-Version: 1.0
-In-Reply-To: <87va91vxnr.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Received: from mail.bugwerft.de ([46.23.86.59]:57194 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388407AbeGXLFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 07:05:50 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v3 10/11] NFC: st95hf: two small style nits
+Date: Tue, 24 Jul 2018 11:59:40 +0200
+Message-Id: <20180724095941.25777-11-daniel@zonque.org> (sfid-20180724_120226_825280_FB1D4F4F)
+In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
+References: <20180724095941.25777-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/27/2018 02:24 AM, Kalle Valo wrote:
-> (fixing top posting)
-> 
-> YueHaibing <yuehaibing@huawei.com> writes:
-> 
->> On 2018/7/13 14:46, YueHaibing wrote:
->>> When CONFIG_PROC_FS isn't set, gcc warning this:
->>>
->>> drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
->>>  static int atmel_proc_show(struct seq_file *m, void *v)
->>>             ^
->>> fix this by adding #ifdef around it.
->>>
->>> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
->>
->> pls ignore this,my bad.
-> 
-> Why should I drop this? Does the patch have something wrong which I'm
-> missing?
-> 
-> I'm asking because I prefer this over Randy's version:
-> 
-> https://patchwork.kernel.org/patch/10512913/
+Address two minor style issues that I came across while working on the
+driver.
 
-Take it.  I don't mind.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/nfc/st95hf/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 10321dba15dc..ccb1f1456871 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -662,7 +662,8 @@ static int st95hf_error_handling(struct st95hf_context *stcontext,
+ 			result = -ETIMEDOUT;
+ 		else
+ 			result = -EIO;
+-	return  result;
++
++		return result;
+ 	}
+ 
+ 	/* Check for CRC err only if CRC is present in the tag response */
+@@ -859,6 +860,7 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 				    skb_resp);
+ 
+ 	mutex_unlock(&stcontext->rm_lock);
++
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
-~Randy
+2.17.1
