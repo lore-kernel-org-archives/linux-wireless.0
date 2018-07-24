@@ -1,61 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:51840 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753300AbeGDKsF (ORCPT
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:45039 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388911AbeGXUhp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 06:48:05 -0400
-Subject: Re: [PATCH v8] ath10k: fix crash in recent 3.5.3 9984 firmware due
- wrong handling of peer_bw_rxnss_override parameter
-To: Sven Eckelmann <sven.eckelmann@openmesh.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org
-References: <20180704092953.32572-1-s.gottschall@dd-wrt.com>
- <5630152.jDWN9V3RzB@bentobox>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <0cff058a-3c4b-6617-a034-3df706ba3a32@dd-wrt.com> (sfid-20180704_124809_796977_F9E3DB75)
-Date: Wed, 4 Jul 2018 12:48:06 +0200
-MIME-Version: 1.0
-In-Reply-To: <5630152.jDWN9V3RzB@bentobox>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Tue, 24 Jul 2018 16:37:45 -0400
+Received: by mail-pf1-f193.google.com with SMTP id k21-v6so1078328pff.11
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:49 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 12/18] ax25: remove blank line at EOF
+Date: Tue, 24 Jul 2018 12:29:12 -0700
+Message-Id: <20180724192918.31165-13-sthemmin@microsoft.com> (sfid-20180724_212959_272252_E6A52933)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+---
+ net/ax25/ax25_addr.c    | 1 -
+ net/ax25/ax25_ds_in.c   | 1 -
+ net/ax25/ax25_ds_subr.c | 1 -
+ net/ax25/ax25_ip.c      | 1 -
+ net/ax25/ax25_out.c     | 1 -
+ 5 files changed, 5 deletions(-)
 
-
-Am 04.07.2018 um 12:40 schrieb Sven Eckelmann:
-> On Mittwoch, 4. Juli 2018 11:29:53 CEST s.gottschall@dd-wrt.com wrote:
->> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
->> +#define BW_NSS_FWCONF_160(x)           (BW_NSS_FWCONF_MAP_ENABLE | \
->> +                                       (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) \
->> +                                       & BW_NSS_FWCONF_MAP_160MHZ_M))
->> +#define BW_NSS_FWCONF_80_80(x)         (BW_NSS_FWCONF_MAP_ENABLE | \
->> +                                       (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) \
->> +                                       & BW_NSS_FWCONF_MAP_80_80MHZ_M))
-> Please check the shift and mask macros in core.h
->
->
-> #define BW_NSS_FWCONF_MAP_160MHZ_LSB           0
-> #define BW_NSS_FWCONF_MAP_160MHZ_MASK          0x00000007
-> #define BW_NSS_FWCONF_MAP_80_80MHZ_LSB         3
-> #define BW_NSS_FWCONF_MAP_80_80MHZ_MASK        0x00000038
-> #define BW_NSS_FWCONF_MAP_MASK                 0x0000003F
->
-> #define GET_BW_NSS_FWCONF_160(x)     (MS((x), BW_NSS_FWCONF_MAP_160MHZ) + 1)
-> #define GET_BW_NSS_FWCONF_80_80(x)   (MS((x), BW_NSS_FWCONF_MAP_80_80MHZ_M) + 1)
->
-> /* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-> #define BW_NSS_FWCONF_160(x)         (BW_NSS_FWCONF_MAP_ENABLE | \
->                                        (SM((x) - 1, BW_NSS_FWCONF_MAP_160MHZ))
-> #define BW_NSS_FWCONF_80_80(x)       (BW_NSS_FWCONF_MAP_ENABLE | \
->                                        (SM((x) - 1, BW_NSS_FWCONF_MAP_80_80MHZ))
->
-> (these snippets were not yet tested and most likely need further adjustments)
->
->
-> Kind regards,
-> 	Sven
-can you explain your request? the macros are unchanged and just 
-reformated for maximum line length restriction. the values have been 
-taken from QCA's wmi header
-
-Sebastian
+diff --git a/net/ax25/ax25_addr.c b/net/ax25/ax25_addr.c
+index ac2542b7be88..a14cfa736b63 100644
+--- a/net/ax25/ax25_addr.c
++++ b/net/ax25/ax25_addr.c
+@@ -304,4 +304,3 @@ void ax25_digi_invert(const ax25_digi *in, ax25_digi *out)
+ 		}
+ 	}
+ }
+-
+diff --git a/net/ax25/ax25_ds_in.c b/net/ax25/ax25_ds_in.c
+index 891596e74278..488fc2d7085a 100644
+--- a/net/ax25/ax25_ds_in.c
++++ b/net/ax25/ax25_ds_in.c
+@@ -299,4 +299,3 @@ int ax25_ds_frame_in(ax25_cb *ax25, struct sk_buff *skb, int type)
+ 
+ 	return queued;
+ }
+-
+diff --git a/net/ax25/ax25_ds_subr.c b/net/ax25/ax25_ds_subr.c
+index 28827e81ba2b..bc0329f43013 100644
+--- a/net/ax25/ax25_ds_subr.c
++++ b/net/ax25/ax25_ds_subr.c
+@@ -205,4 +205,3 @@ void ax25_dama_off(ax25_cb *ax25)
+ 	ax25->condition &= ~AX25_COND_DAMA_MODE;
+ 	ax25_dev_dama_off(ax25->ax25_dev);
+ }
+-
+diff --git a/net/ax25/ax25_ip.c b/net/ax25/ax25_ip.c
+index 183b1c583d56..70417e9b932d 100644
+--- a/net/ax25/ax25_ip.c
++++ b/net/ax25/ax25_ip.c
+@@ -249,4 +249,3 @@ const struct header_ops ax25_header_ops = {
+ 
+ EXPORT_SYMBOL(ax25_header_ops);
+ EXPORT_SYMBOL(ax25_ip_xmit);
+-
+diff --git a/net/ax25/ax25_out.c b/net/ax25/ax25_out.c
+index b11a5f466fcc..3e5afc8dc93e 100644
+--- a/net/ax25/ax25_out.c
++++ b/net/ax25/ax25_out.c
+@@ -394,4 +394,3 @@ int ax25_check_iframes_acked(ax25_cb *ax25, unsigned short nr)
+ 	}
+ 	return 0;
+ }
+-
+-- 
+2.18.0
