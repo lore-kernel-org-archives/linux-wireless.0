@@ -1,56 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35219 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753528AbeGFLhV (ORCPT
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:37266 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388424AbeGXR5H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 07:37:21 -0400
-Received: by mail-wm0-f67.google.com with SMTP id v3-v6so10582492wmh.0
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jul 2018 04:37:20 -0700 (PDT)
-Date: Fri, 6 Jul 2018 13:37:17 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 00/11] Add mt76x0 driver
-Message-ID: <20180706113716.GA2410@localhost.localdomain> (sfid-20180706_133725_284138_6229A736)
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
- <20180705153216.GE17524@localhost.localdomain>
- <20180706103657.GB2033@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180706103657.GB2033@redhat.com>
+        Tue, 24 Jul 2018 13:57:07 -0400
+Received: by mail-pg1-f196.google.com with SMTP id n7-v6so3305096pgq.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:47 -0700 (PDT)
+From: Kees Cook <keescook@chromium.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        qat-linux@intel.com, linux-ppp@vger.kernel.org,
+        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 04/18] dm: Remove VLA usage from hashes
+Date: Tue, 24 Jul 2018 09:49:22 -0700
+Message-Id: <20180724164936.37477-5-keescook@chromium.org> (sfid-20180724_185308_679888_3AB7BB91)
+In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jul 06, Stanislaw Gruszka wrote:
-> On Thu, Jul 05, 2018 at 05:32:17PM +0200, Lorenzo Bianconi wrote:
-> > > My integration efforts can be traced here:
-> > > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
-> > > 
-> > 
-> > I just had a brief review of the code and I compiled the driver since at
-> > the moment I had no adapter for that chipset.
-> > As a remainder for future improvements/integration most of the code in 
-> > dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
-> > routines in the mt76-usb layer (we need to fill function pointer for chipset
-> > related stuff if there are differences with mt76x2u, not looked yet).
-> > Moreover mcu code can use utility routines in usb-mcu.c
-> > I have not looked at mt76x2 common code yet.
-> 
-> That's my plan. So far I started to unify common mac/wcid code. If
-> someone want to work on some area i.e. dma/tx, usb or mcu, please
-> let me know to do not duplicate work.  
+In the quest to remove all stack VLA usage from the kernel[1], this uses
+the new HASH_MAX_DIGESTSIZE from the crypto layer to allocate the upper
+bounds on stack usage.
 
-I can work on dma/tx/usb stuff since I did it for mt76x2u.
-I have just a mt7601u adapter for the moment but I guess
-I can use it that tasks.
+[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
 
-Regards,
-Lorenzo
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/md/dm-integrity.c  | 23 +++++++++++++++++------
+ drivers/md/dm-verity-fec.c |  5 ++++-
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
-> 
-> Thanks for review!
-> Stanislaw
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 86438b2f10dd..884edd7cf1d0 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -521,7 +521,12 @@ static void section_mac(struct dm_integrity_c *ic, unsigned section, __u8 result
+ 		}
+ 		memset(result + size, 0, JOURNAL_MAC_SIZE - size);
+ 	} else {
+-		__u8 digest[size];
++		__u8 digest[HASH_MAX_DIGESTSIZE];
++
++		if (WARN_ON(size > sizeof(digest))) {
++			dm_integrity_io_error(ic, "digest_size", -EINVAL);
++			goto err;
++		}
+ 		r = crypto_shash_final(desc, digest);
+ 		if (unlikely(r)) {
+ 			dm_integrity_io_error(ic, "crypto_shash_final", r);
+@@ -1244,7 +1249,7 @@ static void integrity_metadata(struct work_struct *w)
+ 		struct bio *bio = dm_bio_from_per_bio_data(dio, sizeof(struct dm_integrity_io));
+ 		char *checksums;
+ 		unsigned extra_space = unlikely(digest_size > ic->tag_size) ? digest_size - ic->tag_size : 0;
+-		char checksums_onstack[ic->tag_size + extra_space];
++		char checksums_onstack[HASH_MAX_DIGESTSIZE];
+ 		unsigned sectors_to_process = dio->range.n_sectors;
+ 		sector_t sector = dio->range.logical_sector;
+ 
+@@ -1253,8 +1258,14 @@ static void integrity_metadata(struct work_struct *w)
+ 
+ 		checksums = kmalloc((PAGE_SIZE >> SECTOR_SHIFT >> ic->sb->log2_sectors_per_block) * ic->tag_size + extra_space,
+ 				    GFP_NOIO | __GFP_NORETRY | __GFP_NOWARN);
+-		if (!checksums)
++		if (!checksums) {
+ 			checksums = checksums_onstack;
++			if (WARN_ON(extra_space &&
++				    digest_size > sizeof(checksums_onstack))) {
++				r = -EINVAL;
++				goto error;
++			}
++		}
+ 
+ 		__bio_for_each_segment(bv, bio, iter, dio->orig_bi_iter) {
+ 			unsigned pos;
+@@ -1466,7 +1477,7 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
+ 				} while (++s < ic->sectors_per_block);
+ #ifdef INTERNAL_VERIFY
+ 				if (ic->internal_hash) {
+-					char checksums_onstack[max(crypto_shash_digestsize(ic->internal_hash), ic->tag_size)];
++					char checksums_onstack[max(HASH_MAX_DIGESTSIZE, MAX_TAG_SIZE)];
+ 
+ 					integrity_sector_checksum(ic, logical_sector, mem + bv.bv_offset, checksums_onstack);
+ 					if (unlikely(memcmp(checksums_onstack, journal_entry_tag(ic, je), ic->tag_size))) {
+@@ -1516,7 +1527,7 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
+ 				if (ic->internal_hash) {
+ 					unsigned digest_size = crypto_shash_digestsize(ic->internal_hash);
+ 					if (unlikely(digest_size > ic->tag_size)) {
+-						char checksums_onstack[digest_size];
++						char checksums_onstack[HASH_MAX_DIGESTSIZE];
+ 						integrity_sector_checksum(ic, logical_sector, (char *)js, checksums_onstack);
+ 						memcpy(journal_entry_tag(ic, je), checksums_onstack, ic->tag_size);
+ 					} else
+@@ -1937,7 +1948,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
+ 				    unlikely(from_replay) &&
+ #endif
+ 				    ic->internal_hash) {
+-					char test_tag[max(crypto_shash_digestsize(ic->internal_hash), ic->tag_size)];
++					char test_tag[max_t(size_t, HASH_MAX_DIGESTSIZE, MAX_TAG_SIZE)];
+ 
+ 					integrity_sector_checksum(ic, sec + ((l - j) << ic->sb->log2_sectors_per_block),
+ 								  (char *)access_journal_data(ic, i, l), test_tag);
+diff --git a/drivers/md/dm-verity-fec.c b/drivers/md/dm-verity-fec.c
+index 684af08d0747..0ce04e5b4afb 100644
+--- a/drivers/md/dm-verity-fec.c
++++ b/drivers/md/dm-verity-fec.c
+@@ -212,12 +212,15 @@ static int fec_read_bufs(struct dm_verity *v, struct dm_verity_io *io,
+ 	struct dm_verity_fec_io *fio = fec_io(io);
+ 	u64 block, ileaved;
+ 	u8 *bbuf, *rs_block;
+-	u8 want_digest[v->digest_size];
++	u8 want_digest[HASH_MAX_DIGESTSIZE];
+ 	unsigned n, k;
+ 
+ 	if (neras)
+ 		*neras = 0;
+ 
++	if (WARN_ON(v->digest_size > sizeof(want_digest)))
++		return -EINVAL;
++
+ 	/*
+ 	 * read each of the rsn data blocks that are part of the RS block, and
+ 	 * interleave contents to available bufs
+-- 
+2.17.1
