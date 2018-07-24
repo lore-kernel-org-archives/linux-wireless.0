@@ -1,132 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53680 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388030AbeGWRFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 13:05:12 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 7/9] ath9k: fix block-ack window tracking issues
-Date: Mon, 23 Jul 2018 18:02:58 +0200
-Message-Id: <20180723160300.58024-7-nbd@nbd.name> (sfid-20180723_180322_581169_2808318A)
-In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
-References: <20180723160300.58024-1-nbd@nbd.name>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:36970 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388993AbeGXUh4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 16:37:56 -0400
+Received: by mail-pg1-f194.google.com with SMTP id n7-v6so3581205pgq.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:30:00 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
+        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        alex.aring@gmail.com, stefan@datenfreihafen.org,
+        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
+        johannes@sipsolutions.net, jhs@mojatatu.com,
+        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
+        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
+        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
+        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
+Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-x25@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Subject: [PATCH PATCH net-next 18/18] net: remove blank lines at end of file
+Date: Tue, 24 Jul 2018 12:29:18 -0700
+Message-Id: <20180724192918.31165-19-sthemmin@microsoft.com> (sfid-20180724_213009_573829_8B31018F)
+In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
+References: <20180724192918.31165-1-sthemmin@microsoft.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that a buffer gets tracked as part of the block-ack window as
-soon as it's dequeued from the tid for the first time. Ensure that
-double calls to ath_tx_addto_baw (e.g. on retransmission) don't cause
-any issues.
+Several files have extra line at end of file.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 29 +++++++++++++++++----------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+ net/8021q/Makefile              | 1 -
+ net/Kconfig                     | 2 +-
+ net/core/neighbour.c            | 1 -
+ net/dns_resolver/dns_key.c      | 1 -
+ net/ieee802154/core.c           | 1 -
+ net/ieee802154/nl_policy.c      | 1 -
+ net/ipv4/Kconfig                | 4 ++--
+ net/ipv4/Makefile               | 2 +-
+ net/ipv6/Kconfig                | 2 +-
+ net/iucv/af_iucv.c              | 1 -
+ net/kcm/Kconfig                 | 1 -
+ net/kcm/kcmsock.c               | 1 -
+ net/mac80211/rc80211_minstrel.c | 1 -
+ 13 files changed, 5 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d366170f01cf..bae0f6c045e1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -62,7 +62,7 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
- 			     struct ath_tx_status *ts, int nframes, int nbad,
- 			     int txok);
- static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
--			      int seqno);
-+			      struct ath_buf *bf);
- static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 					   struct ath_txq *txq,
- 					   struct ath_atx_tid *tid,
-@@ -296,7 +296,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- 		}
- 
- 		if (fi->baw_tracked) {
--			ath_tx_update_baw(sc, tid, bf->bf_state.seqno);
-+			ath_tx_update_baw(sc, tid, bf);
- 			sendbar = true;
- 		}
- 
-@@ -312,10 +312,15 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+diff --git a/net/8021q/Makefile b/net/8021q/Makefile
+index 9b703454b93e..e05d4d7aab35 100644
+--- a/net/8021q/Makefile
++++ b/net/8021q/Makefile
+@@ -9,4 +9,3 @@ obj-$(CONFIG_VLAN_8021Q)		+= 8021q.o
+ 8021q-$(CONFIG_VLAN_8021Q_GVRP)		+= vlan_gvrp.o
+ 8021q-$(CONFIG_VLAN_8021Q_MVRP)		+= vlan_mvrp.o
+ 8021q-$(CONFIG_PROC_FS)			+= vlanproc.o
+-
+diff --git a/net/Kconfig b/net/Kconfig
+index f738a6f27665..228dfa382eec 100644
+--- a/net/Kconfig
++++ b/net/Kconfig
+@@ -12,7 +12,7 @@ menuconfig NET
+ 	  The reason is that some programs need kernel networking support even
+ 	  when running on a stand-alone machine that isn't connected to any
+ 	  other computer.
+-	  
++
+ 	  If you are upgrading from an older kernel, you
+ 	  should consider updating your networking tools too because changes
+ 	  in the kernel and the tools often go hand in hand. The tools are
+diff --git a/net/core/neighbour.c b/net/core/neighbour.c
+index cbe85d8d4cc2..aa19d86937af 100644
+--- a/net/core/neighbour.c
++++ b/net/core/neighbour.c
+@@ -3274,4 +3274,3 @@ static int __init neigh_init(void)
  }
  
- static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
--			      int seqno)
-+			      struct ath_buf *bf)
+ subsys_initcall(neigh_init);
+-
+diff --git a/net/dns_resolver/dns_key.c b/net/dns_resolver/dns_key.c
+index 0c9478b91fa5..7f4534828f6c 100644
+--- a/net/dns_resolver/dns_key.c
++++ b/net/dns_resolver/dns_key.c
+@@ -320,4 +320,3 @@ static void __exit exit_dns_resolver(void)
+ module_init(init_dns_resolver)
+ module_exit(exit_dns_resolver)
+ MODULE_LICENSE("GPL");
+-
+diff --git a/net/ieee802154/core.c b/net/ieee802154/core.c
+index cb7176cd4cd6..fe225d9a1877 100644
+--- a/net/ieee802154/core.c
++++ b/net/ieee802154/core.c
+@@ -400,4 +400,3 @@ module_exit(wpan_phy_class_exit);
+ MODULE_LICENSE("GPL v2");
+ MODULE_DESCRIPTION("IEEE 802.15.4 configuration interface");
+ MODULE_AUTHOR("Dmitry Eremin-Solenikov");
+-
+diff --git a/net/ieee802154/nl_policy.c b/net/ieee802154/nl_policy.c
+index 35c432668454..78f6f1233194 100644
+--- a/net/ieee802154/nl_policy.c
++++ b/net/ieee802154/nl_policy.c
+@@ -75,4 +75,3 @@ const struct nla_policy ieee802154_policy[IEEE802154_ATTR_MAX + 1] = {
+ 	[IEEE802154_ATTR_LLSEC_DEV_OVERRIDE] = { .type = NLA_U8, },
+ 	[IEEE802154_ATTR_LLSEC_DEV_KEY_MODE] = { .type = NLA_U8, },
+ };
+-
+diff --git a/net/ipv4/Kconfig b/net/ipv4/Kconfig
+index 80dad301361d..32cae39cdff6 100644
+--- a/net/ipv4/Kconfig
++++ b/net/ipv4/Kconfig
+@@ -430,7 +430,7 @@ config INET_DIAG
+ 	  Support for INET (TCP, DCCP, etc) socket monitoring interface used by
+ 	  native Linux tools such as ss. ss is included in iproute2, currently
+ 	  downloadable at:
+-	  
++
+ 	    http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+ 
+ 	  If unsure, say Y.
+@@ -600,7 +600,7 @@ config TCP_CONG_VENO
+ 	distinguishing to circumvent the difficult judgment of the packet loss
+ 	type. TCP Veno cuts down less congestion window in response to random
+ 	loss packets.
+-	See <http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1177186> 
++	See <http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1177186>
+ 
+ config TCP_CONG_YEAH
+ 	tristate "YeAH TCP"
+diff --git a/net/ipv4/Makefile b/net/ipv4/Makefile
+index eec9569ffa5c..7446b98661d8 100644
+--- a/net/ipv4/Makefile
++++ b/net/ipv4/Makefile
+@@ -43,7 +43,7 @@ obj-$(CONFIG_INET_XFRM_MODE_TRANSPORT) += xfrm4_mode_transport.o
+ obj-$(CONFIG_INET_XFRM_MODE_TUNNEL) += xfrm4_mode_tunnel.o
+ obj-$(CONFIG_IP_PNP) += ipconfig.o
+ obj-$(CONFIG_NETFILTER)	+= netfilter.o netfilter/
+-obj-$(CONFIG_INET_DIAG) += inet_diag.o 
++obj-$(CONFIG_INET_DIAG) += inet_diag.o
+ obj-$(CONFIG_INET_TCP_DIAG) += tcp_diag.o
+ obj-$(CONFIG_INET_UDP_DIAG) += udp_diag.o
+ obj-$(CONFIG_INET_RAW_DIAG) += raw_diag.o
+diff --git a/net/ipv6/Kconfig b/net/ipv6/Kconfig
+index b3885ca22d6f..613282c65a10 100644
+--- a/net/ipv6/Kconfig
++++ b/net/ipv6/Kconfig
+@@ -15,7 +15,7 @@ menuconfig IPV6
+ 	  Documentation/networking/ipv6.txt and read the HOWTO at
+ 	  <http://www.tldp.org/HOWTO/Linux+IPv6-HOWTO/>
+ 
+-	  To compile this protocol support as a module, choose M here: the 
++	  To compile this protocol support as a module, choose M here: the
+ 	  module will be called ipv6.
+ 
+ if IPV6
+diff --git a/net/iucv/af_iucv.c b/net/iucv/af_iucv.c
+index 893a022f9620..8d1c43f8fed4 100644
+--- a/net/iucv/af_iucv.c
++++ b/net/iucv/af_iucv.c
+@@ -2515,4 +2515,3 @@ MODULE_DESCRIPTION("IUCV Sockets ver " VERSION);
+ MODULE_VERSION(VERSION);
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_NETPROTO(PF_IUCV);
+-
+diff --git a/net/kcm/Kconfig b/net/kcm/Kconfig
+index 87fca36e6c47..9ca83f2ade6f 100644
+--- a/net/kcm/Kconfig
++++ b/net/kcm/Kconfig
+@@ -8,4 +8,3 @@ config AF_KCM
+ 	  KCM (Kernel Connection Multiplexor) sockets provide a method
+ 	  for multiplexing messages of a message based application
+ 	  protocol over kernel connectons (e.g. TCP connections).
+-
+diff --git a/net/kcm/kcmsock.c b/net/kcm/kcmsock.c
+index d3601d421571..571d824e4e24 100644
+--- a/net/kcm/kcmsock.c
++++ b/net/kcm/kcmsock.c
+@@ -2104,4 +2104,3 @@ module_exit(kcm_exit);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_NETPROTO(PF_KCM);
+-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 76048b53c5b2..07fb219327d6 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -751,4 +751,3 @@ rc80211_minstrel_exit(void)
  {
-+	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
-+	u16 seqno = bf->bf_state.seqno;
- 	int index, cindex;
- 
-+	if (!fi->baw_tracked)
-+		return;
-+
- 	index  = ATH_BA_INDEX(tid->seq_start, seqno);
- 	cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
- 
-@@ -336,6 +341,9 @@ static void ath_tx_addto_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	u16 seqno = bf->bf_state.seqno;
- 	int index, cindex;
- 
-+	if (fi->baw_tracked)
-+		return;
-+
- 	index  = ATH_BA_INDEX(tid->seq_start, seqno);
- 	cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
- 	__set_bit(cindex, tid->tx_buf);
-@@ -612,7 +620,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			 * complete the acked-ones/xretried ones; update
- 			 * block-ack window
- 			 */
--			ath_tx_update_baw(sc, tid, seqno);
-+			ath_tx_update_baw(sc, tid, bf);
- 
- 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
- 				memcpy(tx_info->control.rates, rates, sizeof(rates));
-@@ -642,7 +650,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				 * run out of tx buf.
- 				 */
- 				if (!tbf) {
--					ath_tx_update_baw(sc, tid, seqno);
-+					ath_tx_update_baw(sc, tid, bf);
- 
- 					ath_tx_complete_buf(sc, bf, txq,
- 							    &bf_head, NULL, ts,
-@@ -1011,11 +1019,14 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 
- 			INIT_LIST_HEAD(&bf_head);
- 			list_add(&bf->list, &bf_head);
--			ath_tx_update_baw(sc, tid, seqno);
-+			ath_tx_update_baw(sc, tid, bf);
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, NULL, &ts, 0);
- 			continue;
- 		}
- 
-+		if (bf_isampdu(bf))
-+			ath_tx_addto_baw(sc, tid, bf);
-+
- 		return bf;
- 	}
- 
-@@ -1073,8 +1084,6 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		bf->bf_next = NULL;
- 
- 		/* link buffers of this frame to the aggregate */
--		if (!fi->baw_tracked)
--			ath_tx_addto_baw(sc, tid, bf);
- 		bf->bf_state.ndelim = ndelim;
- 
- 		list_add_tail(&bf->list, bf_q);
-@@ -1710,10 +1719,8 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 			ath9k_set_moredata(sc, bf, true);
- 			list_add_tail(&bf->list, &bf_q);
- 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
--			if (bf_isampdu(bf)) {
--				ath_tx_addto_baw(sc, tid, bf);
-+			if (bf_isampdu(bf))
- 				bf->bf_state.bf_type &= ~BUF_AGGR;
--			}
- 			if (bf_tail)
- 				bf_tail->bf_next = bf;
- 
+ 	ieee80211_rate_control_unregister(&mac80211_minstrel);
+ }
+-
 -- 
-2.17.0
+2.18.0
