@@ -1,54 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43588 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753547AbeGEJp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:57 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 17/27] mtd: rawnand: fsmc: Allow selection of this driver when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:12 +0200
-Message-Id: <20180705094522.12138-18-boris.brezillon@bootlin.com> (sfid-20180705_114625_285275_C22256B3)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:42741 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388424AbeGXIt6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 04:49:58 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Gidon Studinski <gidons@codeaurora.org>
+Subject: [PATCH v2 05/19] wil6210: fix RX checksum report to network stack
+Date: Tue, 24 Jul 2018 10:44:26 +0300
+Message-Id: <1532418280-5849-6-git-send-email-merez@codeaurora.org> (sfid-20180724_094511_546019_D03A81D8)
+In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having PLAT_SPEAR, ARCH_NOMADIK,
-ARCH_U8500 or MACH_U300 enabled.
+Currently the driver sets CHECKSUM_UNNECESSARY only in case the HW
+doesn't report checksum error.
+As ip_summed value is not initialized it is not clear what
+the driver will report to the network stack in case of HW checksum
+error or in case HW doesn't calculate checksum.
+Initialize ip_summed to CHECKSUM_NONE to guarantee checksum
+calculation by the network stack in the above cases.
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
-
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/mtd/nand/raw/Kconfig | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c   | 5 +++--
+ drivers/net/wireless/ath/wil6210/txrx.c      | 8 ++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 8 ++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h   | 1 +
+ 4 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index b89bd94a654c..245f1b56b94f 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -502,8 +502,9 @@ config MTD_NAND_JZ4780
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4356b32..f2eab39 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1736,10 +1736,11 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 				   p->stats.rx_large_frame,
+ 				   p->stats.rx_replay);
+ 			seq_printf(s,
+-				   "mic error %lu, key error %lu, amsdu error %lu\n",
++				   "mic error %lu, key error %lu, amsdu error %lu, csum error %lu\n",
+ 				   p->stats.rx_mic_error,
+ 				   p->stats.rx_key_error,
+-				   p->stats.rx_amsdu_error);
++				   p->stats.rx_amsdu_error,
++				   p->stats.rx_csum_err);
  
- config MTD_NAND_FSMC
- 	tristate "Support for NAND on ST Micros FSMC"
--	depends on OF
--	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300
-+	depends on OF && HAS_IOMEM
-+	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300 || \
-+		   COMPILE_TEST
- 	help
- 	  Enables support for NAND Flash chips on the ST Microelectronics
- 	  Flexible Static Memory Controller (FSMC)
+ 			seq_puts(s, "Rx/MCS:");
+ 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 6707af6..6a7943e 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -281,6 +281,12 @@ static int wil_vring_alloc_skb(struct wil6210_priv *wil, struct wil_ring *vring,
+ 	skb_reserve(skb, headroom);
+ 	skb_put(skb, sz);
+ 
++	/**
++	 * Make sure that the network stack calculates checksum for packets
++	 * which failed the HW checksum calculation
++	 */
++	skb->ip_summed = CHECKSUM_NONE;
++
+ 	pa = dma_map_single(dev, skb->data, skb->len, DMA_FROM_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev, pa))) {
+ 		kfree_skb(skb);
+@@ -569,6 +575,8 @@ static struct sk_buff *wil_vring_reap_rx(struct wil6210_priv *wil,
+ 		 * mis-calculates TCP checksum - if it should be 0x0,
+ 		 * it writes 0xffff in violation of RFC 1624
+ 		 */
++		else
++			stats->rx_csum_err++;
+ 	}
+ 
+ 	if (snaplen) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 2ea9767..9ef2b66 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -182,6 +182,12 @@ static int wil_ring_alloc_skb_edma(struct wil6210_priv *wil,
+ 
+ 	skb_put(skb, sz);
+ 
++	/**
++	 * Make sure that the network stack calculates checksum for packets
++	 * which failed the HW checksum calculation
++	 */
++	skb->ip_summed = CHECKSUM_NONE;
++
+ 	pa = dma_map_single(dev, skb->data, skb->len, DMA_FROM_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev, pa))) {
+ 		kfree_skb(skb);
+@@ -847,6 +853,8 @@ static int wil_rx_error_check_edma(struct wil6210_priv *wil,
+ 	 * mis-calculates TCP checksum - if it should be 0x0,
+ 	 * it writes 0xffff in violation of RFC 1624
+ 	 */
++	else
++		stats->rx_csum_err++;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 1a7a1ad..b06cba5 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -565,6 +565,7 @@ struct wil_net_stats {
+ 	unsigned long	rx_mic_error;
+ 	unsigned long	rx_key_error; /* eDMA specific */
+ 	unsigned long	rx_amsdu_error; /* eDMA specific */
++	unsigned long	rx_csum_err;
+ 	u16 last_mcs_rx;
+ 	u64 rx_per_mcs[WIL_MCS_MAX + 1];
+ };
 -- 
-2.14.1
+1.9.1
