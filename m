@@ -1,72 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:36592 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730204AbeG0NzV (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:33138 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388510AbeGXIuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 09:55:21 -0400
-Received: by mail-qt0-f195.google.com with SMTP id t5-v6so4816865qtn.3
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2018 05:33:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <6715f59dc8e834cddd701c6f9ee9f344@codeaurora.org>
-References: <1532589677-16428-1-git-send-email-wgong@codeaurora.org>
- <1532589677-16428-3-git-send-email-wgong@codeaurora.org> <87zhye1aqg.fsf@toke.dk>
- <CABvG-CVwRyeD5=0HqTyNQPVOV1iPtAT_GJQSmSH4=DdDca6dYw@mail.gmail.com> <6715f59dc8e834cddd701c6f9ee9f344@codeaurora.org>
-From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-Date: Fri, 27 Jul 2018 14:33:35 +0200
-Message-ID: <CABvG-CUpcK=NbC1DaNw330W4YKwH7vb0ZFwPeWt20ODUa+QyXQ@mail.gmail.com> (sfid-20180727_143340_362759_4A12ECAF)
-Subject: Re: [PATCH 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-To: Wen Gong <wgong@codeaurora.org>
-Cc: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        ath10k@lists.infradead.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 24 Jul 2018 04:50:10 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ahmad Masri <amasri@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 17/19] wil6210: off channel transmit management frames in AP mode
+Date: Tue, 24 Jul 2018 10:44:38 +0300
+Message-Id: <1532418280-5849-18-git-send-email-merez@codeaurora.org> (sfid-20180724_100226_644217_4905BA25)
+In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 July 2018 at 11:39, Wen Gong <wgong@codeaurora.org> wrote:
-> On 2018-07-26 21:02, Micha=C5=82 Kazior wrote:
->>
->> On 26 July 2018 at 13:45, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk=
-> wrote:
->>>
->>> Wen Gong <wgong@codeaurora.org> writes:
->>>
->>>> Upstream kernel has an interface to help adjust sk_pacing_shift to hel=
-p
->>>> improve TCP UL throughput.
->>>> The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
->>>> WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
->>>> VHT80 TCP UL throughput testing result shows 6 is the optimal.
->>>> Overwrite the sk_pacing_shift to 6 in ath10k driver.
->>>
->>>
->>> When I tested this, a pacing shift of 8 was quite close to optimal as
->>> well for ath10k. Why are you getting different results?
->>>
->>>> Tested with QCA6174 PCI with firmware
->>>> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI=
-.
->>>> It's not a regression with new firmware releases.
->>>>
->>>> There have 2 test result of different settings:
->>>>
->>>> ARM CPU based device with QCA6174A PCI with different
->>>> sk_pacing_shift:
->>
->>
->> Different firmware releases have different tx buffering
->> characteristics. In some 10.2 firmware running on QCA9888 you can have
->> up to 5ms of delayed aggregation. Ideally sk_pacing_shift should be
->> adjusted per firmware release. Maybe this should become part of the
->> ath10k firmware wrapping "fw features" stuff?
->>
-> recently we do not want to do like this since no test data for each
-> firmware.
+From: Ahmad Masri <amasri@codeaurora.org>
 
-All the more reason to *not* change the pacing shift from 8 to 6 for
-entire ath10k because you have no idea what impact that is going to
-have on other chips/firmwares, e.g. QCA4019, QCA9888X, QCA9984.
+Currently wil6210 ignores the channel field in the
+cfg80211_mgmt_tx_params struct for wil_cfg80211_ops mgmt_tx operation
+and sends all management frames on the serving channel.
 
+Add support for off-channel transmission of management frames
+(WIPHY_FLAG_OFFCHAN_TX) in AP mode. This is useful in enterprise APs
+for sending custom probe request frames.
 
-Micha=C5=82
+Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 47 ++++++++++++++++++++----
+ drivers/net/wireless/ath/wil6210/main.c     |  3 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 ++
+ drivers/net/wireless/ath/wil6210/wmi.c      | 56 +++++++++++++++++++++++++++++
+ 4 files changed, 101 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 80975c4..b240e78 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1090,18 +1090,51 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	int rc;
+ 	bool tx_status;
+ 
+-	/* Note, currently we do not support the "wait" parameter, user-space
+-	 * must call remain_on_channel before mgmt_tx or listen on a channel
+-	 * another way (AP/PCP or connected station)
+-	 * in addition we need to check if specified "chan" argument is
+-	 * different from currently "listened" channel and fail if it is.
++	wil_dbg_misc(wil, "mgmt_tx: channel %d offchan %d, wait %d\n",
++		     params->chan ? params->chan->hw_value : -1,
++		     params->offchan,
++		     params->wait);
++
++	/* Note, currently we support the "wait" parameter only on AP mode.
++	 * In other modes, user-space must call remain_on_channel before
++	 * mgmt_tx or listen on a channel other than active one.
+ 	 */
+ 
+-	rc = wmi_mgmt_tx(vif, buf, len);
+-	tx_status = (rc == 0);
++	if (params->chan && params->chan->hw_value == 0) {
++		wil_err(wil, "invalid channel\n");
++		return -EINVAL;
++	}
++
++	if (wdev->iftype != NL80211_IFTYPE_AP) {
++		wil_dbg_misc(wil,
++			     "send WMI_SW_TX_REQ_CMDID on non-AP interfaces\n");
++		rc = wmi_mgmt_tx(vif, buf, len);
++		goto out;
++	}
+ 
++	if (!params->chan || params->chan->hw_value == vif->channel) {
++		wil_dbg_misc(wil,
++			     "send WMI_SW_TX_REQ_CMDID for on-channel\n");
++		rc = wmi_mgmt_tx(vif, buf, len);
++		goto out;
++	}
++
++	if (params->offchan == 0) {
++		wil_err(wil,
++			"invalid channel params: current %d requested %d, off-channel not allowed\n",
++			vif->channel, params->chan->hw_value);
++		return -EBUSY;
++	}
++
++	/* use the wmi_mgmt_tx_ext only on AP mode and off-channel */
++	rc = wmi_mgmt_tx_ext(vif, buf, len, params->chan->hw_value,
++			     params->wait);
++
++out:
++	tx_status = (rc == 0);
+ 	cfg80211_mgmt_tx_status(wdev, cookie ? *cookie : 0, buf, len,
+ 				tx_status, GFP_KERNEL);
++
+ 	return rc;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 64de679..7ad22df 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1130,6 +1130,9 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ 		wiphy->max_sched_scan_plans = WMI_MAX_PLANS_NUM;
+ 	}
+ 
++	if (test_bit(WMI_FW_CAPABILITY_TX_REQ_EXT, wil->fw_capabilities))
++		wiphy->flags |= WIPHY_FLAG_OFFCHAN_TX;
++
+ 	if (wil->platform_ops.set_features) {
+ 		features = (test_bit(WMI_FW_CAPABILITY_REF_CLOCK_CONTROL,
+ 				     wil->fw_capabilities) &&
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 542075d..9fc51f7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1350,6 +1350,8 @@ int wmi_start_sched_scan(struct wil6210_priv *wil,
+ 			 struct cfg80211_sched_scan_request *request);
+ int wmi_stop_sched_scan(struct wil6210_priv *wil);
+ int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len);
++int wmi_mgmt_tx_ext(struct wil6210_vif *vif, const u8 *buf, size_t len,
++		    u8 channel, u16 duration_ms);
+ 
+ int reverse_memcmp(const void *cs, const void *ct, size_t count);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 45a71fd..42c02a2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -466,6 +466,8 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_CFG_DEF_RX_OFFLOAD_CMD";
+ 	case WMI_LINK_STATS_CMDID:
+ 		return "WMI_LINK_STATS_CMD";
++	case WMI_SW_TX_REQ_EXT_CMDID:
++		return "WMI_SW_TX_REQ_EXT_CMDID";
+ 	default:
+ 		return "Untracked CMD";
+ 	}
+@@ -3114,6 +3116,60 @@ int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len)
+ 	return rc;
+ }
+ 
++int wmi_mgmt_tx_ext(struct wil6210_vif *vif, const u8 *buf, size_t len,
++		    u8 channel, u16 duration_ms)
++{
++	size_t total;
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
++	struct wmi_sw_tx_req_ext_cmd *cmd;
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_sw_tx_complete_event evt;
++	} __packed evt = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++	int rc;
++
++	wil_dbg_wmi(wil, "mgmt_tx_ext mid %d channel %d duration %d\n",
++		    vif->mid, channel, duration_ms);
++	wil_hex_dump_wmi("mgmt_tx_ext frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
++			 len, true);
++
++	if (len < sizeof(struct ieee80211_hdr_3addr)) {
++		wil_err(wil, "short frame. len %zu\n", len);
++		return -EINVAL;
++	}
++
++	total = sizeof(*cmd) + len;
++	if (total < len) {
++		wil_err(wil, "mgmt_tx_ext invalid len %zu\n", len);
++		return -EINVAL;
++	}
++
++	cmd = kzalloc(total, GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
++	cmd->len = cpu_to_le16(len);
++	memcpy(cmd->payload, buf, len);
++	cmd->channel = channel - 1;
++	cmd->duration_ms = cpu_to_le16(duration_ms);
++
++	rc = wmi_call(wil, WMI_SW_TX_REQ_EXT_CMDID, vif->mid, cmd, total,
++		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
++	if (!rc && evt.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "mgmt_tx_ext failed with status %d\n",
++			evt.evt.status);
++		rc = -EINVAL;
++	}
++
++	kfree(cmd);
++
++	return rc;
++}
++
+ int wil_wmi_tx_sring_cfg(struct wil6210_priv *wil, int ring_id)
+ {
+ 	int rc;
+-- 
+1.9.1
