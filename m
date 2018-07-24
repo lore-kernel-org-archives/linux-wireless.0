@@ -1,80 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr00094.outbound.protection.outlook.com ([40.107.0.94]:37232
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731046AbeGRQ3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jul 2018 12:29:31 -0400
-From: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>
-To: Ben Greear <greearb@candelatech.com>, SEDE <s.deronne@televic.com>,
-        Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Setting tx retry count in ath10k
-Date: Wed, 18 Jul 2018 15:50:56 +0000
-Message-ID: <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180718_175103_685912_A0005D30)
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
- <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
- <8b9713fe-7573-f009-d002-13df73315898@televic.com>
- <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com>
-In-Reply-To: <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail.bugwerft.de ([46.23.86.59]:56724 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388302AbeGXKAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jul 2018 06:00:17 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>,
+        devicetree@vger.kernel.org
+Subject: [PATCH v2 10/10] NFC: st95hf: add of match table
+Date: Tue, 24 Jul 2018 10:54:26 +0200
+Message-Id: <20180724085426.23999-11-daniel@zonque.org> (sfid-20180724_105458_830537_7DFA683D)
+In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
+References: <20180724085426.23999-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCldlIG1hZGUgcmV0cmllcyBjb25maWd1cmFibGUgaW4gb3VyIG1hYzgwMjExK2F0aDlr
-IHN5c3RlbSwgYW5kIHdlIGVuZGVkIHdpdGggMyBjb3VudHM6DQoxKSBzaG9ydCByZXRyeSBjb3Vu
-dCwgZGVmYXVsdHMgdG8gNA0KMikgbG9uZyByZXRyeXMgY291bnQsIGRlZmF1dHMgdG8gNw0KMykg
-c29mdHdhcmUgcmV0cnkgY291bnQsIGRlZmF1bHRzIHRvIDMwDQpUaGlzIGxhc3Qgb25lIGlzIHVz
-ZWQgc2VwYXJhdGVseSBmb3IgZWFjaCBmcmFtZSBpbiBhbiBhZ2dyZWdhdGVkIGZyYW1lLCBzaW5j
-ZSB0aGV5IGNhbiBiZSBzZXBhcmF0ZWx5IGFja25vd2xlZGdlZC4NCg0KUmVnYXJkcywNCkplYW4t
-UGllcnJlDQoNCj4gLS0tLS1NZXNzYWdlIGQnb3JpZ2luZS0tLS0tDQo+IERlwqA6IGxpbnV4LXdp
-cmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLW93bmVy
-QHZnZXIua2VybmVsLm9yZ10gRGUgbGEgcGFydCBkZQ0KPiBCZW4gR3JlZWFyDQo+IEVudm95w6nC
-oDogbWFyZGkgMTcganVpbGxldCAyMDE4IDE3OjA4DQo+IMOAwqA6IFNFREU7IEJlbmphbWluIEJl
-aWNobGVyOyBhdGgxMGs7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBPYmpldMKg
-OiBSZTogU2V0dGluZyB0eCByZXRyeSBjb3VudCBpbiBhdGgxMGsNCj4gDQo+IA0KPiANCj4gT24g
-MDcvMTcvMjAxOCAxMjo1NiBBTSwgU0VERSB3cm90ZToNCj4gPiBIaSwNCj4gPg0KPiA+IEluIHRo
-ZSBzdGFuZGFyZCwgNyBpcyB0aGUgZGVmYXVsdCBmb3IgdGhlIHNob3J0IHJldHJ5IGNvdW50LCA0
-IGlzIHdlbGwgdGhlIGRlZmF1bHQgZm9yIGxvbmcgcmV0cnkNCj4gY291bnQuDQo+ID4NCj4gPiBJ
-biBhdGgxMGssIHRoZXJlIGlzIGFsc28gbm9uX2FnZ19zd19yZXRyeV90aCB0byBjb250cm9sIHRo
-aXMsIHdpbGwgdGhpcyBzdGlsbCBiZSB1c2VkPw0KPiA+IE9yIHdoYXQgaXMgdGhlIGRpZmZlcmVu
-Y2Ugd2l0aCByY19udW1fcmV0cmllcz8NCj4gPg0KPiA+IEtpbmQgcmVnYXJkcywNCj4gPiBTw6li
-YXN0aWVuLg0KPiANCj4gVGhlIGF0aDEwayBmaXJtd2FyZSBoYXMgbm8gaWRlYSBvZiBsb25nIHZz
-IHNob3J0IHJldHJpZXMsIHNvIEkganVzdCB1c2VkIHRoZQ0KPiBsb25nIHNldHRpbmcuDQo+IA0K
-PiBJIHdpbGwgaW52ZXN0aWdhdGUgdGhhdCBub25fYWdnX3N3X3JldHJ5X3RoIGFzIHdlbGwsIGFu
-ZCBJIGRpZCBub3RpY2UgbXkgd2F2ZS0xDQo+IGZpcm13YXJlIChhdCBsZWFzdCkgdXNlcyAxNSBy
-ZXRyaWVzIGZvciBzZWxmLWdlbmVyYXRlZCBmcmFtZXMuICBCdXQsIGluIG15IGNhc2UsDQo+IHRo
-b3NlIHNlbGYtZ2VuIGZyYW1lcyBhcmUgbm90IG11Y2ggdXNlZCBhbnl3YXkgc2luY2UgSSBkaXNh
-YmxlIGZpcm13YXJlIGtlZXAtYWxpdmUuDQo+IA0KPiBBbmQsIEkgbmVlZCB0byBzZWUgaG93IHRo
-ZSBtYWM4MDIxMSBzdGFjayBoYW5kbGVzIGl0cyBvd24gcmV0cmllcyB3aGVuIHdvcmtpbmcNCj4g
-d2l0aCBhdGgxMGsuDQo+IA0KPiBUaGFua3MsDQo+IEJlbg0KPiANCj4gPg0KPiA+DQo+ID4gT24g
-MjAxOC0wNy0xNyAwOTozOSwgQmVuamFtaW4gQmVpY2hsZXIgd3JvdGU6DQo+ID4+IEhpLA0KPiA+
-Pg0KPiA+PiBBbSAxNy4wNy4yMDE4IHVtIDAyOjM3IHNjaHJpZWIgQmVuIEdyZWVhcjoNCj4gPj4+
-IEkgc3BlbnQgYSBiaXQgb2YgdGltZSBsb29raW5nIGludG8gc2V0dGluZyB0aGUgdHggcmV0cnkg
-Y291bnQgaW4NCj4gPj4+IGF0aDEwayAod2F2ZS0xIGZpcm13YXJlKS4gIFRoZSBmaXJtd2FyZSBo
-YXMgc3VwcG9ydCBmb3Igc2V0dGluZyB0aGlzIGFzDQo+ID4+PiBhIHZkZXYgcGFyYW1ldGVyLCBh
-bmQgaXQgZGVmYXVsdHMgdG8gJzInLCBhdCBsZWFzdCBpbiBteSB3YXZlLTEgZmlybXdhcmUuDQo+
-ID4+Pg0KPiA+Pj4gSSBlbmFibGVkIHByb3BhZ2F0aW5nIHRoZSBzZXR0aW5nIGZyb20gbWFjODAy
-MTEsIGllOg0KPiA+Pj4gaXcgcGh5IHdpcGh5MCBzZXQgcmV0cnkgc2hvcnQgMiBsb25nIDINCj4g
-Pj4+DQo+ID4+PiBBbmQgd2hpbGUgZGVidWdnaW5nIHRoaXMsIEkgbm90aWNlZCB0aGF0IG1hYzgw
-MjExIGhhcyBhIGRlZmF1bHQgb2YNCj4gPj4+IDQsIGJ1dCB0aGUgYXRoMTBrIGZpcm13YXJlIGhh
-cyBhIGRlZmF1bHQgb2YgMi4gIE5vdywgSSBhbSBub3Qgc3VyZQ0KPiA+Pj4gaWYgSSBzaG91bGQg
-ZW5hYmxlIHNldHRpbmcgdGhlIHJldHJ5IGNvdW50IHNpbmNlIGl0IHdpbGwgY2hhbmdlDQo+ID4+
-PiB0aGUgYmVoYXZpb3VyIGV2ZW4gaWYgdXNlcnMgZG9uJ3Qgc2V0IGFueXRoaW5nLg0KPiA+Pj4N
-Cj4gPj4gTWF5YmUgSSdtIHdyb25nLCBidXQgSSBoYXZlIGluIG1pbmQsIHRoYXQgNyByZXRyaWVz
-IGlzIHRoZSBkZWZhdWx0DQo+ID4+IHNldHRpbmcgb2YgbWFjODAyMTEuIEFsdGhvdWdoIDIgb3Ig
-ZXZlbiA0IHNlZW1zIHRvIGJlIHByZXR0eSBsb3cgZm9yIHRoZQ0KPiA+PiBvdmVyYWxsIHJldHJ5
-IGNvdW50LCBzbyBtYXliZSB0aGUgdmFsdWVzIGFyZSBzb21laG93IGNoYW5nZWQgaW4gdGhlDQo+
-ID4+IGZpcm13YXJlPyBGcm9tIG91ciBleHBlcmltZW50cyB3ZSBrbm93IChhdCBsZWFzdCBmb3Ig
-ODAyLjExbikgeW91IG5lZWQNCj4gPj4gZm9yIG5vcm1hbCBvcGVyYXRpb24gYSByZXRyeSBjb3Vu
-dCBvZiBzb21ldGhpbmcgYmV0d2VlbiA1IC0gOSwgYnV0DQo+ID4+IHNvbWV0aW1lcyBhbHNvIDEy
-IG9yIDE1IGlzIGJlbmVmaWNpYWwuDQo+ID4+DQo+ID4+IFdlIHVzZSBmb3Igb3VyIGV4cGVyaW1l
-bnRhbCBzZXR1cCBtYWlubHkgYXRoOWsgY2FyZHMgYW5kIHJ0Mjh4eCBuaWNzLA0KPiA+PiBhbmQg
-d2l0aCB0aGVtIHlvdSBuZWVkIGRlZmluaXRlbHkgbW9yZSByZXRyaWVzLg0KPiA+Pg0KPiA+PiBO
-b25ldGhlbGVzcywgSSBkb24ndCB0aGluayB0aGUgY2hhbmdlIGZyb20gMiB0byA0IGRvZXMgcmVh
-bGx5IGFmZmVjdCB0aGUNCj4gPj4gYmVoYXZpb3IgaW4gYSBuZWdhdGl2ZSB3YXkgKGlmIGl0IHdv
-cmtzIGFzIGV4cGVjdGVkKS4NCj4gPj4NCj4gPj4+IEFueSBvcGluaW9ucyBvbiB0aGlzPw0KPiA+
-Pj4NCj4gPj4+IFRoYW5rcywNCj4gPj4+IEJlbg0KPiA+Pj4NCj4gPg0KPiANCj4gLS0NCj4gQmVu
-IEdyZWVhciA8Z3JlZWFyYkBjYW5kZWxhdGVjaC5jb20+DQo+IENhbmRlbGEgVGVjaG5vbG9naWVz
-IEluYyAgaHR0cDovL3d3dy5jYW5kZWxhdGVjaC5jb20NCg==
+Add a match table for device tree compatible strings. Interestingly, a
+document describing the bindings already exists since a while, but users
+currently rely on the implicit matching in the drivers core. Let's be
+explicit and add a real match table.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Cc: devicetree@vger.kernel.org
+---
+ drivers/nfc/st95hf/core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 4db3c020921c..5a01b454fbc4 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -1012,6 +1012,12 @@ static const struct spi_device_id st95hf_id[] = {
+ };
+ MODULE_DEVICE_TABLE(spi, st95hf_id);
+ 
++static const struct of_device_id st95hf_of_match[] = {
++	{ .compatible = "st,st95hf", },
++	{}
++};
++MODULE_DEVICE_TABLE(of, st95hf_of_match);
++
+ static int st95hf_probe(struct spi_device *nfc_spi_dev)
+ {
+ 	int ret;
+@@ -1189,6 +1195,7 @@ static struct spi_driver st95hf_driver = {
+ 	.driver = {
+ 		.name = "st95hf",
+ 		.owner = THIS_MODULE,
++		.of_match_table = st95hf_of_match,
+ 	},
+ 	.id_table = st95hf_id,
+ 	.probe = st95hf_probe,
+-- 
+2.17.1
