@@ -1,106 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55676 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729982AbeGMR4W (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41874 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727564AbeGYGi5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 13:56:22 -0400
-Subject: Re: [PATCH] ath10k: fix vdev-start timeout on error
-To: =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
-References: <1531501683-32299-1-git-send-email-greearb@candelatech.com>
- <CABvG-CUdxFE8NiFfUKyeApm9dXqNWtGUWUBV1q8Fn3WF7zUnuQ@mail.gmail.com>
- <4f4470db-d044-ef1c-4cc9-aab6bbc812f4@candelatech.com>
- <CABvG-CUnHfxgUYVe4EVQRGbVSD4Nj9cWkYRJFBaACCurWqEUeA@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, kvalo@codeaurora.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <78726366-ac9e-41c6-ce51-b378ac3408ec@candelatech.com> (sfid-20180713_194048_979343_54A4EB3C)
-Date: Fri, 13 Jul 2018 10:40:43 -0700
+        Wed, 25 Jul 2018 02:38:57 -0400
+Subject: Re: [PATCH] mac80211: add stations tied to AP_VLANs during hw
+ reconfig
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <1530526214-25086-1-git-send-email-mpubbise@codeaurora.org>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <5a9389cd-599b-e6bd-df75-cf3ccc06ff2c@codeaurora.org> (sfid-20180725_072900_853764_F442202A)
+Date: Wed, 25 Jul 2018 10:58:52 +0530
 MIME-Version: 1.0
-In-Reply-To: <CABvG-CUnHfxgUYVe4EVQRGbVSD4Nj9cWkYRJFBaACCurWqEUeA@mail.gmail.com>
+In-Reply-To: <1530526214-25086-1-git-send-email-mpubbise@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2018 10:37 AM, Michał Kazior wrote:
-> On 13 July 2018 at 19:21, Ben Greear <greearb@candelatech.com> wrote:
->> On 07/13/2018 10:17 AM, Michał Kazior wrote:
->>>
->>> On 13 July 2018 at 19:08,  <greearb@candelatech.com> wrote:
->>>>
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> The vdev-start-response message should cause the
->>>> completion to fire, even in the error case.  Otherwise,
->>>> the user still gets no useful information and everything
->>>> is blocked until the timeout period.
->>>>
->>>> Add some warning text to print out the invalid status
->>>> code to aid debugging.
->>>>
->>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath10k/wmi.c | 12 +++++++++---
->>>>  1 file changed, 9 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
->>>> b/drivers/net/wireless/ath/ath10k/wmi.c
->>>> index a60de71..ec4cd1e 100644
->>>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->>>> @@ -3443,12 +3443,18 @@ void ath10k_wmi_event_vdev_start_resp(struct
->>>> ath10k *ar, struct sk_buff *skb)
->>>>         ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
->>>>         if (ret) {
->>>>                 ath10k_warn(ar, "failed to parse vdev start event: %d\n",
->>>> ret);
->>>> -               return;
->>>> +               goto out;
->>>>         }
->>>>
->>>> -       if (WARN_ON(__le32_to_cpu(arg.status)))
->>>> -               return;
->>>> +       if (WARN_ON_ONCE(__le32_to_cpu(arg.status))) {
->>>> +               ath10k_warn(ar, "vdev-start-response reports status
->>>> error: %d\n",
->>>> +                           __le32_to_cpu(arg.status));
->>>> +               /* Setup is done one way or another though, so we should
->>>> still
->>>> +                * do the completion, so don't return here.
->>>> +                */
->>>> +       }
->>>>
->>>> +out:
->>>>         complete(&ar->vdev_setup_done);
->>>
->>>
->>> With this the waiter can no longer tell if vdev_start succeeded or
->>> not. It'll always think it succeeded even if arg.status or parsing
->>> failed. Waiter instead of erroring out will continue to play out happy
->>> scenario and may end up crashing firmware.
->>>
->>> Not stalling is nice, but I'd argue the status should be propagated
->>> back to the waiter so it can error-check.
->>
->>
->> So, maybe set ar->last_wmi_error = __le32_to_cpu(arg.status) before calling
->> the complete and change the code that waits for vdev_setup_done to check
->> that
->> error code?
->>
->> Or, maybe we need an error code specific to this call,
->> ar->last_wmi_vdev_start_status?
+
+
+On 7/2/2018 3:40 PM, Manikanta Pubbisetty wrote:
+> As part of hw reconfig, only stations linked to AP interfaces are added
+> back to the driver ignoring those which are tied to AP_VLAN interfaces.
 >
-> Tough call. I can't find any compelling argument to prefer one over
-> the other. Maybe last_wmi_error is a bit too generic?
+> It is true that there could be stations tied to the AP_VLAN interface while
+> serving 4addr clients or when using AP_VLAN for VLAN operations; we should
+> be adding these stations back to the driver as part of hw reconfig, failing
+> to do so can cause functional issues.
+>
+> In the case of ath10k driver, the following errors were observed.
+>
+> ath10k_pci : failed to install key for non-existent peer XX:XX:XX:XX:XX:XX
+> Workqueue: events_freezable ieee80211_restart_work [mac80211]
+> (unwind_backtrace) from (show_stack+0x10/0x14)
+> (show_stack) (dump_stack+0x80/0xa0)
+> (dump_stack) (warn_slowpath_common+0x68/0x8c)
+> (warn_slowpath_common) (warn_slowpath_null+0x18/0x20)
+> (warn_slowpath_null) (ieee80211_enable_keys+0x88/0x154 [mac80211])
+> (ieee80211_enable_keys) (ieee80211_reconfig+0xc90/0x19c8 [mac80211])
+> (ieee80211_reconfig]) (ieee80211_restart_work+0x8c/0xa0 [mac80211])
+> (ieee80211_restart_work) (process_one_work+0x284/0x488)
+> (process_one_work) (worker_thread+0x228/0x360)
+> (worker_thread) (kthread+0xd8/0xec)
+> (kthread) (ret_from_fork+0x14/0x24)
+>
+> Also while bringing down the AP VAP, WARN_ONs and errors related to peer
+> removal were observed.
+>
+> ath10k_pci : failed to clear all peer wep keys for vdev 0: -2
+> ath10k_pci : failed to disassociate station: 8c:fd:f0:0a:8c:f5 vdev 0: -2
+> (unwind_backtrace) (show_stack+0x10/0x14)
+> (show_stack) (dump_stack+0x80/0xa0)
+> (dump_stack) (warn_slowpath_common+0x68/0x8c)
+> (warn_slowpath_common) (warn_slowpath_null+0x18/0x20)
+> (warn_slowpath_null) (sta_set_sinfo+0xb98/0xc9c [mac80211])
+> (sta_set_sinfo [mac80211]) (__sta_info_flush+0xf0/0x134 [mac80211])
+> (__sta_info_flush [mac80211]) (ieee80211_stop_ap+0xe8/0x390 [mac80211])
+> (ieee80211_stop_ap [mac80211]) (__cfg80211_stop_ap+0xe0/0x3dc [cfg80211])
+> (__cfg80211_stop_ap [cfg80211]) (cfg80211_stop_ap+0x30/0x44 [cfg80211])
+> (cfg80211_stop_ap [cfg80211]) (genl_rcv_msg+0x274/0x30c)
+> (genl_rcv_msg) (netlink_rcv_skb+0x58/0xac)
+> (netlink_rcv_skb) (genl_rcv+0x20/0x34)
+> (genl_rcv) (netlink_unicast+0x11c/0x204)
+> (netlink_unicast) (netlink_sendmsg+0x30c/0x370)
+> (netlink_sendmsg) (sock_sendmsg+0x70/0x84)
+> (sock_sendmsg) (___sys_sendmsg.part.3+0x188/0x228)
+> (___sys_sendmsg.part.3) (__sys_sendmsg+0x4c/0x70)
+> (__sys_sendmsg) (ret_fast_syscall+0x0/0x44)
+>
+> These issues got fixed by adding the stations which are
+> tied to AP_VLANs back to the driver.
 
-I was thinking some actions might require multiple wmi calls, and so
-each one we track would need its own variable.
+Johannes,
 
-I'll implement it with a more specific error code and post a new patch.
+I see the status of this patch as "accepted" in patchwork but I could 
+not find the change in the master branch of mac80211-next.
+Some of my other recent changes are present in the master branch but not 
+this one.
+
+Here's the patchwork link,
+https://patchwork.kernel.org/patch/10500873/
+
+You too see the same problem?
 
 Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Manikanta
