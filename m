@@ -1,263 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.newmedia-net.de ([185.84.6.166]:54871 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727135AbeGaJYX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:24:23 -0400
-Subject: Re: ath9k and 16 VAP interfaces?
-To: Tom Psyborg <pozega.tomislav@gmail.com>,
-        Ben Greear <greearb@candelatech.com>
-Cc: Matthias May <matthias.may@neratec.com>, michael-dev@fami-braun.de,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <8ecda6f3-68ab-5752-c8de-4086d21ba309@candelatech.com>
- <EB834EF3-21B2-4E6F-BEA8-1411407310F0@fami-braun.de>
- <0896f150-13f8-daae-c956-f60a2f7feeaf@neratec.com>
- <b3a42b0c-4e8a-b1fe-56eb-74eb7e71deaf@candelatech.com>
- <CAKR_QVKz5dZeL6dfstmXA7eghKc=1PNPvKQH7Qvha9H0OehEJQ@mail.gmail.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <43c86d63-714b-8712-ca87-d249211666c3@dd-wrt.com> (sfid-20180731_094605_315118_7A30F84D)
-Date: Tue, 31 Jul 2018 09:45:19 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAKR_QVKz5dZeL6dfstmXA7eghKc=1PNPvKQH7Qvha9H0OehEJQ@mail.gmail.com>
-Content-Type: multipart/alternative;
- boundary="------------C56AC7D9B822261093AFCE16"
+Received: from mga06.intel.com ([134.134.136.31]:50492 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730370AbeGYXEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Jul 2018 19:04:04 -0400
+Message-ID: <c3c236249fc8fc270e7100ed30c15a4269ab3eae.camel@intel.com> (sfid-20180725_235041_423240_7D4C746E)
+Subject: Re: [PATCH v1 1/4] igb: Remove unnecessary include of
+ <linux/pci-aspm.h>
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 25 Jul 2018 14:52:42 -0700
+In-Reply-To: <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+         <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-+VSfdhnE7sUHGmR3FE95"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------C56AC7D9B822261093AFCE16
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-for standard ath9k. (non htc) the following is just enough
+--=-+VSfdhnE7sUHGmR3FE95
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Index: init.c
-===================================================================
---- init.c      (revision 4145)
-+++ init.c      (working copy)
-@@ -735,7 +735,7 @@
+On Wed, 2018-07-25 at 14:52 -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>=20
+> The igb driver doesn't need anything provided by pci-aspm.h, so
+> remove
+> the unnecessary include of it.
+>=20
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-  static const struct ieee80211_iface_limit if_limits[] = {
-         { .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) },
--       { .max = 8,     .types =
-+       { .max = 16,    .types =
-  #ifdef CPTCFG_MAC80211_MESH
-                                  BIT(NL80211_IFTYPE_MESH_POINT) |
-  #endif
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
+I am fine with you picking up this change.
 
-
-but for sure i havent tested it
+> ---
+>  drivers/net/ethernet/intel/igb/igb_main.c |    1 -
+>  1 file changed, 1 deletion(-)
 
 
-Am 30.07.2018 um 22:04 schrieb Tom Psyborg:
-> this is how i enabled it on htc target: 
-> https://github.com/torvalds/linux/pull/574
->
-> On 30 July 2018 at 16:34, Ben Greear <greearb@candelatech.com 
-> <mailto:greearb@candelatech.com>> wrote:
->
->
->
->     On 07/30/2018 04:13 AM, Matthias May wrote:
->
->         On 30/07/18 11:40, michael-dev@fami-braun.de
->         <mailto:michael-dev@fami-braun.de> wrote:
->
->             Do you mean AP interfaces as required for multiple BSS/SSIDs?
->
->             I'm running a patched ath9k to have hostapd run >8 BSS on
->             a single radio.
->             It works fine since years.
->
->
->     Yes, I'd love to see any patches you can share on this as well.
->
->     Thanks,
->     Ben
->
->
->
->             Regards,
->             M. Braun
->
->
->             Am 27. Juli 2018 15:35:28 MESZ schrieb Ben Greear
->             <greearb@candelatech.com <mailto:greearb@candelatech.com>>:
->
->                 Hello,
->
->                 Has anyone tried making ath9k able to support 16 vAP
->                 interfaces on a
->                 single
->                 radio?  I seem to recall that there were limitations
->                 regarding beacon
->                 timers and such, and that is why the current limit is 8?
->
->                 Thanks,
->                 Ben
->
->                 --
->                 Ben Greear <greearb@candelatech.com
->                 <mailto:greearb@candelatech.com>>
->                 Candela Technologies Inc http://www.candelatech.com
->
->
->
->         Are these patches available somewhere?
->         I'm interested to play with them :)
->
->         BR
->         Matthias
->
->
->     -- 
->     Ben Greear <greearb@candelatech.com <mailto:greearb@candelatech.com>>
->     Candela Technologies Inc http://www.candelatech.com
->
->
+--=-+VSfdhnE7sUHGmR3FE95
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
+-----BEGIN PGP SIGNATURE-----
 
---------------C56AC7D9B822261093AFCE16
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
+iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAltY8SoACgkQ5W/vlVpL
+7c5QqBAAn455TsS28QqR/CrkGJoIUp0zfp/vAMA3B9AJjIdFSdsA96CWo/87QBkI
+2NdDy6ngDXPe9DdtDsnrEUKjs45O109izsYAeW885BaxGYYLkhyf/W44FGwuhgpE
+ZZLMHlM5GbcxliTjkPRgEN2/5M2XZPG3w5GvvHlbqwzgbF/u3qbt/jPgcDPT0fFP
++eBRzSnMvGiUj1EujvtfFze3BeIQl3pPgAE+mPAgScCequz0VBeBO60kuG+LcmeU
+uGDudpDucZnGlQWzUYXLdpPtsijUuQvjGDAfR4RhF36pNZYwcu6qkH+Gg+grKpHO
+a3aD8qGF6lobKkKC4sCxxnDjUfbJ4AQN4XNlwso4UIdVR2dh2KjZjRhuj211IR4Y
+Q5VxboEgsW4+rKeOZzy8GAxc5Xd32Omg1DKgl7ALWDlnQPjd7enmYLSn138LHDHf
+vSu3H6CiKrUcdVp2PxdQz4FNpO5XqfEx28Gi7mtkTwWMXyjo6blERyBTeyeE2yBa
+wXwk/FcC/jAxXxaPRZYccPjhU2p0ZWwuyUtlqQ73HieP4SYQG9EsgbmEve2VBHGN
+31gDX5vzSIui+astEAxzwnFyDUINVNS9Dabbyhc9crn1aKcz2SML3h6Kh7fqThhl
+Cs1s5NwcECY2VLPRYTw8QTVqCrcztxxhrT5r4I/7Yz6D5NExMG4=
+=yzWc
+-----END PGP SIGNATURE-----
 
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <p>for standard ath9k. (non htc) the following is just enough</p>
-    <p>Index: init.c<br>
-===================================================================<br>
-      --- init.c      (revision 4145)<br>
-      +++ init.c      (working copy)<br>
-      @@ -735,7 +735,7 @@<br>
-      <br>
-       static const struct ieee80211_iface_limit if_limits[] = {<br>
-              { .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) },<br>
-      -       { .max = 8,     .types =<br>
-      +       { .max = 16,    .types =<br>
-       #ifdef CPTCFG_MAC80211_MESH<br>
-                                       BIT(NL80211_IFTYPE_MESH_POINT) |<br>
-       #endif<br>
-    </p>
-    <p><br>
-    </p>
-    <p><br>
-    </p>
-    <p>but for sure i havent tested it <br>
-    </p>
-    <br>
-    <div class="moz-cite-prefix">Am 30.07.2018 um 22:04 schrieb Tom
-      Psyborg:<br>
-    </div>
-    <blockquote type="cite"
-cite="mid:CAKR_QVKz5dZeL6dfstmXA7eghKc=1PNPvKQH7Qvha9H0OehEJQ@mail.gmail.com">
-      <meta http-equiv="content-type" content="text/html; charset=utf-8">
-      <div dir="ltr">this is how i enabled it on htc target: <a
-          href="https://github.com/torvalds/linux/pull/574"
-          moz-do-not-send="true">https://github.com/torvalds/linux/pull/574</a><span
-          class="sewuaq5cj8zgk32"></span><span class="sewiybm83cm6k9e"></span><br>
-      </div>
-      <div class="gmail_extra"><br>
-        <div class="gmail_quote">On 30 July 2018 at 16:34, Ben Greear <span
-            dir="ltr">&lt;<a href="mailto:greearb@candelatech.com"
-              target="_blank" moz-do-not-send="true">greearb@candelatech.com</a>&gt;</span>
-          wrote:<br>
-          <blockquote class="gmail_quote" style="margin:0 0 0
-            .8ex;border-left:1px #ccc solid;padding-left:1ex"><span
-              class=""><br>
-              <br>
-              On 07/30/2018 04:13 AM, Matthias May wrote:<br>
-              <blockquote class="gmail_quote" style="margin:0 0 0
-                .8ex;border-left:1px #ccc solid;padding-left:1ex">
-                On 30/07/18 11:40, <a
-                  href="mailto:michael-dev@fami-braun.de"
-                  target="_blank" moz-do-not-send="true">michael-dev@fami-braun.de</a>
-                wrote:<br>
-                <blockquote class="gmail_quote" style="margin:0 0 0
-                  .8ex;border-left:1px #ccc solid;padding-left:1ex">
-                  Do you mean AP interfaces as required for multiple
-                  BSS/SSIDs?<br>
-                  <br>
-                  I'm running a patched ath9k to have hostapd run &gt;8
-                  BSS on a single radio.<br>
-                  It works fine since years.<br>
-                </blockquote>
-              </blockquote>
-              <br>
-            </span>
-            Yes, I'd love to see any patches you can share on this as
-            well.<br>
-            <br>
-            Thanks,<br>
-            Ben
-            <div class="HOEnZb">
-              <div class="h5"><br>
-                <br>
-                <blockquote class="gmail_quote" style="margin:0 0 0
-                  .8ex;border-left:1px #ccc solid;padding-left:1ex">
-                  <blockquote class="gmail_quote" style="margin:0 0 0
-                    .8ex;border-left:1px #ccc solid;padding-left:1ex">
-                    <br>
-                    Regards,<br>
-                    M. Braun<br>
-                    <br>
-                    <br>
-                    Am 27. Juli 2018 15:35:28 MESZ schrieb Ben Greear
-                    &lt;<a href="mailto:greearb@candelatech.com"
-                      target="_blank" moz-do-not-send="true">greearb@candelatech.com</a>&gt;:<br>
-                    <blockquote class="gmail_quote" style="margin:0 0 0
-                      .8ex;border-left:1px #ccc solid;padding-left:1ex">
-                      Hello,<br>
-                      <br>
-                      Has anyone tried making ath9k able to support 16
-                      vAP interfaces on a<br>
-                      single<br>
-                      radio?  I seem to recall that there were
-                      limitations regarding beacon<br>
-                      timers and such, and that is why the current limit
-                      is 8?<br>
-                      <br>
-                      Thanks,<br>
-                      Ben<br>
-                      <br>
-                      --<br>
-                      Ben Greear &lt;<a
-                        href="mailto:greearb@candelatech.com"
-                        target="_blank" moz-do-not-send="true">greearb@candelatech.com</a>&gt;<br>
-                      Candela Technologies Inc  <a
-                        href="http://www.candelatech.com"
-                        rel="noreferrer" target="_blank"
-                        moz-do-not-send="true">http://www.candelatech.com</a><br>
-                    </blockquote>
-                    <br>
-                  </blockquote>
-                  <br>
-                  Are these patches available somewhere?<br>
-                  I'm interested to play with them :)<br>
-                  <br>
-                  BR<br>
-                  Matthias<br>
-                  <br>
-                </blockquote>
-                <br>
-                -- <br>
-                Ben Greear &lt;<a href="mailto:greearb@candelatech.com"
-                  target="_blank" moz-do-not-send="true">greearb@candelatech.com</a>&gt;<br>
-                Candela Technologies Inc  <a
-                  href="http://www.candelatech.com" rel="noreferrer"
-                  target="_blank" moz-do-not-send="true">http://www.candelatech.com</a><br>
-              </div>
-            </div>
-          </blockquote>
-        </div>
-        <br>
-      </div>
-    </blockquote>
-    <br>
-  </body>
-</html>
-
---------------C56AC7D9B822261093AFCE16--
+--=-+VSfdhnE7sUHGmR3FE95--
