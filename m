@@ -1,81 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:40729 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728409AbeGTNGZ (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:43251 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728927AbeGYOXv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jul 2018 09:06:25 -0400
-Received: by mail-wm0-f65.google.com with SMTP id z13-v6so9593118wma.5
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jul 2018 05:18:26 -0700 (PDT)
-Date: Fri, 20 Jul 2018 14:18:22 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 00/11] Add mt76x0 driver
-Message-ID: <20180720121821.GB26455@localhost.localdomain> (sfid-20180720_141832_581255_2D979861)
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
- <20180705153216.GE17524@localhost.localdomain>
- <alpine.LNX.2.00.1807071027140.11361@T420s>
- <20180720103032.GA1791@redhat.com>
+        Wed, 25 Jul 2018 10:23:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180720103032.GA1791@redhat.com>
+In-Reply-To: <20180724175531.75276cf4e539124aa9e27177@linux-foundation.org>
+References: <20180724111600.4158975-1-arnd@arndb.de> <20180724140010.e24a9964fd340afe2d98a994@linux-foundation.org>
+ <aa39b6d15f44555cb79d5ebdef74aeab19003d6a.camel@perches.com> <20180724175531.75276cf4e539124aa9e27177@linux-foundation.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 25 Jul 2018 15:12:11 +0200
+Message-ID: <CAK8P3a3tOuP1FVS7oD1UhO5s4C+fLkL8VT3eCpRnSxBZxKzf6A@mail.gmail.com> (sfid-20180725_151228_647949_7B7C78DB)
+Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Joe Perches <joe@perches.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Jonathan Cameron <jic23@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        DTML <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE"
+        <linux-crypto@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-iio@vger.kernel.org,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sat, Jul 07, 2018 at 10:38:27AM +0200, Hans Ulli Kroll wrote:
-> > > > My integration efforts can be traced here:
-> > > > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
-> > > > 
-> > > 
-> > > I just had a brief review of the code and I compiled the driver since at
-> > > the moment I had no adapter for that chipset.
-> > > As a remainder for future improvements/integration most of the code in 
-> > > dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
-> > > routines in the mt76-usb layer (we need to fill function pointer for chipset
-> > > related stuff if there are differences with mt76x2u, not looked yet).
-> > > Moreover mcu code can use utility routines in usb-mcu.c
-> > > I have not looked at mt76x2 common code yet.
-> > > 
-> > > Regards,
-> > > Lorenzo
-> > > 
-> > 
-> > It is also possible to reuse 
-> > struct mt76x2_txwi
-> > struct mt76x2_rxwi
-> > 
-> > They have the same memory layout for both mt76x0u and mt76x2u chipsets.
-> > 
-> > Lorenzo can you move them up to
-> > mt76.h
-> > and rename them to
-> > struct mt76_txwi
-> > struct mt76_rxwi
-> > 
-> > And we can also do this for
-> > struct mt76x2_vif
-> 
-> For the record. I unified bunch of mac80211 callbacks and mac/wcid functions
-> and structures (including structures pointed above) into new mt76xx_lib
-> module. I also rebased the changes on top of latest wireless-drivers-next
-> master and mt76x2u patches in new branch mt76x0-draft-v2:
-> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
-> 
+tools/perf/tests/.gitignore:
+                            LLVM byte-codes, uncompressed
+On Wed, Jul 25, 2018 at 2:55 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Tue, 24 Jul 2018 17:13:20 -0700 Joe Perches <joe@perches.com> wrote:
+>
+>> On Tue, 2018-07-24 at 14:00 -0700, Andrew Morton wrote:
+>> > On Tue, 24 Jul 2018 13:13:25 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
+>> > > Almost all files in the kernel are either plain text or UTF-8
+>> > > encoded. A couple however are ISO_8859-1, usually just a few
+>> > > characters in a C comments, for historic reasons.
+>> > > This converts them all to UTF-8 for consistency.
+>> []
+>> > Will we be getting a checkpatch rule to keep things this way?
+>>
+>> How would that be done?
+>
+> I'm using this, seems to work.
+>
+>         if ! file $p | grep -q -P ", ASCII text|, UTF-8 Unicode text"
+>         then
+>                 echo $p: weird charset
+>         fi
 
-Sorry Hans, I forgot to reply to your email. I have already seen Stanislaw's
-repo and I agree he can apply his patchset on top of mt76x2u one as soon as
-it is merged in wireless-driver-next repo.
-Moreover Stanislaw I started working on unifying mt76x2u/mt76x0 dma/usb code,
-I have not sent you the patchset since I am waiting for the adapter. If you
-want I can send you the code as soon as it is completed (just compiled, not
-tested)
+There are a couple of files that my version of 'find' incorrectly identified as
+something completely different, like:
 
-Regards,
-Lorenzo
+Documentation/devicetree/bindings/pinctrl/pinctrl-sx150x.txt:
+            SemOne archive data
+Documentation/devicetree/bindings/rtc/epson,rtc7301.txt:
+            Microsoft Document Imaging Format
+Documentation/filesystems/nfs/pnfs-block-server.txt:
+            PPMN archive data
+arch/arm/boot/dts/bcm283x-rpi-usb-host.dtsi:
+        Sendmail frozen configuration  - version = "host";
+Documentation/networking/segmentation-offloads.txt:
+        StuffIt Deluxe Segment (data) : gmentation Offloads in the
+Linux Networking Stack
+arch/sparc/include/asm/visasm.h:                              SAS 7+
+arch/xtensa/kernel/setup.c:                                         ,
+init=0x454c, stat=0x090a, dev=0x2009, bas=0x2020
+drivers/cpufreq/powernow-k8.c:
+TI-XX Graphing Calculator (FLASH)
+tools/testing/selftests/net/forwarding/tc_shblocks.sh:
+                            Minix filesystem, V2 (big endian)
+tools/perf/tests/.gitignore:
+                            LLVM byte-codes, uncompressed
 
-> Regards
-> Stanislaw
+All of the above seem to be valid ASCII or UTF-8 files, so the check
+above will lead
+to false-positives, but it may be good enough as they are the
+exception, and may be
+bugs in 'file'.
+
+Not sure if we need to worry about 'file' not being installed.
+
+       Arnd
