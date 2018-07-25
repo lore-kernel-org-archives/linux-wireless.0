@@ -1,81 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:33675 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932399AbeGDKkm (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:42140 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728474AbeGYMnl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 06:40:42 -0400
-Received: by mail-wr0-f181.google.com with SMTP id k7-v6so4850226wrq.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 03:40:41 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: s.gottschall@dd-wrt.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org
-Subject: Re: [PATCH v8] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Wed, 04 Jul 2018 12:40:39 +0200
-Message-ID: <5630152.jDWN9V3RzB@bentobox> (sfid-20180704_124055_715246_4C8662C1)
-In-Reply-To: <20180704092953.32572-1-s.gottschall@dd-wrt.com>
-References: <20180704092953.32572-1-s.gottschall@dd-wrt.com>
+        Wed, 25 Jul 2018 08:43:41 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart4401141.ZugrdnYArS"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <20180724164936.37477-11-keescook@chromium.org>
+References: <20180724164936.37477-1-keescook@chromium.org> <20180724164936.37477-11-keescook@chromium.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 25 Jul 2018 13:32:23 +0200
+Message-ID: <CAJZ5v0gVDotjufLKUW0YuQu2vA4fmU_gqia=ZA4DocW4XHxx0w@mail.gmail.com> (sfid-20180725_133235_296688_9A8A7B6A)
+Subject: Re: [PATCH v6 10/18] x86/power/64: Remove VLA usage
+To: Kees Cook <keescook@chromium.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-crypto@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org, qat-linux@intel.com,
+        linux-ppp@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        devel@driverdev.osuosl.org, linux-afs@lists.infradead.org,
+        "open list:NETWORKING DRIVERS (WIRELESS)"
+        <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4401141.ZugrdnYArS
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+On Tue, Jul 24, 2018 at 6:49 PM, Kees Cook <keescook@chromium.org> wrote:
+> In the quest to remove all stack VLA usage from the kernel[1], this
+> removes the discouraged use of AHASH_REQUEST_ON_STACK by switching to
+> shash directly and allocating the descriptor in heap memory (which should
+> be fine: the tfm has already been allocated there too).
+>
+> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Acked-by: Pavel Machek <pavel@ucw.cz>
 
-On Mittwoch, 4. Juli 2018 11:29:53 CEST s.gottschall@dd-wrt.com wrote:
-> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-> +#define BW_NSS_FWCONF_160(x)           (BW_NSS_FWCONF_MAP_ENABLE | \
-> +                                       (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) \
-> +                                       & BW_NSS_FWCONF_MAP_160MHZ_M))
-> +#define BW_NSS_FWCONF_80_80(x)         (BW_NSS_FWCONF_MAP_ENABLE | \
-> +                                       (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) \
-> +                                       & BW_NSS_FWCONF_MAP_80_80MHZ_M))
+I think I can queue this up if there are no objections from others.
 
-Please check the shift and mask macros in core.h
+Do you want me to do that?
 
-
-#define BW_NSS_FWCONF_MAP_160MHZ_LSB           0
-#define BW_NSS_FWCONF_MAP_160MHZ_MASK          0x00000007
-#define BW_NSS_FWCONF_MAP_80_80MHZ_LSB         3
-#define BW_NSS_FWCONF_MAP_80_80MHZ_MASK        0x00000038
-#define BW_NSS_FWCONF_MAP_MASK                 0x0000003F
-
-#define GET_BW_NSS_FWCONF_160(x)     (MS((x), BW_NSS_FWCONF_MAP_160MHZ) + 1)
-#define GET_BW_NSS_FWCONF_80_80(x)   (MS((x), BW_NSS_FWCONF_MAP_80_80MHZ_M) + 1)
-
-/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-#define BW_NSS_FWCONF_160(x)         (BW_NSS_FWCONF_MAP_ENABLE | \
-                                      (SM((x) - 1, BW_NSS_FWCONF_MAP_160MHZ))
-#define BW_NSS_FWCONF_80_80(x)       (BW_NSS_FWCONF_MAP_ENABLE | \
-                                      (SM((x) - 1, BW_NSS_FWCONF_MAP_80_80MHZ))
-
-(these snippets were not yet tested and most likely need further adjustments)
-
-
-Kind regards,
-	Sven
---nextPart4401141.ZugrdnYArS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAls8pCcACgkQXYcKB8Em
-e0YgFQ//fmRLhV8GGWXxafzDwMIH4JkU2Ilo+XO8gTsbBq4ofe8zGugNwxC9z7m2
-FxDi5PqhRZeQ1VG0niPTwQf6jSIBbxnm8tLToHOnvJILlXhDoEUbpzjzaqPoaNhW
-Y/oCYNWP7Ss0Z44zzdtOnCua0rDfj1OAEjlTOEcO7I6dK/WEHCcW6VqUDlJuGinZ
-kDHVWLE7uASDtWuuL6t4y/l6vQgYkDz+9Cff6KLmeZ25/OJT+X+TOQaulQdIxlv/
-sq1ONEIuGlZ4KqUpDTzFhvWqmUEMZpemF9P53Md43FY11IkZ4350CQ57nP3MiwaY
-/36Nll+PLU6LDfT9fixq5VqUQoTTJ1uFfV5zyHFvj4gbPvI/YhoI5TyBP4nW8dLP
-UnPWn33jIIobwlVo7u+XGHYhhGT3B5NZKrBSzWk/fpX7e7W9liIzztKelTHLhQzF
-DVXRS6HiUDClukSgb+3XXShsRrru5Ib4VlP3r5v0Xas0627eaa0Zz31doGOS/hqD
-EhET0oANyxSnIl3mAhFVsYDMNUUY30FkbnX4B4Eebce6fXgHZmcfMXkRW574Fx/p
-OaXBsHHnSlXPWI9hJDxTqsZQ7/OouKbQYkab7tuVPxHTS/jTANW/tIPRK9l1pdiZ
-1x5u7yrdihYri60ZsOzjmMS9xX/91CRyvlLy51B4QpQ9KAlVMsM=
-=90cy
------END PGP SIGNATURE-----
-
---nextPart4401141.ZugrdnYArS--
+> ---
+>  arch/x86/power/hibernate_64.c | 36 ++++++++++++++++++++---------------
+>  1 file changed, 21 insertions(+), 15 deletions(-)
+>
+> diff --git a/arch/x86/power/hibernate_64.c b/arch/x86/power/hibernate_64.c
+> index 67ccf64c8bd8..f8e3b668d20b 100644
+> --- a/arch/x86/power/hibernate_64.c
+> +++ b/arch/x86/power/hibernate_64.c
+> @@ -233,29 +233,35 @@ struct restore_data_record {
+>   */
+>  static int get_e820_md5(struct e820_table *table, void *buf)
+>  {
+> -       struct scatterlist sg;
+> -       struct crypto_ahash *tfm;
+> +       struct crypto_shash *tfm;
+> +       struct shash_desc *desc;
+>         int size;
+>         int ret = 0;
+>
+> -       tfm = crypto_alloc_ahash("md5", 0, CRYPTO_ALG_ASYNC);
+> +       tfm = crypto_alloc_shash("md5", 0, 0);
+>         if (IS_ERR(tfm))
+>                 return -ENOMEM;
+>
+> -       {
+> -               AHASH_REQUEST_ON_STACK(req, tfm);
+> -               size = offsetof(struct e820_table, entries) + sizeof(struct e820_entry) * table->nr_entries;
+> -               ahash_request_set_tfm(req, tfm);
+> -               sg_init_one(&sg, (u8 *)table, size);
+> -               ahash_request_set_callback(req, 0, NULL, NULL);
+> -               ahash_request_set_crypt(req, &sg, buf, size);
+> -
+> -               if (crypto_ahash_digest(req))
+> -                       ret = -EINVAL;
+> -               ahash_request_zero(req);
+> +       desc = kmalloc(sizeof(struct shash_desc) + crypto_shash_descsize(tfm),
+> +                      GFP_KERNEL);
+> +       if (!desc) {
+> +               ret = -ENOMEM;
+> +               goto free_tfm;
+>         }
+> -       crypto_free_ahash(tfm);
+>
+> +       desc->tfm = tfm;
+> +       desc->flags = 0;
+> +
+> +       size = offsetof(struct e820_table, entries) +
+> +               sizeof(struct e820_entry) * table->nr_entries;
+> +
+> +       if (crypto_shash_digest(desc, (u8 *)table, size, buf))
+> +               ret = -EINVAL;
+> +
+> +       kzfree(desc);
+> +
+> +free_tfm:
+> +       crypto_free_shash(tfm);
+>         return ret;
+>  }
+>
+> --
+> 2.17.1
+>
