@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:39577 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753988AbeGEM7o (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51906 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728126AbeGYJvP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 08:59:44 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s21-v6so5375097pfm.6
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2018 05:59:44 -0700 (PDT)
-From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sajay.konduri@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Subject: [PATCH 1/4] rsi: fix for low throughput issue
-Date: Thu,  5 Jul 2018 18:08:19 +0530
-Message-Id: <1530794302-8833-2-git-send-email-sushant2k1513@gmail.com> (sfid-20180705_145947_264017_7FD9D6A7)
-In-Reply-To: <1530794302-8833-1-git-send-email-sushant2k1513@gmail.com>
-References: <1530794302-8833-1-git-send-email-sushant2k1513@gmail.com>
+        Wed, 25 Jul 2018 05:51:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "H. Nikolaus Schaller" <hns@goldelico.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "Reizer\, Eyal" <eyalr@ti.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, letux-kernel@openphoenux.org,
+        kernel@pyra-handheld.com
+Subject: Re: [PATCH] drivers: net: wlcore: remove duplicate \n for some warnings
+References: <af660348ade58fd33396d2dca432536d2ac85cf7.1532498079.git.hns@goldelico.com>
+        <87lg9zyg1p.fsf@codeaurora.org>
+        <F5C1808B-516D-4D74-BC43-6E997D9F012A@goldelico.com>
+Date: Wed, 25 Jul 2018 11:40:30 +0300
+In-Reply-To: <F5C1808B-516D-4D74-BC43-6E997D9F012A@goldelico.com> (H. Nikolaus
+        Schaller's message of "Wed, 25 Jul 2018 10:30:45 +0200")
+Message-ID: <87lg9zvhc1.fsf@kamboji.qca.qualcomm.com> (sfid-20180725_104052_005108_DB613E2E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+"H. Nikolaus Schaller" <hns@goldelico.com> writes:
 
-observed low throughput rates during verification. This is because, QoS
-enable flag is overridden by sequence number in the data descriptor frame.
-Hence, added the fix for same.
+>> Am 25.07.2018 um 08:40 schrieb Kalle Valo <kvalo@codeaurora.org>:
+>> 
+>> "H. Nikolaus Schaller" <hns@goldelico.com> writes:
+>> 
+>>> wl1271_warning() already appends a \n to the format,
+>>> so adding one to the warning string gives empty lines in the log.
+>>> 
+>>> Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
+>> 
+>> "drivers: net:" in the title is unnecessary, but I can remove that.
+>
+> Ok, thanks! I wasn't aware of the precise subsystem tagging style here.
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah, subsystems can do it a bit differently. But you can easily check
+with git log the preferred style:
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 0761e61..533d9e9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -246,7 +246,7 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 		}
- 	}
- 
--	data_desc->mac_flags = cpu_to_le16(seq_num & 0xfff);
-+	data_desc->mac_flags |= cpu_to_le16(seq_num & 0xfff);
- 	data_desc->qid_tid = ((skb->priority & 0xf) |
- 			      ((tx_params->tid & 0xf) << 4));
- 	data_desc->sta_id = tx_params->sta_id;
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject
+
 -- 
-2.5.5
+Kalle Valo
