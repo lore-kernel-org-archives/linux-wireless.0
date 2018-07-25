@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34212 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33582 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727569AbeGaJGA (ORCPT
+        with ESMTP id S1728218AbeGYHuU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:06:00 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] rtl818x: Replace mdelay() with msleep() in
- rtl8225se_rf_init
+        Wed, 25 Jul 2018 03:50:20 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180727085045.3949-1-baijiaju1990@gmail.com>
-References: <20180727085045.3949-1-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180731072703.6141960708@smtp.codeaurora.org> (sfid-20180731_092722_800170_C96C9B52)
-Date: Tue, 31 Jul 2018 07:27:03 +0000 (UTC)
+To: "H. Nikolaus Schaller" <hns@goldelico.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "Reizer\, Eyal" <eyalr@ti.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, letux-kernel@openphoenux.org,
+        kernel@pyra-handheld.com
+Subject: Re: [PATCH] drivers: net: wlcore: remove duplicate \n for some warnings
+References: <af660348ade58fd33396d2dca432536d2ac85cf7.1532498079.git.hns@goldelico.com>
+Date: Wed, 25 Jul 2018 09:40:02 +0300
+In-Reply-To: <af660348ade58fd33396d2dca432536d2ac85cf7.1532498079.git.hns@goldelico.com>
+        (H. Nikolaus Schaller's message of "Wed, 25 Jul 2018 07:55:04 +0200")
+Message-ID: <87lg9zyg1p.fsf@codeaurora.org> (sfid-20180725_084035_662227_C0C961D1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+"H. Nikolaus Schaller" <hns@goldelico.com> writes:
 
-> rtl8225se_rf_init() is never called in atomic context.
-> It calls mdelay() to busily wait, which is not necessary.
-> mdelay() can be replaced with msleep().
-> This patch only replaces the mdelay() that has >20ms time to wait.
-> 
-> This is found by a static analysis tool named DCNS written by myself.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> wl1271_warning() already appends a \n to the format,
+> so adding one to the warning string gives empty lines in the log.
+>
+> Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-622e938240db rtl818x: Replace mdelay() with msleep() in rtl8225se_rf_init
+"drivers: net:" in the title is unnecessary, but I can remove that.
 
 -- 
-https://patchwork.kernel.org/patch/10546749/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
