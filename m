@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f48.google.com ([209.85.221.48]:35133 "EHLO
-        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732205AbeGJT4S (ORCPT
+Received: from smtprelay0182.hostedemail.com ([216.40.44.182]:54341 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2388496AbeGYBWY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 15:56:18 -0400
-Received: by mail-wr1-f48.google.com with SMTP id a3-v6so6604345wrt.2
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 12:55:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <dbca726e-44c8-9a2f-2bb5-8a83c31f98e3@gmail.com>
- <1530266512.3481.68.camel@sipsolutions.net> <0ce17959-d930-a563-242c-da24145e39f0@gmail.com>
- <1530879434.3197.32.camel@sipsolutions.net> <2195bc60-8e33-b74a-fa27-ffda653ee814@gmail.com>
-In-Reply-To: <2195bc60-8e33-b74a-fa27-ffda653ee814@gmail.com>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Tue, 10 Jul 2018 12:55:34 -0700
-Message-ID: <CAJ-Vmo=LtfjPNxsLLNDQbe3MAF+x+BONsd5pSV50tYt+x_oPZA@mail.gmail.com> (sfid-20180710_215551_918063_9B08DF81)
-Subject: Re: Proper SET_KEY usage?
-To: denkenz@gmail.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 24 Jul 2018 21:22:24 -0400
+Message-ID: <aa39b6d15f44555cb79d5ebdef74aeab19003d6a.camel@perches.com> (sfid-20180725_021349_398316_13807AD3)
+Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
+From: Joe Perches <joe@perches.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Jonathan Cameron <jic23@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-iio@vger.kernel.org,
+        linux-pm@vger.kernel.org, lvs-devel@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
+Date: Tue, 24 Jul 2018 17:13:20 -0700
+In-Reply-To: <20180724140010.e24a9964fd340afe2d98a994@linux-foundation.org>
+References: <20180724111600.4158975-1-arnd@arndb.de>
+         <20180724140010.e24a9964fd340afe2d98a994@linux-foundation.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Jul 2018 at 12:16, Denis Kenzior <denkenz@gmail.com> wrote:
+On Tue, 2018-07-24 at 14:00 -0700, Andrew Morton wrote:
+> On Tue, 24 Jul 2018 13:13:25 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
+> > Almost all files in the kernel are either plain text or UTF-8
+> > encoded. A couple however are ISO_8859-1, usually just a few
+> > characters in a C comments, for historic reasons.
+> > This converts them all to UTF-8 for consistency.
+[]
+> Will we be getting a checkpatch rule to keep things this way?
 
-> I think we had this conversation before.  Up to 802.11-2012, PTK Rekey
-> was not really explicitly mentioned as possible.  There were hints and
-> stuff, but no explicit language.
->
-> I think in 802.11-2016 they finally explicitly say that this is possible.
->
-> However, we seem to have networks that perform PTK Rekey and even full
-> 802.1X re-auth every hour (eduroam for example).  How is this working?
-> Or is it a case of it not always working?
-
-It's ... buggy. Right now I'm hitting race conditions (which someone
-is actively working on now, yay!) where frames are going out in a
-narrow window between the hardware key being rekeyed (and the RX PN
-being set to 0) and an older frame going out with a larger PN with the
-new key. The receiver sees the frame with the old, large PN but the
-new key and .. well, subsequent traffic hangs. I know it's buggy on
-ath9k (what we're using at work.) ath10k seems to fare better - it at
-least is doing key programming and PN assignment in firmware, so it
-has a chance to keep it in sync.
-
-
-
--adrian
+How would that be done?
