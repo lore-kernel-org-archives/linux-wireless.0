@@ -1,93 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:45039 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388911AbeGXUhp (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35739 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730357AbeGYWZj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:45 -0400
-Received: by mail-pf1-f193.google.com with SMTP id k21-v6so1078328pff.11
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:49 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 12/18] ax25: remove blank line at EOF
-Date: Tue, 24 Jul 2018 12:29:12 -0700
-Message-Id: <20180724192918.31165-13-sthemmin@microsoft.com> (sfid-20180724_212959_272252_E6A52933)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Wed, 25 Jul 2018 18:25:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <153254834342.92573.16877025672192312745.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 25 Jul 2018 14:12:08 -0700
+Message-ID: <CAKgT0UewV82FKVMkW975+upccaRJF4i6oQYzNh5jC02wcGmhXQ@mail.gmail.com> (sfid-20180725_231224_917023_3C1D27FF)
+Subject: Re: [Intel-wired-lan] [PATCH v1 1/4] igb: Remove unnecessary include
+ of <linux/pci-aspm.h>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>, linuxwifi@intel.com,
+        Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, LKML <linux-kernel@vger.kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        intel-wired-lan <intel-wired-lan@lists.osuosl.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/ax25/ax25_addr.c    | 1 -
- net/ax25/ax25_ds_in.c   | 1 -
- net/ax25/ax25_ds_subr.c | 1 -
- net/ax25/ax25_ip.c      | 1 -
- net/ax25/ax25_out.c     | 1 -
- 5 files changed, 5 deletions(-)
+On Wed, Jul 25, 2018 at 12:52 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> The igb driver doesn't need anything provided by pci-aspm.h, so remove
+> the unnecessary include of it.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/net/ax25/ax25_addr.c b/net/ax25/ax25_addr.c
-index ac2542b7be88..a14cfa736b63 100644
---- a/net/ax25/ax25_addr.c
-+++ b/net/ax25/ax25_addr.c
-@@ -304,4 +304,3 @@ void ax25_digi_invert(const ax25_digi *in, ax25_digi *out)
- 		}
- 	}
- }
--
-diff --git a/net/ax25/ax25_ds_in.c b/net/ax25/ax25_ds_in.c
-index 891596e74278..488fc2d7085a 100644
---- a/net/ax25/ax25_ds_in.c
-+++ b/net/ax25/ax25_ds_in.c
-@@ -299,4 +299,3 @@ int ax25_ds_frame_in(ax25_cb *ax25, struct sk_buff *skb, int type)
- 
- 	return queued;
- }
--
-diff --git a/net/ax25/ax25_ds_subr.c b/net/ax25/ax25_ds_subr.c
-index 28827e81ba2b..bc0329f43013 100644
---- a/net/ax25/ax25_ds_subr.c
-+++ b/net/ax25/ax25_ds_subr.c
-@@ -205,4 +205,3 @@ void ax25_dama_off(ax25_cb *ax25)
- 	ax25->condition &= ~AX25_COND_DAMA_MODE;
- 	ax25_dev_dama_off(ax25->ax25_dev);
- }
--
-diff --git a/net/ax25/ax25_ip.c b/net/ax25/ax25_ip.c
-index 183b1c583d56..70417e9b932d 100644
---- a/net/ax25/ax25_ip.c
-+++ b/net/ax25/ax25_ip.c
-@@ -249,4 +249,3 @@ const struct header_ops ax25_header_ops = {
- 
- EXPORT_SYMBOL(ax25_header_ops);
- EXPORT_SYMBOL(ax25_ip_xmit);
--
-diff --git a/net/ax25/ax25_out.c b/net/ax25/ax25_out.c
-index b11a5f466fcc..3e5afc8dc93e 100644
---- a/net/ax25/ax25_out.c
-+++ b/net/ax25/ax25_out.c
-@@ -394,4 +394,3 @@ int ax25_check_iframes_acked(ax25_cb *ax25, unsigned short nr)
- 	}
- 	return 0;
- }
--
--- 
-2.18.0
+Looks good to me.
+
+Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+
+> ---
+>  drivers/net/ethernet/intel/igb/igb_main.c |    1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+> index f707709969ac..c77fda05f683 100644
+> --- a/drivers/net/ethernet/intel/igb/igb_main.c
+> +++ b/drivers/net/ethernet/intel/igb/igb_main.c
+> @@ -22,7 +22,6 @@
+>  #include <linux/if.h>
+>  #include <linux/if_vlan.h>
+>  #include <linux/pci.h>
+> -#include <linux/pci-aspm.h>
+>  #include <linux/delay.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/ip.h>
+>
+> _______________________________________________
+> Intel-wired-lan mailing list
+> Intel-wired-lan@osuosl.org
+> https://lists.osuosl.org/mailman/listinfo/intel-wired-lan
