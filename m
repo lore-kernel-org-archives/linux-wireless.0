@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38680 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730852AbeG0OK5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:10:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 15:48:34 +0300
-Message-Id: <20180727124838.25910-13-luca@coelho.fi> (sfid-20180727_144912_420050_202FAF0B)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 12/16] iwlwifi: hard code power save mode to CAM for 22560 devices
+Received: from mail.kernel.org ([198.145.29.99]:37534 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729335AbeGYVFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Jul 2018 17:05:52 -0400
+Subject: [PATCH v1 2/4] ath9k: Remove unnecessary include of
+ <linux/pci-aspm.h>
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 25 Jul 2018 14:52:38 -0500
+Message-ID: <153254835812.92573.3566522887325831923.stgit@bhelgaas-glaptop.roam.corp.google.com> (sfid-20180725_215249_160690_5AAA8433)
+In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Balanced power save mode isn't supported in the fw for 22560 devices
-yet.  Configure the power save mode to CAM until it gets implemented.
+The ath9k driver doesn't need anything provided by pci-aspm.h, so remove
+the unnecessary include of it.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 0efd2a36e6c4..0e26619fb330 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -709,10 +709,13 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 645f0fbd9179..92b2dd396436 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -18,7 +18,6 @@
  
- 	/* the hardware splits the A-MSDU */
--	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
- 		trans_cfg.rx_buf_size = IWL_AMSDU_2K;
--	else if (mvm->cfg->mq_rx_supported)
-+		/* TODO: remove when balanced power mode is fw supported */
-+		iwlmvm_mod_params.power_scheme = IWL_POWER_SCHEME_CAM;
-+	} else if (mvm->cfg->mq_rx_supported) {
- 		trans_cfg.rx_buf_size = IWL_AMSDU_4K;
-+	}
+ #include <linux/nl80211.h>
+ #include <linux/pci.h>
+-#include <linux/pci-aspm.h>
+ #include <linux/module.h>
+ #include "ath9k.h"
  
- 	trans->wide_cmd_header = true;
- 	trans_cfg.bc_table_dword =
--- 
-2.18.0
