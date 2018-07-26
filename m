@@ -1,118 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38608 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730088AbeG0OKn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729093AbeGZIg7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:10:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 15:48:28 +0300
-Message-Id: <20180727124838.25910-7-luca@coelho.fi> (sfid-20180727_144859_046824_AECA6407)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 06/16] iwlwifi: trans: add a new op for getting DMA data
+        Thu, 26 Jul 2018 04:36:59 -0400
+From: Wen Gong <wgong@codeaurora.org>
+To: ath10k@lists.infradead.org, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+Date: Thu, 26 Jul 2018 15:21:17 +0800
+Message-Id: <1532589677-16428-3-git-send-email-wgong@codeaurora.org> (sfid-20180726_092133_154698_BDB0F2F9)
+In-Reply-To: <1532589677-16428-1-git-send-email-wgong@codeaurora.org>
+References: <1532589677-16428-1-git-send-email-wgong@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Upstream kernel has an interface to help adjust sk_pacing_shift to help
+improve TCP UL throughput.
+The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
+WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
+VHT80 TCP UL throughput testing result shows 6 is the optimal.
+Overwrite the sk_pacing_shift to 6 in ath10k driver.
 
-Op mode will need this data in order to feed FW with it.
+Tested with QCA6174 PCI with firmware
+WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
+It's not a regression with new firmware releases.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+There have 2 test result of different settings:
+
+ARM CPU based device with QCA6174A PCI with different
+sk_pacing_shift:
+
+ sk_pacing_shift  throughput(Mbps)             CPU utilization
+         6            500(-P5)      ~75% idle, Focus on CPU1: ~14%idle
+         7            454(-P5)      ~80% idle, Focus on CPU1: ~4%idle
+         8               288        ~90% idle, Focus on CPU1: ~35%idle
+         9              ~200        ~92% idle, Focus on CPU1: ~50%idle
+
+5G TCP UL VTH80 on X86 platform with QCA6174A PCI with sk_packing_shift
+set to 6:
+
+  tcp_limit_output_bytes            throughput(Mbps)
+ default(262144)+1 Stream                 336
+ default(262144)+2 Streams                558
+ default(262144)+3 Streams                584
+ default(262144)+4 Streams                602
+ default(262144)+5 Streams                598
+ changed(2621440)+1 Stream                598
+ changed(2621440)+2 Streams               601
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 26 +++++++++++++++++++
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 17 ++++++++++++
- 2 files changed, 43 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 4229992073b6..9483f76476de 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -439,6 +439,20 @@ struct iwl_trans_txq_scd_cfg {
- 	int frame_limit;
- };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f31ae3b..40d24c1 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8348,6 +8348,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ar->hw->wiphy->max_scan_ssids = WLAN_SCAN_PARAMS_MAX_SSID;
+ 	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
  
-+/**
-+ * struct iwl_trans_rxq_dma_data - RX queue DMA data
-+ * @fr_bd_cb: DMA address of free BD cyclic buffer
-+ * @fr_bd_wid: Initial write index of the free BD cyclic buffer
-+ * @urbd_stts_wrptr: DMA address of urbd_stts_wrptr
-+ * @ur_bd_cb: DMA address of used BD cyclic buffer
-+ */
-+struct iwl_trans_rxq_dma_data {
-+	u64 fr_bd_cb;
-+	u32 fr_bd_wid;
-+	u64 urbd_stts_wrptr;
-+	u64 ur_bd_cb;
-+};
++	ar->hw->tx_sk_pacing_shift = 6;
 +
- /**
-  * struct iwl_trans_ops - transport specific operations
-  *
-@@ -559,6 +573,8 @@ struct iwl_trans_ops {
- 			 int cmd_id, int size,
- 			 unsigned int queue_wdg_timeout);
- 	void (*txq_free)(struct iwl_trans *trans, int queue);
-+	int (*rxq_dma_data)(struct iwl_trans *trans, int queue,
-+			    struct iwl_trans_rxq_dma_data *data);
- 
- 	void (*txq_set_shared_mode)(struct iwl_trans *trans, u32 txq_id,
- 				    bool shared);
-@@ -947,6 +963,16 @@ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
- 				      cfg, queue_wdg_timeout);
- }
- 
-+static inline int
-+iwl_trans_get_rxq_dma_data(struct iwl_trans *trans, int queue,
-+			   struct iwl_trans_rxq_dma_data *data)
-+{
-+	if (WARN_ON_ONCE(!trans->ops->rxq_dma_data))
-+		return -ENOTSUPP;
-+
-+	return trans->ops->rxq_dma_data(trans, queue, data);
-+}
-+
- static inline void
- iwl_trans_txq_free(struct iwl_trans *trans, int queue)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 64c781eab6a5..603458aa2923 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2265,6 +2265,22 @@ void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans, struct iwl_txq *txq)
- 		iwl_read_direct32(trans, FH_TX_TRB_REG(fifo)));
- }
- 
-+static int iwl_trans_pcie_rxq_dma_data(struct iwl_trans *trans, int queue,
-+				       struct iwl_trans_rxq_dma_data *data)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	if (queue >= trans->num_rx_queues || !trans_pcie->rxq)
-+		return -EINVAL;
-+
-+	data->fr_bd_cb = trans_pcie->rxq[queue].bd_dma;
-+	data->urbd_stts_wrptr = trans_pcie->rxq[queue].rb_stts_dma;
-+	data->ur_bd_cb = trans_pcie->rxq[queue].used_bd_dma;
-+	data->fr_bd_wid = 0;
-+
-+	return 0;
-+}
-+
- static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, int txq_idx)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -3212,6 +3228,7 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
- 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
- 	.txq_free = iwl_trans_pcie_dyn_txq_free,
- 	.wait_txq_empty = iwl_trans_pcie_wait_txq_empty,
-+	.rxq_dma_data = iwl_trans_pcie_rxq_dma_data,
- };
- 
- struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
+ 	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
+ 	ar->hw->txq_data_size = sizeof(struct ath10k_txq);
 -- 
-2.18.0
+1.9.1
