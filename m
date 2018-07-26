@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36044 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932569AbeGFMbi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 08:31:38 -0400
-Message-ID: <1530880295.3197.39.camel@sipsolutions.net> (sfid-20180706_143329_659166_FFE17039)
-Subject: Re: [PATCH] cfg80211: inspect off channel operation only when off
- channel given
-From: Johannes Berg <johannes@sipsolutions.net>
-To: peter.oh@bowerswilkins.com, linux-wireless@vger.kernel.org
-Date: Fri, 06 Jul 2018 14:31:35 +0200
-In-Reply-To: <1530659052-5834-1-git-send-email-peter.oh@bowerswilkins.com>
-References: <1530659052-5834-1-git-send-email-peter.oh@bowerswilkins.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from narfation.org ([79.140.41.39]:52642 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730062AbeGZPZN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jul 2018 11:25:13 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        Simon Wunderlich <simon.wunderlich@openmesh.com>,
+        Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH RESENT] ath10k: Prevent active scans on potential unusable channels
+Date: Thu, 26 Jul 2018 15:59:48 +0200
+Message-Id: <20180726135948.29160-1-sven@narfation.org> (sfid-20180726_160815_008243_C8C42FE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-07-03 at 16:04 -0700, peter.oh@bowerswilkins.com wrote:
-> From: Peter Oh <peter.oh@bowerswilkins.com>
-> 
-> NL80211_ATTR_OFFCHANNEL_TX_OK does not mean given channel is always
-> off channel, but it means the channel given could be off channel.
-> Hence it should not block the given channel to be used if given
-> channel does not require off channel mgmt tx although regulatory
-> domain is non-ETSI.
-> 
-> Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
-> ---
->  net/wireless/nl80211.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 4eece06..991042b 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -9915,7 +9915,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
->  		return -EINVAL;
->  
->  	wdev_lock(wdev);
-> -	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev)) {
-> +	if (params.offchan &&
-> +	    !cfg80211_chandef_identical(&chandef, &wdev->chandef) &&
-> +	    !cfg80211_off_channel_oper_allowed(wdev)) {
->  		wdev_unlock(wdev);
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
 
-Hmm. That seems fine, but can we be sure that wdev->chandef is always
-valid? ISTR that it isn't necessarily updated all the time, but I can't
-really say right now.
+The QCA4019 hw1.0 firmware 10.4-3.2.1-00050 and 10.4-3.5.3-00053 (and most
+likely all other) seem to ignore the WMI_CHAN_FLAG_DFS flag during the
+scan. This results in transmission (probe requests) on channels which are
+not "available" for transmissions.
 
-johannes
+Since the firmware is closed source and nothing can be done from our side
+to fix the problem in it, the driver has to work around this problem. The
+WMI_CHAN_FLAG_PASSIVE seems to be interpreted by the firmware to not
+scan actively on a channel unless an AP was detected on it. Simple probe
+requests will then be transmitted by the STA on the channel.
+
+ath10k must therefore also use this flag when it queues a radar channel for
+scanning. This should reduce the chance of an active scan when the channel
+might be "unusable" for transmissions.
+
+Fixes: e8a50f8ba44b ("ath10k: introduce DFS implementation")
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+Cc: Simon Wunderlich <simon.wunderlich@openmesh.com>
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
+---
+
+ drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 95243b48a179..76e9c6eaa051 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3085,6 +3085,13 @@ static int ath10k_update_channel_list(struct ath10k *ar)
+ 			passive = channel->flags & IEEE80211_CHAN_NO_IR;
+ 			ch->passive = passive;
+ 
++			/* the firmware is ignoring the "radar" flag of the
++			 * channel and is scanning actively using Probe Requests
++			 * on "Radar detection"/DFS channels which are not
++			 * marked as "available"
++			 */
++			ch->passive |= ch->chan_radar;
++
+ 			ch->freq = channel->center_freq;
+ 			ch->band_center_freq1 = channel->center_freq;
+ 			ch->min_power = 0;
+-- 
+2.11.0
