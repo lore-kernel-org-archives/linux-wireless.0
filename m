@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50736 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932169AbeGCIcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 04:32:04 -0400
-Subject: Re: [PATCH 13/14] rtlwifi: access skb->data to get C2H data by macro
-To: Kalle Valo <kvalo@codeaurora.org>, Pkshih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-References: <20180518093007.23594-1-pkshih@realtek.com>
- <20180518093007.23594-14-pkshih@realtek.com>
- <87po1fhwfd.fsf@purkki.adurom.net> <1527732798.8418.7.camel@realtek.com>
- <87sh56f3sv.fsf@codeaurora.org> <1530597815.6330.4.camel@realtek.com>
- <87y3esrgkr.fsf@kamboji.qca.qualcomm.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <b69340e7-b7ae-2b54-9488-c9c7bcffecf2@nbd.name> (sfid-20180703_103209_329021_810946F9)
-Date: Tue, 3 Jul 2018 10:32:00 +0200
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:37584 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729902AbeGZOTl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jul 2018 10:19:41 -0400
+Received: by mail-qt0-f175.google.com with SMTP id n6-v6so1409190qtl.4
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jul 2018 06:02:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87y3esrgkr.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87zhye1aqg.fsf@toke.dk>
+References: <1532589677-16428-1-git-send-email-wgong@codeaurora.org>
+ <1532589677-16428-3-git-send-email-wgong@codeaurora.org> <87zhye1aqg.fsf@toke.dk>
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date: Thu, 26 Jul 2018 15:02:53 +0200
+Message-ID: <CABvG-CVwRyeD5=0HqTyNQPVOV1iPtAT_GJQSmSH4=DdDca6dYw@mail.gmail.com> (sfid-20180726_150257_466520_5B823EC4)
+Subject: Re: [PATCH 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Wen Gong <wgong@codeaurora.org>, ath10k@lists.infradead.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-07-03 08:14, Kalle Valo wrote:
-> Pkshih <pkshih@realtek.com> writes:
-> 
->> On Fri, 2018-06-29 at 10:30 +0300, Kalle Valo wrote:
->>> Pkshih <pkshih@realtek.com> writes:
->>> 
->>> > On Tue, 2018-05-29 at 08:18 +0300, Kalle Valo wrote:
->>> >> <pkshih@realtek.com> writes:
->>> >> 
->>> >
->>> > Because C2H data is little endian order, the struct will look like
->>> > struct foo {
->>> > #ifdef __LITTLE_ENDIAN
->>> > 	u8 bar:4;
->>> > 	u8 koo:4;
->>> > #else
->>> > 	u8 koo:4;
->>> > 	u8 bar:4;
->>> > #endif
->>> > }
->>> 
->>> With u8 you don't need endian check, right? I would assume that with
->>> both little and big endian bar and koo would be in the same place.
+On 26 July 2018 at 13:45, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> w=
+rote:
+> Wen Gong <wgong@codeaurora.org> writes:
+>
+>> Upstream kernel has an interface to help adjust sk_pacing_shift to help
+>> improve TCP UL throughput.
+>> The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
+>> WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
+>> VHT80 TCP UL throughput testing result shows 6 is the optimal.
+>> Overwrite the sk_pacing_shift to 6 in ath10k driver.
+>
+> When I tested this, a pacing shift of 8 was quite close to optimal as
+> well for ath10k. Why are you getting different results?
+>
+>> Tested with QCA6174 PCI with firmware
+>> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
+>> It's not a regression with new firmware releases.
 >>
->> I think u8 with bitfield would be different between little and big endian
->> machines.
-> 
-> To me that does not make any sense, I have never heard about bit
-> endianness any of the devices I have worked on.
-Unfortunately, the order in which these fields are laid out is different
-between big and little endian, even when only dealing with u8.
-That alone is a strong reason to avoid bitfields entirely for anything
-shared between the host and something else.
+>> There have 2 test result of different settings:
+>>
+>> ARM CPU based device with QCA6174A PCI with different
+>> sk_pacing_shift:
 
-- Felix
+Different firmware releases have different tx buffering
+characteristics. In some 10.2 firmware running on QCA9888 you can have
+up to 5ms of delayed aggregation. Ideally sk_pacing_shift should be
+adjusted per firmware release. Maybe this should become part of the
+ath10k firmware wrapping "fw features" stuff?
+
+
+Micha=C5=82
