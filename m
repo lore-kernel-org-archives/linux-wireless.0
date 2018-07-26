@@ -1,84 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35797 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752356AbeGAONF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54590 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728378AbeGZIcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:05 -0400
-Received: by mail-wm0-f66.google.com with SMTP id z137-v6so6241886wmc.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:05 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 02/19] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
-Date: Sun,  1 Jul 2018 16:12:14 +0200
-Message-Id: <20180701141231.25323-3-lorenzo.bianconi@redhat.com> (sfid-20180701_161315_566195_F266328E)
+        Thu, 26 Jul 2018 04:32:12 -0400
+From: Wen Gong <wgong@qti-qualcomm.corp-partner.google.com>
+To: ath10k@lists.infradead.org, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] mac80211: Save sk_pacing_shift to ieee80211_hw
+Date: Thu, 26 Jul 2018 15:16:32 +0800
+Message-Id: <1532589393-16182-2-git-send-email-wgong@qti-qualcomm.corp-partner.google.com> (sfid-20180726_091646_712949_CE1BBE75)
+In-Reply-To: <1532589393-16182-1-git-send-email-wgong@qti-qualcomm.corp-partner.google.com>
+References: <1532589393-16182-1-git-send-email-wgong@qti-qualcomm.corp-partner.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
-order to reuse them in mt76x2u mcu related code
+From: Wen Gong <wgong@codeaurora.org>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Add the skb_pacing_shirt adjustment, but this change make it
+configurable for other driver. If no other driver set it, then
+mac8011 will use the default value.
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ include/net/mac80211.h | 1 +
+ net/mac80211/main.c    | 2 ++
+ net/mac80211/tx.c      | 2 +-
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-index dfd36d736b06..743da57760dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-@@ -23,23 +23,6 @@
- #include "mt76x2_dma.h"
- #include "mt76x2_eeprom.h"
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 851a5e1..f600d08 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2279,6 +2279,7 @@ struct ieee80211_hw {
+ 	u8 n_cipher_schemes;
+ 	const struct ieee80211_cipher_scheme *cipher_schemes;
+ 	u8 max_nan_de_entries;
++	u8 tx_sk_pacing_shift;
+ };
  
--struct mt76x2_fw_header {
--	__le32 ilm_len;
--	__le32 dlm_len;
--	__le16 build_ver;
--	__le16 fw_ver;
--	u8 pad[4];
--	char build_time[16];
--};
--
--struct mt76x2_patch_header {
--	char build_time[16];
--	char platform[4];
--	char hw_version[4];
--	char patch_version[4];
--	u8 pad[2];
--};
--
- static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
- {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-index d7a7e83262ce..e40293f21417 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
- 	u8 offset1;
- } __packed __aligned(4);
+ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index fb73451..72dce49 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -584,6 +584,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	local->ops = ops;
+ 	local->use_chanctx = use_chanctx;
  
-+struct mt76x2_fw_header {
-+	__le32 ilm_len;
-+	__le32 dlm_len;
-+	__le16 build_ver;
-+	__le16 fw_ver;
-+	u8 pad[4];
-+	char build_time[16];
-+};
++	local->hw.tx_sk_pacing_shift = 8;
 +
-+struct mt76x2_patch_header {
-+	char build_time[16];
-+	char platform[4];
-+	char hw_version[4];
-+	char patch_version[4];
-+	u8 pad[2];
-+};
-+
- int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
- 			 u32 param);
- int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
+ 	/* set up some defaults */
+ 	local->hw.queues = 1;
+ 	local->hw.max_rates = 1;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 44b5dfe..a2d61b9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3596,7 +3596,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		 * second, so 8 is ~4ms of queued data. Only affects local TCP
+ 		 * sockets.
+ 		 */
+-		sk_pacing_shift_update(skb->sk, 8);
++		sk_pacing_shift_update(skb->sk, sdata->local->hw.tx_sk_pacing_shift);
+ 
+ 		fast_tx = rcu_dereference(sta->fast_tx);
+ 
 -- 
-2.18.0
+1.9.1
