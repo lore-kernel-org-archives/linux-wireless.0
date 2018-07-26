@@ -1,27 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:55324 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728607AbeGaTPm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54544 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726837AbeGZIcK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 15:15:42 -0400
-Date: Tue, 31 Jul 2018 10:34:20 -0700 (PDT)
-Message-Id: <20180731.103420.140879754999687959.davem@davemloft.net> (sfid-20180731_193431_109055_F8DE830B)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2018-07-31
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87bmanadg0.fsf@kamboji.qca.qualcomm.com>
-References: <87bmanadg0.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 26 Jul 2018 04:32:10 -0400
+From: Wen Gong <wgong@qti-qualcomm.corp-partner.google.com>
+To: ath10k@lists.infradead.org, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] Change sk_pacing_shift in ieee80211_hw for best tx throughput
+Date: Thu, 26 Jul 2018 15:16:31 +0800
+Message-Id: <1532589393-16182-1-git-send-email-wgong@qti-qualcomm.corp-partner.google.com> (sfid-20180726_091645_122954_634F1065)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Tue, 31 Jul 2018 13:48:15 +0300
+From: Wen Gong <wgong@codeaurora.org>
 
-> two small patches I still would like to get to the net tree for v4.18.
-> Please let me know if you have any problems.
+Add a field for ath10k to adjust the sk_pacing_shift, mac80211 set
+the default value to 8, and ath10k will change it to 6. Then mac80211
+will use the changed value 6 as sk_pacing_shift since 6 is the best
+value for tx throughput by test result.
 
-Pulled, thanks Kalle.
+Wen Gong (2):
+  mac80211: Change sk_pacing_shift saved to ieee80211_hw
+  ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ include/net/mac80211.h                | 1 +
+ net/mac80211/main.c                   | 2 ++
+ net/mac80211/tx.c                     | 2 +-
+ 4 files changed, 6 insertions(+), 1 deletion(-)
+
+-- 
+1.9.1
