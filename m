@@ -1,47 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59382 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726762AbeG3Psy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 11:48:54 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH 6/6] qtnfmac: implement basic WoWLAN support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180531091102.28666-7-sergey.matyukevich.os@quantenna.com>
-References: <20180531091102.28666-7-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Message-Id: <20180730141342.B613A61D77@smtp.codeaurora.org> (sfid-20180730_161345_236858_ECF9F68B)
-Date: Mon, 30 Jul 2018 14:13:42 +0000 (UTC)
+Received: from mga11.intel.com ([192.55.52.93]:23625 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389211AbeG0WCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 18:02:40 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
+Date: Fri, 27 Jul 2018 23:39:14 +0300
+Message-Id: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com> (sfid-20180727_223910_198724_5DED20F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+looks not so convenient due to additional driver_data field attached.
 
-> This patch implements core WoWLAN support in qtnfmac driver, including
-> processing of WoWLAN features reported by firmware and implementation
-> of cfg80211 suspend/resume/wakeup callbacks. Currently the following
-> WoWLAN triggers are supported: disconnect, magic packet,
-> custom pattern packet.
-> 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+possible form. For example,
 
-Doesn't apply anymore as I dropped patch 5
+  before:
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/quantenna/qtnfmac/cfg80211.c).
-error: could not build fake ancestor
-Applying: qtnfmac: implement basic WoWLAN support
-Patch failed at 0001 qtnfmac: implement basic WoWLAN support
-The copy of the patch that failed is found in: .git/rebase-apply/patch
+    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
 
-Patch set to Changes Requested.
+  after:
 
+    { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
+
+Drivers can be converted later on in independent way.
+
+While here, remove the unused macro with the same name
+from Ralink wireless driver.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+ include/linux/pci.h                            | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+index bc0ca5f58f38..283e2e607bba 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+@@ -27,12 +27,6 @@
+ #include <linux/io.h>
+ #include <linux/pci.h>
+ 
+-/*
+- * This variable should be used with the
+- * pci_driver structure initialization.
+- */
+-#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+-
+ /*
+  * PCI driver handlers.
+  */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d0961aefdbae..af29a32865c5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -825,6 +825,21 @@ struct pci_driver {
+ 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+ 
++/**
++ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
++ * @vend: the vendor name
++ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
++ * @data: the driver data to be filled
++ *
++ * This macro is used to create a struct pci_device_id that matches a
++ * specific PCI device.  The subvendor, and subdevice fields will be set
++ * to PCI_ANY_ID.
++ */
++#define PCI_DEVICE_DATA(vend, dev, data) \
++	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
++	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0 \
++	.driver_data = (kernel_ulong_t)(data)
++
+ enum {
+ 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
+ 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
 -- 
-https://patchwork.kernel.org/patch/10440567/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.18.0
