@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40944 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387831AbeGWNfv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 09:35:51 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, andy.gross@linaro.org, robh@kernel.org,
-        devicetree@vger.kernel.org, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v4 2/6] ath10k: Add support to create boardname for non-bmi target
-Date: Mon, 23 Jul 2018 18:04:24 +0530
-Message-Id: <20180723123428.12993-3-govinds@codeaurora.org> (sfid-20180723_143530_912325_027C37D1)
-In-Reply-To: <20180723123428.12993-1-govinds@codeaurora.org>
-References: <20180723123428.12993-1-govinds@codeaurora.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10145 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730771AbeG0O2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 10:28:00 -0400
+From: YueHaibing <yuehaibing@huawei.com>
+To: <davem@davemloft.net>, <sgruszka@redhat.com>,
+        <helmut.schaa@googlemail.com>, <kvalo@codeaurora.org>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] rt2x00:  remove redundant functions rt2x00mac_sta_{add/remove}
+Date: Fri, 27 Jul 2018 21:05:49 +0800
+Message-ID: <20180727130549.12980-1-yuehaibing@huawei.com> (sfid-20180727_150618_189269_18D003E0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+Only rt2800 subdriver of rt2x00 implement sta_add() and sta_remove(),
+rt2x00mac_sta_add and rt2x00mac_sta_remove has no callers after
+commit 9c87758cf089 ("rt2x00: call sta_add/remove directly in rt2800").
+So can be removed.
 
-Add support to create the boardname for non-bmi targets
-like WCN3990, which uses qmi for bdf download. This
-boardname is used to parse the board data from board-2.bin.
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
- drivers/net/wireless/ath/ath10k/core.h | 2 ++
- 2 files changed, 10 insertions(+)
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 85c58ebbfb26..840e301b6a6e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1440,6 +1440,14 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+index c380c1f..fa2fd64 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -527,24 +527,6 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ EXPORT_SYMBOL_GPL(rt2x00mac_set_key);
+ #endif /* CONFIG_RT2X00_LIB_CRYPTO */
  
-+	if (ar->id.qmi_ids_valid) {
-+		scnprintf(name, name_len,
-+			  "bus=%s,qmi-board-id=%x",
-+			  ath10k_bus_str(ar->hif.bus),
-+			  ar->id.qmi_board_id);
-+		goto out;
-+	}
-+
- 	scnprintf(name, name_len,
- 		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
- 		  ath10k_bus_str(ar->hif.bus),
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 427ee5752bb0..3a4ac3c0d5a6 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -941,6 +941,8 @@ struct ath10k {
- 		u32 subsystem_device;
- 
- 		bool bmi_ids_valid;
-+		bool qmi_ids_valid;
-+		u32 qmi_board_id;
- 		u8 bmi_board_id;
- 		u8 bmi_chip_id;
- 
+-int rt2x00mac_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		      struct ieee80211_sta *sta)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-
+-	return rt2x00dev->ops->lib->sta_add(rt2x00dev, vif, sta);
+-}
+-EXPORT_SYMBOL_GPL(rt2x00mac_sta_add);
+-
+-int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			 struct ieee80211_sta *sta)
+-{
+-	struct rt2x00_dev *rt2x00dev = hw->priv;
+-
+-	return rt2x00dev->ops->lib->sta_remove(rt2x00dev, sta);
+-}
+-EXPORT_SYMBOL_GPL(rt2x00mac_sta_remove);
+-
+ void rt2x00mac_sw_scan_start(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     const u8 *mac_addr)
 -- 
-2.17.0
+2.7.0
