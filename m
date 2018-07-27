@@ -1,88 +1,696 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43120 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753608AbeGDGJi (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38618 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729568AbeG0OKq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 02:09:38 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 04 Jul 2018 11:39:37 +0530
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/7] cfg80211: Add new NL command to configure peer
- specific rssi threshold
-In-Reply-To: <1530264578.3481.34.camel@sipsolutions.net>
-References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
- <1528886747-26342-3-git-send-email-tamizhr@codeaurora.org>
- <1530264578.3481.34.camel@sipsolutions.net>
-Message-ID: <5d7f6ec9ffe0272b41102828f37706db@codeaurora.org> (sfid-20180704_080947_703446_F0138B90)
+        Fri, 27 Jul 2018 10:10:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:29 +0300
+Message-Id: <20180727124838.25910-8-luca@coelho.fi> (sfid-20180727_144901_852949_F28B8CC6)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 07/16] iwlwifi: allow masking out memory areas from the fw dump
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-29 14:59, Johannes Berg wrote:
-> On Wed, 2018-06-13 at 16:15 +0530, Tamizh chelvam wrote:
->> 
->> + * @NL80211_ATTR_STA_MON: Station's connection monitor configuration 
->> in a
->> + *	nested attribute with %NL80211_ATTR_STA_MON_* sub-attributes.
-> 
-> Can't we reuse the existing attributes in this nesting?
-This new attributes introduced as per the previous discussion.
-https://patchwork.kernel.org/patch/10240697/
-Is my understanding correct ?
-> 
->> +/**
->> + * enum nl80211_sta_mon_rssi_threshold_event - RSSI threshold event
->> + * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW: The RSSI level is lower 
->> than the
->> + *	configured threshold
->> + * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH: The RSSI is higher 
->> than the
->> + *	configured threshold
->> + */
->> +enum nl80211_sta_mon_rssi_threshold_event {
->> +	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW,
->> +	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH,
->> +};
-> 
-> It seems like this should already exist also for the CQM? Can we not
-> reuse it?
-> 
->> +static int nl80211_set_sta_mon_rssi(struct genl_info *info,
->> +				    const u8 *peer, s32 threshold,
->> +				    u32 hysteresis)
->> +{
->> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +	struct net_device *dev = info->user_ptr[1];
->> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
->> +
->> +	if (threshold > 0)
->> +		return -EINVAL;
->> +
->> +	if (threshold == 0)
->> +		hysteresis = 0;
->> +
->> +	if (!rdev->ops->set_sta_mon_rssi_config)
->> +		return -EOPNOTSUPP;
->> +
->> +	if ((wdev->iftype != NL80211_IFTYPE_AP &&
->> +	     wdev->iftype != NL80211_IFTYPE_P2P_GO &&
->> +	     wdev->iftype != NL80211_IFTYPE_AP_VLAN) ||
->> +	    !wiphy_ext_feature_isset(&rdev->wiphy,
->> +				NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG))
->> +		return -EOPNOTSUPP;
->> +
->> +	return rdev_set_sta_mon_rssi_config(rdev, dev, peer,
->> +					    threshold, hysteresis);
->> +}
-> 
-> Wait, you went to all this effort in the first patch and now you don't
-> add this to the list?
-> 
-No, the list and the rssi_config structure is for multi threshold value 
-and not for single threshold.
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Thanks,
-Tamizh.
+Reading and dumping memory areas takes time, and sometimes
+dumping all of the areas isn't necessary.
+
+Allow choosing the memory areas which should be dumped.
+
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 284 ++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
+ drivers/net/wireless/intel/iwlwifi/fw/img.h   |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  13 +
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  98 +++---
+ 7 files changed, 244 insertions(+), 157 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index fa283285fcbe..a31a42e673c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -243,39 +243,47 @@ static void iwl_fw_dump_fifos(struct iwl_fw_runtime *fwrt,
+ 	if (!iwl_trans_grab_nic_access(fwrt->trans, &flags))
+ 		return;
+ 
+-	/* Pull RXF1 */
+-	iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->lmac[0].rxfifo1_size, 0, 0);
+-	/* Pull RXF2 */
+-	iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->rxfifo2_size,
+-			  RXF_DIFF_FROM_PREV, 1);
+-	/* Pull LMAC2 RXF1 */
+-	if (fwrt->smem_cfg.num_lmacs > 1)
+-		iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->lmac[1].rxfifo1_size,
+-				  LMAC2_PRPH_OFFSET, 2);
+-
+-	/* Pull TXF data from LMAC1 */
+-	for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries; i++) {
+-		/* Mark the number of TXF we're pulling now */
+-		iwl_trans_write_prph(fwrt->trans, TXF_LARC_NUM, i);
+-		iwl_fwrt_dump_txf(fwrt, dump_data, cfg->lmac[0].txfifo_size[i],
+-				  0, i);
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RXF)) {
++		/* Pull RXF1 */
++		iwl_fwrt_dump_rxf(fwrt, dump_data,
++				  cfg->lmac[0].rxfifo1_size, 0, 0);
++		/* Pull RXF2 */
++		iwl_fwrt_dump_rxf(fwrt, dump_data, cfg->rxfifo2_size,
++				  RXF_DIFF_FROM_PREV, 1);
++		/* Pull LMAC2 RXF1 */
++		if (fwrt->smem_cfg.num_lmacs > 1)
++			iwl_fwrt_dump_rxf(fwrt, dump_data,
++					  cfg->lmac[1].rxfifo1_size,
++					  LMAC2_PRPH_OFFSET, 2);
+ 	}
+ 
+-	/* Pull TXF data from LMAC2 */
+-	if (fwrt->smem_cfg.num_lmacs > 1) {
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXF)) {
++		/* Pull TXF data from LMAC1 */
+ 		for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries; i++) {
+ 			/* Mark the number of TXF we're pulling now */
+-			iwl_trans_write_prph(fwrt->trans,
+-					     TXF_LARC_NUM + LMAC2_PRPH_OFFSET,
+-					     i);
++			iwl_trans_write_prph(fwrt->trans, TXF_LARC_NUM, i);
+ 			iwl_fwrt_dump_txf(fwrt, dump_data,
+-					  cfg->lmac[1].txfifo_size[i],
+-					  LMAC2_PRPH_OFFSET,
+-					  i + cfg->num_txfifo_entries);
++					  cfg->lmac[0].txfifo_size[i], 0, i);
++		}
++
++		/* Pull TXF data from LMAC2 */
++		if (fwrt->smem_cfg.num_lmacs > 1) {
++			for (i = 0; i < fwrt->smem_cfg.num_txfifo_entries;
++			     i++) {
++				/* Mark the number of TXF we're pulling now */
++				iwl_trans_write_prph(fwrt->trans,
++						     TXF_LARC_NUM +
++						     LMAC2_PRPH_OFFSET, i);
++				iwl_fwrt_dump_txf(fwrt, dump_data,
++						  cfg->lmac[1].txfifo_size[i],
++						  LMAC2_PRPH_OFFSET,
++						  i + cfg->num_txfifo_entries);
++			}
+ 		}
+ 	}
+ 
+-	if (fw_has_capa(&fwrt->fw->ucode_capa,
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_INTERNAL_TXF) &&
++	    fw_has_capa(&fwrt->fw->ucode_capa,
+ 			IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG)) {
+ 		/* Pull UMAC internal TXF data from all TXFs */
+ 		for (i = 0;
+@@ -600,42 +608,54 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
+ 		fifo_data_len = 0;
+ 
+-		/* Count RXF2 size */
+-		if (mem_cfg->rxfifo2_size) {
+-			/* Add header info */
+-			fifo_data_len += mem_cfg->rxfifo2_size +
+-					 sizeof(*dump_data) +
+-					 sizeof(struct iwl_fw_error_dump_fifo);
+-		}
+-
+-		/* Count RXF1 sizes */
+-		for (i = 0; i < mem_cfg->num_lmacs; i++) {
+-			if (!mem_cfg->lmac[i].rxfifo1_size)
+-				continue;
+-
+-			/* Add header info */
+-			fifo_data_len += mem_cfg->lmac[i].rxfifo1_size +
+-					 sizeof(*dump_data) +
+-					 sizeof(struct iwl_fw_error_dump_fifo);
+-		}
++		if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RXF)) {
+ 
+-		/* Count TXF sizes */
+-		for (i = 0; i < mem_cfg->num_lmacs; i++) {
+-			int j;
++			/* Count RXF2 size */
++			if (mem_cfg->rxfifo2_size) {
++				/* Add header info */
++				fifo_data_len +=
++					mem_cfg->rxfifo2_size +
++					sizeof(*dump_data) +
++					sizeof(struct iwl_fw_error_dump_fifo);
++			}
+ 
+-			for (j = 0; j < mem_cfg->num_txfifo_entries; j++) {
+-				if (!mem_cfg->lmac[i].txfifo_size[j])
++			/* Count RXF1 sizes */
++			for (i = 0; i < mem_cfg->num_lmacs; i++) {
++				if (!mem_cfg->lmac[i].rxfifo1_size)
+ 					continue;
+ 
+ 				/* Add header info */
+ 				fifo_data_len +=
+-					mem_cfg->lmac[i].txfifo_size[j] +
++					mem_cfg->lmac[i].rxfifo1_size +
+ 					sizeof(*dump_data) +
+ 					sizeof(struct iwl_fw_error_dump_fifo);
+ 			}
+ 		}
+ 
+-		if (fw_has_capa(&fwrt->fw->ucode_capa,
++		if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXF)) {
++			size_t fifo_const_len = sizeof(*dump_data) +
++				sizeof(struct iwl_fw_error_dump_fifo);
++
++			/* Count TXF sizes */
++			for (i = 0; i < mem_cfg->num_lmacs; i++) {
++				int j;
++
++				for (j = 0; j < mem_cfg->num_txfifo_entries;
++				     j++) {
++					if (!mem_cfg->lmac[i].txfifo_size[j])
++						continue;
++
++					/* Add header info */
++					fifo_data_len +=
++						fifo_const_len +
++						mem_cfg->lmac[i].txfifo_size[j];
++				}
++			}
++		}
++
++		if ((fwrt->fw->dbg_dump_mask &
++		    BIT(IWL_FW_ERROR_DUMP_INTERNAL_TXF)) &&
++		    fw_has_capa(&fwrt->fw->ucode_capa,
+ 				IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG)) {
+ 			for (i = 0;
+ 			     i < ARRAY_SIZE(mem_cfg->internal_txfifo_size);
+@@ -652,7 +672,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 		}
+ 
+ 		/* Make room for PRPH registers */
+-		if (!fwrt->trans->cfg->gen2) {
++		if (!fwrt->trans->cfg->gen2 &&
++		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PRPH)) {
+ 			for (i = 0; i < ARRAY_SIZE(iwl_prph_dump_addr_comm);
+ 			     i++) {
+ 				/* The range includes both boundaries */
+@@ -667,7 +688,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 		}
+ 
+ 		if (!fwrt->trans->cfg->gen2 &&
+-		    fwrt->trans->cfg->mq_rx_supported) {
++		    fwrt->trans->cfg->mq_rx_supported &&
++		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PRPH)) {
+ 			for (i = 0; i <
+ 				ARRAY_SIZE(iwl_prph_dump_addr_9000); i++) {
+ 				/* The range includes both boundaries */
+@@ -681,34 +703,42 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 			}
+ 		}
+ 
+-		if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000)
++		if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 &&
++		    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RADIO_REG))
+ 			radio_len = sizeof(*dump_data) + RADIO_REG_MAX_READ;
+ 	}
+ 
+ 	file_len = sizeof(*dump_file) +
+-		   sizeof(*dump_data) * 3 +
+-		   sizeof(*dump_smem_cfg) +
+ 		   fifo_data_len +
+ 		   prph_len +
+-		   radio_len +
+-		   sizeof(*dump_info);
+-
+-	/* Make room for the SMEM, if it exists */
+-	if (smem_len)
+-		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + smem_len;
+-
+-	/* Make room for the secondary SRAM, if it exists */
+-	if (sram2_len)
+-		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + sram2_len;
+-
+-	/* Make room for MEM segments */
+-	for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
+-		file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
+-			    le32_to_cpu(fw_dbg_mem[i].len);
++		   radio_len;
++
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_DEV_FW_INFO))
++		file_len += sizeof(*dump_data) + sizeof(*dump_info);
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM_CFG))
++		file_len += sizeof(*dump_data) + sizeof(*dump_smem_cfg);
++
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
++		/* Make room for the SMEM, if it exists */
++		if (smem_len)
++			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
++				smem_len;
++
++		/* Make room for the secondary SRAM, if it exists */
++		if (sram2_len)
++			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
++				sram2_len;
++
++		/* Make room for MEM segments */
++		for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
++			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
++				    le32_to_cpu(fw_dbg_mem[i].len);
++		}
+ 	}
+ 
+ 	/* Make room for fw's virtual image pages, if it exists */
+-	if (!fwrt->trans->cfg->gen2 &&
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING) &&
++	    !fwrt->trans->cfg->gen2 &&
+ 	    fwrt->fw->img[fwrt->cur_fw_img].paging_mem_size &&
+ 	    fwrt->fw_paging_db[0].fw_paging_block)
+ 		file_len += fwrt->num_of_paging_blk *
+@@ -722,12 +752,14 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 			   sizeof(*dump_info) + sizeof(*dump_smem_cfg);
+ 	}
+ 
+-	if (fwrt->dump.desc)
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_ERROR_INFO) &&
++	    fwrt->dump.desc)
+ 		file_len += sizeof(*dump_data) + sizeof(*dump_trig) +
+ 			    fwrt->dump.desc->len;
+ 
+-	if (!fwrt->fw->n_dbg_mem_tlv)
+-		file_len += sram_len + sizeof(*dump_mem);
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM) &&
++	    !fwrt->fw->n_dbg_mem_tlv)
++		file_len += sizeof(*dump_data) + sram_len + sizeof(*dump_mem);
+ 
+ 	dump_file = vzalloc(file_len);
+ 	if (!dump_file) {
+@@ -740,48 +772,56 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
+ 	dump_data = (void *)dump_file->data;
+ 
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
+-	dump_data->len = cpu_to_le32(sizeof(*dump_info));
+-	dump_info = (void *)dump_data->data;
+-	dump_info->device_family =
+-		fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
+-			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
+-	dump_info->hw_step = cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
+-	memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
+-	       sizeof(dump_info->fw_human_readable));
+-	strncpy(dump_info->dev_human_readable, fwrt->trans->cfg->name,
+-		sizeof(dump_info->dev_human_readable));
+-	strncpy(dump_info->bus_human_readable, fwrt->dev->bus->name,
+-		sizeof(dump_info->bus_human_readable));
+-
+-	dump_data = iwl_fw_error_next_data(dump_data);
+-
+-	/* Dump shared memory configuration */
+-	dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_CFG);
+-	dump_data->len = cpu_to_le32(sizeof(*dump_smem_cfg));
+-	dump_smem_cfg = (void *)dump_data->data;
+-	dump_smem_cfg->num_lmacs = cpu_to_le32(mem_cfg->num_lmacs);
+-	dump_smem_cfg->num_txfifo_entries =
+-		cpu_to_le32(mem_cfg->num_txfifo_entries);
+-	for (i = 0; i < MAX_NUM_LMAC; i++) {
+-		int j;
+-
+-		for (j = 0; j < TX_FIFO_MAX_NUM; j++)
+-			dump_smem_cfg->lmac[i].txfifo_size[j] =
+-				cpu_to_le32(mem_cfg->lmac[i].txfifo_size[j]);
+-		dump_smem_cfg->lmac[i].rxfifo1_size =
+-			cpu_to_le32(mem_cfg->lmac[i].rxfifo1_size);
+-	}
+-	dump_smem_cfg->rxfifo2_size = cpu_to_le32(mem_cfg->rxfifo2_size);
+-	dump_smem_cfg->internal_txfifo_addr =
+-		cpu_to_le32(mem_cfg->internal_txfifo_addr);
+-	for (i = 0; i < TX_FIFO_INTERNAL_MAX_NUM; i++) {
+-		dump_smem_cfg->internal_txfifo_size[i] =
+-			cpu_to_le32(mem_cfg->internal_txfifo_size[i]);
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_DEV_FW_INFO)) {
++		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_DEV_FW_INFO);
++		dump_data->len = cpu_to_le32(sizeof(*dump_info));
++		dump_info = (void *)dump_data->data;
++		dump_info->device_family =
++			fwrt->trans->cfg->device_family ==
++			IWL_DEVICE_FAMILY_7000 ?
++				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
++				cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++		dump_info->hw_step =
++			cpu_to_le32(CSR_HW_REV_STEP(fwrt->trans->hw_rev));
++		memcpy(dump_info->fw_human_readable, fwrt->fw->human_readable,
++		       sizeof(dump_info->fw_human_readable));
++		strncpy(dump_info->dev_human_readable, fwrt->trans->cfg->name,
++			sizeof(dump_info->dev_human_readable) - 1);
++		strncpy(dump_info->bus_human_readable, fwrt->dev->bus->name,
++			sizeof(dump_info->bus_human_readable) - 1);
++
++		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+-	dump_data = iwl_fw_error_next_data(dump_data);
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM_CFG)) {
++		/* Dump shared memory configuration */
++		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_CFG);
++		dump_data->len = cpu_to_le32(sizeof(*dump_smem_cfg));
++		dump_smem_cfg = (void *)dump_data->data;
++		dump_smem_cfg->num_lmacs = cpu_to_le32(mem_cfg->num_lmacs);
++		dump_smem_cfg->num_txfifo_entries =
++			cpu_to_le32(mem_cfg->num_txfifo_entries);
++		for (i = 0; i < MAX_NUM_LMAC; i++) {
++			int j;
++			u32 *txf_size = mem_cfg->lmac[i].txfifo_size;
++
++			for (j = 0; j < TX_FIFO_MAX_NUM; j++)
++				dump_smem_cfg->lmac[i].txfifo_size[j] =
++					cpu_to_le32(txf_size[j]);
++			dump_smem_cfg->lmac[i].rxfifo1_size =
++				cpu_to_le32(mem_cfg->lmac[i].rxfifo1_size);
++		}
++		dump_smem_cfg->rxfifo2_size =
++			cpu_to_le32(mem_cfg->rxfifo2_size);
++		dump_smem_cfg->internal_txfifo_addr =
++			cpu_to_le32(mem_cfg->internal_txfifo_addr);
++		for (i = 0; i < TX_FIFO_INTERNAL_MAX_NUM; i++) {
++			dump_smem_cfg->internal_txfifo_size[i] =
++				cpu_to_le32(mem_cfg->internal_txfifo_size[i]);
++		}
++
++		dump_data = iwl_fw_error_next_data(dump_data);
++	}
+ 
+ 	/* We only dump the FIFOs if the FW is in error state */
+ 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
+@@ -790,7 +830,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 			iwl_read_radio_regs(fwrt, &dump_data);
+ 	}
+ 
+-	if (fwrt->dump.desc) {
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_ERROR_INFO) &&
++	    fwrt->dump.desc) {
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_ERROR_INFO);
+ 		dump_data->len = cpu_to_le32(sizeof(*dump_trig) +
+ 					     fwrt->dump.desc->len);
+@@ -805,7 +846,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	if (monitor_dump_only)
+ 		goto dump_trans_data;
+ 
+-	if (!fwrt->fw->n_dbg_mem_tlv) {
++	if (!fwrt->fw->n_dbg_mem_tlv &&
++	    fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+ 		dump_data->len = cpu_to_le32(sram_len + sizeof(*dump_mem));
+ 		dump_mem = (void *)dump_data->data;
+@@ -821,6 +863,9 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
+ 		bool success;
+ 
++		if (!(fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)))
++			break;
++
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+ 		dump_data->len = cpu_to_le32(len + sizeof(*dump_mem));
+ 		dump_mem = (void *)dump_data->data;
+@@ -854,7 +899,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 			dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+-	if (smem_len) {
++	if (smem_len && fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
+ 		IWL_DEBUG_INFO(fwrt, "WRT SMEM dump\n");
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+ 		dump_data->len = cpu_to_le32(smem_len + sizeof(*dump_mem));
+@@ -867,7 +912,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+-	if (sram2_len) {
++	if (sram2_len && fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_MEM)) {
+ 		IWL_DEBUG_INFO(fwrt, "WRT SRAM dump\n");
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+ 		dump_data->len = cpu_to_le32(sram2_len + sizeof(*dump_mem));
+@@ -881,7 +926,8 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	}
+ 
+ 	/* Dump fw's virtual image */
+-	if (!fwrt->trans->cfg->gen2 &&
++	if (fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING) &&
++	    !fwrt->trans->cfg->gen2 &&
+ 	    fwrt->fw->img[fwrt->cur_fw_img].paging_mem_size &&
+ 	    fwrt->fw_paging_db[0].fw_paging_block) {
+ 		IWL_DEBUG_INFO(fwrt, "WRT paging dump\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 9d939cbaf6c6..c967dfbeacaf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -146,6 +146,9 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_FW_GSCAN_CAPA	= 50,
+ 	IWL_UCODE_TLV_FW_MEM_SEG	= 51,
+ 	IWL_UCODE_TLV_IML		= 52,
++
++	/* TLVs 0x1000-0x2000 are for internal driver usage */
++	IWL_UCODE_TLV_FW_DBG_DUMP_LST	= 0x1000,
+ };
+ 
+ struct iwl_ucode_tlv {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+index f4912382b6af..6c5de68b5244 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+@@ -299,6 +299,7 @@ struct iwl_fw {
+ 	size_t dbg_trigger_tlv_len[FW_DBG_TRIGGER_MAX];
+ 	u8 dbg_dest_reg_num;
+ 	struct iwl_gscan_capabilities gscan_capa;
++	u32 dbg_dump_mask;
+ };
+ 
+ static inline const char *get_fw_dbg_mode_string(int mode)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 38fcc6a9d421..370281e338b2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1043,6 +1043,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			pieces->dbg_trigger_tlv_len[trigger_id] = tlv_len;
+ 			break;
+ 			}
++		case IWL_UCODE_TLV_FW_DBG_DUMP_LST: {
++			if (tlv_len != sizeof(u32)) {
++				IWL_ERR(drv,
++					"dbg lst mask size incorrect, skip\n");
++				break;
++			}
++
++			drv->fw.dbg_dump_mask =
++				le32_to_cpup((__le32 *)tlv_data);
++			break;
++			}
+ 		case IWL_UCODE_TLV_SEC_RT_USNIFFER:
+ 			*usniffer_images = true;
+ 			iwl_store_ucode_sec(pieces, tlv_data,
+@@ -1316,6 +1327,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	fw->ucode_capa.standard_phy_calibration_size =
+ 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
+ 	fw->ucode_capa.n_scan_channels = IWL_DEFAULT_SCAN_CHANNELS;
++	/* dump all fw memory areas by default */
++	fw->dbg_dump_mask = 0xffffffff;
+ 
+ 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
+ 	if (!pieces)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 9483f76476de..279dd7b7a3fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -771,6 +771,7 @@ struct iwl_trans {
+ 	const struct iwl_fw_dbg_dest_tlv_v1 *dbg_dest_tlv;
+ 	const struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_CONF_MAX];
+ 	struct iwl_fw_dbg_trigger_tlv * const *dbg_trigger_tlv;
++	u32 dbg_dump_mask;
+ 	u8 dbg_dest_reg_num;
+ 
+ 	enum iwl_plat_pm_mode system_pm_mode;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index f5b117d8c354..99c086048aea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -746,6 +746,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	memcpy(trans->dbg_conf_tlv, mvm->fw->dbg_conf_tlv,
+ 	       sizeof(trans->dbg_conf_tlv));
+ 	trans->dbg_trigger_tlv = mvm->fw->dbg_trigger_tlv;
++	trans->dbg_dump_mask = mvm->fw->dbg_dump_mask;
+ 
+ 	trans->iml = mvm->fw->iml;
+ 	trans->iml_len = mvm->fw->iml_len;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 603458aa2923..7928e8089f42 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -84,6 +84,7 @@
+ #include "iwl-scd.h"
+ #include "iwl-agn-hw.h"
+ #include "fw/error-dump.h"
++#include "fw/dbg.h"
+ #include "internal.h"
+ #include "iwl-fh.h"
+ 
+@@ -2978,7 +2979,8 @@ static struct iwl_trans_dump_data
+ 	u32 monitor_len;
+ 	int i, ptr;
+ 	bool dump_rbs = test_bit(STATUS_FW_ERROR, &trans->status) &&
+-			!trans->cfg->mq_rx_supported;
++			!trans->cfg->mq_rx_supported &&
++			trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_RB);
+ 
+ 	/* transport dump header */
+ 	len = sizeof(*dump_data);
+@@ -3030,6 +3032,10 @@ static struct iwl_trans_dump_data
+ 	}
+ 
+ 	if (trigger && (trigger->mode & IWL_FW_DBG_TRIGGER_MONITOR_ONLY)) {
++		if (!(trans->dbg_dump_mask &
++		      BIT(IWL_FW_ERROR_DUMP_FW_MONITOR)))
++			return NULL;
++
+ 		dump_data = vzalloc(len);
+ 		if (!dump_data)
+ 			return NULL;
+@@ -3042,15 +3048,20 @@ static struct iwl_trans_dump_data
+ 	}
+ 
+ 	/* CSR registers */
+-	len += sizeof(*data) + IWL_CSR_TO_DUMP;
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_CSR))
++		len += sizeof(*data) + IWL_CSR_TO_DUMP;
+ 
+ 	/* FH registers */
+-	if (trans->cfg->gen2)
+-		len += sizeof(*data) +
+-		       (FH_MEM_UPPER_BOUND_GEN2 - FH_MEM_LOWER_BOUND_GEN2);
+-	else
+-		len += sizeof(*data) +
+-		       (FH_MEM_UPPER_BOUND - FH_MEM_LOWER_BOUND);
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FH_REGS)) {
++		if (trans->cfg->gen2)
++			len += sizeof(*data) +
++			       (FH_MEM_UPPER_BOUND_GEN2 -
++				FH_MEM_LOWER_BOUND_GEN2);
++		else
++			len += sizeof(*data) +
++			       (FH_MEM_UPPER_BOUND -
++				FH_MEM_LOWER_BOUND);
++	}
+ 
+ 	if (dump_rbs) {
+ 		/* Dump RBs is supported only for pre-9000 devices (1 queue) */
+@@ -3066,7 +3077,8 @@ static struct iwl_trans_dump_data
+ 	}
+ 
+ 	/* Paged memory for gen2 HW */
+-	if (trans->cfg->gen2)
++	if (trans->cfg->gen2 &&
++	    trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING))
+ 		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++)
+ 			len += sizeof(*data) +
+ 			       sizeof(struct iwl_fw_error_dump_paging) +
+@@ -3078,41 +3090,51 @@ static struct iwl_trans_dump_data
+ 
+ 	len = 0;
+ 	data = (void *)dump_data->data;
+-	data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_TXCMD);
+-	txcmd = (void *)data->data;
+-	spin_lock_bh(&cmdq->lock);
+-	ptr = cmdq->write_ptr;
+-	for (i = 0; i < cmdq->n_window; i++) {
+-		u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
+-		u32 caplen, cmdlen;
+-
+-		cmdlen = iwl_trans_pcie_get_cmdlen(trans, cmdq->tfds +
+-						   trans_pcie->tfd_size * ptr);
+-		caplen = min_t(u32, TFD_MAX_PAYLOAD_SIZE, cmdlen);
+-
+-		if (cmdlen) {
+-			len += sizeof(*txcmd) + caplen;
+-			txcmd->cmdlen = cpu_to_le32(cmdlen);
+-			txcmd->caplen = cpu_to_le32(caplen);
+-			memcpy(txcmd->data, cmdq->entries[idx].cmd, caplen);
+-			txcmd = (void *)((u8 *)txcmd->data + caplen);
++
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_TXCMD)) {
++		u16 tfd_size = trans_pcie->tfd_size;
++
++		data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_TXCMD);
++		txcmd = (void *)data->data;
++		spin_lock_bh(&cmdq->lock);
++		ptr = cmdq->write_ptr;
++		for (i = 0; i < cmdq->n_window; i++) {
++			u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
++			u32 caplen, cmdlen;
++
++			cmdlen = iwl_trans_pcie_get_cmdlen(trans,
++							   cmdq->tfds +
++							   tfd_size * ptr);
++			caplen = min_t(u32, TFD_MAX_PAYLOAD_SIZE, cmdlen);
++
++			if (cmdlen) {
++				len += sizeof(*txcmd) + caplen;
++				txcmd->cmdlen = cpu_to_le32(cmdlen);
++				txcmd->caplen = cpu_to_le32(caplen);
++				memcpy(txcmd->data, cmdq->entries[idx].cmd,
++				       caplen);
++				txcmd = (void *)((u8 *)txcmd->data + caplen);
++			}
++
++			ptr = iwl_queue_dec_wrap(trans, ptr);
+ 		}
++		spin_unlock_bh(&cmdq->lock);
+ 
+-		ptr = iwl_queue_dec_wrap(trans, ptr);
++		data->len = cpu_to_le32(len);
++		len += sizeof(*data);
++		data = iwl_fw_error_next_data(data);
+ 	}
+-	spin_unlock_bh(&cmdq->lock);
+-
+-	data->len = cpu_to_le32(len);
+-	len += sizeof(*data);
+-	data = iwl_fw_error_next_data(data);
+ 
+-	len += iwl_trans_pcie_dump_csr(trans, &data);
+-	len += iwl_trans_pcie_fh_regs_dump(trans, &data);
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_CSR))
++		len += iwl_trans_pcie_dump_csr(trans, &data);
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FH_REGS))
++		len += iwl_trans_pcie_fh_regs_dump(trans, &data);
+ 	if (dump_rbs)
+ 		len += iwl_trans_pcie_dump_rbs(trans, &data, num_rbs);
+ 
+ 	/* Paged memory for gen2 HW */
+-	if (trans->cfg->gen2) {
++	if (trans->cfg->gen2 &&
++	    trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_PAGING)) {
+ 		for (i = 0; i < trans_pcie->init_dram.paging_cnt; i++) {
+ 			struct iwl_fw_error_dump_paging *paging;
+ 			dma_addr_t addr =
+@@ -3132,8 +3154,8 @@ static struct iwl_trans_dump_data
+ 			len += sizeof(*data) + sizeof(*paging) + page_len;
+ 		}
+ 	}
+-
+-	len += iwl_trans_pcie_dump_monitor(trans, &data, monitor_len);
++	if (trans->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_FW_MONITOR))
++		len += iwl_trans_pcie_dump_monitor(trans, &data, monitor_len);
+ 
+ 	dump_data->len = len;
+ 
+-- 
+2.18.0
