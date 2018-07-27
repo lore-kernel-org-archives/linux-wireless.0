@@ -1,65 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:40272 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727996AbeGVIqJ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38734 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730428AbeG0O15 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:09 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 04/20] wil6210: fix temperature debugfs
-Date: Sun, 22 Jul 2018 10:47:29 +0300
-Message-Id: <1532245665-15249-5-git-send-email-merez@codeaurora.org> (sfid-20180722_095025_205771_8ACB4DC1)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Fri, 27 Jul 2018 10:27:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 16:05:59 +0300
+Message-Id: <20180727130559.28614-1-luca@coelho.fi> (sfid-20180727_150608_008616_FAEE9C3B)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 15/16] iwlwifi: move some msix and rx functions to a common place
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-For negative temperatures, "temp" debugfs is showing wrong values.
-Use signed types so proper calculations is done for sub zero
-temperatures.
+We would like to allow other utlities to init msix and rx.
+Put their declarations in a place accessible to other utilities.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 43 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 24 +++--------
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 23 ----------
+ 3 files changed, 48 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 5d1e48d..4356b32 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1388,7 +1388,7 @@ static int wil_bf_seq_open(struct inode *inode, struct file *file)
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index f6726ccef819..b63d44b7cd7c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -45,6 +45,7 @@
+ #include "iwl-debug.h"
+ #include "iwl-io.h"
+ #include "iwl-op-mode.h"
++#include "iwl-drv.h"
  
- /*---------temp------------*/
--static void print_temp(struct seq_file *s, const char *prefix, u32 t)
-+static void print_temp(struct seq_file *s, const char *prefix, s32 t)
+ /* We need 2 entries for the TX command and header, and another one might
+  * be needed for potential data in the SKB's head. The remaining ones can
+@@ -639,6 +640,20 @@ IWL_TRANS_GET_PCIE_TRANS(struct iwl_trans *trans)
+ 	return (void *)trans->trans_specific;
+ }
+ 
++static inline void iwl_pcie_clear_irq(struct iwl_trans *trans,
++				      struct msix_entry *entry)
++{
++	/*
++	 * Before sending the interrupt the HW disables it to prevent
++	 * a nested interrupt. This is done by writing 1 to the corresponding
++	 * bit in the mask register. After handling the interrupt, it should be
++	 * re-enabled by clearing this bit. This register is defined as
++	 * write 1 clear (W1C) register, meaning that it's being clear
++	 * by writing 1 to the bit.
++	 */
++	iwl_write32(trans, CSR_MSIX_AUTOMASK_ST_AD, BIT(entry->entry));
++}
++
+ static inline struct iwl_trans *
+ iwl_trans_pcie_get_trans(struct iwl_trans_pcie *trans_pcie)
  {
- 	switch (t) {
- 	case 0:
-@@ -1396,7 +1396,8 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
- 		seq_printf(s, "%s N/A\n", prefix);
- 	break;
- 	default:
--		seq_printf(s, "%s %d.%03d\n", prefix, t / 1000, t % 1000);
-+		seq_printf(s, "%s %s%d.%03d\n", prefix, (t < 0 ? "-" : ""),
-+			   abs(t / 1000), abs(t % 1000));
- 		break;
+@@ -666,6 +681,11 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id);
+ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id);
+ int iwl_pcie_rx_stop(struct iwl_trans *trans);
+ void iwl_pcie_rx_free(struct iwl_trans *trans);
++void iwl_pcie_free_rbs_pool(struct iwl_trans *trans);
++void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq);
++int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget);
++void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
++			    struct iwl_rxq *rxq);
+ 
+ /*****************************************************
+ * ICT - interrupt handling
+@@ -892,6 +912,29 @@ static inline void *iwl_pcie_get_tfd(struct iwl_trans *trans,
+ 	return txq->tfds + trans_pcie->tfd_size * idx;
+ }
+ 
++static inline const char *queue_name(struct device *dev,
++				     struct iwl_trans_pcie *trans_p, int i)
++{
++	if (trans_p->shared_vec_mask) {
++		int vec = trans_p->shared_vec_mask &
++			  IWL_SHARED_IRQ_FIRST_RSS ? 1 : 0;
++
++		if (i == 0)
++			return DRV_NAME ": shared IRQ";
++
++		return devm_kasprintf(dev, GFP_KERNEL,
++				      DRV_NAME ": queue %d", i + vec);
++	}
++	if (i == 0)
++		return DRV_NAME ": default queue";
++
++	if (i == trans_p->alloc_vecs - 1)
++		return DRV_NAME ": exception";
++
++	return devm_kasprintf(dev, GFP_KERNEL,
++			      DRV_NAME  ": queue %d", i);
++}
++
+ static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 59bedb461a8c..d017aa2a0a8b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -417,8 +417,8 @@ static struct page *iwl_pcie_rx_alloc_page(struct iwl_trans *trans,
+  * iwl_pcie_rxq_restock. The latter function will update the HW to use the newly
+  * allocated buffers.
+  */
+-static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
+-				   struct iwl_rxq *rxq)
++void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
++			    struct iwl_rxq *rxq)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_mem_buffer *rxb;
+@@ -474,7 +474,7 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority,
  	}
  }
-@@ -1404,7 +1405,7 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
- static int wil_temp_debugfs_show(struct seq_file *s, void *data)
- {
- 	struct wil6210_priv *wil = s->private;
--	u32 t_m, t_r;
-+	s32 t_m, t_r;
- 	int rc = wmi_get_temperature(wil, &t_m, &t_r);
  
- 	if (rc) {
+-static void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
++void iwl_pcie_free_rbs_pool(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int i;
+@@ -986,7 +986,7 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
+ 	iwl_pcie_enable_rx_wake(trans, true);
+ }
+ 
+-static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
++void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
+ {
+ 	lockdep_assert_held(&rxq->lock);
+ 
+@@ -996,7 +996,7 @@ static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
+ 	rxq->used_count = 0;
+ }
+ 
+-static int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget)
++int iwl_pcie_dummy_napi_poll(struct napi_struct *napi, int budget)
+ {
+ 	WARN_ON(1);
+ 	return 0;
+@@ -1479,20 +1479,6 @@ static struct iwl_trans_pcie *iwl_pcie_get_trans_pcie(struct msix_entry *entry)
+ 	return container_of(entries, struct iwl_trans_pcie, msix_entries[0]);
+ }
+ 
+-static inline void iwl_pcie_clear_irq(struct iwl_trans *trans,
+-				      struct msix_entry *entry)
+-{
+-	/*
+-	 * Before sending the interrupt the HW disables it to prevent
+-	 * a nested interrupt. This is done by writing 1 to the corresponding
+-	 * bit in the mask register. After handling the interrupt, it should be
+-	 * re-enabled by clearing this bit. This register is defined as
+-	 * write 1 clear (W1C) register, meaning that it's being clear
+-	 * by writing 1 to the bit.
+-	 */
+-	iwl_write32(trans, CSR_MSIX_AUTOMASK_ST_AD, BIT(entry->entry));
+-}
+-
+ /*
+  * iwl_pcie_rx_msix_handle - Main entry function for receiving responses from fw
+  * This interrupt handler should be used with RSS queue only.
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index a54c2bc985ad..7d319b6863fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1709,29 +1709,6 @@ static void iwl_pcie_irq_set_affinity(struct iwl_trans *trans)
+ 	}
+ }
+ 
+-static const char *queue_name(struct device *dev,
+-			      struct iwl_trans_pcie *trans_p, int i)
+-{
+-	if (trans_p->shared_vec_mask) {
+-		int vec = trans_p->shared_vec_mask &
+-			  IWL_SHARED_IRQ_FIRST_RSS ? 1 : 0;
+-
+-		if (i == 0)
+-			return DRV_NAME ": shared IRQ";
+-
+-		return devm_kasprintf(dev, GFP_KERNEL,
+-				      DRV_NAME ": queue %d", i + vec);
+-	}
+-	if (i == 0)
+-		return DRV_NAME ": default queue";
+-
+-	if (i == trans_p->alloc_vecs - 1)
+-		return DRV_NAME ": exception";
+-
+-	return devm_kasprintf(dev, GFP_KERNEL,
+-			      DRV_NAME  ": queue %d", i);
+-}
+-
+ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
+ 				      struct iwl_trans_pcie *trans_pcie)
+ {
 -- 
-1.9.1
+2.18.0
