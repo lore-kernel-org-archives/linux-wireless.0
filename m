@@ -1,51 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41301 "EHLO mail.bootlin.com"
+Received: from mga06.intel.com ([134.134.136.31]:40667 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933179AbeGIUKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:15 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 12/24] mtd: rawnand: sunxi: Allow selection of this driver when COMPILE_TEST=y
-Date: Mon,  9 Jul 2018 22:09:33 +0200
-Message-Id: <20180709200945.30116-13-boris.brezillon@bootlin.com> (sfid-20180709_221041_623465_94A86119)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+        id S2389317AbeG0WNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 18:13:23 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
+Date: Fri, 27 Jul 2018 23:49:44 +0300
+Message-Id: <20180727204945.60865-1-andriy.shevchenko@linux.intel.com> (sfid-20180727_224954_150026_6F456554)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having ARCH_SUNXI enabled.
+There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+looks not so convenient due to additional driver_data field attached.
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
+Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+possible form. For example,
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+  before:
+
+    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+
+  after:
+
+    { PCI_DEVICE_DATA(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties) },
+
+Drivers can be converted later on in independent way.
+
+While here, remove the unused macro with the same name
+from Ralink wireless driver.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/mtd/nand/raw/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index 539b0619f53a..ee836f7d7b8b 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -518,7 +518,8 @@ config MTD_NAND_XWAY
+- fix commit message (Randy)
+
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+ include/linux/pci.h                            | 15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+index bc0ca5f58f38..283e2e607bba 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+@@ -27,12 +27,6 @@
+ #include <linux/io.h>
+ #include <linux/pci.h>
  
- config MTD_NAND_SUNXI
- 	tristate "Support for NAND on Allwinner SoCs"
--	depends on ARCH_SUNXI
-+	depends on ARCH_SUNXI || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  Enables support for NAND Flash chips on Allwinner SoCs.
+-/*
+- * This variable should be used with the
+- * pci_driver structure initialization.
+- */
+-#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+-
+ /*
+  * PCI driver handlers.
+  */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d0961aefdbae..754da6f9adb3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -825,6 +825,21 @@ struct pci_driver {
+ 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
  
++/**
++ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
++ * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
++ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
++ * @data: the driver data to be filled
++ *
++ * This macro is used to create a struct pci_device_id that matches a
++ * specific PCI device.  The subvendor, and subdevice fields will be set
++ * to PCI_ANY_ID.
++ */
++#define PCI_DEVICE_DATA(vend, dev, data) \
++	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
++	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
++	.driver_data = (kernel_ulong_t)(data)
++
+ enum {
+ 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
+ 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
 -- 
-2.14.1
+2.18.0
