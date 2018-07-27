@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44080 "EHLO mx1.redhat.com"
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10143 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732093AbeGaOVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 10:21:42 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 11/14] mt76: add more states
-Date: Tue, 31 Jul 2018 14:41:01 +0200
-Message-Id: <1533040864-9026-12-git-send-email-sgruszka@redhat.com> (sfid-20180731_144143_465206_764C3B2C)
-In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+        id S1731165AbeG0LY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 07:24:56 -0400
+Subject: Re: [PATCH] hostap: hide unused procfs helpers
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+References: <20180713070317.6724-1-yuehaibing@huawei.com>
+ <5B485441.1080305@broadcom.com> <87r2jpvxme.fsf@codeaurora.org>
+CC: <j@w1.fi>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <davem@davemloft.net>, Randy Dunlap <rdunlap@infradead.org>
+From: YueHaibing <yuehaibing@huawei.com>
+Message-ID: <9c6401cd-c04c-1230-d360-922b476c6541@huawei.com> (sfid-20180727_120627_461912_265686D9)
+Date: Fri, 27 Jul 2018 18:03:38 +0800
+MIME-Version: 1.0
+In-Reply-To: <87r2jpvxme.fsf@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add states needed for mt76x0 driver.
+On 2018/7/27 17:25, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+> 
+>> + Randy
+>>
+>> On 7/13/2018 9:03 AM, YueHaibing wrote:
+>>> When CONFIG_PROC_FS isn't set, gcc warning this:
+>>>
+>>> drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
+>>>   static int prism2_registers_proc_show(struct seq_file *m, void *v)
+>>>
+>>> drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
+>>>   static int prism2_debug_proc_show(struct seq_file *m, void *v)
+>>>              ^
+>>> drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
+>>>   static int prism2_stats_proc_show(struct seq_file *m, void *v)
+>>>              ^
+>>> drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
+>>>   static int prism2_crypt_proc_show(struct seq_file *m, void *v)
+>>>              ^
+>>>
+>>> fix this by adding #ifdef around them.
+>>> hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
+>>> into #ifdef.
+>>
+>> There was already a fix for this posted by Randy Dunlap taking a
+>> different approach, ie. use __maybe_unused classifier. To be honest I
+>> prefer the ifdef approach as it is more explicit and does not feel
+>> like a cheat.
+> 
+> I also prefer the ifdef approach more so I'm planning to take this
+> patch.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h | 2 ++
- 1 file changed, 2 insertions(+)
+It's ok if you prefer pick this.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 4bf1b35ec44c..2eab35879163 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -204,11 +204,13 @@ struct mt76_rx_tid {
- enum {
- 	MT76_STATE_INITIALIZED,
- 	MT76_STATE_RUNNING,
-+	MT76_STATE_MCU_RUNNING,
- 	MT76_SCANNING,
- 	MT76_RESET,
- 	MT76_OFFCHANNEL,
- 	MT76_REMOVED,
- 	MT76_READING_STATS,
-+	MT76_MORE_STATS,
- };
- 
- struct mt76_hw_cap {
--- 
-1.9.3
+> 
