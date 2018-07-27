@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:46235 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388795AbeGXUha (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35420 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730488AbeG0RxG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:30 -0400
-Received: by mail-pl0-f67.google.com with SMTP id t17-v6so2190446ply.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:34 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 04/18] llc: fix whitespace issues
-Date: Tue, 24 Jul 2018 12:29:04 -0700
-Message-Id: <20180724192918.31165-5-sthemmin@microsoft.com> (sfid-20180724_213152_624613_75764587)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Fri, 27 Jul 2018 13:53:06 -0400
+Received: by mail-wm0-f66.google.com with SMTP id o18-v6so6144888wmc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2018 09:30:26 -0700 (PDT)
+From: Loic Poulain <loic.poulain@linaro.org>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH] wlcore: Set rx_status boottime_ns field on rx
+Date: Fri, 27 Jul 2018 18:30:23 +0200
+Message-Id: <1532709023-1237-1-git-send-email-loic.poulain@linaro.org> (sfid-20180727_183029_600708_4106714B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/llc/Kconfig  | 2 +-
- net/llc/Makefile | 2 +-
- net/llc/llc_if.c | 1 -
- 3 files changed, 2 insertions(+), 3 deletions(-)
+When receiving a beacon or probe response, we should update the
+boottime_ns field which is the timestamp the frame was received at.
+(cf mac80211.h)
 
-diff --git a/net/llc/Kconfig b/net/llc/Kconfig
-index b91c65108162..176a6c1521a5 100644
---- a/net/llc/Kconfig
-+++ b/net/llc/Kconfig
-@@ -6,5 +6,5 @@ config LLC2
- 	tristate "ANSI/IEEE 802.2 LLC type 2 Support"
- 	select LLC
- 	help
--	  This is a Logical Link Layer type 2, connection oriented support. 
-+	  This is a Logical Link Layer type 2, connection oriented support.
- 	  Select this if you want to have support for PF_LLC sockets.
-diff --git a/net/llc/Makefile b/net/llc/Makefile
-index 4e260cff3c5d..5e0ef436daae 100644
---- a/net/llc/Makefile
-+++ b/net/llc/Makefile
-@@ -4,7 +4,7 @@
- # Copyright (c) 1997 by Procom Technology,Inc.
- #		2001-2003 by Arnaldo Carvalho de Melo <acme@conectiva.com.br>
- #
--# This program can be redistributed or modified under the terms of the 
-+# This program can be redistributed or modified under the terms of the
- # GNU General Public License as published by the Free Software Foundation.
- # This program is distributed without any warranty or implied warranty
- # of merchantability or fitness for a particular purpose.
-diff --git a/net/llc/llc_if.c b/net/llc/llc_if.c
-index 6daf391b3e84..8db03c2d5440 100644
---- a/net/llc/llc_if.c
-+++ b/net/llc/llc_if.c
-@@ -151,4 +151,3 @@ int llc_send_disc(struct sock *sk)
- 	sock_put(sk);
- 	return rc;
- }
--
+This fixes a scanning issue with Android since it relies on this
+timestamp to determine when the AP has been seen for the last time
+(via the nl80211 BSS_LAST_SEEN_BOOTTIME parameter).
+
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ drivers/net/wireless/ti/wlcore/rx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 0f15696..078a494 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -59,7 +59,7 @@ static u32 wlcore_rx_get_align_buf_size(struct wl1271 *wl, u32 pkt_len)
+ static void wl1271_rx_status(struct wl1271 *wl,
+ 			     struct wl1271_rx_descriptor *desc,
+ 			     struct ieee80211_rx_status *status,
+-			     u8 beacon)
++			     u8 beacon, u8 probe_rsp)
+ {
+ 	memset(status, 0, sizeof(struct ieee80211_rx_status));
+ 
+@@ -106,6 +106,9 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 		}
+ 	}
+ 
++	if (beacon || probe_rsp)
++		status->boottime_ns = ktime_get_boot_ns();
++
+ 	if (beacon)
+ 		wlcore_set_pending_regdomain_ch(wl, (u16)desc->channel,
+ 						status->band);
+@@ -191,7 +194,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 	if (ieee80211_is_data_present(hdr->frame_control))
+ 		is_data = 1;
+ 
+-	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
++	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon,
++			 ieee80211_is_probe_resp(hdr->frame_control));
+ 	wlcore_hw_set_rx_csum(wl, desc, skb);
+ 
+ 	seq_num = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
 -- 
-2.18.0
+2.7.4
