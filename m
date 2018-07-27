@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56616 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388218AbeGXKAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:04 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 00/10] NFC: A bunch of cleanups for st95hf
-Date: Tue, 24 Jul 2018 10:54:16 +0200
-Message-Id: <20180724085426.23999-1-daniel@zonque.org> (sfid-20180724_105445_929506_1EC334BB)
+Received: from merlin.infradead.org ([205.233.59.134]:54550 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389317AbeG0WG0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 18:06:26 -0400
+Subject: Re: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
+ <d38f06dccb3bd129bec6d34a5ad3e93e2fa01bec.camel@linux.intel.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <5c647729-6eab-fbe1-a110-43c7a6bc1207@infradead.org> (sfid-20180727_224254_914590_CA9075EE)
+Date: Fri, 27 Jul 2018 13:42:46 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <d38f06dccb3bd129bec6d34a5ad3e93e2fa01bec.camel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a series of patches for the ST95HF driver.
+On 07/27/2018 01:41 PM, Andy Shevchenko wrote:
+> On Fri, 2018-07-27 at 23:39 +0300, Andy Shevchenko wrote:
+>> There are a lot of examples in the kernel where PCI_VDEVICE() is used
+>> and still
+>> looks not so convenient due to additional driver_data field attached.
+>>
+>> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in
+>> shortest
+>> possible form. For example,
+>>
+>>   before:
+>>
+>>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+>>
+>>   after:
+>>
+>>     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
+>>
+>> Drivers can be converted later on in independent way.
+>>
+>> While here, remove the unused macro with the same name
+>> from Ralink wireless driver.
+> 
+> Skip this, it missed one comma.
 
-Patch #1 reverts a change that I have submitted earlier and which is
-sitting in nfc-next already. Given that the tree hasn't been sent out
-for being merged yet, it could also still be removed with rebasing, in
-which case #1 is not necessary of course.
+s/comma/right paren/ ??
 
-The changes are all rather simple and are explained in their individual
-commit logs.
-
-Note that this series builds upon the patch titled "nfc: st95hf: remove
-redundant pointers 'dev' and 'nfcddev'" that Colin posted the other day.
-
-
-Thanks,
-Daniel
-
-Changelog:
-
-v1 → v2:
-
- * Improved commit logs, identical patch content.
-
-
-Daniel Mack (10):
-  Revert "NFC: st95hf: drop illegal kfree_skb()"
-  NFC: st95hf: drop nfcdev_free
-  NFC: st95hf: drop illegal kfree_skb() in IRQ handler
-  NFC: st95hf: remove logging from spi functions
-  NFC: st95hf: remove exchange_lock
-  NFC: st95hf: move skb allocation to ISR
-  NFC: st95hf: re-order command defines
-  NFC: st95hf: unify sync/async flags
-  NFC: st95hf: two small style nits
-  NFC: st95hf: add of match table
-
- drivers/nfc/st95hf/core.c | 135 +++++++++++---------------------------
- drivers/nfc/st95hf/spi.c  |  31 +++------
- drivers/nfc/st95hf/spi.h  |   8 +--
- 3 files changed, 49 insertions(+), 125 deletions(-)
+> Will send v2 soon.
+> 
+>>
+>> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>> ---
+>>  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+>>  include/linux/pci.h                            | 15 +++++++++++++++
+>>  2 files changed, 15 insertions(+), 6 deletions(-)
 
 -- 
-2.17.1
+~Randy
