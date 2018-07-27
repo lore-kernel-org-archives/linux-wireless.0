@@ -1,803 +1,534 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54418 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732093AbeGaOVb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 10:21:31 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 04/14] mt76x0: mcu files
-Date: Tue, 31 Jul 2018 14:40:54 +0200
-Message-Id: <1533040864-9026-5-git-send-email-sgruszka@redhat.com> (sfid-20180731_144126_566080_570D89A7)
-In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:38582 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730088AbeG0OKl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jul 2018 10:10:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:25 +0300
+Message-Id: <20180727124838.25910-4-luca@coelho.fi> (sfid-20180727_144857_960305_AFD3136F)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 03/16] iwlwifi: support new rx_mpdu_desc api
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mcu files of mt76x0 driver.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+22560 devices use a new rx_mpdu_desc api.
+Update the code to use the new api.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c | 656 ++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h | 101 ++++
- 2 files changed, 757 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 179 +++++++++++++-----
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  95 +++++++---
+ 4 files changed, 218 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-new file mode 100644
-index 000000000000..979ba519e54f
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -0,0 +1,656 @@
-+/*
-+ * (c) Copyright 2002-2010, Ralink Technology, Inc.
-+ * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-+ * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
-+ * Copyright (C) 2018 Stanislaw Gruszka <stf_xl@wp.pl>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index 0daa09c94b0f..565343f7e61f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -377,78 +377,94 @@ enum iwl_rx_he_phy {
+ };
+ 
+ /**
+- * struct iwl_rx_mpdu_desc - RX MPDU descriptor
++ * struct iwl_rx_mpdu_desc_v1 - RX MPDU descriptor
+  */
+-struct iwl_rx_mpdu_desc {
+-	/* DW2 */
+-	/**
+-	 * @mpdu_len: MPDU length
+-	 */
+-	__le16 mpdu_len;
+-	/**
+-	 * @mac_flags1: &enum iwl_rx_mpdu_mac_flags1
+-	 */
+-	u8 mac_flags1;
+-	/**
+-	 * @mac_flags2: &enum iwl_rx_mpdu_mac_flags2
+-	 */
+-	u8 mac_flags2;
+-	/* DW3 */
++struct iwl_rx_mpdu_desc_v1 {
++	/* DW7 - carries rss_hash only when rpa_en == 1 */
+ 	/**
+-	 * @amsdu_info: &enum iwl_rx_mpdu_amsdu_info
++	 * @rss_hash: RSS hash value
+ 	 */
+-	u8 amsdu_info;
++	__le32 rss_hash;
++	/* DW8 - carries filter_match only when rpa_en == 1 */
+ 	/**
+-	 * @phy_info: &enum iwl_rx_mpdu_phy_info
++	 * @filter_match: filter match value
+ 	 */
+-	__le16 phy_info;
++	__le32 filter_match;
++	/* DW9 */
+ 	/**
+-	 * @mac_phy_idx: MAC/PHY index
++	 * @rate_n_flags: RX rate/flags encoding
+ 	 */
+-	u8 mac_phy_idx;
+-	/* DW4 - carries csum data only when rpa_en == 1 */
++	__le32 rate_n_flags;
++	/* DW10 */
+ 	/**
+-	 * @raw_csum: raw checksum (alledgedly unreliable)
++	 * @energy_a: energy chain A
+ 	 */
+-	__le16 raw_csum;
++	u8 energy_a;
+ 	/**
+-	 * @l3l4_flags: &enum iwl_rx_l3l4_flags
++	 * @energy_b: energy chain B
+ 	 */
+-	__le16 l3l4_flags;
+-	/* DW5 */
++	u8 energy_b;
+ 	/**
+-	 * @status: &enum iwl_rx_mpdu_status
++	 * @channel: channel number
+ 	 */
+-	__le16 status;
++	u8 channel;
+ 	/**
+-	 * @hash_filter: hash filter value
++	 * @mac_context: MAC context mask
+ 	 */
+-	u8 hash_filter;
++	u8 mac_context;
++	/* DW11 */
+ 	/**
+-	 * @sta_id_flags: &enum iwl_rx_mpdu_sta_id_flags
++	 * @gp2_on_air_rise: GP2 timer value on air rise (INA)
+ 	 */
+-	u8 sta_id_flags;
+-	/* DW6 */
++	__le32 gp2_on_air_rise;
++	/* DW12 & DW13 */
++	union {
++		/**
++		 * @tsf_on_air_rise:
++		 * TSF value on air rise (INA), only valid if
++		 * %IWL_RX_MPDU_PHY_TSF_OVERLOAD isn't set
++		 */
++		__le64 tsf_on_air_rise;
++		/**
++		 * @he_phy_data:
++		 * HE PHY data, see &enum iwl_rx_he_phy, valid
++		 * only if %IWL_RX_MPDU_PHY_TSF_OVERLOAD is set
++		 */
++		__le64 he_phy_data;
++	};
++} __packed;
++
++/**
++ * struct iwl_rx_mpdu_desc_v3 - RX MPDU descriptor
 + */
++struct iwl_rx_mpdu_desc_v3 {
++	/* DW7 - carries filter_match only when rpa_en == 1 */
+ 	/**
+-	 * @reorder_data: &enum iwl_rx_mpdu_reorder_data
++	 * @filter_match: filter match value
+ 	 */
+-	__le32 reorder_data;
+-	/* DW7 - carries rss_hash only when rpa_en == 1 */
++	__le32 filter_match;
++	/* DW8 - carries rss_hash only when rpa_en == 1 */
+ 	/**
+ 	 * @rss_hash: RSS hash value
+ 	 */
+ 	__le32 rss_hash;
+-	/* DW8 - carries filter_match only when rpa_en == 1 */
++	/* DW9 */
+ 	/**
+-	 * @filter_match: filter match value
++	 * @partial_hash: 31:0 ip/tcp header hash
++	 *	w/o some fields (such as IP SRC addr)
+ 	 */
+-	__le32 filter_match;
+-	/* DW9 */
++	__le32 partial_hash;
++	/* DW10 */
++	/**
++	 * @raw_xsum: raw xsum value
++	 */
++	__le32 raw_xsum;
++	/* DW11 */
+ 	/**
+ 	 * @rate_n_flags: RX rate/flags encoding
+ 	 */
+ 	__le32 rate_n_flags;
+-	/* DW10 */
++	/* DW12 */
+ 	/**
+ 	 * @energy_a: energy chain A
+ 	 */
+@@ -465,12 +481,12 @@ struct iwl_rx_mpdu_desc {
+ 	 * @mac_context: MAC context mask
+ 	 */
+ 	u8 mac_context;
+-	/* DW11 */
++	/* DW13 */
+ 	/**
+ 	 * @gp2_on_air_rise: GP2 timer value on air rise (INA)
+ 	 */
+ 	__le32 gp2_on_air_rise;
+-	/* DW12 & DW13 */
++	/* DW14 & DW15 */
+ 	union {
+ 		/**
+ 		 * @tsf_on_air_rise:
+@@ -485,7 +501,78 @@ struct iwl_rx_mpdu_desc {
+ 		 */
+ 		__le64 he_phy_data;
+ 	};
+-} __packed;
++	/* DW16 & DW17 */
++	/**
++	 * @reserved: reserved
++	 */
++	__le32 reserved[2];
++} __packed; /* RX_MPDU_RES_START_API_S_VER_3 */
 +
-+#include <linux/kernel.h>
-+#include <linux/firmware.h>
-+#include <linux/delay.h>
-+#include <linux/usb.h>
-+#include <linux/skbuff.h>
++/**
++ * struct iwl_rx_mpdu_desc - RX MPDU descriptor
++ */
++struct iwl_rx_mpdu_desc {
++	/* DW2 */
++	/**
++	 * @mpdu_len: MPDU length
++	 */
++	__le16 mpdu_len;
++	/**
++	 * @mac_flags1: &enum iwl_rx_mpdu_mac_flags1
++	 */
++	u8 mac_flags1;
++	/**
++	 * @mac_flags2: &enum iwl_rx_mpdu_mac_flags2
++	 */
++	u8 mac_flags2;
++	/* DW3 */
++	/**
++	 * @amsdu_info: &enum iwl_rx_mpdu_amsdu_info
++	 */
++	u8 amsdu_info;
++	/**
++	 * @phy_info: &enum iwl_rx_mpdu_phy_info
++	 */
++	__le16 phy_info;
++	/**
++	 * @mac_phy_idx: MAC/PHY index
++	 */
++	u8 mac_phy_idx;
++	/* DW4 - carries csum data only when rpa_en == 1 */
++	/**
++	 * @raw_csum: raw checksum (alledgedly unreliable)
++	 */
++	__le16 raw_csum;
++	/**
++	 * @l3l4_flags: &enum iwl_rx_l3l4_flags
++	 */
++	__le16 l3l4_flags;
++	/* DW5 */
++	/**
++	 * @status: &enum iwl_rx_mpdu_status
++	 */
++	__le16 status;
++	/**
++	 * @hash_filter: hash filter value
++	 */
++	u8 hash_filter;
++	/**
++	 * @sta_id_flags: &enum iwl_rx_mpdu_sta_id_flags
++	 */
++	u8 sta_id_flags;
++	/* DW6 */
++	/**
++	 * @reorder_data: &enum iwl_rx_mpdu_reorder_data
++	 */
++	__le32 reorder_data;
 +
-+#include "mt76x0.h"
-+#include "dma.h"
-+#include "mcu.h"
-+#include "usb.h"
-+#include "trace.h"
++	union {
++		struct iwl_rx_mpdu_desc_v1 v1;
++		struct iwl_rx_mpdu_desc_v3 v3;
++	};
++} __packed; /* RX_MPDU_RES_START_API_S_VER_3 */
 +
-+#define MCU_FW_URB_MAX_PAYLOAD		0x38f8
-+#define MCU_FW_URB_SIZE			(MCU_FW_URB_MAX_PAYLOAD + 12)
-+#define MCU_RESP_URB_SIZE		1024
-+
-+static inline int firmware_running(struct mt76x0_dev *dev)
-+{
-+	return mt76_rr(dev, MT_MCU_COM_REG0) == 1;
-+}
-+
-+static inline void skb_put_le32(struct sk_buff *skb, u32 val)
-+{
-+	put_unaligned_le32(val, skb_put(skb, 4));
-+}
-+
-+static inline void mt76x0_dma_skb_wrap_cmd(struct sk_buff *skb,
-+					    u8 seq, enum mcu_cmd cmd)
-+{
-+	WARN_ON(mt76x0_dma_skb_wrap(skb, CPU_TX_PORT, DMA_COMMAND,
-+				     FIELD_PREP(MT_TXD_CMD_SEQ, seq) |
-+				     FIELD_PREP(MT_TXD_CMD_TYPE, cmd)));
-+}
-+
-+static inline void trace_mt_mcu_msg_send_cs(struct mt76_dev *dev,
-+					    struct sk_buff *skb, bool need_resp)
-+{
-+	u32 i, csum = 0;
-+
-+	for (i = 0; i < skb->len / 4; i++)
-+		csum ^= get_unaligned_le32(skb->data + i * 4);
-+
-+	trace_mt_mcu_msg_send(dev, skb, csum, need_resp);
-+}
-+
-+static struct sk_buff *
-+mt76x0_mcu_msg_alloc(struct mt76x0_dev *dev, const void *data, int len)
-+{
-+	struct sk_buff *skb;
-+
-+	WARN_ON(len % 4); /* if length is not divisible by 4 we need to pad */
-+
-+	skb = alloc_skb(len + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
-+	if (skb) {
-+		skb_reserve(skb, MT_DMA_HDR_LEN);
-+		memcpy(skb_put(skb, len), data, len);
-+	}
-+	return skb;
-+}
-+
-+static void mt76x0_read_resp_regs(struct mt76x0_dev *dev, int len)
-+{
-+	int i;
-+	int n = dev->mcu.reg_pairs_len;
-+	u8 *buf = dev->mcu.resp.buf;
-+
-+	buf += 4;
-+	len -= 8;
-+
-+	if (dev->mcu.burst_read) {
-+		u32 reg = dev->mcu.reg_pairs[0].reg - dev->mcu.reg_base;
-+
-+		WARN_ON_ONCE(len/4 != n);
-+		for (i = 0; i < n; i++) {
-+			u32 val = get_unaligned_le32(buf + 4*i);
-+
-+			dev->mcu.reg_pairs[i].reg = reg++;
-+			dev->mcu.reg_pairs[i].value = val;
-+		}
++#define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
+ 
+ struct iwl_frame_release {
+ 	u8 baid;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 1c4178f20441..05b77419953c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1150,6 +1150,10 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+ 	struct iwl_rx_mpdu_desc *desc;
+ 	int bin_len = count / 2;
+ 	int ret = -EINVAL;
++	size_t mpdu_cmd_hdr_size =
++		(mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) ?
++		sizeof(struct iwl_rx_mpdu_desc) :
++		IWL_RX_DESC_SIZE_V1;
+ 
+ 	if (!iwl_mvm_firmware_running(mvm))
+ 		return -EIO;
+@@ -1168,7 +1172,7 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+ 		goto out;
+ 
+ 	/* avoid invalid memory access */
+-	if (bin_len < sizeof(*pkt) + sizeof(*desc))
++	if (bin_len < sizeof(*pkt) + mpdu_cmd_hdr_size)
+ 		goto out;
+ 
+ 	/* check this is RX packet */
+@@ -1179,7 +1183,7 @@ static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+ 	/* check the length in metadata matches actual received length */
+ 	desc = (void *)pkt->data;
+ 	if (le16_to_cpu(desc->mpdu_len) !=
+-	    (bin_len - sizeof(*desc) - sizeof(*pkt)))
++	    (bin_len - mpdu_cmd_hdr_size - sizeof(*pkt)))
+ 		goto out;
+ 
+ 	local_bh_disable();
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d966262e0819..f5b117d8c354 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -621,7 +621,11 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 
+ 	if (iwl_mvm_has_new_rx_api(mvm)) {
+ 		op_mode->ops = &iwl_mvm_ops_mq;
+-		trans->rx_mpdu_cmd_hdr_size = sizeof(struct iwl_rx_mpdu_desc);
++		trans->rx_mpdu_cmd_hdr_size =
++			(trans->cfg->device_family >=
++			 IWL_DEVICE_FAMILY_22560) ?
++			sizeof(struct iwl_rx_mpdu_desc) :
++			IWL_RX_DESC_SIZE_V1;
+ 	} else {
+ 		op_mode->ops = &iwl_mvm_ops;
+ 		trans->rx_mpdu_cmd_hdr_size =
+@@ -704,8 +708,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	}
+ 
+ 	/* the hardware splits the A-MSDU */
+-	if (mvm->trans->cfg->device_family >=
+-	    IWL_DEVICE_FAMILY_22560)
++	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
+ 		trans_cfg.rx_buf_size = IWL_AMSDU_2K;
+ 	else if (mvm->cfg->mq_rx_supported)
+ 		trans_cfg.rx_buf_size = IWL_AMSDU_4K;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index d82eeb7e0de7..b53148f972a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -215,15 +215,14 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
+ }
+ 
+ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
+-					struct iwl_rx_mpdu_desc *desc,
+-					struct ieee80211_rx_status *rx_status)
++					struct ieee80211_rx_status *rx_status,
++					u32 rate_n_flags, int energy_a,
++					int energy_b)
+ {
+-	int energy_a, energy_b, max_energy;
+-	u32 rate_flags = le32_to_cpu(desc->rate_n_flags);
++	int max_energy;
++	u32 rate_flags = rate_n_flags;
+ 
+-	energy_a = desc->energy_a;
+ 	energy_a = energy_a ? -energy_a : S8_MIN;
+-	energy_b = desc->energy_b;
+ 	energy_b = energy_b ? -energy_b : S8_MIN;
+ 	max_energy = max(energy_a, energy_b);
+ 
+@@ -368,7 +367,8 @@ static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
+ 		tid = IWL_MAX_TID_COUNT;
+ 
+ 	/* If this wasn't a part of an A-MSDU the sub-frame index will be 0 */
+-	sub_frame_idx = desc->amsdu_info & IWL_RX_MPDU_AMSDU_SUBFRAME_IDX_MASK;
++	sub_frame_idx = desc->amsdu_info &
++		IWL_RX_MPDU_AMSDU_SUBFRAME_IDX_MASK;
+ 
+ 	if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
+ 		     dup_data->last_seq[tid] == hdr->seq_ctrl &&
+@@ -862,23 +862,41 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct ieee80211_rx_status *rx_status;
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
+-	struct ieee80211_hdr *hdr = (void *)(pkt->data + sizeof(*desc));
++	struct ieee80211_hdr *hdr;
+ 	u32 len = le16_to_cpu(desc->mpdu_len);
+-	u32 rate_n_flags = le32_to_cpu(desc->rate_n_flags);
++	u32 rate_n_flags, gp2_on_air_rise;
+ 	u16 phy_info = le16_to_cpu(desc->phy_info);
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct sk_buff *skb;
+-	u8 crypt_len = 0;
++	u8 crypt_len = 0, channel, energy_a, energy_b;
+ 	struct ieee80211_radiotap_he *he = NULL;
+ 	struct ieee80211_radiotap_he_mu *he_mu = NULL;
+ 	u32 he_type = 0xffffffff;
+ 	/* this is invalid e.g. because puncture type doesn't allow 0b11 */
+ #define HE_PHY_DATA_INVAL ((u64)-1)
+ 	u64 he_phy_data = HE_PHY_DATA_INVAL;
++	size_t desc_size;
+ 
+ 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
+ 		return;
+ 
++	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
++		rate_n_flags = le32_to_cpu(desc->v3.rate_n_flags);
++		channel = desc->v3.channel;
++		gp2_on_air_rise = le32_to_cpu(desc->v3.gp2_on_air_rise);
++		energy_a = desc->v3.energy_a;
++		energy_b = desc->v3.energy_b;
++		desc_size = sizeof(*desc);
 +	} else {
-+		WARN_ON_ONCE(len/8 != n);
-+		for (i = 0; i < n; i++) {
-+			u32 reg = get_unaligned_le32(buf + 8*i) - dev->mcu.reg_base;
-+			u32 val = get_unaligned_le32(buf + 8*i + 4);
-+
-+			WARN_ON_ONCE(dev->mcu.reg_pairs[i].reg != reg);
-+			dev->mcu.reg_pairs[i].value = val;
-+		}
-+	}
-+}
-+
-+static int mt76x0_mcu_wait_resp(struct mt76x0_dev *dev, u8 seq)
-+{
-+	struct urb *urb = dev->mcu.resp.urb;
-+	u32 rxfce;
-+	int urb_status, ret, try = 5;
-+
-+	while (try--) {
-+		if (!wait_for_completion_timeout(&dev->mcu.resp_cmpl,
-+						 msecs_to_jiffies(300))) {
-+			dev_warn(dev->mt76.dev, "Warning: %s retrying\n", __func__);
-+			continue;
-+		}
-+
-+		/* Make copies of important data before reusing the urb */
-+		rxfce = get_unaligned_le32(dev->mcu.resp.buf);
-+		urb_status = urb->status * mt76x0_urb_has_error(urb);
-+
-+		if (urb_status == 0 && dev->mcu.reg_pairs)
-+			mt76x0_read_resp_regs(dev, urb->actual_length);
-+
-+		ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
-+					     &dev->mcu.resp, GFP_KERNEL,
-+					     mt76x0_complete_urb,
-+					     &dev->mcu.resp_cmpl);
-+		if (ret)
-+			return ret;
-+
-+		if (urb_status)
-+			dev_err(dev->mt76.dev, "Error: MCU resp urb failed:%d\n",
-+				urb_status);
-+
-+		if (FIELD_GET(MT_RXD_CMD_INFO_CMD_SEQ, rxfce) == seq &&
-+		    FIELD_GET(MT_RXD_CMD_INFO_EVT_TYPE, rxfce) == CMD_DONE)
-+			return 0;
-+
-+		dev_err(dev->mt76.dev, "Error: MCU resp evt:%lx seq:%hhx-%lx!\n",
-+			FIELD_GET(MT_RXD_CMD_INFO_EVT_TYPE, rxfce),
-+			seq, FIELD_GET(MT_RXD_CMD_INFO_CMD_SEQ, rxfce));
++		rate_n_flags = le32_to_cpu(desc->v1.rate_n_flags);
++		channel = desc->v1.channel;
++		gp2_on_air_rise = le32_to_cpu(desc->v1.gp2_on_air_rise);
++		energy_a = desc->v1.energy_a;
++		energy_b = desc->v1.energy_b;
++		desc_size = IWL_RX_DESC_SIZE_V1;
 +	}
 +
-+	dev_err(dev->mt76.dev, "Error: %s timed out\n", __func__);
-+	return -ETIMEDOUT;
-+}
-+
-+static int
-+__mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
-+		      enum mcu_cmd cmd, bool wait_resp)
-+{
-+	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
-+	unsigned cmd_pipe = usb_sndbulkpipe(usb_dev,
-+					    dev->out_ep[MT_EP_OUT_INBAND_CMD]);
-+	int sent, ret;
-+	u8 seq = 0;
-+
-+	if (wait_resp)
-+		while (!seq)
-+			seq = ++dev->mcu.msg_seq & 0xf;
-+
-+	mt76x0_dma_skb_wrap_cmd(skb, seq, cmd);
-+
-+	if (dev->mcu.resp_cmpl.done)
-+		dev_err(dev->mt76.dev, "Error: MCU response pre-completed!\n");
-+
-+	trace_mt_mcu_msg_send_cs(&dev->mt76, skb, wait_resp);
-+	trace_mt_submit_urb_sync(&dev->mt76, cmd_pipe, skb->len);
-+
-+	ret = usb_bulk_msg(usb_dev, cmd_pipe, skb->data, skb->len, &sent, 500);
-+	if (ret) {
-+		dev_err(dev->mt76.dev, "Error: send MCU cmd failed:%d\n", ret);
-+		goto out;
-+	}
-+	if (sent != skb->len)
-+		dev_err(dev->mt76.dev, "Error: %s sent != skb->len\n", __func__);
-+
-+	if (wait_resp)
-+		ret = mt76x0_mcu_wait_resp(dev, seq);
-+
-+out:
-+	return ret;
-+}
-+
-+static int
-+mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
-+		     enum mcu_cmd cmd, bool wait_resp)
-+{
-+	int ret;
-+
-+	if (test_bit(MT76_REMOVED, &dev->mt76.state))
-+		return 0;
-+
-+	mutex_lock(&dev->mcu.mutex);
-+	ret = __mt76x0_mcu_msg_send(dev, skb, cmd, wait_resp);
-+	mutex_unlock(&dev->mcu.mutex);
-+
-+	consume_skb(skb);
-+
-+	return ret;
-+}
-+
-+int mt76x0_mcu_function_select(struct mt76x0_dev *dev,
-+			       enum mcu_function func, u32 val)
-+{
-+	struct sk_buff *skb;
-+	struct {
-+		__le32 id;
-+		__le32 value;
-+	} __packed __aligned(4) msg = {
-+		.id = cpu_to_le32(func),
-+		.value = cpu_to_le32(val),
-+	};
-+
-+	skb = mt76x0_mcu_msg_alloc(dev, &msg, sizeof(msg));
-+	if (!skb)
-+		return -ENOMEM;
-+	return mt76x0_mcu_msg_send(dev, skb, CMD_FUN_SET_OP, func == 5);
-+}
-+
-+int
-+mt76x0_mcu_calibrate(struct mt76x0_dev *dev, enum mcu_calibrate cal, u32 val)
-+{
-+	struct sk_buff *skb;
-+	struct {
-+		__le32 id;
-+		__le32 value;
-+	} __packed __aligned(4) msg = {
-+		.id = cpu_to_le32(cal),
-+		.value = cpu_to_le32(val),
-+	};
-+
-+	skb = mt76x0_mcu_msg_alloc(dev, &msg, sizeof(msg));
-+	if (!skb)
-+		return -ENOMEM;
-+	return mt76x0_mcu_msg_send(dev, skb, CMD_CALIBRATION_OP, true);
-+}
-+
-+int mt76x0_write_reg_pairs(struct mt76x0_dev *dev, u32 base,
-+			   const struct mt76_reg_pair *data, int n)
-+{
-+	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
-+	struct sk_buff *skb;
-+	int cnt, i, ret;
-+
-+	if (!n)
-+		return 0;
-+
-+	cnt = min(max_vals_per_cmd, n);
-+
-+	skb = alloc_skb(cnt * 8 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, MT_DMA_HDR_LEN);
-+
-+	for (i = 0; i < cnt; i++) {
-+		skb_put_le32(skb, base + data[i].reg);
-+		skb_put_le32(skb, data[i].value);
-+	}
-+
-+	ret = mt76x0_mcu_msg_send(dev, skb, CMD_RANDOM_WRITE, cnt == n);
-+	if (ret)
-+		return ret;
-+
-+	return mt76x0_write_reg_pairs(dev, base, data + cnt, n - cnt);
-+}
-+
-+int mt76x0_read_reg_pairs(struct mt76x0_dev *dev, u32 base,
-+			  struct mt76_reg_pair *data, int n)
-+{
-+	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
-+	struct sk_buff *skb;
-+	int cnt, i, ret;
-+
-+	if (!n)
-+		return 0;
-+
-+	cnt = min(max_vals_per_cmd, n);
-+	if (cnt != n)
-+		return -EINVAL;
-+
-+	skb = alloc_skb(cnt * 8 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, MT_DMA_HDR_LEN);
-+
-+	for (i = 0; i < cnt; i++) {
-+		skb_put_le32(skb, base + data[i].reg);
-+		skb_put_le32(skb, data[i].value);
-+	}
-+
-+	mutex_lock(&dev->mcu.mutex);
-+
-+	dev->mcu.reg_pairs = data;
-+	dev->mcu.reg_pairs_len = n;
-+	dev->mcu.reg_base = base;
-+	dev->mcu.burst_read = false;
-+
-+	ret = __mt76x0_mcu_msg_send(dev, skb, CMD_RANDOM_READ, true);
-+
-+	dev->mcu.reg_pairs = NULL;
-+
-+	mutex_unlock(&dev->mcu.mutex);
-+
-+	consume_skb(skb);
-+
-+	return ret;
-+
-+}
-+
-+int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
-+			     const u32 *data, int n)
-+{
-+	const int max_regs_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
-+	struct sk_buff *skb;
-+	int cnt, i, ret;
-+
-+	if (!n)
-+		return 0;
-+
-+	cnt = min(max_regs_per_cmd, n);
-+
-+	skb = alloc_skb(cnt * 4 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, MT_DMA_HDR_LEN);
-+
-+	skb_put_le32(skb, MT_MCU_MEMMAP_WLAN + offset);
-+	for (i = 0; i < cnt; i++)
-+		skb_put_le32(skb, data[i]);
-+
-+	ret = mt76x0_mcu_msg_send(dev, skb, CMD_BURST_WRITE, cnt == n);
-+	if (ret)
-+		return ret;
-+
-+	return mt76x0_burst_write_regs(dev, offset + cnt * 4,
-+					data + cnt, n - cnt);
-+}
-+
-+#if 0
-+static int mt76x0_burst_read_regs(struct mt76x0_dev *dev, u32 base,
-+				  struct mt76_reg_pair *data, int n)
-+{
-+	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
-+	struct sk_buff *skb;
-+	int cnt, ret;
-+
-+	if (!n)
-+		return 0;
-+
-+	cnt = min(max_vals_per_cmd, n);
-+	if (cnt != n)
-+		return -EINVAL;
-+
-+	skb = alloc_skb(cnt * 4 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, MT_DMA_HDR_LEN);
-+
-+	skb_put_le32(skb, base + data[0].reg);
-+	skb_put_le32(skb, n);
-+
-+	mutex_lock(&dev->mcu.mutex);
-+
-+	dev->mcu.reg_pairs = data;
-+	dev->mcu.reg_pairs_len = n;
-+	dev->mcu.reg_base = base;
-+	dev->mcu.burst_read = true;
-+
-+	ret = __mt76x0_mcu_msg_send(dev, skb, CMD_BURST_READ, true);
-+
-+	dev->mcu.reg_pairs = NULL;
-+
-+	mutex_unlock(&dev->mcu.mutex);
-+
-+	consume_skb(skb);
-+
-+	return ret;
-+}
-+#endif
-+
-+struct mt76_fw_header {
-+	__le32 ilm_len;
-+	__le32 dlm_len;
-+	__le16 build_ver;
-+	__le16 fw_ver;
-+	u8 pad[4];
-+	char build_time[16];
-+};
-+
-+struct mt76_fw {
-+	struct mt76_fw_header hdr;
-+	u8 ivb[MT_MCU_IVB_SIZE];
-+	u8 ilm[];
-+};
-+
-+static int __mt76x0_dma_fw(struct mt76x0_dev *dev,
-+			    const struct mt76x0_dma_buf *dma_buf,
-+			    const void *data, u32 len, u32 dst_addr)
-+{
-+	DECLARE_COMPLETION_ONSTACK(cmpl);
-+	struct mt76x0_dma_buf buf = *dma_buf; /* we need to fake length */
-+	__le32 reg;
-+	u32 val;
-+	int ret;
-+
-+	reg = cpu_to_le32(FIELD_PREP(MT_TXD_INFO_TYPE, DMA_COMMAND) |
-+			  FIELD_PREP(MT_TXD_INFO_D_PORT, CPU_TX_PORT) |
-+			  FIELD_PREP(MT_TXD_INFO_LEN, len));
-+	memcpy(buf.buf, &reg, sizeof(reg));
-+	memcpy(buf.buf + sizeof(reg), data, len);
-+	memset(buf.buf + sizeof(reg) + len, 0, 8);
-+
-+	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
-+				       MT_FCE_DMA_ADDR, dst_addr);
-+	if (ret)
-+		return ret;
-+	len = roundup(len, 4);
-+	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
-+				       MT_FCE_DMA_LEN, len << 16);
-+	if (ret)
-+		return ret;
-+
-+	buf.len = MT_DMA_HDR_LEN + len + 4;
-+	ret = mt76x0_usb_submit_buf(dev, USB_DIR_OUT, MT_EP_OUT_INBAND_CMD,
-+				     &buf, GFP_KERNEL,
-+				     mt76x0_complete_urb, &cmpl);
-+	if (ret)
-+		return ret;
-+
-+	if (!wait_for_completion_timeout(&cmpl, msecs_to_jiffies(1000))) {
-+		dev_err(dev->mt76.dev, "Error: firmware upload timed out\n");
-+		usb_kill_urb(buf.urb);
-+		return -ETIMEDOUT;
-+	}
-+	if (mt76x0_urb_has_error(buf.urb)) {
-+		dev_err(dev->mt76.dev, "Error: firmware upload urb failed:%d\n",
-+			buf.urb->status);
-+		return buf.urb->status;
-+	}
-+
-+	val = mt76_rr(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX);
-+	val++;
-+	mt76_wr(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX, val);
-+
-+	msleep(5);
-+
-+	return 0;
-+}
-+
-+static int
-+mt76x0_dma_fw(struct mt76x0_dev *dev, struct mt76x0_dma_buf *dma_buf,
-+	       const void *data, int len, u32 dst_addr)
-+{
-+	int n, ret;
-+
-+	if (len == 0)
-+		return 0;
-+
-+	n = min(MCU_FW_URB_MAX_PAYLOAD, len);
-+	ret = __mt76x0_dma_fw(dev, dma_buf, data, n, dst_addr);
-+	if (ret)
-+		return ret;
-+
-+#if 0
-+	if (!mt76_poll_msec(dev, MT_MCU_COM_REG1, BIT(31), BIT(31), 500))
-+		return -ETIMEDOUT;
-+#endif
-+
-+	return mt76x0_dma_fw(dev, dma_buf, data + n, len - n, dst_addr + n);
-+}
-+
-+static int
-+mt76x0_upload_firmware(struct mt76x0_dev *dev, const struct mt76_fw *fw)
-+{
-+	struct mt76x0_dma_buf dma_buf;
-+	void *ivb;
-+	u32 ilm_len, dlm_len;
-+	int i, ret;
-+
-+	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
-+	if (!ivb)
-+		return -ENOMEM;
-+	if (mt76x0_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	ilm_len = le32_to_cpu(fw->hdr.ilm_len) - sizeof(fw->ivb);
-+	dev_dbg(dev->mt76.dev, "loading FW - ILM %u + IVB %zu\n",
-+		ilm_len, sizeof(fw->ivb));
-+	ret = mt76x0_dma_fw(dev, &dma_buf, fw->ilm, ilm_len, sizeof(fw->ivb));
-+	if (ret)
-+		goto error;
-+
-+	dlm_len = le32_to_cpu(fw->hdr.dlm_len);
-+	dev_dbg(dev->mt76.dev, "loading FW - DLM %u\n", dlm_len);
-+	ret = mt76x0_dma_fw(dev, &dma_buf, fw->ilm + ilm_len,
-+			     dlm_len, MT_MCU_DLM_OFFSET);
-+	if (ret)
-+		goto error;
-+
-+	ret = mt76x0_vendor_request(dev, MT_VEND_DEV_MODE, USB_DIR_OUT,
-+				     0x12, 0, ivb, sizeof(fw->ivb));
-+	if (ret < 0)
-+		goto error;
-+	ret = 0;
-+
-+	for (i = 100; i && !firmware_running(dev); i--)
-+		msleep(10);
-+	if (!i) {
-+		ret = -ETIMEDOUT;
-+		goto error;
-+	}
-+
-+	dev_dbg(dev->mt76.dev, "Firmware running!\n");
-+error:
-+	kfree(ivb);
-+	mt76x0_usb_free_buf(dev, &dma_buf);
-+
-+	return ret;
-+}
-+
-+static int mt76x0_load_firmware(struct mt76x0_dev *dev)
-+{
-+	const struct firmware *fw;
-+	const struct mt76_fw_header *hdr;
-+	int len, ret;
-+	u32 val;
-+
-+	mt76_wr(dev, MT_USB_DMA_CFG, (MT_USB_DMA_CFG_RX_BULK_EN |
-+					 MT_USB_DMA_CFG_TX_BULK_EN));
-+
-+	if (firmware_running(dev))
-+		return 0;
-+
-+	ret = request_firmware(&fw, MT7610_FIRMWARE, dev->mt76.dev);
-+	if (ret)
-+		return ret;
-+
-+	if (!fw || !fw->data || fw->size < sizeof(*hdr))
-+		goto err_inv_fw;
-+
-+	hdr = (const struct mt76_fw_header *) fw->data;
-+
-+	if (le32_to_cpu(hdr->ilm_len) <= MT_MCU_IVB_SIZE)
-+		goto err_inv_fw;
-+
-+	len = sizeof(*hdr);
-+	len += le32_to_cpu(hdr->ilm_len);
-+	len += le32_to_cpu(hdr->dlm_len);
-+
-+	if (fw->size != len)
-+		goto err_inv_fw;
-+
-+	val = le16_to_cpu(hdr->fw_ver);
-+	dev_dbg(dev->mt76.dev,
-+		 "Firmware Version: %d.%d.%02d Build: %x Build time: %.16s\n",
-+		 (val >> 12) & 0xf, (val >> 8) & 0xf, val & 0xf,
-+		 le16_to_cpu(hdr->build_ver), hdr->build_time);
-+
-+	len = le32_to_cpu(hdr->ilm_len);
-+
-+	mt76_wr(dev, 0x1004, 0x2c);
-+
-+	mt76_set(dev, MT_USB_DMA_CFG, (MT_USB_DMA_CFG_RX_BULK_EN |
-+				       MT_USB_DMA_CFG_TX_BULK_EN) |
-+				       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, 0x20));
-+	mt76x0_vendor_reset(dev);
-+	msleep(5);
-+/*
-+	mt76x0_rmw(dev, MT_PBF_CFG, 0, (MT_PBF_CFG_TX0Q_EN |
-+					 MT_PBF_CFG_TX1Q_EN |
-+					 MT_PBF_CFG_TX2Q_EN |
-+					 MT_PBF_CFG_TX3Q_EN));
-+*/
-+
-+	mt76_wr(dev, MT_FCE_PSE_CTRL, 1);
-+
-+	/* FCE tx_fs_base_ptr */
-+	mt76_wr(dev, MT_TX_CPU_FROM_FCE_BASE_PTR, 0x400230);
-+	/* FCE tx_fs_max_cnt */
-+	mt76_wr(dev, MT_TX_CPU_FROM_FCE_MAX_COUNT, 1);
-+	/* FCE pdma enable */
-+	mt76_wr(dev, MT_FCE_PDMA_GLOBAL_CONF, 0x44);
-+	/* FCE skip_fs_en */
-+	mt76_wr(dev, MT_FCE_SKIP_FS, 3);
-+
-+	val = mt76_rr(dev, MT_USB_DMA_CFG);
-+	val |= MT_USB_DMA_CFG_TX_WL_DROP;
-+	mt76_wr(dev, MT_USB_DMA_CFG, val);
-+	val &= ~MT_USB_DMA_CFG_TX_WL_DROP;
-+	mt76_wr(dev, MT_USB_DMA_CFG, val);
-+
-+	ret = mt76x0_upload_firmware(dev, (const struct mt76_fw *)fw->data);
-+	release_firmware(fw);
-+
-+	mt76_wr(dev, MT_FCE_PSE_CTRL, 1);
-+
-+	return ret;
-+
-+err_inv_fw:
-+	dev_err(dev->mt76.dev, "Invalid firmware image\n");
-+	release_firmware(fw);
-+	return -ENOENT;
-+}
-+
-+int mt76x0_mcu_init(struct mt76x0_dev *dev)
-+{
-+	int ret;
-+
-+	mutex_init(&dev->mcu.mutex);
-+
-+	ret = mt76x0_load_firmware(dev);
-+	if (ret)
-+		return ret;
-+
-+	set_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state);
-+
-+	return 0;
-+}
-+
-+int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
-+{
-+	int ret;
-+
-+	ret = mt76x0_mcu_function_select(dev, Q_SELECT, 1);
-+	if (ret)
-+		return ret;
-+
-+	init_completion(&dev->mcu.resp_cmpl);
-+	if (mt76x0_usb_alloc_buf(dev, MCU_RESP_URB_SIZE, &dev->mcu.resp)) {
-+		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
-+		return -ENOMEM;
-+	}
-+
-+	ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
-+				     &dev->mcu.resp, GFP_KERNEL,
-+				     mt76x0_complete_urb, &dev->mcu.resp_cmpl);
-+	if (ret) {
-+		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void mt76x0_mcu_cmd_deinit(struct mt76x0_dev *dev)
-+{
-+	usb_kill_urb(dev->mcu.resp.urb);
-+	mt76x0_usb_free_buf(dev, &dev->mcu.resp);
-+}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-new file mode 100644
-index 000000000000..8c2f77f4c3f5
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-@@ -0,0 +1,101 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-+ * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef __MT76X0U_MCU_H
-+#define __MT76X0U_MCU_H
-+
-+struct mt76x0_dev;
-+
-+/* Register definitions */
-+#define MT_MCU_RESET_CTL		0x070C
-+#define MT_MCU_INT_LEVEL		0x0718
-+#define MT_MCU_COM_REG0			0x0730
-+#define MT_MCU_COM_REG1			0x0734
-+#define MT_MCU_COM_REG2			0x0738
-+#define MT_MCU_COM_REG3			0x073C
-+
-+#define MT_MCU_IVB_SIZE			0x40
-+#define MT_MCU_DLM_OFFSET		0x80000
-+
-+#define MT_MCU_MEMMAP_WLAN		0x00410000
-+/* We use same space for BBP as for MAC regs
-+ * #define MT_MCU_MEMMAP_BBP		0x40000000
-+ */
-+#define MT_MCU_MEMMAP_RF		0x80000000
-+
-+#define INBAND_PACKET_MAX_LEN		192
-+
-+enum mcu_cmd {
-+	CMD_FUN_SET_OP = 1,
-+	CMD_LOAD_CR = 2,
-+	CMD_INIT_GAIN_OP = 3,
-+	CMD_DYNC_VGA_OP = 6,
-+	CMD_TDLS_CH_SW = 7,
-+	CMD_BURST_WRITE = 8,
-+	CMD_READ_MODIFY_WRITE = 9,
-+	CMD_RANDOM_READ = 10,
-+	CMD_BURST_READ = 11,
-+	CMD_RANDOM_WRITE = 12,
-+	CMD_LED_MODE_OP = 16,
-+	CMD_POWER_SAVING_OP = 20,
-+	CMD_WOW_CONFIG = 21,
-+	CMD_WOW_QUERY = 22,
-+	CMD_WOW_FEATURE = 24,
-+	CMD_CARRIER_DETECT_OP = 28,
-+	CMD_RADOR_DETECT_OP = 29,
-+	CMD_SWITCH_CHANNEL_OP = 30,
-+	CMD_CALIBRATION_OP = 31,
-+	CMD_BEACON_OP = 32,
-+	CMD_ANTENNA_OP = 33,
-+};
-+
-+enum mcu_function {
-+	Q_SELECT = 1,
-+	BW_SETTING = 2,
-+	ATOMIC_TSSI_SETTING = 5,
-+};
-+
-+enum mcu_power_mode {
-+	RADIO_OFF = 0x30,
-+	RADIO_ON = 0x31,
-+	RADIO_OFF_AUTO_WAKEUP = 0x32,
-+	RADIO_OFF_ADVANCE = 0x33,
-+	RADIO_ON_ADVANCE = 0x34,
-+};
-+
-+enum mcu_calibrate {
-+	MCU_CAL_R = 1,
-+	MCU_CAL_RXDCOC,
-+	MCU_CAL_LC,
-+	MCU_CAL_LOFT,
-+	MCU_CAL_TXIQ,
-+	MCU_CAL_BW,
-+	MCU_CAL_DPD,
-+	MCU_CAL_RXIQ,
-+	MCU_CAL_TXDCOC,
-+	MCU_CAL_RX_GROUP_DELAY,
-+	MCU_CAL_TX_GROUP_DELAY,
-+};
-+
-+int mt76x0_mcu_init(struct mt76x0_dev *dev);
-+int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev);
-+void mt76x0_mcu_cmd_deinit(struct mt76x0_dev *dev);
-+
-+int
-+mt76x0_mcu_calibrate(struct mt76x0_dev *dev, enum mcu_calibrate cal, u32 val);
-+
-+int
-+mt76x0_mcu_function_select(struct mt76x0_dev *dev, enum mcu_function func, u32 val);
-+
-+#endif
++	hdr = (void *)(pkt->data + desc_size);
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	 * ieee80211_hdr pulled.
+ 	 */
+@@ -925,8 +943,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK;
+ 
+ 		if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD) {
+-			he_phy_data =
+-				le64_to_cpu(desc->he_phy_data);
++			if (mvm->trans->cfg->device_family >=
++			    IWL_DEVICE_FAMILY_22560)
++				he_phy_data = le64_to_cpu(desc->v3.he_phy_data);
++			else
++				he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
+ 
+ 			if (he_type == RATE_MCS_HE_TYPE_MU) {
+ 				he_mu = skb_put_data(skb, &mu_known,
+@@ -940,6 +961,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		__skb_pull(skb, radiotap_len);
+ 	}
+ 
++	rx_status = IEEE80211_SKB_RXCB(skb);
++
+ 	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, phy_info, desc,
+ 			      le32_to_cpu(pkt->len_n_flags), queue,
+ 			      &crypt_len)) {
+@@ -962,14 +985,28 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		rx_status->enc_flags |= RX_ENC_FLAG_SHORTPRE;
+ 
+ 	if (likely(!(phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD))) {
+-		rx_status->mactime = le64_to_cpu(desc->tsf_on_air_rise);
++		u64 tsf_on_air_rise;
++
++		if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++			tsf_on_air_rise = le64_to_cpu(desc->v3.tsf_on_air_rise);
++		else
++			tsf_on_air_rise = le64_to_cpu(desc->v1.tsf_on_air_rise);
++
++		rx_status->mactime = tsf_on_air_rise;
+ 		/* TSF as indicated by the firmware is at INA time */
+ 		rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
+ 	} else if (he_type == RATE_MCS_HE_TYPE_SU) {
++		u64 he_phy_data;
++
++		if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++			he_phy_data = le64_to_cpu(desc->v3.he_phy_data);
++		else
++			he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
++
+ 		he->data1 |=
+ 			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN);
+ 		if (FIELD_GET(IWL_RX_HE_PHY_UPLINK,
+-			      le64_to_cpu(desc->he_phy_data)))
++			      he_phy_data))
+ 			he->data3 |=
+ 				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA3_UL_DL);
+ 
+@@ -980,7 +1017,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
+ 			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+ 			if (FIELD_GET(IWL_RX_HE_PHY_DELIM_EOF,
+-				      le64_to_cpu(desc->he_phy_data)))
++				      he_phy_data))
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+ 		}
+ 	} else if (he_mu && he_phy_data != HE_PHY_DATA_INVAL) {
+@@ -1005,16 +1042,23 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW);
+ 	}
+-	rx_status->device_timestamp = le32_to_cpu(desc->gp2_on_air_rise);
+-	rx_status->band = desc->channel > 14 ? NL80211_BAND_5GHZ :
+-					       NL80211_BAND_2GHZ;
+-	rx_status->freq = ieee80211_channel_to_frequency(desc->channel,
++	rx_status->device_timestamp = gp2_on_air_rise;
++	rx_status->band = channel > 14 ? NL80211_BAND_5GHZ :
++		NL80211_BAND_2GHZ;
++	rx_status->freq = ieee80211_channel_to_frequency(channel,
+ 							 rx_status->band);
+-	iwl_mvm_get_signal_strength(mvm, desc, rx_status);
++	iwl_mvm_get_signal_strength(mvm, rx_status, rate_n_flags, energy_a,
++				    energy_b);
+ 
+ 	/* update aggregation data for monitor sake on default queue */
+ 	if (!queue && (phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
+ 		bool toggle_bit = phy_info & IWL_RX_MPDU_PHY_AMPDU_TOGGLE;
++		u64 he_phy_data;
++
++		if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++			he_phy_data = le64_to_cpu(desc->v3.he_phy_data);
++		else
++			he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
+ 
+ 		rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
+ 		rx_status->ampdu_reference = mvm->ampdu_ref;
+@@ -1027,7 +1071,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			    he_type == RATE_MCS_HE_TYPE_MU) {
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+ 				if (FIELD_GET(IWL_RX_HE_PHY_DELIM_EOF,
+-					      le64_to_cpu(desc->he_phy_data)))
++					      he_phy_data))
+ 					rx_status->flag |=
+ 						RX_FLAG_AMPDU_EOF_BIT;
+ 			}
+@@ -1327,12 +1371,19 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			break;
+ 		case RATE_MCS_HE_TYPE_MU: {
+ 			u16 val;
++			u64 he_phy_data;
++
++			if (mvm->trans->cfg->device_family >=
++			    IWL_DEVICE_FAMILY_22560)
++				he_phy_data = le64_to_cpu(desc->v3.he_phy_data);
++			else
++				he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
+ 
+ 			if (he_phy_data == HE_PHY_DATA_INVAL)
+ 				break;
+ 
+ 			val = FIELD_GET(IWL_RX_HE_PHY_HE_LTF_NUM_MASK,
+-					le64_to_cpu(desc->he_phy_data));
++					he_phy_data);
+ 
+ 			he->data2 |=
+ 				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN);
 -- 
-1.9.3
+2.18.0
