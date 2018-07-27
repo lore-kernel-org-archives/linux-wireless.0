@@ -1,67 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43460 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731288AbeG3Tnk (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38746 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729568AbeG0O2N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:43:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 3/9] ath9k: force rx_clear when disabling rx
-References: <20180723160300.58024-1-nbd@nbd.name>
-        <20180723160300.58024-3-nbd@nbd.name>
-Date: Mon, 30 Jul 2018 21:07:24 +0300
-In-Reply-To: <20180723160300.58024-3-nbd@nbd.name> (Felix Fietkau's message of
-        "Mon, 23 Jul 2018 18:02:54 +0200")
-Message-ID: <87y3dsk36r.fsf@purkki.adurom.net> (sfid-20180730_200732_416623_191B1D49)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 27 Jul 2018 10:28:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 16:06:15 +0300
+Message-Id: <20180727130615.28707-1-luca@coelho.fi> (sfid-20180727_150624_530385_93773BF8)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 16/16] iwlwifi: pcie: split tx to amsdu and non amsdu
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> From: Felix Fietkau <nbd@openwrt.org>
->
-> This makes stopping Rx more reliable and should reduce the frequency of
-> Rx related DMA stop warnings. Don't use rx_clear in TX99 mode.
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/mac.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-> index 58d02c19b6d0..c9d2bf3fa135 100644
-> --- a/drivers/net/wireless/ath/ath9k/mac.c
-> +++ b/drivers/net/wireless/ath/ath9k/mac.c
-> @@ -678,13 +678,18 @@ void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning)
->  
->  	ath9k_ani_reset(ah, is_scanning);
->  
-> -	REG_CLR_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
-> +	REG_CLR_BIT(ah, AR_DIAG_SW,
-> +		    AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT | AR_DIAG_FORCE_RX_CLEAR);
->  }
->  EXPORT_SYMBOL(ath9k_hw_startpcureceive);
->  
->  void ath9k_hw_abortpcurecv(struct ath_hw *ah)
->  {
-> -	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_RX_ABORT | AR_DIAG_RX_DIS);
-> +	u32 reg = AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT;
-> +
-> +	if (!IS_ENABLED(CPTCFG_ATH9K_TX99))
-> +		reg |= AR_DIAG_FORCE_RX_CLEAR;
-> +	REG_SET_BIT(ah, AR_DIAG_SW, reg);
+The code is different enough to justify a split.
 
-CPTCFG_ prefix is obviously wrong, so I'll drop this patch.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 149 ++++++++++++------
+ 1 file changed, 100 insertions(+), 49 deletions(-)
 
-But I also wonder if IS_ENABLED() is really correct? Why would enabling
-a Kconfig option change "normal mode" (= not tx99 mode) functionality,
-even when nobody accesses the tx99 debugfs file? I would have thought
-there's some kind of runtime check to see if tx99 mode is enabled or
-something like that.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 64db540ad605..b99f33ff9123 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -365,58 +365,89 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 	return -EINVAL;
+ }
+ 
+-static
+-struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+-					    struct iwl_txq *txq,
+-					    struct iwl_device_cmd *dev_cmd,
+-					    struct sk_buff *skb,
+-					    struct iwl_cmd_meta *out_meta)
++static struct
++iwl_tfh_tfd *iwl_pcie_gen2_build_tx_amsdu(struct iwl_trans *trans,
++					  struct iwl_txq *txq,
++					  struct iwl_device_cmd *dev_cmd,
++					  struct sk_buff *skb,
++					  struct iwl_cmd_meta *out_meta,
++					  int hdr_len,
++					  int tx_cmd_len)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
+ 	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
+ 	dma_addr_t tb_phys;
+-	bool amsdu;
+-	int i, len, tb1_len, tb2_len, hdr_len;
++	int len;
+ 	void *tb1_addr;
+ 
+-	memset(tfd, 0, sizeof(*tfd));
++	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
+ 
+-	amsdu = ieee80211_is_data_qos(hdr->frame_control) &&
+-		(*ieee80211_get_qos_ctl(hdr) &
+-		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
++	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
++
++	/*
++	 * The second TB (tb1) points to the remainder of the TX command
++	 * and the 802.11 header - dword aligned size
++	 * (This calculation modifies the TX command, so do it before the
++	 * setup of the first TB)
++	 */
++	len = tx_cmd_len + sizeof(struct iwl_cmd_header) + hdr_len -
++	      IWL_FIRST_TB_SIZE;
++
++	/* do not align A-MSDU to dword as the subframe header aligns it */
++
++	/* map the data for TB1 */
++	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
++	tb_phys = dma_map_single(trans->dev, tb1_addr, len, DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(trans->dev, tb_phys)))
++		goto out_err;
++	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, len);
++
++	if (iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
++				      len + IWL_FIRST_TB_SIZE,
++				      hdr_len, dev_cmd))
++		goto out_err;
++
++	/* building the A-MSDU might have changed this data, memcpy it now */
++	memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr, IWL_FIRST_TB_SIZE);
++	return tfd;
++
++out_err:
++	iwl_pcie_gen2_tfd_unmap(trans, out_meta, tfd);
++	return NULL;
++}
++
++static struct
++iwl_tfh_tfd *iwl_pcie_gen2_build_tx(struct iwl_trans *trans,
++				    struct iwl_txq *txq,
++				    struct iwl_device_cmd *dev_cmd,
++				    struct sk_buff *skb,
++				    struct iwl_cmd_meta *out_meta,
++				    int hdr_len,
++				    int tx_cmd_len)
++{
++	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
++	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
++	dma_addr_t tb_phys;
++	int i, len, tb1_len, tb2_len;
++	void *tb1_addr;
+ 
+ 	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
++
+ 	/* The first TB points to bi-directional DMA data */
+-	if (!amsdu)
+-		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
+-		       IWL_FIRST_TB_SIZE);
++	memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr, IWL_FIRST_TB_SIZE);
+ 
+ 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, IWL_FIRST_TB_SIZE);
+ 
+-	/* there must be data left over for TB1 or this code must be changed */
+-	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) < IWL_FIRST_TB_SIZE);
+-
+ 	/*
+ 	 * The second TB (tb1) points to the remainder of the TX command
+ 	 * and the 802.11 header - dword aligned size
+ 	 * (This calculation modifies the TX command, so do it before the
+ 	 * setup of the first TB)
+ 	 */
+-	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
+-		len = sizeof(struct iwl_tx_cmd_gen2);
+-	else
+-		len = sizeof(struct iwl_tx_cmd_gen3);
++	len = tx_cmd_len + sizeof(struct iwl_cmd_header) + hdr_len -
++	      IWL_FIRST_TB_SIZE;
+ 
+-	len += sizeof(struct iwl_cmd_header) +
+-		ieee80211_hdrlen(hdr->frame_control) -
+-		IWL_FIRST_TB_SIZE;
+-
+-	/* do not align A-MSDU to dword as the subframe header aligns it */
+-	if (amsdu)
+-		tb1_len = len;
+-	else
+-		tb1_len = ALIGN(len, 4);
++	tb1_len = ALIGN(len, 4);
+ 
+ 	/* map the data for TB1 */
+ 	tb1_addr = ((u8 *)&dev_cmd->hdr) + IWL_FIRST_TB_SIZE;
+@@ -425,23 +456,6 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 		goto out_err;
+ 	iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, tb1_len);
+ 
+-	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+-
+-	if (amsdu) {
+-		if (iwl_pcie_gen2_build_amsdu(trans, skb, tfd,
+-					      tb1_len + IWL_FIRST_TB_SIZE,
+-					      hdr_len, dev_cmd))
+-			goto out_err;
+-
+-		/*
+-		 * building the A-MSDU might have changed this data, so memcpy
+-		 * it now
+-		 */
+-		memcpy(&txq->first_tb_bufs[idx], &dev_cmd->hdr,
+-		       IWL_FIRST_TB_SIZE);
+-		return tfd;
+-	}
+-
+ 	/* set up TFD's third entry to point to remainder of skb's head */
+ 	tb2_len = skb_headlen(skb) - hdr_len;
+ 
+@@ -483,6 +497,43 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 	return NULL;
+ }
+ 
++static
++struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
++					    struct iwl_txq *txq,
++					    struct iwl_device_cmd *dev_cmd,
++					    struct sk_buff *skb,
++					    struct iwl_cmd_meta *out_meta)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	int idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
++	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, idx);
++	int len, hdr_len;
++	bool amsdu;
++
++	/* There must be data left over for TB1 or this code must be changed */
++	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) < IWL_FIRST_TB_SIZE);
++
++	memset(tfd, 0, sizeof(*tfd));
++
++	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
++		len = sizeof(struct iwl_tx_cmd_gen2);
++	else
++		len = sizeof(struct iwl_tx_cmd_gen3);
++
++	amsdu = ieee80211_is_data_qos(hdr->frame_control) &&
++			(*ieee80211_get_qos_ctl(hdr) &
++			 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
++
++	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (amsdu)
++		return iwl_pcie_gen2_build_tx_amsdu(trans, txq, dev_cmd, skb,
++						    out_meta, hdr_len, len);
++
++	return iwl_pcie_gen2_build_tx(trans, txq, dev_cmd, skb, out_meta,
++				      hdr_len, len);
++}
++
+ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			   struct iwl_device_cmd *dev_cmd, int txq_id)
+ {
 -- 
-Kalle Valo
+2.18.0
