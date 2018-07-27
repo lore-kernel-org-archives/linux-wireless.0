@@ -1,80 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36364 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726205AbeGKIKc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38672 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730852AbeG0OKx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 04:10:32 -0400
-Received: by mail-wm0-f68.google.com with SMTP id s14-v6so1543647wmc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jul 2018 01:07:29 -0700 (PDT)
-Date: Wed, 11 Jul 2018 10:07:25 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Sean Wang <sean.wang@mediatek.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v2 00/12] Add mt76x0 driver
-Message-ID: <20180711080721.GA3871@localhost.localdomain> (sfid-20180711_100736_562219_A965B5D1)
-References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
- <1531205430.26214.8.camel@mtkswgap22>
- <20180710095222.GA18926@redhat.com>
- <1531230864.26214.20.camel@mtkswgap22>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1531230864.26214.20.camel@mtkswgap22>
+        Fri, 27 Jul 2018 10:10:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:33 +0300
+Message-Id: <20180727124838.25910-12-luca@coelho.fi> (sfid-20180727_144908_919222_30A8BDA2)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 11/16] Revert "iwlwifi: implement fseq version mismatch warning"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, 2018-07-10 at 11:52 +0200, Stanislaw Gruszka wrote:
-> > On Tue, Jul 10, 2018 at 02:50:30PM +0800, Sean Wang wrote:
-> > > > For full support mt7610.bin firmware blob is need, hopefully with 
-> > > > the permission of Mediatek, the blob will be pushed into linux-firmware
-> > > > git tree.
-> > > > 
-> > > 
-> > > Hi, Stanislaw
-> > > 
-> > > You can feel free to add mt7610.bin firmware blob to linux-firmware with
-> > > the license LICENCE.mediatek I added in [1].
-> > > 
-> > > 
-> > > [1]
-> > > http://lists.infradead.org/pipermail/linux-mediatek/2018-June/013759.html
-> > 
-> > Thank you Sean!
-> > 
-> > I guess there is no problem with similar submission for
-> > mt7662u.bin and mt7662u_rom_patch.bin needed for mt76x2u:
-> > https://marc.info/?l=linux-wireless&m=153045438821562&w=2
-> > 
-> 
+From: Sara Sharon <sara.sharon@intel.com>
 
-Thanks Sean,
+This reverts commit f2e66c8df0d0f10c70ed7f5e14a939714e9ee6a9.
 
-I will submit mt7662u.bin and mt7662u_rom_patch.bin with LICENCE.mediatek
-soon
+The firmware never implemented this, and they do not plan to.
 
-> Sure, there is no any problem for submitting mt7662u.bin and
-> mt7662u_rom_patch.bin if they are added with LICENCE.mediatek.
-> 
-> Do you or Lorenzo have a plan to add MT7668u support to mt76?
-> MT7668 is a newer wifi device than MT7610u or MT7662u.
-> 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/alive.h | 18 +---
+ .../wireless/intel/iwlwifi/fw/api/commands.h  |  7 --
+ .../net/wireless/intel/iwlwifi/fw/common_rx.c | 88 -------------------
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  3 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  4 +-
+ 5 files changed, 3 insertions(+), 117 deletions(-)
+ delete mode 100644 drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
 
-Cool, I am interested in adding MT7668u support to mt76 driver.
-Is the adapter available on the market?
-
-Regards,
-Lorenzo
-
-> > Regards
-> > Stanislaw
-> > 
-> > _______________________________________________
-> > Linux-mediatek mailing list
-> > Linux-mediatek@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-mediatek
-> 
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
+index 007bfe7656a4..08d3d8a190f6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/alive.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -30,6 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -187,20 +189,4 @@ struct iwl_card_state_notif {
+ 	__le32 flags;
+ } __packed; /* CARD_STATE_NTFY_API_S_VER_1 */
+ 
+-/**
+- * struct iwl_fseq_ver_mismatch_nty - Notification about version
+- *
+- * This notification does not have a direct impact on the init flow.
+- * It means that another core (not WiFi) has initiated the FSEQ flow
+- * and updated the FSEQ version.  The driver only prints an error when
+- * this occurs.
+- *
+- * @aux_read_fseq_ver: auxiliary read FSEQ version
+- * @wifi_fseq_ver: FSEQ version (embedded in WiFi)
+- */
+-struct iwl_fseq_ver_mismatch_ntf {
+-	__le32 aux_read_fseq_ver;
+-	__le32 wifi_fseq_ver;
+-} __packed; /* FSEQ_VER_MISMATCH_NTFY_API_S_VER_1 */
+-
+ #endif /* __iwl_fw_api_alive_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+index d71a6a837ec5..6dad748e5cdc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+@@ -647,13 +647,6 @@ enum iwl_system_subcmd_ids {
+ 	 * @INIT_EXTENDED_CFG_CMD: &struct iwl_init_extended_cfg_cmd
+ 	 */
+ 	INIT_EXTENDED_CFG_CMD = 0x03,
+-
+-	/**
+-	 * @FSEQ_VER_MISMATCH_NTF: Notification about fseq version
+-	 *	mismatch during init.  The format is specified in
+-	 *	&struct iwl_fseq_ver_mismatch_ntf.
+-	 */
+-	FSEQ_VER_MISMATCH_NTF = 0xFF,
+ };
+ 
+ #endif /* __iwl_fw_api_commands_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c b/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
+deleted file mode 100644
+index 6f75985eea66..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
++++ /dev/null
+@@ -1,88 +0,0 @@
+-/******************************************************************************
+- *
+- * This file is provided under a dual BSD/GPLv2 license.  When using or
+- * redistributing this file, you may do so under either license.
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2017 Intel Deutschland GmbH
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * The full GNU General Public License is included in this distribution
+- * in the file called COPYING.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <linuxwifi@intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- * BSD LICENSE
+- *
+- * Copyright(c) 2017 Intel Deutschland GmbH
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  * Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- *  * Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in
+- *    the documentation and/or other materials provided with the
+- *    distribution.
+- *  * Neither the name Intel Corporation nor the names of its
+- *    contributors may be used to endorse or promote products derived
+- *    from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *
+- *****************************************************************************/
+-#include "iwl-drv.h"
+-#include "runtime.h"
+-#include "fw/api/commands.h"
+-#include "fw/api/alive.h"
+-
+-static void iwl_fwrt_fseq_ver_mismatch(struct iwl_fw_runtime *fwrt,
+-				       struct iwl_rx_cmd_buffer *rxb)
+-{
+-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_fseq_ver_mismatch_ntf *fseq = (void *)pkt->data;
+-
+-	IWL_ERR(fwrt, "FSEQ version mismatch (aux: %d, wifi: %d)\n",
+-		__le32_to_cpu(fseq->aux_read_fseq_ver),
+-		__le32_to_cpu(fseq->wifi_fseq_ver));
+-}
+-
+-void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
+-				  struct iwl_rx_cmd_buffer *rxb)
+-{
+-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	u32 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
+-
+-	switch (cmd) {
+-	case WIDE_ID(SYSTEM_GROUP, FSEQ_VER_MISMATCH_NTF):
+-		iwl_fwrt_fseq_ver_mismatch(fwrt, rxb);
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-IWL_EXPORT_SYMBOL(iwl_fwrt_handle_notification);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index d8db1dd100b0..ed23367f7088 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -168,7 +168,4 @@ void iwl_free_fw_paging(struct iwl_fw_runtime *fwrt);
+ 
+ void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt);
+ 
+-void iwl_fwrt_handle_notification(struct iwl_fw_runtime *fwrt,
+-				  struct iwl_rx_cmd_buffer *rxb);
+-
+ #endif /* __iwl_fw_runtime_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 06298356df6d..0efd2a36e6c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1013,10 +1013,8 @@ static void iwl_mvm_rx_common(struct iwl_mvm *mvm,
+ 		list_add_tail(&entry->list, &mvm->async_handlers_list);
+ 		spin_unlock(&mvm->async_handlers_lock);
+ 		schedule_work(&mvm->async_handlers_wk);
+-		return;
++		break;
+ 	}
+-
+-	iwl_fwrt_handle_notification(&mvm->fwrt, rxb);
+ }
+ 
+ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
+-- 
+2.18.0
