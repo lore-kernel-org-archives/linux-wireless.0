@@ -1,322 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:40136 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727408AbeGTMu2 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38608 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730088AbeG0OKn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jul 2018 08:50:28 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <linus.walleij@linaro.org>, Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 4/4] staging: wilc1000: use descriptor-based interface for GPIO
-Date: Fri, 20 Jul 2018 17:31:38 +0530
-Message-ID: <1532088098-8483-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180720_140236_373271_C6113619)
-In-Reply-To: <1532088098-8483-1-git-send-email-ajay.kathat@microchip.com>
-References: <1532088098-8483-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 27 Jul 2018 10:10:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:28 +0300
+Message-Id: <20180727124838.25910-7-luca@coelho.fi> (sfid-20180727_144859_046824_AECA6407)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 06/16] iwlwifi: trans: add a new op for getting DMA data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now making use of descriptor-based interface instead of integer-based
-interface for IRQ GPIO.
-Added device tree binding reference for WILC SDIO and SPI interface
-module. Also moved the code to free gpio descriptor in module remove
-as the reference was fetched in probe function.
-Updated the TODO file
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Op mode will need this data in order to feed FW with it.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/TODO                      |  4 ---
- drivers/staging/wilc1000/linux_wlan.c              | 40 +++++++++-------------
- .../staging/wilc1000/microchip,wilc1000,sdio.txt   | 32 +++++++++++++++++
- .../staging/wilc1000/microchip,wilc1000,spi.txt    | 26 ++++++++++++++
- drivers/staging/wilc1000/wilc_sdio.c               | 23 +++++++++----
- drivers/staging/wilc1000/wilc_spi.c                | 23 +++++++++----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h      |  3 +-
- 7 files changed, 108 insertions(+), 43 deletions(-)
- create mode 100644 drivers/staging/wilc1000/microchip,wilc1000,sdio.txt
- create mode 100644 drivers/staging/wilc1000/microchip,wilc1000,spi.txt
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 26 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 17 ++++++++++++
+ 2 files changed, 43 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-index 725bede..3d82bb0 100644
---- a/drivers/staging/wilc1000/TODO
-+++ b/drivers/staging/wilc1000/TODO
-@@ -3,7 +3,3 @@ TODO:
- - make spi and sdio components coexist in one build
- - support soft-ap and p2p mode
- - support resume/suspend function
--- convert all uses of the old GPIO API from <linux/gpio.h> to the
--  GPIO descriptor API in <linux/gpio/consumer.h> and look up GPIO
--  lines from device tree, ACPI or board files, board files should
--  use <linux/gpio/machine.h>
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 74e7180..64c5d69 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1,6 +1,5 @@
- // SPDX-License-Identifier: GPL-2.0
- #include <linux/irq.h>
--#include <linux/gpio.h>
- #include <linux/kthread.h>
- #include <linux/firmware.h>
- #include <linux/netdevice.h>
-@@ -127,28 +126,23 @@ static int init_irq(struct net_device *dev)
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wl = vif->wilc;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 4229992073b6..9483f76476de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -439,6 +439,20 @@ struct iwl_trans_txq_scd_cfg {
+ 	int frame_limit;
+ };
  
--	if ((gpio_request(wl->gpio_irq, "WILC_INTR") == 0) &&
--	    (gpio_direction_input(wl->gpio_irq) == 0)) {
--		wl->dev_irq_num = gpio_to_irq(wl->gpio_irq);
--	} else {
--		ret = -1;
-+	ret = gpiod_direction_input(wl->gpio_irq);
-+	if (ret) {
- 		netdev_err(dev, "could not obtain gpio for WILC_INTR\n");
-+		return ret;
- 	}
- 
--	if (ret != -1 && request_threaded_irq(wl->dev_irq_num,
--					      isr_uh_routine,
--					      isr_bh_routine,
--					      IRQF_TRIGGER_LOW | IRQF_ONESHOT,
--					      "WILC_IRQ", dev) < 0) {
--		netdev_err(dev, "Failed to request IRQ GPIO: %d\n",
--			   wl->gpio_irq);
--		gpio_free(wl->gpio_irq);
--		ret = -1;
--	} else {
--		netdev_dbg(dev,
--			   "IRQ request succeeded IRQ-NUM= %d on GPIO: %d\n",
--			   wl->dev_irq_num, wl->gpio_irq);
--	}
-+	wl->dev_irq_num = gpiod_to_irq(wl->gpio_irq);
-+
-+	ret = request_threaded_irq(wl->dev_irq_num, isr_uh_routine,
-+				   isr_bh_routine,
-+				   IRQF_TRIGGER_LOW | IRQF_ONESHOT,
-+				   "WILC_IRQ", dev);
-+	if (ret < 0)
-+		netdev_err(dev, "Failed to request IRQ\n");
-+	else
-+		netdev_dbg(dev, "IRQ request succeeded IRQ-NUM= %d\n",
-+			   wl->dev_irq_num);
- 
- 	return ret;
- }
-@@ -159,10 +153,8 @@ static void deinit_irq(struct net_device *dev)
- 	struct wilc *wilc = vif->wilc;
- 
- 	/* Deinitialize IRQ */
--	if (wilc->dev_irq_num) {
-+	if (wilc->dev_irq_num)
- 		free_irq(wilc->dev_irq_num, wilc);
--		gpio_free(wilc->gpio_irq);
--	}
- }
- 
- void wilc_mac_indicate(struct wilc *wilc)
-@@ -652,7 +644,7 @@ static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
- 			goto fail_locks;
- 		}
- 
--		if (wl->gpio_irq >= 0 && init_irq(dev)) {
-+		if (wl->gpio_irq && init_irq(dev)) {
- 			ret = -EIO;
- 			goto fail_locks;
- 		}
-diff --git a/drivers/staging/wilc1000/microchip,wilc1000,sdio.txt b/drivers/staging/wilc1000/microchip,wilc1000,sdio.txt
-new file mode 100644
-index 0000000..4f7d1c2
---- /dev/null
-+++ b/drivers/staging/wilc1000/microchip,wilc1000,sdio.txt
-@@ -0,0 +1,32 @@
-+* Microchip WILC wireless SDIO device
-+
-+The wilc1000 chips can be connected via SDIO. The node is used to specifiy
-+child node to the SDIO controller that connects the device to the system.
-+
-+Required properties:
-+- compatible	:	Should be "microchip,wilc1000-spi"
-+- irq-gpios	:	Connect to a host IRQ
-+- reg		:	Slot ID used in the controller
-+
-+Optional:
-+- bus-width	:	Number of data lines wired up the slot. Default 1 bit.
-+
-+
-+Examples:
-+mmc1: mmc@fc000000 {
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
-+		non-removable;
-+		vmmc-supply = <&vcc_mmc1_reg>;
-+		vqmmc-supply = <&vcc_3v3_reg>;
-+		status = "okay";
-+
-+		wilc_sdio@0 {
-+			compatible = "microchip,wilc1000-sdio";
-+			irq-gpios = <&pioC 27 0>;
-+			status = "okay";
-+			reg = <0>;
-+			bus-width = <4>;
-+		}
-+	};
-+}
-diff --git a/drivers/staging/wilc1000/microchip,wilc1000,spi.txt b/drivers/staging/wilc1000/microchip,wilc1000,spi.txt
-new file mode 100644
-index 0000000..87db87b
---- /dev/null
-+++ b/drivers/staging/wilc1000/microchip,wilc1000,spi.txt
-@@ -0,0 +1,26 @@
-+* Microchip WILC wireless SPI device
-+
-+The wilc1000 chips can be connected via SPI. This document describes
-+the binding for the SPI connected module.
-+
-+Required properties:
-+- compatible		: Should be "microchip,wilc1000-spi"
-+- spi-max-frequency	: Maximum SPI clocking speed of device in Hz
-+- reg			: Chip select address of device
-+- irq-gpios		: Connect to a host IRQ
-+
-+
-+Examples:
-+
-+spi1: spi@fc018000 {
-+		cs-gpios = <&pioB 21 0>;
-+		status = "okay";
-+
-+		wilc_spi@0 {
-+			compatible = "microchip,wilc1000-spi";
-+			spi-max-frequency = <48000000>;
-+			reg = <0>;
-+			irq-gpios = <&pioC 27 0>;
-+			status = "okay";
-+		};
++/**
++ * struct iwl_trans_rxq_dma_data - RX queue DMA data
++ * @fr_bd_cb: DMA address of free BD cyclic buffer
++ * @fr_bd_wid: Initial write index of the free BD cyclic buffer
++ * @urbd_stts_wrptr: DMA address of urbd_stts_wrptr
++ * @ur_bd_cb: DMA address of used BD cyclic buffer
++ */
++struct iwl_trans_rxq_dma_data {
++	u64 fr_bd_cb;
++	u32 fr_bd_wid;
++	u64 urbd_stts_wrptr;
++	u64 ur_bd_cb;
 +};
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index afb91e5..8a47147 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -6,7 +6,7 @@
-  */
- 
- #include <linux/mmc/sdio_func.h>
--#include <linux/of_gpio.h>
-+#include <linux/mmc/host.h>
- 
- #include "wilc_wfi_netdevice.h"
- 
-@@ -108,13 +108,17 @@ static int linux_sdio_probe(struct sdio_func *func,
- 			    const struct sdio_device_id *id)
- {
- 	struct wilc *wilc;
--	int gpio, ret;
-+	int ret;
-+	struct gpio_desc *gpio = NULL;
- 
--	gpio = -1;
- 	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
--		gpio = of_get_gpio(func->dev.of_node, 0);
--		if (gpio < 0)
--			gpio = GPIO_NUM;
-+		gpio = gpiod_get(&func->dev, "irq", GPIOD_IN);
-+		if (IS_ERR(gpio)) {
-+			/* get the GPIO descriptor from hardcode GPIO number */
-+			gpio = gpio_to_desc(GPIO_NUM);
-+			if (!gpio)
-+				dev_err(&func->dev, "failed to get irq gpio\n");
-+		}
- 	}
- 
- 	dev_dbg(&func->dev, "Initializing netdev\n");
-@@ -133,7 +137,12 @@ static int linux_sdio_probe(struct sdio_func *func,
- 
- static void linux_sdio_remove(struct sdio_func *func)
- {
--	wilc_netdev_cleanup(sdio_get_drvdata(func));
-+	struct wilc *wilc = sdio_get_drvdata(func);
 +
-+	/* free the GPIO in module remove */
-+	if (wilc->gpio_irq)
-+		gpiod_put(wilc->gpio_irq);
-+	wilc_netdev_cleanup(wilc);
+ /**
+  * struct iwl_trans_ops - transport specific operations
+  *
+@@ -559,6 +573,8 @@ struct iwl_trans_ops {
+ 			 int cmd_id, int size,
+ 			 unsigned int queue_wdg_timeout);
+ 	void (*txq_free)(struct iwl_trans *trans, int queue);
++	int (*rxq_dma_data)(struct iwl_trans *trans, int queue,
++			    struct iwl_trans_rxq_dma_data *data);
+ 
+ 	void (*txq_set_shared_mode)(struct iwl_trans *trans, u32 txq_id,
+ 				    bool shared);
+@@ -947,6 +963,16 @@ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
+ 				      cfg, queue_wdg_timeout);
  }
  
- static int sdio_reset(struct wilc *wilc)
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 7d4c7c5..fa9371b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -6,7 +6,6 @@
-  */
- 
- #include <linux/spi/spi.h>
--#include <linux/of_gpio.h>
- 
- #include "wilc_wfi_netdevice.h"
- 
-@@ -106,12 +105,17 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- 
- static int wilc_bus_probe(struct spi_device *spi)
- {
--	int ret, gpio;
-+	int ret;
- 	struct wilc *wilc;
--
--	gpio = of_get_gpio(spi->dev.of_node, 0);
--	if (gpio < 0)
--		gpio = GPIO_NUM;
-+	struct gpio_desc *gpio;
++static inline int
++iwl_trans_get_rxq_dma_data(struct iwl_trans *trans, int queue,
++			   struct iwl_trans_rxq_dma_data *data)
++{
++	if (WARN_ON_ONCE(!trans->ops->rxq_dma_data))
++		return -ENOTSUPP;
 +
-+	gpio = gpiod_get(&spi->dev, "irq", GPIOD_IN);
-+	if (IS_ERR(gpio)) {
-+		/* get the GPIO descriptor from hardcode GPIO number */
-+		gpio = gpio_to_desc(GPIO_NUM);
-+		if (!gpio)
-+			dev_err(&spi->dev, "failed to get the irq gpio\n");
-+	}
- 
- 	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, &wilc_hif_spi);
- 	if (ret)
-@@ -126,7 +130,12 @@ static int wilc_bus_probe(struct spi_device *spi)
- 
- static int wilc_bus_remove(struct spi_device *spi)
- {
--	wilc_netdev_cleanup(spi_get_drvdata(spi));
-+	struct wilc *wilc = spi_get_drvdata(spi);
++	return trans->ops->rxq_dma_data(trans, queue, data);
++}
 +
-+	/* free the GPIO in module remove */
-+	if (wilc->gpio_irq)
-+		gpiod_put(wilc->gpio_irq);
-+	wilc_netdev_cleanup(wilc);
- 	return 0;
+ static inline void
+ iwl_trans_txq_free(struct iwl_trans *trans, int queue)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 64c781eab6a5..603458aa2923 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2265,6 +2265,22 @@ void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans, struct iwl_txq *txq)
+ 		iwl_read_direct32(trans, FH_TX_TRB_REG(fifo)));
  }
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 74c2a17..331a971 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -7,6 +7,7 @@
- #include <net/cfg80211.h>
- #include <net/ieee80211_radiotap.h>
- #include <linux/if_arp.h>
-+#include <linux/gpio/consumer.h>
++static int iwl_trans_pcie_rxq_dma_data(struct iwl_trans *trans, int queue,
++				       struct iwl_trans_rxq_dma_data *data)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	if (queue >= trans->num_rx_queues || !trans_pcie->rxq)
++		return -EINVAL;
++
++	data->fr_bd_cb = trans_pcie->rxq[queue].bd_dma;
++	data->urbd_stts_wrptr = trans_pcie->rxq[queue].rb_stts_dma;
++	data->ur_bd_cb = trans_pcie->rxq[queue].used_bd_dma;
++	data->fr_bd_wid = 0;
++
++	return 0;
++}
++
+ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, int txq_idx)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -3212,6 +3228,7 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
+ 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
+ 	.txq_free = iwl_trans_pcie_dyn_txq_free,
+ 	.wait_txq_empty = iwl_trans_pcie_wait_txq_empty,
++	.rxq_dma_data = iwl_trans_pcie_rxq_dma_data,
+ };
  
- #include "host_interface.h"
- #include "wilc_wlan.h"
-@@ -121,7 +122,7 @@ struct wilc {
- 	const struct wilc_hif_func *hif_func;
- 	int io_type;
- 	int mac_status;
--	int gpio_irq;
-+	struct gpio_desc *gpio_irq;
- 	bool initialized;
- 	int dev_irq_num;
- 	int close;
+ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
 -- 
-2.7.4
+2.18.0
