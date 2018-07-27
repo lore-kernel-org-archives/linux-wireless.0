@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:42867 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388816AbeGXUhc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38680 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730852AbeG0OK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:32 -0400
-Received: by mail-pl0-f66.google.com with SMTP id z7-v6so2194441plo.9
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:36 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 05/18] mpls: remove trailing whitepace
-Date: Tue, 24 Jul 2018 12:29:05 -0700
-Message-Id: <20180724192918.31165-6-sthemmin@microsoft.com> (sfid-20180724_212941_192711_41AE535D)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Fri, 27 Jul 2018 10:10:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:34 +0300
+Message-Id: <20180727124838.25910-13-luca@coelho.fi> (sfid-20180727_144912_420050_202FAF0B)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 12/16] iwlwifi: hard code power save mode to CAM for 22560 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/mpls/mpls_iptunnel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-diff --git a/net/mpls/mpls_iptunnel.c b/net/mpls/mpls_iptunnel.c
-index 6e558a419f60..94f53a9b7d1a 100644
---- a/net/mpls/mpls_iptunnel.c
-+++ b/net/mpls/mpls_iptunnel.c
-@@ -224,7 +224,7 @@ static int mpls_fill_encap_info(struct sk_buff *skb,
- 				struct lwtunnel_state *lwtstate)
- {
- 	struct mpls_iptunnel_encap *tun_encap_info;
--	
-+
- 	tun_encap_info = mpls_lwtunnel_encap(lwtstate);
+Balanced power save mode isn't supported in the fw for 22560 devices
+yet.  Configure the power save mode to CAM until it gets implemented.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 0efd2a36e6c4..0e26619fb330 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -709,10 +709,13 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	}
  
- 	if (nla_put_labels(skb, MPLS_IPTUNNEL_DST, tun_encap_info->labels,
+ 	/* the hardware splits the A-MSDU */
+-	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
+ 		trans_cfg.rx_buf_size = IWL_AMSDU_2K;
+-	else if (mvm->cfg->mq_rx_supported)
++		/* TODO: remove when balanced power mode is fw supported */
++		iwlmvm_mod_params.power_scheme = IWL_POWER_SCHEME_CAM;
++	} else if (mvm->cfg->mq_rx_supported) {
+ 		trans_cfg.rx_buf_size = IWL_AMSDU_4K;
++	}
+ 
+ 	trans->wide_cmd_header = true;
+ 	trans_cfg.bc_table_dword =
 -- 
 2.18.0
