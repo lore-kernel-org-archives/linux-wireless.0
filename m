@@ -1,141 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:36376 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752386AbeGAONI (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:40340 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731918AbeG0CCL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:08 -0400
-Received: by mail-wr0-f196.google.com with SMTP id f16-v6so13003732wrm.3
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:07 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 04/19] mt76x2: introduce mt76x2_init_device routine
-Date: Sun,  1 Jul 2018 16:12:16 +0200
-Message-Id: <20180701141231.25323-5-lorenzo.bianconi@redhat.com> (sfid-20180701_161318_986904_32CDE905)
+        Thu, 26 Jul 2018 22:02:11 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        kvalo@codeaurora.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 2/3] ath10k:  Don't try un-supported idle_ps_config command.
+Date: Thu, 26 Jul 2018 17:42:44 -0700
+Message-Id: <1532652165-27272-2-git-send-email-greearb@candelatech.com> (sfid-20180727_024257_977896_BAEC0A11)
+In-Reply-To: <1532652165-27272-1-git-send-email-greearb@candelatech.com>
+References: <1532652165-27272-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt76x2_init_device routine in order to reuse common pcie/usb mac80211
-initialization code supporting mt76x2u based device
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+The warning the the logs does not give user a clue as to what
+command is failing, so it is worth it to check for un-supported
+command before trying the call.
+
+And add return-code to survey error message.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |  1 +
- .../net/wireless/mediatek/mt76/mt76x2_init.c  | 58 ++++++++++---------
- 2 files changed, 33 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 8824c617cbd2..5719deb78c5c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -221,6 +221,7 @@ extern const struct ieee80211_ops mt76x2_ops;
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
- int mt76x2_register_device(struct mt76x2_dev *dev);
- void mt76x2_init_debugfs(struct mt76x2_dev *dev);
-+void mt76x2_init_device(struct mt76x2_dev *dev);
- 
- irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance);
- void mt76x2_phy_power_on(struct mt76x2_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 6a7db3f88153..9c6d180da294 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -539,11 +539,6 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
- 	tasklet_init(&dev->pre_tbtt_tasklet, mt76x2_pre_tbtt_tasklet,
- 		     (unsigned long) dev);
- 
--	dev->chainmask = 0x202;
--	dev->global_wcid.idx = 255;
--	dev->global_wcid.hw_key_idx = -1;
--	dev->slottime = 9;
--
- 	val = mt76_rr(dev, MT_WPDMA_GLO_CFG);
- 	val &= MT_WPDMA_GLO_CFG_DMA_BURST_SIZE |
- 	       MT_WPDMA_GLO_CFG_BIG_ENDIAN |
-@@ -770,6 +765,34 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 541bc1c..345d333 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4690,10 +4690,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
  	}
- }
  
-+void mt76x2_init_device(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_hw *hw = mt76_hw(dev);
-+
-+	hw->queues = 4;
-+	hw->max_rates = 1;
-+	hw->max_report_rates = 7;
-+	hw->max_rate_tries = 1;
-+	hw->extra_tx_headroom = 2;
-+
-+	hw->sta_data_size = sizeof(struct mt76x2_sta);
-+	hw->vif_data_size = sizeof(struct mt76x2_vif);
-+
-+	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
-+	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
-+
-+	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	dev->chainmask = 0x202;
-+	dev->global_wcid.idx = 255;
-+	dev->global_wcid.hw_key_idx = -1;
-+	dev->slottime = 9;
-+
-+	/* init antenna configuration */
-+	dev->mt76.antenna_mask = 3;
-+}
-+
- int mt76x2_register_device(struct mt76x2_dev *dev)
- {
- 	struct ieee80211_hw *hw = mt76_hw(dev);
-@@ -784,20 +807,15 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 		return -ENOMEM;
+ 	param = ar->wmi.pdev_param->idle_ps_config;
+-	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
+-	if (ret && ret != -EOPNOTSUPP) {
+-		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
+-		goto err_core_stop;
++	if (param != WMI_PDEV_PARAM_UNSUPPORTED) {
++		ret = ath10k_wmi_pdev_set_param(ar, param, 1);
++		if (ret) {
++			ath10k_warn(ar, "failed to enable idle_ps_config: %d\n",
++				    ret);
++			goto err_core_stop;
++		}
+ 	}
  
- 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
-+	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
-+	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
-+
-+	mt76x2_init_device(dev);
+ 	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
+@@ -6809,7 +6812,8 @@ ath10k_mac_update_bss_chan_survey(struct ath10k *ar,
  
- 	ret = mt76x2_init_hardware(dev);
- 	if (ret)
- 		return ret;
+ 	ret = ath10k_wmi_pdev_bss_chan_info_request(ar, type);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to send pdev bss chan info request\n");
++		ath10k_warn(ar, "failed to send pdev bss chan info request: %d\n",
++			    ret);
+ 		return;
+ 	}
  
--	hw->queues = 4;
--	hw->max_rates = 1;
--	hw->max_report_rates = 7;
--	hw->max_rate_tries = 1;
--	hw->extra_tx_headroom = 2;
--
--	hw->sta_data_size = sizeof(struct mt76x2_sta);
--	hw->vif_data_size = sizeof(struct mt76x2_vif);
--
- 	for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
- 		u8 *addr = dev->macaddr_list[i].addr;
- 
-@@ -819,24 +837,12 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
- 
--	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
--	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
--
--	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
--	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
--
--	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--
- 	mt76x2_dfs_init_detector(dev);
- 
- 	/* init led callbacks */
- 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
- 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
- 
--	/* init antenna configuration */
--	dev->mt76.antenna_mask = 3;
--
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
- 	if (ret)
 -- 
-2.18.0
+2.4.11
