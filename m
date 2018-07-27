@@ -1,82 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34095 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752784AbeGGInE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48500 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726034AbeG0KvZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Jul 2018 04:43:04 -0400
-Received: by mail-wm0-f66.google.com with SMTP id s13-v6so6064643wmc.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jul 2018 01:43:04 -0700 (PDT)
-Date: Sat, 7 Jul 2018 10:38:27 +0200 (CEST)
-From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 00/11] Add mt76x0 driver
-In-Reply-To: <20180705153216.GE17524@localhost.localdomain>
-Message-ID: <alpine.LNX.2.00.1807071027140.11361@T420s> (sfid-20180707_104311_535366_08DA898B)
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com> <20180705153216.GE17524@localhost.localdomain>
+        Fri, 27 Jul 2018 06:51:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wen Gong <wgong@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        ath10k@lists.infradead.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: Save sk_pacing_shift to ieee80211_hw
+References: <1532589677-16428-2-git-send-email-wgong@codeaurora.org>
+        <201807262252.r7bjxM51%fengguang.wu@intel.com>
+        <c687d997be0c8e85a5e1e6f09a969dba@codeaurora.org>
+Date: Fri, 27 Jul 2018 12:30:17 +0300
+In-Reply-To: <c687d997be0c8e85a5e1e6f09a969dba@codeaurora.org> (Wen Gong's
+        message of "Fri, 27 Jul 2018 16:35:42 +0800")
+Message-ID: <87k1phf2l2.fsf@purkki.adurom.net> (sfid-20180727_113026_248027_8A154A00)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi 
+Wen Gong <wgong@codeaurora.org> writes:
 
-On Thu, 5 Jul 2018, Lorenzo Bianconi wrote:
+> Thanks,
+> I will add description of tx_sk_pacing_shift as below and sent next
+> patch.
+> *
+> * @tx_sk_pacing_shift: The TCP stack allow more than a single ms of data
+> *     to be queued in the stack. The value is a bit-shift of 1 second,
+> e.g. 8
+> *     is ~4ms of queued data. It only affects local TCP sockets.
+> */
 
-> On Jul 05, Stanislaw Gruszka wrote:
-> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
-> > support only STA mode.
-> 
-> Hi Stanislaw,
-> 
-> > 
-> > mt76x0 is based on Jakub's mt7601u driver already included
-> > in the kernel. I would like the driver be integrated as part
-> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
-> > to utilize mt76 code for adding support for MT76x0 PCIe devices
-> > in further development.
-> > 
-> > To do not collide with current mt76x2u work from Lorenzo, I did not
-> > remove some code duplication. This will be done in the future, when
-> > Lorenzo patches will be merged. I plan to do more close integration
-> > with mt76x2u into common mt76 layer and add support for MT76x0 PCIe
-> > devices (i.e. MT7630E). Any help with this work is obviously welcome.
-> > My integration efforts can be traced here:
-> > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
-> > 
-> 
-> I just had a brief review of the code and I compiled the driver since at
-> the moment I had no adapter for that chipset.
-> As a remainder for future improvements/integration most of the code in 
-> dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
-> routines in the mt76-usb layer (we need to fill function pointer for chipset
-> related stuff if there are differences with mt76x2u, not looked yet).
-> Moreover mcu code can use utility routines in usb-mcu.c
-> I have not looked at mt76x2 common code yet.
-> 
-> Regards,
-> Lorenzo
-> 
+Please don't top post:
 
-It is also possible to reuse 
-struct mt76x2_txwi
-struct mt76x2_rxwi
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
 
-They have the same memory layout for both mt76x0u and mt76x2u chipsets.
-
-Lorenzo can you move them up to
-mt76.h
-and rename them to
-struct mt76_txwi
-struct mt76_rxwi
-
-And we can also do this for
-struct mt76x2_vif
-
-Greetings
-Hans Ulli
+-- 
+Kalle Valo
