@@ -1,130 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:38058 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388845AbeGXUhg (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:54640 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389368AbeG0WNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:36 -0400
-Received: by mail-pg1-f195.google.com with SMTP id k3-v6so3572705pgq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:39 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 07/18] ceph: fix whitespace
-Date: Tue, 24 Jul 2018 12:29:07 -0700
-Message-Id: <20180724192918.31165-8-sthemmin@microsoft.com> (sfid-20180724_213119_865915_EC326CF9)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+        Fri, 27 Jul 2018 18:13:09 -0400
+Subject: Re: [PATCH v2] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20180727204337.60767-1-andriy.shevchenko@linux.intel.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <bbfacae4-7d11-c910-9f71-906308880495@infradead.org> (sfid-20180727_224935_646902_C8AAAA76)
+Date: Fri, 27 Jul 2018 13:49:30 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180727204337.60767-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove blank lines at end of file and trailing whitespace.
+On 07/27/2018 01:43 PM, Andy Shevchenko wrote:
+> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+> looks not so convenient due to additional driver_data field attached.
+> 
+> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+> possible form. For example,
+> 
+>   before:
+> 
+>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+> 
+>   after:
+> 
+>     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/ceph/Kconfig      | 1 -
- net/ceph/Makefile     | 1 -
- net/ceph/auth_none.c  | 1 -
- net/ceph/auth_none.h  | 1 -
- net/ceph/auth_x.c     | 2 --
- net/ceph/auth_x.h     | 1 -
- net/ceph/mon_client.c | 2 +-
- net/ceph/pagevec.c    | 1 -
- 8 files changed, 1 insertion(+), 9 deletions(-)
+      { PCI_DEVICE_DATA(                                       ies) },
 
-diff --git a/net/ceph/Kconfig b/net/ceph/Kconfig
-index f8cceb99e732..cd2d5b9301a1 100644
---- a/net/ceph/Kconfig
-+++ b/net/ceph/Kconfig
-@@ -41,4 +41,3 @@ config CEPH_LIB_USE_DNS_RESOLVER
- 	  Documentation/networking/dns_resolver.txt
- 
- 	  If unsure, say N.
--
-diff --git a/net/ceph/Makefile b/net/ceph/Makefile
-index 12bf49772d24..db09defe27d0 100644
---- a/net/ceph/Makefile
-+++ b/net/ceph/Makefile
-@@ -15,4 +15,3 @@ libceph-y := ceph_common.o messenger.o msgpool.o buffer.o pagelist.o \
- 	auth_x.o \
- 	ceph_fs.o ceph_strings.o ceph_hash.o \
- 	pagevec.o snapshot.o string_table.o
--
-diff --git a/net/ceph/auth_none.c b/net/ceph/auth_none.c
-index 41d2a0c72236..edb7042479ed 100644
---- a/net/ceph/auth_none.c
-+++ b/net/ceph/auth_none.c
-@@ -142,4 +142,3 @@ int ceph_auth_none_init(struct ceph_auth_client *ac)
- 	ac->ops = &ceph_auth_none_ops;
- 	return 0;
- }
--
-diff --git a/net/ceph/auth_none.h b/net/ceph/auth_none.h
-index 860ed9875791..4158f064302e 100644
---- a/net/ceph/auth_none.h
-+++ b/net/ceph/auth_none.h
-@@ -26,4 +26,3 @@ struct ceph_auth_none_info {
- int ceph_auth_none_init(struct ceph_auth_client *ac);
- 
- #endif
--
-diff --git a/net/ceph/auth_x.c b/net/ceph/auth_x.c
-index 2f4a1baf5f52..32c7f5c4b1a6 100644
---- a/net/ceph/auth_x.c
-+++ b/net/ceph/auth_x.c
-@@ -823,5 +823,3 @@ int ceph_x_init(struct ceph_auth_client *ac)
- out:
- 	return ret;
- }
--
--
-diff --git a/net/ceph/auth_x.h b/net/ceph/auth_x.h
-index 454cb54568af..a71c4c282b57 100644
---- a/net/ceph/auth_x.h
-+++ b/net/ceph/auth_x.h
-@@ -52,4 +52,3 @@ struct ceph_x_info {
- int ceph_x_init(struct ceph_auth_client *ac);
- 
- #endif
--
-diff --git a/net/ceph/mon_client.c b/net/ceph/mon_client.c
-index d7a7a2330ef7..18deb3d889c4 100644
---- a/net/ceph/mon_client.c
-+++ b/net/ceph/mon_client.c
-@@ -1249,7 +1249,7 @@ static void dispatch(struct ceph_connection *con, struct ceph_msg *msg)
- 		if (monc->client->extra_mon_dispatch &&
- 		    monc->client->extra_mon_dispatch(monc->client, msg) == 0)
- 			break;
--			
-+
- 		pr_err("received unknown message type %d %s\n", type,
- 		       ceph_msg_type_name(type));
- 	}
-diff --git a/net/ceph/pagevec.c b/net/ceph/pagevec.c
-index e560d3975f41..d3736f5bffec 100644
---- a/net/ceph/pagevec.c
-+++ b/net/ceph/pagevec.c
-@@ -197,4 +197,3 @@ void ceph_zero_page_vector_range(int off, int len, struct page **pages)
- 	}
- }
- EXPORT_SYMBOL(ceph_zero_page_vector_range);
--
+I guess.  or what?
+
+> 
+> Drivers can be converted later on in independent way.
+> 
+> While here, remove the unused macro with the same name
+> from Ralink wireless driver.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+>  include/linux/pci.h                            | 15 +++++++++++++++
+>  2 files changed, 15 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> index bc0ca5f58f38..283e2e607bba 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> @@ -27,12 +27,6 @@
+>  #include <linux/io.h>
+>  #include <linux/pci.h>
+>  
+> -/*
+> - * This variable should be used with the
+> - * pci_driver structure initialization.
+> - */
+> -#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+> -
+>  /*
+>   * PCI driver handlers.
+>   */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d0961aefdbae..754da6f9adb3 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -825,6 +825,21 @@ struct pci_driver {
+>  	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+>  	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+>  
+> +/**
+> + * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
+> + * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
+> + * @dev: the device name (without PCI_DEVICE_ID_ prefix)
+> + * @data: the driver data to be filled
+> + *
+> + * This macro is used to create a struct pci_device_id that matches a
+> + * specific PCI device.  The subvendor, and subdevice fields will be set
+> + * to PCI_ANY_ID.
+> + */
+> +#define PCI_DEVICE_DATA(vend, dev, data) \
+> +	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
+> +	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
+> +	.driver_data = (kernel_ulong_t)(data)
+> +
+>  enum {
+>  	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
+>  	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
+> 
+
+
 -- 
-2.18.0
+~Randy
