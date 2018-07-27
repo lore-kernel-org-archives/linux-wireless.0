@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:57694 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388351AbeGXIXH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38628 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730088AbeG0OKp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 04:23:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-07-24
-Date: Tue, 24 Jul 2018 09:16:57 +0200
-Message-Id: <20180724071658.9464-1-johannes@sipsolutions.net> (sfid-20180724_091814_663738_7F9291F8)
+        Fri, 27 Jul 2018 10:10:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 27 Jul 2018 15:48:30 +0300
+Message-Id: <20180727124838.25910-9-luca@coelho.fi> (sfid-20180727_144900_780884_C4D3D55C)
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
+References: <20180727124838.25910-1-luca@coelho.fi>
+Subject: [PATCH 08/16] iwlwifi: d3: disable dbg recording before entering D3
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-After a long delay (I'm still on vacation & bonding leave until
-mid August and forgot), here are a few fixes for the current
-release cycle.
+Currently the firmware does not stop recording debugging data when
+entering D3 and this causes trouble (e.g. sporadic wake ups).
 
-Please pull and let me know if there's any problem.
+Fix that by stopping dbg recording when suspending.
 
-Thanks,
-johannes
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-
-
-The following changes since commit d0fbad0aec1df29717fab736eb24c8a49cf2c70b:
-
-  Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2018-07-02 12:40:59 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-07-24
-
-for you to fetch changes up to e31f6456c01c76f154e1b25cd54df97809a49edb:
-
-  cfg80211: never ignore user regulatory hint (2018-07-24 09:11:31 +0200)
-
-----------------------------------------------------------------
-Only a few fixes:
- * always keep regulatory user hint
- * add missing break statement in station flags parsing
- * fix non-linear SKBs in port-control-over-nl80211
- * reconfigure VLAN stations during HW restart
-
-----------------------------------------------------------------
-Amar Singhal (1):
-      cfg80211: never ignore user regulatory hint
-
-Bernd Edlinger (1):
-      nl80211: Add a missing break in parse_station_flags
-
-Denis Kenzior (1):
-      nl80211/mac80211: allow non-linear skb in rx_control_port
-
-mpubbise@codeaurora.org (1):
-      mac80211: add stations tied to AP_VLANs during hw reconfig
-
- include/net/cfg80211.h | 12 ++++++------
- net/mac80211/rx.c      |  5 +----
- net/mac80211/util.c    |  3 ++-
- net/wireless/nl80211.c | 25 ++++++++++++++++---------
- net/wireless/reg.c     | 28 +++-------------------------
- net/wireless/trace.h   | 18 ++++++++++--------
- 6 files changed, 38 insertions(+), 53 deletions(-)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 3fcf489f3120..79bdae994822 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1037,6 +1037,13 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 			cpu_to_le32(IWL_WAKEUP_D3_CONFIG_FW_ERROR);
+ #endif
+ 
++	/*
++	 * TODO: this is needed because the firmware is not stopping
++	 * the recording automatically before entering D3.  This can
++	 * be removed once the FW starts doing that.
++	 */
++	iwl_fw_dbg_stop_recording(&mvm->fwrt);
++
+ 	/* must be last -- this switches firmware state */
+ 	ret = iwl_mvm_send_cmd(mvm, &d3_cfg_cmd);
+ 	if (ret)
+-- 
+2.18.0
