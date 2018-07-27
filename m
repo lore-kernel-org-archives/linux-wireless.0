@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727241AbeGaIyJ (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:52172 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388075AbeG0RH3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 04:54:09 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 27 Jul 2018 13:07:29 -0400
+Subject: Re: [PATCH 03/10] atmel: hide unused procfs helpers
+To: Kalle Valo <kvalo@codeaurora.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Cc: simon@thekelleys.org.uk, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        davem@davemloft.net
+References: <20180713064658.10340-1-yuehaibing@huawei.com>
+ <ded55181-e1b0-99e9-ac68-2d93fb6168c0@huawei.com>
+ <87va91vxnr.fsf@codeaurora.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <e6100005-2c8e-b1b9-2870-b8ca2d61fe30@infradead.org> (sfid-20180727_174521_103895_5752D7D8)
+Date: Fri, 27 Jul 2018 08:44:54 -0700
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] rsi: fix for low throughput issue
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1530794302-8833-2-git-send-email-sushant2k1513@gmail.com>
-References: <1530794302-8833-2-git-send-email-sushant2k1513@gmail.com>
-To: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sajay.konduri@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Message-Id: <20180731071516.3C2F760714@smtp.codeaurora.org> (sfid-20180731_091538_117781_B99921E7)
-Date: Tue, 31 Jul 2018 07:15:16 +0000 (UTC)
+In-Reply-To: <87va91vxnr.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sushant Kumar Mishra <sushant2k1513@gmail.com> wrote:
-
-> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+On 07/27/2018 02:24 AM, Kalle Valo wrote:
+> (fixing top posting)
 > 
-> observed low throughput rates during verification. This is because, QoS
-> enable flag is overridden by sequence number in the data descriptor frame.
-> Hence, added the fix for same.
+> YueHaibing <yuehaibing@huawei.com> writes:
 > 
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+>> On 2018/7/13 14:46, YueHaibing wrote:
+>>> When CONFIG_PROC_FS isn't set, gcc warning this:
+>>>
+>>> drivers/net/wireless/atmel/atmel.c:1402:12: warning: ‘atmel_proc_show’ defined but not used [-Wunused-function]
+>>>  static int atmel_proc_show(struct seq_file *m, void *v)
+>>>             ^
+>>> fix this by adding #ifdef around it.
+>>>
+>>> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+>>
+>> pls ignore this,my bad.
+> 
+> Why should I drop this? Does the patch have something wrong which I'm
+> missing?
+> 
+> I'm asking because I prefer this over Randy's version:
+> 
+> https://patchwork.kernel.org/patch/10512913/
 
-4 patches applied to wireless-drivers-next.git, thanks.
-
-92e971238138 rsi: fix for low throughput issue
-38709316d1c9 rsi: fix for 40MHZ connection issue.
-4c837d8c9b0c rsi: fix for WoWLAN wakeup in security mode.
-1d2194562112 rsi: optimize virtual interfaces
+Take it.  I don't mind.
 
 -- 
-https://patchwork.kernel.org/patch/10508915/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+~Randy
