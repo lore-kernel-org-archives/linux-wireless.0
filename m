@@ -1,204 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728006AbeGVIqS (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:22116 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726272AbeG2Hgk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:18 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 18/20] wil6210: off channel transmit management frames in AP mode
-Date: Sun, 22 Jul 2018 10:47:43 +0300
-Message-Id: <1532245665-15249-19-git-send-email-merez@codeaurora.org> (sfid-20180722_095039_616334_7B127EDA)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Sun, 29 Jul 2018 03:36:40 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 6/8] staging: wilc1000: rename 'rcvd_ch_cnt' element in 'user_scan_req' struct
+Date: Sun, 29 Jul 2018 11:36:55 +0530
+Message-ID: <1532844417-3192-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180729_080728_463612_489D8D06)
+In-Reply-To: <1532844417-3192-1-git-send-email-ajay.kathat@microchip.com>
+References: <1532844417-3192-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ahmad Masri <amasri@codeaurora.org>
+Cleanup patch to use shorter name for 'rcvd_ch_cnt' to 'ch_cnt' to avoid
+line over 80 character issue reported by checkpatch.
 
-Currently wil6210 ignores the channel field in the
-cfg80211_mgmt_tx_params struct for wil_cfg80211_ops mgmt_tx operation
-and sends all management frames on the serving channel.
-
-Add support for off-channel transmission of management frames
-(WIPHY_FLAG_OFFCHAN_TX) in AP mode. This is useful in enterprise APs
-for sending custom probe request frames.
-
-Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 47 ++++++++++++++++++++----
- drivers/net/wireless/ath/wil6210/main.c     |  3 ++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 ++
- drivers/net/wireless/ath/wil6210/wmi.c      | 56 +++++++++++++++++++++++++++++
- 4 files changed, 101 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 80975c4..b240e78 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1090,18 +1090,51 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	int rc;
- 	bool tx_status;
- 
--	/* Note, currently we do not support the "wait" parameter, user-space
--	 * must call remain_on_channel before mgmt_tx or listen on a channel
--	 * another way (AP/PCP or connected station)
--	 * in addition we need to check if specified "chan" argument is
--	 * different from currently "listened" channel and fail if it is.
-+	wil_dbg_misc(wil, "mgmt_tx: channel %d offchan %d, wait %d\n",
-+		     params->chan ? params->chan->hw_value : -1,
-+		     params->offchan,
-+		     params->wait);
-+
-+	/* Note, currently we support the "wait" parameter only on AP mode.
-+	 * In other modes, user-space must call remain_on_channel before
-+	 * mgmt_tx or listen on a channel other than active one.
- 	 */
- 
--	rc = wmi_mgmt_tx(vif, buf, len);
--	tx_status = (rc == 0);
-+	if (params->chan && params->chan->hw_value == 0) {
-+		wil_err(wil, "invalid channel\n");
-+		return -EINVAL;
-+	}
-+
-+	if (wdev->iftype != NL80211_IFTYPE_AP) {
-+		wil_dbg_misc(wil,
-+			     "send WMI_SW_TX_REQ_CMDID on non-AP interfaces\n");
-+		rc = wmi_mgmt_tx(vif, buf, len);
-+		goto out;
-+	}
- 
-+	if (!params->chan || params->chan->hw_value == vif->channel) {
-+		wil_dbg_misc(wil,
-+			     "send WMI_SW_TX_REQ_CMDID for on-channel\n");
-+		rc = wmi_mgmt_tx(vif, buf, len);
-+		goto out;
-+	}
-+
-+	if (params->offchan == 0) {
-+		wil_err(wil,
-+			"invalid channel params: current %d requested %d, off-channel not allowed\n",
-+			vif->channel, params->chan->hw_value);
-+		return -EBUSY;
-+	}
-+
-+	/* use the wmi_mgmt_tx_ext only on AP mode and off-channel */
-+	rc = wmi_mgmt_tx_ext(vif, buf, len, params->chan->hw_value,
-+			     params->wait);
-+
-+out:
-+	tx_status = (rc == 0);
- 	cfg80211_mgmt_tx_status(wdev, cookie ? *cookie : 0, buf, len,
- 				tx_status, GFP_KERNEL);
-+
- 	return rc;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 64de679..7ad22df 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1130,6 +1130,9 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- 		wiphy->max_sched_scan_plans = WMI_MAX_PLANS_NUM;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0df4d9c..86d8aaf 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -792,7 +792,7 @@ static void handle_scan(struct work_struct *work)
+ 		goto error;
  	}
  
-+	if (test_bit(WMI_FW_CAPABILITY_TX_REQ_EXT, wil->fw_capabilities))
-+		wiphy->flags |= WIPHY_FLAG_OFFCHAN_TX;
-+
- 	if (wil->platform_ops.set_features) {
- 		features = (test_bit(WMI_FW_CAPABILITY_REF_CLOCK_CONTROL,
- 				     wil->fw_capabilities) &&
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 16ed827..28aa4a7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1352,6 +1352,8 @@ int wmi_start_sched_scan(struct wil6210_priv *wil,
- 			 struct cfg80211_sched_scan_request *request);
- int wmi_stop_sched_scan(struct wil6210_priv *wil);
- int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len);
-+int wmi_mgmt_tx_ext(struct wil6210_vif *vif, const u8 *buf, size_t len,
-+		    u8 channel, u16 duration_ms);
+-	hif_drv->usr_scan_req.rcvd_ch_cnt = 0;
++	hif_drv->usr_scan_req.ch_cnt = 0;
  
- int reverse_memcmp(const void *cs, const void *ct, size_t count);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 7fee674..c44c54d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -466,6 +466,8 @@ static const char *cmdid2name(u16 cmdid)
- 		return "WMI_CFG_DEF_RX_OFFLOAD_CMD";
- 	case WMI_LINK_STATS_CMDID:
- 		return "WMI_LINK_STATS_CMD";
-+	case WMI_SW_TX_REQ_EXT_CMDID:
-+		return "WMI_SW_TX_REQ_EXT_CMDID";
- 	default:
- 		return "Untracked CMD";
+ 	wid_list[index].id = WID_SSID_PROBE_REQ;
+ 	wid_list[index].type = WID_STR;
+@@ -1406,7 +1406,7 @@ static void handle_rcvd_ntwrk_info(struct work_struct *work)
+ 		goto done;
  	}
-@@ -3116,6 +3118,60 @@ int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len)
- 	return rc;
- }
  
-+int wmi_mgmt_tx_ext(struct wil6210_vif *vif, const u8 *buf, size_t len,
-+		    u8 channel, u16 duration_ms)
-+{
-+	size_t total;
-+	struct wil6210_priv *wil = vif_to_wil(vif);
-+	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
-+	struct wmi_sw_tx_req_ext_cmd *cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_sw_tx_complete_event evt;
-+	} __packed evt = {
-+		.evt = {.status = WMI_FW_STATUS_FAILURE},
-+	};
-+	int rc;
-+
-+	wil_dbg_wmi(wil, "mgmt_tx_ext mid %d channel %d duration %d\n",
-+		    vif->mid, channel, duration_ms);
-+	wil_hex_dump_wmi("mgmt_tx_ext frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
-+			 len, true);
-+
-+	if (len < sizeof(struct ieee80211_hdr_3addr)) {
-+		wil_err(wil, "short frame. len %zu\n", len);
-+		return -EINVAL;
-+	}
-+
-+	total = sizeof(*cmd) + len;
-+	if (total < len) {
-+		wil_err(wil, "mgmt_tx_ext invalid len %zu\n", len);
-+		return -EINVAL;
-+	}
-+
-+	cmd = kzalloc(total, GFP_KERNEL);
-+	if (!cmd)
-+		return -ENOMEM;
-+
-+	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
-+	cmd->len = cpu_to_le16(len);
-+	memcpy(cmd->payload, buf, len);
-+	cmd->channel = channel - 1;
-+	cmd->duration_ms = cpu_to_le16(duration_ms);
-+
-+	rc = wmi_call(wil, WMI_SW_TX_REQ_EXT_CMDID, vif->mid, cmd, total,
-+		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
-+	if (!rc && evt.evt.status != WMI_FW_STATUS_SUCCESS) {
-+		wil_err(wil, "mgmt_tx_ext failed with status %d\n",
-+			evt.evt.status);
-+		rc = -EINVAL;
-+	}
-+
-+	kfree(cmd);
-+
-+	return rc;
-+}
-+
- int wil_wmi_tx_sring_cfg(struct wil6210_priv *wil, int ring_id)
- {
- 	int rc;
+-	for (i = 0; i < scan_req->rcvd_ch_cnt; i++) {
++	for (i = 0; i < scan_req->ch_cnt; i++) {
+ 		if (memcmp(scan_req->net_info[i].bssid, info->bssid, 6) == 0) {
+ 			if (info->rssi <= scan_req->net_info[i].rssi) {
+ 				goto done;
+@@ -1419,13 +1419,13 @@ static void handle_rcvd_ntwrk_info(struct work_struct *work)
+ 	}
+ 
+ 	if (found) {
+-		if (scan_req->rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
+-			scan_req->net_info[scan_req->rcvd_ch_cnt].rssi = info->rssi;
++		if (scan_req->ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
++			scan_req->net_info[scan_req->ch_cnt].rssi = info->rssi;
+ 
+-			memcpy(scan_req->net_info[scan_req->rcvd_ch_cnt].bssid,
++			memcpy(scan_req->net_info[scan_req->ch_cnt].bssid,
+ 			       info->bssid, 6);
+ 
+-			scan_req->rcvd_ch_cnt++;
++			scan_req->ch_cnt++;
+ 
+ 			info->new_network = true;
+ 			params = host_int_parse_join_bss_param(info);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 9a016c5..3ddeec2 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -199,7 +199,7 @@ struct hidden_network {
+ struct user_scan_req {
+ 	wilc_scan_result scan_result;
+ 	void *arg;
+-	u32 rcvd_ch_cnt;
++	u32 ch_cnt;
+ 	struct found_net_info net_info[MAX_NUM_SCANNED_NETWORKS];
+ };
+ 
 -- 
-1.9.1
+2.7.4
