@@ -1,85 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41357 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933335AbeGIUKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:16 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 21/24] MIPS: jz4740: Move jz4740_nand.h header to include/linux/platform_data/jz4740
-Date: Mon,  9 Jul 2018 22:09:42 +0200
-Message-Id: <20180709200945.30116-22-boris.brezillon@bootlin.com> (sfid-20180709_221036_565328_264796C7)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from smtprelay0022.hostedemail.com ([216.40.44.22]:46710 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731481AbeG2B5r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 28 Jul 2018 21:57:47 -0400
+Message-ID: <597a61a1b1e0caf7770fe9109e2913708b28ac22.camel@perches.com> (sfid-20180729_023006_496798_77A5C20F)
+Subject: Re: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+From: Joe Perches <joe@perches.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Date: Sat, 28 Jul 2018 17:29:21 -0700
+In-Reply-To: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
+References: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This way we will be able to compile the jz4740_nand driver when
-COMPILE_TEST=y.
+On Fri, 2018-07-27 at 23:39 +0300, Andy Shevchenko wrote:
+> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+> looks not so convenient due to additional driver_data field attached.
+> 
+> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+> possible form. For example,
+> 
+>   before:
+> 
+>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+> 
+>   after:
+> 
+>     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
 
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
----
- arch/mips/jz4740/board-qi_lb60.c                                      | 3 ++-
- drivers/mtd/nand/raw/jz4740_nand.c                                    | 2 +-
- .../mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h  | 4 ++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
- rename {arch/mips/include/asm/mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h (91%)
-
-diff --git a/arch/mips/jz4740/board-qi_lb60.c b/arch/mips/jz4740/board-qi_lb60.c
-index 60f0767507c6..af0c8ace0141 100644
---- a/arch/mips/jz4740/board-qi_lb60.c
-+++ b/arch/mips/jz4740/board-qi_lb60.c
-@@ -29,10 +29,11 @@
- #include <linux/power/gpio-charger.h>
- #include <linux/pwm.h>
- 
-+#include <linux/platform_data/jz4740/jz4740_nand.h>
-+
- #include <asm/mach-jz4740/gpio.h>
- #include <asm/mach-jz4740/jz4740_fb.h>
- #include <asm/mach-jz4740/jz4740_mmc.h>
--#include <asm/mach-jz4740/jz4740_nand.h>
- 
- #include <linux/regulator/fixed.h>
- #include <linux/regulator/machine.h>
-diff --git a/drivers/mtd/nand/raw/jz4740_nand.c b/drivers/mtd/nand/raw/jz4740_nand.c
-index 613b00a9604b..a0254461812d 100644
---- a/drivers/mtd/nand/raw/jz4740_nand.c
-+++ b/drivers/mtd/nand/raw/jz4740_nand.c
-@@ -25,7 +25,7 @@
- 
- #include <linux/gpio.h>
- 
--#include <asm/mach-jz4740/jz4740_nand.h>
-+#include <linux/platform_data/jz4740/jz4740_nand.h>
- 
- #define JZ_REG_NAND_CTRL	0x50
- #define JZ_REG_NAND_ECC_CTRL	0x100
-diff --git a/arch/mips/include/asm/mach-jz4740/jz4740_nand.h b/include/linux/platform_data/jz4740/jz4740_nand.h
-similarity index 91%
-rename from arch/mips/include/asm/mach-jz4740/jz4740_nand.h
-rename to include/linux/platform_data/jz4740/jz4740_nand.h
-index f381d465e768..bc571f6d5ced 100644
---- a/arch/mips/include/asm/mach-jz4740/jz4740_nand.h
-+++ b/include/linux/platform_data/jz4740/jz4740_nand.h
-@@ -13,8 +13,8 @@
-  *
-  */
- 
--#ifndef __ASM_MACH_JZ4740_JZ4740_NAND_H__
--#define __ASM_MACH_JZ4740_JZ4740_NAND_H__
-+#ifndef __JZ4740_NAND_H__
-+#define __JZ4740_NAND_H__
- 
- #include <linux/mtd/rawnand.h>
- #include <linux/mtd/partitions.h>
--- 
-2.14.1
+PCI_DEVICE_DATA(...)
