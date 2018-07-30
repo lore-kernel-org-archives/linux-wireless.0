@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56716 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388302AbeGXKAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:15 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 09/10] NFC: st95hf: two small style nits
-Date: Tue, 24 Jul 2018 10:54:25 +0200
-Message-Id: <20180724085426.23999-10-daniel@zonque.org> (sfid-20180724_105457_726915_0E58736F)
-In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
-References: <20180724085426.23999-1-daniel@zonque.org>
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:42421 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729542AbeG3U0j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jul 2018 16:26:39 -0400
+Received: by mail-ed1-f67.google.com with SMTP id r4-v6so4548969edp.9
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2018 11:50:19 -0700 (PDT)
+Subject: Re: [PATCH] ath10k: Limit available channels via DT
+ ieee80211-freq-limit
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>,
+        ath10k@lists.infradead.org
+References: <20180730153933.3771-1-sven.eckelmann@openmesh.com>
+Cc: linux-wireless@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B5F5DE8.9060101@broadcom.com> (sfid-20180730_205022_300979_77862F99)
+Date: Mon, 30 Jul 2018 20:50:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180730153933.3771-1-sven.eckelmann@openmesh.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Address two minor style issues that I came across while working on the
-driver.
++ Rafał
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+On 7/30/2018 5:39 PM, Sven Eckelmann wrote:
+> Tri-band devices (1x 2.4GHz + 2x 5GHz) often incorporate special filters in
+> the RX and TX path. These filtered channel can in theory still be used by
+> the hardware but the signal strength is reduced so much that it makes no
+> sense.
+>
+> There is already a DT property to limit the available channels but ath10k
+> has to manually call this functionality to limit the currrently set wiphy
+> channels further.
+
+Wondering whether we can call it in wiphy_register() like below. Not 
+sure why we did not explore that with the introduction of it by Rafał. 
+Maybe he remembers. I did not find something in that direction in 
+patchwork, but may have missed it. I know mt76 drops the band reference 
+if it ends up with all channels disabled. Maybe that was the reason.
+
+Regards,
+Arend
 ---
- drivers/nfc/st95hf/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a88551f..2e00cb1 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -742,6 +742,8 @@ int wiphy_register(struct wiphy *wiphy)
+	if (res)
+		return res;
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 835a1e61c817..4db3c020921c 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -662,7 +662,8 @@ static int st95hf_error_handling(struct st95hf_context *stcontext,
- 			result = -ETIMEDOUT;
- 		else
- 			result = -EIO;
--	return  result;
++	wiphy_read_of_freq_limits(wiphy);
 +
-+		return result;
- 	}
- 
- 	/* Check for CRC err only if CRC is present in the tag response */
-@@ -844,6 +845,7 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
- 	/* call of callback with error */
- 	cb_arg->complete_cb(stcontext->ddev, cb_arg->cb_usrarg, skb_resp);
- 	mutex_unlock(&stcontext->rm_lock);
-+
- 	return IRQ_HANDLED;
- }
- 
--- 
-2.17.1
+	/* sanity check supported bands/channels */
+	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+		u16 types = 0;
