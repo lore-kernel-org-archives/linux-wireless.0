@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37116 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:59382 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727667AbeG3Tcr (ORCPT
+        with ESMTP id S1726762AbeG3Psy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:32:47 -0400
+        Mon, 30 Jul 2018 11:48:54 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath5k: remove redundant pointer rf
+Subject: Re: [PATCH 6/6] qtnfmac: implement basic WoWLAN support
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180709124138.14996-1-colin.king@canonical.com>
-References: <20180709124138.14996-1-colin.king@canonical.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R . Rodriguez" <mcgrof@do-not-panic.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180730175639.BF40362012@smtp.codeaurora.org> (sfid-20180730_195703_755593_928E08DF)
-Date: Mon, 30 Jul 2018 17:56:39 +0000 (UTC)
+In-Reply-To: <20180531091102.28666-7-sergey.matyukevich.os@quantenna.com>
+References: <20180531091102.28666-7-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Message-Id: <20180730141342.B613A61D77@smtp.codeaurora.org> (sfid-20180730_161345_236858_ECF9F68B)
+Date: Mon, 30 Jul 2018 14:13:42 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> wrote:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
 
-> Pointer rf is being assigned but is never used hence it is redundant
-> and can be removed.
+> This patch implements core WoWLAN support in qtnfmac driver, including
+> processing of WoWLAN features reported by firmware and implementation
+> of cfg80211 suspend/resume/wakeup callbacks. Currently the following
+> WoWLAN triggers are supported: disconnect, magic packet,
+> custom pattern packet.
 > 
-> Cleans up two clang warnings:
-> warning: variable 'rf' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Doesn't apply anymore as I dropped patch 5
 
-e8c38062efc6 ath5k: remove redundant pointer rf
+fatal: sha1 information is lacking or useless (drivers/net/wireless/quantenna/qtnfmac/cfg80211.c).
+error: could not build fake ancestor
+Applying: qtnfmac: implement basic WoWLAN support
+Patch failed at 0001 qtnfmac: implement basic WoWLAN support
+The copy of the patch that failed is found in: .git/rebase-apply/patch
+
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/patch/10514529/
+https://patchwork.kernel.org/patch/10440567/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
