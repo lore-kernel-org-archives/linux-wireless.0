@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:41207 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933165AbeGIUKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 16:10:05 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 01/24] mtd: rawnand: atmel: Use uintptr_t casts instead of unsigned int
-Date: Mon,  9 Jul 2018 22:09:22 +0200
-Message-Id: <20180709200945.30116-2-boris.brezillon@bootlin.com> (sfid-20180709_221112_425211_ECF11BC8)
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:39292 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726762AbeG3QJg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jul 2018 12:09:36 -0400
+Subject: Re: ath9k and 16 VAP interfaces?
+To: Matthias May <matthias.may@neratec.com>, michael-dev@fami-braun.de,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <8ecda6f3-68ab-5752-c8de-4086d21ba309@candelatech.com>
+ <EB834EF3-21B2-4E6F-BEA8-1411407310F0@fami-braun.de>
+ <0896f150-13f8-daae-c956-f60a2f7feeaf@neratec.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <b3a42b0c-4e8a-b1fe-56eb-74eb7e71deaf@candelatech.com> (sfid-20180730_163422_423810_C6C3D063)
+Date: Mon, 30 Jul 2018 07:34:12 -0700
+MIME-Version: 1.0
+In-Reply-To: <0896f150-13f8-daae-c956-f60a2f7feeaf@neratec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When casting a pointer to an unsigned in, uintptr_t should be used to
-cope with the pointer size differences between 32-bit and 64-bit
-architectures.
 
-This is needed if we want to allow compilation of this driver when
-COMPILE_TEST=y.
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
----
- drivers/mtd/nand/raw/atmel/nand-controller.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 07/30/2018 04:13 AM, Matthias May wrote:
+> On 30/07/18 11:40, michael-dev@fami-braun.de wrote:
+>> Do you mean AP interfaces as required for multiple BSS/SSIDs?
+>>
+>> I'm running a patched ath9k to have hostapd run >8 BSS on a single radio.
+>> It works fine since years.
 
-diff --git a/drivers/mtd/nand/raw/atmel/nand-controller.c b/drivers/mtd/nand/raw/atmel/nand-controller.c
-index e686fe73159e..e8f7549d0354 100644
---- a/drivers/mtd/nand/raw/atmel/nand-controller.c
-+++ b/drivers/mtd/nand/raw/atmel/nand-controller.c
-@@ -2050,7 +2050,7 @@ atmel_smc_nand_controller_init(struct atmel_smc_nand_controller *nc)
- 		return ret;
- 	}
- 
--	nc->ebi_csa_offs = (unsigned int)match->data;
-+	nc->ebi_csa_offs = (uintptr_t)match->data;
- 
- 	/*
- 	 * The at91sam9263 has 2 EBIs, if the NAND controller is under EBI1
+Yes, I'd love to see any patches you can share on this as well.
+
+Thanks,
+Ben
+
+>>
+>> Regards,
+>> M. Braun
+>>
+>>
+>> Am 27. Juli 2018 15:35:28 MESZ schrieb Ben Greear <greearb@candelatech.com>:
+>>> Hello,
+>>>
+>>> Has anyone tried making ath9k able to support 16 vAP interfaces on a
+>>> single
+>>> radio?  I seem to recall that there were limitations regarding beacon
+>>> timers and such, and that is why the current limit is 8?
+>>>
+>>> Thanks,
+>>> Ben
+>>>
+>>> --
+>>> Ben Greear <greearb@candelatech.com>
+>>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>
+> Are these patches available somewhere?
+> I'm interested to play with them :)
+>
+> BR
+> Matthias
+>
+
 -- 
-2.14.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
