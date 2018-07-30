@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48798 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728656AbeG0Xmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 19:42:53 -0400
-Date: Fri, 27 Jul 2018 17:18:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
- <linux/pci-aspm.h>
-Message-ID: <20180727221855.GG173328@bhelgaas-glaptop.roam.corp.google.com> (sfid-20180728_001912_917339_7DCF8416)
-References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57398 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725995AbeG3Hx4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jul 2018 03:53:56 -0400
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] mac80211: allow station search on AP/VLANs
+Date: Mon, 30 Jul 2018 11:50:20 +0530
+Message-Id: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180730_082035_668709_F7528517)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 25, 2018 at 02:52:08PM -0500, Bjorn Helgaas wrote:
-> Remove includes of <linux/pci-aspm.h> from files that don't need
-> it.  I'll apply all these via the PCI tree unless there's objection.
-> 
-> ---
-> 
-> Bjorn Helgaas (4):
->       igb: Remove unnecessary include of <linux/pci-aspm.h>
->       ath9k: Remove unnecessary include of <linux/pci-aspm.h>
->       iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
->       PCI: Remove unnecessary include of <linux/pci-aspm.h>
-> 
-> 
->  drivers/net/ethernet/intel/igb/igb_main.c     |    1 -
->  drivers/net/wireless/ath/ath9k/pci.c          |    1 -
->  drivers/net/wireless/intel/iwlwifi/pcie/drv.c |    1 -
->  drivers/pci/pci-sysfs.c                       |    1 -
->  drivers/pci/pci.c                             |    1 -
->  drivers/pci/probe.c                           |    1 -
->  drivers/pci/remove.c                          |    1 -
->  7 files changed, 7 deletions(-)
+When mac80211 receives a packet, we interate over the list of
+active interfaces to find the station(which transmitted the packet).
+Currently, station search is not allowed on AP/VLAN interface; since
+stations can also get mapped to AP/VLAN interfaces, they are worth
+considering for station search.
 
-I applied these to the pci/aspm branch for v4.19.
+Found this during code review; just a theoritical fix.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+ net/mac80211/rx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a16ba56..e3fbed1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4391,8 +4391,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+-		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
+ 			continue;
+ 
+ 		/*
+-- 
+2.7.4
