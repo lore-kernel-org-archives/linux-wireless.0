@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway36.websitewelcome.com ([50.116.125.2]:35787 "EHLO
-        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751581AbeGBNtZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35154 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726800AbeG3T2Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jul 2018 09:49:25 -0400
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway36.websitewelcome.com (Postfix) with ESMTP id 6D611401015EA
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Jul 2018 07:02:45 -0500 (CDT)
-Subject: Re: [PATCH] wlcore: Fix memory leak in
- wlcore_cmd_wait_for_event_or_timeout
-To: Tony Lindgren <tony@atomide.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180628130809.GA8147@embeddedor.com>
- <20180702113008.GV112168@atomide.com>
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <f6b4f549-1b14-4212-d81b-1201f0ce6b3d@embeddedor.com> (sfid-20180702_154930_152655_41113C46)
-Date: Mon, 2 Jul 2018 08:01:32 -0500
+        Mon, 30 Jul 2018 15:28:24 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180702113008.GV112168@atomide.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH 1/2] ath10k: Disable bundle mgmt tx completion event
+ support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1530177537-18487-2-git-send-email-pillair@codeaurora.org>
+References: <1530177537-18487-2-git-send-email-pillair@codeaurora.org>
+To: Rakesh Pillai <pillair@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Surabhi Vishnoi <svishnoi@codeaurora.org>,
+        Rakesh Pillai <pillair@codeaurora.org>
+Message-Id: <20180730175217.8584A62256@smtp.codeaurora.org> (sfid-20180730_195220_448196_44EDC0C1)
+Date: Mon, 30 Jul 2018 17:52:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-
-On 07/02/2018 06:30 AM, Tony Lindgren wrote:
-> * Gustavo A. R. Silva <gustavo@embeddedor.com> [180628 13:11]:
->> In case memory resources for *events_vector* were allocated, release
->> them before return.
->>
->> Addresses-Coverity-ID: 1470194 ("Resource leak")
->> Fixes: 4ec7cece87b3 ("wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> The tx completion of multiple mgmt frames can be bundled
+> in a single event and sent by the firmware to host, if this
+> capability is not disabled explicitly by the host. If the host
+> cannot handle the bundled mgmt tx completion, this capability
+> support needs to be disabled in the wmi init cmd, sent to the firmware.
 > 
-> Thanks for catching this one:
+> Add the host capability indication flag in the wmi ready command,
+> to let firmware know the features supported by the host driver.
+> This field is ignored if it is not supported by firmware.
 > 
-> Acked-by: Tony Lindgren <tony@atomide.com>
+> Set the host capability indication flag(i.e. host_capab) to zero,
+> for disabling the support of bundle mgmt tx completion. This will
+> indicate the firmware to send completion event for every mgmt tx
+> completion, instead of bundling them together and sending in a single
+> event.
 > 
+> Tested HW: WCN3990
+> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+> 
+> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Glad to help. :)
+2 patches applied to ath-next branch of ath.git, thanks.
 
-Thanks
---
-Gustavo
+673bc519c558 ath10k: disable bundle mgmt tx completion event support
+dc405152bb64 ath10k: handle mgmt tx completion event
+
+-- 
+https://patchwork.kernel.org/patch/10493381/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
