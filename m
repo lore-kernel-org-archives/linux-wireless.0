@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33886 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36528 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729784AbeGaJEw (ORCPT
+        with ESMTP id S1727077AbeG3Tap (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:04:52 -0400
+        Mon, 30 Jul 2018 15:30:45 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH] atmel: Replace mdelay() with msleep() in
- probe_atmel_card()
+Subject: Re: [PATCH] ath10k: remove redundant pointers 'dev' and 'noa'
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180727084535.3848-1-baijiaju1990@gmail.com>
-References: <20180727084535.3848-1-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: simon@thekelleys.org.uk, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180731072556.26D726071C@smtp.codeaurora.org> (sfid-20180731_092632_413605_FE1DA533)
-Date: Tue, 31 Jul 2018 07:25:56 +0000 (UTC)
+In-Reply-To: <20180709123446.14796-1-colin.king@canonical.com>
+References: <20180709123446.14796-1-colin.king@canonical.com>
+To: Colin King <colin.king@canonical.com>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20180730175438.377C362203@smtp.codeaurora.org> (sfid-20180730_195534_723539_86754797)
+Date: Mon, 30 Jul 2018 17:54:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+Colin King <colin.king@canonical.com> wrote:
 
-> probe_atmel_card() is never called in atomic context.
-> It calls mdelay() to busily wait, which is not necessary.
-> mdelay() can be replaced with msleep().
+> Pointers dev and noa are being assigned but are never used hence they
+> are redundant and can be removed.
 > 
-> This is found by a static analysis tool named DCNS written by myself.
+> Cleans up clang warnings:
+> warning: variable 'dev' set but not used [-Wunused-but-set-variable]
+> warning: variable 'noa' set but not used [-Wunused-but-set-variable]
 > 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-5685bee313e9 atmel: Replace mdelay() with msleep() in probe_atmel_card()
+e6712aa1244f ath10k: remove redundant pointers 'dev' and 'noa'
 
 -- 
-https://patchwork.kernel.org/patch/10546747/
+https://patchwork.kernel.org/patch/10514521/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
