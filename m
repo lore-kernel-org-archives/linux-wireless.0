@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38908 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753231AbeGDPP0 (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:35788 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726528AbeG3KPW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 11:15:26 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 30 Jul 2018 06:15:22 -0400
+Date: Mon, 30 Jul 2018 11:41:13 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: devel@driverdev.osuosl.org, venkateswara.kaja@microchip.com,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
+ '_' in label name
+Message-ID: <20180730084113.fixf2zeb5tgbcovj@mwanda> (sfid-20180730_104129_923442_80840A15)
+References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+ <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
+ <20180719092744.5gx2ctgj7etvk7uh@mwanda>
+ <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
 MIME-Version: 1.0
-Subject: Re: [v2] atmel: using strlcpy() to avoid possible buffer overflows
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180630063341.9900-1-yuehaibing@huawei.com>
-References: <20180630063341.9900-1-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: <simon@thekelleys.org.uk>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        <davem@davemloft.net>, <andy.shevchenko@gmail.com>,
-        YueHaibing <yuehaibing@huawei.com>
-Message-Id: <20180704151525.62BF460B26@smtp.codeaurora.org> (sfid-20180704_171604_694990_EB53843D)
-Date: Wed,  4 Jul 2018 15:15:25 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
-
-> 'firmware' is a module param which may been longer than firmware_id,
-> so using strlcpy() to guard against overflows. Also priv is allocated
-> with zeroed memory,no need to set firmware_id[0] to '\0'.
+On Fri, Jul 20, 2018 at 04:35:24AM +0530, Ajay Singh wrote:
+> Hi Dan,
 > 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> On Thu, 19 Jul 2018 12:27:44 +0300
+> Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> 
+> > On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh wrote:
+> > > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
+> > > b/drivers/staging/wilc1000/wilc_wlan.c index 85af365..8e71c28 100644
+> > > --- a/drivers/staging/wilc1000/wilc_wlan.c
+> > > +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> > > @@ -850,13 +850,13 @@ static void wilc_wlan_handle_isr_ext(struct
+> > > wilc *wilc, u32 int_status) if (wilc->rx_buffer)
+> > >  			buffer = &wilc->rx_buffer[offset];
+> > >  		else
+> > > -			goto _end_;
+> > > +			goto end;  
+> > 
+> > This isn't related to your patch but this goto doesn't appear to make
+> > any sort of sense.  I have no idea what was intended.
+> > 
+> 
+> Thanks for pointing it out. I will include these changes in separate
+> patchset.
+> 
+> Yes, the position of goto label can be moved just before
+> wilc_wlan_handle_rxq(wilc), as 'ret' will always be '0' when goto
+> statement is executed.
+> 
+> Actually earlier there were few more goto statement in this function
+> and single label 'end' was used to handle for different cases. But in
+> previous cleanup patches those cases were removed.
+> Now this function can be further refactor by either moving
+> goto label before wilc_wlan_handle_rxq(wilc) or avoid goto use by
+> adding the rx_buffer validation along with size check.
+> 
+> i.e 
+> 
+> end:
+>     wilc_wlan_handle_rxq(wilc)
+> 
+> 
+> OR
+> 
+> 	if (size > 0 && wilc->rx_buffer) {
+> 
+> 	....
+> 	}
+>     	wilc_wlan_handle_rxq(wilc)
+> 
 
-Patch applied to wireless-drivers-next.git, thanks.
+Actually looking at it now, you could probably just remove the if
+statement.  Hopefully wilc->rx_buffer is non-NULL at this point? Is
+there really any need to call wilc_wlan_handle_rxq() when we haven't
+called wilc_wlan_rxq_add()?
 
-f9cbaeb52930 atmel: using strlcpy() to avoid possible buffer overflows
-
--- 
-https://patchwork.kernel.org/patch/10498009/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
