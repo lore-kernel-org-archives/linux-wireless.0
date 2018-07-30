@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34859 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388036AbeGTTGL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54570 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbeG3Hob (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jul 2018 15:06:11 -0400
-From: Colin King <colin.king@canonical.com>
-To: Samuel Ortiz <sameo@linux.intel.com>,
-        Amit Pundir <amit.pundir@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] nfc: fdp: remove redundant pointer 'client'
-Date: Fri, 20 Jul 2018 19:16:43 +0100
-Message-Id: <20180720181643.21340-1-colin.king@canonical.com> (sfid-20180720_201658_860349_0429BE09)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Mon, 30 Jul 2018 03:44:31 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH] ath10k: fix kernel panic by moving pci flush after napi_disable
+Date: Mon, 30 Jul 2018 11:40:51 +0530
+Message-Id: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180730_081112_250222_422D5266)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+When continuously running wifi up/down sequence, the napi poll
+can be scheduled after the CE buffers being freed by ath10k_pci_flush
 
-Pointer 'client' is being assigned but is never used hence it is
-redundant and can be removed.
+Steps:
+  In a certain condition, during wifi down below scenario might occur.
 
-Cleans up clang warning:
-warning: variable 'client' set but not used [-Wunused-but-set-variable]
+ath10k_stop->ath10k_hif_stop->napi_schedule->ath10k_pci_flush->napi_poll(napi_synchronize).
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+In the above scenario, CE buffer entries will be freed up and become NULL in
+ath10k_pci_flush. And the napi_poll has been invoked after the flush process
+and it will try to get the skb from the CE buffer entry and perform some action on that.
+Since the CE buffer already cleaned by pci flush this action will create NULL
+pointer dereference and trigger below kernel panic.
+
+Unable to handle kernel NULL pointer dereference at virtual address 0000005c
+PC is at ath10k_pci_htt_rx_cb+0x64/0x3ec [ath10k_pci]
+ath10k_pci_htt_rx_cb [ath10k_pci]
+ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci]
+ath10k_ce_per_engine_service [ath10k_pci]
+ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci]
+ath10k_ce_per_engine_service_any [ath10k_pci]
+ath10k_pci_napi_poll+0x48/0xec [ath10k_pci]
+ath10k_pci_napi_poll [ath10k_pci]
+net_rx_action+0xac/0x160
+net_rx_action
+__do_softirq+0xdc/0x208
+__do_softirq
+irq_exit+0x84/0xe0
+irq_exit
+__handle_domain_irq+0x80/0xa0
+__handle_domain_irq
+gic_handle_irq+0x38/0x5c
+gic_handle_irq
+__irq_usr+0x44/0x60
+
+Tested on QCA4019 and firmware version 10.4.3.2.1.1-00010
+
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- drivers/nfc/fdp/i2c.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/ahb.c | 4 ++--
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index 70a970c7375c..5d3ea63e405f 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -210,7 +210,6 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
- {
- 	struct fdp_i2c_phy *phy = phy_id;
--	struct i2c_client *client;
- 	struct sk_buff *skb;
- 	int r;
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index fa39fff..e244dc5 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -660,10 +660,10 @@ static void ath10k_ahb_hif_stop(struct ath10k *ar)
+ 	ath10k_ahb_irq_disable(ar);
+ 	synchronize_irq(ar_ahb->irq);
  
-@@ -219,8 +218,6 @@ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
- 		return IRQ_NONE;
- 	}
- 
--	client = phy->i2c_dev;
+-	ath10k_pci_flush(ar);
 -
- 	r = fdp_nci_i2c_read(phy, &skb);
+ 	napi_synchronize(&ar->napi);
+ 	napi_disable(&ar->napi);
++
++	ath10k_pci_flush(ar);
+ }
  
- 	if (r == -EREMOTEIO)
+ static int ath10k_ahb_hif_power_up(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index af2cf55..97fa5c7 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2068,9 +2068,9 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 
+ 	ath10k_pci_irq_disable(ar);
+ 	ath10k_pci_irq_sync(ar);
+-	ath10k_pci_flush(ar);
+ 	napi_synchronize(&ar->napi);
+ 	napi_disable(&ar->napi);
++	ath10k_pci_flush(ar);
+ 
+ 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
+ 	WARN_ON(ar_pci->ps_wake_refcount > 0);
 -- 
-2.17.1
+1.9.1
