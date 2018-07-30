@@ -1,121 +1,1235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:46058 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729814AbeGQBS6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jul 2018 21:18:58 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [RFC] ath10k:  Support configuring firmware tx-retry counter.
-Date: Mon, 16 Jul 2018 17:48:59 -0700
-Message-Id: <1531788539-17937-1-git-send-email-greearb@candelatech.com> (sfid-20180717_024908_432943_801217B0)
+Received: from frisell.zx2c4.com ([192.95.5.64]:35109 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726670AbeG3Nwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jul 2018 09:52:47 -0400
+Received: by frisell.zx2c4.com (ZX2C4 Mail Server) with ESMTP id 8151f199
+        for <linux-wireless@vger.kernel.org>;
+        Mon, 30 Jul 2018 12:06:49 +0000 (UTC)
+Received: by frisell.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id c8719e90 (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128:NO)
+        for <linux-wireless@vger.kernel.org>;
+        Mon, 30 Jul 2018 12:06:49 +0000 (UTC)
+Received: by mail-oi0-f41.google.com with SMTP id y207-v6so20789391oie.13
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jul 2018 05:17:59 -0700 (PDT)
+MIME-Version: 1.0
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Date: Mon, 30 Jul 2018 14:17:47 +0200
+Message-ID: <CAHmME9oBQqT5B9cnY530czZ53hoqyMsXeAf7OURhrX=wZv1Qvw@mail.gmail.com> (sfid-20180730_141808_413210_19B3D6DB)
+Subject: disconnection regression in 4.17?
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hello,
 
-Firmware already supports this, so just enable the path
-to configure the vdev parameter.
+I'm seeing quite frequent but fairly irregular disconnections in 4.17
+that I was not seeing in 4.16, even when sitting directly next to the
+AP. Below is a debug log; let me know if there's a better way to debug
+this.
 
-One potential issue:  The firmware (10.1 at least) defaults to 2,
-and the mac80211 stack defaults to 4.  So applying this patch would
-change the firmware behaviour regardless of user settings.
+(Previously 4.17 was totally borked until I submitted
+https://www.spinics.net/lists/stable/msg249189.html for stable; not
+sure if that problem is related to this one.)
 
-I verified this tweaked the proper firmware setting when I
-ran this command:
+Thanks,
+Jason
 
-iw phy wiphy0 set retry short 2 long 2
+----------------8<----------------------------------
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 31 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  2 +-
- drivers/net/wireless/ath/ath10k/wmi.h |  2 ++
- 3 files changed, 34 insertions(+), 1 deletion(-)
+Thinkpad P50
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c90c8bb..b458e5b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2027,6 +2027,16 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- 	return 0;
- }
- 
-+static int ath10k_mac_vif_config_retry_limit(struct ath10k_vif *arvif, int limit)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	int vdev_param = ar->wmi.vdev_param->rc_num_retries;
-+
-+	lockdep_assert_held(&arvif->ar->conf_mutex);
-+
-+	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, limit);
-+}
-+
- static int ath10k_mac_vif_disable_keepalive(struct ath10k_vif *arvif)
- {
- 	struct ath10k *ar = arvif->ar;
-@@ -5516,6 +5526,24 @@ static int ath10k_config_ps(struct ath10k *ar)
- 	return ret;
- }
- 
-+static int ath10k_config_retry_limit(struct ath10k *ar, int limit)
-+{
-+	struct ath10k_vif *arvif;
-+	int ret = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ret = ath10k_mac_vif_config_retry_limit(arvif, limit);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to setup retry-limit: %d\n", ret);
-+			break;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static int ath10k_mac_txpower_setup(struct ath10k *ar, int txpower)
- {
- 	int ret;
-@@ -5592,6 +5620,9 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
- 	}
- 
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS)
-+		ret = ath10k_config_retry_limit(ar, conf->long_frame_max_tx_count);
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6aaa439..816883d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -874,7 +874,7 @@ static struct wmi_vdev_param_map wmi_10x_vdev_param_map = {
- 	.tx_encap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.ap_detect_out_of_sync_sleeping_sta_time_secs =
- 		WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS,
--	.rc_num_retries = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.rc_num_retries = WMI_10X_VDEV_PARAM_RC_NUM_RETRIES,
- 	.cabq_maxdur = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.mfptest_set = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rts_fixed_rate = WMI_VDEV_PARAM_UNSUPPORTED,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 95ff280..b01778e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5369,6 +5369,8 @@ enum wmi_10x_vdev_param {
- 	WMI_10X_VDEV_PARAM_MCAST2UCAST_SET,
- 	/* Enable/Disable RTS-CTS */
- 	WMI_10X_VDEV_PARAM_ENABLE_RTSCTS,
-+	/** Total number of HW retries */
-+	WMI_10X_VDEV_PARAM_RC_NUM_RETRIES,
- 
- 	WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS,
- 
--- 
-2.4.11
+02:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+       Subsystem: Intel Corporation Wireless 8260
+       Flags: bus master, fast devsel, latency 0, IRQ 141
+       Memory at d4300000 (64-bit, non-prefetchable) [size=8K]
+       Capabilities: <access denied>
+       Kernel driver in use: iwlwifi
+       Kernel modules: iwlwifi
+
+Jul 30 03:19:23 thinkpad kernel: wlan0: deauthenticated from
+re:po:rt:re:mo:ve (Reason: 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x393ca3039/0x894808f0, offset 0
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command REMOVE_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command REMOVE_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command REMOVE_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCAN_REQ_UMAC
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCAN_REQ_UMAC
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCAN_REQ_UMAC
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-DISCONNECTED bssid=re:po:rt:re:mo:ve reason=6
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0: SME: Trying to
+authenticate with re:po:rt:re:mo:ve (SSID='neato-burrito-network'
+freq=5220 MHz)
+Jul 30 03:19:23 thinkpad kernel: wlan0: authenticate with re:po:rt:re:mo:ve
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: wlan0: send auth to re:po:rt:re:mo:ve (try 1/3)
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:23 thinkpad kernel: wlan0: authenticated
+Jul 30 03:19:23 thinkpad kernel: wlan0: associate with
+re:po:rt:re:mo:ve (try 1/3)
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0: Trying to
+associate with re:po:rt:re:mo:ve (SSID='neato-burrito-network'
+freq=5220 MHz)
+Jul 30 03:19:23 thinkpad kernel: wlan0: RX AssocResp from
+re:po:rt:re:mo:ve (capab=0x511 status=0 aid=1)
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command LQ_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command LQ_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command LQ_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x38feeb039/0x856c87bc, offset 0
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: wlan0: associated
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0: Associated with
+re:po:rt:re:mo:ve
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x38feeb039/0x856c87bc, offset 0
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0: WPA: Key
+negotiation completed with re:po:rt:re:mo:ve [PTK=CCMP GTK=CCMP]
+Jul 30 03:19:23 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-CONNECTED - Connection to re:po:rt:re:mo:ve completed [id=0
+id_str=]
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:23 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:24 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x3a562e039/0x9ae0c11b, offset 0
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:28 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:29 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:19:30 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:19:30 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:19:30 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+
+
+Jul 30 03:21:19 thinkpad kernel: wlan0: deauthenticated from
+re:po:rt:re:mo:ve (Reason: 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x3a562e039/0x9ae0c11b, offset 0
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TXPATH_FLUSH
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_drain_sta Frames for staid 0 will drained in fw
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command REMOVE_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command REMOVE_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command REMOVE_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCAN_REQ_UMAC
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCAN_REQ_UMAC
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCAN_REQ_UMAC
+Jul 30 03:21:19 thinkpad kernel: wlan0: authenticate with re:po:rt:re:mo:ve
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+BINDING_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-DISCONNECTED bssid=re:po:rt:re:mo:ve reason=6
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0: SME: Trying to
+authenticate with re:po:rt:re:mo:ve (SSID='neato-burrito-network'
+freq=5220 MHz)
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: wlan0: send auth to re:po:rt:re:mo:ve (try 1/3)
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:19 thinkpad kernel: wlan0: authenticated
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0: Trying to
+associate with re:po:rt:re:mo:ve (SSID='neato-burrito-network'
+freq=5220 MHz)
+Jul 30 03:21:19 thinkpad kernel: wlan0: associate with
+re:po:rt:re:mo:ve (try 1/3)
+Jul 30 03:21:19 thinkpad kernel: wlan0: RX AssocResp from
+re:po:rt:re:mo:ve (capab=0x511 status=0 aid=1)
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command LQ_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command LQ_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command LQ_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x3a562e039/0x9ae0c11b, offset 0
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command STATISTICS_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_QUOTA_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TIME_EVENT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+PHY_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: wlan0: associated
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0: Associated with
+re:po:rt:re:mo:ve
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-SUBNET-STATUS-UPDATE status=0
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA_KEY
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x3a562e039/0x9ae0c11b, offset 0
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_PM_POWER_TABLE
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+REPLY_BEACON_FILTERING_CMD
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0: WPA: Key
+negotiation completed with re:po:rt:re:mo:ve [PTK=CCMP GTK=CCMP]
+Jul 30 03:21:19 thinkpad wpa_supplicant[446]: wlan0:
+CTRL-EVENT-CONNECTED - Connection to re:po:rt:re:mo:ve completed [id=0
+id_str=]
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:19 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_mac_ctxt_cmd_sta DTIM TBTT is 0x3ac4a1039/0xa1c7f44d, offset 0
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command
+MAC_CONTEXT_CMD
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:24 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command
+MAC_CONTEXT_CMD
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command SCD_QUEUE_CFG
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command SCD_QUEUE_CFG
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_mvm_sta_send_to_fw ADD_STA PASSED
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Attempting to send sync command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: U
+iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command ADD_STA
+Jul 30 03:21:25 thinkpad kernel: iwlwifi 0000:02:00.0: I
+iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command ADD_STA
