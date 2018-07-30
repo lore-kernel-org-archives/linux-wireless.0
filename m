@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta24.messagelabs.com ([67.219.250.208]:30960 "EHLO
-        mail1.bemta24.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751132AbeGIF65 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38552 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726888AbeG3TgO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 01:58:57 -0400
-From: "Palanisamy, Rameshbabu" <Rameshbabu.Palanisamy@harman.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: iwlwifi is not working after doing the reboot by pressing RESET
- button
-Date: Mon, 9 Jul 2018 05:57:51 +0000
-Message-ID: <2f72033224fa47dcad87a69e8bd6a1e1@HIBDWSMB05.ad.harman.com> (sfid-20180709_075901_725387_56D34D75)
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 30 Jul 2018 15:36:14 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [PATCH] ath10k: add debugfs file warm_hw_reset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1531920860-3236-1-git-send-email-mkenna@codeaurora.org>
+References: <1531920860-3236-1-git-send-email-mkenna@codeaurora.org>
+To: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Message-Id: <20180730180005.B77B360B1A@smtp.codeaurora.org> (sfid-20180730_200048_116741_A7541AAB)
+Date: Mon, 30 Jul 2018 18:00:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Team,
+Maharaja Kennadyrajan <mkenna@codeaurora.org> wrote:
 
+> Debugfs support to do hardware warm reset with WMI command
+> WMI_PDEV_PARAM_PDEV_RESET for 10.4 and 10.2.4(if wmi
+> service is enabled in the firmware for backward compatibility).
+> 
+> This change is purely for debugging purpose when hardware hangs/mutes.
+> 
+> This hardware reset won't affect the connectivity but there will be small
+> pause in data traffic. Here we are doing BB/MAC level reset and hence
+> whenever the BB/MAC watchdog is triggered, it does a hardware_chip_reset.
+> So the target will be in the active state.
+> 
+> Below command used to warm reset the hardware.
+> echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/warm_hw_reset
+> 
+> Tested in QCA988X with firmware ver 10.2.4.70.45
+> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
+> 
+> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I am using intel 8265 NGW wifi card in intel leafhill board.
+Patch applied to ath-next branch of ath.git, thanks.
 
-We have enabled the Intel -wifi card in the Leaf_hill platform. After powering on the device, the wifi module is working fine but it doesn't work when we do the reboot by pressing RESET button.
-We have debug the issue and found that  when we do the hard reboot by pressing the RESET key, the wifi module doesn't detected.
-We have given the  lspci command before and after the hard reboot and the module is not listing in the lspci after hard reboot so we are suspecting that wifi module is not in the proper state due to the hard reboot.
-Could you please help to know what might be the issue.
+db251d7df457 ath10k: add debugfs file warm_hw_reset
 
+-- 
+https://patchwork.kernel.org/patch/10532465/
 
-Thanks,
-Ramesh
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
