@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53684 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388017AbeGWRFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 13:05:12 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 2/9] ath9k: don't run periodic and nf calibation at the same time
-Date: Mon, 23 Jul 2018 18:02:53 +0200
-Message-Id: <20180723160300.58024-2-nbd@nbd.name> (sfid-20180723_180333_176556_E217C3AC)
-In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
-References: <20180723160300.58024-1-nbd@nbd.name>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53584 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732036AbeGaIvG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 04:51:06 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCH v2 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1530080019-20108-1-git-send-email-gbhat@marvell.com>
+References: <1530080019-20108-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20180731071214.08D7E6071C@smtp.codeaurora.org> (sfid-20180731_091240_881909_9B7F0149)
+Date: Tue, 31 Jul 2018 07:12:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The checks already prevents periodic cal from being started while noise
-floor calibration runs. It is missing checks for the other way around.
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> At present driver spinlock protects iteration of list
+> rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
+> individual items in this list, it uses rx_pkt_lock. But, we can
+> use a single rx_reorder_tbl_lock for both purposes. This patch
+> replaces rx_pkt_lock by rx_reorder_tbl_lock.
+> 
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 50fcd343c41a..fd9db8ca99d7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -676,10 +676,10 @@ static int ar9002_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			return 0;
- 
- 		ah->cal_list_curr = currCal = currCal->calNext;
--		if (currCal->calState == CAL_WAITING) {
-+		if (currCal->calState == CAL_WAITING)
- 			ath9k_hw_reset_calibration(ah, currCal);
--			return 0;
--		}
-+
-+		return 0;
- 	}
- 
- 	/* Do NF cal only at longer intervals */
+2 patches applied to wireless-drivers-next.git, thanks.
+
+5631909364e1 mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
+5188d5453bc9 mwifiex: restructure rx_reorder_tbl_lock usage
+
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10490657/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
