@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35154 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726800AbeG3T2Y (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:34619 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731121AbeGaXbn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:28:24 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 31 Jul 2018 19:31:43 -0400
+Date: Tue, 31 Jul 2018 15:49:20 -0600
+From: Rob Herring <robh@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        Joe Perches <joe@perches.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Jonathan Cameron <jic23@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-iio@vger.kernel.org,
+        linux-pm@vger.kernel.org, lvs-devel@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
+Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
+Message-ID: <20180731214920.GA20796@rob-hp-laptop> (sfid-20180731_234948_489182_CD2113EB)
+References: <20180724111600.4158975-1-arnd@arndb.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] ath10k: Disable bundle mgmt tx completion event
- support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1530177537-18487-2-git-send-email-pillair@codeaurora.org>
-References: <1530177537-18487-2-git-send-email-pillair@codeaurora.org>
-To: Rakesh Pillai <pillair@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>,
-        Rakesh Pillai <pillair@codeaurora.org>
-Message-Id: <20180730175217.8584A62256@smtp.codeaurora.org> (sfid-20180730_195220_448196_44EDC0C1)
-Date: Mon, 30 Jul 2018 17:52:17 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180724111600.4158975-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@codeaurora.org> wrote:
-
-> The tx completion of multiple mgmt frames can be bundled
-> in a single event and sent by the firmware to host, if this
-> capability is not disabled explicitly by the host. If the host
-> cannot handle the bundled mgmt tx completion, this capability
-> support needs to be disabled in the wmi init cmd, sent to the firmware.
+On Tue, Jul 24, 2018 at 01:13:25PM +0200, Arnd Bergmann wrote:
+> Almost all files in the kernel are either plain text or UTF-8
+> encoded. A couple however are ISO_8859-1, usually just a few
+> characters in a C comments, for historic reasons.
 > 
-> Add the host capability indication flag in the wmi ready command,
-> to let firmware know the features supported by the host driver.
-> This field is ignored if it is not supported by firmware.
+> This converts them all to UTF-8 for consistency.
 > 
-> Set the host capability indication flag(i.e. host_capab) to zero,
-> for disabling the support of bundle mgmt tx completion. This will
-> indicate the firmware to send completion event for every mgmt tx
-> completion, instead of bundling them together and sending in a single
-> event.
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  .../devicetree/bindings/net/nfc/pn544.txt     |   2 +-
+>  arch/arm/boot/dts/sun4i-a10-inet97fv2.dts     |   2 +-
+>  arch/arm/crypto/sha256_glue.c                 |   2 +-
+>  arch/arm/crypto/sha256_neon_glue.c            |   4 +-
+>  drivers/crypto/vmx/ghashp8-ppc.pl             |  12 +-
+>  drivers/iio/dac/ltc2632.c                     |   2 +-
+>  drivers/power/reset/ltc2952-poweroff.c        |   4 +-
+>  kernel/events/callchain.c                     |   2 +-
+>  net/netfilter/ipvs/Kconfig                    |   8 +-
+>  net/netfilter/ipvs/ip_vs_mh.c                 |   4 +-
+>  tools/power/cpupower/po/de.po                 |  44 +++----
+>  tools/power/cpupower/po/fr.po                 | 120 +++++++++---------
+>  12 files changed, 103 insertions(+), 103 deletions(-)
 > 
-> Tested HW: WCN3990
-> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
-> 
-> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> diff --git a/Documentation/devicetree/bindings/net/nfc/pn544.txt b/Documentation/devicetree/bindings/net/nfc/pn544.txt
+> index 538a86f7b2b0..72593f056b75 100644
+> --- a/Documentation/devicetree/bindings/net/nfc/pn544.txt
+> +++ b/Documentation/devicetree/bindings/net/nfc/pn544.txt
+> @@ -2,7 +2,7 @@
+>  
+>  Required properties:
+>  - compatible: Should be "nxp,pn544-i2c".
+> -- clock-frequency: I²C work frequency.
+> +- clock-frequency: IÂ²C work frequency.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+I'd prefer just plain ASCII 'I2C' here, but either way:
 
-673bc519c558 ath10k: disable bundle mgmt tx completion event support
-dc405152bb64 ath10k: handle mgmt tx completion event
+Acked-by: Rob Herring <robh@kernel.org>
 
--- 
-https://patchwork.kernel.org/patch/10493381/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Rob
