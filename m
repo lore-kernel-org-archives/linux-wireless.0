@@ -1,154 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr690121.outbound.protection.outlook.com ([40.107.69.121]:1741
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727640AbeGRMGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jul 2018 08:06:16 -0400
-From: Ben Whitten <Ben.Whitten@lairdtech.com>
-To: =?utf-8?B?QW5kcmVhcyBGw6RyYmVy?= <afaerber@suse.de>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jian-Hong Pan <starnight@g.ncu.edu.tw>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Matthias Brugger <mbrugger@suse.com>,
-        Janus Piwek <jpiwek@arroweurope.com>,
-        =?utf-8?B?TWljaGFlbCBSw7ZkZXI=?= <michael.roeder@avnet.eu>,
-        Dollar Chen <dollar.chen@wtmec.com>,
-        Ken Yu <ken.yu@rakwireless.com>,
-        =?utf-8?B?S29uc3RhbnRpbiBCw7ZobQ==?= <konstantin.boehm@ancud.de>,
-        Jan Jongboom <jan.jongboom@arm.com>,
-        Jon Ortego <Jon.Ortego@imst.de>,
-        "contact@snootlab.com" <contact@snootlab.com>,
-        Brian Ray <brian.ray@link-labs.com>,
-        "lora@globalsat.com.tw" <lora@globalsat.com.tw>,
-        Alexander Graf <agraf@suse.de>,
-        =?utf-8?B?TWljaGFsIEt1YmXEjWVr?= <mkubecek@suse.cz>,
-        Rob Herring <robh@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Steve deRosier <derosier@gmail.com>,
-        Mark Brown <broonie@kernel.org>,
-        "linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-        Hasnain Virk <Hasnain.Virk@arm.com>,
-        Stefan Schmidt <stefan@datenfreihafen.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "seth.forshee@canonical.com" <seth.forshee@canonical.com>
-Subject: RE: [RFC net-next 00/15] net: A socket API for LoRa
-Date: Wed, 18 Jul 2018 11:28:41 +0000
-Message-ID: <BY1PR02MB11143134B9ABAC9C9929A9C4E7530@BY1PR02MB1114.namprd02.prod.outlook.com> (sfid-20180718_132858_368657_EFABDBA1)
-References: <20180701110804.32415-1-afaerber@suse.de>
- <BY1PR02MB11147C7443AB9623D6B65798E75A0@BY1PR02MB1114.namprd02.prod.outlook.com>
- <e08cdcfb-207f-bd73-2afd-f775810b72b7@suse.de>
-In-Reply-To: <e08cdcfb-207f-bd73-2afd-f775810b72b7@suse.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from 3.mo6.mail-out.ovh.net ([178.33.253.26]:49617 "EHLO
+        3.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729315AbeGaXMo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 19:12:44 -0400
+Received: from player714.ha.ovh.net (unknown [10.109.143.146])
+        by mo6.mail-out.ovh.net (Postfix) with ESMTP id CD7B41710EA
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 22:11:01 +0200 (CEST)
+From: Alexander Wetzel <alexander@wetzel-home.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        s.gottschall@dd-wrt.com, denkenz@gmail.com,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH v4 0/3] Fix PTK rekey freezes and cleartext leaks
+Date: Tue, 31 Jul 2018 22:10:27 +0200
+Message-Id: <20180731201030.2619-1-alexander@wetzel-home.de> (sfid-20180731_233033_877049_C9E65D04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBTdWJqZWN0OiBSZTogW1JGQyBuZXQtbmV4dCAwMC8xNV0gbmV0OiBBIHNvY2tldCBBUEkgZm9y
-IExvUmENCj4gDQo+ICsgbGludXgtd2lyZWxlc3MgKyBTdGVmYW4gKyBTZXRoDQo+IA0KPiBBbSAx
-MS4wNy4yMDE4IHVtIDE3OjIxIHNjaHJpZWIgQmVuIFdoaXR0ZW46DQo+ID4+IFRoaXMgcGF0Y2hz
-ZXQgaXMgY2xlYXJseSBub3QgcmVhZHkgZm9yIG1lcmdpbmcsIGJ1dCBpcyBiZWluZw0KPiA+PiBz
-dWJtaXR0ZWQgZm9yDQo+ID4+IGRpc2N1c3Npb24sIGFzIHJlcXVlc3RlZCBieSBKaXJpLCBpbiBw
-YXJ0aWN1bGFyIG9mIHRoZSBkZXNpZ24NCj4gPj4gY2hvaWNlczoNCj4gPj4NCj4gPj4gMSkgUEZf
-TE9SQS9BRl9MT1JBIGFuZCBhc3NvY2lhdGVkIGlkZW50aWZpZXJzIGFyZQ0KPiA+PiBwcm9wb3Nl
-ZCB0byByZXByZXNlbnQNCj4gPj4gICAgdGhpcyB0ZWNobm9sb2d5LiBXaGlsZSBmb3IgYW4gU1gx
-Mjc2IC0gY2FzZSBhKSBhYm92ZSAtIGl0DQo+ID4+IG1pZ2h0IHdvcmsgdG8NCj4gPj4gICAgbGF5
-ZXIgTG9SYVdBTiBhcyBhIHByb3RvY29sIG9wdGlvbiBmb3IgUEZfTE9SQSBhbmQNCj4gYWRkDQo+
-ID4+IExvUmFXQU4gYWRkcmVzcw0KPiA+PiAgICBmaWVsZHMgdG8gdGhlIHVuaW9uIGluIG15IHNv
-Y2thZGRyX2xvcmEsIGhvdyB3b3VsZCB0aGF0DQo+ID4+IHdvcmsgZm9yIGRldmljZXMNCj4gPj4g
-ICAgdGhhdCBvbmx5IHN1cHBvcnQgTG9SYVdBTiBidXQgbm90IHB1cmUgTG9SYT8gRG8gd2UNCj4g
-Pj4gbmVlZCBib3RoIEFGX0xPUkEgYW5kDQo+ID4+ICAgIEFGX0xPUkFXQU4sIG9yIGp1c3QgYSBz
-ZXBhcmF0ZSBFVEhfUF9MT1JBV0FOIG9yDQo+ID4+IEFSUEhSRF9MT1JBV0FOPw0KPiA+Pg0KPiA+
-PiAyKSBQRl9MT1JBIGlzIHVzZWQgd2l0aCBTT0NLX0RHUkFNIGhlcmUuIFRoZQ0KPiA+PiBhc3N1
-bXB0aW9uIGlzIHRoYXQgUkFXIG1vZGUNCj4gPj4gICAgd291bGQgYmUgREdSQU0gcGx1cyBwcmVh
-bWJsZSBwbHVzIG9wdGlvbmFsDQo+IGNoZWNrc3VtLg0KPiA+Pg0KPiA+PiAzKSBPbmx5IHRoZSB0
-cmFuc21pdCBwYXRoIGlzIHBhcnRpYWxseSBpbXBsZW1lbnRlZA0KPiBhbHJlYWR5Lg0KPiA+PiBU
-aGUgYXNzdW1wdGlvbg0KPiA+PiAgICBpcyB0aGF0IHRoZSBkZXZpY2VzIHNob3VsZCBnbyBpbnRv
-IHJlY2VpdmUgbW9kZSBieQ0KPiBkZWZhdWx0DQo+ID4+IGFuZCBvbmx5DQo+ID4+ICAgIGludGVy
-cnVwdCB0aGF0IHdoZW4gYXNrZWQgdG8gdHJhbnNtaXQuDQo+ID4+DQo+ID4+IDQpIFNvbWUgaGFy
-ZHdhcmUgc2V0dGluZ3MgbmVlZCB0byBiZSBzdXBwbGllZA0KPiBleHRlcm5hbGx5LA0KPiA+PiBz
-dWNoIGFzIHRoZSByYWRpbw0KPiA+PiAgICBmcmVxdWVuY3kgZm9yIHNvbWUgbW9kdWxlcywgYnV0
-IG1hbnkgb3RoZXJzIGNhbiBiZQ0KPiA+PiBydW50aW1lLWNvbmZpZ3VyZWQsDQo+ID4+ICAgIHN1
-Y2ggYXMgU3ByZWFkaW5nIEZhY3RvciwgQmFuZHdpZHRoLCBTeW5jIFdvcmQsIG9yDQo+IHdoaWNo
-DQo+ID4+IGFudGVubmEgdG8gdXNlLg0KPiA+PiAgICBXaGF0IHNldHRpbmdzIHNob3VsZCBiZSBp
-bXBsZW1lbnRlZCBhcyBzb2NrZXQgb3B0aW9uDQo+IHZzLg0KPiA+PiBuZXRsaW5rIGxheWVyDQo+
-ID4+ICAgIHZzLiBpb2N0bCB2cy4gc3lzZnM/IFdoYXQgYXJlIHRoZSBjcml0ZXJpYSB0byBhcHBs
-eT8NCj4gPj4NCj4gPj4gNSkgTWFueSBvZiB0aGUgbW9kdWxlcyBzdXBwb3J0IG11bHRpcGxlIG1v
-ZGVzLCBzdWNoIGFzDQo+ID4+IExvUmEsIExvUmFXQU4gYW5kIEZTSy4NCj4gPj4gICAgTGFja2lu
-ZyBhIExvUmFXQU4gaW1wbGVtZW50YXRpb24sIEkgYW0gY3VycmVudGx5DQo+ID4+IHN3aXRjaGlu
-ZyB0aGVtIGludG8gTG9SYQ0KPiA+PiAgICBtb2RlIGF0IHByb2JlIHRpbWUgd2hlcmV2ZXIgcG9z
-c2libGUuIEhvdyBkbyB3ZQ0KPiBkZWFsDQo+ID4+IHdpdGggdGhhdCBwcm9wZXJseT8NCj4gPj4N
-Cj4gPj4gICBhKSBJcyB0aGVyZSBhbnkgcHJlY2VkZW5jZSBmcm9tIHRoZSBXaWZpIHdvcmxkIGZv
-cg0KPiA+PiBkeW5hbWljYWxseSBzZWxlY3RpbmcNCj4gPj4gICAgICBiZXR3ZWVuIG91ciBvd24g
-dHJ1c3RlZCBPcGVuIFNvdXJjZQ0KPiBpbXBsZW1lbnRhdGlvbg0KPiA+PiB2cy4gaGFyZHdhcmUv
-ZmlybXdhcmUNCj4gPj4gICAgICBhY2NlbGVyYXRlZCBhbmQvb3IgY2VydGlmaWVkIGltcGxlbWVu
-dGF0aW9ucz8NCj4gPj4NCj4gPj4gICBiKSBXb3VsZCBhIHByb29mIG9mIGNvbmNlcHQgZm9yIEZT
-SyAobm9uLUxvUmEpIG1vZGVzDQo+IGJlDQo+ID4+IHJlcXVpcmVkIGZvcg0KPiA+PiAgICAgIG1l
-cmdpbmcgYW55IExvUmEgZHJpdmVyIGZvciBjaGlwc2V0cyB0aGF0IHN1cHBvcnQNCj4gYm90aD8N
-Cj4gPj4gT3IgaXMgdGhlcmUgYW55DQo+ID4+ICAgICAgZmFjaWxpdHkgb3IgZGVzaWduIGd1aWRl
-bGluZXMgdGhhdCB3b3VsZCBhbGxvdyB1cyB0bw0KPiBmb2N1cw0KPiA+PiBvbiBMb1JhIGFuZA0K
-PiA+PiAgICAgIExvUmFXQU4gYW5kIGxlYXZlIG5vbi1Mb1JhIHJhZGlvIG1vZGVzIHRvIGxhdGVy
-DQo+ID4+IGNvbnRyaWJ1dG9ycz8NCj4gPg0KPiA+IERvd24gdGhlIGxpbmUgSSB0aGluayB3ZSBz
-aG91bGQgYWxzbyBwbGFuIGZvciBhIENSREEgc3R5bGUNCj4gcmVnZGIgc29tZXdoZXJlIGluIHRo
-ZSBwYXRoIGZvciByYXcgTG9SYSB0cmFuc2NlaXZlcnMNCj4gb3BlcmF0aW5nIGFzIHNvZnRNQUMs
-IG11Y2ggbGlrZSB3aXRoIFdpRmkuDQo+IA0KPiBZZXMsIEkgaGFkIHJhaXNlZCB0aGUgdG9waWMg
-b2Ygd2lyZWxlc3MtcmVnZGIgZm9yIFN0ZWZhbidzDQo+IGNvbmZlcmVuY2UgLQ0KPiBjdXJyZW50
-bHkgaXQgc2VlbXMgdG8gb25seSBjb3ZlciAyLjQgR0h6LCA1IEdIeiBhbmQgNjAgR0h6Lg0KPiBO
-b3Qgc3VyZSBpZg0KPiB3ZSBjYW4gZWFzaWx5IGV4dGVuZCB0aGF0IHRvIGNvdmVyIDQzMyBNSHos
-IDg2OCBNSHosIDkxNQ0KPiBNSHogYW5kIDkyMyBNSHoNCj4gYmFuZHMgb3Igd2hldGhlciB3ZSdk
-IGp1c3QgbmVlZCBzb21ldGhpbmcgc2ltaWxhci4uLiBJcw0KPiA4MDIuMTUuNCBhYmxlIHRvDQo+
-IHNoYXJlIHRoaXMgZGF0YWJhc2Ugd2l0aCBXaWZpPw0KDQpXZWxsIHRoZSBSRUFETUUgaW4gdGhl
-IHdpcmVsZXNzLXJlZ2RiIGRvZXNuJ3QgYmluZCBpdHNlbGYgdG8gODAyMTEsIHRoZXJlIGFyZSBy
-ZWZlcmVuY2VzIHRvIHRoZSBvdGhlciBFVFNJIEVOIHNwZWNzIHNvIHRoaXMgd291bGQgYmUgdGhl
-IHBsYWNlIHJhdGhlciB0aGFuIGR1cGxpY2F0aW5nLg0KVGhlcmUgd291bGQgbmVlZCBhIGJpdCBv
-ZiBhZGRpdGlvbmFsIGluZm9ybWF0aW9uIHRvIGNhcHR1cmUgZHV0eS1jeWNsZSByZXF1aXJlbWVu
-dHMsIGhvd2V2ZXIgdGhlIFNSRCBzcGVjIHN0YXRlcyB0aGUgbWF4aW11bSBiYW5kd2lkdGhzIGNh
-biBiZSAnVGhlIHdob2xlIGJhbmQnLCBzbyB3aXRoIGEgZmxhZyBzZXQgd2UgY291bGQgaGlqYWNr
-IHRoaXMgYmFuZCBpbmZvcm1hdGlvbiBmb3IgZHV0eS1jeWNsZS4NCkkgYW0gdW5zdXJlIGlmIDgw
-Mi4xNS40IHVzZXMgdGhpcyBkYXRhYmFzZSwgbW9zdCBvZiB0aGUgbmFtaW5nIHNlZW1zIGdlYXJl
-ZCB0b3dhcmRzIDgwMjExLCBubDgwMjExLCBjZmc4MDIxMSBzbyBwZXJoYXBzIHdlIG5lZWQgb3Vy
-IG93biB2ZXJzaW9ucyBvZiB0aGVzZSB3aXRoIGEgY29tbW9uIGNvbXBvbmVudCwgSSBob3BlIHRo
-ZSBtYWludGFpbmVycyBjYW4gZ2l2ZSBzb21lIGd1aWRhbmNlIGhlcmUuDQoNCj4gQW4gYXJndW1l
-bnQgdG8gc2hhcmUgd2l0aCBXaWZpIG1pZ2h0IGJlIHRoYXQgU2VtdGVjaCdzDQo+IFNYMTI4MCBh
-bmQgU1gxMjgxDQo+IDIuNCBHSHogdHJhbnNjZWl2ZXJzIGNsYWltIHRvIHN1cHBvcnQgTG9SYSBt
-b2R1bGF0aW9uLCB0b28uDQo+IEhhdmluZyB0d28NCj4gZGlmZmVyZW50IHJlZ3VsYXRvcnkgREJz
-IGludGVyYWN0IHdpdGggTG9SYSBkcml2ZXJzIHNlZW1zIGENCj4gYmFkIGlkZWEsDQo+IGFuZCBk
-dXBsaWNhdGluZyAyLjQgR0h6IGludG8gYSBuZXcgREIgZG9lc24ndCBzb3VuZA0KPiBhcHBlYWxp
-bmcgZWl0aGVyLg0KDQpXZWxsIEknbSBub3Qgc3VyZSBpZiB0aGUgbW9kdWxhdGlvbiBhZmZlY3Rz
-IHJlZ3VsYXRvcnkgaW5mb3JtYXRpb24sIGp1c3QgYmFuZHMsIHBvd2VyLCBhbmQgdGVjaG5pcXVl
-cyBsaWtlIERGUy4NCkFzIHRoZXNlIGNoaXBzIGFyZSAyLjRHSHogb25seSBJIGV4cGVjdCB0aGV5
-IGFyZSBib3VuZCBieSB0aGUgZXhpc3RpbmcgcmVndWxhdG9yeSBpbmZvcm1hdGlvbiB3ZSB3b3Vs
-ZCBqdXN0IG5lZWQgYSBwYXRoIHRvIGFjY2VzcyBpdC4NCiANCj4gaHR0cHM6Ly93d3cuc2VtdGVj
-aC5jb20vcHJvZHVjdHMvd2lyZWxlc3MtcmYvMjQtZ2h6LQ0KPiB0cmFuc2NlaXZlcnMNCj4gDQo+
-IE1lYW53aGlsZSBteSBhdHRlbXB0IHRvIHBsYXkgd2l0aCBuZXRsaW5rIGR1cmluZyBTVVNFDQo+
-IEhhY2t3ZWVrIGhhcyBiZWVuDQo+IGdvaW5nIHNsb3cgYW5kIEkgY291bGQgdXNlIHNvbWUgZ3Vp
-ZGFuY2Ugb3IgYSB2b2x1bnRlZXIgdG8NCj4gY29udHJpYnV0ZTogSQ0KPiBoYXZlIGEgYmFyZSBz
-a2VsZXRvbiBvZiByZWdpc3RyYXRpb24sIGNvbW1hbmRzLCBhdHRyaWJ1dGVzDQo+IGFuZCBtdWx0
-aWNhc3QNCj4gZ3JvdXBzLCBidXQgbm8gcGxhbiB5ZXQgaG93IHRvIGNvbm5lY3QgdGhhdCB0byB0
-aGUgYWN0dWFsDQo+IGRyaXZlcnMgdG8NCj4gcXVlcnkgb3IgYXBwbHkgdGhlIHNldHRpbmdzLi4u
-DQoNCkhhcHB5IHRvIGhlbHAsIEkgd2lsbCBiZSBzdGFydGluZyBmcm9tIHplcm8gb24gbmV0bGlu
-ayBidXQgSSBjYW4gY29udHJpYnV0ZSBteSBleGlzdGluZyB3b3JrIGluY29ycG9yYXRpbmcgTWFy
-a3MgY29tbWVudHMgZm9yIHN4MTMwMSBldGFsLg0KDQo+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcv
-cHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2FmYWVyYmVyL2xpDQo+IG51eC1sb3JhLmdpdC90cmVl
-L25ldC9sb3JhL25ldGxpbmsuYz9oPWxvcmEtbmV4dA0KPiANCj4gPiBMb1JhIHJhZGlvcyB1c2Vk
-IGluIEdhdGV3YXkgZGV2aWNlcyBhcmUgdHlwaWNhbGx5IHJlbGF0aXZlbHkNCj4gaGlnaCBwb3dl
-ciAoY2FwYWJsZSBvZiAyN2RCbSkgYW5kIG9wZXJhdGUgaW4gYmFuZHMgd2l0aA0KPiBjZXJ0YWlu
-IHJlc3RyaWN0aW9ucywgZWcgdGhlIEVVIGhhcyBrZWVwIG91dCBhcmVhcyB3aXRoaW4NCj4gODY4
-TUh6IGZvciBhbGFybXMgYW5kIFNSRCBkZXZpY2VzIG11c3QgYWJpZGUgYnkgY2VydGFpbg0KPiBk
-dXR5IGN5Y2xlIHJlc3RyaWN0aW9ucywgdGhlcmUgYXJlIGFsc28gbWF4aW11bSBwb3dlcnMgdG8N
-Cj4gY29uc2lkZXIgZm9yIHN1Yi1iYW5kcy4gKEVUU0kgRU4gMzAwIDIyMC0yIFYzLjIuMSwgQmFu
-ZHMgSywNCj4gTCwgTSwgTiwgUCwgUSkNCj4gDQo+ID4gVGhlIGNlcnRpZmllZCBBVCBzdHlsZSBt
-b2R1bGVzIHdpbGwgKHNob3VsZCkgYWxyZWFkeSBoYXZlDQo+IHRoaXMgcmVndWxhdG9yeSBkYXRh
-IGJha2VkIGluIHNvIGl0IG9ubHkgYXBwbGllZCB0byBzaXR1YXRpb25zDQo+IHdoZXJlIHdlIGRy
-aXZlIHRoZSB0cmFuc2NlaXZlcnMgZGlyZWN0bHksIGJ1dCBpdCB3b3VsZG4ndA0KPiBodXJ0IHRv
-IGNoZWNrIHRoYXQgdGhlIGZyZXF1ZW5jeSBiZWluZyBhc2tlZCB0byB0cmFuc21pdCBvbg0KPiBk
-b2Vzbid0IHNwaWxsIGludG8gYSByZXN0cmljdGVkIGJhbmQuDQo+IA0KPiBTb21lIGRvIGhhdmUg
-Y29uZmlndXJhdGlvbiBvcHRpb25zIHRoYXQgd2lsbCBuZWVkIHRvIGJlIHNldA0KPiBvciBjaGVj
-a2VkLg0KPiANCj4gUmVnYXJkcywNCj4gQW5kcmVhcw0KPiANCj4gLS0NCj4gU1VTRSBMaW51eCBH
-bWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcsIEdlcm1hbnkNCj4gR0Y6IEZlbGl4
-IEltZW5kw7ZyZmZlciwgSmFuZSBTbWl0aGFyZCwgR3JhaGFtIE5vcnRvbg0KPiBIUkIgMjEyODQg
-KEFHIE7DvHJuYmVyZykNCg==
+I do not see an acceptable way from the kernel to trigger a fast
+reconnect. wpa_supplicant e.g. has some special code handling errors
+during a 4-way-handshake differently. I assume we would have to add
+code detecting if we are running as AP, Station Infrastructure, Ad-Hoc
+or Mesh and then find and spoof an error which allows the userspace to
+reconnect fast. For multiple different userspace implementations and
+the different versions of them.
+And we'll have that mess in the kernel for basically forever...
+Seems to be a clear no go, correct?
+
+So this patch (series) is giving up on a quick fix and will allow broken
+rekeys to continue. It is instead providing an updated API for both the
+userspace and the drivers to also do it correctly. Users running a
+userspace not aware of the new API will get some improvements but may
+still leak cleartext packets and have connection freezes till we get an
+updated userspace rolled out. On the plus side users running updated
+userspace won't be able to rekey connections any longer, avoiding the
+issues even with unpatched kernels.
+
+Since the new approach now also touches nl80211 I've now broken it down
+into a small patch series.
+The first two patches are just laying some ground work with all the
+magic happening in the last patch, which also best describes what we
+want to achieve in its commit message. The commit messages of the first
+two are mainly outlining how the new APIs should be used.
+
+Here a quick overview of the patches in the series:
+1) nl80211: Add ATOMIC_KEY_REPLACE API
+   This adds support for NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE
+   to nl80211. We expect the userspace (hostap, wpa_supplicant, iwd ...)
+   to check this flag and only rekey a connection when this flag is
+   present. When the flag is not set a rekey has to be "emulated" by a
+   full de-association and a reconnect if it can't be avoided by the
+   userspace.
+
+2) mac80211: Define new driver callback replace_key
+   This is just adding the new driver callback replace_key in
+   mac80211 the last patch of the set can then use when needed.
+   It's needed to provide a clear demarcation line between old
+   packets which absolutely must not be send out with new key and new
+   ones which should use the new key.
+   By giving the driver the option to directly replace a running key
+   with a updated one many drivers should be able to implement an atomic
+   switch which is either using the old or the new key, avoiding the
+   headach how to prevent some packets to be send out unencrypted.
+
+3) mac80211: Fix PTK rekey freezes and cleartext leaks
+   This finally changes how mac80211 handles the rekey and starts using
+   the replace_key and sets NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE for
+   drivers using mac80211 for it. GTK rekey is basically unchanged and
+   only PTK rekey fixed to allow replacing the key with it while receiving
+   and sending packets with HW encryption offloading and the races this
+   causes to be factored in.
+   When the driver is not supporting replace_key the code still fix the
+   cleartext packet leak in mac80211 and stops RX and TX aggregation to
+   prevent those to freeze the connection but besides that falls back to
+   the old - know to be broken - sequence for backward compatibility. In
+   that case mac80211 will print our a error message, alerting users
+   that they still could leak clear text packets and may experience
+   connection freezes till  they do not either disable rekey or upgrade
+   the userspace. (There is currently no updated userspace available.)
+
+Version history:
+V4 Fix PTK rekey freezes and cleartext leaks
+    - Switched over to a small patch series.
+    - Allows insecure rekeys again for compatibility
+    - Allows the userspace to check if rekeys are safe by extending
+      nl80211.
+
+V3 mac80211: Fix PTK rekey freezes and cleartext leaks
+    Updates the mac80211 API. When the driver is implementing the new
+    callback replace_key mac80211 allows PTK rekeys. If not it returns
+    an error on key install to the requester.
+
+V2 mac80211: Fix wlan freezes under load at rekey
+    This fixes the issue in mac80211 only without API changes on a
+    best-can-do approach. Drivers still can freeze the connection and if
+    so have to be fixed.
+
+V1 mac80211: Fix wlan freezes under load at rekey
+    Very simple approach, only fixing the freezes and using a not
+    guaranteed to be working fallback to SW encryption.
+
+Alexander Wetzel (3):
+  nl80211: Add ATOMIC_KEY_REPLACE API
+  mac80211: Define new driver callback replace_key
+  mac80211: Fix PTK rekey freezes and cleartext leaks
+
+ include/net/mac80211.h       |  15 +++++
+ include/uapi/linux/nl80211.h |   6 ++
+ net/mac80211/driver-ops.h    |  20 ++++++
+ net/mac80211/key.c           | 123 ++++++++++++++++++++++++++++++-----
+ net/mac80211/main.c          |   5 ++
+ net/mac80211/trace.h         |  39 +++++++++++
+ net/mac80211/tx.c            |   4 ++
+ 7 files changed, 195 insertions(+), 17 deletions(-)
+
+-- 
+2.18.0
