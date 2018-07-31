@@ -1,90 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:48189 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933267AbeGJRKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 13:10:03 -0400
-Date: Tue, 10 Jul 2018 19:10:00 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        Linux-MIPS <linux-mips@linux-mips.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 23/24] mtd: rawnand: jz4780: Drop the dependency on
- MACH_JZ4780
-Message-ID: <20180710191000.2b7c95bb@bbrezillon> (sfid-20180710_191006_507973_04AE685A)
-In-Reply-To: <CANc+2y5vjUpM_ikegaoKTtqehSmBY3y_r+1E6y93AoivRQqmfg@mail.gmail.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-        <20180709200945.30116-24-boris.brezillon@bootlin.com>
-        <CANc+2y5vjUpM_ikegaoKTtqehSmBY3y_r+1E6y93AoivRQqmfg@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46526 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727020AbeGaJer (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 05:34:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH 1/9] ath9k_hw: set spectral scan enable bit on trigger for
+ AR9003+
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
+References: <20180723160300.58024-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20180731075543.2E14060714@smtp.codeaurora.org> (sfid-20180731_095547_172570_1B14F6B0)
+Date: Tue, 31 Jul 2018 07:55:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi PrasannaKumar,
+Felix Fietkau <nbd@nbd.name> wrote:
 
-On Tue, 10 Jul 2018 22:16:50 +0530
-PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com> wrote:
-
-> Hi Boris,
+> AR9002 code and the QCA AR9003+ reference code do the same.
 > 
-> On 10 July 2018 at 01:39, Boris Brezillon <boris.brezillon@bootlin.com>
-> wrote:
-> 
-> > This MACH_JZ4780 dependency is taken care of by JZ4780_NEMC, no need
-> > to repeat it here.
-> >
-> > Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
-> > ---
-> >  drivers/mtd/nand/raw/Kconfig | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-> > index 7b5e97719c25..d9cd9608bc2d 100644
-> > --- a/drivers/mtd/nand/raw/Kconfig
-> > +++ b/drivers/mtd/nand/raw/Kconfig
-> > @@ -499,7 +499,7 @@ config MTD_NAND_JZ4740
-> >
-> >  config MTD_NAND_JZ4780
-> >         tristate "Support for NAND on JZ4780 SoC"
-> > -       depends on MACH_JZ4780 && JZ4780_NEMC
-> > +       depends on JZ4780_NEMC
-> >         help
-> >           Enables support for NAND Flash connected to the NEMC on JZ4780
-> > SoC
-> >           based boards, using the BCH controller for hardware error
-> > correction.
-> > --
-> > 2.14.1
-> >
-> >
-> >  
-> JZ4780 has MLC NAND.
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Hm, the NAND controller supports both MLC and SLC NANDs. Maybe there
-are only boards with MLC NANDs, but that doesn't mean we should remove
-the driver for the controller. 
+8 patches applied to ath-next branch of ath.git, thanks.
 
-> As MLC NAND is not supported in mainline do you think
-> this patch is required? Even wondering if the driver is required at all.
+a2a49e86b325 ath9k_hw: set spectral scan enable bit on trigger for AR9003+
+3a69dd366866 ath9k: don't run periodic and nf calibation at the same time
+11f7f4f9c0d2 ath9k: fix moredata bit in PS buffered frame release
+e20c7c91ef60 ath9k: clear potentially stale EOSP status bit in intermediate queues
+36e14a787dd0 ath9k: report tx status on EOSP
+1226f9e10296 ath9k: fix block-ack window tracking issues
+461d8a6bb987 ath9k_hw: fix channel maximum power level test
+52d7e0e5339b ath9k: fix more-data flag for buffered multicast packets
 
-The fact that MLC NANDs are not supported by UBI is not necessarily
-definitive. I have a branch with all the work we've done to add MLC
-support to UBI [1]. If you have time to invest in it, feel free to take
-over this work.
+-- 
+https://patchwork.kernel.org/patch/10540573/
 
-Anyway, the decision to remove this driver is not mine, and this patch
-allows me to at least compile-test this driver.
-
-Regards,
-
-Boris
-
-[1]https://github.com/bbrezillon/linux/commits/nand/mlc
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
