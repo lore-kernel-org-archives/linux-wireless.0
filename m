@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53672 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387963AbeGWRFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 13:05:12 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 9/9] ath9k: fix more-data flag for buffered multicast packets
-Date: Mon, 23 Jul 2018 18:03:00 +0200
-Message-Id: <20180723160300.58024-9-nbd@nbd.name> (sfid-20180723_180333_728756_B8FCD6A9)
-In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
-References: <20180723160300.58024-1-nbd@nbd.name>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729784AbeGaLeH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 07:34:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: Re: [PATCH v2 00/19] add mt76x2u support to mt76 driver
+References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+Date: Tue, 31 Jul 2018 12:54:32 +0300
+In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com> (Lorenzo
+        Bianconi's message of "Tue, 31 Jul 2018 10:09:01 +0200")
+Message-ID: <877elb20iv.fsf@purkki.adurom.net> (sfid-20180731_115439_304924_C5906098)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag needs to be cleared for the last packet in the list, not the
-first one. Fixes some issues with multicast packet loss for powersave
-clients connected to an ath9k AP.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+> Add usb layer to mt76 driver in order to support mt76x2u based devices.
+> Move common code between pci and usb in mt76x2-common module in order to
+> remove pci dependency from usb driver
+>
+> Changes since v1:
+> - rebase on top of wireless-drivers-next master branch
+> - fix mt7662u fw definitions
+> - remove unused len variable in mt76x2u_remove_dma_hdr()
+> - move mt76u_mcu_fw_reset routine in mt76-usb module in order
+>   to be reused by mt76x0 driver
+> - move mt76u_mcu_init_rx routine in mt76-usb module in order
+>   to be reused by mt76x0 driver
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index bae0f6c045e1..43b6c8508e49 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2436,7 +2436,6 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		.txq = sc->beacon.cabq
- 	};
- 	struct ath_tx_info info = {};
--	struct ieee80211_hdr *hdr;
- 	struct ath_buf *bf_tail = NULL;
- 	struct ath_buf *bf;
- 	LIST_HEAD(bf_q);
-@@ -2480,15 +2479,10 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (list_empty(&bf_q))
- 		return;
- 
--	bf = list_first_entry(&bf_q, struct ath_buf, list);
--	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
--
--	if (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_MOREDATA)) {
--		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
--		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
--			sizeof(*hdr), DMA_TO_DEVICE);
--	}
-+	bf = list_last_entry(&bf_q, struct ath_buf, list);
-+	ath9k_set_moredata(sc, bf, false);
- 
-+	bf = list_first_entry(&bf_q, struct ath_buf, list);
- 	ath_txq_lock(sc, txctl.txq);
- 	ath_tx_fill_desc(sc, bf, txctl.txq, 0);
- 	ath_tx_txqaddbuf(sc, txctl.txq, &bf_q, false);
+My deadline for 4.19 is most likely this Friday (if the merge window
+starts on Sunday) so I would need to apply these tomorrow by latest to
+have some time in linux-next. Are everyone happy with this set?
+
 -- 
-2.17.0
+Kalle Valo
