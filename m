@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:35104 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730317AbeGVXvz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59328 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729592AbeGaJBd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 19:51:55 -0400
-Received: by mail-it0-f42.google.com with SMTP id q20-v6so21230623ith.0
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jul 2018 15:53:36 -0700 (PDT)
+        Tue, 31 Jul 2018 05:01:33 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <CACRpkdbdt5Jxa+=4kBGEjRdiVwv9Py3Lo5ngxB-sZO-Xgzb09g@mail.gmail.com>
-In-Reply-To: <CACRpkdbdt5Jxa+=4kBGEjRdiVwv9Py3Lo5ngxB-sZO-Xgzb09g@mail.gmail.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Mon, 23 Jul 2018 00:53:24 +0200
-Message-ID: <CACRpkdZfxjuYjJX-qMnVOWpwjBJ-MVgP==RJOOiH=3D4gdFQEg@mail.gmail.com> (sfid-20180723_005339_945787_9A03060A)
-Subject: Re: RT2880F based iNIC mini-PCI network card
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH V2] brcmfmac: specify some features per firmware version
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180709045543.15031-1-zajec5@gmail.com>
+References: <20180709045543.15031-1-zajec5@gmail.com>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20180731072238.3120E606AC@smtp.codeaurora.org> (sfid-20180731_092320_801868_0F6A8063)
+Date: Tue, 31 Jul 2018 07:22:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 15, 2018 at 1:37 AM Linus Walleij <linus.walleij@linaro.org> wrote:
+Rafał Miłecki wrote:
 
-> I'm curious to hear if you have hints of this beast:
->
-> lspci:
-> 00:0c.0 Class 0200: 1814:0801
-(...)
-> Has someone seen a vendor tree where this leaked out by
-> mistake or so?
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Some features supported by firmware aren't advertised and there is no
+> way for a driver to query them. This includes e.g. monitor mode details.
+> 
+> Most firmwares support monitor interface but only the latest ones
+> /announce/ it with a "monitor" flag in the "cap" iovar. There isn't any
+> reliable detection method for older firmwares (BRCMF_C_MONITOR was tried
+> but "it only indicates the core part of the stack supports").
+> 
+> Similarly support for tagging monitor frames and building radiotap
+> headers can't be reliably detected for all firmwares.
+> 
+> This commit adds table that allows mapping features to firmware version.
+> It adds mappings for 43602a1 and 4366b1 firmwares from
+> linux-firmware.git. Both were confirmed to be passing monitor frames.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-The Internet is so big. impossible to keep secrets there.
-So I found it:
-https://github.com/kovz/ralink_inic
+Patch applied to wireless-drivers-next.git, thanks.
 
-Now I just need to churn through this.
+1e591c56a65f brcmfmac: specify some features per firmware version
 
-The firmware is ~500K. I guess an entire operating system.
+-- 
+https://patchwork.kernel.org/patch/10513497/
 
-Oh well, I guess we can replace it with RT2880F Linux since
-it is just a vanilla SoC.
-
-Yours,
-Linus Walleij
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
