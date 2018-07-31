@@ -1,88 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23625 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389211AbeG0WCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:02:40 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
-Date: Fri, 27 Jul 2018 23:39:14 +0300
-Message-Id: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com> (sfid-20180727_223910_198724_5DED20F0)
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:45980 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729224AbeGaJsf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 05:48:35 -0400
+Received: by mail-wr1-f67.google.com with SMTP id f12-v6so5693024wrv.12
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:27 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH v2 02/19] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
+Date: Tue, 31 Jul 2018 10:09:03 +0200
+Message-Id: <5e23603a8af63f2c1ad1abd8419af0b115cb938d.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100930_558680_6EDC120B)
+In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
-looks not so convenient due to additional driver_data field attached.
+move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
+order to reuse them in mt76x2u mcu related code
 
-Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
-possible form. For example,
-
-  before:
-
-    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-
-  after:
-
-    { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
-
-Drivers can be converted later on in independent way.
-
-While here, remove the unused macro with the same name
-from Ralink wireless driver.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
- include/linux/pci.h                            | 15 +++++++++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-index bc0ca5f58f38..283e2e607bba 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-@@ -27,12 +27,6 @@
- #include <linux/io.h>
- #include <linux/pci.h>
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index dfd36d736b06..743da57760dc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -23,23 +23,6 @@
+ #include "mt76x2_dma.h"
+ #include "mt76x2_eeprom.h"
  
--/*
-- * This variable should be used with the
-- * pci_driver structure initialization.
-- */
--#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+-struct mt76x2_fw_header {
+-	__le32 ilm_len;
+-	__le32 dlm_len;
+-	__le16 build_ver;
+-	__le16 fw_ver;
+-	u8 pad[4];
+-	char build_time[16];
+-};
 -
- /*
-  * PCI driver handlers.
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d0961aefdbae..af29a32865c5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -825,6 +825,21 @@ struct pci_driver {
- 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+-struct mt76x2_patch_header {
+-	char build_time[16];
+-	char platform[4];
+-	char hw_version[4];
+-	char patch_version[4];
+-	u8 pad[2];
+-};
+-
+ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ {
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+index d7a7e83262ce..e40293f21417 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
+ 	u8 offset1;
+ } __packed __aligned(4);
  
-+/**
-+ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
-+ * @vend: the vendor name
-+ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
-+ * @data: the driver data to be filled
-+ *
-+ * This macro is used to create a struct pci_device_id that matches a
-+ * specific PCI device.  The subvendor, and subdevice fields will be set
-+ * to PCI_ANY_ID.
-+ */
-+#define PCI_DEVICE_DATA(vend, dev, data) \
-+	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
-+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0 \
-+	.driver_data = (kernel_ulong_t)(data)
++struct mt76x2_fw_header {
++	__le32 ilm_len;
++	__le32 dlm_len;
++	__le16 build_ver;
++	__le16 fw_ver;
++	u8 pad[4];
++	char build_time[16];
++};
 +
- enum {
- 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
- 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
++struct mt76x2_patch_header {
++	char build_time[16];
++	char platform[4];
++	char hw_version[4];
++	char patch_version[4];
++	u8 pad[2];
++};
++
+ int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
+ 			 u32 param);
+ int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
 -- 
-2.18.0
+2.17.1
