@@ -1,49 +1,346 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57194 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388407AbeGXLFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 07:05:50 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v3 10/11] NFC: st95hf: two small style nits
-Date: Tue, 24 Jul 2018 11:59:40 +0200
-Message-Id: <20180724095941.25777-11-daniel@zonque.org> (sfid-20180724_120226_825280_FB1D4F4F)
-In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
-References: <20180724095941.25777-1-daniel@zonque.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:50339 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729224AbeGaJsp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 05:48:45 -0400
+Received: by mail-wm0-f66.google.com with SMTP id s12-v6so2031978wmc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:36 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH v2 12/19] mt76: add mt76x2_tx_common to mt76x2-common module
+Date: Tue, 31 Jul 2018 10:09:13 +0200
+Message-Id: <0ec0d7a7605b90f0d7a378d36410a43e6dda3d3a.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100957_899730_6445875E)
+In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Address two minor style issues that I came across while working on the
-driver.
+Move tx related code shared between mt76x2 and mt76x2u in mt76x2-common
+module
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/nfc/st95hf/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |   2 +
+ .../net/wireless/mediatek/mt76/mt76x2_tx.c    | 123 ---------------
+ .../wireless/mediatek/mt76/mt76x2_tx_common.c | 149 ++++++++++++++++++
+ 4 files changed, 152 insertions(+), 124 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 10321dba15dc..ccb1f1456871 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -662,7 +662,8 @@ static int st95hf_error_handling(struct st95hf_context *stcontext,
- 			result = -ETIMEDOUT;
- 		else
- 			result = -EIO;
--	return  result;
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index 57feda501a51..e1226aae82fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -8,7 +8,7 @@ mt76-y := \
+ CFLAGS_trace.o := -I$(src)
+ 
+ mt76x2-common-y := \
+-	mt76x2_eeprom.o
++	mt76x2_eeprom.o mt76x2_tx_common.o
+ 
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 896549c2fcbb..af9259cd6d42 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -280,4 +280,6 @@ s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
+ s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj);
+ void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr);
+ 
++int mt76x2_insert_hdr_pad(struct sk_buff *skb);
 +
-+		return result;
- 	}
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 84a3448ca163..4c907882e8b0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -23,129 +23,6 @@ struct beacon_bc_data {
+ 	struct sk_buff *tail[8];
+ };
  
- 	/* Check for CRC err only if CRC is present in the tag response */
-@@ -859,6 +860,7 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
- 				    skb_resp);
- 
- 	mutex_unlock(&stcontext->rm_lock);
+-void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+-	     struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct mt76x2_dev *dev = hw->priv;
+-	struct ieee80211_vif *vif = info->control.vif;
+-	struct mt76_wcid *wcid = &dev->global_wcid;
+-
+-	if (control->sta) {
+-		struct mt76x2_sta *msta;
+-
+-		msta = (struct mt76x2_sta *) control->sta->drv_priv;
+-		wcid = &msta->wcid;
+-		/* sw encrypted frames */
+-		if (!info->control.hw_key && wcid->hw_key_idx != -1)
+-			control->sta = NULL;
+-	}
+-
+-	if (vif && !control->sta) {
+-		struct mt76x2_vif *mvif;
+-
+-		mvif = (struct mt76x2_vif *) vif->drv_priv;
+-		wcid = &mvif->group_wcid;
+-	}
+-
+-	mt76_tx(&dev->mt76, control->sta, wcid, skb);
+-}
+-
+-void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-
+-	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+-		ieee80211_free_txskb(mt76_hw(dev), skb);
+-	} else {
+-		ieee80211_tx_info_clear_status(info);
+-		info->status.rates[0].idx = -1;
+-		info->flags |= IEEE80211_TX_STAT_ACK;
+-		ieee80211_tx_status(mt76_hw(dev), skb);
+-	}
+-}
+-
+-s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
+-			       const struct ieee80211_tx_rate *rate)
+-{
+-	s8 max_txpwr;
+-
+-	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
+-		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
+-
+-		if (mcs == 8 || mcs == 9) {
+-			max_txpwr = dev->rate_power.vht[8];
+-		} else {
+-			u8 nss, idx;
+-
+-			nss = ieee80211_rate_get_vht_nss(rate);
+-			idx = ((nss - 1) << 3) + mcs;
+-			max_txpwr = dev->rate_power.ht[idx & 0xf];
+-		}
+-	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
+-		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
+-	} else {
+-		enum nl80211_band band = dev->mt76.chandef.chan->band;
+-
+-		if (band == NL80211_BAND_2GHZ) {
+-			const struct ieee80211_rate *r;
+-			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
+-			struct mt76_rate_power *rp = &dev->rate_power;
+-
+-			r = &wiphy->bands[band]->bitrates[rate->idx];
+-			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+-				max_txpwr = rp->cck[r->hw_value & 0x3];
+-			else
+-				max_txpwr = rp->ofdm[r->hw_value & 0x7];
+-		} else {
+-			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
+-		}
+-	}
+-
+-	return max_txpwr;
+-}
+-
+-s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
+-{
+-	txpwr = min_t(s8, txpwr, dev->txpower_conf);
+-	txpwr -= (dev->target_power + dev->target_power_delta[0]);
+-	txpwr = min_t(s8, txpwr, max_txpwr_adj);
+-
+-	if (!dev->enable_tpc)
+-		return 0;
+-	else if (txpwr >= 0)
+-		return min_t(s8, txpwr, 7);
+-	else
+-		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
+-}
+-
+-void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
+-{
+-	s8 txpwr_adj;
+-
+-	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
+-					    dev->rate_power.ofdm[4]);
+-	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
+-		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
+-	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
+-		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
+-}
+-
+-static int mt76x2_insert_hdr_pad(struct sk_buff *skb)
+-{
+-	int len = ieee80211_get_hdrlen_from_skb(skb);
+-
+-	if (len % 4 == 0)
+-		return 0;
+-
+-	skb_push(skb, 2);
+-	memmove(skb->data, skb->data + 2, len);
+-
+-	skb->data[len] = 0;
+-	skb->data[len + 1] = 0;
+-	return 2;
+-}
+-
+ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 			  struct sk_buff *skb, struct mt76_queue *q,
+ 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+new file mode 100644
+index 000000000000..36afb166fa3f
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
- 	return IRQ_HANDLED;
- }
- 
++#include "mt76x2.h"
++#include "mt76x2_dma.h"
++
++void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
++	       struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct mt76x2_dev *dev = hw->priv;
++	struct ieee80211_vif *vif = info->control.vif;
++	struct mt76_wcid *wcid = &dev->global_wcid;
++
++	if (control->sta) {
++		struct mt76x2_sta *msta;
++
++		msta = (struct mt76x2_sta *)control->sta->drv_priv;
++		wcid = &msta->wcid;
++		/* sw encrypted frames */
++		if (!info->control.hw_key && wcid->hw_key_idx != -1)
++			control->sta = NULL;
++	}
++
++	if (vif && !control->sta) {
++		struct mt76x2_vif *mvif;
++
++		mvif = (struct mt76x2_vif *)vif->drv_priv;
++		wcid = &mvif->group_wcid;
++	}
++
++	mt76_tx(&dev->mt76, control->sta, wcid, skb);
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx);
++
++int mt76x2_insert_hdr_pad(struct sk_buff *skb)
++{
++	int len = ieee80211_get_hdrlen_from_skb(skb);
++
++	if (len % 4 == 0)
++		return 0;
++
++	skb_push(skb, 2);
++	memmove(skb->data, skb->data + 2, len);
++
++	skb->data[len] = 0;
++	skb->data[len + 1] = 0;
++	return 2;
++}
++EXPORT_SYMBOL_GPL(mt76x2_insert_hdr_pad);
++
++s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
++			       const struct ieee80211_tx_rate *rate)
++{
++	s8 max_txpwr;
++
++	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
++		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
++
++		if (mcs == 8 || mcs == 9) {
++			max_txpwr = dev->rate_power.vht[8];
++		} else {
++			u8 nss, idx;
++
++			nss = ieee80211_rate_get_vht_nss(rate);
++			idx = ((nss - 1) << 3) + mcs;
++			max_txpwr = dev->rate_power.ht[idx & 0xf];
++		}
++	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
++		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
++	} else {
++		enum nl80211_band band = dev->mt76.chandef.chan->band;
++
++		if (band == NL80211_BAND_2GHZ) {
++			const struct ieee80211_rate *r;
++			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
++			struct mt76_rate_power *rp = &dev->rate_power;
++
++			r = &wiphy->bands[band]->bitrates[rate->idx];
++			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
++				max_txpwr = rp->cck[r->hw_value & 0x3];
++			else
++				max_txpwr = rp->ofdm[r->hw_value & 0x7];
++		} else {
++			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
++		}
++	}
++
++	return max_txpwr;
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx_get_max_txpwr_adj);
++
++s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
++{
++	txpwr = min_t(s8, txpwr, dev->txpower_conf);
++	txpwr -= (dev->target_power + dev->target_power_delta[0]);
++	txpwr = min_t(s8, txpwr, max_txpwr_adj);
++
++	if (!dev->enable_tpc)
++		return 0;
++	else if (txpwr >= 0)
++		return min_t(s8, txpwr, 7);
++	else
++		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx_get_txpwr_adj);
++
++void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
++{
++	s8 txpwr_adj;
++
++	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
++					    dev->rate_power.ofdm[4]);
++	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
++		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
++	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
++		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx_set_txpwr_auto);
++
++void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		ieee80211_free_txskb(mt76_hw(dev), skb);
++	} else {
++		ieee80211_tx_info_clear_status(info);
++		info->status.rates[0].idx = -1;
++		info->flags |= IEEE80211_TX_STAT_ACK;
++		ieee80211_tx_status(mt76_hw(dev), skb);
++	}
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx_complete);
++
 -- 
 2.17.1
