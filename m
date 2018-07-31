@@ -1,188 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:45127 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388707AbeGXR5S (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37199 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729224AbeGaJsl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 13:57:18 -0400
-Received: by mail-pg1-f196.google.com with SMTP id f1-v6so3290750pgq.12
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 09:49:57 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
-        Eric Biggers <ebiggers@google.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Rabin Vincent <rabinv@axis.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Will Deacon <will.deacon@arm.com>, dm-devel@redhat.com,
-        linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        qat-linux@intel.com, linux-ppp@vger.kernel.org,
-        netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-afs@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 13/18] wireless/lib80211: Convert from ahash to shash
-Date: Tue, 24 Jul 2018 09:49:31 -0700
-Message-Id: <20180724164936.37477-14-keescook@chromium.org> (sfid-20180724_185134_537835_18BA6B25)
-In-Reply-To: <20180724164936.37477-1-keescook@chromium.org>
-References: <20180724164936.37477-1-keescook@chromium.org>
+        Tue, 31 Jul 2018 05:48:41 -0400
+Received: by mail-wm0-f67.google.com with SMTP id n11-v6so2087068wmc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:32 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH v2 08/19] mt76x2: add buffer len to mt76x2_mac_write_txwi signature
+Date: Tue, 31 Jul 2018 10:09:09 +0200
+Message-Id: <9dbcce17e9faa7a10e92c3e54429771360b6e246.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100937_185802_59A64F0D)
+In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparing to remove all stack VLA usage from the kernel[1], this
-removes the discouraged use of AHASH_REQUEST_ON_STACK in favor of
-the smaller SHASH_DESC_ON_STACK by converting from ahash-wrapped-shash
-to direct shash. By removing a layer of indirection this both improves
-performance and reduces stack usage. The stack allocation will be made
-a fixed size in a later patch to the crypto subsystem.
+Add frame length to mt76x2_mac_write_txwi routine signature and do not
+fetch it from skb since txwi data structure is added at the beginning of
+the skb for usb based devices and mt76x2_mac_write_txwi will be shared
+between pci and usb related code
 
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
-
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- net/wireless/lib80211_crypt_tkip.c | 58 +++++++++++++++---------------
- 1 file changed, 29 insertions(+), 29 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c  | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
-index ba0a1f398ce5..21040aba3a81 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -65,9 +65,9 @@ struct lib80211_tkip_data {
- 	int key_idx;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index bff0b7268467..010c1cbfcd6c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -167,7 +167,7 @@ void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
  
- 	struct crypto_skcipher *rx_tfm_arc4;
--	struct crypto_ahash *rx_tfm_michael;
-+	struct crypto_shash *rx_tfm_michael;
- 	struct crypto_skcipher *tx_tfm_arc4;
--	struct crypto_ahash *tx_tfm_michael;
-+	struct crypto_shash *tx_tfm_michael;
- 
- 	/* scratch buffers for virt_to_page() (crypto API) */
- 	u8 rx_hdr[16], tx_hdr[16];
-@@ -106,8 +106,7 @@ static void *lib80211_tkip_init(int key_idx)
- 		goto fail;
- 	}
- 
--	priv->tx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
- 	if (IS_ERR(priv->tx_tfm_michael)) {
- 		priv->tx_tfm_michael = NULL;
- 		goto fail;
-@@ -120,8 +119,7 @@ static void *lib80211_tkip_init(int key_idx)
- 		goto fail;
- 	}
- 
--	priv->rx_tfm_michael = crypto_alloc_ahash("michael_mic", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm_michael = crypto_alloc_shash("michael_mic", 0, 0);
- 	if (IS_ERR(priv->rx_tfm_michael)) {
- 		priv->rx_tfm_michael = NULL;
- 		goto fail;
-@@ -131,9 +129,9 @@ static void *lib80211_tkip_init(int key_idx)
- 
-       fail:
- 	if (priv) {
--		crypto_free_ahash(priv->tx_tfm_michael);
-+		crypto_free_shash(priv->tx_tfm_michael);
- 		crypto_free_skcipher(priv->tx_tfm_arc4);
--		crypto_free_ahash(priv->rx_tfm_michael);
-+		crypto_free_shash(priv->rx_tfm_michael);
- 		crypto_free_skcipher(priv->rx_tfm_arc4);
- 		kfree(priv);
- 	}
-@@ -145,9 +143,9 @@ static void lib80211_tkip_deinit(void *priv)
+ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 			   struct sk_buff *skb, struct mt76_wcid *wcid,
+-			   struct ieee80211_sta *sta)
++			   struct ieee80211_sta *sta, int len)
  {
- 	struct lib80211_tkip_data *_priv = priv;
- 	if (_priv) {
--		crypto_free_ahash(_priv->tx_tfm_michael);
-+		crypto_free_shash(_priv->tx_tfm_michael);
- 		crypto_free_skcipher(_priv->tx_tfm_arc4);
--		crypto_free_ahash(_priv->rx_tfm_michael);
-+		crypto_free_shash(_priv->rx_tfm_michael);
- 		crypto_free_skcipher(_priv->rx_tfm_arc4);
- 	}
- 	kfree(priv);
-@@ -510,29 +508,31 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	return keyidx;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
+@@ -254,7 +254,7 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 		txwi_flags |= MT_TXWI_FLAGS_TS;
+ 
+ 	txwi->flags |= cpu_to_le16(txwi_flags);
+-	txwi->len_ctl = cpu_to_le16(skb->len);
++	txwi->len_ctl = cpu_to_le16(len);
  }
  
--static int michael_mic(struct crypto_ahash *tfm_michael, u8 * key, u8 * hdr,
--		       u8 * data, size_t data_len, u8 * mic)
-+static int michael_mic(struct crypto_shash *tfm_michael, u8 *key, u8 *hdr,
-+		       u8 *data, size_t data_len, u8 *mic)
- {
--	AHASH_REQUEST_ON_STACK(req, tfm_michael);
--	struct scatterlist sg[2];
-+	SHASH_DESC_ON_STACK(desc, tfm_michael);
- 	int err;
+ static void mt76x2_remove_hdr_pad(struct sk_buff *skb, int len)
+@@ -732,7 +732,7 @@ mt76_write_beacon(struct mt76x2_dev *dev, int offset, struct sk_buff *skb)
+ 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x2_txwi)))
+ 		return -ENOSPC;
  
--	if (tfm_michael == NULL) {
--		pr_warn("%s(): tfm_michael == NULL\n", __func__);
--		return -1;
--	}
--	sg_init_table(sg, 2);
--	sg_set_buf(&sg[0], hdr, 16);
--	sg_set_buf(&sg[1], data, data_len);
-+	desc->tfm = tfm_michael;
-+	desc->flags = 0;
+-	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL);
++	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
  
--	if (crypto_ahash_setkey(tfm_michael, key, 8))
-+	if (crypto_shash_setkey(tfm_michael, key, 8))
- 		return -1;
+ 	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
+ 	offset += sizeof(txwi);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+index c048cd06df6b..5af0107ba748 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+@@ -166,7 +166,7 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ 			  void *rxi);
+ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 			   struct sk_buff *skb, struct mt76_wcid *wcid,
+-			   struct ieee80211_sta *sta);
++			   struct ieee80211_sta *sta, int len);
+ void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
+ int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
+ 			    struct ieee80211_key_conf *key);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 560376dd1133..241a1513ec55 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -159,7 +159,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 	if (q == &dev->mt76.q_tx[MT_TXQ_PSD] && wcid && wcid->idx < 128)
+ 		mt76x2_mac_wcid_set_drop(dev, wcid->idx, false);
  
--	ahash_request_set_tfm(req, tfm_michael);
--	ahash_request_set_callback(req, 0, NULL, NULL);
--	ahash_request_set_crypt(req, sg, mic, data_len + 16);
--	err = crypto_ahash_digest(req);
--	ahash_request_zero(req);
-+	err = crypto_shash_init(desc);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_update(desc, hdr, 16);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_update(desc, data, data_len);
-+	if (err)
-+		goto out;
-+	err = crypto_shash_final(desc, mic);
-+
-+out:
-+	shash_desc_zero(desc);
- 	return err;
- }
+-	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta);
++	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta, skb->len);
  
-@@ -654,9 +654,9 @@ static int lib80211_tkip_set_key(void *key, int len, u8 * seq, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
- 	int keyidx;
--	struct crypto_ahash *tfm = tkey->tx_tfm_michael;
-+	struct crypto_shash *tfm = tkey->tx_tfm_michael;
- 	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
--	struct crypto_ahash *tfm3 = tkey->rx_tfm_michael;
-+	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
- 	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
- 
- 	keyidx = tkey->key_idx;
+ 	ret = mt76x2_insert_hdr_pad(skb);
+ 	if (ret < 0)
 -- 
 2.17.1
