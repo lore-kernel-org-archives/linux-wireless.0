@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34885 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727354AbeHGTao (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43884 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731007AbeHAAGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 15:30:44 -0400
-Received: by mail-io0-f196.google.com with SMTP id w11-v6so14635190iob.2
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2018 10:15:26 -0700 (PDT)
+        Tue, 31 Jul 2018 20:06:40 -0400
+Subject: Re: [PATCH] ath10k: fix kernel panic by moving pci flush after
+ napi_disable
+To: Tamizh chelvam <tamizhr@codeaurora.org>, ath10k@lists.infradead.org
+References: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <ef5defff-0687-4b47-4880-a88dd5e99e86@candelatech.com> (sfid-20180801_002420_686814_EC9FD1B9)
+Date: Tue, 31 Jul 2018 15:24:10 -0700
 MIME-Version: 1.0
-References: <20180806074239.jrufspo3d7c4kgtb@kili.mountain>
-In-Reply-To: <20180806074239.jrufspo3d7c4kgtb@kili.mountain>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Tue, 7 Aug 2018 19:15:14 +0200
-Message-ID: <CAJ0CqmUkeHnUAsqvM=_CFndD8ivOx73BfhowLcncgRaxQt49EQ@mail.gmail.com> (sfid-20180807_191530_573248_53074624)
-Subject: Re: [bug report] mt76: add mt76x2_tx_common to mt76x2-common module
-To: dan.carpenter@oracle.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/29/2018 11:10 PM, Tamizh chelvam wrote:
+> When continuously running wifi up/down sequence, the napi poll
+> can be scheduled after the CE buffers being freed by ath10k_pci_flush
 >
-> Hello Lorenzo Bianconi,
+> Steps:
+>   In a certain condition, during wifi down below scenario might occur.
 >
-> The patch 9367a9c7f956: "mt76: add mt76x2_tx_common to mt76x2-common
-> module" from Jul 31, 2018, leads to the following static checker
-> warning:
+> ath10k_stop->ath10k_hif_stop->napi_schedule->ath10k_pci_flush->napi_poll(napi_synchronize).
 >
->         drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c:35 mt76x2_tx()
->         warn: always true condition '(wcid->hw_key_idx != -1) => (0-255 != (-1))'
+> In the above scenario, CE buffer entries will be freed up and become NULL in
+> ath10k_pci_flush. And the napi_poll has been invoked after the flush process
+> and it will try to get the skb from the CE buffer entry and perform some action on that.
+> Since the CE buffer already cleaned by pci flush this action will create NULL
+> pointer dereference and trigger below kernel panic.
 >
-> drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
->     21  void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
->     22                 struct sk_buff *skb)
->     23  {
->     24          struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->     25          struct mt76x2_dev *dev = hw->priv;
->     26          struct ieee80211_vif *vif = info->control.vif;
->     27          struct mt76_wcid *wcid = &dev->global_wcid;
->     28
->     29          if (control->sta) {
->     30                  struct mt76x2_sta *msta;
->     31
->     32                  msta = (struct mt76x2_sta *)control->sta->drv_priv;
->     33                  wcid = &msta->wcid;
->     34                  /* sw encrypted frames */
->     35                  if (!info->control.hw_key && wcid->hw_key_idx != -1)
->                                                      ^^^^^^^^^^^^^^^^^^^^^^
-> This is always going to be true.
+> Unable to handle kernel NULL pointer dereference at virtual address 0000005c
+> PC is at ath10k_pci_htt_rx_cb+0x64/0x3ec [ath10k_pci]
+> ath10k_pci_htt_rx_cb [ath10k_pci]
+> ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci]
+> ath10k_ce_per_engine_service [ath10k_pci]
+> ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci]
+> ath10k_ce_per_engine_service_any [ath10k_pci]
+> ath10k_pci_napi_poll+0x48/0xec [ath10k_pci]
+> ath10k_pci_napi_poll [ath10k_pci]
+> net_rx_action+0xac/0x160
+> net_rx_action
+> __do_softirq+0xdc/0x208
+> __do_softirq
+> irq_exit+0x84/0xe0
+> irq_exit
+> __handle_domain_irq+0x80/0xa0
+> __handle_domain_irq
+> gic_handle_irq+0x38/0x5c
+> gic_handle_irq
+> __irq_usr+0x44/0x60
 >
->     36                          control->sta = NULL;
->     37          }
->     38
->     39          if (vif && !control->sta) {
->     40                  struct mt76x2_vif *mvif;
->     41
->     42                  mvif = (struct mt76x2_vif *)vif->drv_priv;
->     43                  wcid = &mvif->group_wcid;
->     44          }
->     45
->     46          mt76_tx(&dev->mt76, control->sta, wcid, skb);
->     47  }
->     48  EXPORT_SYMBOL_GPL(mt76x2_tx);
->
-> regards,
-> dan carpenter
+> Tested on QCA4019 and firmware version 10.4.3.2.1.1-00010
 
-Hi Dan,
+I have been testing this for two days while bisecting buggy 10.4 9984 firmware.  I still see
+crashes, but it is certainly no worse.  So, this patch seems OK to me.
 
-thx for the info. This patch just moves mt76x2_tx (and other tx
-routines) in mt76x2-common module in order to remove pci dependency in
-usb code; the warning was already there. I will fix it in a separate
-patch.
+Thanks,
+Ben
 
-Regards,
-Lorenzo
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
