@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:47647 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732387AbeGKLU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 07:20:29 -0400
-Date: Wed, 11 Jul 2018 13:16:26 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
- driver when COMPILE_TEST=y
-Message-ID: <20180711131626.732967be@bbrezillon> (sfid-20180711_131642_320064_D647598D)
-In-Reply-To: <20180709200945.30116-5-boris.brezillon@bootlin.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-        <20180709200945.30116-5-boris.brezillon@bootlin.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44092 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732093AbeGaOVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 10:21:45 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
+Date: Tue, 31 Jul 2018 14:41:02 +0200
+Message-Id: <1533040864-9026-13-git-send-email-sgruszka@redhat.com> (sfid-20180731_144144_031491_8D269D1D)
+In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon,  9 Jul 2018 22:09:25 +0200
-Boris Brezillon <boris.brezillon@bootlin.com> wrote:
+Add Kconfig and Makefiles for mt76x0 driver. Now the driver
+can be build.
 
-> It just makes NAND maintainers' life easier by allowing them to
-> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
-> enabled.
-> 
-> We add a dependency on HAS_IOMEM to make sure the driver compiles
-> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
-> accessors are not defined for this architecture.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
+ drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
+ 3 files changed, 15 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
 
-I see that SPARC does not define those accessors either. So I guess we
-should add depends on !SPARC.
-
-Arnd, any other way to know when the platform implements
-{read,write}s{bwl}() accessors?
-
-> 
-> Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
-> ---
->  drivers/mtd/nand/raw/Kconfig | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-> index 1488ad0a0199..e01b3da726c0 100644
-> --- a/drivers/mtd/nand/raw/Kconfig
-> +++ b/drivers/mtd/nand/raw/Kconfig
-> @@ -119,7 +119,8 @@ config MTD_NAND_AU1550
->  
->  config MTD_NAND_S3C2410
->  	tristate "NAND Flash support for Samsung S3C SoCs"
-> -	depends on ARCH_S3C24XX || ARCH_S3C64XX
-> +	depends on ARCH_S3C24XX || ARCH_S3C64XX || COMPILE_TEST
-> +	depends on HAS_IOMEM && !IA64
->  	help
->  	  This enables the NAND flash controller on the S3C24xx and S3C64xx
->  	  SoCs
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 69906c733a1c..850611ad347a 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -9,6 +9,13 @@ config MT76x2_COMMON
+ 	tristate
+ 	depends on MT76_CORE
+ 
++config MT76x0U
++	tristate "MediaTek MT76x0U (USB) support"
++	depends on MAC80211
++	depends on USB
++	help
++	  This adds support for MT7610U-based wireless USB dongles.
++
+ config MT76x2E
+ 	tristate "MediaTek MT76x2E (PCIe) support"
+ 	select MT76_CORE
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index dfe1c1ba60db..158d10d2716c 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -1,5 +1,6 @@
+ obj-$(CONFIG_MT76_CORE) += mt76.o
+ obj-$(CONFIG_MT76_USB) += mt76-usb.o
++obj-$(CONFIG_MT76x0U) += mt76x0/
+ obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
+ obj-$(CONFIG_MT76x2E) += mt76x2e.o
+ obj-$(CONFIG_MT76x2U) += mt76x2u.o
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+new file mode 100644
+index 000000000000..7843908261ba
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+@@ -0,0 +1,7 @@
++obj-$(CONFIG_MT76x0U)    += mt76x0.o
++
++mt76x0-objs	= \
++	usb.o init.o main.o mcu.o trace.o dma.o eeprom.o phy.o \
++	mac.o util.o debugfs.o tx.o core.o
++# ccflags-y := -DDEBUG
++CFLAGS_trace.o := -I$(src)
+-- 
+1.9.3
