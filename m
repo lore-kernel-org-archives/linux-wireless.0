@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45946 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729791AbeGQBHS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57452 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727241AbeGaI7Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jul 2018 21:07:18 -0400
-To: ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Setting tx retry count in ath10k
-Message-ID: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com> (sfid-20180717_023729_917675_1E4F5B90)
-Date: Mon, 16 Jul 2018 17:37:24 -0700
+        Tue, 31 Jul 2018 04:59:24 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH] ray_cs: remove redundant pointer 'p'
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180720180740.21018-1-colin.king@canonical.com>
+References: <20180720180740.21018-1-colin.king@canonical.com>
+To: Colin King <colin.king@canonical.com>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180731072029.1243B607BD@smtp.codeaurora.org> (sfid-20180731_092055_107389_95839BF2)
+Date: Tue, 31 Jul 2018 07:20:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I spent a bit of time looking into setting the tx retry count in
-ath10k (wave-1 firmware).  The firmware has support for setting this as
-a vdev parameter, and it defaults to '2', at least in my wave-1 firmware.
+Colin King <colin.king@canonical.com> wrote:
 
-I enabled propagating the setting from mac80211, ie:
-iw phy wiphy0 set retry short 2 long 2
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Pointer 'p' is being assigned but is never used hence it is
+> redundant and can be removed. Also re-work if statement to remove
+> redundant assignment of p.
+> 
+> Cleans up clang warning:
+> warning: variable 'p' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-And while debugging this, I noticed that mac80211 has a default of
-4, but the ath10k firmware has a default of 2.  Now, I am not sure
-if I should enable setting the retry count since it will change
-the behaviour even if users don't set anything.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Any opinions on this?
-
-Thanks,
-Ben
+f21bcefcf91c ray_cs: remove redundant pointer 'p'
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/10538143/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
