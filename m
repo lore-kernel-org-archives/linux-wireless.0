@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:49584 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965174AbeGBLaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jul 2018 07:30:11 -0400
-Date: Mon, 2 Jul 2018 04:30:08 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wlcore: Fix memory leak in
- wlcore_cmd_wait_for_event_or_timeout
-Message-ID: <20180702113008.GV112168@atomide.com> (sfid-20180702_133049_077621_39CC7682)
-References: <20180628130809.GA8147@embeddedor.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180628130809.GA8147@embeddedor.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:38540 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729643AbeGaJsi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 05:48:38 -0400
+Received: by mail-wm0-f68.google.com with SMTP id t25-v6so2079708wmi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:30 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH v2 05/19] mt76x2: move interface_modes definition in mt76x2_init
+Date: Tue, 31 Jul 2018 10:09:06 +0200
+Message-Id: <82ba7bcda9d54321ff0cd2bf469e151d7332e57f.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100935_495190_D04C2032)
+In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Gustavo A. R. Silva <gustavo@embeddedor.com> [180628 13:11]:
-> In case memory resources for *events_vector* were allocated, release
-> them before return.
-> 
-> Addresses-Coverity-ID: 1470194 ("Resource leak")
-> Fixes: 4ec7cece87b3 ("wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Move  wiphy interface_modes definition in mt76x2_init in order to
+reuse mt76_register_device routine supporting mt76x2u based chipsets
+since mt76x2u currently supports just sta mode
 
-Thanks for catching this one:
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 8 --------
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Acked-by: Tony Lindgren <tony@atomide.com>
-
-> ---
->  drivers/net/wireless/ti/wlcore/cmd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-> index 836c616..9039687 100644
-> --- a/drivers/net/wireless/ti/wlcore/cmd.c
-> +++ b/drivers/net/wireless/ti/wlcore/cmd.c
-> @@ -195,8 +195,7 @@ int wlcore_cmd_wait_for_event_or_timeout(struct wl1271 *wl,
->  	ret = pm_runtime_get_sync(wl->dev);
->  	if (ret < 0) {
->  		pm_runtime_put_noidle(wl->dev);
-> -
-> -		return ret;
-> +		goto free_vector;
->  	}
->  
->  	do {
-> @@ -232,6 +231,7 @@ int wlcore_cmd_wait_for_event_or_timeout(struct wl1271 *wl,
->  out:
->  	pm_runtime_mark_last_busy(wl->dev);
->  	pm_runtime_put_autosuspend(wl->dev);
-> +free_vector:
->  	kfree(events_vector);
->  	return ret;
->  }
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index d62e34e7eadf..6a0b6f4403a8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -303,14 +303,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
+ 
+-	wiphy->interface_modes =
+-		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_AP) |
+-#ifdef CONFIG_MAC80211_MESH
+-		BIT(NL80211_IFTYPE_MESH_POINT) |
+-#endif
+-		BIT(NL80211_IFTYPE_ADHOC);
+-
+ 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+ 
+ 	wiphy->available_antennas_tx = dev->antenna_mask;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index c3ecc1c206bd..d3eedd9c59b7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -841,6 +841,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 
+ 	wiphy->reg_notifier = mt76x2_regd_notifier;
+ 
++	wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_STATION) |
++		BIT(NL80211_IFTYPE_AP) |
++#ifdef CONFIG_MAC80211_MESH
++		BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++		BIT(NL80211_IFTYPE_ADHOC);
++
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 
+ 	mt76x2_dfs_init_detector(dev);
+-- 
+2.17.1
