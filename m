@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57080 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726367AbeGXLFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 07:05:31 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v3 00/11] NFC: A bunch of cleanups for st95hf
-Date: Tue, 24 Jul 2018 11:59:30 +0200
-Message-Id: <20180724095941.25777-1-daniel@zonque.org> (sfid-20180724_120136_439030_1EB25147)
+Received: from smtp.codeaurora.org ([198.145.29.96]:52202 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727241AbeGaIqV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jul 2018 04:46:21 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] net/wireless/intersil/hostap: fix defined but not
+ usedwarnings
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <b2a357a4-dfae-5561-deda-33b2124fc4cf@infradead.org>
+References: <b2a357a4-dfae-5561-deda-33b2124fc4cf@infradead.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+        David Miller <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Message-Id: <20180731070729.7323360708@smtp.codeaurora.org> (sfid-20180731_090732_557534_F909FFB6)
+Date: Tue, 31 Jul 2018 07:07:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This v3 of a series of patches for the ST95HF driver.
+Randy Dunlap <rdunlap@infradead.org> wrote:
 
-Patch #1 reverts a change that I have submitted earlier and which is
-sitting in nfc-next already. Given that the tree hasn't been sent out
-for being merged yet, it could also still be removed with rebasing, in
-which case #1 is not necessary of course.
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Fix build warnings in drivers/net/wireless/intersil/hostap/ when
+> CONFIG_PROC_FS is not enabled by marking the unused functions as
+> __maybe_unused.
+> 
+> ../drivers/net/wireless/intersil/hostap/hostap_ap.c:70:12: warning: 'ap_debug_proc_show' defined but not used [-Wunused-function]
+> ../drivers/net/wireless/intersil/hostap/hostap_ap.c:994:12: warning: 'prism2_sta_proc_show' defined but not used [-Wunused-function]
+> ../drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: 'prism2_debug_proc_show' defined but not used [-Wunused-function]
+> ../drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: 'prism2_stats_proc_show' defined but not used [-Wunused-function]
+> ../drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: 'prism2_crypt_proc_show' defined but not used [-Wunused-function]
+> ../drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: 'prism2_registers_proc_show' defined but not used [-Wunused-function]
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Jouni Malinen <j@w1.fi>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: netdev@vger.kernel.org
 
-The changes are all rather simple and are explained in their individual
-commit logs.
+I'll drop this as I take Yue's patch.
 
-Note that this series builds upon the patch titled "nfc: st95hf: remove
-redundant pointers 'dev' and 'nfcddev'" that Colin posted the other day.
-
-
-Thanks,
-Daniel
-
-Changelog:
-
-v1 → v2:
-
- * Improved commit logs, identical patch content.
-
-
-v2 → v3:
-
- * Added another patch titled "NFC: st95hf: ignore spurious interrupts"
-
-
-Daniel Mack (11):
-  Revert "NFC: st95hf: drop illegal kfree_skb()"
-  NFC: st95hf: drop nfcdev_free
-  NFC: st95hf: drop illegal kfree_skb() in IRQ handler
-  NFC: st95hf: remove logging from spi functions
-  NFC: st95hf: remove exchange_lock
-  NFC: st95hf: move skb allocation to ISR
-  NFC: st95hf: ignore spurious interrupts
-  NFC: st95hf: re-order command defines
-  NFC: st95hf: unify sync/async flags
-  NFC: st95hf: two small style nits
-  NFC: st95hf: add of match table
-
- drivers/nfc/st95hf/core.c | 154 ++++++++++++++------------------------
- drivers/nfc/st95hf/spi.c  |  31 +++-----
- drivers/nfc/st95hf/spi.h  |   8 +-
- 3 files changed, 66 insertions(+), 127 deletions(-)
+Patch set to Changes Requested.
 
 -- 
-2.17.1
+https://patchwork.kernel.org/patch/10512915/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
