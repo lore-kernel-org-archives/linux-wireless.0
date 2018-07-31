@@ -1,122 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:44028 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753068AbeGEJtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:49:33 -0400
-Date: Thu, 5 Jul 2018 11:49:21 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 00/27] mtd: rawnand: Improve compile-test coverage
-Message-ID: <20180705114921.4bb66185@bbrezillon> (sfid-20180705_114937_274764_5CB0DA42)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51566 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731768AbeGaB4s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jul 2018 21:56:48 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 30 Jul 2018 17:19:18 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <87effkz6ft.fsf@toke.dk>
+References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
+ <153115422491.7447.12479559048433925372.stgit@alrua-x1>
+ <361a221dd15e44028fd35440df657a3d@codeaurora.org> <87lgahbisu.fsf@toke.dk>
+ <8d8160cd9c804d1b00ba4e234c8f1520@codeaurora.org> <87k1q09hf1.fsf@toke.dk>
+ <f8038c8ea281b365ec560cae0dd1ec0f@codeaurora.org> <87h8l39rv8.fsf@toke.dk>
+ <01fe0f526e992563e3b1f450f8acc9e4@codeaurora.org> <87wotr2trs.fsf@toke.dk>
+ <25dc507c35c2dff356742626d026989d@codeaurora.org> <877elo48ea.fsf@toke.dk>
+ <9d2d6156f7bfd173ed5098f528d7ed49@codeaurora.org> <87k1pk3n7b.fsf@toke.dk>
+ <aaa234780cad834c2ca0a36d7a007571@codeaurora.org> <87effkz6ft.fsf@toke.dk>
+Message-ID: <e6d2908652d7915ed6b61eaeab3f8ece@codeaurora.org> (sfid-20180731_021923_154303_0081484C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+Geert since I have a question for you
+On 2018-07-30 15:48, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+> Hmm, the driver really shouldn't need to do any locking apart from 
+> using
+> the next_txq() API. But I think you are right that the seqno mechanism
+> doesn't play well with unserialised access to through next_txq() from
+> multiple CPUs. I'll see what I can do about that, and also incorporate
+> the other changes we've been discussing into a new RFC series.
+> 
+Great.. :)
 
-On Thu,  5 Jul 2018 11:44:55 +0200
-Boris Brezillon <boris.brezillon@bootlin.com> wrote:
+>> Hmm.. reorder_txq() API may not needed. Calling next_txq() takes care
+>> of reordering list though the driver is accessing txqs directly.
+> 
+> Right, as long as the next_txq() path is still called even while
+> fetch_ind() is active, that should be fine.
+> 
+I am still wondering how and when to refill deficit in case next_txq()
+won't be called. :(
 
-> Hello,
-> 
-> This is an attempt at adding "depends || COMPILE_TEST" to all NAND
-> drivers that have no compile-time dependencies on arch
-> features/headers.
-> 
-> This will hopefully help us (NAND/MTD maintainers) in detecting build
-> issues earlier. Unfortunately we still have a few drivers that can't
-> easily be modified to be arch independent.
-> 
-> I tried to put all patches that only touch the NAND subsystem first,
-> so that they can be applied even if other patches are being discussed.
-> 
-> Don't hesitate to point any missing dependencies when compiled with
-> COMPILE_TEST. I didn't have any problem when compiling, but that might
-> be because the dependencies were already selected.
-> 
-> I have Question for Geert. I know you worked on HAS_DMA removal when
-> combined with COMPILE_TEST, do you plan to do something similar with
-> HAS_IOMEM?
+Will post RFC change on top of yours.
 
-just here :).
-
-> 
-> Regards,
-> 
-> Boris
-> 
-> Boris Brezillon (27):
->   mtd: rawnand: gpmi: Remove useless dependency on MTD_NAND
->   mtd: rawnand: Add 'depends on HAS_IOMEM' where missing
->   mtd: rawnand: atmel: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: omap2: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: s3c2410: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: sharpsl: Remove inclusion of mach and asm headers
->   mtd: rawnand: sharpsl: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: lpc32xx: Allow selection of these drivers when
->     COMPILE_TEST=y
->   mtd: rawnand: brcmnand: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: orion: Avoid direct inclusion of asm headers
->   mtd: rawnand: orion: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: mxc: Avoid inclusion of asm/mach headers
->   mtd: rawnand: mxc: Allow selection of this driver when COMPILE_TEST=y
->   mtd: rawnand: davinci: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: sunxi: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: qcom: Allow selection of this driver when COMPILE_TEST=y
->   mtd: rawnand: fsmc: Allow selection of this driver when COMPILE_TEST=y
->   mtd: rawnand: nuc900: Allow selection of this driver when
->     COMPILE_TEST=y
->   memory: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
->   mtd: rawnand: fsl_ifc: Allow selection of this driver when
->     COMPILE_TEST=y
->   bcma: Allow selection of this driver when COMPILE_TEST=y
->   MIPS: txx9: Move the ndfc.h header to include/linux/platform_data/txx9
->   mtd: rawnand: txx9ndfmc: Allow selection of this driver when
->     COMPILE_TEST=y
->   MIPS: jz4740: Move jz4740_nand.h header to
->     include/linux/platform_data/jz4740
->   mtd: rawnand: jz4740: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: jz4780: Drop the dependency on MACH_JZ4780
->   memory: jz4780-nemc: Allow selection of this driver when
->     COMPILE_TEST=y
-> 
->  arch/mips/jz4740/board-qi_lb60.c                   |  3 +-
->  arch/mips/txx9/generic/setup.c                     |  2 +-
->  arch/mips/txx9/generic/setup_tx4938.c              |  2 +-
->  arch/mips/txx9/generic/setup_tx4939.c              |  2 +-
->  drivers/bcma/Kconfig                               |  3 +-
->  drivers/memory/Kconfig                             |  6 ++-
->  drivers/mtd/nand/raw/Kconfig                       | 61 +++++++++++++++-------
->  drivers/mtd/nand/raw/jz4740_nand.c                 |  2 +-
->  drivers/mtd/nand/raw/mxc_nand.c                    |  2 -
->  drivers/mtd/nand/raw/orion_nand.c                  |  2 +-
->  drivers/mtd/nand/raw/sharpsl.c                     |  5 +-
->  drivers/mtd/nand/raw/txx9ndfmc.c                   |  2 +-
->  .../linux/platform_data/jz4740}/jz4740_nand.h      |  4 +-
->  .../linux/platform_data}/txx9/ndfmc.h              |  6 +--
->  14 files changed, 61 insertions(+), 41 deletions(-)
->  rename {arch/mips/include/asm/mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h (91%)
->  rename {arch/mips/include/asm => include/linux/platform_data}/txx9/ndfmc.h (91%)
-> 
+-Rajkumar
