@@ -1,46 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37802 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729472AbeHNOlf (ORCPT
+Received: from 3.mo179.mail-out.ovh.net ([178.33.251.175]:54552 "EHLO
+        3.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405410AbeHATHM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 10:41:35 -0400
-Message-ID: <1534247624.3547.28.camel@sipsolutions.net> (sfid-20180814_135447_527237_756C88B4)
-Subject: Re: [PATCH] mac80211: allow station search on AP/VLANs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Aug 2018 13:53:44 +0200
-In-Reply-To: <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org>
-References: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org>
-         <1534246103.3547.23.camel@sipsolutions.net>
-         <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Aug 2018 15:07:12 -0400
+Received: from player729.ha.ovh.net (unknown [10.109.143.72])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 5F72EDD771
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Aug 2018 19:01:33 +0200 (CEST)
+Subject: Re: [PATCH v4 3/3] mac80211: Fix PTK rekey freezes and cleartext
+ leaks
+To: Ben Greear <greearb@candelatech.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, s.gottschall@dd-wrt.com,
+        denkenz@gmail.com
+References: <20180731201030.2619-1-alexander@wetzel-home.de>
+ <20180731201030.2619-4-alexander@wetzel-home.de>
+ <234090b7-f260-e5c9-d933-8ce5240d5689@candelatech.com>
+From: Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <e7941f1c-4999-8cd5-75f5-2973a8ff8feb@wetzel-home.de> (sfid-20180801_192152_958788_32E5E472)
+Date: Wed, 1 Aug 2018 19:01:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <234090b7-f260-e5c9-d933-8ce5240d5689@candelatech.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-14 at 17:22 +0530, Manikanta Pubbisetty wrote:
-> On 8/14/2018 4:58 PM, Johannes Berg wrote:
+Hallo,
+
+>> Rekeying a pairwise key with encryption offload and only keyid 0 had
+>> multiple races. Two of them could freeze the wlan connection till
+>> rekeyed again and the third could send out packets in clear which should
+>> have been encrypted.
+>>
+>>  1) Freeze caused by incoming packets:
+>>     If the local STA installed the key prior to the remote STA we still
+>>     had the old key active in the hardware while mac80211 was already
+>>     operating on the new key.
+>>     The card could still hand over packets decoded with the old key to
+>>     mac80211, bumping the new PN (IV) value to an incorrect high number
+>>     and tricking the local replay detection to later drop all packets
+>>     really sent with the new key.
+>>
+>>  2) Freeze caused by outgoing packets:
+>>     If mac80211 was providing the PN (IV) and handed over a cleartext
+>>     packets for encryption to the hardware prior to a key change the
+>>     driver/card could have processed the queued packets after switching
+>>     to the new key.
+>>     This immediately bumped the PN (IV) value on the remote STA to
+>>     an incorrect high number, which also froze the connection.
+>>
+>>  3) Clear text leak:
+>>     Removing encryption offload from the card cleared the encryption
+>>     offload flag only after the card had removed the key. Packets handed
+>>     over between that were send out unencrypted.
+>>
+>> To prevent those issues we now stop queuing packets to the driver while
+>> replacing the key, replace the key first in the HW and stop/block new
+>> aggregation sessions during the rekey.
 > 
-> > On Mon, 2018-07-30 at 11:50 +0530, Manikanta Pubbisetty wrote:
-> > > When mac80211 receives a packet, we interate over the list of
-> > > active interfaces to find the station(which transmitted the packet).
-> > > Currently, station search is not allowed on AP/VLAN interface; since
-> > > stations can also get mapped to AP/VLAN interfaces, they are worth
-> > > considering for station search.
-> > 
-> > I don't see how this makes sense. We use sta_info_get_bss() later, so
-> > any AP/AP_VLAN would be OK, so we don't need to try it twice for
-> > AP_VLAN?
+> I guess the replace_key logic will have to flush the tx hardware/firmware
+> queues and any other packets currently owned by the driver before it can
+> replace the key?
+
+That is one of the options, but looks like we can also avoid it with
+some efforts. Question will be what's the best approach per driver and
+how complex we want the code to become...
+My current ath9k fix depends on flush - since it's simple - but it
+definitely looks like it can be done without. (It looks like the
+userspace updates are more urgent - assuming we can even agree on this
+overall solution - and I've not done anything on it for weeks.)
+
+There are two ways to establish the boundary we need here:
+1) Make sure all old packets have been send/dropped or 2) continue to
+use the old key for them.
+
+Iwlwifi e.g. is handing over the key with the packet to the HW and the
+driver simply uses the key it was told per packet. Implementing
+replace_key is trivial, we can just call the existing set_key function
+for deletion and addition from replace_key if we want. (I've tested that
+quite extensive and it works flawless with my dvm card.)
+
+Drivers uploading the keys to the HW and then just tell the HW to use
+key ID X for encryption - like ath9, the only other driver I drilled
+deeper so far - are more tricky. But replace_key is still allowed to
+change the HW key ID for the new key if desired by the driver.
+
+The driver can therefore only "deprecate" a key but keep it programmed
+in HW, assign and program a new key and return to mac80211.
+Any queued packets will still lookup and use the old key while new
+packets will tell the HW to use the new one. Problem solved, if we
+ignore the headache when and how to really free the old key id and
+remove it from the HW. In the worst case we wait the max time any packet
+can be stuck in the queue. Of course this may cause other issues in at
+least some special cases. The one I can think of would be:
+
+A busy AP with many clients connected and rekey enabled gets rebooted
+during work hours. All clients reconnect at basically the same time.
+Thus all of those will also rekey at nearly the same time and therefore
+all need two PTK key slots in the HW for some seconds, potentially
+exceeding the available ones. So you may get some strange effects after
+the rekey interval expired, long after the reboot...
+
+> ..
 > 
-> AP/VLANs are skipped currently, we don't even get to sta_info_get_bss() 
-> if the iftype is AP/VLAN. No?
+>> +        /* Key is beeing removed */
+> 
+> Looks like 'being' is mis-spelled?
 
-Yes, we won't try anything for the AP_VLANs, but when we hit the AP we
-look up through everything, no?
+Thanks, I've fixed that in my local git tree. Guess I'll wait a few more
+days till sending and hopefully accumulating more feedback in it.
 
-Or maybe not - the _bss() just means fallback to AP?
+Regards,
 
-Hmm. But even then I can't really see where this would apply?
-
-johannes
+Alexander
