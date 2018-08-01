@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33289 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729181AbeHPTfM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 15:35:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id 8-v6so9153736oip.0
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2018 09:35:39 -0700 (PDT)
-Subject: Re: [PATCH v6 2/3] mac80211: Define new driver callback replace_key
-To: Alexander Wetzel <alexander@wetzel-home.de>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
- <20180814104255.4183-3-alexander@wetzel-home.de>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <6b36b011-d02e-778b-d7a1-951ab8aee721@gmail.com> (sfid-20180816_183543_614687_1901345E)
-Date: Thu, 16 Aug 2018 11:35:37 -0500
+Received: from mail-dm3nam03on0066.outbound.protection.outlook.com ([104.47.41.66]:44513
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387633AbeHAKHw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 06:07:52 -0400
+Date: Wed, 1 Aug 2018 11:23:01 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
+Message-ID: <20180801082300.sev7ag5wh4wj7fbb@bars> (sfid-20180801_103305_033560_E9F63B65)
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+ <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
+ <87d0v4stqm.fsf@codeaurora.org>
+ <5B604B14.8080607@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20180814104255.4183-3-alexander@wetzel-home.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5B604B14.8080607@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexander,
-
-Just minor nitpicks:
-
-> + * @replace_key: Replace an exiting in use key with a new one while guaranteeing
-> + * 	to not leak clear text packets. Implementing this callback will enable
-> + * 	mac80211 to announce NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE.
-> + * 	Packets already queued must not be send out encrypted with the new key
-send out -> sent out
-> + * 	and packets decoded with the old key must not be handed over to mac80211
-> + * 	when the driver is not checking IV/ICV itself once the callback has been
-> + * 	completed.
-> + * 	Mac80211 will log an error when asked to use replace a PTK key
-> + * 	without replace_key but will still perform the then potentially
-> + * 	insecure action via set_key for backward compatibility for now.
+> > > Implement support for PTA (Packet Traffic Arbitration) configuration.
+> > > The PTA mechanism is used to coordinate sharing of the medium between
+> > > WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
+> > > 
+> > > This patch implements core infrastructure and vendor specific commands
+> > > to control PTA functionality in firmware.
+> > 
+> > And no description of the actual interface which would have helped with
+> > the review.
+> > 
+> > Anyway, the vendor commands are pain and they just make me grumpy. The
+> > original idea was that upstream drivers should not support them at all,
+> > later we flexed the rules so that low level hardware specific interfaces
+> > might be ok, for example we added one in wil6210.
+> > 
+> > If I would even consider applying a patch which adds a vendor command it
+> > needs a really good commit log with a proper description of the actual
+> > interface and good justifications why a generic nl80211 command won't
+> > work. I don't see anything even remotely close here.
+> > 
+> > Sorry for being grumpy, I just hate these vendor commands. Especially
+> > when I see that a generic nl80211 command has not even be consired at
+> > all.
+> 
+> For what it is worth, looking at part of the patch:
+> 
+> +/**
+> + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
 > + *
-
-Not sure this part really belongs in the driver method description?
-
->    * @update_tkip_key: See the section "Hardware crypto acceleration"
->    * 	This callback will be called in the context of Rx. Called for drivers
->    * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
-
-<snip>
-
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 4fb2709cb527..84cc8005c19a 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -572,9 +572,14 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
->   				      NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT);
->   	}
->   
-> +	if (ops->replace_key)
-> +		wiphy_ext_feature_set(wiphy,
-> +				      NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE);
+> + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
+> + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
+> + */
+> +enum qlink_pta_mode {
+> +       QLINK_PTA_MODE_DISABLED = 0,
+> +       QLINK_PTA_MODE_2_WIRE = 2
+> +};
 > +
->   	if (!ops->set_key)
->   		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
->   
-> +
+> 
+> it smells very much like low-level btcoex. The question is whether this
+> needs to be conveyed from user-space or should these be device
+> configuration, eg. like DT properties.
 
-Stray whitespace?
+Hello Arend,
 
->   	if (ops->wake_tx_queue)
->   		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_TXQS);
->   
+Yes, this is some kind of low-level BT coexistence mechanism, when WiFi and
+BT cards coordinate access to wireless media in 2.4G using gpio lines.
+Those lines connect WiFi and BT cards directly w/o host mediation.
+
+As for DT properties, the qustion still remains the same: how to propagate
+those settings to WiFi card. AFAIK there is no 'standard' interface for
+this kind of things. So using vendor commands looked like the only option.
 
 Regards,
--Denis
+Sergey
