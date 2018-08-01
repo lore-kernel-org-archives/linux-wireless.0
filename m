@@ -1,55 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f52.google.com ([209.85.160.52]:34435 "EHLO
-        mail-pl0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730326AbeHNBZB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51982 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387699AbeHAKKT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 21:25:01 -0400
-Received: by mail-pl0-f52.google.com with SMTP id f6-v6so7492174plo.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 15:40:45 -0700 (PDT)
-Date: Mon, 13 Aug 2018 15:40:41 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: Tomasz Kalbarczyk <tkalbar@utexas.edu>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Promiscuous (not monitor) Mode support for ath10k
-Message-ID: <20180813224041.GA165278@ban.mtv.corp.google.com> (sfid-20180814_004104_229692_F89BDEA1)
-References: <CAH9jq_Ow7Gt-m1QZoS3-JOEdU1CkC33S2mCfYz4bHNOMDX+q9A@mail.gmail.com>
+        Wed, 1 Aug 2018 06:10:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+        <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
+        <87d0v4stqm.fsf@codeaurora.org> <5B604B14.8080607@broadcom.com>
+Date: Wed, 01 Aug 2018 11:25:42 +0300
+In-Reply-To: <5B604B14.8080607@broadcom.com> (Arend van Spriel's message of
+        "Tue, 31 Jul 2018 13:42:12 +0200")
+Message-ID: <87effi8pdl.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_103306_257052_4B7EA8B2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAH9jq_Ow7Gt-m1QZoS3-JOEdU1CkC33S2mCfYz4bHNOMDX+q9A@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 06, 2018 at 06:08:46PM -0400, Tomasz Kalbarczyk wrote:
-> Hello,
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Hi!
+> On 7/30/2018 4:06 PM, Kalle Valo wrote:
+>> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+>>
+>>> From: Andrey Shevchenko <ashevchenko@quantenna.com>
+>>>
+>>> Implement support for PTA (Packet Traffic Arbitration) configuration.
+>>> The PTA mechanism is used to coordinate sharing of the medium between
+>>> WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
+>>>
+>>> This patch implements core infrastructure and vendor specific commands
+>>> to control PTA functionality in firmware.
+>>
+>> And no description of the actual interface which would have helped with
+>> the review.
+>>
+>> Anyway, the vendor commands are pain and they just make me grumpy. The
+>> original idea was that upstream drivers should not support them at all,
+>> later we flexed the rules so that low level hardware specific interfaces
+>> might be ok, for example we added one in wil6210.
+>>
+>> If I would even consider applying a patch which adds a vendor command it
+>> needs a really good commit log with a proper description of the actual
+>> interface and good justifications why a generic nl80211 command won't
+>> work. I don't see anything even remotely close here.
+>>
+>> Sorry for being grumpy, I just hate these vendor commands. Especially
+>> when I see that a generic nl80211 command has not even be consired at
+>> all.
+>
+> For what it is worth, looking at part of the patch:
+>
+> +/**
+> + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
+> + *
+> + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
+> + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
+> + */
+> +enum qlink_pta_mode {
+> +	QLINK_PTA_MODE_DISABLED = 0,
+> +	QLINK_PTA_MODE_2_WIRE = 2
+> +};
+> +
+>
+> it smells very much like low-level btcoex. The question is whether
+> this needs to be conveyed from user-space or should these be device
+> configuration, eg. like DT properties.
 
-> I have a QCA6174 and I'm running tcpdump on the wireless interface to
-> listen for packets. I can receive packets addressed directly to the
-> device, but not any other packets on the network.
-> 
-> Does anyone know the status of promiscuous mode support on ath10k?
-> Note that this is different from monitor mode / supported on a larger
-> subset of hardware. Dmesg merely indicates that the device has
-> "entered promiscuous mode" when tcpdump is initiated.
-> 
-> Here is a link to similar discussion regarding the ath9k a few years
-> back: https://marc.info/?l=linux-wireless&m=135936563626791&w=2
+That's a very good point.
 
-This might be relevant:
-
-commit df1404650ccbfeb76a84f301f22316be0d00a864
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed Apr 22 14:40:58 2015 +0200
-
-    mac80211: remove support for IFF_PROMISC
-
-    This support is essentially useless as typically networks are encrypted,
-    frames will be filtered by hardware, and rate scaling will be done with
-    the intended recipient in mind. For real monitoring of the network, the
-    monitor mode support should be used instead.
-
-    Removing it removes a lot of corner cases.
-
-Regards,
-Brian
+-- 
+Kalle Valo
