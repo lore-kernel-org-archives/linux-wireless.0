@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57882 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46218 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387719AbeHAKDp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:23 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/24] staging: wilc1000: remove unnecessary NULL check in clear_shadow_scan()
-Date: Tue, 14 Aug 2018 12:19:56 +0530
-Message-ID: <1534229416-13254-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085037_470252_D3C0603E)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 1 Aug 2018 06:03:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+        <87y3dqzga9.fsf@purkki.adurom.net>
+        <20180801081346.GA4794@localhost.localdomain>
+Date: Wed, 01 Aug 2018 11:19:10 +0300
+In-Reply-To: <20180801081346.GA4794@localhost.localdomain> (Lorenzo Bianconi's
+        message of "Wed, 1 Aug 2018 10:13:47 +0200")
+Message-ID: <87in4u8poh.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_102124_126699_9EE1BF0F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the unnecessary NULL check before freeing up ies
-information in clear_shadow_scan().
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> On Aug 01, Kalle Valo wrote:
+>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>> 
+>> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
+>> > support only STA mode.
+>> >
+>> > mt76x0 is based on Jakub's mt7601u driver already included
+>> > in the kernel. I would like the driver be integrated as part
+>> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
+>> > to utilize mt76 code for adding support for MT76x0 PCIe devices
+>> > in further development.
+>> 
+>> So what's the future for mt7601u, are we going to delete it? What's
+>> Jakub's opinion about all this? And what's the delta featurewise between
+>> mt7601u and this driver? Which one will be loaded by default?
+>
+> I think we can integrate mt7601u in mt76 as soon as mt76x0 is merged since the
+> code path is pretty similar. Jakub what do you think? (That was actually on my
+> ToDo list :))
+>
+> For the moment I guess both drivers can coexist since the
+> usb_device_id lists seem different
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ede9134..00a167b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -165,10 +165,8 @@ static void clear_shadow_scan(void)
- 		return;
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
--		if (last_scanned_shadow[i].ies) {
--			kfree(last_scanned_shadow[i].ies);
--			last_scanned_shadow[i].ies = NULL;
--		}
-+		kfree(last_scanned_shadow[i].ies);
-+		last_scanned_shadow[i].ies = NULL;
- 
- 		kfree(last_scanned_shadow[i].join_params);
- 		last_scanned_shadow[i].join_params = NULL;
+Ah, I didn't realise that. I was exactly worried that if we would now
+have two drivers supporting same device ids, but very good if that's not
+the case.
+
 -- 
-2.7.4
+Kalle Valo
