@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr730126.outbound.protection.outlook.com ([40.107.73.126]:60013
-        "EHLO NAM05-DM3-obe.outbound.protection.outlook.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51830 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728583AbeHOMV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 08:21:28 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH] Add CYW89342 mini-PCIe device
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jia-Shyr Chuang <saint.chuang@cypress.com>
-References: <1534323982-49462-1-git-send-email-chi-hsien.lin@cypress.com>
- <5B73EF66.5070601@broadcom.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <6510a9db-7ea3-f914-4daf-dc2040b4afef@cypress.com> (sfid-20180815_113007_114197_E7043795)
-Date: Wed, 15 Aug 2018 17:29:46 +0800
+        id S2387662AbeHAKn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 06:43:59 -0400
+Date: Wed, 1 Aug 2018 10:59:14 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
+Message-ID: <20180801085913.GC4526@redhat.com> (sfid-20180801_105934_557939_F9111A46)
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+ <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
+ <8736vy1r0j.fsf@purkki.adurom.net>
+ <20180801082844.GB4526@redhat.com>
+ <87600u8on6.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <5B73EF66.5070601@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87600u8on6.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 08/15/2018 5:16, Arend van Spriel wrote:
-> O, and add "brcmfmac:" prefix in the subject.
-Arend,
-
-Thanks a lot for the feedback. Fixed below in V3:
-  - Add "brcmfmac:" prefix
-  - Remove host interface references from commit message.
-
-Regards,
-Chi-hsien Lin
-
-
+On Wed, Aug 01, 2018 at 11:41:33AM +0300, Kalle Valo wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
 > 
-> Regards,
-> Arend
+> > On Wed, Aug 01, 2018 at 10:32:12AM +0300, Kalle Valo wrote:
+> >> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> >> 
+> >> > Add Kconfig and Makefiles for mt76x0 driver. Now the driver
+> >> > can be build.
+> >> >
+> >> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> >> > ---
+> >> >  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
+> >> >  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
+> >> >  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
+> >> >  3 files changed, 15 insertions(+)
+> >> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> >> >
+> >> > diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> >> > index 69906c733a1c..850611ad347a 100644
+> >> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> >> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> >> > @@ -9,6 +9,13 @@ config MT76x2_COMMON
+> >> >  	tristate
+> >> >  	depends on MT76_CORE
+> >> >  
+> >> > +config MT76x0U
+> >> > +	tristate "MediaTek MT76x0U (USB) support"
+> >> > +	depends on MAC80211
+> >> > +	depends on USB
+> >> > +	help
+> >> > +	  This adds support for MT7610U-based wireless USB dongles.
+> >> 
+> >> Does it make sense to add a Kconfig option for every mt76 device? I'm
+> >> worried that soon we have over a dozen of them. I can understand having
+> >> separate options to enable PCI or USB devices, but I don't see the
+> >> benefit for anything more finegrained than that.
+> >
+> > I think it does make sense for AP/home routers and other embedded
+> > devices.
 > 
-> 
-> ----------
-> 
-> You're receiving this message because you're a member of the 
-> brcm80211-dev-list group.
-> .
-> 
+> How much of memory savings are we talking about?
+
+Currently mt76x0.ko module is 285 KB big on x86_64 after debug symbols
+strip (with debug symbols size is 6MB).
+
+Stanislaw
