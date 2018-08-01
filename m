@@ -1,227 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:48367 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726676AbeHWNiq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37152 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387411AbeHAVfI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 09:38:46 -0400
-Date: Thu, 23 Aug 2018 15:39:41 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH 11/24] staging: wilc1000: move hif specific static
- variables to 'wilc' structure
-Message-ID: <20180823153941.0ff5f43e@ajaysk-VirtualBox> (sfid-20180823_120952_348886_A291D680)
-In-Reply-To: <8020e04f-23b0-1b1c-9d75-9dc5fdfde9f3@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-        <1534229416-13254-12-git-send-email-ajay.kathat@microchip.com>
-        <8020e04f-23b0-1b1c-9d75-9dc5fdfde9f3@microchip.com>
+        Wed, 1 Aug 2018 17:35:08 -0400
+Subject: Re: [PATCH v4 3/3] mac80211: Fix PTK rekey freezes and cleartext
+ leaks
+To: Alexander Wetzel <alexander@wetzel-home.de>,
+        johannes@sipsolutions.net
+References: <20180731201030.2619-1-alexander@wetzel-home.de>
+ <20180731201030.2619-4-alexander@wetzel-home.de>
+ <234090b7-f260-e5c9-d933-8ce5240d5689@candelatech.com>
+ <e7941f1c-4999-8cd5-75f5-2973a8ff8feb@wetzel-home.de>
+ <2d0d71ef-5384-f0ff-83ca-59a73fcd9991@candelatech.com>
+ <9ab523b6-ca8a-5f5b-b85e-554c96ba6a97@wetzel-home.de>
+Cc: linux-wireless@vger.kernel.org, s.gottschall@dd-wrt.com,
+        denkenz@gmail.com
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <fdaa388f-86f2-7b3c-a6e0-e26e6db00ec5@candelatech.com> (sfid-20180801_214749_429388_4B0B68DA)
+Date: Wed, 1 Aug 2018 12:47:44 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <9ab523b6-ca8a-5f5b-b85e-554c96ba6a97@wetzel-home.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 23 Aug 2018 11:11:09 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+On 08/01/2018 12:37 PM, Alexander Wetzel wrote:
+> Hello,
+>
+>>>
+>>>>> Rekeying a pairwise key with encryption offload and only keyid 0 had
+>>>>> multiple races. Two of them could freeze the wlan connection till
+>>>>> rekeyed again and the third could send out packets in clear which
+>>>>> should
+>>>>> have been encrypted.
+>>>>>
+>>>>>  1) Freeze caused by incoming packets:
+>>>>>     If the local STA installed the key prior to the remote STA we still
+>>>>>     had the old key active in the hardware while mac80211 was already
+>>>>>     operating on the new key.
+>>>>>     The card could still hand over packets decoded with the old key to
+>>>>>     mac80211, bumping the new PN (IV) value to an incorrect high number
+>>>>>     and tricking the local replay detection to later drop all packets
+>>>>>     really sent with the new key.
+>>>>>
+>>>>>  2) Freeze caused by outgoing packets:
+>>>>>     If mac80211 was providing the PN (IV) and handed over a cleartext
+>>>>>     packets for encryption to the hardware prior to a key change the
+>>>>>     driver/card could have processed the queued packets after switching
+>>>>>     to the new key.
+>>>>>     This immediately bumped the PN (IV) value on the remote STA to
+>>>>>     an incorrect high number, which also froze the connection.
+>>>>>
+>>>>>  3) Clear text leak:
+>>>>>     Removing encryption offload from the card cleared the encryption
+>>>>>     offload flag only after the card had removed the key. Packets
+>>>>> handed
+>>>>>     over between that were send out unencrypted.
+>>>>>
+>>>>> To prevent those issues we now stop queuing packets to the driver while
+>>>>> replacing the key, replace the key first in the HW and stop/block new
+>>>>> aggregation sessions during the rekey.
+>>>>
+>>>> I guess the replace_key logic will have to flush the tx
+>>>> hardware/firmware
+>>>> queues and any other packets currently owned by the driver before it can
+>>>> replace the key?
+>>>
+>>> That is one of the options, but looks like we can also avoid it with
+>>> some efforts. Question will be what's the best approach per driver and
+>>> how complex we want the code to become...
+>>> My current ath9k fix depends on flush - since it's simple - but it
+>>> definitely looks like it can be done without. (It looks like the
+>>> userspace updates are more urgent - assuming we can even agree on this
+>>> overall solution - and I've not done anything on it for weeks.)
+>>>
+>>> There are two ways to establish the boundary we need here:
+>>> 1) Make sure all old packets have been send/dropped or 2) continue to
+>>> use the old key for them.
+>>>
+>>> Iwlwifi e.g. is handing over the key with the packet to the HW and the
+>>> driver simply uses the key it was told per packet. Implementing
+>>> replace_key is trivial, we can just call the existing set_key function
+>>> for deletion and addition from replace_key if we want. (I've tested that
+>>> quite extensive and it works flawless with my dvm card.)
+>>>
+>>> Drivers uploading the keys to the HW and then just tell the HW to use
+>>> key ID X for encryption - like ath9, the only other driver I drilled
+>>> deeper so far - are more tricky. But replace_key is still allowed to
+>>> change the HW key ID for the new key if desired by the driver.
+>>>
+>>> The driver can therefore only "deprecate" a key but keep it programmed
+>>> in HW, assign and program a new key and return to mac80211.
+>>> Any queued packets will still lookup and use the old key while new
+>>> packets will tell the HW to use the new one. Problem solved, if we
+>>> ignore the headache when and how to really free the old key id and
+>>> remove it from the HW. In the worst case we wait the max time any packet
+>>> can be stuck in the queue. Of course this may cause other issues in at
+>>> least some special cases. The one I can think of would be:
+>>>
+>>> A busy AP with many clients connected and rekey enabled gets rebooted
+>>> during work hours. All clients reconnect at basically the same time.
+>>> Thus all of those will also rekey at nearly the same time and therefore
+>>> all need two PTK key slots in the HW for some seconds, potentially
+>>> exceeding the available ones. So you may get some strange effects after
+>>> the rekey interval expired, long after the reboot...
+>>
+>> The ath10k firmware already sort of handles stale keys as far as I can
+>> tell,
+>> and early on in my testing, which often has this issue of all
+>> stations rekeying at once, I was running out of firmware key objects.  I
+>> increased the multiplier in the driver and made the firmware smarter about
+>> recycling key objects, and that fixed the problem for me.
+>>
+>> So, maybe this would just work with ath10k, but if there were any issues,
+>> probably you'd have to fall back to flushing everything.  And, that might
+>> be a way to work somewhat generically with drivers that don't have special
+>> replace-key logic?
+>
+> The V2 version of the patch called ieee80211_flush_queues
+> unconditionally as kind of safety net to increase the odds of the driver
+> to not send out a wrong packet. Argument against that was, that not all
+> drivers are implementing flush and even when they are we have no
+> guarantee that the packet was really flushed from the card and not only
+> the driver. The current patch is now expecting the userspace to never
+> rekey a connection when the driver is not supporting. If it does anyhow
+> we are back in uncharted area, only slightly better than current stable
+> kernels. Of course we can handle that like in the V2 version of the
+> patch. I kind of like the idea...Is that something I shall add in the
+> next version?
 
-> On 14.08.2018 09:50, Ajay Singh wrote:
-> > Avoid use of static variable and move it in 'wilc' structure
-> > related to hif and added NULL before accessing hif_workqueue in
-> > wilc_enqueue_work().
-> > 
-> > Below variables are moved to 'wilc' struct:
-> >  struct workqueue_struct *hif_workqueue;
-> >  struct mutex hif_deinit_lock;
-> >  struct completion hif_driver_comp;
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c     | 43
-> > ++++++++++++++-------------
-> > drivers/staging/wilc1000/wilc_wfi_netdevice.h |  4 +++ 2 files
-> > changed, 26 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index 642c314..d5d81843
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -187,9 +187,6 @@ struct join_bss_param {
-> >  
-> >  static struct host_if_drv *terminated_handle;
-> >  static u8 p2p_listen_state;
-> > -static struct workqueue_struct *hif_workqueue;
-> > -static struct completion hif_driver_comp;
-> > -static struct mutex hif_deinit_lock;
-> >  static struct timer_list periodic_rssi;
-> >  static struct wilc_vif *periodic_rssi_vif;
-> >  
-> > @@ -225,7 +222,11 @@ wilc_alloc_work(struct wilc_vif *vif, void
-> > (*work_fun)(struct work_struct *), static int
-> > wilc_enqueue_work(struct host_if_msg *msg) {
-> >  	INIT_WORK(&msg->work, msg->fn);
-> > -	if (!hif_workqueue || !queue_work(hif_workqueue,
-> > &msg->work)) +
-> > +	if (!msg->vif || !msg->vif->wilc
-> > || !msg->vif->wilc->hif_workqueue)
-> > +		return -EINVAL;
-> > +
-> > +	if (!queue_work(msg->vif->wilc->hif_workqueue, &msg->work))
-> >  		return -EINVAL;
-> >  
-> >  	return 0;
-> > @@ -316,7 +317,7 @@ static void handle_set_wfi_drv_handler(struct
-> > work_struct *work) if (ret)
-> >  		netdev_err(vif->ndev, "Failed to set driver
-> > handler\n"); 
-> > -	complete(&hif_driver_comp);
-> > +	complete(&vif->wilc->hif_driver_comp);
-> >  	kfree(buffer);
-> >  
-> >  free_msg:
-> > @@ -340,7 +341,7 @@ static void handle_set_operation_mode(struct
-> > work_struct *work) wilc_get_vif_idx(vif));
-> >  
-> >  	if (hif_op_mode->mode == IDLE_MODE)
-> > -		complete(&hif_driver_comp);
-> > +		complete(&vif->wilc->hif_driver_comp);
-> >  
-> >  	if (ret)
-> >  		netdev_err(vif->ndev, "Failed to set operation
-> > mode\n"); @@ -3454,11 +3455,11 @@ int wilc_init(struct net_device
-> > *dev, struct host_if_drv **hif_drv_handler) vif->obtaining_ip =
-> > false; 
-> >  	if (wilc->clients_count == 0) {
-> > -		init_completion(&hif_driver_comp);
-> > -		mutex_init(&hif_deinit_lock);
-> > +		init_completion(&wilc->hif_driver_comp);
-> > +		mutex_init(&wilc->hif_deinit_lock);
-> >  
-> > -		hif_workqueue =
-> > create_singlethread_workqueue("WILC_wq");
-> > -		if (!hif_workqueue) {
-> > +		wilc->hif_workqueue =
-> > create_singlethread_workqueue("WILC_wq");
-> > +		if (!wilc->hif_workqueue) {
-> >  			netdev_err(vif->ndev, "Failed to create
-> > workqueue\n"); kfree(hif_drv);
-> >  			return -ENOMEM;
-> > @@ -3502,7 +3503,7 @@ int wilc_deinit(struct wilc_vif *vif)
-> >  		return -EFAULT;
-> >  	}
-> >  
-> > -	mutex_lock(&hif_deinit_lock);
-> > +	mutex_lock(&vif->wilc->hif_deinit_lock);
-> >  
-> >  	terminated_handle = hif_drv;
-> >  
-> > @@ -3512,7 +3513,7 @@ int wilc_deinit(struct wilc_vif *vif)
-> >  	del_timer_sync(&hif_drv->remain_on_ch_timer);
-> >  
-> >  	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
-> > -	wait_for_completion(&hif_driver_comp);
-> > +	wait_for_completion(&vif->wilc->hif_driver_comp);
-> >  
-> >  	if (hif_drv->usr_scan_req.scan_result) {
-> >  		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED,
-> > NULL, @@ -3536,14 +3537,14 @@ int wilc_deinit(struct wilc_vif *vif)
-> >  				wait_for_completion(&msg->work_comp);
-> >  			kfree(msg);
-> >  		}
-> > -		destroy_workqueue(hif_workqueue);
-> > +		destroy_workqueue(vif->wilc->hif_workqueue);
-> >  	}
-> >  
-> >  	kfree(hif_drv);
-> >  
-> >  	vif->wilc->clients_count--;
-> >  	terminated_handle = NULL;
-> > -	mutex_unlock(&hif_deinit_lock);
-> > +	mutex_unlock(&vif->wilc->hif_deinit_lock);
-> >  	return result;
-> >  }
-> >  
-> > @@ -3596,7 +3597,7 @@ void wilc_gnrl_async_info_received(struct
-> > wilc *wilc, u8 *buffer, u32 length) struct host_if_drv *hif_drv;
-> >  	struct wilc_vif *vif;
-> >  
-> > -	mutex_lock(&hif_deinit_lock);
-> > +	mutex_lock(&wilc->hif_deinit_lock);
-> >  
-> >  	id = buffer[length - 4];
-> >  	id |= (buffer[length - 3] << 8);
-> > @@ -3604,26 +3605,26 @@ void wilc_gnrl_async_info_received(struct
-> > wilc *wilc, u8 *buffer, u32 length) id |= (buffer[length - 1] <<
-> > 24); vif = wilc_get_vif_from_idx(wilc, id);
-> >  	if (!vif) {
-> > -		mutex_unlock(&hif_deinit_lock);
-> > +		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> >  
-> >  	hif_drv = vif->hif_drv;
-> >  
-> >  	if (!hif_drv || hif_drv == terminated_handle) {
-> > -		mutex_unlock(&hif_deinit_lock);
-> > +		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> >  
-> >  	if (!hif_drv->usr_conn_req.conn_result) {
-> >  		netdev_err(vif->ndev, "%s: conn_result is NULL\n",
-> > __func__);
-> > -		mutex_unlock(&hif_deinit_lock);
-> > +		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> >  
-> >  	msg = wilc_alloc_work(vif, handle_rcvd_gnrl_async_info,
-> > false); if (IS_ERR(msg)) {
-> > -		mutex_unlock(&hif_deinit_lock);
-> > +		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> >  
-> > @@ -3631,7 +3632,7 @@ void wilc_gnrl_async_info_received(struct
-> > wilc *wilc, u8 *buffer, u32 length) msg->body.async_info.buffer =
-> > kmemdup(buffer, length, GFP_KERNEL); if
-> > (!msg->body.async_info.buffer) { kfree(msg);
-> > -		mutex_unlock(&hif_deinit_lock);
-> > +		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> >  
-> > @@ -3642,7 +3643,7 @@ void wilc_gnrl_async_info_received(struct
-> > wilc *wilc, u8 *buffer, u32 length) kfree(msg);
-> >  	}
-> >  
-> > -	mutex_unlock(&hif_deinit_lock);
-> > +	mutex_unlock(&wilc->hif_deinit_lock);
-> >  }
-> >  
-> >  void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer,
-> > u32 length) diff --git
-> > a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h index
-> > ee8eda7..eb00e42 100644 ---
-> > a/drivers/staging/wilc1000/wilc_wfi_netdevice.h +++
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h @@ -173,6 +173,10
-> > @@ struct wilc { struct rf_info dummy_statistics; bool enable_ps;
-> >  	int clients_count;
-> > +	struct workqueue_struct *hif_workqueue;
-> > +	/* deinitialization lock */
-> > +	struct mutex hif_deinit_lock;
-> > +	struct completion hif_driver_comp;  
-> 
-> I'm thinking now... wouldn't fit these better to struct host_if_drv?
+I think if mac80211 will stop sending frames, then a driver *should* be able
+to implement flush one way or another.  But, having the driver itself
+try to flush in a key_replace() method while the rest of the system might
+still be sending it frames is probably going to be more complicated.
 
-No, In my opinion it should be part of 'wilc' struct as only the single
-instance of there variables is required. 'host_if_drv' is maintained
-separately for each interface.
+You could handle it on a per-driver basis by having the driver somehow notify
+your logic whether a flush is desired or not?
 
-> 
-> >  };
-> >  
-> >  struct wilc_wfi_mon_priv {
-> >   
+>> Someone could also tweak supplicant to somewhat randomize the rekey timers,
+>> but that would take a while to propagate to all of the station devices out
+>> there.
+>
+> It may not even be a realistic problem. Just trying to think of worst
+> cases:-) The reconnections will for sure be spread a few ms, at least.
+> What is the longest time we have to keep the old key programmed in HW?
+
+If you are trying to transmit a frame with the wrong key, probably it will
+be retransmitted a lot since the receiver should dispose of it, so I guess
+a few seconds max?
+
+ath10k firmware will only dispose of old keys once all packets referencing
+it are removed.
+
+Either way, this is a fixable problem, and a flush should certainly fix it
+if there is no better way.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
