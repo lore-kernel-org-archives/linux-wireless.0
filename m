@@ -1,67 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50612 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728331AbeHVPKA (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28880 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726960AbeHAGpF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 11:10:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 07/15] iwlwifi: add 80211 hdr offset to trace data
-References: <20180821063657.30071-1-luca@coelho.fi>
-        <20180821063657.30071-8-luca@coelho.fi>
-Date: Wed, 22 Aug 2018 14:45:21 +0300
-In-Reply-To: <20180821063657.30071-8-luca@coelho.fi> (Luca Coelho's message of
-        "Tue, 21 Aug 2018 09:36:49 +0300")
-Message-ID: <877ekir5f2.fsf@kamboji.qca.qualcomm.com> (sfid-20180822_134528_791267_1CDB0978)
+        Wed, 1 Aug 2018 02:45:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: refactor wilc_wlan_handle_isr_ext to avoid goto statement
+Date: Wed, 1 Aug 2018 10:33:41 +0530
+Message-ID: <1533099821-3769-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180801_070134_568122_9CB58E87)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Refactor wilc_wlan_handle_isr_ext() to avoid the use of the goto label.
+Also avoid the unnecessary NULL check for 'wilc->rx_buffer' and
+calling wilc_wlan_handle_rxq() only after wilc_wlan_rxq_add() call.
+The link [1] contains details for discussion related to this changes.
 
-> From: Mordechay Goodstein <mordechay.goodstein@intel.com>
->
-> Every rx mpdu cmd is built from cmd_hdr | 80211_hdr.  The problem is
-> that the size of cmd_hdr changes with API changes and we don't know
-> where the 80211_hdr starts.
->
-> By adding the size of cmd_hdr dynamically, we can ensure that we always
-> know how to parse mpdu frames, without dependending on the API changes.
->
-> Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+[1]. https://patchwork.kernel.org/patch/10533601/
 
-[...]
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 45 +++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 24 deletions(-)
 
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-> @@ -2,6 +2,7 @@
->   *
->   * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
->   * Copyright(c) 2015        Intel Deutschland GmbH
-> + * Copyright(c) 2018        Intel Corporation
->   *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
-> @@ -12,10 +13,6 @@
->   * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
->   * more details.
->   *
-> - * You should have received a copy of the GNU General Public License along with
-> - * this program; if not, write to the Free Software Foundation, Inc.,
-> - * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-> - *
->   * The full GNU General Public License is included in this distribution in the
->   * file called LICENSE.
->   *
-
-Ok, you have more of these removals in this patch so I guess it's
-intentional. But IMHO it would be nicer to remove these all in one go
-instead of sprinkle around in different patches.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index ea2e77f..cad6cec 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -820,31 +820,28 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
+ 		retries++;
+ 	}
+ 
+-	if (size > 0) {
+-		if (LINUX_RX_SIZE - offset < size)
+-			offset = 0;
++	if (size <= 0)
++		return;
+ 
+-		if (wilc->rx_buffer)
+-			buffer = &wilc->rx_buffer[offset];
+-		else
+-			goto end;
+-
+-		wilc->hif_func->hif_clear_int_ext(wilc,
+-					      DATA_INT_CLR | ENABLE_RX_VMM);
+-		ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
+-
+-end:
+-		if (ret) {
+-			offset += size;
+-			wilc->rx_buffer_offset = offset;
+-			rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
+-			if (rqe) {
+-				rqe->buffer = buffer;
+-				rqe->buffer_size = size;
+-				wilc_wlan_rxq_add(wilc, rqe);
+-			}
+-		}
+-	}
++	if (LINUX_RX_SIZE - offset < size)
++		offset = 0;
++
++	buffer = &wilc->rx_buffer[offset];
++
++	wilc->hif_func->hif_clear_int_ext(wilc, DATA_INT_CLR | ENABLE_RX_VMM);
++	ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
++	if (!ret)
++		return;
++
++	offset += size;
++	wilc->rx_buffer_offset = offset;
++	rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
++	if (!rqe)
++		return;
++
++	rqe->buffer = buffer;
++	rqe->buffer_size = size;
++	wilc_wlan_rxq_add(wilc, rqe);
+ 	wilc_wlan_handle_rxq(wilc);
+ }
+ 
 -- 
-Kalle Valo
+2.7.4
