@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:8855 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbeH0JJs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49346 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729769AbeHAJkb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 05:09:48 -0400
-Date: Mon, 27 Aug 2018 10:54:38 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in
- tcp_process()
-Message-ID: <20180827105438.5443cdfa@ajaysk-VirtualBox> (sfid-20180827_072448_979522_56AA487A)
-In-Reply-To: <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-        <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com>
-        <c8362c8b-acb3-d5c3-8d47-be18424b8a1e@microchip.com>
-        <20180823160315.168c49e5@ajaysk-VirtualBox>
-        <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
+        Wed, 1 Aug 2018 05:40:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 00/16] iwlwifi: updates intended for v4.19 2018-07-27
+References: <20180727124838.25910-1-luca@coelho.fi>
+Date: Wed, 01 Aug 2018 10:56:01 +0300
+In-Reply-To: <20180727124838.25910-1-luca@coelho.fi> (Luca Coelho's message of
+        "Fri, 27 Jul 2018 15:48:22 +0300")
+Message-ID: <87wota8qr2.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_102121_124766_8F05EF74)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Claudiu,
+Luca Coelho <luca@coelho.fi> writes:
 
-On Fri, 24 Aug 2018 12:31:28 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+>
+> Hi,
+>
+> Here's one more set of patches intended for v4.19.  It contains some
+> bugfixes, cleanups and more work on supporting the 22560 family of
+> devices.
+>
+> The changes are:
+>
+> * New PCI IDs for 22000 and 22560;
+> * Some fixes and an improvement in debug dumps and recording;
+> * Remove some old dead code;
+> * Fix compilation when only IPv6 is not enabled;
 
-> On 23.08.2018 13:33, Ajay Singh wrote:
-> > On Thu, 23 Aug 2018 11:12:08 +0300
-> > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> >   
-> >> On 14.08.2018 09:50, Ajay Singh wrote:  
-> >>> Cleanup patch to avoid line over 80 chars issue reported by
-> >>> checkpatch.pl script.
-> >>>
-> >>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> >>> ---
-> >>>  drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
-> >>>  1 file changed, 6 insertions(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> >>> b/drivers/staging/wilc1000/wilc_wlan.c index 041c9dd..f0743d9
-> >>> 100644 --- a/drivers/staging/wilc1000/wilc_wlan.c
-> >>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> >>> @@ -137,6 +137,11 @@ static inline int add_tcp_pending_ack(struct
-> >>> wilc_vif *vif, u32 ack, return 0;
-> >>>  }
-> >>>  
-> >>> +static inline void clear_tcp_session_txq(struct wilc_vif *vif,
-> >>> int index) +{
-> >>> +	vif->ack_filter.pending_acks_info[index].txqe = NULL;
-> >>> +}
-> >>> +    
-> >>
-> >> This seems useless to me...  
-> > 
-> > Sorry, this point is not fully clear to me.
-> > 
-> > Did you mean setting of 'NULL' to 'pending_acks_info[index].txqe' is
-> > not required?
-> >   
-> 
-> No, having a new function that sets a variable just to avoid line
-> over 80 warning.
+-EPARSE, "when only ... not"?
 
-Okay got it.
-How about using a temp variable to hold the value of
-'tqe->tcp_pending_ack_idx'. It can also help to overcome the
-checkpatch warning.
-
-
-Regards,
-Ajay
+-- 
+Kalle Valo
