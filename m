@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51970 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbeHXPZD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 11:25:03 -0400
+Received: from mga06.intel.com ([134.134.136.31]:55982 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388530AbeHAPJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 11:09:07 -0400
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
+To: Colin Ian King <colin.king@canonical.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] cfg80211: read wmm rules from regulatory database
+Date: Wed, 1 Aug 2018 13:23:06 +0000
+Message-ID: <409B2791E285FD41B488E034D9B4719F2D5D22DA@HASMSX106.ger.corp.intel.com> (sfid-20180801_152337_216915_28918F22)
+References: <9ff30f03-07f1-0abd-8c57-2601af546de0@canonical.com>
+In-Reply-To: <9ff30f03-07f1-0abd-8c57-2601af546de0@canonical.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH] wcn36xx: use dma_zalloc_coherent instead of
- allocator/memset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180724115211.19264-1-yuehaibing@huawei.com>
-References: <20180724115211.19264-1-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: <davem@davemloft.net>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        <wcn36xx@lists.infradead.org>, YueHaibing <yuehaibing@huawei.com>
-Message-Id: <20180824115045.185996032D@smtp.codeaurora.org> (sfid-20180824_135057_279538_75CB6E6B)
-Date: Fri, 24 Aug 2018 11:50:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
-
-> Use dma_zalloc_coherent instead of dma_alloc_coherent
-> followed by memset 0.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-d410e28f3ae4 wcn36xx: use dma_zalloc_coherent instead of allocator/memset
-
--- 
-https://patchwork.kernel.org/patch/10541939/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDb2xpbiBJYW4gS2luZyBbbWFp
+bHRvOmNvbGluLmtpbmdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgSnVseSAzMSwg
+MjAxOCAyOjI4IFBNDQo+IFRvOiBEcmV5ZnVzcywgSGFpbSA8aGFpbS5kcmV5ZnVzc0BpbnRlbC5j
+b20+OyBEYXZpZCBTLiBNaWxsZXINCj4gPGRhdmVtQGRhdmVtbG9mdC5uZXQ+OyBKb2hhbm5lcyBC
+ZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsNCj4gbmV0ZGV2QHZnZXIua2VybmVsLm9y
+ZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IENjOiBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IHJlOiBbUEFUQ0hdIGNmZzgwMjExOiByZWFkIHdtbSBy
+dWxlcyBmcm9tIHJlZ3VsYXRvcnkgZGF0YWJhc2UNCj4gDQo+IEhpIEhhaW0sDQo+IA0KPiBJIHRo
+aW5rIHRoZXJlIG1heSBiZSBhbiBpc3N1ZSB3aXRoIHRoZSBjb21taXQ6DQo+IA0KPiBGcm9tIDIz
+MGViYWExODlhZjQ0ZDUwZGNjYjRhMTg0NmUzOWNhNTk0ZTM0N2IgTW9uIFNlcCAxNyAwMDowMDow
+MA0KPiAyMDAxDQo+IEZyb206IEhhaW0gRHJleWZ1c3MgPGhhaW0uZHJleWZ1c3NAaW50ZWwuY29t
+Pg0KPiBEYXRlOiBXZWQsIDI4IE1hciAyMDE4IDEzOjI0OjA5ICswMzAwDQo+IFN1YmplY3Q6IFtQ
+QVRDSF0gY2ZnODAyMTE6IHJlYWQgd21tIHJ1bGVzIGZyb20gcmVndWxhdG9yeSBkYXRhYmFzZQ0K
+PiANCj4gc3BlY2lmaWNhbGx5IGluIGZ1bmN0aW9uOiByZWdfY29weV9yZWdkKCkNCj4gDQo+ICsg
+ICAgICAgZm9yIChpID0gMDsgaSA8IHNyY19yZWdkLT5uX3JlZ19ydWxlczsgaSsrKSB7DQo+ICAg
+ICAgICAgICAgICAgICBtZW1jcHkoJnJlZ2QtPnJlZ19ydWxlc1tpXSwgJnNyY19yZWdkLT5yZWdf
+cnVsZXNbaV0sDQo+ICAgICAgICAgICAgICAgICAgICAgICAgc2l6ZW9mKHN0cnVjdCBpZWVlODAy
+MTFfcmVnX3J1bGUpKTsNCj4gKyAgICAgICAgICAgICAgIGlmICghc3JjX3JlZ2QtPnJlZ19ydWxl
+c1tpXS53bW1fcnVsZSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+IA0K
+PiArICAgICAgICAgICAgICAgcmVnZC0+cmVnX3J1bGVzW2ldLndtbV9ydWxlID0gZF93bW0gKw0K
+PiArICAgICAgICAgICAgICAgICAgICAgICAoc3JjX3JlZ2QtPnJlZ19ydWxlc1tpXS53bW1fcnVs
+ZSAtIHNfd21tKSAvDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHNpemVvZihzdHJ1Y3QgaWVl
+ZTgwMjExX3dtbV9ydWxlKTsNCj4gKyAgICAgICB9DQo+IA0KPiBUaGUgcG9pbnRlciBhcml0aG1l
+dGljIChzcmNfcmVnZC0+cmVnX3J1bGVzW2ldLndtbV9ydWxlIC0gc193bW0pIGlzDQo+IHBlcmZv
+cm1lZCBpbiB0ZXJtcyBvZiB0aGUgc2l6ZSBvZiBzdHJ1Y3QgaWVlZTgwMjExX3dtbV9ydWxlIGFu
+ZCBub3QgaW4NCj4gYnl0ZXMgYW5kIEkgYmVsaWV2ZSB0aGF0IHRoZSBkaXZpc2lvbiBieSBzaXpl
+b2Yoc3RydWN0DQo+IGllZWU4MDIxMV93bW1fcnVsZSkgaXMgbm90IHJlcXVpcmVkLg0KPiANCj4g
+VGhpcyBpc3N1ZSB3YXMgZGV0ZWN0ZWQgYnkgc3RhdGljIGFuYWx5c2lzIHdpdGggQ292ZXJpdHkg
+U2NhbiwNCj4gQ0lEIzE0Njc0NTEgKCJFeHRyYSBzaXplb2YgZXhwcmVzc2lvbiIpLCAnc3VzcGlj
+aW91c19kaXZpc2lvbicNCj4gDQo+IEknbSBub3QgMTAwJSBzdXJlIHRoYXQgaXMgdGhpcyBhIGZh
+bHNlIHBvc2l0aXZlIG9yIG5vdCwgYnV0IEkgdGhpbmsgaXQgbG9va3MNCj4gaW5jb3JyZWN0IHRv
+IG1lLg0KDQpZZWFoIHlvdSdyZSByaWdodCwgdGhpcyBpcyBub3QgZmFsc2UgcG9zaXRpdmUuDQpK
+b2hhbm5lcyBhbHJlYWR5IGZpeGVkIHRoYXQgYW5kIEx1Y2Egd2lsbCBwcm9iYWJseSBzZW5kIGl0
+IGluIHRoZSBjb21pbmcgd2Vlay4NCj4gDQo=
