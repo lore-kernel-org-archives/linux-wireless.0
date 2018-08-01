@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51722 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727326AbeH3NIC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387411AbeHAJYX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 09:08:02 -0400
-Message-ID: <1535620003.5215.50.camel@sipsolutions.net> (sfid-20180830_110656_230126_37789A8E)
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is
- set to one
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 30 Aug 2018 11:06:43 +0200
-In-Reply-To: <1535619812.5215.49.camel@sipsolutions.net> (sfid-20180830_110347_501191_25C9B39D)
-References: <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
-         <1535569548.5215.33.camel@sipsolutions.net>
-         <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
-         <1535570007.5215.34.camel@sipsolutions.net>
-         <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
-         <1535616192.5215.37.camel@sipsolutions.net>
-         <20180830083115.GA9867@localhost.localdomain>
-         <1535618382.5215.44.camel@sipsolutions.net>
-         <20180830085054.GB9867@localhost.localdomain>
-         <1535619189.5215.47.camel@sipsolutions.net>
-         <20180830090045.GC9867@localhost.localdomain>
-         (sfid-20180830_110049_016172_37F22F11) <1535619812.5215.49.camel@sipsolutions.net>
-         (sfid-20180830_110347_501191_25C9B39D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Aug 2018 05:24:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+Date: Wed, 01 Aug 2018 10:39:58 +0300
+In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com> (Stanislaw
+        Gruszka's message of "Tue, 31 Jul 2018 14:40:50 +0200")
+Message-ID: <87y3dqzga9.fsf@purkki.adurom.net> (sfid-20180801_094238_379913_FF1AEF08)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-08-30 at 11:03 +0200, Johannes Berg wrote:
-> On Thu, 2018-08-30 at 11:00 +0200, Lorenzo Bianconi wrote:
-> > > On Thu, 2018-08-30 at 10:50 +0200, Lorenzo Bianconi wrote:
-> > > > 
-> > > > ack, I agree. Do you want I send a patch to fix it?
-> > > 
-> > > I have it written now, I'll just commit & send it out.
-> > 
-> > Sound good, thx :)
-> > 
-> > > 
-> > > > > Hmm, not sure I follow? "head" is the A-MSDU, containing the A-MSDU
-> > > > > header and the first subframe in skb->data (and/or frags), with the
-> > > > > subframes 2..N in the fraglist.
-> > > > > 
-> > > > > So I think this is right?
-> > > > 
-> > > > yep, correct. But when we are analyzing the second subframe what is the correct value for 'n'?
-> > > > 1 or 2? At the moment I guess it is set to 1 if frag_tail is NULL for head.
-> > > 
-> > > Ah. I guess you're right. So basically setting max_subframes to 1
-> > > doesn't avoid A-MSDUs completely, since n will still be 1 when we get
-> > > here ... good point, care to send a patch?
-> > > 
-> > 
-> > ack, I will send a patch for it
-> 
-> The same is true for nfrags, btw, no?
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-No, it's not, just misread the code.
+> Add mt76x0 driver for MT7610U based USB dongles. Currently driver
+> support only STA mode.
+>
+> mt76x0 is based on Jakub's mt7601u driver already included
+> in the kernel. I would like the driver be integrated as part
+> of mt76 (instead of separate driver in mediatek dir like mt7601u)
+> to utilize mt76 code for adding support for MT76x0 PCIe devices
+> in further development.
 
-johannes
+So what's the future for mt7601u, are we going to delete it? What's
+Jakub's opinion about all this? And what's the delta featurewise between
+mt7601u and this driver? Which one will be loaded by default?
+
+Also I noticed that mt76 is missing an entry in MAINTAINERS file? Could
+someone send a separate patch to add that, please?
+
+-- 
+Kalle Valo
