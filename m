@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57466 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726268AbeHBVrP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37652 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387911AbeHAK0S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Aug 2018 17:47:15 -0400
-Subject: Re: use-after free bug in hacked 4.16 kernel, related to
- fq_flow_dequeue
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com>
- <87in4sy2ks.fsf@toke.dk>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <cbfd3c11-6896-ff43-2434-7c29b04f8a79@candelatech.com> (sfid-20180802_215441_378443_96F8B720)
-Date: Thu, 2 Aug 2018 12:54:36 -0700
+        Wed, 1 Aug 2018 06:26:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+        <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
+        <8736vy1r0j.fsf@purkki.adurom.net> <20180801082844.GB4526@redhat.com>
+Date: Wed, 01 Aug 2018 11:41:33 +0300
+In-Reply-To: <20180801082844.GB4526@redhat.com> (Stanislaw Gruszka's message
+        of "Wed, 1 Aug 2018 10:28:45 +0200")
+Message-ID: <87600u8on6.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_105647_191532_CDCBA5D4)
 MIME-Version: 1.0
-In-Reply-To: <87in4sy2ks.fsf@toke.dk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2018 12:45 PM, Toke Høiland-Jørgensen wrote:
-> Ben Greear <greearb@candelatech.com> writes:
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
+
+> On Wed, Aug 01, 2018 at 10:32:12AM +0300, Kalle Valo wrote:
+>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>> 
+>> > Add Kconfig and Makefiles for mt76x0 driver. Now the driver
+>> > can be build.
+>> >
+>> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> > ---
+>> >  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
+>> >  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
+>> >  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
+>> >  3 files changed, 15 insertions(+)
+>> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+>> >
+>> > diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+>> > index 69906c733a1c..850611ad347a 100644
+>> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+>> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+>> > @@ -9,6 +9,13 @@ config MT76x2_COMMON
+>> >  	tristate
+>> >  	depends on MT76_CORE
+>> >  
+>> > +config MT76x0U
+>> > +	tristate "MediaTek MT76x0U (USB) support"
+>> > +	depends on MAC80211
+>> > +	depends on USB
+>> > +	help
+>> > +	  This adds support for MT7610U-based wireless USB dongles.
+>> 
+>> Does it make sense to add a Kconfig option for every mt76 device? I'm
+>> worried that soon we have over a dozen of them. I can understand having
+>> separate options to enable PCI or USB devices, but I don't see the
+>> benefit for anything more finegrained than that.
 >
->> This is from my hacked kernel, could be my fault. I thought the fq
->> guys might want to know however...
->
-> Hmm, nothing obvious comes to mind; fq_flow_dequeue() just dequeues a
-> packet from the queue; it only has two memory derefs, to fq->lock and
-> flow->queue. Don't see why either of those should be freed at this
-> point.
->
-> Unless fq_adjust_removal() is being inlined, perhaps? Then I suppose the
-> flow->tin reference could be the problem, if the txq_info struct was
-> already freed; did you change anything around the handling of TXQs?
+> I think it does make sense for AP/home routers and other embedded
+> devices.
 
-I have worked on some stuff to fix other leaks and corruptions in ath10k related
-to txqs, maybe that is part of this problem.  My full tree is here:
-
-https://github.com/greearb/linux-ct-4.16
-
-This bug in question is fairly repeatable on my current setup, which is high speed
-tx + rx on a 9984 NIC, with buggy firmware that crashes often in the tx
-path.  I think the crash only happens when I rmmod the driver under
-load, but possibly some of the fw crash cleanup logic that ran previously
-is also involved.
-
-I'll get the FW fixed sooner or later and quite reloading modules, and then this
-problem will probably go away.
-
-Thanks,
-Ben
+How much of memory savings are we talking about?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
