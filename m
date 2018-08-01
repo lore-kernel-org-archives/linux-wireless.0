@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37634 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730759AbeHNOVA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34960 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387733AbeHAKXg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 10:21:00 -0400
-Message-ID: <1534246392.3547.26.camel@sipsolutions.net> (sfid-20180814_133416_685913_D2729095)
-Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sushant Kumar Mishra <sushant2k1513@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Date: Tue, 14 Aug 2018 13:33:12 +0200
-In-Reply-To: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com> (sfid-20180802_055141_811857_426FAC5B)
-References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
-         (sfid-20180802_055141_811857_426FAC5B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Aug 2018 06:23:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 6/6] qtnfmac: implement basic WoWLAN support
+References: <20180531091102.28666-7-sergey.matyukevich.os@quantenna.com>
+        <20180730141342.B613A61D77@smtp.codeaurora.org>
+        <20180731095929.nskgxmi3siyrjvvv@bars>
+Date: Wed, 01 Aug 2018 11:38:54 +0300
+In-Reply-To: <20180731095929.nskgxmi3siyrjvvv@bars> (Sergey Matyukevich's
+        message of "Tue, 31 Jul 2018 12:59:31 +0300")
+Message-ID: <87a7q68orl.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_105646_053084_787596E4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-08-02 at 09:00 +0530, Sushant Kumar Mishra wrote:
-> From: Sanjay Kumar Koduri <sanjay.konduri@redpinesignals.com>
-> 
-> Currently, software scan in mac80211 is used by drivers, which don't
-> implement hardware scan. However some drivers which have implemented
-> hardware scan may also sometimes want to use software scan in mac80211.
-> Such drivers can return '-EPERM' and ask mac80211 to fallback to
-> software scan with this patch.
-> 
-> Signed-off-by: Sanjay Kumar konduri <sanjay.konduri@redpinesignals.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-> ---
-> changes in v3: Set SCAN_HW_CANCELLED bit, before SW_SCAN triggered.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-I'm not convinced - why would you set that? It seems to me that drivers
-might, for example, still do one band in hardware and the other in
-software, or something like that? You might also run into the WARN_ON
-here?
+>> > This patch implements core WoWLAN support in qtnfmac driver, including
+>> > processing of WoWLAN features reported by firmware and implementation
+>> > of cfg80211 suspend/resume/wakeup callbacks. Currently the following
+>> > WoWLAN triggers are supported: disconnect, magic packet,
+>> > custom pattern packet.
+>> >
+>> > Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+>> 
+>> Doesn't apply anymore as I dropped patch 5
+>> 
+>> fatal: sha1 information is lacking or useless
+>> (drivers/net/wireless/quantenna/qtnfmac/cfg80211.c).
+>> error: could not build fake ancestor
+>> Applying: qtnfmac: implement basic WoWLAN support
+>> Patch failed at 0001 qtnfmac: implement basic WoWLAN support
+>> The copy of the patch that failed is found in: .git/rebase-apply/patch
+>> 
+>> Patch set to Changes Requested.
+>
+> Thanks for review. I will rebase the remaining patches on top of your
+> up-to-date tree and resubmit.
+>
+> As for the patch with vendor specific commands, I will split it into
+> a separate discussion and make another attempt to convince you, adding
+> proper description.
 
-> @@ -686,6 +686,11 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->  	if (local->ops->hw_scan) {
->  		WARN_ON(!ieee80211_prep_hw_scan(local));
+Thanks, please do that. And always try to submit controversial patches
+separately, not within a bigger patchset.
 
+> IIRC there is no generic functionality suitable for this particular
+> usecase.
 
+The bigger problem here is that what should we do with the vendor
+commands, the current way of things (=some low level hardware related
+commands are accepted) does not work as it takes too much of my time.
+People always try to take the easy way out so they provide minimal
+documentation for vendors commands and don't even considering having a
+generic nl80211 interface, which needs from me quite significant effort
+to make the decision if the vendor interface is acceptable or not.
 
->  		rc = drv_hw_scan(local, sdata, local->hw_scan_req);
-> +		if (rc == -EPERM) {
-> +			set_bit(SCAN_HW_CANCELLED, &local->scanning);
-> +			__set_bit(SCAN_SW_SCANNING, &local->scanning);
-> +			rc = ieee80211_start_sw_scan(local, sdata);
-> +		}
+Personally I would just reject all vendor commands but on the otherhand
+I somewhat understand why in some cases they might be good. Dunno.
 
-Also, -EPERM is probably not a good idea - we might want to let the
-driver propagate arbitrary return values up. There's precedent for using
-a positive number (just the value 1) for such "special" behaviour, so I
-think that'd be better.
-
-Obviously this is also lacking documentation in mac80211.h one way or
-the other.
-
-johannes
+-- 
+Kalle Valo
