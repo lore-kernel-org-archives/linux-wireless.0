@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45462 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727410AbeHaMsu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:48:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36364 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387699AbeHAKJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 06:09:47 -0400
+Date: Wed, 1 Aug 2018 10:25:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Sean Wang <sean.wang@mediatek.com>
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:26 +0300
-Message-Id: <20180831083130.15525-25-luca@coelho.fi> (sfid-20180831_104232_985803_CB0A17A7)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 24/28] mac80211: allow AMSDU size limitation per-TID
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
+Message-ID: <20180801082508.GA4526@redhat.com> (sfid-20180801_103305_676756_354B9545)
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+ <87y3dqzga9.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y3dqzga9.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-)
+On Wed, Aug 01, 2018 at 10:39:58AM +0300, Kalle Valo wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> 
+> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
+> > support only STA mode.
+> >
+> > mt76x0 is based on Jakub's mt7601u driver already included
+> > in the kernel. I would like the driver be integrated as part
+> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
+> > to utilize mt76 code for adding support for MT76x0 PCIe devices
+> > in further development.
+> 
+> So what's the future for mt7601u, are we going to delete it? What's
+> Jakub's opinion about all this? And what's the delta featurewise between
+> mt7601u and this driver? Which one will be loaded by default?
 
-From: Sara Sharon <sara.sharon@intel.com>
+mt7601u is driver for different chip: MT7601. This driver if for MT7610
+chip. There are lot of similarities between the drivers, but there are
+bunch of differences too. And in the future development of mt76x0, due
+to integration into mt76 and mt76x2u and adding support for PCIe chips,
+the differences against mt7601u will be much be bigger.
 
-Some drivers may have AMSDU size limitation per TID, due to
-HW constrains. Add an option to set this limit.
+> Also I noticed that mt76 is missing an entry in MAINTAINERS file? Could
+> someone send a separate patch to add that, please?
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h | 2 ++
- net/mac80211/tx.c      | 4 ++++
- 2 files changed, 6 insertions(+)
+The question is if Felix would like to be the maintainer? Otherwise who would
+want to do this job? I think the best option would be to get some
+commitment from Mediatek if that possible, maybe Sean Wang could aggree
+to be the maintainer ? :-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1d1dbd8123a4..e448a633a242 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1852,6 +1852,7 @@ struct ieee80211_sta_rates {
-  *	unlimited.
-  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
-  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
-+ * @max_tid_amsdu_len: Maximum A-MSDU size in bytes for this TID
-  * @twt_req_support: indicates whether the STA advertised support for TWT
-  *	requester in the Extended Capabilities element.
-  * @twt_resp_support: indicates whether the STA advertised support for TWT
-@@ -1897,6 +1898,7 @@ struct ieee80211_sta {
- 	u16 max_amsdu_len;
- 	bool support_p2p_ps;
- 	u16 max_rc_amsdu_len;
-+	u16 max_tid_amsdu_len[IEEE80211_NUM_TIDS];
- 	bool twt_req_support;
- 	bool twt_resp_support;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b184906611b6..a2cc33652f2a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3221,6 +3221,10 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 		max_amsdu_len = min_t(int, max_amsdu_len,
- 				      sta->sta.max_rc_amsdu_len);
- 
-+	if (sta->sta.max_tid_amsdu_len[tid])
-+		max_amsdu_len = min_t(int, max_amsdu_len,
-+				      sta->sta.max_tid_amsdu_len[tid]);
-+
- 	spin_lock_bh(&fq->lock);
- 
- 	/* TODO: Ideally aggregation should be done on dequeue to remain
--- 
-2.18.0
+Thanks
+Stanislaw 
