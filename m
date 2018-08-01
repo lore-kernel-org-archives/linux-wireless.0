@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0043.outbound.protection.outlook.com ([104.47.37.43]:26880
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726251AbeHER1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Aug 2018 13:27:40 -0400
-Date: Sun, 5 Aug 2018 18:22:27 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
-Message-ID: <20180805152226.4t67jriayk4nkfw2@bars> (sfid-20180805_172247_213515_292C950F)
-References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
- <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
- <87d0v4stqm.fsf@codeaurora.org>
- <5B604B14.8080607@broadcom.com>
- <20180801082300.sev7ag5wh4wj7fbb@bars>
- <5B66268B.3010205@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5B66268B.3010205@broadcom.com>
+Received: from mga18.intel.com ([134.134.136.126]:49847 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388360AbeHAKEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 06:04:34 -0400
+Message-ID: <7c0f5fa3617c112eed1bdd199b88e32bf44c3d2e.camel@intel.com> (sfid-20180801_102124_767278_E6B77E34)
+Subject: Re: [PATCH 00/16] iwlwifi: updates intended for v4.19 2018-07-27
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 01 Aug 2018 11:19:59 +0300
+In-Reply-To: <87muu68prr.fsf@kamboji.qca.qualcomm.com>
+References: <20180727124838.25910-1-luca@coelho.fi>
+         <87wota8qr2.fsf@kamboji.qca.qualcomm.com>
+         <a3d8f0dcd43467c412ffcb72e2b4361f210a1cc6.camel@intel.com>
+         <87muu68prr.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > > Implement support for PTA (Packet Traffic Arbitration) configuration.
-> > > > > The PTA mechanism is used to coordinate sharing of the medium between
-> > > > > WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
-> > > > > 
-> > > > > This patch implements core infrastructure and vendor specific commands
-> > > > > to control PTA functionality in firmware.
-> > > > 
-> > > > And no description of the actual interface which would have helped with
-> > > > the review.
-> > > > 
-> > > > Anyway, the vendor commands are pain and they just make me grumpy. The
-> > > > original idea was that upstream drivers should not support them at all,
-> > > > later we flexed the rules so that low level hardware specific interfaces
-> > > > might be ok, for example we added one in wil6210.
-> > > > 
-> > > > If I would even consider applying a patch which adds a vendor command it
-> > > > needs a really good commit log with a proper description of the actual
-> > > > interface and good justifications why a generic nl80211 command won't
-> > > > work. I don't see anything even remotely close here.
-> > > > 
-> > > > Sorry for being grumpy, I just hate these vendor commands. Especially
-> > > > when I see that a generic nl80211 command has not even be consired at
-> > > > all.
+On Wed, 2018-08-01 at 11:17 +0300, Kalle Valo wrote:
+> Luciano Coelho <luciano.coelho@intel.com> writes:
+> 
+> > On Wed, 2018-08-01 at 10:56 +0300, Kalle Valo wrote:
+> > > Luca Coelho <luca@coelho.fi> writes:
 > > > 
-> > > For what it is worth, looking at part of the patch:
+> > > > From: Luca Coelho <luciano.coelho@intel.com>
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > Here's one more set of patches intended for v4.19.  It contains
+> > > > some
+> > > > bugfixes, cleanups and more work on supporting the 22560 family
+> > > > of
+> > > > devices.
+> > > > 
+> > > > The changes are:
+> > > > 
+> > > > * New PCI IDs for 22000 and 22560;
+> > > > * Some fixes and an improvement in debug dumps and recording;
+> > > > * Remove some old dead code;
+> > > > * Fix compilation when only IPv6 is not enabled;
 > > > 
-> > > +/**
-> > > + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
-> > > + *
-> > > + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
-> > > + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
-> > > + */
-> > > +enum qlink_pta_mode {
-> > > +       QLINK_PTA_MODE_DISABLED = 0,
-> > > +       QLINK_PTA_MODE_2_WIRE = 2
-> > > +};
-> > > +
-> > > 
-> > > it smells very much like low-level btcoex. The question is whether this
-> > > needs to be conveyed from user-space or should these be device
-> > > configuration, eg. like DT properties.
+> > > -EPARSE, "when only ... not"?
 > > 
-> > Hello Arend,
+> > That's perfectly fine grammar. :) "If only IPv6 is not enabled,
+> > compilation fails.  Fix that."
 > > 
-> > Yes, this is some kind of low-level BT coexistence mechanism, when WiFi and
-> > BT cards coordinate access to wireless media in 2.4G using gpio lines.
-> > Those lines connect WiFi and BT cards directly w/o host mediation.
+> > Though not exactly what I meant, I meant "when IPv6 is not
+> > enabled".
 > 
-> Right.
+> Yeah, that's more understandable :)
 > 
-> > As for DT properties, the qustion still remains the same: how to propagate
-> > those settings to WiFi card. AFAIK there is no 'standard' interface for
-> > this kind of things. So using vendor commands looked like the only option.
-> 
-> So DT properties are available to the kernel so it is just between
-> device driver and wifi card. There is no involvement with user-space needed.
+> Also I got last three patches two times, but maybe that was a problem
+> with email servers or something.
 
-Ok, makes sense. But IIUC this approach with DT
-does not cover PCIe/USB wireless cards.
+Sorry for that.  My mail server had some problems and added invalid
+tags in the headers and vger rejected them, so I resent.
 
-Regards,
-Sergey
+--
+Luca.
