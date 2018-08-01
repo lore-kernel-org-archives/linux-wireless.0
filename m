@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60640 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728701AbeH2TSO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 15:18:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Intel Wireless 8265/8275 (rev 78) issue
-References: <20180829065442.GA3488@dhcp-128-65.nay.redhat.com>
-Date: Wed, 29 Aug 2018 18:20:44 +0300
-In-Reply-To: <20180829065442.GA3488@dhcp-128-65.nay.redhat.com> (Dave Young's
-        message of "Wed, 29 Aug 2018 14:54:42 +0800")
-Message-ID: <87bm9ltd0z.fsf@purkki.adurom.net> (sfid-20180829_172105_609607_F1240AF7)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36474 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388666AbeHAKNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 06:13:23 -0400
+Date: Wed, 1 Aug 2018 10:28:45 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
+Message-ID: <20180801082844.GB4526@redhat.com> (sfid-20180801_103306_868383_BAB2655E)
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+ <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
+ <8736vy1r0j.fsf@purkki.adurom.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8736vy1r0j.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave Young <dyoung@redhat.com> writes:
+On Wed, Aug 01, 2018 at 10:32:12AM +0300, Kalle Valo wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+> 
+> > Add Kconfig and Makefiles for mt76x0 driver. Now the driver
+> > can be build.
+> >
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
+> >  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
+> >  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
+> >  3 files changed, 15 insertions(+)
+> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> >
+> > diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> > index 69906c733a1c..850611ad347a 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> > @@ -9,6 +9,13 @@ config MT76x2_COMMON
+> >  	tristate
+> >  	depends on MT76_CORE
+> >  
+> > +config MT76x0U
+> > +	tristate "MediaTek MT76x0U (USB) support"
+> > +	depends on MAC80211
+> > +	depends on USB
+> > +	help
+> > +	  This adds support for MT7610U-based wireless USB dongles.
+> 
+> Does it make sense to add a Kconfig option for every mt76 device? I'm
+> worried that soon we have over a dozen of them. I can understand having
+> separate options to enable PCI or USB devices, but I don't see the
+> benefit for anything more finegrained than that.
 
-> Not sure if this is a known issue, I'm seeing this with latest mainline
-> kernel on Fedora rawhide.
->
-> The wireless networking is not stable, I can not access network any more after
-> downloading some big files or just browsing some web pages about some
-> time.  I do not see this when I work in office.  So this maybe relate to
-> wireless router.
->
-> "Can not access network" means ping timeout, can not open web pages etc.
-> But the wireless connection looks normal at least from the
-> NetworkManager icon it is still connected.
->
-> The router I used at home is an old ASUS WL520gc.  I can confirm I can
-> reproduce this with another ASUA router WL-500gP v2 
->
-> My laptop model is Thinkpad T480s.  It is painful I can only use
-> wireless,  any hints how to make it work will be appreciated!
+I think it does make sense for AP/home routers and other embedded
+devices.
 
-Not everyone use Fedora so providing info which kernel versions work and
-which don't would help. Does Fedora usually add their own patches/hacks
-to kernel or is it a stock release from kernel.org? Also have you
-verified that this isn't a problem in user space, for example by
-downgrading the kernel to an older version?
-
--- 
-Kalle Valo
+Stanislaw
