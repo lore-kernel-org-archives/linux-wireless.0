@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:49142 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727649AbeHVKvZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39214 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733234AbeHAJQg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 06:51:25 -0400
-Message-ID: <1534922856.25523.60.camel@sipsolutions.net> (sfid-20180822_092749_166175_B26CAA86)
-Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Date: Wed, 22 Aug 2018 09:27:36 +0200
-In-Reply-To: <7999c366492a4523456227fb49329bf2@codeaurora.org>
-References: <7999c366492a4523456227fb49329bf2@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Aug 2018 05:16:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
+References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
+        <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
+Date: Wed, 01 Aug 2018 10:32:12 +0300
+In-Reply-To: <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
+        (Stanislaw Gruszka's message of "Tue, 31 Jul 2018 14:41:02 +0200")
+Message-ID: <8736vy1r0j.fsf@purkki.adurom.net> (sfid-20180801_093456_014756_ACF0DFDB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-21 at 15:08 -0700, Pradeep Kumar Chitrapu wrote:
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-> > Right. However, I guess we could allow updating/changing this setting 
-> > on
-> > the fly through nl80211_set_beacon() which already allows changing 
-> > other
-> > non-beacon parameters (like the probe or assoc response templates), and
-> > then we can use your approach. Basically changing "SET_BEACON" to be a
-> > bit like "CHANGE_AP".
-> 
-> Agree. ( ftm_responder param will have to be added in 
-> cfg80211_beacon_data
-> instead of cfg80211_ap_settings)
+> Add Kconfig and Makefiles for mt76x0 driver. Now the driver
+> can be build.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
+>  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
+>  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
+>  3 files changed, 15 insertions(+)
+>  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> index 69906c733a1c..850611ad347a 100644
+> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> @@ -9,6 +9,13 @@ config MT76x2_COMMON
+>  	tristate
+>  	depends on MT76_CORE
+>  
+> +config MT76x0U
+> +	tristate "MediaTek MT76x0U (USB) support"
+> +	depends on MAC80211
+> +	depends on USB
+> +	help
+> +	  This adds support for MT7610U-based wireless USB dongles.
 
-Right. I'm not even sure that all devices can disable it though, so we
-may be in a bind here? I think ours (Intel) can't, for example, disable
-FTM responder without disabling the AP (at least momentarily)...
+Does it make sense to add a Kconfig option for every mt76 device? I'm
+worried that soon we have over a dozen of them. I can understand having
+separate options to enable PCI or USB devices, but I don't see the
+benefit for anything more finegrained than that.
 
-Should we just ignore that? Or perhaps add a separate capability for it?
-
-Maybe there's even hardware that cannot change the elements (LCI/Civic
-location) on the fly?
-
-johannes
+-- 
+Kalle Valo
