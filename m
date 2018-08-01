@@ -1,129 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53664 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728315AbeHVNHA (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37504 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727159AbeHAVyW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 09:07:00 -0400
-Message-ID: <1534930963.25523.87.camel@sipsolutions.net> (sfid-20180822_114303_382512_2C9D3984)
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        kernel-team@lge.com
-Date: Wed, 22 Aug 2018 11:42:43 +0200
-In-Reply-To: <20180822091547.GB29722@X58A-UD3R>
-References: <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
-         <1534872621.25523.39.camel@sipsolutions.net>
-         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
-         <1534879241.25523.44.camel@sipsolutions.net>
-         <20180822024535.GA2414@X58A-UD3R>
-         <1534910543.25523.50.camel@sipsolutions.net>
-         <20180822054731.GB2414@X58A-UD3R>
-         <1534921643.25523.56.camel@sipsolutions.net>
-         <20180822075010.GA29722@X58A-UD3R>
-         <1534924940.25523.70.camel@sipsolutions.net>
-         <20180822091547.GB29722@X58A-UD3R>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 1 Aug 2018 17:54:22 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id A0D0F40A5C4
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Aug 2018 13:06:53 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: use-after free bug in hacked 4.16 kernel, related to fq_flow_dequeue
+Message-ID: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com> (sfid-20180801_220658_869971_8E6E2CEC)
+Date: Wed, 1 Aug 2018 13:06:53 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 18:15 +0900, Byungchul Park wrote:
-> 
-> > thread 1			thread 2 (wq thread)
-> > 
-> > common_case = false;
-> > queue_work(&my_wq, &work);
-> > mutex_lock(&mutex);
-> > 
-> > flush_workqueue(&my_wq);
-> > 				work_function()
-> > 				-> mutex_lock(&mutex);
-> > 				-> schedule(), wait for mutex
-> > wait_for_completion()
-> > 
-> > -> deadlock - we can't make any forward progress here.
-> 
-> I see. Now, I understand what you are talking about.
-> 
->    if (common_case)
-> 	schedule_and_wait_for_something_that_takes_a_long_time()
-> 
-> should be:
-> 
->    if (common_case)
-> 	schedule_and_wait_long_time_so_that_the_work_to_finish()
+This is from my hacked kernel, could be my fault.  I thought the fq guys might
+want to know however...
 
-Fair point.
+==================================================================
+BUG: KASAN: use-after-free in fq_flow_dequeue+0x353/0x3c0 [mac80211]
+Read of size 4 at addr ffff88013d92a700 by task rmmod/813
 
-> Ok. I didn't know what you are talking about but now I got it.
+audit: type=1130 audit(1533153605.287:233): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=sysstat-collect comm="systemd" exe="/usr/lib/systemd/s'
+CPU: 0 PID: 813 Comm: rmmod Tainted: G        W        4.16.18+ #24
+Hardware name: _ _/, BIOS 5.11 08/26/2016
+Call Trace:
+  dump_stack+0x7c/0xbf
+  print_address_description+0x70/0x280
+audit: type=1131 audit(1533153605.287:234): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=sysstat-collect comm="systemd" exe="/usr/lib/systemd/s'
+  ? fq_flow_dequeue+0x353/0x3c0 [mac80211]
+  kasan_report+0x25c/0x350
+  fq_flow_dequeue+0x353/0x3c0 [mac80211]
+  fq_flow_reset.constprop.56+0x2b/0x2d0 [mac80211]
+  fq_reset.constprop.53+0x79/0x110 [mac80211]
+  ieee80211_txq_teardown_flows+0xc2/0x100 [mac80211]
+  ieee80211_unregister_hw+0x17b/0x260 [mac80211]
+  ath10k_mac_unregister+0x35/0x1a0 [ath10k_core]
+  ath10k_core_unregister+0x60/0x160 [ath10k_core]
+  ath10k_pci_remove+0x53/0x100 [ath10k_pci]
+  pci_device_remove+0x97/0x1d0
+  device_release_driver_internal+0x26f/0x520
+  driver_detach+0x9d/0x140
+  bus_remove_driver+0xde/0x2c0
+  pci_unregister_driver+0x28/0x1a0
+  ath10k_pci_exit+0xc/0x14 [ath10k_pci]
+  SyS_delete_module+0x39a/0x4a0
+  ? free_module+0x7d0/0x7d0
+  ? exit_to_usermode_loop+0x75/0xf0
+  ? free_module+0x7d0/0x7d0
+  do_syscall_64+0x193/0x5e0
+  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+RIP: 0033:0x7f65a31ac5e7
+RSP: 002b:00007ffd0781e9a8 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+RAX: ffffffffffffffda RBX: 00007ffd0781e9f8 RCX: 00007f65a31ac5e7
+RDX: 000000000000000a RSI: 0000000000000800 RDI: 000055e08a426248
+RBP: 000055e08a4261e0 R08: 000000000000000a R09: 1999999999999999
+R10: 00007f65a321c1a0 R11: 0000000000000206 R12: 00007ffd0781ebc0
+R13: 00007ffd07820643 R14: 0000000000000000 R15: 000055e08a4261e0
 
-great.
+The buggy address belongs to the page:
+page:ffffea0004f64a80 count:0 mapcount:0 mapping:0000000000000000 index:0xffff88013d92a640
+flags: 0x5fff8000000000()
+raw: 005fff8000000000 0000000000000000 ffff88013d92a640 00000000ffffffff
+raw: 0000000000000000 dead000000000200 ffff88014c02a600 0000000000000000
+page dumped because: kasan: bad access detected
 
-> You are talking about who knows whether common_case is true or not,
-> so we must aggresively consider the case the wait_for_completion()
-> so far hasn't been called but may be called in the future.
+Memory state around the buggy address:
+  ffff88013d92a600: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+  ffff88013d92a680: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ >ffff88013d92a700: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                    ^
+  ffff88013d92a780: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+  ffff88013d92a800: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
 
-Yes.
 
-> I think it's a problem of how aggressively we need to check dependencies.
-> If we choose the aggressive option, then we could get reported
-> aggressively but could not avoid aggresive false positives either.
-> I don't want to strongly argue that because it's a problem of policy.
+Thanks,
+Ben
 
-I don't think you could consider a report from "aggressive reporting" to
- be a false positive. It's clearly possible that this happens, and once
-you go to a workqueue you basically don't really know your sequencing
-and timing any more.
-
-> Just, I would consider only waits that actually happened anyway. Of
-> course, we gotta consider the waits definitely even if any actual
-> deadlock doesn't happen since detecting potantial problem is more
-> important than doing on actual ones as you said.
-> 
-> So no big objection to check dependencies aggressively.
-> 
-> > Here we don't have a deadlock, but without the revert we will also not
-> 
-> You misunderstand me. The commit should be reverted or acquire/release
-> pairs should be added in both flush functions.
-
-Ok, I thought you were arguing we shouldn't revert it :)
-
-I don't know whether to revert or just add the pairs in the flush
-functions, because I can't say I understand what the third part of the
-patch does.
-
-> Anyway the annotation should be placed in the path where
-> wait_for_completion() might be called.
-
-Yes, it should be called regardless of whether we actually wait or not,
-i.e. before most of the checking in the functions.
-
-My issue #3 that I outlined is related - we'd like to have lockdep
-understand that if this work was on the WQ it might deadlock, but we
-don't have a way to get the WQ unless the work is scheduled - and in the
-case that it is scheduled we might already hitting the deadlock
-(depending on the order of execution though I guess).
-
-> Absolutly true. You can find my opinion about that in
-> Documentation/locking/crossrelease.txt which has been removed because
-> crossrelease is strong at detecting *potential* deadlock problems.
-
-Ok, you know what, I'm going to read this now ... hang on........
-
-I see. You were trying to solve the problem of completions/context
-transfers in lockdep.
-
-Given the revert of crossrelease though, we can't actually revert your
-patch anyway, and looking at it again I see what you mean by the "name"
-now ...
-
-So yeah, we should only re-add the two acquire/release pairs. I guess
-I'll make a patch for that, replacing my patch 2.
-
-I'm intrigued by the crossrelease - but that's a separate topic.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
