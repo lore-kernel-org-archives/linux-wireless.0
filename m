@@ -1,89 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr60088.outbound.protection.outlook.com ([40.107.6.88]:7072
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727211AbeHIVMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 17:12:49 -0400
-Subject: Re: [PATCHv2] ath10k : Fix channel survey dump
-To: Venkateswara Naralasetty <vnaralas@codeaurora.org>,
-        Jasmine Strong <jas@eero.com>
-References: <d586156d3861a6cf0f479ff12ddd6544@codeaurora.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <619039a5-3b30-b49d-dc85-9ccfa4403251@bowerswilkins.com> (sfid-20180809_204654_059331_F43538EF)
-Date: Thu, 9 Aug 2018 11:46:26 -0700
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:14807 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730915AbeHAMyI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 1 Aug 2018 08:54:08 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 1/2] staging: wilc1000: use 'u16' data type for config id parameter
+Date: Wed, 1 Aug 2018 16:40:59 +0530
+Message-ID: <1533121860-20820-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180801_130855_666395_020E9423)
+In-Reply-To: <1533121860-20820-1-git-send-email-ajay.kathat@microchip.com>
+References: <1533121860-20820-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <d586156d3861a6cf0f479ff12ddd6544@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cleanup patch to use the correct data type 'u16' for keeping the WID
+value in 'wilc_cfg_word' & 'wilc_cfg_str' structure.
 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On 08/08/2018 11:35 PM, Venkateswara Naralasetty wrote:
-> On 2018-08-01 00:03, Jasmine Strong wrote:
->> On Tue, Jul 31, 2018 at 10:38 AM Ben Greear <greearb@candelatech.com>
->> wrote:
->>
->>> On 07/31/2018 05:11 AM, Venkateswara Naralasetty wrote:
->>>> Channel active/busy time are showing incorrect(less than previous
->>> or
->>>> sometimes zero) for successive survey dump command.
->>>>
->>>> example:
->>>> Survey data from wlan0
->>>> frequency:                      5180 MHz [in use]
->>>> channel active time:            54995 ms
->>>> channel busy time:              432 ms
->>>> channel receive time:           0 ms
->>>> channel transmit time:          59 ms
->>>> Survey data from wlan0
->>>> frequency:                      5180 MHz [in use]
->>>> channel active time:            32592 ms
->>>> channel busy time:              254 ms
->>>> channel receive time:           0 ms
->>>> channel transmit time:          0 ms
->>>>
->>>> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
->>>> as 'WMI_BSS_SURVEY_REQ_TYPE_READ' which accumulate survey data in
->>>> FW and send survey data to driver upon the driver request. Wrap
->>> around
->>>> is taken care by FW.
->>>>
->>>> hardware used : QCA9984
->>>> firmware ver  : ver 10.4-3.5.3-00057
->>>
->>> Have you tested this on other firmwares?  I am pretty sure that at
->>> least
->>> some of them, probably 10.2, will have issues.
->>>
->>> Maybe you could make this change specific to certain firmware that
->>> is known to work with the change?
->>
->> There are bigger problems with it than that;  even with firmwares that
->> behave correctly,
->> this changes the behavior that a lot of upper-layer software depends
->> upon, and will likely
->> make anything that actually uses the channel survey data misbehave.
->>
->> It is therefore a breaking change for any device that actually
->> implements ACS.
->>
->> -J.
->
-> In ath9k driver also survey data being accumulated in driver and send 
-> survey data to user space is accumulated one. same thing we are 
-> implementing in FW(with WMI request type WMI_BSS_SURVEY_REQ_TYPE_READ) 
-> instead of doing it in driver.
-It seems you're changing the behavior, not fixing a bug.
-WMI_BSS_SURVEY_REQ_TYPE_READ_CLEAR is handled differently from 
-WMI_BSS_SURVEY_REQ_TYPE_READ and as Jasmine addressed, userspace apps 
-that's counting on WMI_BSS_SURVEY_REQ_TYPE_READ_CLEAR behavior will be 
-broken their functions with your change.
-This means this patch will break backward compatibility.
-
-Thanks,
-Peter
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index 08092a5..2aa7a9b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -22,12 +22,12 @@ struct wilc_cfg_hword {
+ };
+ 
+ struct wilc_cfg_word {
+-	u32 id;
++	u16 id;
+ 	u32 val;
+ };
+ 
+ struct wilc_cfg_str {
+-	u32 id;
++	u16 id;
+ 	u8 *str;
+ };
+ 
+-- 
+2.7.4
