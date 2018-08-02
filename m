@@ -1,182 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44974 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726074AbeHRDTv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Aug 2018 23:19:51 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 54818409E08
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Aug 2018 17:14:17 -0700 (PDT)
-Subject: Re: Crash in stock Fedora 4.17 kernel in ieee80211_set_wmm_default
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <e47ddecd-1346-4581-5e47-5ff2432d34ad@candelatech.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <e8ce4707-043e-8890-ded0-9d76af299b38@candelatech.com> (sfid-20180818_021422_681827_7979EE91)
-Date: Fri, 17 Aug 2018 17:14:17 -0700
+Received: from ns.e-nautia.com ([37.187.142.32]:36289 "EHLO ns.e-nautia.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729982AbeHBTN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Aug 2018 15:13:29 -0400
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Berto Gerard <gerard.berto@e-nautia.com>
+Subject: bug: many pcieport errors
+Message-ID: <16fa1240-cc8d-1c6c-7bf2-ea8d176cec5b@e-nautia.com> (sfid-20180802_192134_779261_77CB3946)
+Date: Thu, 2 Aug 2018 19:16:16 +0200
 MIME-Version: 1.0
-In-Reply-To: <e47ddecd-1346-4581-5e47-5ff2432d34ad@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/alternative;
+ boundary="------------2EE078C6B1299E5CF2263ADD"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/17/2018 03:49 PM, Ben Greear wrote:
-> I have been running some tests on un-modified Fedora 27, with a stock QCA firmware-2.bin.
+This is a multi-part message in MIME format.
+--------------2EE078C6B1299E5CF2263ADD
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I realized a bit later than NetworkManager (or wpa_supplicant service?) was already doing something with this
-interface.  When I disabled wpa_supplicant service, the crashes stopped.
+Hello,
 
-Still a bug, but maybe that will help someone understand why and/or reproduce.
+I help on the Ubuntu French forum and we see many times the same 
+problem: kern.log and syslog are filled with an error which is repeated. 
+Here is the error:
 
-Thanks,
-Ben
+|[ 22.275320] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.275322] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.277322] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.277325] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.277327] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.278793] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.278795] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.278796] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.279211] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.279214] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.279216] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.279605] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.279608] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.279610] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.399607] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.399611] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.399613] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) [ 22.538521] pcieport 0000:00:1c.4: PCIe Bus 
+Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
+22.538525] pcieport 0000:00:1c.4: device [8086:9d14] error 
+status/mask=00000001/00000000 [ 22.538527] pcieport 0000:00:1c.4: [ 0] 
+Receiver Error (First) |||||
 
->
-> [root@lf0350-0a0e ~]# uname -a
-> Linux lf0350-0a0e 4.17.14-102.fc27.x86_64 #1 SMP Wed Aug 15 12:26:40 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
->
-> [root@lf0350-0a0e network-scripts]# ethtool -i wlp5s0
-> driver: ath10k_pci
-> version: 4.17.14-102.fc27.x86_64
-> firmware-version: 10.1.467.3-1
-> expansion-rom-version:
-> bus-info: 0000:05:00.0
-> supports-statistics: yes
-> supports-test: no
-> supports-eeprom-access: no
-> supports-register-dump: no
-> supports-priv-flags: no
->
-> [root@lf0350-0a0e network-scripts]# cat /root/run_sup.sh
-> #!/bin/bash
->
-> WLAN=wlp5s0
-> CONF=/root/bagel.conf
->
-> wpa_supplicant -g /var/run/wpa_supplicant_if_wiphy1 -B -P /tmp/wpa_supplicant-wiphy1.pid -t -f /tmp/wpa_supplicant_log_wiphy1.txt -dd -K -Dnl80211 -i $WLAN -c
-> $CONF
->
->
-> # cat /root/bagel.conf
-> ctrl_interface=/var/run/wpa_supplicant
-> fast_reauth=1
-> p2p_disabled=1
-> bss_max_count=2000
->
-> network={
->     ssid="HOME-C9EC-2.4"
->
->     proto=RSN
->     key_mgmt=WPA-PSK WPA-PSK-SHA256
->     psk="XXXXXXXXXXXXXXXXXXX"
->     #psk=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
->     pairwise=TKIP CCMP
->     group=TKIP CCMP
->     proactive_key_caching=0
->
-> }
->
->
->
-> The kernel reliably crashes when I start up supplicant with the script above.
->
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: authenticate with ec:aa:a0:f6:e3:98
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: send auth to ec:aa:a0:f6:e3:98 (try 1/3)
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: authenticated
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: associate with ec:aa:a0:f6:e3:98 (try 1/3)
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: RX AssocResp from ec:aa:a0:f6:e3:98 (capab=0x431 status=0 aid=1)
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: associated
-> Aug 17 15:37:28 lf0350-0a0e wpa_supplicant[974]: wlp5s0: No network configuration found for the current AP
-> Aug 17 15:37:28 lf0350-0a0e kernel: wlp5s0: deauthenticating from ec:aa:a0:f6:e3:98 by local choice (Reason: 3=DEAUTH_LEAVING)
-> Aug 17 15:37:28 lf0350-0a0e kernel: general protection fault: 0000 [#1] SMP NOPTI
-> Aug 17 15:37:28 lf0350-0a0e kernel: Modules linked in: ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge
-> stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_raw ip6table_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
-> nf_nat_ipv4 nf_nat nf_conntrack libcrc32c iptable_mangle iptable_raw iptable_security ebtable_filter ebtables ip6table_filter ip6_tables arc4 sunrpc ath10k_pci
-> ath10k_core mac80211 amd64_edac_mod edac_mce_amd kvm_amd kvm ath irqbypass crct10dif_pclmul crc32_pclmul sdhci_pci cfg80211 leds_apu ghash_clmulni_intel cqhci
-> sdhci igb fam15h_power sp5100_tco mmc_core i2c_piix4 k10temp rfkill i2c_algo_bit dca ccp shpchp pcc_cpufreq acpi_cpufreq crc32c_intel
-> Aug 17 15:37:28 lf0350-0a0e kernel: CPU: 3 PID: 974 Comm: wpa_supplicant Not tainted 4.17.14-102.fc27.x86_64 #1
-> Aug 17 15:37:28 lf0350-0a0e kernel: Hardware name: PC Engines APU2/APU2, BIOS 4.0.7 02/28/2017
-> Aug 17 15:37:28 lf0350-0a0e kernel: RIP: 0010:ieee80211_regulatory_limit_wmm_params.part.19+0x63/0xe0 [mac80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel: RSP: 0018:ffff9d7fc1177940 EFLAGS: 00010297
-> Aug 17 15:37:28 lf0350-0a0e kernel: RAX: 2c5ff8c7f2828f00 RBX: ffff8bf9983ee8c0 RCX: 2c5ff8c7f2828f00
-> Aug 17 15:37:28 lf0350-0a0e kernel: RDX: 000000000025b840 RSI: 0000000000259130 RDI: ffff8bf997fa5020
-> Aug 17 15:37:28 lf0350-0a0e kernel: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-> Aug 17 15:37:28 lf0350-0a0e kernel: R10: 000000000000001f R11: 00000000000003ff R12: ffff9d7fc117797e
-> Aug 17 15:37:28 lf0350-0a0e kernel: R13: ffff8bf9983ee8c0 R14: 0000000000000000 R15: ffff8bf996a50760
-> Aug 17 15:37:28 lf0350-0a0e kernel: FS:  00007f8bc46f8300(0000) GS:ffff8bf99ed80000(0000) knlGS:0000000000000000
-> Aug 17 15:37:28 lf0350-0a0e kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> Aug 17 15:37:28 lf0350-0a0e kernel: CR2: 000055efb3ce6728 CR3: 0000000102666000 CR4: 00000000000406e0
-> Aug 17 15:37:28 lf0350-0a0e kernel: Call Trace:
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ieee80211_set_wmm_default+0x2f7/0x3a0 [mac80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ieee80211_set_disassoc+0x21b/0x5b0 [mac80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? avtab_search_node+0xb1/0x100
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ieee80211_mgd_deauth+0x113/0x230 [mac80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel:  cfg80211_mlme_deauth+0xaf/0x1c0 [cfg80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? startup_64+0x3/0x30
-> Aug 17 15:37:28 lf0350-0a0e kernel:  nl80211_deauthenticate+0x11f/0x160 [cfg80211]
-> Aug 17 15:37:28 lf0350-0a0e kernel:  genl_family_rcv_msg+0x1e4/0x390
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to+0x16f/0x4c0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  genl_rcv_msg+0x47/0x90
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __kmalloc_node_track_caller+0x1f9/0x2a0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? genl_family_rcv_msg+0x390/0x390
-> Aug 17 15:37:28 lf0350-0a0e kernel:  netlink_rcv_skb+0x4d/0x130
-> Aug 17 15:37:28 lf0350-0a0e kernel:  genl_rcv+0x24/0x40
-> Aug 17 15:37:28 lf0350-0a0e kernel:  netlink_unicast+0x1a3/0x250
-> Aug 17 15:37:28 lf0350-0a0e kernel:  netlink_sendmsg+0x2c1/0x3c0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  sock_sendmsg+0x36/0x40
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ___sys_sendmsg+0x2a0/0x2f0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? unix_dgram_sendmsg+0x35e/0x6f0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x34/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to+0x16f/0x4c0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __switch_to_asm+0x40/0x70
-> Aug 17 15:37:28 lf0350-0a0e kernel:  ? __sys_sendmsg+0x5e/0xa0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  __sys_sendmsg+0x5e/0xa0
-> Aug 17 15:37:28 lf0350-0a0e kernel:  do_syscall_64+0x5b/0x160
-> Aug 17 15:37:28 lf0350-0a0e kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> Aug 17 15:37:28 lf0350-0a0e kernel: RIP: 0033:0x7f8bc2e40387
-> Aug 17 15:37:28 lf0350-0a0e kernel: RSP: 002b:00007ffe48b99778 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-> Aug 17 15:37:28 lf0350-0a0e kernel: RAX: ffffffffffffffda RBX: 0000555c886749a0 RCX: 00007f8bc2e40387
-> Aug 17 15:37:28 lf0350-0a0e kernel: RDX: 0000000000000000 RSI: 00007ffe48b997b0 RDI: 0000000000000007
-> Aug 17 15:37:28 lf0350-0a0e kernel: RBP: 0000555c886cdc20 R08: 0000000000000000 R09: 000000000000000d
-> Aug 17 15:37:28 lf0350-0a0e kernel: R10: 0000555c8866a010 R11: 0000000000000246 R12: 0000555c886748b0
-> Aug 17 15:37:28 lf0350-0a0e kernel: R13: 00007ffe48b997b0 R14: 0000000000000000 R15: 00007ffe48b99b80
-> Aug 17 15:37:28 lf0350-0a0e kernel: Code: 2d ce ff 48 85 c0 74 7a 48 3d 00 f0 ff ff 77 72 48 8b 40 18 48 85 c0 74 69 83 bb d0 0a 00 00 03 48 8d 0c e8 75 05 48
-> 8d 4c e8 20 <0f> b7 01 41 0f b7 7c 24 02 41 0f b7 14 24 66 39 c7 0f 47 c7 41
-> Aug 17 15:37:28 lf0350-0a0e kernel: RIP: ieee80211_regulatory_limit_wmm_params.part.19+0x63/0xe0 [mac80211] RSP: ffff9d7fc1177940
-> Aug 17 15:37:28 lf0350-0a0e kernel: ---[ end trace 28cadc83f715e641 ]---
->
-> Thanks,
-> Ben
->
+||This problem leads to filled hard drive (and it's fast!) for Ubuntu 
+16.04 versions, and for the 18.04.1 version, the live session can't be 
+used: screen remains black with these errors written in white.
+
+These two boot parameters avoid the problem but they have drawbacks, so 
+it's a just a bypass solution: "pci=noaer" or "pci_aspm=off"
+
+We also see that
+
+|[8086:9d14]|
+
+in the error is an intel bridge (Skylake architecture), and
+
+|0000:00:1c.4|
+
+is the RTL8723BE wifi card.
+Many of the Ubuntu's French forum threads have the RTL8723BE card, and 
+every thread has this intel bridge. So I don't know if it's specific of 
+the RTL8723BE card, but on my pc, I don't have the problem and I have 
+the RTL8723BE card but not the same intel bridge (Haswell architecture) 
+and I tried with Xubuntu 16.04.1, Ubuntu 16.04.3 and Xubuntu 18.04.1 and 
+no errors logged.
+
+When we do
+sudo modprobe -r rtl8723be
+the errors stop logged. So maybe the boot parameter 
+"modprobe.blacklist=rtl8723be" could be useful for tests.
+
+That's all we know. If you have questions or some tests for finding 
+where the problem is, don't hesitate.
+Best regards
+
+--------------2EE078C6B1299E5CF2263ADD
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  </head>
+  <body text="#000000" bgcolor="#FFFFFF">
+    <p>Hello, </p>
+    <p>I help on the Ubuntu French forum and we see many times the same
+      problem: kern.log and syslog are filled with an error which is
+      repeated. Here is the error:</p>
+    <pre><code>[   22.275320] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.275322] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.277322] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.277325] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.277327] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.278793] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.278795] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.278796] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.279211] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.279214] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.279216] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.279605] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.279608] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.279610] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.399607] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.399611] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.399613] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
+[   22.538521] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
+[   22.538525] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
+[   22.538527] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+</code><code>
+</code><code></code></pre>
+    <p><code></code>This problem leads to filled hard drive (and it's
+      fast!) for Ubuntu 16.04 versions, and for the 18.04.1 version, the
+      live session can't be used: screen remains black with these errors
+      written in white.</p>
+    <p>These two boot parameters avoid the problem but they have
+      drawbacks, so it's a just a bypass solution: "pci=noaer" or
+      "pci_aspm=off"</p>
+    <p>We also see that <br>
+    </p>
+    <pre><code>[8086:9d14]</code></pre>
+    in the error is an intel bridge (Skylake architecture), and <br>
+    <pre><code>0000:00:1c.4</code></pre>
+    is the RTL8723BE wifi card. <br>
+    Many of the Ubuntu's French forum threads have the RTL8723BE card,
+    and every thread has this intel bridge. So I don't know if it's
+    specific of the RTL8723BE card, but on my pc, I don't have the
+    problem and I have the RTL8723BE card but not the same intel bridge
+    (Haswell architecture) and I tried with Xubuntu 16.04.1, Ubuntu
+    16.04.3 and Xubuntu 18.04.1 and no errors logged.<br>
+    <br>
+    When we do<br>
+    sudo modprobe -r rtl8723be<br>
+    the errors stop logged. So maybe the boot parameter
+    "modprobe.blacklist=rtl8723be" could be useful for tests.<br>
+    <br>
+    That's all we know. If you have questions or some tests for finding
+    where the problem is, don't hesitate.<br>
+    Best regards<br>
+  </body>
+</html>
+
+--------------2EE078C6B1299E5CF2263ADD--
