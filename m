@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:39825 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730038AbeHBDlD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37774 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726580AbeHBUsg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 23:41:03 -0400
-Received: by mail-yw0-f182.google.com with SMTP id r184-v6so236794ywg.6
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2018 18:52:21 -0700 (PDT)
+        Thu, 2 Aug 2018 16:48:36 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Joshua Zhao <swzhao@gmail.com>
-Date: Wed, 1 Aug 2018 18:52:20 -0700
-Message-ID: <CAKmTU=p=HBNYiNmEhoUJVhZpuYrrFMjhfxkO0fegOTu8pjuSxg@mail.gmail.com> (sfid-20180802_035225_053361_FAA7C14E)
-Subject: 11s mesh authentication problem
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v2] qtnfmac: implement basic WoWLAN support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180802104043.32068-1-sergey.matyukevich.os@quantenna.com>
+References: <20180802104043.32068-1-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Message-Id: <20180802185612.D0CF56063A@smtp.codeaurora.org> (sfid-20180802_205615_682755_817AD0E6)
+Date: Thu,  2 Aug 2018 18:56:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I'm running the open source 11s mesh with QCA Dakota radios. But as we
-set up more spaces, say > 4 spaces, mesh authentication starts to
-become difficult. As I look into the code, it appears to me that the
-SAE state machine is not tracking/identifying the peers?  So when the
-commit & confirm messages between multiple peers interleave each
-other, the state machine either sees ECC/FFC mismatch or keeps
-resetting the states.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
 
-Is my observation correct?  And is this a known issue?
+> This patch implements basic WoWLAN support in qtnfmac driver, including
+> processing of WoWLAN features reported by firmware and implementation
+> of cfg80211 suspend/resume/wakeup callbacks. Currently the following
+> WoWLAN triggers are supported: disconnect, magic packet,
+> custom pattern packet.
+> 
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Thanks,
-Joshua
+Patch applied to wireless-drivers-next.git, thanks.
+
+28b918848390 qtnfmac: implement basic WoWLAN support
+
+-- 
+https://patchwork.kernel.org/patch/10553471/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
