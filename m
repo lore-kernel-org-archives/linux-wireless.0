@@ -1,84 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43348 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728356AbeHVPXS (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:46356 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728767AbeHBNRx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 11:23:18 -0400
-Message-ID: <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi> (sfid-20180822_135843_036264_09ABEA50)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Date: Wed, 22 Aug 2018 14:58:37 +0300
-In-Reply-To: <877ekir5f2.fsf@kamboji.qca.qualcomm.com>
-References: <20180821063657.30071-1-luca@coelho.fi>
-         <20180821063657.30071-8-luca@coelho.fi>
-         <877ekir5f2.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 07/15] iwlwifi: add 80211 hdr offset to trace data
+        Thu, 2 Aug 2018 09:17:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: fix compilation warning for ARCH PowerPC
+Date: Thu, 2 Aug 2018 16:57:02 +0530
+Message-ID: <1533209222-22295-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180802_132712_547551_57B2559A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 14:45 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> > 
-> > Every rx mpdu cmd is built from cmd_hdr | 80211_hdr.  The problem
-> > is
-> > that the size of cmd_hdr changes with API changes and we don't know
-> > where the 80211_hdr starts.
-> > 
-> > By adding the size of cmd_hdr dynamically, we can ensure that we
-> > always
-> > know how to parse mpdu frames, without dependending on the API
-> > changes.
-> > 
-> > Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> [...]
-> 
-> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h
-> > @@ -2,6 +2,7 @@
-> >   *
-> >   * Copyright(c) 2009 - 2014 Intel Corporation. All rights
-> > reserved.
-> >   * Copyright(c) 2015        Intel Deutschland GmbH
-> > + * Copyright(c) 2018        Intel Corporation
-> >   *
-> >   * This program is free software; you can redistribute it and/or
-> > modify it
-> >   * under the terms of version 2 of the GNU General Public License
-> > as
-> > @@ -12,10 +13,6 @@
-> >   * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-> > License for
-> >   * more details.
-> >   *
-> > - * You should have received a copy of the GNU General Public
-> > License along with
-> > - * this program; if not, write to the Free Software Foundation,
-> > Inc.,
-> > - * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-> > - *
-> >   * The full GNU General Public License is included in this
-> > distribution in the
-> >   * file called LICENSE.
-> >   *
-> 
-> Ok, you have more of these removals in this patch so I guess it's
-> intentional. But IMHO it would be nicer to remove these all in one go
-> instead of sprinkle around in different patches.
+Fix below warning reported for PowerPC arch compilation
 
-IMHO it's too much fuzz for mostly useless warning removal... We need
-to update the copyright when this hits, so we just do it at the same
-time.
+include/uapi/linux/byteorder/big_endian.h:95:37: warning: passing
+argument 1 of '__swab32s' makes pointer from integer without a cast
+[-Wint-conversion]
 
-But you're the boss, I can submit a patch to remove just that, all at
-once.
+Fixes: 02211edc9a1f ("staging: wilc1000: fix endianness warnings
+reported by sparse")
 
---
-Luca.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 2 +-
+ drivers/staging/wilc1000/wilc_spi.c  | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 8bda550..1908afa1 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -563,7 +563,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		}
+ 	}
+ 
+-	le32_to_cpus(*data);
++	le32_to_cpus(data);
+ 
+ 	return 1;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 064892d..a85f87b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -699,7 +699,7 @@ static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
+ 		return 0;
+ 	}
+ 
+-	le32_to_cpus(*data);
++	le32_to_cpus(data);
+ 
+ 	return 1;
+ }
+@@ -778,7 +778,7 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		return 0;
+ 	}
+ 
+-	le32_to_cpus(*data);
++	le32_to_cpus(data);
+ 
+ 	return 1;
+ }
+-- 
+2.7.4
