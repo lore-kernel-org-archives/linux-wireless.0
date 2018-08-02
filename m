@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726793AbeHHM7i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 08:59:38 -0400
-From: Wen Gong <wgong@codeaurora.org>
-To: ath10k@lists.infradead.org, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/2] Change sk_pacing_shift in ieee80211_hw for best tx throughput
-Date: Wed,  8 Aug 2018 18:40:00 +0800
-Message-Id: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> (sfid-20180808_124034_747900_A72840B7)
+Received: from mail.toke.dk ([52.28.52.200]:43727 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726177AbeHBVia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Aug 2018 17:38:30 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: use-after free bug in hacked 4.16 kernel, related to fq_flow_dequeue
+In-Reply-To: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com>
+References: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com>
+Date: Thu, 02 Aug 2018 21:45:55 +0200
+Message-ID: <87in4sy2ks.fsf@toke.dk> (sfid-20180802_214605_093557_531778B9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a field for ath10k to adjust the sk_pacing_shift, mac80211 set
-the default value to 8, and ath10k will change it to 6. Then mac80211
-will use the changed value 6 as sk_pacing_shift since 6 is the best
-value for tx throughput by test result.
+Ben Greear <greearb@candelatech.com> writes:
 
-Wen Gong (2):
-  mac80211: Change sk_pacing_shift saved to ieee80211_hw
-  ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+> This is from my hacked kernel, could be my fault. I thought the fq
+> guys might want to know however...
 
- drivers/net/wireless/ath/ath10k/core.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/hw.h   | 3 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 4 ++++
- include/net/mac80211.h                 | 5 +++++
- net/mac80211/main.c                    | 2 ++
- net/mac80211/tx.c                      | 2 +-
- 6 files changed, 21 insertions(+), 1 deletion(-)
+Hmm, nothing obvious comes to mind; fq_flow_dequeue() just dequeues a
+packet from the queue; it only has two memory derefs, to fq->lock and
+flow->queue. Don't see why either of those should be freed at this
+point.
 
--- 
-1.9.1
+Unless fq_adjust_removal() is being inlined, perhaps? Then I suppose the
+flow->tin reference could be the problem, if the txq_info struct was
+already freed; did you change anything around the handling of TXQs?
+
+-Toke
