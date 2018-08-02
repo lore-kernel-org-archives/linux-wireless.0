@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lorien.comfychair.org ([173.8.144.98]:44960 "EHLO
-        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726292AbeHRAdD (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57466 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726268AbeHBVrP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Aug 2018 20:33:03 -0400
-Date: Fri, 17 Aug 2018 14:21:20 -0700
-From: Danek Duvall <duvall@comfychair.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: Use of IEEE80211_VHT_CAP_RXSTBC_* in mac80211_hwsim
-Message-ID: <20180817212120.GA16270@lorien.comfychair.org> (sfid-20180818_004155_053007_4313902F)
+        Thu, 2 Aug 2018 17:47:15 -0400
+Subject: Re: use-after free bug in hacked 4.16 kernel, related to
+ fq_flow_dequeue
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com>
+ <87in4sy2ks.fsf@toke.dk>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <cbfd3c11-6896-ff43-2434-7c29b04f8a79@candelatech.com> (sfid-20180802_215441_378443_96F8B720)
+Date: Thu, 2 Aug 2018 12:54:36 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87in4sy2ks.fsf@toke.dk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac80211_hwsim driver puts this in its VHT capabilities info field:
+On 08/02/2018 12:45 PM, Toke Høiland-Jørgensen wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> This is from my hacked kernel, could be my fault. I thought the fq
+>> guys might want to know however...
+>
+> Hmm, nothing obvious comes to mind; fq_flow_dequeue() just dequeues a
+> packet from the queue; it only has two memory derefs, to fq->lock and
+> flow->queue. Don't see why either of those should be freed at this
+> point.
+>
+> Unless fq_adjust_removal() is being inlined, perhaps? Then I suppose the
+> flow->tin reference could be the problem, if the txq_info struct was
+> already freed; did you change anything around the handling of TXQs?
 
-    IEEE80211_VHT_CAP_RXSTBC_1 | 
-    IEEE80211_VHT_CAP_RXSTBC_2 |
-    IEEE80211_VHT_CAP_RXSTBC_3 |
-    IEEE80211_VHT_CAP_RXSTBC_4
+I have worked on some stuff to fix other leaks and corruptions in ath10k related
+to txqs, maybe that is part of this problem.  My full tree is here:
 
-and I don't understand what that's supposed to mean.  According to
-802.11-2016, the three-bit field isn't a series of boolean values, but a
-single numerical value in its three bits, where the value is the maximum
-number of STBC streams, and the maximum defined value is 4.
+https://github.com/greearb/linux-ct-4.16
 
-But the way that the code treats it, we end up with a value of 7.
+This bug in question is fairly repeatable on my current setup, which is high speed
+tx + rx on a 9984 NIC, with buggy firmware that crashes often in the tx
+path.  I think the crash only happens when I rmmod the driver under
+load, but possibly some of the fw crash cleanup logic that ran previously
+is also involved.
 
-There seems to be a similar issue in mac80211/main.c, in the definition of
-mac80211_vht_capa_mod_mask.
-
-Is that a bug in the code, or a misunderstanding on my part?  No other
-(in-tree) drivers use any of the macros other than _1, so I don't have any
-other references for how the other values might be used.
+I'll get the FW fixed sooner or later and quite reloading modules, and then this
+problem will probably go away.
 
 Thanks,
-Danek
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
