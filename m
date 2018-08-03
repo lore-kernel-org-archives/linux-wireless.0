@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45540 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727222AbeHaNBK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45738 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727374AbeHCSVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 09:01:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+        Fri, 3 Aug 2018 14:21:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 31 Aug 2018 11:31:19 +0300
-Message-Id: <20180831083130.15525-18-luca@coelho.fi> (sfid-20180831_105449_387424_290EC0E6)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 17/28] mac80211: copy VHT EXT NSS BW Support/Capable data to station
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 1/2] mt76x0: raname mt76_* functions
+References: <1533296680-7236-1-git-send-email-sgruszka@redhat.com>
+        <87r2jf5t6w.fsf@kamboji.qca.qualcomm.com>
+        <20180803161828.GA2389@redhat.com>
+Date: Fri, 03 Aug 2018 19:24:19 +0300
+In-Reply-To: <20180803161828.GA2389@redhat.com> (Stanislaw Gruszka's message
+        of "Fri, 3 Aug 2018 18:18:29 +0200")
+Message-ID: <87muu35sgc.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_182426_807009_BA588A13)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-When taking VHT capabilities for a station, copy the new
-fields if we support them as a transmitter. Also adjust
-the maximum bandwidth the station supports appropriately.
+> On Fri, Aug 03, 2018 at 07:08:23PM +0300, Kalle Valo wrote:
+>> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>> 
+>> > mt76_* functions conflicts with mt7601u driver what prevents to build
+>> > those drivers in the kernel or use both drivers modules at once.
+>> >
+>> > Patch fixes build errors like this:
+>> > ld: drivers/net/wireless/mediatek/mt76/mt76x0/mac.o:(.opd+0x30):
+>> > multiple definition of `mt76_mac_tx_rate_val';
+>> > drivers/net/wireless/mediatek/mt7601u/mac.o:(.opd+0x30): first
+>> > defined here
+>> >
+>> > Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+>> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> 
+>> Thanks. I'll add this to both patches:
+>> 
+>> Fixes: 7b4859026ccd ("mt76x0: core files")
+>
+> Please also fix typo in the topic raname -> rename
 
-Also, since it was missing, copy tx_highest and rx_highest.
+Oh, I didn't even notice that. Will fix.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/vht.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+The patches are now in w-d-next pending branch and I'll also run some
+build tests myself. If everything goes ok I'll apply these.
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 259325cbcc31..006d82e4a397 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -3,6 +3,7 @@
-  *
-  * Portions of this file
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -231,6 +232,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
- 	       sizeof(struct ieee80211_vht_mcs_info));
- 
-+	/* copy EXT_NSS_BW Support value or remove the capability */
-+	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
-+		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
-+	else
-+		vht_cap->vht_mcs.tx_highest &=
-+			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
-+
- 	/* but also restrict MCSes */
- 	for (i = 0; i < 8; i++) {
- 		u16 own_rx, own_tx, peer_rx, peer_tx;
-@@ -294,6 +302,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	default:
- 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
-+
-+		if (!(vht_cap->vht_mcs.tx_highest &
-+				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE)))
-+			break;
-+
-+		/*
-+		 * If this is non-zero, then it does support 160 MHz after all,
-+		 * in one form or the other. We don't distinguish here (or even
-+		 * above) between 160 and 80+80 yet.
-+		 */
-+		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
-+			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
- 	}
- 
- 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
 -- 
-2.18.0
+Kalle Valo
