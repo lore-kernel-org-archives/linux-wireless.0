@@ -1,345 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53390 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727101AbeH1Qha (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 12:37:30 -0400
-Message-ID: <1535460343.5895.56.camel@sipsolutions.net> (sfid-20180828_144612_195273_EFB39F9F)
-Subject: Re: [PATCH net-next] Implement a rtnetlink device which simulates
- wifi.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cody Schuffelen <schuffelen@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-team@android.com
-Date: Tue, 28 Aug 2018 14:45:43 +0200
-In-Reply-To: <5b5b8e09.1c69fb81.c693c.0acd@mx.google.com> (sfid-20180727_232641_004306_EE08DF16)
-References: <5b5b8e09.1c69fb81.c693c.0acd@mx.google.com>
-         (sfid-20180727_232641_004306_EE08DF16)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43396 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728412AbeHCNkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Aug 2018 09:40:52 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH 1/2] mt76x0: raname mt76_* functions
+Date: Fri,  3 Aug 2018 13:44:39 +0200
+Message-Id: <1533296680-7236-1-git-send-email-sgruszka@redhat.com> (sfid-20180803_134507_104285_B476DC79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cody,
-
-Sorry for the delay in reviewing this.
-
-I think in general there may be some value in this.
-
-I think you'd have a far better experience (and some more real wifi
-testing) by adding the ability to route the hwsim virtual air/medium of
-the inside of the VM to the outside of the VM, and then you could run
-APs there and bridge to ethernet etc. That way, you could have far more
-realistic WiFi with multiple APs etc. with not all that much effort.
-
-
-Regarding the patch itself:
-
-On Tue, 2018-07-24 at 17:10 -0700, Cody Schuffelen wrote:
-> The device added here is used through "ip link add ... type virt_wifi"
-
-Can you have a more elaborate example that includes how to specify the
-ethernet link to use?
-
-> +static struct ieee80211_channel channel = {
-> +	.band = NL80211_BAND_5GHZ,
-
-You only have a single 5 GHz channel? That's pretty atypical - there are
-no real devices that behave this way. I wouldn't be surprised if some
-userspace assumes you have at least one 2.4 GHz channel, so I'd argue
-you should have a more regular setup here.
-
-> +static struct ieee80211_rate bitrate = {
-> +	.flags = IEEE80211_RATE_SHORT_PREAMBLE, /* ieee80211_rate_flags */
-> +	.bitrate = 1000,
-
-err, well, you can't really have 10Mbps as a rate ... it doesn't exist.
-Also, short preamble is irrelevant on 5 GHz.
-
-Again, you should have a more regular setup here.
-
-> +};
-> +
-> +static struct ieee80211_supported_band band_5ghz = {
-> +	.channels = &channel,
-> +	.bitrates = &bitrate,
-> +	.band = NL80211_BAND_5GHZ,
-> +	.n_channels = 1,
-> +	.n_bitrates = 1,
-> +};
-
-And probably best to support the normal 8 bitrates supported on 5GHz at
-least?
-
-Or perhaps put the whole thing on 2.4GHz since chips actually exist that
-only have 2.4 (vs. none that only have 5), and support some HT/VHT even
-to make it look like it's not out of the last millenium? :)
-
-> +static struct cfg80211_inform_bss mock_inform_bss = {
-> +	/* ieee80211_channel* */ .chan = &channel,
-> +	/* nl80211_bss_scan_width */ .scan_width = NL80211_BSS_CHAN_WIDTH_20,
-> +	/* s32 */ .signal = 99,
-
-That signal level is questionable ... better limit to something actually
-used in practice like -60 dBm?
-
-> +static u8 fake_router_bssid[] = {4, 4, 4, 4, 4, 4};
-
-Well, use a locally assigned address at least if you're going to fake
-something?
-
-> +		for (i = 0; i < request->n_ssids; i++) {
-> +			strncpy(request_ssid_copy, request->ssids[i].ssid,
-> +				request->ssids[i].ssid_len);
-> +			request_ssid_copy[request->ssids[i].ssid_len] = 0;
-> +			wiphy_debug(wiphy, "scan: ssid: %s\n",
-> +				    request_ssid_copy);
-
-SSIDs can very well contain NUL bytes, so this is not a valid way to
-print them.
-
-Why would you even want to print the request anyway though, if your
-stated goal is to make it look to userspace like a wifi link, vs.
-debugging?
-
-Plus you can always run "iw event" to see it.
-
-> +		}
-> +	}
-> +
-> +	priv->scan_request = request;
-> +	schedule_delayed_work(&priv->scan_result, HZ / 100);
-
-That's way too fast, so for any realism you should probably wait 2-3
-seconds. Well, you only have one channel, so perhaps only 100-200ms? But
-10ms is not realistic.
-
-> +	return 0;
-> +}
-> +
-> +static void virt_wifi_scan_result(struct work_struct *work)
-> +{
-> +	struct virt_wifi_priv *priv =
-> +		container_of(work, struct virt_wifi_priv,
-> +			     scan_result.work);
-> +	struct wiphy *wiphy = priv_to_wiphy(priv);
-> +	char ssid[] = "__VirtWifi";
-> +	struct cfg80211_bss *informed_bss;
-> +
-> +	mock_inform_bss.boottime_ns = ktime_get_boot_ns();
-
-Updating the static variable seems a bit weird, this could be concurrent
-for different instances, afaict?
-
-> +
-> +static struct ieee80211_mgmt auth_mgmt_frame = {
-> +	.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT
-> +				     | IEEE80211_STYPE_AUTH),
-
-more idiomatic kernel coding style would put the | at the end of the
-first line
-
-> +	.duration = cpu_to_le16(1), /* ??? */
-
-that's not quite a realistic duration, but I guess nobody cares
-
-> +	.u = {
-> +		.auth = {
-> +			.auth_alg = WLAN_AUTH_OPEN,
-> +			/* auth request has 1, auth response has 2 */
-> +			.auth_transaction = cpu_to_le16(2),
-> +		},
-> +	},
-> +};
-> +
-> +static int virt_wifi_auth(struct wiphy *wiphy,  struct net_device *dev,
-> +			  struct cfg80211_auth_request *req)
-> +{
-> +	wiphy_debug(wiphy, "auth\n");
-> +	memcpy(auth_mgmt_frame.da, dev->dev_addr, dev->addr_len);
-> +	memcpy(auth_mgmt_frame.sa, fake_router_bssid,
-> +	       sizeof(fake_router_bssid));
-> +	memcpy(auth_mgmt_frame.bssid, fake_router_bssid,
-> +	       sizeof(fake_router_bssid));
-
-Well, I guess at the very least you should check you're connecting to
-the right AP? Or maybe not, since you only fake one to exist in the
-first place.
-
-Same problem with globals being modified though.
-
-> +	/* Must call cfg80211_rx_mlme_mgmt to notify about the response to this.
-> +	 * This must hold the mutex for the wedev while calling the function.
-
-typo - wdev
-
-> +	 * Luckily the nl80211 code invoking this already holds that mutex.
-> +	 */
-> +	cfg80211_rx_mlme_mgmt(dev, (const u8 *)&auth_mgmt_frame,
-> +			      sizeof(auth_mgmt_frame));
-
-Some delay might be appropriate.
-
-> +	return 0;
-> +}
-> +
-> +static struct ieee80211_mgmt assoc_mgmt_frame = {
-> +	.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT
-> +				     | IEEE80211_STYPE_ASSOC_RESP),
-> +	.duration = cpu_to_le16(1), /* ??? */
-
-see above
-
-> +static int virt_wifi_assoc(struct wiphy *wiphy, struct net_device *dev,
-> +			   struct cfg80211_assoc_request *req)
-> +{
-> +	wiphy_debug(wiphy, "assoc\n");
-> +	memcpy(assoc_mgmt_frame.da, dev->dev_addr, dev->addr_len);
-
-see above
-
-> +	memcpy(assoc_mgmt_frame.sa, fake_router_bssid,
-> +	       sizeof(fake_router_bssid));
-> +	memcpy(assoc_mgmt_frame.bssid, fake_router_bssid,
-> +	       sizeof(fake_router_bssid));
-> +	/* Must call cfg80211_rx_assoc_resp to notify about the response to
-> +	 * this. This must hold the mutex for the wedev while calling the
-
-see above
-
-> +	 * function. Luckily the nl80211 code invoking this already holds that
-> +	 * mutex.
-> +	 */
-> +	cfg80211_rx_assoc_resp(dev, req->bss, (const u8 *)&assoc_mgmt_frame,
-> +			       sizeof(assoc_mgmt_frame), -1);
-
-see above
-
-(and this repeats for deauth and disassoc too)
-
-> +static int virt_wifi_get_station(struct wiphy *wiphy, struct net_device *dev,
-> +				 const u8 *mac, struct station_info *sinfo)
-> +{
-> +	wiphy_debug(wiphy, "get_station\n");
-> +	/* Only the values used by netlink_utils.cpp. */
-
-What's netlink_utils.cpp? :-)
-
-More seriously though, if you're proposing a general addition, the
-hidden Android reference isn't all that helpful.
-
-> +	sinfo->filled = BIT(NL80211_STA_INFO_TX_PACKETS) |
-> +		BIT(NL80211_STA_INFO_TX_FAILED) | BIT(NL80211_STA_INFO_SIGNAL) |
-> +		BIT(NL80211_STA_INFO_TX_BITRATE);
-> +	sinfo->tx_packets = 1;
-> +	sinfo->tx_failed = 0;
-> +	sinfo->signal = -1; /* -1 is the maximum signal strength, somehow. */
-
-Yeah, well, -1 is like taking a jet engine next to your ear ... not
-going to happen. Go with something reasonable instead, maybe -60?
-
-> +	sinfo->txrate = (struct rate_info) {
-> +		.legacy = 10000, /* units are 100kbit/s */
-> +	};
-
-That's not realistic.
-
-> +	return 0;
-> +}
-> +
-> +static const struct cfg80211_ops virt_wifi_cfg80211_ops = {
-> +	.scan = virt_wifi_scan,
-> +
-> +	.auth = virt_wifi_auth,
-> +	.assoc = virt_wifi_assoc,
-> +	.deauth = virt_wifi_deauth,
-> +	.disassoc = virt_wifi_disassoc,
-> +
-> +	.get_station = virt_wifi_get_station,
-
-That seems a little *too* minimal, and too much at the same time...
-
-Practially no drivers, apart from mac80211 ones, implement auth/assoc -
-in particular not most chips used in Android. So connect/disconnect
-instead of auth/assoc/deauth/disassoc might be more realistic.
-
-On the other hand, if you have get_station you should probably have
-dump_station so people can use tools other than Android.
-
-> +	/* 100 SSIDs should be enough for anyone! */
-> +	wiphy->max_scan_ssids = 101;
-
-Well, typical implementations limit this to 4, or 20, so this is
-certainly excessive.
-
-> +	/* Don't worry about frequency regulations. */
-> +	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
-> +	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-> +				     BIT(NL80211_IFTYPE_AP) |
-> +				     BIT(NL80211_IFTYPE_P2P_CLIENT) |
-> +				     BIT(NL80211_IFTYPE_P2P_GO) |
-> +				     BIT(NL80211_IFTYPE_ADHOC) |
-> +				     BIT(NL80211_IFTYPE_MESH_POINT) |
-> +				     BIT(NL80211_IFTYPE_MONITOR);
-
-You obviously only support NL80211_IFTYPE_STATION - the other modes
-require many more ops to be implemented.
-
-> +	wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
-> +			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
-> +			    WIPHY_FLAG_AP_UAPSD |
-> +			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-
-Nope, has none of these.
-
-> +	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
-> +			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
-> +			       NL80211_FEATURE_STATIC_SMPS |
-> +			       NL80211_FEATURE_DYNAMIC_SMPS |
-> +			       NL80211_FEATURE_AP_SCAN |
-> +			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
-
-None of these either.
-
-> +static netdev_tx_t virt_wifi_start_xmit(struct sk_buff *skb,
-> +					struct net_device *dev)
-> +{
-> +	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-> +
-> +	skb->dev = priv->lowerdev;
-> +	return dev_queue_xmit(skb);
-
-This really should only work while connected on "wifi".
-
-> +static const struct net_device_ops wifi_vlan_ops = {
-
-vlan?
-
-> +/* Called under rcu_read_lock() from netif_receive_skb */
-> +static rx_handler_result_t virt_wifi_rx_handler(struct sk_buff **pskb)
-> +{
-> +	struct sk_buff *skb = *pskb;
-> +	struct virt_wifi_netdev_priv *priv =
-> +		rcu_dereference(skb->dev->rx_handler_data);
-> +
-> +	/* macvlan uses GFP_ATOMIC here. */
-
-so?
-
-> +	skb = skb_share_check(skb, GFP_ATOMIC);
-> +	if (!skb) {
-> +		dev_err(&priv->upperdev->dev, "can't skb_share_check\n");
-> +		return RX_HANDLER_CONSUMED;
-> +	}
-> +
-> +	*pskb = skb;
-> +	skb->dev = priv->upperdev;
-> +	skb->pkt_type = PACKET_HOST;
-> +	return RX_HANDLER_ANOTHER;
-> +}
-
-I guess this should also only do something while connected.
-
-johannes
+mt76_* functions conflicts with mt7601u driver what prevents to build
+those drivers in the kernel or use both drivers modules at once.
+
+Patch fixes build errors like this:
+ld: drivers/net/wireless/mediatek/mt76/mt76x0/mac.o:(.opd+0x30): multiple definition of `mt76_mac_tx_rate_val'; drivers/net/wireless/mediatek/mt7601u/mac.o:(.opd+0x30): first defined here
+
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/dma.c    |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 14 +++++++-------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    | 12 ++++++------
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |  8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt76x0/util.c   |  4 ++--
+ 7 files changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c b/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
+index 2cf71283de3f..d91b1bb8fcc7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
+@@ -44,7 +44,7 @@ mt76x0_rx_skb_from_seg(struct mt76x0_dev *dev, struct mt76x0_rxwi *rxwi,
+ 	if (!skb)
+ 		return NULL;
+ 
+-	true_len = mt76_mac_process_rx(dev, skb, data, rxwi);
++	true_len = mt76x0_mac_process_rx(dev, skb, data, rxwi);
+ 	if (!true_len || true_len > seg_len)
+ 		goto bad_frame;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+index 7b32777c06e9..5f12724eeb62 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+@@ -116,7 +116,7 @@ mt76_mac_fill_tx_status(struct mt76x0_dev *dev, struct ieee80211_tx_info *info,
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ }
+ 
+-u16 mt76_mac_tx_rate_val(struct mt76x0_dev *dev,
++u16 mt76x0_mac_tx_rate_val(struct mt76x0_dev *dev,
+ 			 const struct ieee80211_tx_rate *rate, u8 *nss_val)
+ {
+ 	u16 rateval;
+@@ -166,13 +166,13 @@ u16 mt76_mac_tx_rate_val(struct mt76x0_dev *dev,
+ 	return cpu_to_le16(rateval);
+ }
+ 
+-void mt76_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
++void mt76x0_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
+ 			    const struct ieee80211_tx_rate *rate)
+ {
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&dev->mt76.lock, flags);
+-	wcid->tx_rate = mt76_mac_tx_rate_val(dev, rate, &wcid->tx_rate_nss);
++	wcid->tx_rate = mt76x0_mac_tx_rate_val(dev, rate, &wcid->tx_rate_nss);
+ 	wcid->tx_rate_set = true;
+ 	spin_unlock_irqrestore(&dev->mt76.lock, flags);
+ }
+@@ -198,7 +198,7 @@ struct mt76_tx_status mt76x0_mac_fetch_tx_status(struct mt76x0_dev *dev)
+ 	return stat;
+ }
+ 
+-void mt76_send_tx_status(struct mt76x0_dev *dev, struct mt76_tx_status *stat, u8 *update)
++void mt76x0_send_tx_status(struct mt76x0_dev *dev, struct mt76_tx_status *stat, u8 *update)
+ {
+ 	struct ieee80211_tx_info info = {};
+ 	struct ieee80211_sta *sta = NULL;
+@@ -527,7 +527,7 @@ mt76x0_rx_is_our_beacon(struct mt76x0_dev *dev, u8 *data)
+ 		ether_addr_equal(hdr->addr2, dev->ap_bssid);
+ }
+ 
+-u32 mt76_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
++u32 mt76x0_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
+ 			u8 *data, void *rxi)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+@@ -594,7 +594,7 @@ mt76_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
+ 	}
+ }
+ 
+-int mt76_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
++int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
+ 			  struct ieee80211_key_conf *key)
+ {
+ 	enum mt76_cipher_type cipher;
+@@ -635,7 +635,7 @@ int mt76_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
+ 	return 0;
+ }
+ 
+-int mt76_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
++int mt76x0_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
+ 			      struct ieee80211_key_conf *key)
+ {
+ 	enum mt76_cipher_type cipher;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
+index 947eba253553..bea067b71c13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
+@@ -136,19 +136,19 @@ struct mt76_txwi {
+ 
+ #define MT_TXWI_PKTID_PROBE             BIT(7)
+ 
+-u32 mt76_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
++u32 mt76x0_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
+ 			u8 *data, void *rxi);
+-int mt76_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
++int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
+ 			  struct ieee80211_key_conf *key);
+-void mt76_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
++void mt76x0_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
+ 			    const struct ieee80211_tx_rate *rate);
+ 
+-int mt76_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
++int mt76x0_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
+ 			      struct ieee80211_key_conf *key);
+-u16 mt76_mac_tx_rate_val(struct mt76x0_dev *dev,
++u16 mt76x0_mac_tx_rate_val(struct mt76x0_dev *dev,
+ 			 const struct ieee80211_tx_rate *rate, u8 *nss_val);
+ struct mt76_tx_status
+ mt76x0_mac_fetch_tx_status(struct mt76x0_dev *dev);
+-void mt76_send_tx_status(struct mt76x0_dev *dev, struct mt76_tx_status *stat, u8 *update);
++void mt76x0_send_tx_status(struct mt76x0_dev *dev, struct mt76_tx_status *stat, u8 *update);
+ 
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 0c521f3485c9..cf6ffb1ba4a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -300,15 +300,15 @@ mt76x0_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	if (!msta) {
+ 		if (key || wcid->hw_key_idx == idx) {
+-			ret = mt76_mac_wcid_set_key(dev, wcid->idx, key);
++			ret = mt76x0_mac_wcid_set_key(dev, wcid->idx, key);
+ 			if (ret)
+ 				return ret;
+ 		}
+ 
+-		return mt76_mac_shared_key_setup(dev, mvif->idx, idx, key);
++		return mt76x0_mac_shared_key_setup(dev, mvif->idx, idx, key);
+ 	}
+ 
+-	return mt76_mac_wcid_set_key(dev, msta->wcid.idx, key);
++	return mt76x0_mac_wcid_set_key(dev, msta->wcid.idx, key);
+ }
+ 
+ static int mt76x0_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+@@ -375,7 +375,7 @@ mt76_sta_rate_tbl_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	rate.idx = rates->rate[0].idx;
+ 	rate.flags = rates->rate[0].flags;
+-	mt76_mac_wcid_set_rate(dev, &msta->wcid, &rate);
++	mt76x0_mac_wcid_set_rate(dev, &msta->wcid, &rate);
+ 
+ out:
+ 	rcu_read_unlock();
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 9e60fcb14687..c1feca3ea016 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -324,8 +324,8 @@ void mt76x0_tx_status(struct mt76x0_dev *dev, struct sk_buff *skb);
+ void mt76x0_tx_stat(struct work_struct *work);
+ 
+ /* util */
+-void mt76_remove_hdr_pad(struct sk_buff *skb);
+-int mt76_insert_hdr_pad(struct sk_buff *skb);
++void mt76x0_remove_hdr_pad(struct sk_buff *skb);
++int mt76x0_insert_hdr_pad(struct sk_buff *skb);
+ 
+ int mt76x0_dma_init(struct mt76x0_dev *dev);
+ void mt76x0_dma_cleanup(struct mt76x0_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+index 28b8e1508016..976d3ee91f67 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+@@ -35,7 +35,7 @@ static void mt76x0_tx_skb_remove_dma_overhead(struct sk_buff *skb,
+ 
+ 	skb_pull(skb, sizeof(struct mt76_txwi) + 4);
+ 	if (ieee80211_get_hdrlen_from_skb(skb) % 4)
+-		mt76_remove_hdr_pad(skb);
++		mt76x0_remove_hdr_pad(skb);
+ 
+ 	skb_trim(skb, pkt_len);
+ }
+@@ -93,7 +93,7 @@ mt76x0_push_txwi(struct mt76x0_dev *dev, struct sk_buff *skb,
+ 		rate_ctl = wcid->tx_rate;
+ 		nss = wcid->tx_rate_nss;
+ 	} else {
+-		rate_ctl = mt76_mac_tx_rate_val(dev, rate, &nss);
++		rate_ctl = mt76x0_mac_tx_rate_val(dev, rate, &nss);
+ 	}
+ 	spin_unlock_irqrestore(&dev->mt76.lock, flags);
+ 
+@@ -158,7 +158,7 @@ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	BUILD_BUG_ON(ARRAY_SIZE(info->status.status_driver_data) < 1);
+ 	info->status.status_driver_data[0] = (void *)(unsigned long)pkt_len;
+ 
+-	if (mt76x0_skb_rooms(dev, skb) || mt76_insert_hdr_pad(skb)) {
++	if (mt76x0_skb_rooms(dev, skb) || mt76x0_insert_hdr_pad(skb)) {
+ 		ieee80211_free_txskb(dev->mt76.hw, skb);
+ 		return;
+ 	}
+@@ -194,7 +194,7 @@ void mt76x0_tx_stat(struct work_struct *work)
+ 		if (!stat.valid)
+ 			break;
+ 
+-		mt76_send_tx_status(dev, &stat, &update);
++		mt76x0_send_tx_status(dev, &stat, &update);
+ 
+ 		cleaned++;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/util.c b/drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+index 148be47d822f..7856dd760419 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+@@ -13,7 +13,7 @@
+ 
+ #include "mt76x0.h"
+ 
+-void mt76_remove_hdr_pad(struct sk_buff *skb)
++void mt76x0_remove_hdr_pad(struct sk_buff *skb)
+ {
+ 	int len = ieee80211_get_hdrlen_from_skb(skb);
+ 
+@@ -21,7 +21,7 @@ void mt76_remove_hdr_pad(struct sk_buff *skb)
+ 	skb_pull(skb, 2);
+ }
+ 
+-int mt76_insert_hdr_pad(struct sk_buff *skb)
++int mt76x0_insert_hdr_pad(struct sk_buff *skb)
+ {
+ 	int len = ieee80211_get_hdrlen_from_skb(skb);
+ 	int ret;
+-- 
+2.7.5
