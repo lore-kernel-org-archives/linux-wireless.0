@@ -1,75 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39234 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728762AbeHWOr3 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:48918 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728129AbeHCKYP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 10:47:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: Felix Fietkau <nbd@nbd.name>, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k: turn on btcoex_enable as default
-References: <20180208052801.15670-1-kai.heng.feng@canonical.com>
-        <56d650e6-d26f-087c-4e86-2e5d4e859414@nbd.name>
-        <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com>
-        <87k1vmeip8.fsf@kamboji.qca.qualcomm.com>
-        <E500FA42-23F1-433F-9BFB-78A2FD1946AF@canonical.com>
-        <7170e2d5-a59d-8260-fa8e-f02f583b773f@nbd.name>
-        <6A0F65EF-A7C4-469F-8FAF-CBE314676237@canonical.com>
-        <9AF82E83-2EBE-4076-BAFA-EEA44B1DB423@canonical.com>
-Date: Thu, 23 Aug 2018 14:18:10 +0300
-In-Reply-To: <9AF82E83-2EBE-4076-BAFA-EEA44B1DB423@canonical.com> (Kai-Heng
-        Feng's message of "Thu, 23 Aug 2018 09:33:56 +0800")
-Message-ID: <87in41nxfx.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_131837_691417_AFF2E839)
+        Fri, 3 Aug 2018 06:24:15 -0400
+Date: Fri, 3 Aug 2018 13:58:51 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 7/8] staging: wilc1000: replace udelay with usleep_range
+Message-ID: <20180803135851.0b576ef0@ajaysk-VirtualBox> (sfid-20180803_102905_198370_F66DFDB4)
+In-Reply-To: <20180802073415.GB14107@kroah.com>
+References: <1532844417-3192-1-git-send-email-ajay.kathat@microchip.com>
+        <1532844417-3192-8-git-send-email-ajay.kathat@microchip.com>
+        <20180802073415.GB14107@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
+Hi Greg,
 
-> at 12:15, Kai Heng Feng <kai.heng.feng@canonical.com> wrote:
->
->>
->>
->>> On 10 Feb 2018, at 10:05 PM, Felix Fietkau <nbd@nbd.name> wrote:
->>>
->>> On 2018-02-10 14:56, Kai Heng Feng wrote:
->>>>> On 9 Feb 2018, at 3:16 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>>> Sure, but we have to make sure that we don't create regressions on
->>>>> existing systems. For example, did you test this with any system which
->>>>> don't support btcoex? (just asking, haven't tested this myself)
->>>>
->>>> No not really, but I will definitely test it.
->>>> The only module I have that uses ath9k is Dell=E2=80=99s DW1707.
->>>> How do I check if it support btcoex or not?
->>> I just reviewed the code again, and I am sure that we cannot merge this
->>> patch. Enabling the btcoex parameter makes the driver enable a whole
->>> bunch of code starting timers, listening to some GPIOs, etc.
->>>
->>> On non-btcoex systems, some of those GPIOs might be floating or even
->>> connected to different things, which could cause a lot of undefined
->>> behavior.
->>>
->>> This is simply too big a risk, so there absolutely needs to be a
->>> whitelist for systems that need this, otherwise it has to remain
->>> disabled by default.
->>
->> So what information can we use to whitelist btcoex chips?
->> Can we get btcoex support status at ath9k probing?
->
-> Sorry for bringing this up again.
->
-> Is DMI based match an acceptable approach for ath9k?
+On Thu, 2 Aug 2018 09:34:15 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-I don't know what Felix thinkgs, but to me using DMI sounds like a good
-idea to try, assuming the matches are unique enough and there's no risk
-of enabling bt coex on wrong platforms. Should the PCI bus number etc
-checked as well in case the user adds more ath9k devices to the
-platform?
+> On Sun, Jul 29, 2018 at 11:36:56AM +0530, Ajay Singh wrote:
+> > Cleanup patch to avoid the below checkpatch reported issue.
+> > 
+> > "usleep_range is preferred over udelay; see
+> > Documentation/timers/timers-howto.txt".
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
+> > b/drivers/staging/wilc1000/wilc_wlan.c index 6bac3f7..655952a 100644
+> > --- a/drivers/staging/wilc1000/wilc_wlan.c
+> > +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> > @@ -425,7 +425,7 @@ void chip_wakeup(struct wilc *wilc)
+> >  		} while (wilc_get_chipid(wilc, true) == 0);
+> >  	} else if ((wilc->io_type & 0x1) == HIF_SDIO) {
+> >  		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
+> > -		udelay(200);
+> > +		usleep_range(200, 201);  
+> 
+> Hah, that's funny.
+> 
+> No, do it right, don't try to game checkpatch here.
 
-But of course I need to see the patch to comment more.
+The delay of 200us was added to have a short wait between HW register
+write and read operation. The short delay of 200us was enough for this
+but the duration range is not available. So to replace udelay() of
+200us with usleep_range(), I have used used range from 200, 201.
 
---=20
-Kalle Valo
+How should we handle these type of scenarios and is there any suggested
+way to specify these range.
+ 
+Should we leave this code as it is and ignore this checkpatch warning.
+
+Please provide your suggestion/input.
+
+Thank you.
+
+Regards,
+Ajay
