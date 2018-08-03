@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40852 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727312AbeH2QYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 12:24:41 -0400
-Subject: Re: [PATCH v3 00/16] mt76 patches 2018-08-24 v3
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-mediatek@lists.infradead.org
-References: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <52aac72b-f1d3-d1d5-dc19-308003a26a72@nbd.name> (sfid-20180829_142804_139252_AF5B1867)
-Date: Wed, 29 Aug 2018 14:27:58 +0200
-MIME-Version: 1.0
-In-Reply-To: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mailout2.samsung.com ([203.254.224.25]:62374 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732233AbeHCMgr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Aug 2018 08:36:47 -0400
+From: "K.T.VIJAYAKUMAAR" <vijay.bvb@samsung.com>
+To: kvalo@codeaurora.org, davem@davemloft.net,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: cpgs@samsung.com, vijay.bvb@samsung.com
+Subject: [PATCH 1/1] ath10k: avoid possible memory access violation
+Date: Fri, 03 Aug 2018 16:10:05 +0530
+Message-id: <1533292805-9709-1-git-send-email-vijay.bvb@samsung.com> (sfid-20180803_124153_950433_1EBD9E2B)
+References: <CGME20180803104058epcas1p1d5cdd51e2774d72679aaf15358cb3d00@epcas1p1.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-29 13:16, Stanislaw Gruszka wrote:
-> This is the begin work of integration between mt76x0 and mt76x2.
-> 
-> Further development can be seen here:
-> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
-> 
-> v2 -> v3:
-> - merge module licence fix patch to patch that add new module
-> v1 -> v2:
-> - rename mt76xx to mt76x02 to reflect that common code is for mt76x0
->   and mt76x2 only, not for new chips.
-> - fixup 'stucture typo' in one patch
-> 
-> Stanislaw Gruszka (17):
->   mt76: unify wait_for_mac
->   mt76: rename mt76x2_regs.h
->   mt76: merge mt76x0/regs.h into mt76x02_regs.h
->   mt76: create new mt76x02-lib module for common mt76x{0,2} code
->   mt76: fix mt76x02-lib module license
->   mt76: unify mac_get_key_info
->   mt76: add helpers for register access with mt76_dev struct
->   mt76: unify mac_shared_key_setup
->   mt76: unify mt76x02_mac_wcid_set_key
->   mt76: unify mac_wcid_setup
->   mt76: use mac_wcid_set_drop in mt76x0
->   mt76x0: use mt76_wcid_free in mt76x0
->   mt76: unify mt76x02_vif struct
->   mt76: unify sta structure part 1
->   mt76: unify sta structure part 2
->   mt76x0: initalize custom tx queues
->   mt76x0: use mt76x02_sta and mt76x02_tx_status
-For the series:
+array "ctl_power_table" access index "pream" is initialized with -1 and
+is raised as a static analysis tool issue.
+[drivers\net\wireless\ath\ath10k\wmi.c:4719] ->
+[drivers\net\wireless\ath\ath10k\wmi.c:4730]: (error) Array index -1 is
+out of bounds.
 
-Acked-by: Felix Fietkau <nbd@nbd.name>
+Since the "pream" index for accessing ctl_power_table array is initialized
+with -1, there is a chance of memory access violation for the cases below.
+1) wmi_pdev_tpc_final_table_event change frequency is between 2483 and 5180
+2) pream_idx is out of the enumeration ranges of wmi_tpc_pream_2ghz,
+wmi_tpc_pream_5ghz
 
-- Felix
+Signed-off-by: K.T.VIJAYAKUMAAR <vijay.bvb@samsung.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 877249a..23502cd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4721,6 +4721,13 @@ ath10k_wmi_tpc_final_get_rate(struct ath10k *ar,
+ 		}
+ 	}
+ 
++	if (pream == -1) {
++		ath10k_warn(ar, "unknown wmi tpc final: pream_idx[%u], chan_freq[%u]\n",
++			    pream_idx, __le32_to_cpu(ev->chan_freq));
++		tpc = 0;
++		goto out;
++	}
++
+ 	if (pream == 4)
+ 		tpc = min_t(u8, ev->rates_array[rate_idx],
+ 			    ev->max_reg_allow_pow[ch]);
+-- 
+2.7.4
