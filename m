@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:41790 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728443AbeHMNhD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 09:37:03 -0400
-Received: by mail-io0-f194.google.com with SMTP id q4-v6so14357665iob.8
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 03:55:19 -0700 (PDT)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45532 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729350AbeHCLHG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Aug 2018 07:07:06 -0400
+Date: Fri, 3 Aug 2018 11:11:41 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+Message-ID: <20180803091140.GA10284@redhat.com> (sfid-20180803_111156_477506_B19BC85E)
+References: <20180803182942.4de98df2@canb.auug.org.au>
 MIME-Version: 1.0
-References: <20180812145207.11395-1-kristian.evensen@gmail.com>
- <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> <5B708025.4090906@broadcom.com>
-In-Reply-To: <5B708025.4090906@broadcom.com>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Mon, 13 Aug 2018 12:55:03 +0200
-Message-ID: <CAJ0CqmVZNAnHwnU4YqRRv7R8DyHi2MiFJr1bvQDPVszUU5Ez3g@mail.gmail.com> (sfid-20180813_125522_526262_83FE5B47)
-Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
-To: arend.vanspriel@broadcom.com
-Cc: Kalle Valo <kvalo@codeaurora.org>, kristian.evensen@gmail.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180803182942.4de98df2@canb.auug.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 8/12/2018 8:14 PM, Kalle Valo wrote:
-> > Kristian Evensen <kristian.evensen@gmail.com> writes:
-> >
-> >> Enable the use of CQM with mt76-devices.
-> >>
-> >> Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
-> >> ---
-> >>   drivers/net/wireless/mediatek/mt76/mac80211.c | 2 ++
-> >>   1 file changed, 2 insertions(+)
-> >>
-> >> diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-> >> index 029d54bc..3eb328ff 100644
-> >> --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-> >> +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-> >> @@ -305,6 +305,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
-> >>
-> >>      wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
-> >>
-> >> +    wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
-> >
-> > So have you tested this and with what devices? For example, does it work
-> > with recently added USB devices?
->
-> I was looking into this as it looks suspicious to me. From reading the
-> description of this ext_feature flag it seems this is an extention of CQM:
->
-> """
->   * @NL80211_EXT_FEATURE_CQM_RSSI_LIST: With this driver the
->   *     %NL80211_ATTR_CQM_RSSI_THOLD attribute accepts a list of zero or more
->   *     RSSI threshold values to monitor rather than exactly one threshold.
-> """
->
-> Also looking at mt76x2_bss_info_changed() it does not handle
-> BSS_CHANGED_CQM so I doubt it has support for it (yet). The driver does
-> not use IEEE80211_VIF_SUPPORTS_CQM_RSSI which is a requirement for it.
->
-> Regards,
-> Arend
->
+Hi
 
-According to my understanding (please correct me if I am wrong)
-BSS_CHANGED_CQM is only needed if CQM_RSSI is handled
-by the driver/fw, while if it is not set mac80211 will take care of that
-in ieee80211_handle_beacon_sig routine.
-I am AFK at the moment, I will test that patch when I am back from vacations.
+On Fri, Aug 03, 2018 at 06:29:42PM +1000, Stephen Rothwell wrote:
+> After merging the wireless-drivers-next tree, today's linux-next build
+> (powerpc allyesconfig) failed like this:
+[snip]
+> diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> index 850611ad347a..ad56b3ed2be2 100644
+> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> @@ -13,6 +13,7 @@ config MT76x0U
+>  	tristate "MediaTek MT76x0U (USB) support"
+>  	depends on MAC80211
+>  	depends on USB
+> +	depends on BROKEN
+Would be better to limit driver to be build as module.
+Hopefully that will fix the issue. I'll post patch in a moment.
 
-Regards,
-Lorenzo
-
->
-> https://elixir.bootlin.com/linux/latest/source/drivers/net/wireless/mediatek/mt76/mt76x2_main.c#L223
->
+Thanks
+Stanislaw
