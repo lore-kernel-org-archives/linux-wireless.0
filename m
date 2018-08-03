@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:50616 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726975AbeH1MeB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44610 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732233AbeHCM0r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 08:34:01 -0400
-Message-ID: <1535445791.5895.0.camel@sipsolutions.net> (sfid-20180828_104328_846287_57E00620)
-Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Date: Tue, 28 Aug 2018 10:43:11 +0200
-In-Reply-To: <4fb78fad97704c8b3b1433085355180c@codeaurora.org>
-References: <7999c366492a4523456227fb49329bf2@codeaurora.org>
-         <1534922856.25523.60.camel@sipsolutions.net>
-         <4fb78fad97704c8b3b1433085355180c@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 3 Aug 2018 08:26:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wireless <linux-wireless@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] mt76x0: build driver only as module
+References: <20180803091401.GB10284@redhat.com>
+        <87zhy36c4n.fsf@kamboji.qca.qualcomm.com>
+        <20180803092822.GD10284@redhat.com>
+        <20180803100939.GE10284@redhat.com>
+Date: Fri, 03 Aug 2018 13:31:01 +0300
+In-Reply-To: <20180803100939.GE10284@redhat.com> (Stanislaw Gruszka's message
+        of "Fri, 3 Aug 2018 12:09:40 +0200")
+Message-ID: <87va8r68t6.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_123118_478362_B9C045D1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 11:22 -0700, Pradeep Kumar Chitrapu wrote:
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-> > Should we just ignore that? Or perhaps add a separate capability for 
-> > it?
-> 
-> Yes, even we behave the same. In that case, we can go ahead now with the
-> capability to only enable FTM responder. If the driver wants to support
-> disabling option in future, at which point, the new capability can be 
-> added.
+> On Fri, Aug 03, 2018 at 11:28:22AM +0200, Stanislaw Gruszka wrote:
+>> > But this feels like an ugly hack to me. Isn't there a better way to fix
+>> > this? (I don't have time to investigate the error in detail right now.)
+>> 
+>> Yes, rename symbols names. And I will do this, just wanted to provide
+>> quick fix for the problem. 
+>> 
+>> Moreover seems the same thing should be done for mt7601u to avoid build
+>> errors and perhaps with mt76 :-( 
+>> 
+>> So I'm going to rename functions.
+>
+> I have the patches, I'm building kernel with allyesconfig now,
+> it will take a while ...
 
-True.
+I'm now hoping to send the pull request tomorrow, so if you can submit a
+proper patch some time today that would be good.
 
-> However, changes to nl80211_set_beacon to support enabling FTM responder
-> may still be needed along with start_ap, assuming that ap start will be 
-> issued by different android api than enableResponder api.
-
-Yes, I guess that's still needed to be able to support the Android API,
-which seems useful.
-
-johannes
+-- 
+Kalle Valo
