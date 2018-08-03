@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:39919 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727264AbeH2ORi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 10:17:38 -0400
-Received: by mail-wm0-f67.google.com with SMTP id q8-v6so4966276wmq.4
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 03:21:25 -0700 (PDT)
-Date: Wed, 29 Aug 2018 12:21:22 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, sara.sharon@intel.com
-Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set to
- one
-Message-ID: <20180829102121.GB2488@localhost.localdomain> (sfid-20180829_122129_332052_595EA17E)
-References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
- <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
- <1535490861.20033.8.camel@sipsolutions.net>
- <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com>
- <1535525825.5215.1.camel@sipsolutions.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36060 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732374AbeHCLRW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 3 Aug 2018 07:17:22 -0400
+Date: Fri, 3 Aug 2018 11:21:54 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+Message-ID: <20180803092152.GC10284@redhat.com> (sfid-20180803_112206_577575_887E8A44)
+References: <20180803182942.4de98df2@canb.auug.org.au>
+ <20180803091140.GA10284@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535525825.5215.1.camel@sipsolutions.net>
+In-Reply-To: <20180803091140.GA10284@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, 2018-08-28 at 23:41 +0200, Lorenzo Bianconi wrote:
+On Fri, Aug 03, 2018 at 11:11:40AM +0200, Stanislaw Gruszka wrote:
+> Hi
 > 
-> > Assuming the A-MSDU subframe is composed by two packets, the last one
-> > must not contain padding, is my understanding correct?
-> 
-> Yes. More generally, assuming the A-MSDU subframe is composed of *any
-> number of* packets, the last one must not contain padding :)
-> 
-> > > My colleague Sara (CC'ed now) has a patch to fix all of this (we just
-> > > did that this morning). I'll send it out tomorrow morning. Can I bother
-> > > you to try that?
-> > > 
-> > 
-> > Sure, no worries :)
-> 
-> Thanks, patch coming up in a second.
-> 
-> > > We'd have to fix the first point independently though, or I guess we can
-> > > roll that into our bugfix too, which would you prefer?
-> > > 
-> > > johannes
-> > > 
-> > 
-> > If the patch is already done I can add the fix for the first point on
-> > top of it, does it sound good?
-> 
-> Perfect.
+> On Fri, Aug 03, 2018 at 06:29:42PM +1000, Stephen Rothwell wrote:
+> > After merging the wireless-drivers-next tree, today's linux-next build
+> > (powerpc allyesconfig) failed like this:
+> [snip]
+> > diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+> > index 850611ad347a..ad56b3ed2be2 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
+> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+> > @@ -13,6 +13,7 @@ config MT76x0U
+> >  	tristate "MediaTek MT76x0U (USB) support"
+> >  	depends on MAC80211
+> >  	depends on USB
+> > +	depends on BROKEN
+> Would be better to limit driver to be build as module.
+> Hopefully that will fix the issue. I'll post patch in a moment.
 
-Ok, I will apply it on top of Sara's patch and send it later today.
+Ok, I made config allyesconfig and .config file looks like this:
 
-Regards,
-Lorenzo
+CONFIG_WLAN_VENDOR_MEDIATEK=y
+CONFIG_MT7601U=y
+CONFIG_MT76_CORE=y
+CONFIG_MT76_USB=y
+CONFIG_MT76x2_COMMON=y
+CONFIG_MT76x0U=m
 
-> 
-> johannes
+However I still not sure if kernel will build this way.
+Because there can be conflict between kernel symbols
+and module symbols. So looks as part of quick fix
+mt7601u should be build also as module. And slower
+fix will be to rename symbosl names in mt76x0 driver.
+
+Regards
+Stanislaw
