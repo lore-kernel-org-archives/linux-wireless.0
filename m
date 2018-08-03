@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34542 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727069AbeH1PoT (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:18334 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726612AbeHCGY3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 11:44:19 -0400
-From: <murugana@codeaurora.org>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-Cc: "'Felix Fietkau'" <nbd@nbd.name>
-References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>  (sfid-20180816_144745_205490_C47B9321) <1535450281.5895.34.camel@sipsolutions.net>
-In-Reply-To: <1535450281.5895.34.camel@sipsolutions.net>
-Subject: RE: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
-Date: Tue, 28 Aug 2018 17:22:56 +0530
-Message-ID: <003d01d43ec5$ab42fb00$01c8f100$@codeaurora.org> (sfid-20180828_135304_100588_71CA833C)
+        Fri, 3 Aug 2018 02:24:29 -0400
+Date: Fri, 3 Aug 2018 09:59:56 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: Re: [PATCH] staging: wilc1000: fix compilation warning for ARCH
+ PowerPC
+Message-ID: <20180803095956.589d9b82@ajaysk-VirtualBox> (sfid-20180803_063008_335206_1B10DE5B)
+In-Reply-To: <20180802193116.GA27034@kroah.com>
+References: <1533209222-22295-1-git-send-email-ajay.kathat@microchip.com>
+        <20180802193116.GA27034@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi Greg,
 
-> Hmm. The subject/patch title isn't very clear - does it *implement* =
-this
-> requirement? Or do something else with it? Please clarify.
->=20
+On Thu, 2 Aug 2018 21:31:16 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-Yes, this patch implements the missing Rx requirement (ii) for backhaul =
-STA
-below.
-..
+> On Thu, Aug 02, 2018 at 04:57:02PM +0530, Ajay Singh wrote:
+> > Fix below warning reported for PowerPC arch compilation
+> > 
+> > include/uapi/linux/byteorder/big_endian.h:95:37: warning: passing
+> > argument 1 of '__swab32s' makes pointer from integer without a cast
+> > [-Wint-conversion]
+> > 
+> > Fixes: 02211edc9a1f ("staging: wilc1000: fix endianness warnings
+> > reported by sparse")
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---  
+> 
+> You forgot the reported-by: line :(
+> 
 
-> > Receiver requirements
-> > ---------------------
-> > 1. Fronthaul AP
-> >         i) When SA!=3DTA of backhaul STA, must support receiving =
-4-address
-> >            format frames
-> >         ii) When SA=3D=3DTA of backhaul STA, must support receiving =
-both
-> >             3-address and 4-address format frames
-> >
-> >             (mac80211 support both 3-addr & 4-addr via AP/VLAN
-> > interface)
-> >
-> > 2. Backhaul STA
-> >         i) When DA!=3DRA of backhaul STA, must support receiving =
-4-address
-> >            format frames
-> >         ii) When DA=3D=3DRA of backhaul STA,  must support receiving =
-both
-> >             3-address and 4-address format frames
-> >
-> >             (mac80211 support only receiving 4-address format via
-> >              use_4addr)
-> >
-> > This patch addresses the above Rx requirement (ii) for backhaul STA.
+Sorry for the trouble.
 
-This patch implements the Rx requirement (ii) of receiving unicast =
-3-addr frames in
-addition to 4-addr format frames.
+> I'll go add it, but be more careful in the future please.
+> 
 
-Thanks,
-Sathishkumar
+Thank you for adding it up. I will take care in future patches.
+
+Regards,
+Ajay
