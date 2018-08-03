@@ -1,124 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36067 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727089AbeH3MwE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42082 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728122AbeHCLF0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 08:52:04 -0400
-Received: by mail-wm0-f66.google.com with SMTP id j192-v6so1154218wmj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2018 01:50:58 -0700 (PDT)
-Date: Thu, 30 Aug 2018 10:50:55 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
- to one
-Message-ID: <20180830085054.GB9867@localhost.localdomain> (sfid-20180830_105102_418596_49C177A8)
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
- <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
- <1535569548.5215.33.camel@sipsolutions.net>
- <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
- <1535570007.5215.34.camel@sipsolutions.net>
- <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
- <1535616192.5215.37.camel@sipsolutions.net>
- <20180830083115.GA9867@localhost.localdomain>
- <1535618382.5215.44.camel@sipsolutions.net>
+        Fri, 3 Aug 2018 07:05:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Wireless <linux-wireless@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
+References: <20180803182942.4de98df2@canb.auug.org.au>
+Date: Fri, 03 Aug 2018 12:09:59 +0300
+In-Reply-To: <20180803182942.4de98df2@canb.auug.org.au> (Stephen Rothwell's
+        message of "Fri, 3 Aug 2018 18:29:42 +1000")
+Message-ID: <874lgb7r4o.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_111017_819130_E47136C7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535618382.5215.44.camel@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thu, 2018-08-30 at 10:31 +0200, Lorenzo Bianconi wrote:
-> 
-> > Reviewing the code I guess it is not necessary since pskb_expand_head routine
-> > does not modify head->len (or skb->len). 
-> 
-> True.
-> 
-> > Packet len (if we consider padding) is only modified in:
-> > 
-> > memset(skb_push(skb, pad), 0, pad);
-> > 
-> > and if we hit that point, we will account new skb->len in flow backlog. Do you
-> > agree?
-> 
-> Right, but that's the *pad*. I was thinking about the header conversion.
-> 
-> Let's say you decided to add the second frame to the A-MSDU, at which
-> point the first one isn't really an A-MSDU yet. So we get to:
-> 
->         if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
-> 
-> which changes the header of "head" to be 14 bytes longer:
-> 
-> 	skb_push(skb, sizeof(*amsdu_hdr));
-> 
-> But now let's say we get a failure here when reallocating the second
-> subframe:
-> 
->         if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
->                                                      2 + pad))
->                 goto out;
-> 
-> Now we have changed "head", which is on the FQ, but we haven't changed
-> the FQ accounting. So I *think* we still need this:
-> 
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -3239,7 +3239,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
->  
->  	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
->  						     2 + pad))
-> -		goto out;
-> +		goto out_recalc;
->  
->  	ret = true;
->  	data = skb_push(skb, ETH_ALEN + 2);
-> @@ -3256,11 +3256,13 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
->  	head->data_len += skb->len;
->  	*frag_tail = skb;
->  
-> -	flow->backlog += head->len - orig_len;
-> -	tin->backlog_bytes += head->len - orig_len;
-> -
-> -	fq_recalc_backlog(fq, tin, flow);
-> +out_recalc:
-> +	if (head->len != orig_len) {
-> +		flow->backlog += head->len - orig_len;
-> +		tin->backlog_bytes += head->len - orig_len;
->  
-> +		fq_recalc_backlog(fq, tin, flow);
-> +	}
->  out:
->  	spin_unlock_bh(&fq->lock);
->  
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-ack, I agree. Do you want I send a patch to fix it?
+> After merging the wireless-drivers-next tree, today's linux-next build
+> (powerpc allyesconfig) failed like this:
+>
+> ld: drivers/net/wireless/mediatek/mt76/mt76x0/trace.o:(__tracepoints+0x0): multiple definition of `__tracepoint_set_shared_key'; drivers/net/wireless/mediatek/mt7601u/trace.o:(__tracepoints+0x0): first defined here
 
-> 
-> 
-> > Looking at the code maybe I spotted another issue, I guess there is an
-> > off-by-one issue in 'n' estimation since it does not take into account
-> > the first frame. We hit the line:
-> > 
-> > while (*frag_tail) {
-> > }
-> > 
-> > starting from the second subframe, but if the head does not have packet in the
-> > fraglist we will end up having n = 1, while it is actually the second frame.
-> 
-> Hmm, not sure I follow? "head" is the A-MSDU, containing the A-MSDU
-> header and the first subframe in skb->data (and/or frags), with the
-> subframes 2..N in the fraglist.
-> 
-> So I think this is right?
+[...]
 
-yep, correct. But when we are analyzing the second subframe what is the correct value for 'n'?
-1 or 2? At the moment I guess it is set to 1 if frag_tail is NULL for head.
+> Caused by commit
+>
+>   7b4859026ccd ("mt76x0: core files")
+>
+> and following ones.
+>
+> I have just marked that driver broken for now:
 
-Regards,
-Lorenzo
+Thanks Stephen for the report. Odd that kbuild bot didn't catch this, I
+did have these patches in my pending branch for several days.
 
-> 
-> johannes
-> 
+Stanislaw, could you please send a fix for this ASAP? I can't submit a
+pull request to Dave until this is fixed.
+
+-- 
+Kalle Valo
