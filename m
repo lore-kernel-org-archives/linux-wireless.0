@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46958 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58864 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731793AbeHIRko (ORCPT
+        with ESMTP id S1726396AbeHDIGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 13:40:44 -0400
+        Sat, 4 Aug 2018 04:06:40 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in
- halbtc8723b2ant.c
+Subject: Re: [PATCH 1/2] mt76x0: rename mt76_* functions
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180806045440.11920-1-yuehaibing@huawei.com>
-References: <20180806045440.11920-1-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: <pkshih@realtek.com>, <Larry.Finger@lwfinger.net>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <davem@davemloft.net>, <colin.king@canonical.com>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Message-Id: <20180809151521.C033760B7E@smtp.codeaurora.org> (sfid-20180809_171531_038002_8A59290D)
-Date: Thu,  9 Aug 2018 15:15:21 +0000 (UTC)
+In-Reply-To: <1533296680-7236-1-git-send-email-sgruszka@redhat.com>
+References: <1533296680-7236-1-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Message-Id: <20180804060712.56AD260558@smtp.codeaurora.org> (sfid-20180804_080751_780274_6AEF5960)
+Date: Sat,  4 Aug 2018 06:07:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-> Fix following coccinelle warning:
+> mt76_* functions conflicts with mt7601u driver what prevents to build
+> those drivers in the kernel or use both drivers modules at once.
 > 
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2952:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2961:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3011:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3020:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3439:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3448:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3339:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3348:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3074:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3083:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3192:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3201:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3267:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3276:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3124:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3133:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2821:2-4: WARNING: possible condition with no effect (if == else)
-> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2830:2-4: WARNING: possible condition with no effect (if == else)
+> Patch fixes build errors like this:
+> ld: drivers/net/wireless/mediatek/mt76/mt76x0/mac.o:(.opd+0x30): multiple definition of `mt76_mac_tx_rate_val'; drivers/net/wireless/mediatek/mt7601u/mac.o:(.opd+0x30): first defined here
 > 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Fixes: 7b4859026ccd ("mt76x0: core files")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-ad2e6d23bdad rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
+909da6e4b577 mt76x0: rename mt76_* functions
+e800a333135b mt76x0: rename trace symbols
 
 -- 
-https://patchwork.kernel.org/patch/10556487/
+https://patchwork.kernel.org/patch/10555033/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
