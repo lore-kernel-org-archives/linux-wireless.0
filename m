@@ -1,58 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46218 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387719AbeHAKDp (ORCPT
+Received: from 8.mo69.mail-out.ovh.net ([46.105.56.233]:55971 "EHLO
+        8.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726484AbeHEU5c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 06:03:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-        <87y3dqzga9.fsf@purkki.adurom.net>
-        <20180801081346.GA4794@localhost.localdomain>
-Date: Wed, 01 Aug 2018 11:19:10 +0300
-In-Reply-To: <20180801081346.GA4794@localhost.localdomain> (Lorenzo Bianconi's
-        message of "Wed, 1 Aug 2018 10:13:47 +0200")
-Message-ID: <87in4u8poh.fsf@kamboji.qca.qualcomm.com> (sfid-20180801_102124_126699_9EE1BF0F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 5 Aug 2018 16:57:32 -0400
+Received: from player692.ha.ovh.net (unknown [10.109.160.39])
+        by mo69.mail-out.ovh.net (Postfix) with ESMTP id 8FFCE1743D
+        for <linux-wireless@vger.kernel.org>; Sun,  5 Aug 2018 20:32:07 +0200 (CEST)
+From: Alexander Wetzel <alexander@wetzel-home.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH v5 2/3] mac80211: Define new driver callback replace_key
+Date: Sun,  5 Aug 2018 20:31:23 +0200
+Message-Id: <20180805183124.29921-3-alexander@wetzel-home.de> (sfid-20180805_205229_935855_55E8059E)
+In-Reply-To: <20180805183124.29921-1-alexander@wetzel-home.de>
+References: <20180805183124.29921-1-alexander@wetzel-home.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+Define the new driver callback replace_key in mac80211 for future use.
+Drivers able to replace a in-use key should implement this new callback
+to allow mac80211 drivers to securely use PTK rekeying.
 
-> On Aug 01, Kalle Valo wrote:
->> Stanislaw Gruszka <sgruszka@redhat.com> writes:
->> 
->> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
->> > support only STA mode.
->> >
->> > mt76x0 is based on Jakub's mt7601u driver already included
->> > in the kernel. I would like the driver be integrated as part
->> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
->> > to utilize mt76 code for adding support for MT76x0 PCIe devices
->> > in further development.
->> 
->> So what's the future for mt7601u, are we going to delete it? What's
->> Jakub's opinion about all this? And what's the delta featurewise between
->> mt7601u and this driver? Which one will be loaded by default?
->
-> I think we can integrate mt7601u in mt76 as soon as mt76x0 is merged since the
-> code path is pretty similar. Jakub what do you think? (That was actually on my
-> ToDo list :))
->
-> For the moment I guess both drivers can coexist since the
-> usb_device_id lists seem different
+On return of the function drivers must guarantee they:
+ - Did not send out any frames for the key unencrypted during the
+   replace,
+ - will not send out packets queued to them prior to the call encrypted
+   with the new key
+ - and will no longer hand over any frames which were decrypted by the
+   old key to mac80211 when not also handling PN (IV) in the driver.
 
-Ah, I didn't realise that. I was exactly worried that if we would now
-have two drivers supporting same device ids, but very good if that's not
-the case.
+Packets handed over to the driver after the callback has returned are
+expected to be send out encrypted with the new key and retransmissions
+must either be dropped or continue to use the old key.
 
+Mac80211 will not hand over packets for the key being replaced while the
+callback is running. All other packets will still be handed over.
+If the driver can't handle that the driver is allowed to call functions
+like ieee80211_stop_queues from the callback.
+
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+---
+ include/net/mac80211.h    | 15 +++++++++++++++
+ net/mac80211/driver-ops.h | 20 ++++++++++++++++++++
+ net/mac80211/main.c       |  5 +++++
+ net/mac80211/trace.h      | 39 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 79 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5790f55c241d..7d13cd10b7d7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3137,6 +3137,17 @@ enum ieee80211_reconfig_type {
+  *	Returns a negative error code if the key can't be added.
+  *	The callback can sleep.
+  *
++ * @replace_key: Replace an exiting in use key with a new one while guaranteeing
++ * 	to not leak clear text packets. Implementing this callback will enable
++ * 	mac80211 to announce NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE.
++ * 	Packets already queued must not be send out encrypted with the new key
++ * 	and packets decoded with the old key must not be handed over to mac80211
++ * 	when the driver is not checking IV/ICV itself once the callback has been
++ * 	completed.
++ * 	Mac80211 will log an error when asked to use replace a PTK key
++ * 	without replace_key but will still perform the then potentially
++ * 	insecure action via set_key for backward compatibility for now.
++ *
+  * @update_tkip_key: See the section "Hardware crypto acceleration"
+  * 	This callback will be called in the context of Rx. Called for drivers
+  * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
+@@ -3585,6 +3596,10 @@ struct ieee80211_ops {
+ 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 		       struct ieee80211_key_conf *key);
++	int (*replace_key)(struct ieee80211_hw *hw,
++		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *old,
++		       struct ieee80211_key_conf *new);
+ 	void (*update_tkip_key)(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_key_conf *conf,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 8f6998091d26..ebd7f1463336 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -255,6 +255,26 @@ static inline int drv_set_key(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline int drv_replace_key(struct ieee80211_local *local,
++			      struct ieee80211_sub_if_data *sdata,
++			      struct ieee80211_sta *sta,
++			      struct ieee80211_key_conf *old_key,
++			      struct ieee80211_key_conf *new_key)
++{
++	int ret;
++
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	trace_drv_replace_key(local, sdata, sta, old_key, new_key);
++	ret = local->ops->replace_key(&local->hw, &sdata->vif, sta, old_key, new_key);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
+ static inline void drv_update_tkip_key(struct ieee80211_local *local,
+ 				       struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_key_conf *conf,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4fb2709cb527..84cc8005c19a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -572,9 +572,14 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 				      NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT);
+ 	}
+ 
++	if (ops->replace_key)
++		wiphy_ext_feature_set(wiphy,
++				      NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE);
++
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
++
+ 	if (ops->wake_tx_queue)
+ 		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_TXQS);
+ 
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0ab69a1964f8..f93e00f1ae4d 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -603,6 +603,45 @@ TRACE_EVENT(drv_set_key,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_replace_key,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 struct ieee80211_key_conf *old_key,
++		 struct ieee80211_key_conf *new_key),
++
++	TP_ARGS(local, sdata, sta, old_key, new_key),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		KEY_ENTRY
++		__field(u32, cipher2)
++		__field(u8, hw_key_idx2)
++		__field(u8, flags2)
++		__field(s8, keyidx2)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		KEY_ASSIGN(old_key);
++		__entry->cipher2 = new_key->cipher;
++		__entry->flags2 = new_key->flags;
++		__entry->keyidx2 = new_key->keyidx;
++		__entry->hw_key_idx2 = new_key->hw_key_idx;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT KEY_PR_FMT
++		" cipher2:0x%x, flags2=%#x, keyidx2=%d, hw_key_idx2=%d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, KEY_PR_ARG,
++		__entry->cipher2, __entry->flags2, __entry->keyidx2, __entry->hw_key_idx2
++	)
++);
++
+ TRACE_EVENT(drv_update_tkip_key,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
 -- 
-Kalle Valo
+2.18.0
