@@ -1,76 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45895 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726436AbeHQOfw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Aug 2018 10:35:52 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Wen Gong <wgong@qti.qualcomm.com>, Wen Gong <wgong@codeaurora.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "johannes\@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-In-Reply-To: <68d91488f58f4a449908fc7eeebb8b34@aptaiexm02f.ap.qualcomm.com>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <87600eecr7.fsf@toke.dk> <68d91488f58f4a449908fc7eeebb8b34@aptaiexm02f.ap.qualcomm.com>
-Date: Fri, 17 Aug 2018 13:32:50 +0200
-Message-ID: <87tvntb53x.fsf@toke.dk> (sfid-20180817_133248_263379_1C92EBBD)
+Received: from mx2.suse.de ([195.135.220.15]:36974 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726112AbeHEPyI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Aug 2018 11:54:08 -0400
+Subject: Re: [RFC net-next 00/15] net: A socket API for LoRa
+To: Ben Whitten <Ben.Whitten@lairdtech.com>,
+        Jian-Hong Pan <starnight@g.ncu.edu.tw>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jiri Pirko <jiri@resnulli.us>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Matthias Brugger <mbrugger@suse.com>,
+        Janus Piwek <jpiwek@arroweurope.com>,
+        =?UTF-8?Q?Michael_R=c3=b6der?= <michael.roeder@avnet.eu>,
+        Dollar Chen <dollar.chen@wtmec.com>,
+        Ken Yu <ken.yu@rakwireless.com>,
+        =?UTF-8?Q?Konstantin_B=c3=b6hm?= <konstantin.boehm@ancud.de>,
+        Jan Jongboom <jan.jongboom@arm.com>,
+        Jon Ortego <Jon.Ortego@imst.de>,
+        "contact@snootlab.com" <contact@snootlab.com>,
+        Brian Ray <brian.ray@link-labs.com>,
+        "lora@globalsat.com.tw" <lora@globalsat.com.tw>,
+        Alexander Graf <agraf@suse.de>,
+        =?UTF-8?Q?Michal_Kube=c4=8dek?= <mkubecek@suse.cz>,
+        Hasnain Virk <Hasnain.Virk@arm.com>,
+        Stefan Schmidt <stefan@datenfreihafen.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "seth.forshee@canonical.com" <seth.forshee@canonical.com>,
+        Daniele Comel <dcomel@mipot.com>,
+        linux-wpan <linux-wpan@vger.kernel.org>
+References: <20180701110804.32415-1-afaerber@suse.de>
+ <BY1PR02MB11147C7443AB9623D6B65798E75A0@BY1PR02MB1114.namprd02.prod.outlook.com>
+ <e08cdcfb-207f-bd73-2afd-f775810b72b7@suse.de>
+ <BY1PR02MB11143134B9ABAC9C9929A9C4E7530@BY1PR02MB1114.namprd02.prod.outlook.com>
+From: =?UTF-8?Q?Andreas_F=c3=a4rber?= <afaerber@suse.de>
+Message-ID: <b7d67853-2b22-e9c3-edb5-85f937d95c5c@suse.de> (sfid-20180805_155015_050944_F2353F7E)
+Date: Sun, 5 Aug 2018 15:49:20 +0200
 MIME-Version: 1.0
+In-Reply-To: <BY1PR02MB11143134B9ABAC9C9929A9C4E7530@BY1PR02MB1114.namprd02.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wen Gong <wgong@qti.qualcomm.com> writes:
+Hi Ben and Jian-Hong,
 
->> -----Original Message-----
->> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
->> Sent: Monday, August 13, 2018 7:18 PM
->> To: Wen Gong <wgong@qti.qualcomm.com>; Wen Gong
->> <wgong@codeaurora.org>; ath10k@lists.infradead.org;
->> johannes@sipsolutions.net
->> Cc: linux-wireless@vger.kernel.org
->> Subject: RE: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC Wi=
-Fi
->> chips
->>=20
->> Wen Gong <wgong@qti.qualcomm.com> writes:
->>=20
->> > Hi Toke,
->> >
->> > I have tested with your method for shift 6/8/10/7 all twice time in
->> > open air environment.
->>=20
->> Great, thanks!
->>=20
->> > Shift 6:
->> > wgong@wgong-Latitude-E5440-1:~/flent$ flent -H 192.168.1.7 -t
->> > "sk_pacing_shift6" tcp_nup --test-parameter upload_streams=3D1
->>=20
->> Just to be sure: You are running this on your laptop? And that laptop ha=
-s the
->> ath10k and the modified kernel you are testing? Is 192.168.1.7 the AP or
->> another device?
-> Hi Toke,
-> Yes, I run on my laptop(Dell LATITUDE E5440 + QCA6174 PCI wireless card) =
-in open air environment,
-> Kernel is 4.18.0-rc2-wt-ath+ #2 SMP which is built myself.
-> The mac80211.ko/ath10k is built with the 2 patches.
-> 192.168.1.7 is another device(PC installed with 4.4.0-116-generic #140~14=
-.04.1-Ubuntu)
->>=20
->> I'd like to see what happens when the link is fully saturated my multiple
->> streams as well. Could you repeat the tests with upload_streams=3D5, ple=
-ase?
->> And if you could share the .flent.gz files (upload them somewhere, or em=
-ail
->> me off-list), that would be useful as well :)
->
-> Test result with upload_streams=3D5:
+[- SPI - devicetree]
 
-Sorry for the delay in looking at this, I've been terribly busy this
-week; will get back to it in more detail next week.
+Am 18.07.2018 um 13:28 schrieb Ben Whitten:
+>> Meanwhile my attempt to play with netlink during SUSE
+>> Hackweek has been
+>> going slow and I could use some guidance or a volunteer to
+>> contribute: I
+>> have a bare skeleton of registration, commands, attributes
+>> and multicast
+>> groups, but no plan yet how to connect that to the actual
+>> drivers to
+>> query or apply the settings...
+> 
+> Happy to help, I will be starting from zero on netlink but I can contribute my existing work incorporating Marks comments for sx1301 etal.
 
-One question for now: In the results you quote below the total
-throughput is way lower than the up to 600 mbps you quoted in the patch
-description. How did you run your original tests to achieve that high a
-throughput?
+I've figured out a way to retrieve a frequency value via netlink:
+By passing the lora0 ifindex in as attribute, nllora can look up the
+net_device by index, and then via struct lora_dev_priv call into hooks
+that the device drivers can optionally implement. :)
 
--Toke
+https://git.kernel.org/pub/scm/linux/kernel/git/afaerber/linux-lora.git/tree/net/lora/netlink.c?h=lora-next
+
+Tested with HIMO-01M module.
+The command might need an additional channel attribute for SX130x.
+
+The corresponding nltest program (using libnl-genl) is here:
+https://github.com/afaerber/lora-modules/blob/master/nltest.c
+
+Cheers,
+Andreas
+
+-- 
+SUSE Linux GmbH, Maxfeldstr. 5, 90409 Nürnberg, Germany
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
