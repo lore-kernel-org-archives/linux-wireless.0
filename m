@@ -1,81 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:15273 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727406AbeHWLlf (ORCPT
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:41041 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727154AbeHEXkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 07:41:35 -0400
-Subject: Re: [PATCH 24/24] staging: wilc1000: remove unnecessary static
- variable 'p2p_listen_state'
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <f79b44e1-6a4a-6b7a-f0d7-25f1e3c8dc4a@microchip.com> (sfid-20180823_101321_036818_8DD34837)
-Date: Thu, 23 Aug 2018 11:13:04 +0300
+        Sun, 5 Aug 2018 19:40:11 -0400
+Received: by mail-ed1-f65.google.com with SMTP id s24-v6so4176977edr.8
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2018 14:34:10 -0700 (PDT)
+Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+ <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
+ <87d0v4stqm.fsf@codeaurora.org> <5B604B14.8080607@broadcom.com>
+ <20180801082300.sev7ag5wh4wj7fbb@bars> <5B66268B.3010205@broadcom.com>
+ <20180805152226.4t67jriayk4nkfw2@bars>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B676D52.4000104@broadcom.com> (sfid-20180805_233414_149481_C29F8F7B)
+Date: Sun, 5 Aug 2018 23:34:10 +0200
 MIME-Version: 1.0
-In-Reply-To: <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180805152226.4t67jriayk4nkfw2@bars>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8/5/2018 5:22 PM, Sergey Matyukevich wrote:
+>>>>>> Implement support for PTA (Packet Traffic Arbitration) configuration.
+>>>>>> The PTA mechanism is used to coordinate sharing of the medium between
+>>>>>> WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
+>>>>>>
+>>>>>> This patch implements core infrastructure and vendor specific commands
+>>>>>> to control PTA functionality in firmware.
+>>>>>
+>>>>> And no description of the actual interface which would have helped with
+>>>>> the review.
+>>>>>
+>>>>> Anyway, the vendor commands are pain and they just make me grumpy. The
+>>>>> original idea was that upstream drivers should not support them at all,
+>>>>> later we flexed the rules so that low level hardware specific interfaces
+>>>>> might be ok, for example we added one in wil6210.
+>>>>>
+>>>>> If I would even consider applying a patch which adds a vendor command it
+>>>>> needs a really good commit log with a proper description of the actual
+>>>>> interface and good justifications why a generic nl80211 command won't
+>>>>> work. I don't see anything even remotely close here.
+>>>>>
+>>>>> Sorry for being grumpy, I just hate these vendor commands. Especially
+>>>>> when I see that a generic nl80211 command has not even be consired at
+>>>>> all.
+>>>>
+>>>> For what it is worth, looking at part of the patch:
+>>>>
+>>>> +/**
+>>>> + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
+>>>> + *
+>>>> + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
+>>>> + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
+>>>> + */
+>>>> +enum qlink_pta_mode {
+>>>> +       QLINK_PTA_MODE_DISABLED = 0,
+>>>> +       QLINK_PTA_MODE_2_WIRE = 2
+>>>> +};
+>>>> +
+>>>>
+>>>> it smells very much like low-level btcoex. The question is whether this
+>>>> needs to be conveyed from user-space or should these be device
+>>>> configuration, eg. like DT properties.
+>>>
+>>> Hello Arend,
+>>>
+>>> Yes, this is some kind of low-level BT coexistence mechanism, when WiFi and
+>>> BT cards coordinate access to wireless media in 2.4G using gpio lines.
+>>> Those lines connect WiFi and BT cards directly w/o host mediation.
+>>
+>> Right.
+>>
+>>> As for DT properties, the qustion still remains the same: how to propagate
+>>> those settings to WiFi card. AFAIK there is no 'standard' interface for
+>>> this kind of things. So using vendor commands looked like the only option.
+>>
+>> So DT properties are available to the kernel so it is just between
+>> device driver and wifi card. There is no involvement with user-space needed.
+>
+> Ok, makes sense. But IIUC this approach with DT
+> does not cover PCIe/USB wireless cards.
 
+It can cover any device in the system regardless type of host interface. 
+For example in the ath10k bindings document [1] you see:
 
-On 14.08.2018 09:50, Ajay Singh wrote:
-> Remove the use of unnecessary static variable 'p2p_listen_state'.
-> Already 'p2p_listen_state' is present in 'wilc_priv' struct. So making
-> use of that variable as its getting set in channel ready and
-> remain on channel expired callback.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index d8cc08b..cf7ead5 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -185,8 +185,6 @@ struct join_bss_param {
->  	u8 start_time[4];
->  };
->  
-> -static u8 p2p_listen_state;
-> -
->  /* 'msg' should be free by the caller for syc */
->  static struct host_if_msg*
->  wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
-> @@ -2351,7 +2349,6 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
->  		netdev_err(vif->ndev, "Failed to set remain on channel\n");
->  
->  error:
-> -	p2p_listen_state = 1;
->  	hif_drv->remain_on_ch_timer_vif = vif;
->  	mod_timer(&hif_drv->remain_on_ch_timer,
->  		  jiffies + msecs_to_jiffies(hif_remain_ch->duration));
-> @@ -2407,8 +2404,9 @@ static void handle_listen_state_expired(struct work_struct *work)
->  	struct wid wid;
->  	int result;
->  	struct host_if_drv *hif_drv = vif->hif_drv;
-> +	struct wilc_priv *priv = wdev_priv(vif->ndev->ieee80211_ptr);
->  
-> -	if (p2p_listen_state) {
-> +	if (priv->p2p_listen_state) {
->  		remain_on_chan_flag = false;
->  		wid.id = WID_REMAIN_ON_CHAN;
->  		wid.type = WID_STR;
-> @@ -2433,7 +2431,6 @@ static void handle_listen_state_expired(struct work_struct *work)
->  			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
->  						      hif_remain_ch->id);
->  		}
-> -		p2p_listen_state = 0;
+pci {
+	pcie@0 {
+		reg = <0 0 0 0 0>;
+		#interrupt-cells = <1>;
+		#size-cells = <2>;
+		#address-cells = <3>;
+		device_type = "pci";
 
-Is this useless at all?
+		ath10k@0,0 {
+			reg = <0 0 0 0 0>;
+			device_type = "pci";
+			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
+		};
+	};
+};
 
->  	} else {
->  		netdev_dbg(vif->ndev, "Not in listen state\n");
->  	}
-> 
+Regards,
+Arend
+
+[1] 
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt?h=linux-4.17.y
