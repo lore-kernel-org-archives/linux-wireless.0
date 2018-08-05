@@ -1,159 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:55006 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727389AbeHWN3Y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 09:29:24 -0400
-Date: Thu, 23 Aug 2018 15:30:21 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH 10/24] staging: wilc1000: move
- wilc_multicast_mac_addr_list to 'wilc_vif' struct
-Message-ID: <20180823153021.3ad58351@ajaysk-VirtualBox> (sfid-20180823_120031_155405_F8B8381E)
-In-Reply-To: <92faa952-6722-cc9f-cccf-2275c4158a37@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-        <1534229416-13254-11-git-send-email-ajay.kathat@microchip.com>
-        <92faa952-6722-cc9f-cccf-2275c4158a37@microchip.com>
+Received: from mail-cys01nam02on0043.outbound.protection.outlook.com ([104.47.37.43]:26880
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726251AbeHER1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Aug 2018 13:27:40 -0400
+Date: Sun, 5 Aug 2018 18:22:27 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
+Message-ID: <20180805152226.4t67jriayk4nkfw2@bars> (sfid-20180805_172247_213515_292C950F)
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+ <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
+ <87d0v4stqm.fsf@codeaurora.org>
+ <5B604B14.8080607@broadcom.com>
+ <20180801082300.sev7ag5wh4wj7fbb@bars>
+ <5B66268B.3010205@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5B66268B.3010205@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 23 Aug 2018 11:10:48 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-
-> On 14.08.2018 09:50, Ajay Singh wrote:
-> > Instead of using 'wilc_multicast_mac_addr_list' as global variable
-> > move it part of wilc_vif struct. Rename
-> > 'wilc_multicast_mac_addr_list' variable to 'mc_mac_addr_list' as
-> > its now part of 'wilc_vif' struct.
+> > > > > Implement support for PTA (Packet Traffic Arbitration) configuration.
+> > > > > The PTA mechanism is used to coordinate sharing of the medium between
+> > > > > WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
+> > > > > 
+> > > > > This patch implements core infrastructure and vendor specific commands
+> > > > > to control PTA functionality in firmware.
+> > > > 
+> > > > And no description of the actual interface which would have helped with
+> > > > the review.
+> > > > 
+> > > > Anyway, the vendor commands are pain and they just make me grumpy. The
+> > > > original idea was that upstream drivers should not support them at all,
+> > > > later we flexed the rules so that low level hardware specific interfaces
+> > > > might be ok, for example we added one in wil6210.
+> > > > 
+> > > > If I would even consider applying a patch which adds a vendor command it
+> > > > needs a really good commit log with a proper description of the actual
+> > > > interface and good justifications why a generic nl80211 command won't
+> > > > work. I don't see anything even remotely close here.
+> > > > 
+> > > > Sorry for being grumpy, I just hate these vendor commands. Especially
+> > > > when I see that a generic nl80211 command has not even be consired at
+> > > > all.
+> > > 
+> > > For what it is worth, looking at part of the patch:
+> > > 
+> > > +/**
+> > > + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
+> > > + *
+> > > + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
+> > > + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
+> > > + */
+> > > +enum qlink_pta_mode {
+> > > +       QLINK_PTA_MODE_DISABLED = 0,
+> > > +       QLINK_PTA_MODE_2_WIRE = 2
+> > > +};
+> > > +
+> > > 
+> > > it smells very much like low-level btcoex. The question is whether this
+> > > needs to be conveyed from user-space or should these be device
+> > > configuration, eg. like DT properties.
 > > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c     |  4 +---
-> >  drivers/staging/wilc1000/host_interface.h     |  1 -
-> >  drivers/staging/wilc1000/linux_wlan.c         | 14 +++++++-------
-> >  drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
-> >  4 files changed, 9 insertions(+), 11 deletions(-)
+> > Hello Arend,
 > > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index d930f06..642c314
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -193,8 +193,6 @@ static struct mutex hif_deinit_lock;
-> >  static struct timer_list periodic_rssi;
-> >  static struct wilc_vif *periodic_rssi_vif;
-> >  
-> > -u8
-> > wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN]; -
-> >  static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
-> >  
-> >  static u8 set_ip[2][4];
-> > @@ -2588,7 +2586,7 @@ static void handle_set_mcast_filter(struct
-> > work_struct *work) *cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
-> >  
-> >  	if (hif_set_mc->cnt > 0)
-> > -		memcpy(cur_byte, wilc_multicast_mac_addr_list,
-> > +		memcpy(cur_byte, vif->mc_mac_addr_list,  
+> > Yes, this is some kind of low-level BT coexistence mechanism, when WiFi and
+> > BT cards coordinate access to wireless media in 2.4G using gpio lines.
+> > Those lines connect WiFi and BT cards directly w/o host mediation.
 > 
-> A locking mechanism should be used for vif->mc_mac_addr_list. It is
-> read here.
+> Right.
+> 
+> > As for DT properties, the qustion still remains the same: how to propagate
+> > those settings to WiFi card. AFAIK there is no 'standard' interface for
+> > this kind of things. So using vendor commands looked like the only option.
+> 
+> So DT properties are available to the kernel so it is just between
+> device driver and wifi card. There is no involvement with user-space needed.
 
-Below is my understanding. 
-
-wilc_set_multicast_list() is called from 'ndo_set_rx_mode' callback.
- 
-wilc_set_multicast_list() calls wilc_setup_multicast_filter() which
-only read the value from the array and don't write to it when below
-if conditions pass.
-
-if (dev->flags &
-IFF_ALLMULTI || dev->mc.count > WILC_MULTICAST_TABLE_SIZE) 
-
-if (dev->mc.count == 0)
- 
-For the scenario when above 'if' conditions fails then value will be
-write to array first followed by read operation which will happen
-in different context(worker thread).
-
-Unless ndo_set_rx_mode() gets called quickly I don't think there is any
-issue here. 
-
-If required instead of adding the lock how about making
-handle_set_mcast_filter() a sync call in further patches, so that it can
-complete handle_set_mcast_filter() operation before coming out of
-ndo_set_rx_mode() callback.
-
-Actually, I am also worried if its right to add 'lock' at this
-point without reproducing the issue and only based on the code
-observation.
+Ok, makes sense. But IIUC this approach with DT
+does not cover PCIe/USB wireless cards.
 
 Regards,
-Ajay
-
-> 
-> >  		       ((hif_set_mc->cnt) * ETH_ALEN));
-> >  
-> >  	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-> > diff --git a/drivers/staging/wilc1000/host_interface.h
-> > b/drivers/staging/wilc1000/host_interface.h index d026f44..4a84dd2
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.h
-> > +++ b/drivers/staging/wilc1000/host_interface.h
-> > @@ -362,7 +362,6 @@ int wilc_set_tx_power(struct wilc_vif *vif, u8
-> > tx_power); int wilc_get_tx_power(struct wilc_vif *vif, u8
-> > *tx_power); 
-> >  extern u8 wilc_connected_ssid[6];
-> > -extern u8
-> > wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN]; 
-> >  extern int wilc_connecting;
-> >  
-> > diff --git a/drivers/staging/wilc1000/linux_wlan.c
-> > b/drivers/staging/wilc1000/linux_wlan.c index 283bb74..bbaa653
-> > 100644 --- a/drivers/staging/wilc1000/linux_wlan.c
-> > +++ b/drivers/staging/wilc1000/linux_wlan.c
-> > @@ -822,14 +822,14 @@ static void wilc_set_multicast_list(struct
-> > net_device *dev) }
-> >  
-> >  	netdev_for_each_mc_addr(ha, dev) {
-> > -		memcpy(wilc_multicast_mac_addr_list[i], ha->addr,
-> > ETH_ALEN);
-> > +		memcpy(vif->mc_mac_addr_list[i], ha->addr,
-> > ETH_ALEN);  
-> 
-> and set here. The contexts are different. If not in this patch, then
-> in a future one.
-> 
-> >  		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n",
-> > i,
-> > -			   wilc_multicast_mac_addr_list[i][0],
-> > -			   wilc_multicast_mac_addr_list[i][1],
-> > -			   wilc_multicast_mac_addr_list[i][2],
-> > -			   wilc_multicast_mac_addr_list[i][3],
-> > -			   wilc_multicast_mac_addr_list[i][4],
-> > -			   wilc_multicast_mac_addr_list[i][5]);
-> > +			   vif->mc_mac_addr_list[i][0],
-> > +			   vif->mc_mac_addr_list[i][1],
-> > +			   vif->mc_mac_addr_list[i][2],
-> > +			   vif->mc_mac_addr_list[i][3],
-> > +			   vif->mc_mac_addr_list[i][4],
-> > +			   vif->mc_mac_addr_list[i][5]);
-> >  		i++;
-> >  	}
-> >  
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h index
-> > 8cccbbc..ee8eda7 100644 ---
-> > a/drivers/staging/wilc1000/wilc_wfi_netdevice.h +++
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h @@ -120,6 +120,7 @@
-> > struct wilc_vif { u8 ifc_id;
-> >  	struct timer_list during_ip_timer;
-> >  	bool obtaining_ip;
-> > +	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-> >  };
-> >  
-> >  struct wilc {
-> >   
+Sergey
