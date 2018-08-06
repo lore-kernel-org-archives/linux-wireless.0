@@ -1,120 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:46753 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733041AbeHAG52 (ORCPT
+Received: from cloudserver094114.home.pl ([79.96.170.134]:52441 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727517AbeHFMiy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 02:57:28 -0400
-Date: Wed, 1 Aug 2018 10:46:00 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
-        <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
- '_' in label name
-Message-ID: <20180801104600.2716843b@ajaysk-VirtualBox> (sfid-20180801_071534_643862_28BDF622)
-In-Reply-To: <20180730113231.gwqliakpdgbchrre@mwanda>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-        <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
-        <20180719092744.5gx2ctgj7etvk7uh@mwanda>
-        <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
-        <20180730084113.fixf2zeb5tgbcovj@mwanda>
-        <20180730154024.4324b0cd@ajaysk-VirtualBox>
-        <20180730113231.gwqliakpdgbchrre@mwanda>
+        Mon, 6 Aug 2018 08:38:54 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Eric Biggers <ebiggers@google.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Rabin Vincent <rabinv@axis.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tudor-Dan Ambarus <tudor.ambarus@microchip.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Will Deacon <will.deacon@arm.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-crypto <linux-crypto@vger.kernel.org>,
+        drbd-dev@lists.linbit.com,
+        linux-block <linux-block@vger.kernel.org>, qat-linux@intel.com,
+        linux-ppp@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        "open list:ANDROID DRIVERS" <devel@driverdev.osuosl.org>,
+        linux-afs@lists.infradead.org,
+        "open list:NETWORKING DRIVERS (WIRELESS)"
+        <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 10/18] x86/power/64: Remove VLA usage
+Date: Mon, 06 Aug 2018 12:28:28 +0200
+Message-ID: <1782361.6NaZWiq7ky@aspire.rjw.lan> (sfid-20180806_123051_494272_9C93EE4E)
+In-Reply-To: <CAGXu5j+NPCc2hq5x7JUwgKYvY6zKN28YdtHbHVapnpgC3GwCsg@mail.gmail.com>
+References: <20180724164936.37477-1-keescook@chromium.org> <CAJZ5v0gVDotjufLKUW0YuQu2vA4fmU_gqia=ZA4DocW4XHxx0w@mail.gmail.com> <CAGXu5j+NPCc2hq5x7JUwgKYvY6zKN28YdtHbHVapnpgC3GwCsg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
-
-On Mon, 30 Jul 2018 14:32:31 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
-
-> On Mon, Jul 30, 2018 at 03:40:24PM +0530, Ajay Singh wrote:
-> > Hi Dan,
-> > 
-> > On Mon, 30 Jul 2018 11:41:13 +0300
-> > Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> >   
-> > > On Fri, Jul 20, 2018 at 04:35:24AM +0530, Ajay Singh wrote:  
-> > > > Hi Dan,
-> > > > 
-> > > > On Thu, 19 Jul 2018 12:27:44 +0300
-> > > > Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> > > >     
-> > > > > On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh
-> > > > > wrote:    
-> > > > > > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > > > > > b/drivers/staging/wilc1000/wilc_wlan.c index
-> > > > > > 85af365..8e71c28 100644 ---
-> > > > > > a/drivers/staging/wilc1000/wilc_wlan.c +++
-> > > > > > b/drivers/staging/wilc1000/wilc_wlan.c @@ -850,13 +850,13
-> > > > > > @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc,
-> > > > > > u32 int_status) if (wilc->rx_buffer) buffer =
-> > > > > > &wilc->rx_buffer[offset]; else
-> > > > > > -			goto _end_;
-> > > > > > +			goto end;      
-> > > > > 
-> > > > > This isn't related to your patch but this goto doesn't appear
-> > > > > to make any sort of sense.  I have no idea what was intended.
-> > > > >     
-> > > > 
-> > > > Thanks for pointing it out. I will include these changes in
-> > > > separate patchset.
-> > > > 
-> > > > Yes, the position of goto label can be moved just before
-> > > > wilc_wlan_handle_rxq(wilc), as 'ret' will always be '0' when
-> > > > goto statement is executed.
-> > > > 
-> > > > Actually earlier there were few more goto statement in this
-> > > > function and single label 'end' was used to handle for
-> > > > different cases. But in previous cleanup patches those cases
-> > > > were removed. Now this function can be further refactor by
-> > > > either moving goto label before wilc_wlan_handle_rxq(wilc) or
-> > > > avoid goto use by adding the rx_buffer validation along with
-> > > > size check.
-> > > > 
-> > > > i.e 
-> > > > 
-> > > > end:
-> > > >     wilc_wlan_handle_rxq(wilc)
-> > > > 
-> > > > 
-> > > > OR
-> > > > 
-> > > > 	if (size > 0 && wilc->rx_buffer) {
-> > > > 
-> > > > 	....
-> > > > 	}
-> > > >     	wilc_wlan_handle_rxq(wilc)
-> > > >     
-> > > 
-> > > Actually looking at it now, you could probably just remove the if
-> > > statement.  Hopefully wilc->rx_buffer is non-NULL at this point?
-> > > Is there really any need to call wilc_wlan_handle_rxq() when we
-> > > haven't called wilc_wlan_rxq_add()?
-> > >   
-> > 
-> > Yes, wilc->rx_buffer would be non NULL value as its only one time
-> > allocated buffer. wilc_wlan_handle_rxq() was called without
-> > wilc_wlan_rxq_add() just as a fail safe to ensure there are no
-> > pending packets in the queue.  
+On Wednesday, July 25, 2018 8:01:47 PM CEST Kees Cook wrote:
+> On Wed, Jul 25, 2018 at 4:32 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > On Tue, Jul 24, 2018 at 6:49 PM, Kees Cook <keescook@chromium.org> wrote:
+> >> In the quest to remove all stack VLA usage from the kernel[1], this
+> >> removes the discouraged use of AHASH_REQUEST_ON_STACK by switching to
+> >> shash directly and allocating the descriptor in heap memory (which should
+> >> be fine: the tfm has already been allocated there too).
+> >>
+> >> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+> >>
+> >> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >> Acked-by: Pavel Machek <pavel@ucw.cz>
+> >
+> > I think I can queue this up if there are no objections from others.
+> >
+> > Do you want me to do that?
 > 
-> The only thing is wilc->quit can be set.  Otherwise if ->rx_buffer is
-> NULL it would just result in a NULL dereference.  (We are deep into
-> hypotheticals here because we're discussing impossible code).
+> Sure thing. It looks like the other stand-alone patches like this one
+> are getting taken into the non-crypto trees, so that's fine.
 > 
 
-I have prepared a patch based on the feedback. The patch is submitted
-in https://patchwork.kernel.org/patch/10551703/.
-
-Regards,
-Ajay
-
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+Applied now, thanks!
