@@ -1,56 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42216 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726417AbeHRLf3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44628 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727340AbeHFPVn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:35:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:44 +0300
-Message-Id: <20180818082750.28717-11-luca@coelho.fi> (sfid-20180818_102841_841230_E7D83BB3)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 10/16] iwlwifi: mvm: add bss color to radiotap
+        Mon, 6 Aug 2018 11:21:43 -0400
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] ath10k: get the legacy rate index to update the txrate table
+Date: Mon,  6 Aug 2018 18:43:40 +0530
+Message-Id: <1533561223-342-2-git-send-email-akolli@codeaurora.org> (sfid-20180806_151243_505556_0321F870)
+In-Reply-To: <1533561223-342-1-git-send-email-akolli@codeaurora.org>
+References: <1533561223-342-1-git-send-email-akolli@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Get the legacy rate index to update the pkts/bytes counter 
+against each possible tx rate.
 
-Add BSS color to the HE radiotap.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index b53148f972a4..4af3ab2ee1a8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1042,6 +1042,20 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 						   he_phy_data),
- 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 4d1cd90d6d27..01eb4a7f4a69 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2488,7 +2488,7 @@ void ath10k_htt_htc_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		dev_kfree_skb_any(skb);
+ }
+ 
+-static inline bool is_valid_legacy_rate(u8 rate)
++static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+ {
+ 	static const u8 legacy_rates[] = {1, 2, 5, 11, 6, 9, 12,
+ 					  18, 24, 36, 48, 54};
+@@ -2496,10 +2496,11 @@ static inline bool is_valid_legacy_rate(u8 rate)
+ 
+ 	for (i = 0; i < ARRAY_SIZE(legacy_rates); i++) {
+ 		if (rate == legacy_rates[i])
+-			return true;
++			return i;
  	}
-+
-+	if (he_phy_data != HE_PHY_DATA_INVAL &&
-+	    (he_type == RATE_MCS_HE_TYPE_SU ||
-+	     he_type == RATE_MCS_HE_TYPE_MU)) {
-+		u8 bss_color = FIELD_GET(IWL_RX_HE_PHY_BSS_COLOR_MASK,
-+					 he_phy_data);
-+
-+		if (bss_color) {
-+			he->data1 |=
-+				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN);
-+			he->data3 |= cpu_to_le16(bss_color);
-+		}
-+	}
-+
- 	rx_status->device_timestamp = gp2_on_air_rise;
- 	rx_status->band = channel > 14 ? NL80211_BAND_5GHZ :
- 		NL80211_BAND_2GHZ;
+ 
+-	return false;
++	ath10k_warn(ar, "Invalid legacy rate %hhd peer stats", rate);
++	return -EINVAL;
+ }
+ 
+ static void
+@@ -2508,7 +2509,7 @@ static inline bool is_valid_legacy_rate(u8 rate)
+ 				struct ath10k_per_peer_tx_stats *peer_stats)
+ {
+ 	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+-	u8 rate = 0, sgi;
++	u8 rate = 0, rate_idx = 0, sgi;
+ 	struct rate_info txrate;
+ 
+ 	lockdep_assert_held(&ar->data_lock);
+@@ -2536,17 +2537,12 @@ static inline bool is_valid_legacy_rate(u8 rate)
+ 	if (txrate.flags == WMI_RATE_PREAMBLE_CCK ||
+ 	    txrate.flags == WMI_RATE_PREAMBLE_OFDM) {
+ 		rate = ATH10K_HW_LEGACY_RATE(peer_stats->ratecode);
+-
+-		if (!is_valid_legacy_rate(rate)) {
+-			ath10k_warn(ar, "Invalid legacy rate %hhd peer stats",
+-				    rate);
+-			return;
+-		}
+-
+ 		/* This is hacky, FW sends CCK rate 5.5Mbps as 6 */
+-		rate *= 10;
+-		if (rate == 60 && txrate.flags == WMI_RATE_PREAMBLE_CCK)
+-			rate = rate - 5;
++		if (rate == 6 && txrate.flags == WMI_RATE_PREAMBLE_CCK)
++			rate = 5;
++		rate_idx = ath10k_get_legacy_rate_idx(ar, rate);
++		if (rate_idx < 0)
++			return;
+ 		arsta->txrate.legacy = rate;
+ 	} else if (txrate.flags == WMI_RATE_PREAMBLE_HT) {
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
 -- 
-2.18.0
+1.7.9.5
