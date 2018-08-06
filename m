@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40502 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732570AbeHIReb (ORCPT
+Received: from mail-ed1-f42.google.com ([209.85.208.42]:42983 "EHLO
+        mail-ed1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726865AbeHFLZT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 13:34:31 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 6 Aug 2018 07:25:19 -0400
+Received: by mail-ed1-f42.google.com with SMTP id r4-v6so4775794edp.9
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2018 02:17:11 -0700 (PDT)
+Subject: Re: iw scanning broken?
+To: Dan Kosek <daniel.kosek@gmail.com>
+References: <C17ECAF6-E13C-40DB-A582-C9945D9BE7D7@gmail.com>
+ <5B65FC42.3010604@broadcom.com>
+ <0ED1D417-F3DA-41EC-BE23-B0D3F736D255@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B681216.6010402@broadcom.com> (sfid-20180806_111715_626821_65634A3D)
+Date: Mon, 6 Aug 2018 11:17:10 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180807225040.GA2164@beast>
-References: <20180807225040.GA2164@beast>
-To: Kees Cook <keescook@chromium.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20180809150911.7D1F660AD8@smtp.codeaurora.org> (sfid-20180809_170922_579536_06352F1D)
-Date: Thu,  9 Aug 2018 15:09:11 +0000 (UTC)
+In-Reply-To: <0ED1D417-F3DA-41EC-BE23-B0D3F736D255@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kees Cook <keescook@chromium.org> wrote:
++ linux-wireless
 
-> Even with "const" variables, the compiler will generate warnings about
-> VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
-> a #define instead of a const to do the array sizing.
-> 
-> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
-> 
-> Fixes: e87b5039511a ("mt76x0: eeprom files")
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 8/5/2018 4:59 AM, Dan Kosek wrote:
+> Arend,
+>
+> Thank you for getting back to me.  Adding the “flush” variable to the command fixes the issue on both systems.  Wow is the single channel scan fast with the flush.  Is appears the full scan (all channels) is faster with the flush option as well.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Glad it worked for you.
 
-17ad18fd12a3 mt76x0: Remove VLA usage
+> I have attached my bash logs.
+>
+> No I have don’t have kernel logfiles.
+>
+> I would be glad to collect the kernel log files for you tomorrow.
 
--- 
-https://patchwork.kernel.org/patch/10559297/
+There is not really an issue here so no need.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> Can you provide me some instructions or a reference and I will forward them.
+> 	(I am a wireless engineer my trade and learning to program now.)
+
+Welcome to the dark side :-p Getting the logs depends on you linux 
+distro, but using dmesg tends to work on most of them.
+
+Regards,
+Arend
