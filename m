@@ -1,119 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42578 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726346AbeHUI2g (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55156 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733074AbeHFSVL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:28:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:35 +0300
-Message-Id: <20180821050952.31603-1-luca@coelho.fi> (sfid-20180821_071006_389614_21791CA6)
-Subject: [PATCH v2 00/17] iwlwifi: updates intended for v4.20 2018-08-18
+        Mon, 6 Aug 2018 14:21:11 -0400
+Subject: Re: ath10k SWBA overrun / tx credit starvation
+To: Martin Willi <martin@strongswan.org>
+References: <6f044fff274867c90038e673c9291279ae1a1121.camel@strongswan.org>
+ <8b65a418-04ba-620d-8139-ac62d6715b24@candelatech.com>
+ <1c41320da3c241aed1281576eace6021ccb3adb0.camel@strongswan.org>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <9ce7eaed-d842-45e7-4a2a-ae2bc0f72fe5@candelatech.com> (sfid-20180806_181128_077874_98AB3F47)
+Date: Mon, 6 Aug 2018 09:11:22 -0700
+MIME-Version: 1.0
+In-Reply-To: <1c41320da3c241aed1281576eace6021ccb3adb0.camel@strongswan.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 08/06/2018 05:15 AM, Martin Willi wrote:
+> Hi Ben,
+>
+> Thanks for your help.
+>
+>> If you use the -ct firmware and the -ct driver, you can configure
+>> more than 2 tx-credits.
+>
+> Unfortunately, this didn't help, either. I hit these issues even sooner
+> with any 10.1-based firmware (including CT), which implies that at
+> least some of them have been addressed with 10.2/10.2.4.
 
-Here's a second version of the first set of patches intended for
-v4.20.  I fixed a linkage error when CONFIG_PM is not enabled, as
-reported by kbuildbot.  For this, I added a new, separate patch
-"iwlwifi: mvm: protect D0i3 code behind CONFIG_PM" that adds checks
-for the CONFIG_PM flags in a few places that were missing.
+Out of curiosity, how soon could you hit it with -ct firmware?  We often
+see these around once per day in some of our test cases, rarely more often
+than that.
 
-The rest is the same:
+>> I am not sure it resolves everything and a buggy firmware would still
+>> cause issues no matter.
+>
+> As a work-around, I'm experimenting with handling timeout conditions in
+> ath10k_wmi_cmd_send() caused by missing credits. Given that we can't do
+> any TX-flush or warm-restart over WMI under these conditions, I just
+> issue a hardware restart (patch below).
+>
+> Some initial tests show that this in fact recovers the module from its
+> bad state with just a small connectivity gap; certainly much better
+> than that unpredictable behavior we've seen previously.
 
-It's the usual developments, with some small new feauters,
-cleanups and bugfixes.
+Yes, I have been using a similar patch for years with good results.
 
-The changes are:
+Thanks,
+Ben
 
-* One fix for channel-switch handling;
-* Some improvements in the HE code;
-* New FW API handling;
-* Improvements in the debugging code;
-* Other clean-ups and small fixes;
+>
+> I'll do some more testing with this approach before considering to
+> upstream it.
+>
+> Regards
+> Martin
+>
+> ---
+>
+> From fd9e90d0294450c093d243ee4f1eb1e07b1cd73a Mon Sep 17 00:00:00 2001
+> From: Martin Willi <martin@strongswan.org>
+> Date: Fri, 3 Aug 2018 14:23:30 +0200
+> Subject: [PATCH] ath10k: Schedule hardware restart if WMI command times out
+>
+> If the TX queue gets stuck for some reason, we run out of tx credits and
+> are unable to send any commands over WMI. To recover from this situation,
+> issue a hard hardware restart. This implies a connectivity outage of about
+> 1.4s in AP mode, but brings back the interface to a usable state.
+>
+> Signed-off-by: Martin Willi <martin@strongswan.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index 38a97086708b..d39a983f4a1f 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -1852,6 +1852,12 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+>  	if (ret)
+>  		dev_kfree_skb_any(skb);
+>
+> +	if (ret == -EAGAIN) {
+> +		ath10k_warn(ar, "wmi command %d timeout, restarting hardware\n",
+> +			    cmd_id);
+> +		queue_work(ar->workqueue, &ar->restart_work);
+> +	}
+> +
+>  	return ret;
+>  }
+>
+>
 
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-I have a lot of pending patches in our internal tree, so I'll probably
-send another patchset before sending the pull-request.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  iwlwifi: set the tid for non-QOS frames to zero
-
-Golan Ben Ami (3):
-  iwlwifi: add required include to iwl-fh.h
-  iwlwifi: pcie: allow using tx init for other queues but the command
-    queue
-  iwlwifi: pcie: make non-static hcmd and rx code
-
-Gregory Greenman (1):
-  iwlwifi: mvm: add NOA and CSA to a probe response
-
-Liad Kaufman (2):
-  iwlwifi: mvm: add bss color to radiotap
-  iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
-
-Luca Coelho (4):
-  iwlwifi: remove unused TLC debugging commands
-  iwlwifi: mvm: remove duplicate if in iwl_mvm_setup_connection_keep()
-  iwlwifi: mvm: protect D0i3 code behind CONFIG_PM
-  iwlwifi: mvm: support new WoWLAN status FW API
-
-Mordechay Goodstein (2):
-  iwlwifi: turn timestamp marker cmd off by default
-  iwlwifi: enable reading the value of delay in timestamp_marker cmd
-
-Naftali Goldstein (1):
-  iwlwifi: runtime: avoid calling debugfs read functions more than once
-
-Sara Sharon (2):
-  iwlwifi: mvm: move he RX handling to a separate function
-  iwlwifi: drop packets with bad status in CD
-
-Shahar S Matityahu (1):
-  iwlwifi: add d3 debug data support
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |   4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |   4 +-
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  89 ++-
- .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   |  49 ++
- .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  60 --
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  63 ++
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  51 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  10 +
- .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 121 +++-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |   8 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   1 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   4 +
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h   |   2 +
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 160 +++--
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  61 ++
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   9 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  19 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  38 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 569 +++++++++---------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |  91 ++-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  71 +--
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  12 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   2 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  33 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |   2 +-
- 30 files changed, 1016 insertions(+), 528 deletions(-)
 
 -- 
-2.18.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
