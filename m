@@ -1,59 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:37156 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbeHUWpx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 18:45:53 -0400
-Message-ID: <1534879459.25523.48.camel@sipsolutions.net> (sfid-20180821_212430_433649_CC014082)
-Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Tue, 21 Aug 2018 21:24:19 +0200
-In-Reply-To: <dbd347a3434c05f48931559818dac8a1@codeaurora.org>
-References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
-         <1534323867.3547.30.camel@sipsolutions.net>
-         <4aaa3a6185dbd116ba5c1a2ce76b691f@codeaurora.org>
-         <1534407150.3547.58.camel@sipsolutions.net>
-         <cd1e8ef5693b81c6b5d25eae36a44fd3@codeaurora.org>
-         (sfid-20180818_095014_905997_2F2749FC) <1534757602.6287.4.camel@sipsolutions.net>
-         <dbd347a3434c05f48931559818dac8a1@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.bugwerft.de ([46.23.86.59]:34118 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726746AbeHFMql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Aug 2018 08:46:41 -0400
+Subject: Re: [PATCH v3 00/11] NFC: A bunch of cleanups for st95hf
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
+        shikha.singh@st.com
+References: <20180724095941.25777-1-daniel@zonque.org>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <2b5303c6-d9b6-de58-690b-9508c139e7d6@zonque.org> (sfid-20180806_123817_745444_0B88636D)
+Date: Mon, 6 Aug 2018 12:38:12 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-21 at 11:32 -0700, Pradeep Kumar Chitrapu wrote:
+Hi Samuel,
+
+On Tuesday, July 24, 2018 11:59 AM, Daniel Mack wrote:
+> This v3 of a series of patches for the ST95HF driver.
 > 
-> I wasn't aware of this android api.
+> Patch #1 reverts a change that I have submitted earlier and which is
+> sitting in nfc-next already. Given that the tree hasn't been sent out
+> for being merged yet, it could also still be removed with rebasing, in
+> which case #1 is not necessary of course.
+> 
+> The changes are all rather simple and are explained in their individual
+> commit logs.
+> 
+> Note that this series builds upon the patch titled "nfc: st95hf: remove
+> redundant pointers 'dev' and 'nfcddev'" that Colin posted the other day.
 
-OK.
+Could you still apply this set for 4.19?
 
-> However, looking at the api, the 
-> assumption is that bss is started by a different
-> api and the 'enableResponder' api is used for enabling rtt for a given 
-> duration.
+At least #1 should go in, or commit c99f996b2ba49 ("NFC: st95hf: drop 
+illegal kfree_skb()") which is already in your tree should be removed 
+with a rebase.
 
-It looks like. Note that there's also *disable*, which we hadn't even
-implemented before.
+For the rest, I'm in no hurry. I just want to prevent a regression in 4.19.
 
-> The reason we have added enabling ftm responder through start ap is that 
-> this can reflect beacon IE change in the
-> configuration in the same place. 
 
-Which makes sense, yeah.
+Thanks,
+Daniel
 
-> In case of the separate command, 
-> enabling responder will not update the beacon,
-> however, the application must issue the new command, whenever its 
-> updating beacon template.
 
-Right. However, I guess we could allow updating/changing this setting on
-the fly through nl80211_set_beacon() which already allows changing other
-non-beacon parameters (like the probe or assoc response templates), and
-then we can use your approach. Basically changing "SET_BEACON" to be a
-bit like "CHANGE_AP". In that case we definitely would need the
-attribute to be 0/1 as you had it so that it not present can be used to
-indicate "no change".
 
-johannes
+> 
+> 
+> Thanks,
+> Daniel
+> 
+> Changelog:
+> 
+> v1 → v2:
+> 
+>   * Improved commit logs, identical patch content.
+> 
+> 
+> v2 → v3:
+> 
+>   * Added another patch titled "NFC: st95hf: ignore spurious interrupts"
+> 
+> 
+> Daniel Mack (11):
+>    Revert "NFC: st95hf: drop illegal kfree_skb()"
+>    NFC: st95hf: drop nfcdev_free
+>    NFC: st95hf: drop illegal kfree_skb() in IRQ handler
+>    NFC: st95hf: remove logging from spi functions
+>    NFC: st95hf: remove exchange_lock
+>    NFC: st95hf: move skb allocation to ISR
+>    NFC: st95hf: ignore spurious interrupts
+>    NFC: st95hf: re-order command defines
+>    NFC: st95hf: unify sync/async flags
+>    NFC: st95hf: two small style nits
+>    NFC: st95hf: add of match table
+> 
+>   drivers/nfc/st95hf/core.c | 154 ++++++++++++++------------------------
+>   drivers/nfc/st95hf/spi.c  |  31 +++-----
+>   drivers/nfc/st95hf/spi.h  |   8 +-
+>   3 files changed, 66 insertions(+), 127 deletions(-)
+> 
