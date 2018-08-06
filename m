@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45556 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727207AbeHaNCv (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:38004 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732312AbeHFWOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 09:02:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:13 +0300
-Message-Id: <20180831083130.15525-12-luca@coelho.fi> (sfid-20180831_105632_560497_BA963589)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 11/28] mac80211: shorten the IBSS debug messages
+        Mon, 6 Aug 2018 18:14:08 -0400
+Date: Mon, 6 Aug 2018 23:03:18 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: sgruszka@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] mt76x0: mac files
+Message-ID: <20180806200318.tya32jj5k5fvptff@kili.mountain> (sfid-20180806_220332_383493_A6B2AA72)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hello Stanislaw Gruszka,
 
-When tracing is enabled, all the debug messages are recorded and must
-not exceed MAX_MSG_LEN (100) columns. Longer debug messages grant the
-user with:
+The patch a77443498137: "mt76x0: mac files" from Jul 31, 2018, leads
+to the following static checker warning:
 
-WARNING: CPU: 3 PID: 32642 at /tmp/wifi-core-20180806094828/src/iwlwifi-stack-dev/net/mac80211/./trace_msg.h:32 trace_event_raw_event_mac80211_msg_event+0xab/0xc0 [mac80211]
-Workqueue: phy1 ieee80211_iface_work [mac80211]
- RIP: 0010:trace_event_raw_event_mac80211_msg_event+0xab/0xc0 [mac80211]
- Call Trace:
-  __sdata_dbg+0xbd/0x120 [mac80211]
-  ieee80211_ibss_rx_queued_mgmt+0x15f/0x510 [mac80211]
-  ieee80211_iface_work+0x21d/0x320 [mac80211]
+	drivers/net/wireless/mediatek/mt76/mt76x0/mac.c:429 mt76x0_mac_set_ampdu_factor()
+	info: ignoring unreachable code.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ibss.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+   419  void mt76x0_mac_set_ampdu_factor(struct mt76x0_dev *dev)
+   420  {
+   421          struct ieee80211_sta *sta;
+   422          struct mt76_wcid *wcid;
+   423          void *msta;
+   424          u8 min_factor = 3;
+   425          int i;
+   426  
+   427          return;
+                ^^^^^^^
+Did you mean to comment this function out?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 6449a1c2283b..f0f5fedb8caa 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -947,8 +947,8 @@ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
- 	if (len < IEEE80211_DEAUTH_FRAME_LEN)
- 		return;
- 
--	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM BSSID=%pM (reason: %d)\n",
--		 mgmt->sa, mgmt->da, mgmt->bssid, reason);
-+	ibss_dbg(sdata, "RX DeAuth SA=%pM DA=%pM\n", mgmt->sa, mgmt->da);
-+	ibss_dbg(sdata, "\tBSSID=%pM (reason: %d)\n", mgmt->bssid, reason);
- 	sta_info_destroy_addr(sdata, mgmt->sa);
- }
- 
-@@ -966,9 +966,9 @@ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
- 	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
- 	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
- 
--	ibss_dbg(sdata,
--		 "RX Auth SA=%pM DA=%pM BSSID=%pM (auth_transaction=%d)\n",
--		 mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
-+	ibss_dbg(sdata, "RX Auth SA=%pM DA=%pM\n", mgmt->sa, mgmt->da);
-+	ibss_dbg(sdata, "\tBSSID=%pM (auth_transaction=%d)\n",
-+		 mgmt->bssid, auth_transaction);
- 
- 	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
- 		return;
-@@ -1175,10 +1175,10 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		rx_timestamp = drv_get_tsf(local, sdata);
- 	}
- 
--	ibss_dbg(sdata,
--		 "RX beacon SA=%pM BSSID=%pM TSF=0x%llx BCN=0x%llx diff=%lld @%lu\n",
-+	ibss_dbg(sdata, "RX beacon SA=%pM BSSID=%pM TSF=0x%llx\n",
- 		 mgmt->sa, mgmt->bssid,
--		 (unsigned long long)rx_timestamp,
-+		 (unsigned long long)rx_timestamp);
-+	ibss_dbg(sdata, "\tBCN=0x%llx diff=%lld @%lu\n",
- 		 (unsigned long long)beacon_timestamp,
- 		 (unsigned long long)(rx_timestamp - beacon_timestamp),
- 		 jiffies);
-@@ -1537,9 +1537,9 @@ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
- 
- 	tx_last_beacon = drv_tx_last_beacon(local);
- 
--	ibss_dbg(sdata,
--		 "RX ProbeReq SA=%pM DA=%pM BSSID=%pM (tx_last_beacon=%d)\n",
--		 mgmt->sa, mgmt->da, mgmt->bssid, tx_last_beacon);
-+	ibss_dbg(sdata, "RX ProbeReq SA=%pM DA=%pM\n", mgmt->sa, mgmt->da);
-+	ibss_dbg(sdata, "\tBSSID=%pM (tx_last_beacon=%d)\n",
-+		 mgmt->bssid, tx_last_beacon);
- 
- 	if (!tx_last_beacon && is_multicast_ether_addr(mgmt->da))
- 		return;
--- 
-2.18.0
+   428  
+   429          rcu_read_lock();
+   430          for (i = 0; i < ARRAY_SIZE(dev->wcid); i++) {
+   431                  wcid = rcu_dereference(dev->wcid[i]);
+   432                  if (!wcid)
+   433                          continue;
+   434  
+   435                  msta = container_of(wcid, struct mt76_sta, wcid);
+   436                  sta = container_of(msta, struct ieee80211_sta, drv_priv);
+   437  
+   438                  min_factor = min(min_factor, sta->ht_cap.ampdu_factor);
+   439          }
+   440          rcu_read_unlock();
+   441  
+   442          mt76_wr(dev, MT_MAX_LEN_CFG, 0xa0fff |
+   443                     FIELD_PREP(MT_MAX_LEN_CFG_AMPDU, min_factor));
+   444  }
+
+regards,
+dan carpenter
