@@ -1,32 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47282 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728089AbeHLOOP (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:37641 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725735AbeHFIVm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 10:14:15 -0400
-Date: Sun, 12 Aug 2018 13:36:27 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, ganesh.krishna@microchip.com,
-        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
-Subject: Re: [PATCH 4/5] staging: wilc1000: change permission to 0600 in
- debugfs_create_file() call
-Message-ID: <20180812113627.GD25209@kroah.com> (sfid-20180812_133631_874168_9186FEDC)
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
- <1534049265-5600-5-git-send-email-ajay.kathat@microchip.com>
+        Mon, 6 Aug 2018 04:21:42 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "yuehaibing@huawei.com" <yuehaibing@huawei.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "colin.king@canonical.com" <colin.king@canonical.com>
+Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
+Date: Mon, 6 Aug 2018 06:13:47 +0000
+Message-ID: <1533564825.4334.1.camel@realtek.com> (sfid-20180806_081425_652187_7D0D8B20)
+References: <20180806045440.11920-1-yuehaibing@huawei.com>
+In-Reply-To: <20180806045440.11920-1-yuehaibing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534049265-5600-5-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2018 at 10:17:44AM +0530, Ajay Singh wrote:
-> Cleanup patch to use more restrictive access permission for debugfs
-> file.
-
-Why?  What is the harm in writing to a value that is never used?  :)
-
-thanks,
-
-greg k-h
+T24gTW9uLCAyMDE4LTA4LTA2IGF0IDEyOjU0ICswODAwLCBZdWVIYWliaW5nIHdyb3RlOg0KPiBG
+aXggZm9sbG93aW5nIGNvY2NpbmVsbGUgd2FybmluZzoNCj4gDQo+IC4vZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzoyOTUyOjIt
+NDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBl
+bHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3Qv
+aGFsYnRjODcyM2IyYW50LmM6Mjk2MToyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlv
+biB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+ZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMwMTE6Mi00OiBXQVJO
+SU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+
+IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4
+NzIzYjJhbnQuYzozMDIwOjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGgg
+bm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
+cnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzQzOToyLTQ6IFdBUk5JTkc6IHBv
+c3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFu
+dC5jOjM0NDg6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZl
+Y3QgKGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZp
+L2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMzM5OjItNDogV0FSTklORzogcG9zc2libGUN
+Cj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzM0
+ODoyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYg
+PT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4
+aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMwNzQ6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25k
+aXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxl
+c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMDgzOjItNDog
+V0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNl
+KQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFs
+YnRjODcyM2IyYW50LmM6MzE5MjoyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3
+aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
+dGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMyMDE6Mi00OiBXQVJOSU5H
+OiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+IC4v
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIz
+YjJhbnQuYzozMjY3OjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8g
+ZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
+d2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzI3NjoyLTQ6IFdBUk5JTkc6IHBvc3Np
+YmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJz
+L25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5j
+OjMxMjQ6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3Qg
+KGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0
+Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMTMzOjItNDogV0FSTklORzogcG9zc2libGUNCj4g
+Y29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MjgyMToy
+LTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0g
+ZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0
+L2hhbGJ0Yzg3MjNiMmFudC5jOjI4MzA6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRp
+b24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQoNCkFja2VkLWJ5OiBQaW5nLUtlIFNoaWgg
+PHBrc2hpaEByZWFsdGVrLmNvbT4NCg0KPiANCj4gU2lnbmVkLW9mZi1ieTogWXVlSGFpYmluZyA8
+eXVlaGFpYmluZ0BodWF3ZWkuY29tPg0KPiAtLS0NCg==
