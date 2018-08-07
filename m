@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:39682 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726624AbeHYOTn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Aug 2018 10:19:43 -0400
-Received: by mail-wr1-f68.google.com with SMTP id o37-v6so9448241wrf.6
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:09 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 06/16] mt76x0: remove mt76x0_vendor_reset routine
-Date: Sat, 25 Aug 2018 12:40:46 +0200
-Message-Id: <20180825104056.9130-7-lorenzo.bianconi@redhat.com> (sfid-20180825_124114_048693_0C5D009B)
+Received: from mail-dm3nam03on0118.outbound.protection.outlook.com ([104.47.41.118]:1880
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1733061AbeHGIbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Aug 2018 04:31:16 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Winnie Chang <winnie.chang@cypress.com>
+Subject: [PATCH] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
+Date: Tue,  7 Aug 2018 01:18:06 -0500
+Message-Id: <1533622686-145733-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180807_081930_809181_28361BE3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove mt76x0_vendor_reset duplicated routine and use mt76u_mcu_fw_reset
-utility function for mcu fw reset
+From: Winnie Chang <winnie.chang@cypress.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+The kernel BUG happens when wowl is enabled from firmware. In
+brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
+drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
+yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
+calls brcmf_wiphy_wowl_params().
+
+The kernel panic is introduced in below commit:
+commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
+brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+
+Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
+Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 6 ------
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.h | 1 -
- 3 files changed, 1 insertion(+), 8 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-index 75768ebf8b30..c8ea3126e7dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -571,7 +571,7 @@ static int mt76x0_load_firmware(struct mt76x0_dev *dev)
- 	mt76_set(dev, MT_USB_DMA_CFG, (MT_USB_DMA_CFG_RX_BULK_EN |
- 				       MT_USB_DMA_CFG_TX_BULK_EN) |
- 				       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, 0x20));
--	mt76x0_vendor_reset(dev);
-+	mt76u_mcu_fw_reset(&dev->mt76);
- 	msleep(5);
- /*
- 	mt76x0_rmw(dev, MT_PBF_CFG, 0, (MT_PBF_CFG_TX0Q_EN |
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 09e7f9590f01..fdb71b907419 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -131,12 +131,6 @@ int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 24c4e18..5444e62 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6926,15 +6926,15 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	cfg->d11inf.io_type = (u8)io_type;
+ 	brcmu_d11_attach(&cfg->d11inf);
  
--void mt76x0_vendor_reset(struct mt76x0_dev *dev)
--{
--	mt76x0_vendor_request(dev, MT_VEND_DEV_MODE, USB_DIR_OUT,
--			      MT_VEND_DEV_MODE_RESET, 0, NULL, 0);
--}
+-	err = brcmf_setup_wiphy(wiphy, ifp);
+-	if (err < 0)
+-		goto priv_out;
 -
- int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
- 			     const u16 offset, const u32 val)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-index 492e431390a8..d23ca45a294e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-@@ -54,7 +54,6 @@ void mt76x0_complete_urb(struct urb *urb);
- int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
- 			   const u8 direction, const u16 val, const u16 offset,
- 			   void *buf, const size_t buflen);
--void mt76x0_vendor_reset(struct mt76x0_dev *dev);
- int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
- 			     const u16 offset, const u32 val);
+ 	/* regulatory notifer below needs access to cfg so
+ 	 * assign it now.
+ 	 */
+ 	drvr->config = cfg;
  
++	err = brcmf_setup_wiphy(wiphy, ifp);
++	if (err < 0)
++		goto priv_out;
++
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
+ 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
 -- 
-2.18.0
+2.1.0
