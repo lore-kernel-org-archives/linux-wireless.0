@@ -1,107 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56686 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727504AbeHLSCs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 14:02:48 -0400
-Date: Sun, 12 Aug 2018 17:24:21 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: devel@driverdev.osuosl.org, venkateswara.kaja@microchip.com,
-        linux-wireless@vger.kernel.org, ganesh.krishna@microchip.com,
-        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
-Subject: Re: [PATCH 1/5] staging: wilc1000: avoid arrray of
- 'wilc_debugfs_info_t' type
-Message-ID: <20180812152421.GB30273@kroah.com> (sfid-20180812_172431_442111_A098CC2D)
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
- <1534049265-5600-2-git-send-email-ajay.kathat@microchip.com>
- <20180812112930.GB25209@kroah.com>
- <20180812171829.1187a0cd@ajaysk-VirtualBox>
+Received: from mail-bn3nam01on0096.outbound.protection.outlook.com ([104.47.33.96]:56064
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732639AbeHGPx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Aug 2018 11:53:27 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Winnie Chang <winnie.chang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH v2] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
+Date: Tue,  7 Aug 2018 08:38:27 -0500
+Message-Id: <1533649107-157808-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180807_153922_456508_D0676EF3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180812171829.1187a0cd@ajaysk-VirtualBox>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2018 at 05:18:29PM +0530, Ajay Singh wrote:
-> Hi Greg,
-> 
-> On Sun, 12 Aug 2018 13:29:30 +0200
-> Greg KH <gregkh@linuxfoundation.org> wrote:
-> 
-> > On Sun, Aug 12, 2018 at 10:17:41AM +0530, Ajay Singh wrote:
-> > > Refactor code by removing array of 'wilc_debugfs_info_t' type and
-> > > use single variable to store 'wilc_debugfs_info_t' struct value.
-> > > 
-> > > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > > ---
-> > >  drivers/staging/wilc1000/wilc_debugfs.c | 26
-> > > +++++++++----------------- 1 file changed, 9 insertions(+), 17
-> > > deletions(-)
-> > > 
-> > > diff --git a/drivers/staging/wilc1000/wilc_debugfs.c
-> > > b/drivers/staging/wilc1000/wilc_debugfs.c index edc7287..c5f67c9
-> > > 100644 --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> > > +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> > > @@ -78,29 +78,21 @@ struct wilc_debugfs_info_t {
-> > >  	const struct file_operations fops;
-> > >  };
-> > >  
-> > > -static struct wilc_debugfs_info_t debugfs_info[] = {
-> > > -	{
-> > > -		"wilc_debug_level",
-> > > -		0666,
-> > > -		(DEBUG | ERR),
-> > > -		FOPS(NULL, wilc_debug_level_read,
-> > > wilc_debug_level_write, NULL),
-> > > -	},
-> > > +static struct wilc_debugfs_info_t debugfs_info = {
-> > > +	"wilc_debug_level",
-> > > +	0666,
-> > > +	(DEBUG | ERR),
-> > > +	FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write,
-> > > NULL), };
-> > >  
-> > >  int wilc_debugfs_init(void)
-> > >  {
-> > > -	int i;
-> > > -	struct wilc_debugfs_info_t *info;
-> > > +	struct wilc_debugfs_info_t *info = &debugfs_info;
-> > >  
-> > >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> > > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-> > > -		info = &debugfs_info[i];
-> > > -		debugfs_create_file(info->name,
-> > > -				    info->perm,
-> > > -				    wilc_dir,
-> > > -				    &info->data,
-> > > -				    &info->fops);
-> > > -	}
-> > > +	debugfs_create_file(info->name, info->perm, wilc_dir,
-> > > &info->data,
-> > > +			    &info->fops);
-> > > +
-> > 
-> > Why go through the extra step here in changing this variable from an
-> > array to a single value and not just make the call to
-> > debugfs_create_file() directly with the individual values like you do
-> > in patch 3?  It feels like this step isn't needed at all here, right?
-> > 
-> > What am I missing?
-> 
-> Actually, while calling debugfs_create_file() it also passed the
-> "info->data", "info->perm" which was maintained in a static variable.
-> So to have the changes in multiple patches, I first tried by removing
-> the dependency of array and later changed the individual parameters
-> for this debugfs_create_file().
+From: Winnie Chang <winnie.chang@cypress.com>
 
-But you don't need/want that here anyway, it would have been simpler to
-just do it correct in one patch.  That would have also been easier to
-review :)
+The kernel BUG happens when wowl is enabled from firmware. In
+brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
+drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
+yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
+calls brcmf_wiphy_wowl_params().
 
-But for now, just delete this file as it is not used at all.  Want me to
-do it for you?
+The kernel panic is introduced in below commit:
+commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
+brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
 
-thanks,
+Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 24c4e18..5444e62 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6926,15 +6926,15 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	cfg->d11inf.io_type = (u8)io_type;
+ 	brcmu_d11_attach(&cfg->d11inf);
+ 
+-	err = brcmf_setup_wiphy(wiphy, ifp);
+-	if (err < 0)
+-		goto priv_out;
+-
+ 	/* regulatory notifer below needs access to cfg so
+ 	 * assign it now.
+ 	 */
+ 	drvr->config = cfg;
+ 
++	err = brcmf_setup_wiphy(wiphy, ifp);
++	if (err < 0)
++		goto priv_out;
++
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
+ 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
+-- 
+2.1.0
