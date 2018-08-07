@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42168 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726417AbeHRLfG (ORCPT
+Received: from sitav-80046.hsr.ch ([152.96.80.46]:54578 "EHLO
+        mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731577AbeHGIgZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:35:06 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:45 +0300
-Message-Id: <20180818082750.28717-12-luca@coelho.fi> (sfid-20180818_102828_629559_DBDA16D1)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 11/16] iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
+        Tue, 7 Aug 2018 04:36:25 -0400
+Message-ID: <7a6298921f401b59bab1488f2596e3b1b5f78551.camel@strongswan.org> (sfid-20180807_082342_207287_8FCCEC25)
+Subject: Re: ath10k SWBA overrun / tx credit starvation
+From: Martin Willi <martin@strongswan.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 07 Aug 2018 08:23:36 +0200
+In-Reply-To: <9ce7eaed-d842-45e7-4a2a-ae2bc0f72fe5@candelatech.com>
+References: <6f044fff274867c90038e673c9291279ae1a1121.camel@strongswan.org>
+         <8b65a418-04ba-620d-8139-ac62d6715b24@candelatech.com>
+         <1c41320da3c241aed1281576eace6021ccb3adb0.camel@strongswan.org>
+         <9ce7eaed-d842-45e7-4a2a-ae2bc0f72fe5@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
 
-Current implementation turns this bit on only for HE MU.
+> > [...], which implies that at least some of them have been addressed
+> > with 10.2/10.2.4.
+> 
+> Out of curiosity, how soon could you hit it with -ct firmware?  We
+> often see these around once per day in some of our test cases, rarely
+> more often than that.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I have no hard numbers, as I have no reproducer. In the field this
+depends on the client load, but once in 1-3 days is realistic.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 4af3ab2ee1a8..311c639e23de 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1082,7 +1082,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			mvm->ampdu_toggle = toggle_bit;
- 
- 			if (he_phy_data != HE_PHY_DATA_INVAL &&
--			    he_type == RATE_MCS_HE_TYPE_MU) {
-+			    (he_type == RATE_MCS_HE_TYPE_MU ||
-+			     he_type == RATE_MCS_HE_TYPE_SU)) {
- 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
- 				if (FIELD_GET(IWL_RX_HE_PHY_DELIM_EOF,
- 					      he_phy_data))
--- 
-2.18.0
+With 10.2.4 is see this much less frequent (factor 10).
+
+Martin
