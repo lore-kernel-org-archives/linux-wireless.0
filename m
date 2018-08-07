@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:59432 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727098AbeH2BIB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 21:08:01 -0400
-Message-ID: <1535490861.20033.8.camel@sipsolutions.net> (sfid-20180828_231435_221776_ED35095A)
-Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set
- to one
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, sara.sharon@intel.com
-Date: Tue, 28 Aug 2018 23:14:21 +0200
-In-Reply-To: <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com> (sfid-20180828_230714_540221_B42ABCED)
-References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
-         <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
-         (sfid-20180828_230714_540221_B42ABCED)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-sn1nam01on0132.outbound.protection.outlook.com ([104.47.32.132]:18608
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732639AbeHGP6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Aug 2018 11:58:20 -0400
+Reply-To: chi-hsien.lin@cypress.com
+Subject: Re: [PATCH] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer
+ dereference
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Winnie Chang <winnie.chang@cypress.com>
+References: <1533622686-145733-1-git-send-email-chi-hsien.lin@cypress.com>
+ <87a7py4dqz.fsf@kamboji.qca.qualcomm.com>
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Message-ID: <d336b996-9762-2c58-0b51-297b4e2c291b@cypress.com> (sfid-20180807_154359_240709_3499F461)
+Date: Tue, 7 Aug 2018 21:40:44 +0800
+MIME-Version: 1.0
+In-Reply-To: <87a7py4dqz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-28 at 23:07 +0200, Lorenzo Bianconi wrote:
-> Do not try to aggregate packets in a A-MSDU frame if max_tx_fragments
-> or max_amsdu_subframes is set to 1. 
 
-Yeah that seems valid.
 
-> Moreover take into account
-> tail padding added on the first frame into flow backlog if
-> ieee80211_amsdu_realloc_pad routine on the second frame fails.
+On 08/07/2018 7:28, Kalle Valo wrote:
+> Chi-Hsien Lin <chi-hsien.lin@cypress.com> writes:
+> 
+>> From: Winnie Chang <winnie.chang@cypress.com>
+>>
+>> The kernel BUG happens when wowl is enabled from firmware. In
+>> brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
+>> drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
+>> yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
+>> calls brcmf_wiphy_wowl_params().
+>>
+>> The kernel panic is introduced in below commit:
+>> commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
+>> brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+>>
+>> Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
+>> Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+> 
+> Chi-Hsien, you need to include your own s-o-b as well when you are
+> submitting the patch:
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#signed-off-by_missing
 
-That's not really right - the padding shouldn't have been added to the
-first subframe in the first place as the last one shouldn't have padding
-at all. There's also a separate bug in that the A-MSDU subframe length
-should NOT include the padding.
+Hi Kalle,
 
-My colleague Sara (CC'ed now) has a patch to fix all of this (we just
-did that this morning). I'll send it out tomorrow morning. Can I bother
-you to try that?
+Thanks a lot for the notes. I've added proper s-o-b in V2.
 
-We'd have to fix the first point independently though, or I guess we can
-roll that into our bugfix too, which would you prefer?
+Chi-hsien Lin
 
-johannes
+> 
+> --
+> Kalle Valo
+> 
+> 
+> ----------
+> 
+> You're receiving this message because you're a member of the brcm80211-dev-list group.
+> .
+> 
