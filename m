@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:50436 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726633AbeH2XCE (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:42882 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727360AbeHGHfT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 19:02:04 -0400
-Received: by mail-wm0-f67.google.com with SMTP id s12-v6so6314939wmc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 12:03:48 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, sara.sharon@intel.com
-Subject: [PATCH v2] mac80211: do not aggregate frames if max_frags is set to one
-Date: Wed, 29 Aug 2018 21:03:25 +0200
-Message-Id: <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com> (sfid-20180829_210352_745681_F4DB5BA1)
-In-Reply-To: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
+        Tue, 7 Aug 2018 03:35:19 -0400
+Received: by mail-io0-f171.google.com with SMTP id n18-v6so3472459ioa.9
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2018 22:22:45 -0700 (PDT)
+MIME-Version: 1.0
+From: Farhan Khan <khanzf@gmail.com>
+Date: Tue, 7 Aug 2018 01:22:23 -0400
+Message-ID: <CAFd4kYBx_kOixTvBm1n6F2VAta2CLtZSqoKH=4qi1yOqoZ32rw@mail.gmail.com> (sfid-20180807_072248_492286_C9C50FC7)
+Subject: Where do STA mode and Monitor mode differ?
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not try to aggregate packets in a A-MSDU frame and add A-MSDU header
-on the first packet if max_tx_fragments or max_amsdu_subframes are
-set to one
+Hi all,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
-Changes since v1:
-- rebased on top of mac80211 master branch
-- removed ieee80211_amsdu_realloc_pad chunk
----
- net/mac80211/tx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Does anyone know where rtlwifi drivers differ between STA and Monitor
+mode? More specifically, what does the rtl8188ee driver do aside from
+powering the device on to get it into STA mode?
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6a362b2882d3..75646e3fb3d9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3213,9 +3213,6 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	if (skb->len + head->len > max_amsdu_len)
- 		goto out;
- 
--	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
--		goto out;
--
- 	nfrags = 1 + skb_shinfo(skb)->nr_frags;
- 	nfrags += 1 + skb_shinfo(head)->nr_frags;
- 	frag_tail = &skb_shinfo(head)->frag_list;
-@@ -3231,6 +3228,9 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	if (max_frags && nfrags > max_frags)
- 		goto out;
- 
-+	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
-+		goto out;
-+
- 	/*
- 	 * Pad out the previous subframe to a multiple of 4 by adding the
- 	 * padding to the next one, that's being added. Note that head->len
--- 
-2.17.1
+Can you kindly point me to references in the driver code?
+
+I have been searching for about a week and have not been able to locate it.
+
+Thank you,
+--
+Farhan Khan
+PGP Fingerprint: B28D 2726 E2BC A97E 3854 5ABE 9A9F 00BC D525 16EE
