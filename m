@@ -1,49 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49794 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730880AbeHISQO (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:37101 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725751AbeHHEFv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 14:16:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        b43-dev <b43-dev@lists.infradead.org>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Joe Perches <joe@perches.com>
-Subject: Re: ssb: Remove home-grown printk wrappers
-References: <20180731215638.381f0370@wiggum>
-        <877ekz1r1d.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 09 Aug 2018 18:50:40 +0300
-In-Reply-To: <877ekz1r1d.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Thu, 09 Aug 2018 18:46:38 +0300")
-Message-ID: <87y3dfzghb.fsf@kamboji.qca.qualcomm.com> (sfid-20180809_175047_532767_0FD0A2DD)
+        Wed, 8 Aug 2018 00:05:51 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "yuehaibing@huawei.com" <yuehaibing@huawei.com>,
+        "valdis.kletnieks@vt.edu" <valdis.kletnieks@vt.edu>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>
+Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
+Date: Wed, 8 Aug 2018 01:48:14 +0000
+Message-ID: <1533692892.2513.16.camel@realtek.com> (sfid-20180808_034857_751836_7B4FCEE9)
+References: <20180806045440.11920-1-yuehaibing@huawei.com>
+         <63216.1533591775@turing-police.cc.vt.edu>
+         <577a831f-45c3-a687-ca04-edc977ddb925@lwfinger.net>
+In-Reply-To: <577a831f-45c3-a687-ca04-edc977ddb925@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-
-> Michael B=C3=BCsch <m@bues.ch> writes:
->
->> Replace the ssb printk wrappers by standard print helpers.
->> Also remove SSB_SILENT. Nobody should use it anyway.
->>
->> Originally submitted by Joe Perches <joe@perches.com>.
->> Modified to add dev_... based printks.
->>
->> Signed-off-by: Michael Buesch <m@bues.ch>
->> Tested-by: Michael Buesch <m@bues.ch>
->> Cc: Joe Perches <joe@perches.com>
->
-> Applied manually:
->
-> 4d77a89e3924 b43legacy/leds: Ensure NUL-termination of LED name string
-
-Heh, a copy paste error. Shows that I should not be applying anything
-manually. Anyway, the correct commit id is:
-
-b8b6069cf208 ssb: Remove home-grown printk wrappers
-
---=20
-Kalle Valo
+T24gVHVlLCAyMDE4LTA4LTA3IGF0IDA5OjIzIC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDA4LzA2LzIwMTggMDQ6NDIgUE0sIHZhbGRpcy5rbGV0bmlla3NAdnQuZWR1IHdyb3RlOg0K
+PiA+IE9uIE1vbiwgMDYgQXVnIDIwMTggMTI6NTQ6NDAgKzA4MDAsIFl1ZUhhaWJpbmcgc2FpZDoN
+Cj4gPj4gRml4IGZvbGxvd2luZyBjb2NjaW5lbGxlIHdhcm5pbmc6DQo+ID4+DQo+ID4+IC4vZHJp
+dmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJh
+bnQuYzoyOTUyOjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZm
+ZWN0IChpZiA9PSBlbHNlKQ0KPiA+wqANCj4gPj7CoMKgwqAJLyogc3cgbWVjaGFuaXNtICovDQo+
+ID4+wqDCoMKgCWlmIChCVENfV0lGSV9CV19IVDQwID09IHdpZmlfYncpIHsNCj4gPj4gLQkJaWYg
+KCh3aWZpX3Jzc2lfc3RhdGUgPT0gQlRDX1JTU0lfU1RBVEVfSElHSCkgfHwNCj4gPj4gLQkJwqDC
+oMKgwqAod2lmaV9yc3NpX3N0YXRlID09IEJUQ19SU1NJX1NUQVRFX1NUQVlfSElHSCkpIHsNCj4g
+Pj4gLQkJCWJ0Yzg3MjNiMmFudF9zd19tZWNoYW5pc20oYnRjb2V4aXN0LCB0cnVlLCB0cnVlLA0K
+PiA+PiAtCQkJCQkJwqDCoGZhbHNlLCBmYWxzZSk7DQo+ID4+IC0JCX0gZWxzZSB7DQo+ID4+IC0J
+CQlidGM4NzIzYjJhbnRfc3dfbWVjaGFuaXNtKGJ0Y29leGlzdCwgdHJ1ZSwgdHJ1ZSwNCj4gPj4g
+LQkJCQkJCcKgwqBmYWxzZSwgZmFsc2UpOw0KPiA+PiAtCQl9DQo+ID4+ICsJCWJ0Yzg3MjNiMmFu
+dF9zd19tZWNoYW5pc20oYnRjb2V4aXN0LCB0cnVlLCB0cnVlLA0KPiA+PiArCQkJCQnCoMKgZmFs
+c2UsIGZhbHNlKTsNCj4gPj7CoMKgwqAJfSBlbHNlIHsNCj4gPsKgDQo+ID4gUmF0aGVyIHRoYW4g
+YmxpbmRseSBmaXhpbmcgdGhpcywgcGVyaGFwcyBhIGJpdCBvZiB0aG91Z2h0IG5lZWRzIHRvIGJl
+DQo+ID4gYXBwbGllZCB0byB3aHkgdGhpcyBjb2RlIGxvb2tzIGxpa2UgdGhpcyBpbiB0aGUgZmly
+c3QgcGxhY2UuDQo+ID7CoA0KPiA+IFNlZSBjb21taXQgYzY4MjE2MTNlNjUzYcKgwqAod2hpY2gg
+bG9va3MgbGlrZSB0aGUgYmxldGNoZXJvdXMgImRvIHRvbyBtYW55DQo+ID4gdGhpbmdzIGF0IG9u
+Y2UiIGNvbW1pdCBpbmRlZWQpLCBhbHRob3VnaCB0aGUgYWN0dWFsIGRpZmYgYXBwZWFycyB0byBi
+ZSBhDQo+ID4gIm5vIGhhcm0sIG5vIGZvdWwiIGFnYWluc3QgdGhpcyBjb21taXQsIHdoZXJlIHRo
+ZSBpc3N1ZSBhbHJlYWR5IGV4aXN0ZWQuDQo+ID7CoA0KPiA+IGNvbW1pdCBhYTQ1YTY3M2IyOTFm
+ZDc2MTI3NTQ5M2JjMTUzMTZkNzk1NTVlZDU1DQo+ID4gQXV0aG9yOiBMYXJyeSBGaW5nZXIgPExh
+cnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+ID4gRGF0ZTrCoMKgwqBGcmkgRmViIDI4IDE1OjE2
+OjQzIDIwMTQgLTA2MDANCj4gPsKgDQo+ID7CoMKgwqDCoMKgwqBydGx3aWZpOiBidGNvZXhpc3Q6
+IEFkZCBuZXcgbWluaSBkcml2ZXINCj4gPsKgDQo+ID4gTGFycnk/IENhbiB5b3UgcmVhY2ggYmFj
+ayB0byAyMDE0IGFuZCByZW1lbWJlciB3aHkgdGhpcyBjb2RlDQo+ID4gbG9va2VkIGxpa2UgdGhp
+cyBpbiB0aGUgZmlyc3QgcGxhY2U/DQo+IA0KPiBUaGUgYmFzZSBjb2RlIGNhbWUgZnJvbSBSZWFs
+dGVrLiBNeSBvbmx5IHBhcnQgaW4gZ2V0dGluZyBpdCBpbnRvIHRoZSBrZXJuZWwgd2FzwqANCj4g
+dG8gY2xlYW4gdXAgdGhlIGNoZWNrcGF0Y2ggYW5kIFNwYXJzZSBlcnJvcnMgYW5kIHdhcm5pbmdz
+LCBhbmQgc3VibWl0IGl0LiBJIHdhc8KgDQo+IGEgInNjcmlwdCBraWRkeSIganVzdCBsaWtlIHRo
+ZSBhdXRob3JzIG9mIHRoZSBjdXJyZW50IHBhdGNoZXMuIFRoZSBvbmx5wqANCj4gZGlmZmVyZW5j
+ZSBpcyB0aGF0IEkgd2FzIGdldHRpbmcgZHJpdmVycyBpbnRvIHRoZSBrZXJuZWwgc28gdGhhdCB1
+c2VycyBoYXJkd2FyZcKgDQo+IHdvdWxkIHdvcmsuDQo+IA0KPiBBbnkgcmVjb3JkIG9mIHdoZXRo
+ZXIgdGhlc2UgZHVwbGljYXRlIGJyYW5jaGVzIGFyZSB0aGUgcmVzdWx0IG9mIGluY29ycmVjdCBj
+b3B5wqANCj4gYW5kIHBhc3RlLCBvciBqdXN0IGV4dHJhbmVvdXMgY29kZSwgd291bGQgYmUgYXQg
+UmVhbHRlayBpbiB0aGVpciB2ZXJzaW9uIGNvbnRyb2zCoA0KPiBoaXN0b3J5LiBJIGhhdmUgbmV2
+ZXIgaGFkIGFjY2VzcyB0byBzdWNoIGFyY2hpdmVzLCBub3IgaGF2ZSBJIGV2ZXIgaGFkIGFuwqAN
+Cj4gbm9uLWRpc2Nsb3N1cmUgYWdyZWVtZW50IHdpdGggUmVhbHRlay4NCj4gDQo+IFBpbmctS2Ug
+U2hpaCwgd2hvIGlzIENjJ2Qgb24gdGhlc2UgbWVzc2FnZXMsIG1pZ2h0IGJlIGFibGUgdG8gYW5z
+d2VyIHRoZXNlwqANCj4gcXVlc3Rpb25zLg0KDQpUaGVzZSBicmFuY2hlcyBpcyB1c2VkIHRvIGlt
+cHJvdmUgdXNlciBleHBlcmllbmNlIGFjY29yZGluZyB0byBSU1NJIHN0cmVuZ3RoLCBidXQNCml0
+IGhhcyBub3Qgc2lnbmlmaWNhbnQgaW1wcm92ZW1lbnQgc28gdGhlIHNhbWUgYXJndW1lbnRzIGJl
+Y29tZSBkdXBsaWNhdGUgYnJhbmNoZXMuDQpJIGNoZWNrIHRoZSBsYXRlc3QgY29kZSBvZsKgaGFs
+YnRjODcyM2IyYW50LmMsIHRoZXJlIGFyZSBtb3JlIHRoYW4gb25lIHN0YXRlbWVudHMNCndpdGhp
+biBpZi1lbHNlIGJyYW5jaCB0byBpbXByb3ZlIHBlcmZvcm1hbmNlLCBidXQgdGhlIHN0YXRlbWVu
+dHMgbWVudGlvbmVkIGJ5wqANCnRoaXMgcGF0Y2ggYXJlIHN0aWxsIHRoZSBzYW1lLiBTbywgdGhl
+c2UgZHVwbGljYXRlIGJyYW5jaGVzIGNhbiBiZSBzYWZlbHkgcmVtb3ZlZC4NCg0KPiANCj4gRm9y
+IHRoZSBtb21lbnQsIHRoZXNlIHNpbXBsaWZpY2F0aW9ucyBjb3VsZCBiZSBhcHBsaWVkIGFzIGxv
+bmcgYXMgdGhleSBhcmXCoA0KPiBjb3JyZWN0bHkgZG9uZS4gQWZ0ZXIgYWxsLCB0aGV5IGFyZSBu
+b3QgY2hhbmdpbmcgd2hhdCBpcyBhbHJlYWR5IHRoZXJlIGFuZCB0aGF0wqANCj4gc3RvcHMgYW55
+IG90aGVyIHBlcnNvbiB0aGF0IGtub3dzIGhvdyB0byBydW4gY29jY2luZWxsZSBmcm9tIHN1Ym1p
+dHRpbmcgdGhlIHNhbWXCoA0KPiBwYXRjaCBpbiB0aGUgZnV0dXJlLiBXaHkgImtpY2sgdGhlIGNh
+biBkb3duIHRoZSByb2FkIj8gSWYgUEsgY2FuIGZpbmQgdGhhdCB0aGVyZcKgDQo+IHdhcyBhbiBl
+cnJvciBpbiB0aGUgb3JpZ2luYWwgY29kZSwgaGUgY2FuIHN1Ym1pdCBhICJGaXhlcyIgcGF0Y2gu
+DQo+IA0KPiANCg0K
