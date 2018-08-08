@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:46356 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728767AbeHBNRx (ORCPT
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:43369 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726954AbeHHSBp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Aug 2018 09:17:53 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: fix compilation warning for ARCH PowerPC
-Date: Thu, 2 Aug 2018 16:57:02 +0530
-Message-ID: <1533209222-22295-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180802_132712_547551_57B2559A)
+        Wed, 8 Aug 2018 14:01:45 -0400
+Received: by mail-yw1-f65.google.com with SMTP id l189-v6so1851433ywb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2018 08:41:31 -0700 (PDT)
+Received: from mail-yw1-f43.google.com (mail-yw1-f43.google.com. [209.85.161.43])
+        by smtp.gmail.com with ESMTPSA id g203-v6sm2096004ywb.69.2018.08.08.08.41.29
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 08 Aug 2018 08:41:29 -0700 (PDT)
+Received: by mail-yw1-f43.google.com with SMTP id j68-v6so1872628ywg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2018 08:41:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <871sb942cx.fsf@kamboji.qca.qualcomm.com>
+References: <20180807225040.GA2164@beast> <20180808092450.GA25772@redhat.com> <871sb942cx.fsf@kamboji.qca.qualcomm.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Wed, 8 Aug 2018 08:41:28 -0700
+Message-ID: <CAGXu5jKqeAHDWdNg++QJko5AM4g160kEQ54jLAojpRq6FszqgA@mail.gmail.com> (sfid-20180808_174201_898428_0BD027B9)
+Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix below warning reported for PowerPC arch compilation
+On Wed, Aug 8, 2018 at 2:46 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>
+>> On Tue, Aug 07, 2018 at 03:50:40PM -0700, Kees Cook wrote:
+>>> Even with "const" variables, the compiler will generate warnings about
+>>> VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
+>>> a #define instead of a const to do the array sizing.
+>>>
+>>> [1]
+>>> https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+>>>
+>>> Fixes: e87b5039511a ("mt76x0: eeprom files")
+>>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>>> ---
+>>> Please include this for the v4.19 merge window. The VLA was introduced
+>>> with the new source file (which I also note is missing a SPDX line), so
+>>
+>> I thought SPDX line is needed only if file has no license and eeprom.c
+>> file and other mt76x0 files have specified the license. Is SPDX still
+>> needed in that case ?
 
-include/uapi/linux/byteorder/big_endian.h:95:37: warning: passing
-argument 1 of '__swab32s' makes pointer from integer without a cast
-[-Wint-conversion]
+I thought all source files needed SPDX: https://lwn.net/Articles/739183/
 
-Fixes: 02211edc9a1f ("staging: wilc1000: fix endianness warnings
-reported by sparse")
+>>
+>>> +#define MT_MAP_READS        DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16)
+>>>  static int
+>>>  mt76x0_efuse_physical_size_check(struct mt76x0_dev *dev)
+>>>  {
+>>> -    const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
+>>> -    u8 data[map_reads * 16];
+>>
+>> Why this is variable length array? DIV_ROUND_UP can not be calculated
+>> at compile time? But if so, macro do not change the situation either.
+>
+> The commit log mentioned:
+>
+>   "Even with "const" variables, the compiler will generate warnings about
+>    VLA usage."
+>
+> So I guess the compiler (gcc?) is just not smart enough in this case?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_sdio.c | 2 +-
- drivers/staging/wilc1000/wilc_spi.c  | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Correct. This is technically a false positive, but with the goal of
+adding -Wvla to the build globally, we have to get rid of these as
+well. It's a little frustrating, I agree, but with all others fixed
+now, these stand out. :)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 8bda550..1908afa1 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -563,7 +563,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
- 		}
- 	}
- 
--	le32_to_cpus(*data);
-+	le32_to_cpus(data);
- 
- 	return 1;
- 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 064892d..a85f87b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -699,7 +699,7 @@ static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
- 		return 0;
- 	}
- 
--	le32_to_cpus(*data);
-+	le32_to_cpus(data);
- 
- 	return 1;
- }
-@@ -778,7 +778,7 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
- 		return 0;
- 	}
- 
--	le32_to_cpus(*data);
-+	le32_to_cpus(data);
- 
- 	return 1;
- }
+-Kees
+
 -- 
-2.7.4
+Kees Cook
+Pixel Security
