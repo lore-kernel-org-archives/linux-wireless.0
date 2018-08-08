@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727187AbeHHLno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 07:43:44 -0400
-Date: Wed, 8 Aug 2018 11:24:52 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
-Message-ID: <20180808092450.GA25772@redhat.com> (sfid-20180808_112508_538070_EBFFE4C0)
-References: <20180807225040.GA2164@beast>
+Received: from mail.toke.dk ([52.28.52.200]:40109 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726793AbeHHNCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Aug 2018 09:02:46 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Wen Gong <wgong@codeaurora.org>, ath10k@lists.infradead.org,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+In-Reply-To: <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
+Date: Wed, 08 Aug 2018 12:43:39 +0200
+Message-ID: <87sh3pdtpg.fsf@toke.dk> (sfid-20180808_124342_300875_FCE17968)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180807225040.GA2164@beast>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 07, 2018 at 03:50:40PM -0700, Kees Cook wrote:
-> Even with "const" variables, the compiler will generate warnings about
-> VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
-> a #define instead of a const to do the array sizing.
-> 
-> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
-> 
-> Fixes: e87b5039511a ("mt76x0: eeprom files")
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
-> Please include this for the v4.19 merge window. The VLA was introduced
-> with the new source file (which I also note is missing a SPDX line), so
+Wen Gong <wgong@codeaurora.org> writes:
 
-I thought SPDX line is needed only if file has no license and eeprom.c
-file and other mt76x0 files have specified the license. Is SPDX still
-needed in that case ?
- 
-> +#define MT_MAP_READS	DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16)
->  static int
->  mt76x0_efuse_physical_size_check(struct mt76x0_dev *dev)
->  {
-> -	const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
-> -	u8 data[map_reads * 16];
+> Upstream kernel has an interface to help adjust sk_pacing_shift to help
+> improve TCP UL throughput.
+> The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
+> WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
+> VHT80 TCP UL throughput testing result shows 6 is the optimal.
+> Overwrite the sk_pacing_shift to 6 in ath10k driver for QCA6174/9377 PCI.
+>
+> Tested with QCA6174 PCI with firmware
+> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
+> It's not a regression with new firmware releases.
+>
+> There have 2 test result of different settings:
+>
+> ARM CPU based device with QCA6174A PCI with different
+> sk_pacing_shift:
+>
+>  sk_pacing_shift  throughput(Mbps)             CPU utilization
+>          6            500(-P5)      ~75% idle, Focus on CPU1: ~14%idle
+>          7            454(-P5)      ~80% idle, Focus on CPU1: ~4%idle
+>          8               288        ~90% idle, Focus on CPU1: ~35%idle
+>          9              ~200        ~92% idle, Focus on CPU1: ~50%idle
+>
+> 5G TCP UL VTH80 on X86 platform with QCA6174A PCI with sk_packing_shift
+> set to 6:
+>
+>   tcp_limit_output_bytes            throughput(Mbps)
+>  default(262144)+1 Stream                 336
+>  default(262144)+2 Streams                558
+>  default(262144)+3 Streams                584
+>  default(262144)+4 Streams                602
+>  default(262144)+5 Streams                598
+>  changed(2621440)+1 Stream                598
+>  changed(2621440)+2 Streams               601
 
-Why this is variable length array? DIV_ROUND_UP can not be calculated
-at compile time? But if so, macro do not change the situation either.
+You still haven't provided any latency numbers for these tests, which
+makes it impossible to verify that setting sk_pacing_shift to 6 is the
+right tradeoff.
 
-Thanks
-Stanislaw
+As I said before, from your numbers I suspect the right setting is
+actually 7, which would be 10-20ms less latency under load; way more
+important than ~50 Mbps...
+
+-Toke
