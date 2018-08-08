@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42782 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726668AbeHUJlM (ORCPT
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46594 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727530AbeHIAFB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:41:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:22:20 +0300
-Message-Id: <20180821062220.29813-3-luca@coelho.fi> (sfid-20180821_083156_268999_B3B06CC5)
-In-Reply-To: <20180821062220.29813-1-luca@coelho.fi>
-References: <20180821062220.29813-1-luca@coelho.fi>
-Subject: [PATCH 2/2] nl80211: Pass center frequency in KHZ instead of MHZ
+        Wed, 8 Aug 2018 20:05:01 -0400
+Received: by mail-wr1-f66.google.com with SMTP id h14-v6so3261902wrw.13
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2018 14:43:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5B6B4127.1040308@broadcom.com>
+References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+ <5B6B4127.1040308@broadcom.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Wed, 8 Aug 2018 23:43:06 +0200
+Message-ID: <CAOiHx=n-sHAhdrrDTAb13XCghcp=uc-JpoDp+UVRsCTvYu9aaQ@mail.gmail.com> (sfid-20180808_234345_751325_F0963858)
+Subject: Re: wireless dongle causing entire machine to hang
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Randy Oostdyk <linux-kernel@oostdyk.com>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On 8 August 2018 at 21:14, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 8/8/2018 7:58 PM, Randy Oostdyk wrote:
+>>
+>> Good day all,
+>
+>
+> Hi Randy
+>
+>> I'm writing to report an issue with the linux kernel, and I'm hoping
+>> this is the right place to report it. (short aside: I tried to ask in
+>> the #linux-wireless IRC channel, but wasn't permitted to speak!)
+>
+>
+> uhm. why?
 
-freq_reg_info expects to get the frequency in KHZ Instead we
-accidently pass it in MHZ.  Thus, currently the function always return
-ERR rule.  Fix that.
+There was (and still is) a lot of link spamming recently on freenode
+in #linux-wireless (and several other open [source] channels) from
+unregistered clients; to prevent further disruptions unregistered
+clients were prevented from writing to the channel for now.
 
-Fixes: 50f32718e125 ("nl80211: Add wmm rule attribute to NL80211_CMD_GET_WIPHY dump command")
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Quite likely this was/is Randys issue. Registering helps, not sure how
+easy it is to give individual unregistered users the right to talk.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1760f38295d5..fbe9e0d98e1b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -766,7 +766,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 
- 	if (large) {
- 		const struct ieee80211_reg_rule *rule =
--			freq_reg_info(wiphy, chan->center_freq);
-+			freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq));
- 
- 		if (!IS_ERR(rule) && rule->wmm_rule) {
- 			if (nl80211_msg_put_wmm_rules(msg, rule))
--- 
-2.18.0
+
+Regards
+Jonas
