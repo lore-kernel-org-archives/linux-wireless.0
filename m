@@ -1,91 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:40682 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726624AbeHYOTs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Aug 2018 10:19:48 -0400
-Received: by mail-wr1-f67.google.com with SMTP id n2-v6so9429328wrw.7
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:13 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 10/16] mt76x0: remove mt76x0_complete_urb routine
-Date: Sat, 25 Aug 2018 12:40:50 +0200
-Message-Id: <20180825104056.9130-11-lorenzo.bianconi@redhat.com> (sfid-20180825_130845_018964_DBA603DD)
+Received: from mail-sn1nam01on0116.outbound.protection.outlook.com ([104.47.32.116]:61705
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726158AbeHHEh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Aug 2018 00:37:26 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Winnie Chang <winnie.chang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH v3] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
+Date: Tue,  7 Aug 2018 21:19:41 -0500
+Message-Id: <1533694781-176974-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180808_042011_109985_5EA533B5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove mt76x0_complete_urb routine and use mt76u_mcu_complete_urb utility
-function as usb mcu completion handler
+From: Winnie Chang <winnie.chang@cypress.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+The kernel BUG happens when wowl is enabled from firmware. In
+brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
+drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
+yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
+calls brcmf_wiphy_wowl_params().
+
+Fixes: 856d5a011c86 ("brcmfmac: allocate struct brcmf_pub instance using wiphy_new()")
+Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c | 6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 7 -------
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.h | 1 -
- 3 files changed, 3 insertions(+), 11 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-index bfaabe018216..3f985c1d45f0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -113,7 +113,7 @@ static int mt76x0_mcu_wait_resp(struct mt76x0_dev *dev, u8 seq)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 24c4e18e7d80..5444e6213d45 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6926,15 +6926,15 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	cfg->d11inf.io_type = (u8)io_type;
+ 	brcmu_d11_attach(&cfg->d11inf);
  
- 		ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
- 					     &dev->mcu.resp, GFP_KERNEL,
--					     mt76x0_complete_urb,
-+					     mt76u_mcu_complete_urb,
- 					     &usb->mcu.cmpl);
- 		if (ret)
- 			return ret;
-@@ -412,7 +412,7 @@ static int __mt76x0_dma_fw(struct mt76x0_dev *dev,
- 	buf.len = MT_DMA_HDR_LEN + len + 4;
- 	ret = mt76x0_usb_submit_buf(dev, USB_DIR_OUT, MT_EP_OUT_INBAND_CMD,
- 				     &buf, GFP_KERNEL,
--				     mt76x0_complete_urb, &cmpl);
-+				     mt76u_mcu_complete_urb, &cmpl);
- 	if (ret)
- 		return ret;
- 
-@@ -624,7 +624,7 @@ int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
- 
- 	ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
- 				     &dev->mcu.resp, GFP_KERNEL,
--				     mt76x0_complete_urb, &usb->mcu.cmpl);
-+				     mt76u_mcu_complete_urb, &usb->mcu.cmpl);
- 	if (ret) {
- 		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
- 		return ret;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index a9835bb7b921..fcca1e990475 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -93,13 +93,6 @@ int mt76x0_usb_submit_buf(struct mt76x0_dev *dev, int dir, int ep_idx,
- 	return ret;
- }
- 
--void mt76x0_complete_urb(struct urb *urb)
--{
--	struct completion *cmpl = urb->context;
+-	err = brcmf_setup_wiphy(wiphy, ifp);
+-	if (err < 0)
+-		goto priv_out;
 -
--	complete(cmpl);
--}
--
- int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
- 			   const u8 direction, const u16 val, const u16 offset,
- 			   void *buf, const size_t buflen)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-index 931c36554ff4..0d1ba95dcf2e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
-@@ -49,7 +49,6 @@ void mt76x0_usb_free_buf(struct mt76x0_dev *dev, struct mt76x0_dma_buf *buf);
- int mt76x0_usb_submit_buf(struct mt76x0_dev *dev, int dir, int ep_idx,
- 			   struct mt76x0_dma_buf *buf, gfp_t gfp,
- 			   usb_complete_t complete_fn, void *context);
--void mt76x0_complete_urb(struct urb *urb);
+ 	/* regulatory notifer below needs access to cfg so
+ 	 * assign it now.
+ 	 */
+ 	drvr->config = cfg;
  
- int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
- 			   const u8 direction, const u16 val, const u16 offset,
++	err = brcmf_setup_wiphy(wiphy, ifp);
++	if (err < 0)
++		goto priv_out;
++
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
+ 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
 -- 
-2.18.0
+2.1.0
