@@ -1,191 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:16607 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725883AbeHLHY6 (ORCPT
+Received: from mail-ed1-f50.google.com ([209.85.208.50]:34089 "EHLO
+        mail-ed1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729620AbeHHVfy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 03:24:58 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to `__this_module' error
-Date: Sun, 12 Aug 2018 10:17:42 +0530
-Message-ID: <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180812_064836_384047_65C6214F)
-In-Reply-To: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 8 Aug 2018 17:35:54 -0400
+Received: by mail-ed1-f50.google.com with SMTP id h1-v6so1777569eds.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2018 12:14:49 -0700 (PDT)
+Subject: Re: wireless dongle causing entire machine to hang
+To: Randy Oostdyk <linux-kernel@oostdyk.com>,
+        linux-wireless@vger.kernel.org
+References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B6B4127.1040308@broadcom.com> (sfid-20180808_211520_873355_A926AB8A)
+Date: Wed, 8 Aug 2018 21:14:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_debug.o object file is included for both SDIO and SPI module. When
-anyone(either SDIO or SPI) module is compiled as loaded module and another
-as buildin module then below compilation error occurs.
+On 8/8/2018 7:58 PM, Randy Oostdyk wrote:
+> Good day all,
 
-"drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
-reference to `__this_module'"
+Hi Randy
 
-Moved the declaration of file_operation variable in SDIO/SPI files and
-pass this as parameter to wilc_debugfs_init(). Remove 'fops' element
-from 'wilc_debugfs_info_t' struct, as its not required.
+> I'm writing to report an issue with the linux kernel, and I'm hoping
+> this is the right place to report it. (short aside: I tried to ask in
+> the #linux-wireless IRC channel, but wasn't permitted to speak!)
 
-Fixes: 9abc44ba4e2f ("staging: wilc1000: fix TODO to compile spi and sdio components in single module")
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c   |  1 -
- drivers/staging/wilc1000/wilc_debugfs.c | 23 ++++++-----------------
- drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++++
- drivers/staging/wilc1000/wilc_spi.c     |  7 +++++++
- drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++++-
- 5 files changed, 26 insertions(+), 19 deletions(-)
+uhm. why?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 01cf4bd..37885ad 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1062,7 +1062,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	if (!wl)
- 		return -ENOMEM;
- 
--	wilc_debugfs_init();
- 	*wilc = wl;
- 	wl->io_type = io_type;
- 	wl->hif_func = ops;
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index c5f67c9..78c0831 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -20,8 +20,8 @@ static struct dentry *wilc_dir;
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- 
--static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
--				     size_t count, loff_t *ppos)
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos)
- {
- 	char buf[128];
- 	int res = 0;
-@@ -36,9 +36,8 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
--static ssize_t wilc_debug_level_write(struct file *filp,
--				      const char __user *buf, size_t count,
--				      loff_t *ppos)
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos)
- {
- 	int flag = 0;
- 	int ret;
-@@ -63,35 +62,25 @@ static ssize_t wilc_debug_level_write(struct file *filp,
- 	return count;
- }
- 
--#define FOPS(_open, _read, _write, _poll) { \
--		.owner	= THIS_MODULE, \
--		.open	= (_open), \
--		.read	= (_read), \
--		.write	= (_write), \
--		.poll		= (_poll), \
--}
--
- struct wilc_debugfs_info_t {
- 	const char *name;
- 	int perm;
- 	unsigned int data;
--	const struct file_operations fops;
- };
- 
- static struct wilc_debugfs_info_t debugfs_info = {
- 	"wilc_debug_level",
- 	0666,
- 	(DEBUG | ERR),
--	FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
- };
- 
--int wilc_debugfs_init(void)
-+int wilc_debugfs_init(const struct file_operations *fops)
- {
- 	struct wilc_debugfs_info_t *info = &debugfs_info;
- 
- 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
- 	debugfs_create_file(info->name, info->perm, wilc_dir, &info->data,
--			    &info->fops);
-+			    fops);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index b2080d8..c1573f5 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -103,6 +103,12 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
- 	return ret;
- }
- 
-+static const struct file_operations sdio_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
-+
- static int linux_sdio_probe(struct sdio_func *func,
- 			    const struct sdio_device_id *id)
- {
-@@ -126,6 +132,7 @@ static int linux_sdio_probe(struct sdio_func *func,
- 		dev_err(&func->dev, "Couldn't initialize netdev\n");
- 		return ret;
- 	}
-+	wilc_debugfs_init(&sdio_debug_fops);
- 	sdio_set_drvdata(func, wilc);
- 	wilc->dev = &func->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 5517477..0376649 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -102,6 +102,12 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- 
- #define USE_SPI_DMA				0
- 
-+static const struct file_operations spi_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
-+
- static int wilc_bus_probe(struct spi_device *spi)
- {
- 	int ret;
-@@ -120,6 +126,7 @@ static int wilc_bus_probe(struct spi_device *spi)
- 	if (ret)
- 		return ret;
- 
-+	wilc_debugfs_init(&spi_debug_fops);
- 	spi_set_drvdata(spi, wilc);
- 	wilc->dev = &spi->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 00d13b1..47b4020 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -831,6 +831,11 @@ struct wilc;
- int wilc_wlan_init(struct net_device *dev);
- u32 wilc_get_chipid(struct wilc *wilc, bool update);
- 
--int wilc_debugfs_init(void);
-+int wilc_debugfs_init(const struct file_operations *fops);
- void wilc_debugfs_remove(void);
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos);
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos);
-+
- #endif
--- 
-2.7.4
+> I'm aware that this is a USB protocol issue, and so this may be the
+> wrong place to report the bug, but the warning seems to be generated
+> by the wireless driver, and that appears to be the key issue here.
+>
+> My USB wifi dongle is on the end of a very long USB cable, and was
+> connected to a USB hub. On two different occasions (after hours or
+> days of use), the machine it was attached to (Raspberry Pi 3) stopped
+> responding. I was unable to SSH in, even over ethernet. After a hard
+> reboot, I found that the following error was repeated **many thousands
+> of times per second** in three different log files:
+
+I assume that USB is powered, right? Now probably asking the obvious, 
+but you did not write it down so here it is: did you try with a very 
+short USB cable?
+
+I guess you read this already [1]
+
+> Rpi kernel: [857011.857581] ieee80211 phy1:
+> rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+> -71
+
+So this -EPROTO. The usb host controller of the RPi3 can be found here:
+
+https://github.com/raspberrypi/linux/tree/rpi-4.18.y/drivers/usb/host/dwc_otg
+
+Not sure it that tells us anything though.
+
+Regards,
+Arend
+
+[1] 
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/usb/README.md
