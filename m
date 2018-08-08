@@ -1,110 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 3.mo177.mail-out.ovh.net ([46.105.36.172]:49454 "EHLO
-        3.mo177.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726833AbeH1U7W (ORCPT
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:46298 "EHLO
+        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730110AbeHHWiS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 16:59:22 -0400
-Received: from player778.ha.ovh.net (unknown [10.109.146.173])
-        by mo177.mail-out.ovh.net (Postfix) with ESMTP id D2609C10AA
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 18:27:16 +0200 (CEST)
-Subject: Re: [PATCH v6 3/3] mac80211: Fix PTK rekey freezes and cleartext
- leaks
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
- <20180814104255.4183-4-alexander@wetzel-home.de>
- <1535446120.5895.6.camel@sipsolutions.net>
-From: Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <0ed63254-cdb3-cefb-6074-d6a501809e8f@wetzel-home.de> (sfid-20180828_190657_051826_DC447034)
-Date: Tue, 28 Aug 2018 18:27:08 +0200
-MIME-Version: 1.0
-In-Reply-To: <1535446120.5895.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Wed, 8 Aug 2018 18:38:18 -0400
+Received: from mr4.cc.vt.edu (smtp.ipv6.vt.edu [IPv6:2607:b400:92:9:0:9d:8fcb:4116])
+        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id w78KH2xV012034
+        for <linux-wireless@vger.kernel.org>; Wed, 8 Aug 2018 16:17:02 -0400
+Received: from mail-qt0-f197.google.com (mail-qt0-f197.google.com [209.85.216.197])
+        by mr4.cc.vt.edu (8.14.7/8.14.7) with ESMTP id w78KGuJi023026
+        for <linux-wireless@vger.kernel.org>; Wed, 8 Aug 2018 16:17:01 -0400
+Received: by mail-qt0-f197.google.com with SMTP id o18-v6so2684510qtm.11
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Aug 2018 13:17:01 -0700 (PDT)
+From: valdis.kletnieks@vt.edu
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] fix build for MediaTek MT7610U USB wireless dongle
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Wed, 08 Aug 2018 16:16:54 -0400
+Message-ID: <145751.1533759414@turing-police.cc.vt.edu> (sfid-20180808_221712_828881_7DBA1929)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.08.18 um 10:48 schrieb Johannes Berg:
-> On Tue, 2018-08-14 at 12:42 +0200, Alexander Wetzel wrote:
->>
->> +	/* PTK only using key ID 0 needs special handling on rekey */
->> +	if (new_key && sta && ptk0rekey) {
->> +		local = old_key->local;
->> +		sdata = old_key->sdata;
->> +
->> +		/* Stop TX till we are on the new key */
->> +		old_key->flags |= KEY_FLAG_TAINTED;
->> +		ieee80211_clear_fast_xmit(sta);
->> +
->> +		/* Aggregation sessions during rekey are complicated due to
->> +		 * the reorder buffer. Side step that by blocking aggregation
->> +		 * and tear down running connections.
->> +		 */
->> +		if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
->> +			set_sta_flag(sta, WLAN_STA_BLOCK_BA);
->> +			ieee80211_sta_tear_down_BA_sessions(sta,
->> +							    AGG_STOP_LOCAL_REQUEST);
->> +		}
->> +
->> +		if (new_key->local->ops->replace_key) {
->> +			ret = drv_replace_key(old_key->local, sdata,
->> +					      &sta->sta, &old_key->conf,
->> +					      &new_key->conf);
->> +			if (!ret)
->> +				new_key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
->> +			else
->> +				sdata_err(sdata,
->> +					  "failed to replace key (%d) for " \
->> +					  "STA (%pM) in hardware: ret=(%d)\n",
->> +					  old_key->conf.keyidx,
->> +					  sta->sta.addr,
->> +					  ret);
->> +
->> +			old_key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
->> +		} else {
->> +			sdata_info(sdata,
->> +				   "Userspace requested a PTK rekey for STA " \
->> +				   "%pM while feature not supported! " \
->> +				   "This may leak clear text packets or " \
->> +				   "freeze the connection.",
->> +				   sta->sta.addr);
-> 
-> This seems a bit weird - we know a likely dangerous thing is happening
-> and only print an info message? Why not just prevent this in the first
-> place?
+The mt76x0 driver requires the mt76 core driver to actually function.
+So add a 'select' to avoid embarrassing 'symbol unknown' errors
+when attempting to modprobe it in a module tree that doesn't
+include mt76.ko
 
-The next version will upgrade that to a warning.
+Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+---
+Still need to figure out why it totally fails to see the 5gz band,
+it works find on 2.4 but ends up locked at 72mbits/sec. Works
+OK otherwise...
 
-Rejecting it outright will break things for users with card/drivers
-where rekey currently is working. There is no error error message for
-"please re-associate as quick as you can" and tricking userspace to do
-that across versions and implementations would need code at I do not see
-belonging into the kernel. Here what I wrote in the cover letter of the
-v4 version of the patch about this decision:
-
-> I do not see an acceptable way from the kernel to trigger a fast
-> reconnect. wpa_supplicant e.g. has some special code handling errors
-> during a 4-way-handshake differently. I assume we would have to add
-> code detecting if we are running as AP, Station Infrastructure, Ad-Hoc
-> or Mesh and then find and spoof an error which allows the userspace to
-> reconnect fast. For multiple different userspace implementations and
-> the different versions of them.
-> And we'll have that mess in the kernel for basically forever...
-> Seems to be a clear no go, correct?
->
-> So this patch (series) is giving up on a quick fix and will allow
-> broken rekeys to continue. It is instead providing an updated API for
-> both the userspace and the drivers to also do it correctly. Users
-> running a userspace not aware of the new API will get some
-> improvements but may
-> still leak cleartext packets and have connection freezes till we get
-> an updated userspace rolled out. On the plus side users running
-> updated userspace won't be able to rekey connections any longer,
-> avoiding the issues even with unpatched kernels.
-
-Of course I may miss something and there may be a good way to get that
-working anyhow. But for me it looks like we either have to accept
-something which looks like a regression to users or accept that some
-drivers may not be fixed with this patch alone and will need either an
-updated userspace or drivers.
-
-Alexander
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 850611ad347a..b6c5f17dca30 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -11,6 +11,7 @@ config MT76x2_COMMON
+ 
+ config MT76x0U
+ 	tristate "MediaTek MT76x0U (USB) support"
++	select MT76_CORE
+ 	depends on MAC80211
+ 	depends on USB
+ 	help
