@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51800 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727782AbeH3NJL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 09:09:11 -0400
-Message-ID: <1535620072.5215.51.camel@sipsolutions.net> (sfid-20180830_110804_549138_E10C7767)
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is
- set to one
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 30 Aug 2018 11:07:52 +0200
-In-Reply-To: <20180830090725.GE9867@localhost.localdomain> (sfid-20180830_110729_327984_B8136566)
-References: <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
-         <1535570007.5215.34.camel@sipsolutions.net>
-         <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
-         <1535616192.5215.37.camel@sipsolutions.net>
-         <20180830083115.GA9867@localhost.localdomain>
-         <1535618382.5215.44.camel@sipsolutions.net>
-         <20180830085054.GB9867@localhost.localdomain>
-         <1535619189.5215.47.camel@sipsolutions.net>
-         <20180830090045.GC9867@localhost.localdomain>
-         <1535619812.5215.49.camel@sipsolutions.net>
-         <20180830090725.GE9867@localhost.localdomain>
-         (sfid-20180830_110729_327984_B8136566)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44554 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727768AbeHINGB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Aug 2018 09:06:01 -0400
+Date: Thu, 9 Aug 2018 12:41:38 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
+Message-ID: <20180809104137.GA1955@redhat.com> (sfid-20180809_124250_851521_464A29B6)
+References: <20180807225040.GA2164@beast>
+ <20180808092450.GA25772@redhat.com>
+ <871sb942cx.fsf@kamboji.qca.qualcomm.com>
+ <CAGXu5jKqeAHDWdNg++QJko5AM4g160kEQ54jLAojpRq6FszqgA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXu5jKqeAHDWdNg++QJko5AM4g160kEQ54jLAojpRq6FszqgA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-08-30 at 11:07 +0200, Lorenzo Bianconi wrote:
+On Wed, Aug 08, 2018 at 08:41:28AM -0700, Kees Cook wrote:
+> >> I thought SPDX line is needed only if file has no license and eeprom.c
+> >> file and other mt76x0 files have specified the license. Is SPDX still
+> >> needed in that case ?
 > 
-> I do not think so since for nfrags we have:
-> nfrags = 1 + skb_shinfo(skb)->nr_frags;
-> nfrags += 1 + skb_shinfo(head)->nr_frags;
-> 
-> and even if frag_tail is NULL we will have nfrags = 2.
-> 
-> Agree?
+> I thought all source files needed SPDX: https://lwn.net/Articles/739183/
 
-Yeah, I misread those two lines.
+Ok, goal is to have all kernel source files with SPDX header.
 
-johannes
+> >>> +#define MT_MAP_READS        DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16)
+> >>>  static int
+> >>>  mt76x0_efuse_physical_size_check(struct mt76x0_dev *dev)
+> >>>  {
+> >>> -    const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
+> >>> -    u8 data[map_reads * 16];
+> >>
+> >> Why this is variable length array? DIV_ROUND_UP can not be calculated
+> >> at compile time? But if so, macro do not change the situation either.
+> >
+> > The commit log mentioned:
+> >
+> >   "Even with "const" variables, the compiler will generate warnings about
+> >    VLA usage."
+> >
+> > So I guess the compiler (gcc?) is just not smart enough in this case?
+> 
+> Correct. This is technically a false positive, but with the goal of
+> adding -Wvla to the build globally, we have to get rid of these as
+> well. It's a little frustrating, I agree, but with all others fixed
+> now, these stand out. :)
+
+Then:
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
