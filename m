@@ -1,81 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:37511 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732639AbeHGQiG (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41634 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730090AbeHIOqS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 12:38:06 -0400
-Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in
- halbtc8723b2ant.c
-To: valdis.kletnieks@vt.edu, YueHaibing <yuehaibing@huawei.com>
-Cc: pkshih@realtek.com, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        davem@davemloft.net, colin.king@canonical.com,
-        linux-wireless@vger.kernel.org
-References: <20180806045440.11920-1-yuehaibing@huawei.com>
- <63216.1533591775@turing-police.cc.vt.edu>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <577a831f-45c3-a687-ca04-edc977ddb925@lwfinger.net> (sfid-20180807_162352_247963_44D9A981)
-Date: Tue, 7 Aug 2018 09:23:30 -0500
+        Thu, 9 Aug 2018 10:46:18 -0400
+Date: Thu, 9 Aug 2018 14:21:33 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        ganesh.krishna@microchip.com, venkateswara.kaja@microchip.com,
+        aditya.shankar@microchip.com, claudiu.beznea@microchip.com,
+        adham.abozaeid@microchip.com
+Subject: Re: [PATCH v2] staging: wilc1000: fix undefined reference to
+ `__this_module' compilation error
+Message-ID: <20180809122133.GB6937@kroah.com> (sfid-20180809_142143_840637_FD2116BC)
+References: <1533814179-21436-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <63216.1533591775@turing-police.cc.vt.edu>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1533814179-21436-1-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/06/2018 04:42 PM, valdis.kletnieks@vt.edu wrote:
-> On Mon, 06 Aug 2018 12:54:40 +0800, YueHaibing said:
->> Fix following coccinelle warning:
->>
->> ./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2952:2-4: WARNING: possible condition with no effect (if == else)
+On Thu, Aug 09, 2018 at 04:59:39PM +0530, Ajay Singh wrote:
+> wilc_debug.o object file is included for both SDIO and SPI module. When
+> anyone(either SDIO or SPI) module is compiled as loaded module and another
+> as buildin module then below compilation error occurs.
 > 
->>   	/* sw mechanism */
->>   	if (BTC_WIFI_BW_HT40 == wifi_bw) {
->> -		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
->> -		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
->> -			btc8723b2ant_sw_mechanism(btcoexist, true, true,
->> -						  false, false);
->> -		} else {
->> -			btc8723b2ant_sw_mechanism(btcoexist, true, true,
->> -						  false, false);
->> -		}
->> +		btc8723b2ant_sw_mechanism(btcoexist, true, true,
->> +					  false, false);
->>   	} else {
+> "drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
+> reference to `__this_module'"
 > 
-> Rather than blindly fixing this, perhaps a bit of thought needs to be
-> applied to why this code looks like this in the first place.
-> 
-> See commit c6821613e653a  (which looks like the bletcherous "do too many
-> things at once" commit indeed), although the actual diff appears to be a
-> "no harm, no foul" against this commit, where the issue already existed.
-> 
-> commit aa45a673b291fd761275493bc15316d79555ed55
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Fri Feb 28 15:16:43 2014 -0600
-> 
->      rtlwifi: btcoexist: Add new mini driver
-> 
-> Larry? Can you reach back to 2014 and remember why this code
-> looked like this in the first place?
+> Moved the declaration of file_operation variable in SDIO/SPI files and
+> pass this as parameter to wilc_debugfs_init().
+> Refactor wilc_debugfs_init() as its not required to maintain
+> 'wilc_debugfs_info_t' in debugfs_info[] array. Also modified file
+> permission from 0666 to 0600 & use 'data' field as 'NULL' in
+> debugfs_create_file() call.
 
-The base code came from Realtek. My only part in getting it into the kernel was 
-to clean up the checkpatch and Sparse errors and warnings, and submit it. I was 
-a "script kiddy" just like the authors of the current patches. The only 
-difference is that I was getting drivers into the kernel so that users hardware 
-would work.
+That is a lot of different things all in one patch.  Please never do
+that.
 
-Any record of whether these duplicate branches are the result of incorrect copy 
-and paste, or just extraneous code, would be at Realtek in their version control 
-history. I have never had access to such archives, nor have I ever had an 
-non-disclosure agreement with Realtek.
 
-Ping-Ke Shih, who is Cc'd on these messages, might be able to answer these 
-questions.
+> 
+> Fixes: 9abc44ba4e2f ("staging: wilc1000: fix TODO to compile spi and sdio components in single module")
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+> changes since v1:
+>  1. Correct the Fixes tag format.
+>  2. Remove blank line between Fixes and Reported-by tag.
+>  3. Modified debug print and use only NULL check in wilc_debugfs_init().
+> 
+>  drivers/staging/wilc1000/linux_wlan.c   |  1 -
+>  drivers/staging/wilc1000/wilc_debugfs.c | 51 +++++++--------------------------
+>  drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++
+>  drivers/staging/wilc1000/wilc_spi.c     |  7 +++++
+>  drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++-
+>  5 files changed, 30 insertions(+), 43 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index 01cf4bd..37885ad 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -1062,7 +1062,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+>  	if (!wl)
+>  		return -ENOMEM;
+>  
+> -	wilc_debugfs_init();
+>  	*wilc = wl;
+>  	wl->io_type = io_type;
+>  	wl->hif_func = ops;
+> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+> index edc7287..9787b3a 100644
+> --- a/drivers/staging/wilc1000/wilc_debugfs.c
+> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+> @@ -20,8 +20,8 @@ static struct dentry *wilc_dir;
+>  #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+>  static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+>  
+> -static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+> -				     size_t count, loff_t *ppos)
+> +ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+> +			      size_t count, loff_t *ppos)
+>  {
+>  	char buf[128];
+>  	int res = 0;
+> @@ -36,9 +36,8 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+>  	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+>  }
+>  
+> -static ssize_t wilc_debug_level_write(struct file *filp,
+> -				      const char __user *buf, size_t count,
+> -				      loff_t *ppos)
+> +ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
+> +			       size_t count, loff_t *ppos)
+>  {
+>  	int flag = 0;
+>  	int ret;
+> @@ -63,45 +62,15 @@ static ssize_t wilc_debug_level_write(struct file *filp,
+>  	return count;
+>  }
+>  
+> -#define FOPS(_open, _read, _write, _poll) { \
+> -		.owner	= THIS_MODULE, \
+> -		.open	= (_open), \
+> -		.read	= (_read), \
+> -		.write	= (_write), \
+> -		.poll		= (_poll), \
+> -}
+> -
+> -struct wilc_debugfs_info_t {
+> -	const char *name;
+> -	int perm;
+> -	unsigned int data;
+> -	const struct file_operations fops;
+> -};
+> -
+> -static struct wilc_debugfs_info_t debugfs_info[] = {
+> -	{
+> -		"wilc_debug_level",
+> -		0666,
+> -		(DEBUG | ERR),
+> -		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
+> -	},
+> -};
+> -
+> -int wilc_debugfs_init(void)
+> +void wilc_debugfs_init(const struct file_operations *fops)
+>  {
+> -	int i;
+> -	struct wilc_debugfs_info_t *info;
+> -
+>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+> -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+> -		info = &debugfs_info[i];
+> -		debugfs_create_file(info->name,
+> -				    info->perm,
+> -				    wilc_dir,
+> -				    &info->data,
+> -				    &info->fops);
+> +	if (!wilc_dir) {
+> +		pr_err("Error creating debugfs/wilc_wifi/\n");
+> +		return;
 
-For the moment, these simplifications could be applied as long as they are 
-correctly done. After all, they are not changing what is already there and that 
-stops any other person that knows how to run coccinelle from submitting the same 
-patch in the future. Why "kick the can down the road"? If PK can find that there 
-was an error in the original code, he can submit a "Fixes" patch.
+The lack of checking was there for a reason, please do not add it back,
+it is not needed at all.
 
-Larry
+>  	}
+> -	return 0;
+> +
+> +	debugfs_create_file("wilc_debug_level", 0600, wilc_dir, NULL, fops);
+
+thanks,
+
+greg k-h
