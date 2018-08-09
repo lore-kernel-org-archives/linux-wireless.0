@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:43609 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727005AbeH0TVY (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:35890 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727768AbeHINIa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 15:21:24 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>,
-        Taketo Kabe <kabe@sra-tohoku.co.jp>
-Subject: [PATCH] b43: Fix regression in kernel 4.18
-Date: Mon, 27 Aug 2018 10:34:07 -0500
-Message-Id: <20180827153407.5612-1-Larry.Finger@lwfinger.net> (sfid-20180827_173427_211643_5850C325)
+        Thu, 9 Aug 2018 09:08:30 -0400
+Date: Thu, 9 Aug 2018 13:43:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH] staging: wilc1000: fix undefined reference to
+ `__this_module' compilation error
+Message-ID: <20180809104358.gg7mwmw57eawyqvd@mwanda> (sfid-20180809_124418_012695_BCCB37C8)
+References: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com>
+ <20180809100838.pduj5s5lvbpjuljn@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180809100838.pduj5s5lvbpjuljn@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 66cffd6daab7 ("b43: fix transmit failure when VT is switched"),
-a condition is noted where the network controller needs to be reset. Note
-that this situation happens when running the open-source firmware
-(http://netweb.ing.unibs.it/~openfwwf/), plus a number of other special
-conditions.
+On Thu, Aug 09, 2018 at 01:08:38PM +0300, Dan Carpenter wrote:
+> On Thu, Aug 09, 2018 at 12:13:06PM +0530, Ajay Singh wrote:
+> >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+> > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+> > -		info = &debugfs_info[i];
+> > -		debugfs_create_file(info->name,
+> > -				    info->perm,
+> > -				    wilc_dir,
+> > -				    &info->data,
+> > -				    &info->fops);
+> > +	if (IS_ERR_OR_NULL(wilc_dir)) {
+> > +		pr_err("Error creating debugfs\n");
+> > +		return -EFAULT;
+> >  	}
+> 
+> Just check for NULL.  If someone builds without debugfs enabled in their
+> .config, that's their choice.  No need to print a warning.
+> 
 
-for a different card model, it is reported that this change breaks
-operation running the proprietary firmware
-(https://marc.info/?l=linux-wireless&m=153504546924558&w=2). Rather
-than reverting the previous patch, the code is tweaked to avoid the
-reset unless the open-source firmware is being used.
+Reading it again, I'm not sure my email was clear...  Just do this:
 
-Fixes: 66cffd6daab7 ("b43: fix transmit failure when VT is switched")
-Cc: Stable <stable@vger.kernel.org> # 4.18+
-Cc: Taketo Kabe <kabe@sra-tohoku.co.jp>
-Reported-and-tested-by: D. Prabhu <d.praabhu@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/broadcom/b43/dma.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+	if (!wilc_dir)) {
+		pr_err("Error creating debugfs/wilc_wifi/\n");
+		return;
+	}
 
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
-index 6b0e1ec346cb..d46d57b989ae 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1518,13 +1518,15 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 			}
- 		} else {
- 			/* More than a single header/data pair were missed.
--			 * Report this error, and reset the controller to
-+			 * Report this error. If running with open-source
-+			 * firmware, then reset the controller to
- 			 * revive operation.
- 			 */
- 			b43dbg(dev->wl,
- 			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
- 			       ring->index, firstused, slot);
--			b43_controller_restart(dev, "Out of order TX");
-+			if (dev->fw.opensource)
-+				b43_controller_restart(dev, "Out of order TX");
- 			return;
- 		}
- 	}
--- 
-2.18.0
+If debugfs_create_dir() returns an error pointer it means all the other
+debugfs functions are also just no-op stub functions.  Passing an error
+pointer to them is harmless.
+
+regards,
+dan carpenter
