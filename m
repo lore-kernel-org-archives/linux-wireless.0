@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38328 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726826AbeH0XmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 19:42:09 -0400
-Subject: Re: [PATCH v2 05/17] mt76: fix mt76x02-lib module license
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-mediatek@lists.infradead.org
-References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
- <1535381791-14908-6-git-send-email-sgruszka@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <db37ca86-e311-9cd2-062e-7675a64319b2@nbd.name> (sfid-20180827_215409_399008_82B7B5AA)
-Date: Mon, 27 Aug 2018 21:54:03 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:40502 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732570AbeHIReb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Aug 2018 13:34:31 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1535381791-14908-6-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180807225040.GA2164@beast>
+References: <20180807225040.GA2164@beast>
+To: Kees Cook <keescook@chromium.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20180809150911.7D1F660AD8@smtp.codeaurora.org> (sfid-20180809_170922_579536_06352F1D)
+Date: Thu,  9 Aug 2018 15:09:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-27 16:56, Stanislaw Gruszka wrote:
-> Add module license.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Please merge this into the previous patch.
+Kees Cook <keescook@chromium.org> wrote:
 
-- Felix
+> Even with "const" variables, the compiler will generate warnings about
+> VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
+> a #define instead of a const to do the array sizing.
+> 
+> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+> 
+> Fixes: e87b5039511a ("mt76x0: eeprom files")
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+17ad18fd12a3 mt76x0: Remove VLA usage
+
+-- 
+https://patchwork.kernel.org/patch/10559297/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
