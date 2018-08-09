@@ -1,82 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53994 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728825AbeHVNNY (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:64300 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727237AbeHIJHH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 09:13:24 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Byungchul Park <byungchul.park@lge.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/2] workqueue: re-add lockdep dependencies for flushing
-Date: Wed, 22 Aug 2018 11:49:04 +0200
-Message-Id: <20180822094904.15718-3-johannes@sipsolutions.net> (sfid-20180822_114937_589531_261E37A6)
-In-Reply-To: <20180822094904.15718-1-johannes@sipsolutions.net>
-References: <20180822094904.15718-1-johannes@sipsolutions.net>
+        Thu, 9 Aug 2018 05:07:07 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH] staging: wilc1000: fix undefined reference to `__this_module' compilation error
+Date: Thu, 9 Aug 2018 12:13:06 +0530
+Message-ID: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180809_084354_681829_6A38E910)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+wilc_debug.o object file is included for both SDIO and SPI module. When
+anyone(either SDIO or SPI) module is compiled as loaded module and another
+as buildin module then below compilation error occurs.
 
-In flush_work(), we need to create a lockdep dependency so that
-the following scenario is appropriately tagged as a problem:
+"drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
+reference to `__this_module'"
 
-  work_function()
-  {
-    mutex_lock(&mutex);
-    ...
-  }
+Moved the declaration of file_operation variable in SDIO/SPI files and
+pass this as parameter to wilc_debugfs_init().
+Refactor wilc_debugfs_init() as its not required to maintain
+'wilc_debugfs_info_t' in debugfs_info[] array. Also modified file
+permission from 0666 to 0600 & use 'data' field as 'NULL' in
+debugfs_create_file() call.
 
-  other_function()
-  {
-    mutex_lock(&mutex);
-    flush_work(&work); // or cancel_work_sync(&work);
-  }
+Fixes: 9abc44ba4e2f("staging: wilc1000: fix TODO to compile spi and sdio
+components in single module")
 
-This is a problem since the work might be running and be blocked
-on trying to acquire the mutex.
-
-Similarly, in flush_workqueue().
-
-These were removed after cross-release partially caught these
-problems, but now cross-release was reverted anyway. IMHO the
-removal was erroneous anyway though, since lockdep should be
-able to catch potential problems, not just actual ones, and
-cross-release would only have caught the problem when actually
-invoking wait_for_completion().
-
-Fixes: fd1a5b04dfb8 ("workqueue: Remove now redundant lock acquisitions wrt. workqueue flushes")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- kernel/workqueue.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c   |  1 -
+ drivers/staging/wilc1000/wilc_debugfs.c | 50 +++++++--------------------------
+ drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++
+ drivers/staging/wilc1000/wilc_spi.c     |  7 +++++
+ drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++-
+ 5 files changed, 30 insertions(+), 42 deletions(-)
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index a6c2b823f348..60e80198c3df 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -2652,6 +2652,9 @@ void flush_workqueue(struct workqueue_struct *wq)
- 	if (WARN_ON(!wq_online))
- 		return;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 01cf4bd..37885ad 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1062,7 +1062,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	if (!wl)
+ 		return -ENOMEM;
  
-+	lock_map_acquire(&wq->lockdep_map);
-+	lock_map_release(&wq->lockdep_map);
+-	wilc_debugfs_init();
+ 	*wilc = wl;
+ 	wl->io_type = io_type;
+ 	wl->hif_func = ops;
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index edc7287..cb02859 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -20,8 +20,8 @@ static struct dentry *wilc_dir;
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ 
+-static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+-				     size_t count, loff_t *ppos)
++ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
++			      size_t count, loff_t *ppos)
+ {
+ 	char buf[128];
+ 	int res = 0;
+@@ -36,9 +36,8 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ 
+-static ssize_t wilc_debug_level_write(struct file *filp,
+-				      const char __user *buf, size_t count,
+-				      loff_t *ppos)
++ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
++			       size_t count, loff_t *ppos)
+ {
+ 	int flag = 0;
+ 	int ret;
+@@ -63,44 +62,15 @@ static ssize_t wilc_debug_level_write(struct file *filp,
+ 	return count;
+ }
+ 
+-#define FOPS(_open, _read, _write, _poll) { \
+-		.owner	= THIS_MODULE, \
+-		.open	= (_open), \
+-		.read	= (_read), \
+-		.write	= (_write), \
+-		.poll		= (_poll), \
+-}
+-
+-struct wilc_debugfs_info_t {
+-	const char *name;
+-	int perm;
+-	unsigned int data;
+-	const struct file_operations fops;
+-};
+-
+-static struct wilc_debugfs_info_t debugfs_info[] = {
+-	{
+-		"wilc_debug_level",
+-		0666,
+-		(DEBUG | ERR),
+-		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
+-	},
+-};
+-
+-int wilc_debugfs_init(void)
++int wilc_debugfs_init(const struct file_operations *fops)
+ {
+-	int i;
+-	struct wilc_debugfs_info_t *info;
+-
+ 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+-		info = &debugfs_info[i];
+-		debugfs_create_file(info->name,
+-				    info->perm,
+-				    wilc_dir,
+-				    &info->data,
+-				    &info->fops);
++	if (IS_ERR_OR_NULL(wilc_dir)) {
++		pr_err("Error creating debugfs\n");
++		return -EFAULT;
+ 	}
++	debugfs_create_file("wilc_debug_level", 0600, wilc_dir, NULL, fops);
 +
- 	mutex_lock(&wq->mutex);
+ 	return 0;
+ }
  
- 	/*
-@@ -2905,6 +2908,11 @@ static bool __flush_work(struct work_struct *work, bool from_cancel)
- 	if (WARN_ON(!wq_online))
- 		return false;
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index b2080d8..c1573f5 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -103,6 +103,12 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
+ 	return ret;
+ }
  
-+	if (!from_cancel) {
-+		lock_map_acquire(&work->lockdep_map);
-+		lock_map_release(&work->lockdep_map);
-+	}
++static const struct file_operations sdio_debug_fops = {
++	.owner		= THIS_MODULE,
++	.read		= wilc_debug_level_read,
++	.write		= wilc_debug_level_write,
++};
 +
- 	if (start_flush_work(work, &barr, from_cancel)) {
- 		wait_for_completion(&barr.done);
- 		destroy_work_on_stack(&barr.work);
+ static int linux_sdio_probe(struct sdio_func *func,
+ 			    const struct sdio_device_id *id)
+ {
+@@ -126,6 +132,7 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 		dev_err(&func->dev, "Couldn't initialize netdev\n");
+ 		return ret;
+ 	}
++	wilc_debugfs_init(&sdio_debug_fops);
+ 	sdio_set_drvdata(func, wilc);
+ 	wilc->dev = &func->dev;
+ 	wilc->gpio_irq = gpio;
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 5517477..0376649 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -102,6 +102,12 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
+ 
+ #define USE_SPI_DMA				0
+ 
++static const struct file_operations spi_debug_fops = {
++	.owner		= THIS_MODULE,
++	.read		= wilc_debug_level_read,
++	.write		= wilc_debug_level_write,
++};
++
+ static int wilc_bus_probe(struct spi_device *spi)
+ {
+ 	int ret;
+@@ -120,6 +126,7 @@ static int wilc_bus_probe(struct spi_device *spi)
+ 	if (ret)
+ 		return ret;
+ 
++	wilc_debugfs_init(&spi_debug_fops);
+ 	spi_set_drvdata(spi, wilc);
+ 	wilc->dev = &spi->dev;
+ 	wilc->gpio_irq = gpio;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 00d13b1..47b4020 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -831,6 +831,11 @@ struct wilc;
+ int wilc_wlan_init(struct net_device *dev);
+ u32 wilc_get_chipid(struct wilc *wilc, bool update);
+ 
+-int wilc_debugfs_init(void);
++int wilc_debugfs_init(const struct file_operations *fops);
+ void wilc_debugfs_remove(void);
++ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
++			      size_t count, loff_t *ppos);
++ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
++			       size_t count, loff_t *ppos);
++
+ #endif
 -- 
-2.14.4
+2.7.4
