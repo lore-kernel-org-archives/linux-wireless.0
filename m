@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:37641 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725735AbeHFIVm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47240 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731793AbeHIRlf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 04:21:42 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "yuehaibing@huawei.com" <yuehaibing@huawei.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "colin.king@canonical.com" <colin.king@canonical.com>
-Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
-Date: Mon, 6 Aug 2018 06:13:47 +0000
-Message-ID: <1533564825.4334.1.camel@realtek.com> (sfid-20180806_081425_652187_7D0D8B20)
-References: <20180806045440.11920-1-yuehaibing@huawei.com>
-In-Reply-To: <20180806045440.11920-1-yuehaibing@huawei.com>
+        Thu, 9 Aug 2018 13:41:35 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [PATCH] ssb: driver_gige: use true and false for boolean values
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180805000453.GA19115@embeddedor.com>
+References: <20180805000453.GA19115@embeddedor.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-Id: <20180809151613.6A1BE60B23@smtp.codeaurora.org> (sfid-20180809_171620_948967_42B60D8A)
+Date: Thu,  9 Aug 2018 15:16:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTA4LTA2IGF0IDEyOjU0ICswODAwLCBZdWVIYWliaW5nIHdyb3RlOg0KPiBG
-aXggZm9sbG93aW5nIGNvY2NpbmVsbGUgd2FybmluZzoNCj4gDQo+IC4vZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzoyOTUyOjIt
-NDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBl
-bHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3Qv
-aGFsYnRjODcyM2IyYW50LmM6Mjk2MToyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlv
-biB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
-ZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMwMTE6Mi00OiBXQVJO
-SU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+
-IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4
-NzIzYjJhbnQuYzozMDIwOjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGgg
-bm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzQzOToyLTQ6IFdBUk5JTkc6IHBv
-c3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFu
-dC5jOjM0NDg6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZl
-Y3QgKGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZp
-L2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMzM5OjItNDogV0FSTklORzogcG9zc2libGUN
-Cj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzM0
-ODoyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYg
-PT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4
-aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMwNzQ6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25k
-aXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMDgzOjItNDog
-V0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNl
-KQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFs
-YnRjODcyM2IyYW50LmM6MzE5MjoyLTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3
-aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
-dGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5jOjMyMDE6Mi00OiBXQVJOSU5H
-OiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQo+IC4v
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIz
-YjJhbnQuYzozMjY3OjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8g
-ZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
-d2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MzI3NjoyLTQ6IFdBUk5JTkc6IHBvc3Np
-YmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0gZWxzZSkNCj4gLi9kcml2ZXJz
-L25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg3MjNiMmFudC5j
-OjMxMjQ6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRpb24gd2l0aCBubyBlZmZlY3Qg
-KGlmID09IGVsc2UpDQo+IC4vZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0
-Y29leGlzdC9oYWxidGM4NzIzYjJhbnQuYzozMTMzOjItNDogV0FSTklORzogcG9zc2libGUNCj4g
-Y29uZGl0aW9uIHdpdGggbm8gZWZmZWN0IChpZiA9PSBlbHNlKQ0KPiAuL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODcyM2IyYW50LmM6MjgyMToy
-LTQ6IFdBUk5JTkc6IHBvc3NpYmxlDQo+IGNvbmRpdGlvbiB3aXRoIG5vIGVmZmVjdCAoaWYgPT0g
-ZWxzZSkNCj4gLi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0
-L2hhbGJ0Yzg3MjNiMmFudC5jOjI4MzA6Mi00OiBXQVJOSU5HOiBwb3NzaWJsZQ0KPiBjb25kaXRp
-b24gd2l0aCBubyBlZmZlY3QgKGlmID09IGVsc2UpDQoNCkFja2VkLWJ5OiBQaW5nLUtlIFNoaWgg
-PHBrc2hpaEByZWFsdGVrLmNvbT4NCg0KPiANCj4gU2lnbmVkLW9mZi1ieTogWXVlSGFpYmluZyA8
-eXVlaGFpYmluZ0BodWF3ZWkuY29tPg0KPiAtLS0NCg==
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+
+> Return statements in functions returning bool should use true or false
+> instead of an integer value.
+> 
+> This code was detected with the help of Coccinelle.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Reviewed-by: Michael Buesch <m@bues.ch>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+c7743c428111 ssb: driver_gige: use true and false for boolean values
+
+-- 
+https://patchwork.kernel.org/patch/10555985/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
