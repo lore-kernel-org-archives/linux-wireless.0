@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45610 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727268AbeHaODI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49794 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730880AbeHISQO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:03:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:55:59 +0300
-Message-Id: <20180831095614.14099-2-luca@coelho.fi> (sfid-20180831_115634_005808_7BC92833)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 01/16] iwlwifi: mvm: fix a comment about the SP length
+        Thu, 9 Aug 2018 14:16:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        b43-dev <b43-dev@lists.infradead.org>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Joe Perches <joe@perches.com>
+Subject: Re: ssb: Remove home-grown printk wrappers
+References: <20180731215638.381f0370@wiggum>
+        <877ekz1r1d.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 09 Aug 2018 18:50:40 +0300
+In-Reply-To: <877ekz1r1d.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Thu, 09 Aug 2018 18:46:38 +0300")
+Message-ID: <87y3dfzghb.fsf@kamboji.qca.qualcomm.com> (sfid-20180809_175047_532767_0FD0A2DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-The SP length in the ADD_STA command is an actual number of
-frames, and not the SP len as it appears in the WME IE.
-Fix that comment. The actual code is fine.
+> Michael B=C3=BCsch <m@bues.ch> writes:
+>
+>> Replace the ssb printk wrappers by standard print helpers.
+>> Also remove SSB_SILENT. Nobody should use it anyway.
+>>
+>> Originally submitted by Joe Perches <joe@perches.com>.
+>> Modified to add dev_... based printks.
+>>
+>> Signed-off-by: Michael Buesch <m@bues.ch>
+>> Tested-by: Michael Buesch <m@bues.ch>
+>> Cc: Joe Perches <joe@perches.com>
+>
+> Applied manually:
+>
+> 4d77a89e3924 b43legacy/leds: Ensure NUL-termination of LED name string
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/sta.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Heh, a copy paste error. Shows that I should not be applying anything
+manually. Anyway, the correct commit id is:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h b/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-index dc40cbd52f92..450227f81706 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -391,7 +393,7 @@ enum iwl_sta_type {
-  * @tfd_queue_msk: tfd queues used by this station.
-  *	Obselete for new TX API (9 and above).
-  * @rx_ba_window: aggregation window size
-- * @sp_length: the size of the SP as it appears in the WME IE
-+ * @sp_length: the size of the SP in actual number of frames
-  * @uapsd_acs:  4 LS bits are trigger enabled ACs, 4 MS bits are the deliver
-  *	enabled ACs.
-  *
--- 
-2.18.0
+b8b6069cf208 ssb: Remove home-grown printk wrappers
+
+--=20
+Kalle Valo
