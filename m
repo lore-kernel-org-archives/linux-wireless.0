@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr60081.outbound.protection.outlook.com ([40.107.6.81]:26400
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727106AbeHaDaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 23:30:00 -0400
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
- chips
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Wen Gong <wgong@qti.qualcomm.com>,
-        Wen Gong <wgong@codeaurora.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
- <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
- <87sh3pdtpg.fsf@toke.dk>
- <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
- <87mutue4y8.fsf@toke.dk>
- <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
- <87600eecr7.fsf@toke.dk>
- <68d91488f58f4a449908fc7eeebb8b34@aptaiexm02f.ap.qualcomm.com>
- <87tvntb53x.fsf@toke.dk>
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <ae8d9891-b827-7ca5-1375-0280d8f5c194@bowerswilkins.com> (sfid-20180831_012530_200495_EB66D0FA)
-Date: Thu, 30 Aug 2018 16:25:11 -0700
+Received: from smtp.codeaurora.org ([198.145.29.96]:60980 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727371AbeHII6n (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Aug 2018 04:58:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <87tvntb53x.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 09 Aug 2018 12:05:23 +0530
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+To: Jasmine Strong <jas@eero.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+        ath10k <ath10k@lists.infradead.org>,
+        linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCHv2] ath10k : Fix channel survey dump
+Message-ID: <d586156d3861a6cf0f479ff12ddd6544@codeaurora.org> (sfid-20180809_083526_556306_2863BB55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Toke,
+On 2018-08-01 00:03, Jasmine Strong wrote:
+> On Tue, Jul 31, 2018 at 10:38 AM Ben Greear <greearb@candelatech.com>
+> wrote:
+> 
+>> On 07/31/2018 05:11 AM, Venkateswara Naralasetty wrote:
+>>> Channel active/busy time are showing incorrect(less than previous
+>> or
+>>> sometimes zero) for successive survey dump command.
+>>> 
+>>> example:
+>>> Survey data from wlan0
+>>> frequency:                      5180 MHz [in use]
+>>> channel active time:            54995 ms
+>>> channel busy time:              432 ms
+>>> channel receive time:           0 ms
+>>> channel transmit time:          59 ms
+>>> Survey data from wlan0
+>>> frequency:                      5180 MHz [in use]
+>>> channel active time:            32592 ms
+>>> channel busy time:              254 ms
+>>> channel receive time:           0 ms
+>>> channel transmit time:          0 ms
+>>> 
+>>> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
+>>> as 'WMI_BSS_SURVEY_REQ_TYPE_READ' which accumulate survey data in
+>>> FW and send survey data to driver upon the driver request. Wrap
+>> around
+>>> is taken care by FW.
+>>> 
+>>> hardware used : QCA9984
+>>> firmware ver  : ver 10.4-3.5.3-00057
+>> 
+>> Have you tested this on other firmwares?  I am pretty sure that at
+>> least
+>> some of them, probably 10.2, will have issues.
+>> 
+>> Maybe you could make this change specific to certain firmware that
+>> is known to work with the change?
+> 
+> There are bigger problems with it than that;  even with firmwares that
+> behave correctly,
+> this changes the behavior that a lot of upper-layer software depends
+> upon, and will likely
+> make anything that actually uses the channel survey data misbehave.
+> 
+> It is therefore a breaking change for any device that actually
+> implements ACS.
+> 
+> -J.
 
-
-On 08/17/2018 04:32 AM, Toke Høiland-Jørgensen wrote:
->
->>>> Shift 6:
->>>> wgong@wgong-Latitude-E5440-1:~/flent$ flent -H 192.168.1.7 -t
->>>> "sk_pacing_shift6" tcp_nup --test-parameter upload_streams=1
->>>
-Does flent have options to set TOS or QoS queue for TCP or UDP test?
-If I add "--test-paramete burst_tos=0xe0", will it use corresponding 
-mac80211 QoS queue?
-flent -H xxxx -t "xxxx" tcp_nup --test-parameter upload_streams=1 
---test-paramete burst_tos=0xe0
+In ath9k driver also survey data being accumulated in driver and send 
+survey data to user space is accumulated one. same thing we are 
+implementing in FW(with WMI request type WMI_BSS_SURVEY_REQ_TYPE_READ) 
+instead of doing it in driver.
 
 Thanks,
-Peter
+Venkatesh.
