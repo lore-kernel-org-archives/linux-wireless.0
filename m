@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60852 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727768AbeHINfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 09:35:15 -0400
-Date: Thu, 9 Aug 2018 13:10:50 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Randy Oostdyk <linux-kernel@oostdyk.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless dongle causing entire machine to hang
-Message-ID: <20180809111049.GC1955@redhat.com> (sfid-20180809_131108_886760_C1CA47C4)
-References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+Received: from mail-yw1-f53.google.com ([209.85.161.53]:41823 "EHLO
+        mail-yw1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726181AbeHJORP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Aug 2018 10:17:15 -0400
+Received: by mail-yw1-f53.google.com with SMTP id q129-v6so8337754ywg.8
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2018 04:47:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+In-Reply-To: <20180810111425.GA16269@redhat.com>
+References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+ <20180809111049.GC1955@redhat.com> <CAAemcoOkA4y7zDMCKzD+nKJAQFoWCGPVHdbEV0j9ZOeaCe144g@mail.gmail.com>
+ <20180810111425.GA16269@redhat.com>
+From: Randy Oostdyk <linux-kernel@oostdyk.com>
+Date: Fri, 10 Aug 2018 05:47:39 -0600
+Message-ID: <CAAemcoM6u9103BDxVdqAE2-bZ-KFhhKK+1Lf72KRw8P0RAVtTQ@mail.gmail.com> (sfid-20180810_134743_522405_F176A10B)
+Subject: Re: wireless dongle causing entire machine to hang
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 08, 2018 at 11:58:36AM -0600, Randy Oostdyk wrote:
-> Good day all,
-> 
-> I'm writing to report an issue with the linux kernel, and I'm hoping
-> this is the right place to report it. (short aside: I tried to ask in
-> the #linux-wireless IRC channel, but wasn't permitted to speak!)
-> 
-> I'm aware that this is a USB protocol issue, and so this may be the
-> wrong place to report the bug, but the warning seems to be generated
-> by the wireless driver, and that appears to be the key issue here.
-> 
-> My USB wifi dongle is on the end of a very long USB cable, and was
-> connected to a USB hub. On two different occasions (after hours or
-> days of use), the machine it was attached to (Raspberry Pi 3) stopped
-> responding. I was unable to SSH in, even over ethernet. After a hard
-> reboot, I found that the following error was repeated **many thousands
-> of times per second** in three different log files:
-> 
-> Rpi kernel: [857011.857581] ieee80211 phy1:
-> rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
-> -71
+It's indeed possible that the cause was faulty or out-of-spec HW. I'm
+confident the machine hung (soft lock?) due to log spam, because upon
+reboot, log files were several GB each, covering the time period I was
+unable to connect to it.
 
-We have this change that make device not presend when we get -EPROTO
-error from USB driver.
+Thanks for the patch. I'll try to test it with my previous HW setup,
+and let you know how it goes. It might take a few weeks, due to the
+intermittent nature of the USB problem that triggered it.
 
-commit 2ad69ac5976191e9bb7dc4044204a504653ad1bb
-Author: Richard Genoud <richard.genoud@gmail.com>
-Date:   Thu Apr 3 16:48:56 2014 +0200
-
-    rt2x00: Endless loop on hub port power down 
-
-However I reverted it in
-
-commit dc50a52a36f459e0e3bed492d72a78bf64772c25
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Wed Nov 26 15:29:16 2014 +0100
-
-    Revert "rt2x00: Endless loop on hub port power down"
-
-Because it caused that if we get this error only one time,
-it prevent devices to work, which worked otherwise.
-
-rt2800usb driver expect thet we get -ENODEV or -ENOENT from
-usb host driver when we can not talk to device anymore. On other usb
-errors rt2800usb just try to work. I think this should be fixed in
-usb host driver to return proper error code.
-
-> As the machine continued in that state for hours, those log files had
-> grown to several gigabytes in size each! (/var/log/syslog,
-> /var/log/kern.log, and /var/log/messages)
-> 
-> It appears to be a very similar (if not same) bug referenced here:
-> https://www.spinics.net/lists/linux-wireless/msg150555.html
-> 
-> He resolved the "soft lockup" issue with some changes to the driver
-> (diff included in that thread), so I'm hoping this is the right place
-> to bring this issue up.
-
-I'm reluctant to replace _warn by _dbg messages as if somethings
-will go wrong we will not notice that. We can use printk_ratelimited()
-variant instead to do not spam log in speed that it will hung
-the machine. But the correct fix should be in USB host drivers,
-which seems to be not in perfect shape on those embedded platforms.
-
-Regards
-Stanislaw
+On Fri, Aug 10, 2018 at 5:14 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Aug 09, 2018 at 12:49:58PM -0600, Randy Oostdyk wrote:
+>> On Thu, Aug 9, 2018 at 5:10 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> > I'm reluctant to replace _warn by _dbg messages as if somethings
+>> > will go wrong we will not notice that. We can use printk_ratelimited()
+>> > variant instead to do not spam log in speed that it will hung
+>> > the machine. But the correct fix should be in USB host drivers,
+>> > which seems to be not in perfect shape on those embedded platforms.
+>>
+>> Agreed about the "correct" fix likely being on the USB side, but at
+>> least using printk_ratelimited() will avoid the log spamming, and
+>> avoid locking the machine, as you said.
+>>
+>> Will someone else take that approach and come up with a patch, or is
+>> this something I should try to take on myself? I could certainly test
+>> such a patch, if desired.
+>>
+>> Meanwhile, I'll look into reporting the USB bug, if it hasn't already been.
+>
+> I'm attaching the ratelimit patch for test.
+>
+> However after reading email from Larry I withdraw blaming USB host
+> driver. The issue could be faulty HW and USB host driver can not do
+> much much about this.
+>
+> Another question is if machine hung due to log spam or because there
+> was some crash. Those error conditions trigger code paths that are
+> not usually used, so there could be some oops that hung the system.
+>
+> Anyway you can test the patch and report back.
+>
+> Cheers
+> Stanislaw
