@@ -1,42 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40356 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726195AbeHOMS1 (ORCPT
+Received: from alexa-out-tai-02.qualcomm.com ([103.229.16.227]:42116 "EHLO
+        alexa-out-tai-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726961AbeHJKkr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 08:18:27 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, briannorris@chromium.org,
-        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        andy.gross@linaro.org, devicetree@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v5 5/6] ath10k: Add debug mask for QMI layer
-Date: Wed, 15 Aug 2018 14:56:36 +0530
-Message-Id: <20180815092637.11455-6-govinds@codeaurora.org> (sfid-20180815_112709_081282_76F9395D)
-In-Reply-To: <20180815092637.11455-1-govinds@codeaurora.org>
-References: <20180815092637.11455-1-govinds@codeaurora.org>
+        Fri, 10 Aug 2018 06:40:47 -0400
+From: Wen Gong <wgong@qti.qualcomm.com>
+To: =?iso-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Wen Gong <wgong@codeaurora.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
+ chips
+Date: Fri, 10 Aug 2018 08:05:39 +0000
+Message-ID: <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> (sfid-20180810_101303_044303_8795D692)
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+ <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
+ <87sh3pdtpg.fsf@toke.dk>
+In-Reply-To: <87sh3pdtpg.fsf@toke.dk>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add debug mask to control debug info of ath10k qmi
-messaging layer.
+> -----Original Message-----
+> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Toke
+> H=F8iland-J=F8rgensen
+> Sent: Wednesday, August 8, 2018 6:44 PM
+> To: Wen Gong <wgong@codeaurora.org>; ath10k@lists.infradead.org;
+> johannes@sipsolutions.net
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiF=
+i
+> chips
+>=20
+> Wen Gong <wgong@codeaurora.org> writes:
+>=20
+> > Upstream kernel has an interface to help adjust sk_pacing_shift to
+> > help improve TCP UL throughput.
+> > The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
+> > WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
+> > VHT80 TCP UL throughput testing result shows 6 is the optimal.
+> > Overwrite the sk_pacing_shift to 6 in ath10k driver for QCA6174/9377 PC=
+I.
+> >
+> > Tested with QCA6174 PCI with firmware
+> > WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377
+> PCI.
+> > It's not a regression with new firmware releases.
+> >
+> > There have 2 test result of different settings:
+> >
+> > ARM CPU based device with QCA6174A PCI with different
+> > sk_pacing_shift:
+> >
+> >  sk_pacing_shift  throughput(Mbps)             CPU utilization
+> >          6            500(-P5)      ~75% idle, Focus on CPU1: ~14%idle
+> >          7            454(-P5)      ~80% idle, Focus on CPU1: ~4%idle
+> >          8               288        ~90% idle, Focus on CPU1: ~35%idle
+> >          9              ~200        ~92% idle, Focus on CPU1: ~50%idle
+> >
+> > 5G TCP UL VTH80 on X86 platform with QCA6174A PCI with
+> > sk_packing_shift set to 6:
+> >
+> >   tcp_limit_output_bytes            throughput(Mbps)
+> >  default(262144)+1 Stream                 336
+> >  default(262144)+2 Streams                558
+> >  default(262144)+3 Streams                584
+> >  default(262144)+4 Streams                602
+> >  default(262144)+5 Streams                598
+> >  changed(2621440)+1 Stream                598
+> >  changed(2621440)+2 Streams               601
+>=20
+> You still haven't provided any latency numbers for these tests, which mak=
+es
+> it impossible to verify that setting sk_pacing_shift to 6 is the right tr=
+adeoff.
+>=20
+> As I said before, from your numbers I suspect the right setting is actual=
+ly 7,
+> which would be 10-20ms less latency under load; way more important than
+> ~50 Mbps...
+>=20
+Hi Toke,
+Could you give the command line for the latency test?
+https://flent.org/intro.html#quick-start
+I used the command but test failed:
+flent tcp_download -p 1 -l 60 -H 192.168.1.5 -t text-to-be-included-in-plot=
+ -o file1.png
+error loading plotter: unable to find plot configuration "1"
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/debug.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 0afca5c106b6..a2f84fdb9131 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -44,6 +44,7 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_USB		= 0x00040000,
- 	ATH10K_DBG_USB_BULK	= 0x00080000,
- 	ATH10K_DBG_SNOC		= 0x00100000,
-+	ATH10K_DBG_QMI		= 0x00200000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
- 
--- 
-2.17.0
+> -Toke
+>=20
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
