@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34578 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727345AbeHaT4Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:56:25 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] brcmfmac: fix wrong strnchr usage
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180822132215.27669-1-linux@rasmusvillemoes.dk>
-References: <20180822132215.27669-1-linux@rasmusvillemoes.dk>
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Message-Id: <20180831154818.9D0E96038E@smtp.codeaurora.org> (sfid-20180831_174917_633677_8E1B0B35)
-Date: Fri, 31 Aug 2018 15:48:18 +0000 (UTC)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33696 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726963AbeHJN2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Aug 2018 09:28:19 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] cfg80211: allow to build without CFG80211_REQUIRE_SIGNED_REGDB
+Date: Fri, 10 Aug 2018 12:55:47 +0200
+Message-Id: <1533898547-14449-1-git-send-email-sgruszka@redhat.com> (sfid-20180810_125902_042211_A5A70028)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
+According to kconfig-language.txt conditional dependency should be
+expressed 2 times:
 
-> strnchr takes arguments in the order of its name: string, max bytes to
-> read, character to search for. Here we're passing '\n' aka 10 as the
-> buffer size, and searching for sizeof(buf) aka BRCMF_DCMD_SMLEN aka
-> 256 (aka '\0', since it's implicitly converted to char) within those 10
-> bytes.
-> 
-> Just interchanging the last two arguments would still leave a bug,
-> because if we've been successful once, there are not sizeof(buf)
-> characters left after the new value of p.
-> 
-> Since clmver is immediately afterwards passed as a %s argument, I assume
-> that it is actually a properly nul-terminated string. For that case, we
-> have strreplace().
-> 
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+        bool "foo" if BAR
+        default y if BAR
 
-Patch applied to wireless-drivers-next.git, thanks.
+Indeed, without additional if expression we always build with
+CFG80211_REQUIRE_SIGNED_REGDB even when CFG80211_CERTIFICATION_ONUS
+is not set.
 
-cb18e2e9ec71 brcmfmac: fix wrong strnchr usage
+Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/wireless/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 4172204..bd63b73 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -89,7 +89,7 @@ config CFG80211_CERTIFICATION_ONUS
+ 
+ config CFG80211_REQUIRE_SIGNED_REGDB
+ 	bool "require regdb signature" if CFG80211_CERTIFICATION_ONUS
+-	default y
++	default y if CFG80211_CERTIFICATION_ONUS
+ 	select SYSTEM_DATA_VERIFICATION
+ 	help
+ 	  Require that in addition to the "regulatory.db" file a
 -- 
-https://patchwork.kernel.org/patch/10572951/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.1
