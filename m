@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:44964 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbeHVHZd (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:37462 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727399AbeHLCJx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 03:25:33 -0400
-Message-ID: <1534910543.25523.50.camel@sipsolutions.net> (sfid-20180822_060244_479463_992E6E9A)
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        kernel-team@lge.com
-Date: Wed, 22 Aug 2018 06:02:23 +0200
-In-Reply-To: <20180822024535.GA2414@X58A-UD3R>
-References: <20180821120317.4115-1-johannes@sipsolutions.net>
-         <20180821120317.4115-2-johannes@sipsolutions.net>
-         <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
-         <1534871894.25523.34.camel@sipsolutions.net>
-         <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
-         <1534872621.25523.39.camel@sipsolutions.net>
-         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
-         <1534879241.25523.44.camel@sipsolutions.net>
-         <20180822024535.GA2414@X58A-UD3R>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sat, 11 Aug 2018 22:09:53 -0400
+Received: by mail-pl0-f68.google.com with SMTP id d5-v6so5464221pll.4
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Aug 2018 16:34:04 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: lorenzo.bianconi@redhat.com
+Cc: linux-wireless@vger.kernel.org, Rosen Penev <rosenp@gmail.com>
+Subject: [PATCH] mt76x2u: Add support for Alfa AWUS036ACM
+Date: Sat, 11 Aug 2018 16:33:52 -0700
+Message-Id: <1534030432-229-1-git-send-email-rosenp@gmail.com> (sfid-20180812_013640_356065_90FAEC7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 11:45 +0900, Byungchul Park wrote:
+A 2x2 unit with a USB dock for optimal placement.
 
-> That should've been adjusted as well when Ingo reverted Cross-release.
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I can't really say.
-
-> It would be much easier to add each pair, acquire/release, before
-> wait_for_completion() in both flush_workqueue() and flush_work() than
-> reverting the whole commit.
-
-The commit doesn't do much more than this though.
-
-> What's lacking is only lockdep annotations for wait_for_completion().
-
-No, I disagree. Like I said before, we need the lockdep annotations on
-the WQ even when we don't actually create/use the completion, so we can
-catch issues even when they don't actually happen.
-
-johannes
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+index 1428cfd..f5338c3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+@@ -20,6 +20,7 @@
+ #include "mt76x2u.h"
+ 
+ static const struct usb_device_id mt76x2u_device_table[] = {
++	{ USB_DEVICE(0x0e8d, 0x7612) }, /* Alfa AWUS036ACM */
+ 	{ USB_DEVICE(0x0b05, 0x1833) },	/* Asus USB-AC54 */
+ 	{ USB_DEVICE(0x0b05, 0x17eb) },	/* Asus USB-AC55 */
+ 	{ USB_DEVICE(0x0b05, 0x180b) },	/* Asus USB-N53 B1 */
+-- 
+2.7.4
