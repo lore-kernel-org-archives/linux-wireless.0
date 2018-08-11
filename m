@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43254 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727069AbeH1PpF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 11:45:05 -0400
-Subject: Re: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>
- <1535450281.5895.34.camel@sipsolutions.net>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <4156a91b-cea4-8942-23ad-6377ac50a804@nbd.name> (sfid-20180828_135350_104520_931A7A29)
-Date: Tue, 28 Aug 2018 13:53:42 +0200
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34551 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727441AbeHKWyj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Aug 2018 18:54:39 -0400
+Received: by mail-wm0-f65.google.com with SMTP id l2-v6so4248972wme.1
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Aug 2018 13:19:21 -0700 (PDT)
+Subject: Re: [PATCH] ath10k: retrieve MAC address from firmware if provided
+To: Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+References: <20180810233948.144792-1-briannorris@chromium.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>,
+        linux-kernel@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B6F2A47.7070502@broadcom.com> (sfid-20180811_221924_370185_F5ADF909)
+Date: Sat, 11 Aug 2018 20:26:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <1535450281.5895.34.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180810233948.144792-1-briannorris@chromium.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-28 11:58, Johannes Berg wrote:
->> ---
->>  net/mac80211/rx.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->> 
->> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> index a16ba568e2a3..686e5586e1f4 100644
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -2313,7 +2313,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
->>  
->>  		if (!sdata->u.mgd.use_4addr)
->>  			return -1;
->> -		else
->> +		else if (!ether_addr_equal(hdr->addr1, sdata->vif.addr))
->>  			check_port_control = true;
-> 
-> I guess I have no objection to this. Felix?
-No objection from me.
+On 8/11/2018 1:39 AM, Brian Norris wrote:
+> Devices may provide their own MAC address via system firmware (e.g.,
 
-- Felix
+You got me confused by using just "firmware" in the subject.
+
+> device tree), especially in the case where the device doesn't have a
+> useful EEPROM on which to store its MAC address (e.g., for integrated
+> Wifi).
+>
+> Use the generic device helper to retrieve the MAC address, and (if
+> present) honor it above the MAC address advertised by the card.
+
+But this put me back on track ;-)
+
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>   drivers/net/wireless/ath/ath10k/core.c | 3 +++
+>   drivers/net/wireless/ath/ath10k/wmi.c  | 3 ++-
+>   2 files changed, 5 insertions(+), 1 deletion(-)
