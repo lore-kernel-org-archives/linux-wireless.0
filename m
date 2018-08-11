@@ -1,102 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:35676 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727054AbeH1UKY (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:34818 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727197AbeHKLv3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 16:10:24 -0400
-Received: by mail-it0-f51.google.com with SMTP id 139-v6so3300873itf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 09:18:00 -0700 (PDT)
+        Sat, 11 Aug 2018 07:51:29 -0400
+Received: by mail-it0-f66.google.com with SMTP id 139-v6so6124974itf.0
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Aug 2018 02:17:55 -0700 (PDT)
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 28 Aug 2018 21:47:48 +0530
-Message-ID: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com> (sfid-20180828_181803_373188_C3BC883F)
-Subject: ath10k: adding wlan to bridge causes WPA2-PSK to fail
-To: "Hostap@lists.infradead.org" <hostap@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
+References: <CAJVZm6cZ5yF+PjiMMnVmcu0MhOmaMFWV2E9EaK3=k4ogo3Lj6Q@mail.gmail.com>
+In-Reply-To: <CAJVZm6cZ5yF+PjiMMnVmcu0MhOmaMFWV2E9EaK3=k4ogo3Lj6Q@mail.gmail.com>
+From: Menion <menion@gmail.com>
+Date: Sat, 11 Aug 2018 11:17:42 +0200
+Message-ID: <CAJVZm6cWUqverJo90uuscPn8zu9eg7ms4etwXDp4Y4CX0NHbtA@mail.gmail.com> (sfid-20180811_111759_141417_0157748F)
+Subject: Re: mwl8k: Expand non-DFS 5G channels (linux master commit 4628257)
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I am trying to connect ath10k interface to Linux bridge after enabling
-of 4addr mode in WPA2-PSK mode, but EAPOL handshake fails, M1 is
-not received by the wpa_supplicant.
-
-ath10k_pci: QCA6174
-=================
-pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
-qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1028:0310
-kconfig debug 0 debugfs 1 tracing 1 dfs 0 testmode 0
-firmware ver WLAN.RM.4.4.1-00079-QCARMSWPZ-1 api 6 features
-wowlan,ignore-otp crc32 fd869beb
-board_file api 2 bmi_id N/A crc32 20d869c3
-Unknown eventid: 118809
-Unknown eventid: 90118
-htt-ver 3.47 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
-============
-Kernel: 4.18.0-rc8: wireless-drivers-next:
-209b43759d65b2cc99ce7757249aacc82b03c4e2
-============
-wpa_supp: b3f24b06e30411e1d4af06945b43eb4db0ac3394
-  .config has #CONFIG_NO_LINUX_PACKET_SOCKET_WAR=y
-and default L2 packet (linux packet socket)
-
-wpa_supplicant verbose logs:
-
-wlp3s0: State: ASSOCIATING -> ASSOCIATED
-nl80211: Set wlp3s0 operstate 0->0 (DORMANT)
-netlink: Operstate: ifindex=3 linkmode=-1 (no change), operstate=5
-(IF_OPER_DORMANT)
-<<Snip..............>>
-EAPOL: External notification - portEnabled=0
-EAPOL: External notification - portValid=0
-EAPOL: External notification - EAP success=0
-EAPOL: External notification - portEnabled=1
-EAPOL: SUPP_PAE entering state CONNECTING
-EAPOL: enable timer tick
-EAPOL: SUPP_BE entering state IDLE
-wlp3s0: Setting authentication timeout: 10 sec 0 usec
-wlp3s0: Cancelling scan request
-<<Snip..............>>
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 wext ifi_family=0
-ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 wext ifi_family=0
-ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 master=12 operstate=5
-ifi_family=7 ifi_flags=0x11003 ([UP][LOWER_UP])
-nl80211: Add ifindex 12 for bridge br0
-nl80211: Add own interface ifindex 12 (ifidx_reason 3)
-nl80211: ifindex 12 already in the list
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 operstate=5 linkmode=1
-master=12 ifi_family=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-<<Snip..............>>
-EAPOL: SUPP_PAE entering state CONNECTING
-EAPOL: enable timer tick
-EAPOL: txStart
-WPA: drop TX EAPOL in non-IEEE 802.1X mode (type=1 len=0)
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 master=12 operstate=2
-ifi_family=7 ifi_flags=0x1003 ([UP])
-nl80211: Add ifindex 12 for bridge br0
-nl80211: Add own interface ifindex 12 (ifidx_reason 3)
-nl80211: ifindex 12 already in the list
-RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 operstate=2 linkmode=1
-master=12 ifi_family=0 ifi_flags=0x1003 ([UP])
-nl80211: Event message available
-nl80211: Ignored event (cmd=20) for foreign interface (ifindex 3 wdev 0x0)
-nl80211: Drv Event 20 (NL80211_CMD_DEL_STATION) received for wlp3s0
-nl80211: Delete station 08:02:8e:8c:9c:50
-nl80211: Event message available
-nl80211: Ignored event (cmd=40) for foreign interface (ifindex 3 wdev 0x0)
-nl80211: Drv Event 40 (NL80211_CMD_DISASSOCIATE) received for wlp3s0
-nl80211: MLME event 40 (NL80211_CMD_DISASSOCIATE) on
-wlp3s0(9c:30:5b:7b:18:65) A1=9c:30:5b:7b:18:65 A2=08:02:8e:8c:9c:50
-nl80211: MLME event frame - hexdump(len=26): a0 00 3c 00 9c 30 5b 7b
-18 65 08 02 8e 8c 9c 50 08 02 8e 8c 9c 50 00 00 02 00
-nl80211: Disassociate event
-wlp3s0: Event DISASSOC (1) received
-wlp3s0: Disassociation notification
-wlp3s0:  * reason 2
-wlp3s0:  * address 08:02:8e:8c:9c:50
-Disassociation frame IE(s) - hexdump(len=0): [NULL]
+Hi again
+I have identified the problem, it was the way the country code is set
+by openwrt when multiple radio are present on the target
+Bye
+Il giorno ven 10 ago 2018 alle ore 21:11 Menion <menion@gmail.com> ha scritto:
+>
+> Hi all
+> I have backported the commit above on the 4.14.x kernel used by
+> Openwrt 18.06.x image family.
+> I planned to use it with my kirkwood based router, linksys ea4500,
+> which use mwl8k to control two radio, 2.4Ghz and 5Ghz, based on
+> 88W8366 (see: https://wiki.openwrt.org/toh/linksys/ea4500)
+> I built the image and loaded it on my routers (actually I have two ea4500)
+> Unfortunately only the old 4 ch shows as supported.
+> My question is if the modification should be enough to unlock higher
+> non DFS channels, or if I require some other patches, or maybe new
+> firmware.
+> In case suggestions to troubleshoot the problem are appreciated
+> Bye
+>
+> Following the "iw list" output for the 5Ghz radio
+>
+> Wiphy phy1
+>         max # scan SSIDs: 4
+>         max scan IEs length: 2261 bytes
+>         max # sched scan SSIDs: 0
+>         max # match sets: 0
+>         max # scan plans: 1
+>         max scan plan interval: -1
+>         max scan plan iterations: 0
+>         Retry short limit: 7
+>         Retry long limit: 4
+>         Coverage class: 0 (up to 0m)
+>         Available Antennas: TX 0 RX 0
+>         Supported interface modes:
+>                  * managed
+>                  * AP
+>                  * AP/VLAN
+>                  * monitor
+>         Band 2:
+>                 Capabilities: 0xffe
+>                         HT20/HT40
+>                         SM Power Save disabled
+>                         RX Greenfield
+>                         RX HT20 SGI
+>                         RX HT40 SGI
+>                         TX STBC
+>                         RX STBC 3-streams
+>                         HT Delayed Block Ack
+>                         Max AMSDU length: 7935 bytes
+>                         No DSSS/CCK HT40
+>                 Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+>                 Minimum RX AMPDU time spacing: No restriction (0x00)
+>                 HT TX/RX MCS rate indexes supported: 0-23, 32
+>                 Frequencies:
+>                         * 5180 MHz [36] (20.0 dBm)
+>                         * 5200 MHz [40] (20.0 dBm)
+>                         * 5220 MHz [44] (20.0 dBm)
+>                         * 5240 MHz [48] (20.0 dBm)
+>         valid interface combinations:
+>                  * #{ AP } <= 8, #{ managed } <= 1,
+>                    total <= 8, #channels <= 1
+>         HT Capability overrides:
+>                  * MCS: ff ff ff ff ff ff ff ff ff ff
+>                  * maximum A-MSDU length
+>                  * supported channel width
+>                  * short GI for 40 MHz
+>                  * max A-MPDU length exponent
+>                  * min MPDU start spacing
