@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35764 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726268AbeHXTuc (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:57008 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727756AbeHLN7z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 15:50:32 -0400
-Received: by mail-oi0-f68.google.com with SMTP id m11-v6so16256448oic.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 09:15:14 -0700 (PDT)
-Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
-To: Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-Cc: prabhu <d.praabhu@gmail.com>, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org
-References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
- <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net> (sfid-20180824_181517_282819_54145254)
-Date: Fri, 24 Aug 2018 11:15:12 -0500
+        Sun, 12 Aug 2018 09:59:55 -0400
+Date: Sun, 12 Aug 2018 16:52:04 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
+ `__this_module' error
+Message-ID: <20180812165204.5dfb54db@ajaysk-VirtualBox> (sfid-20180812_132215_323162_EFB24AA8)
+In-Reply-To: <20180812064250.GA31152@kroah.com>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+        <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
+        <20180812064250.GA31152@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2018 03:23 AM, Kalle Valo wrote:
-> Michael Büsch <m@bues.ch> writes:
+Hi Greg,
+
+On Sun, 12 Aug 2018 08:42:50 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
+
+> On Sun, Aug 12, 2018 at 10:17:42AM +0530, Ajay Singh wrote:
+> > wilc_debug.o object file is included for both SDIO and SPI module.
+> > When anyone(either SDIO or SPI) module is compiled as loaded module
+> > and another as buildin module then below compilation error occurs.
+> > 
+> > "drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
+> > reference to `__this_module'"
+> > 
+> > Moved the declaration of file_operation variable in SDIO/SPI files
+> > and pass this as parameter to wilc_debugfs_init(). Remove 'fops'
+> > element from 'wilc_debugfs_info_t' struct, as its not required.
+> > 
+> > Fixes: 9abc44ba4e2f ("staging: wilc1000: fix TODO to compile spi
+> > and sdio components in single module") Reported-by: kbuild test
+> > robot <lkp@intel.com> Signed-off-by: Ajay Singh
+> > <ajay.kathat@microchip.com> ---  
 > 
->> On Thu, 23 Aug 2018 23:00:53 +0530
->> prabhu <d.praabhu@gmail.com> wrote:
->>
->>> The following commits introduce this regression in 4.18
->>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=66cffd6daab76caebab26eb803b92182414fc182
->>
->> Ok. Kalle, can you please revert the commit
->> 66cffd6daab76caebab26eb803b92182414fc182
->> ?
+> Can this be the first patch in the series so it can go to Linus for
+> 4.19 and the rest can be postponed for later?
 > 
-> Please submit a proper patch with an explanation why it needs to be
-> reverted.
 
-Before doing a revert, let's see if we can keep the fix for open firmware, the 
-situation for which commit 66cffd6daab7 was "needed". I think the following 
-should do:
+No, the patches are in order. To apply this patch the first patch has
+to be also applied. 
 
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c 
-b/drivers/net/wireless/broadcom/b43/dma.c
-index 6b0e1ec346cb..2c37366b3592 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1519,12 +1519,14 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-                 } else {
-                         /* More than a single header/data pair were missed.
-                          * Report this error, and reset the controller to
--                        * revive operation.
-+                        * revive operation. If running the open-source
-+                        * firmware, then do a restart.
-                          */
-                         b43dbg(dev->wl,
-                                "Out of order TX status report on DMA ring %d. 
-Expected %d, but got %d\n",
-                                ring->index, firstused, slot);
--                       b43_controller_restart(dev, "Out of order TX");
-+                       if (dev->fw.opensource)
-+                               b43_controller_restart(dev, "Out of order TX");
-                         return;
-                 }
-         }
+If its okay, I can merge the first 2 patches and give a single patch
+so it can be sent for 4.19 release. Rest of the patches can be
+postponed for later.
 
-At the moment, I am working with prabhu to see if upgrading his firmware will 
-help his problem with no change in the driver. If not, then I will have him test 
-this patch.
-
-Larry
+Regards,
+Ajay
