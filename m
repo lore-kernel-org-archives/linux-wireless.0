@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36712 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727688AbeH3McU (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:34067 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725883AbeHLHZC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 08:32:20 -0400
-Received: by mail-wm0-f54.google.com with SMTP id j192-v6so1090134wmj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2018 01:31:19 -0700 (PDT)
-Date: Thu, 30 Aug 2018 10:31:16 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
- to one
-Message-ID: <20180830083115.GA9867@localhost.localdomain> (sfid-20180830_103122_416814_16996C82)
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
- <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
- <1535569548.5215.33.camel@sipsolutions.net>
- <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
- <1535570007.5215.34.camel@sipsolutions.net>
- <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
- <1535616192.5215.37.camel@sipsolutions.net>
+        Sun, 12 Aug 2018 03:25:02 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 3/5] staging: wilc1000: remove the use of 'wilc_debugfs_info_t' struct
+Date: Sun, 12 Aug 2018 10:17:43 +0530
+Message-ID: <1534049265-5600-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180812_064837_366063_1C9BFF86)
+In-Reply-To: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535616192.5215.37.camel@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> First of all, I applied your patch with now, but changed the commit
-> message. I hope it still makes sense.
+Refactor the code to remove the use of 'wilc_debugfs_info_t' struct.
+Pass NULL for data in debugfs_create_file() call, as its value is not
+used.
 
-Thx, definitely better than mine :)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_debugfs.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
 
-> 
-> > Ops, maybe I got your point:
-> > ieee80211_amsdu_realloc_pad() in ieee80211_amsdu_prepare_head() can
-> > expand the headroom on the first frame
-> 
-> Right.
-> 
-> > but if ieee80211_amsdu_realloc_pad() on the second one fails, we do
-> > not take into account the extra len added on the
-> > first subframe. Is that what you mean?
-> 
-> Yes, that's what I was thinking of, but you described it much better
-> than me :)
-> 
-> If this needs to be addressed, please send a separate patch.
-
-Reviewing the code I guess it is not necessary since pskb_expand_head routine
-does not modify head->len (or skb->len). Packet len (if we consider padding)
-is only modified in:
-
-memset(skb_push(skb, pad), 0, pad);
-
-and if we hit that point, we will account new skb->len in flow backlog. Do you
-agree?
-
-Looking at the code maybe I spotted another issue, I guess there is an
-off-by-one issue in 'n' estimation since it does not take into account
-the first frame. We hit the line:
-
-while (*frag_tail) {
-}
-
-starting from the second subframe, but if the head does not have packet in the
-fraglist we will end up having n = 1, while it is actually the second frame.
-Does n count just subsequent frames or also the first one?
-
-Regards,
-Lorenzo
-
-> 
-> johannes
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 78c0831..c9bc325 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -62,25 +62,10 @@ ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
+ 	return count;
+ }
+ 
+-struct wilc_debugfs_info_t {
+-	const char *name;
+-	int perm;
+-	unsigned int data;
+-};
+-
+-static struct wilc_debugfs_info_t debugfs_info = {
+-	"wilc_debug_level",
+-	0666,
+-	(DEBUG | ERR),
+-};
+-
+ int wilc_debugfs_init(const struct file_operations *fops)
+ {
+-	struct wilc_debugfs_info_t *info = &debugfs_info;
+-
+ 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	debugfs_create_file(info->name, info->perm, wilc_dir, &info->data,
+-			    fops);
++	debugfs_create_file("wilc_debug_level", 0666, wilc_dir, NULL, fops);
+ 
+ 	return 0;
+ }
+-- 
+2.7.4
