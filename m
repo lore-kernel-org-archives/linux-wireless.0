@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:19987 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727780AbeHLO0Y (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33056 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727827AbeHLVXv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 10:26:24 -0400
-Date: Sun, 12 Aug 2018 17:18:29 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 1/5] staging: wilc1000: avoid arrray of
- 'wilc_debugfs_info_t' type
-Message-ID: <20180812171829.1187a0cd@ajaysk-VirtualBox> (sfid-20180812_134839_970775_11A40120)
-In-Reply-To: <20180812112930.GB25209@kroah.com>
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
-        <1534049265-5600-2-git-send-email-ajay.kathat@microchip.com>
-        <20180812112930.GB25209@kroah.com>
+        Sun, 12 Aug 2018 17:23:51 -0400
+Received: by mail-wm0-f66.google.com with SMTP id r24-v6so5818960wmh.0
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2018 11:44:55 -0700 (PDT)
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Kristian Evensen <kristian.evensen@gmail.com>
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+ <871sb3zc3v.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B708025.4090906@broadcom.com> (sfid-20180812_204503_893988_BC83DF3E)
+Date: Sun, 12 Aug 2018 20:44:53 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <871sb3zc3v.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+On 8/12/2018 8:14 PM, Kalle Valo wrote:
+> Kristian Evensen <kristian.evensen@gmail.com> writes:
+>
+>> Enable the use of CQM with mt76-devices.
+>>
+>> Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
+>> ---
+>>   drivers/net/wireless/mediatek/mt76/mac80211.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+>> index 029d54bc..3eb328ff 100644
+>> --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
+>> +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+>> @@ -305,6 +305,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+>>
+>>   	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+>>
+>> +	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+>
+> So have you tested this and with what devices? For example, does it work
+> with recently added USB devices?
 
-On Sun, 12 Aug 2018 13:29:30 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
+I was looking into this as it looks suspicious to me. From reading the 
+description of this ext_feature flag it seems this is an extention of CQM:
 
-> On Sun, Aug 12, 2018 at 10:17:41AM +0530, Ajay Singh wrote:
-> > Refactor code by removing array of 'wilc_debugfs_info_t' type and
-> > use single variable to store 'wilc_debugfs_info_t' struct value.
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_debugfs.c | 26
-> > +++++++++----------------- 1 file changed, 9 insertions(+), 17
-> > deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_debugfs.c
-> > b/drivers/staging/wilc1000/wilc_debugfs.c index edc7287..c5f67c9
-> > 100644 --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> > +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> > @@ -78,29 +78,21 @@ struct wilc_debugfs_info_t {
-> >  	const struct file_operations fops;
-> >  };
-> >  
-> > -static struct wilc_debugfs_info_t debugfs_info[] = {
-> > -	{
-> > -		"wilc_debug_level",
-> > -		0666,
-> > -		(DEBUG | ERR),
-> > -		FOPS(NULL, wilc_debug_level_read,
-> > wilc_debug_level_write, NULL),
-> > -	},
-> > +static struct wilc_debugfs_info_t debugfs_info = {
-> > +	"wilc_debug_level",
-> > +	0666,
-> > +	(DEBUG | ERR),
-> > +	FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write,
-> > NULL), };
-> >  
-> >  int wilc_debugfs_init(void)
-> >  {
-> > -	int i;
-> > -	struct wilc_debugfs_info_t *info;
-> > +	struct wilc_debugfs_info_t *info = &debugfs_info;
-> >  
-> >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-> > -		info = &debugfs_info[i];
-> > -		debugfs_create_file(info->name,
-> > -				    info->perm,
-> > -				    wilc_dir,
-> > -				    &info->data,
-> > -				    &info->fops);
-> > -	}
-> > +	debugfs_create_file(info->name, info->perm, wilc_dir,
-> > &info->data,
-> > +			    &info->fops);
-> > +
-> 
-> Why go through the extra step here in changing this variable from an
-> array to a single value and not just make the call to
-> debugfs_create_file() directly with the individual values like you do
-> in patch 3?  It feels like this step isn't needed at all here, right?
-> 
-> What am I missing?
+"""
+  * @NL80211_EXT_FEATURE_CQM_RSSI_LIST: With this driver the
+  *	%NL80211_ATTR_CQM_RSSI_THOLD attribute accepts a list of zero or more
+  *	RSSI threshold values to monitor rather than exactly one threshold.
+"""
 
-Actually, while calling debugfs_create_file() it also passed the
-"info->data", "info->perm" which was maintained in a static variable.
-So to have the changes in multiple patches, I first tried by removing
-the dependency of array and later changed the individual parameters
-for this debugfs_create_file().
+Also looking at mt76x2_bss_info_changed() it does not handle 
+BSS_CHANGED_CQM so I doubt it has support for it (yet). The driver does 
+not use IEEE80211_VIF_SUPPORTS_CQM_RSSI which is a requirement for it.
+
+Regards,
+Arend
 
 
-Regards
-Ajay
+https://elixir.bootlin.com/linux/latest/source/drivers/net/wireless/mediatek/mt76/mt76x2_main.c#L223
