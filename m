@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f171.google.com ([209.85.208.171]:41786 "EHLO
-        mail-lj1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728515AbeHaRw3 (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:16612 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727503AbeHLHZF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 13:52:29 -0400
-Subject: Re: [PATCH 10/23] wireless: remove unnecessary unlikely()
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, Igor Stoppa <igor.stoppa@huawei.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        linux-wireless@vger.kernel.org
-References: <20180830223429.30051-1-igor.stoppa@huawei.com>
- <20180830223429.30051-11-igor.stoppa@huawei.com>
- <87va7qdfry.fsf@kamboji.qca.qualcomm.com>
-From: Igor Stoppa <igor.stoppa@gmail.com>
-Message-ID: <814defe0-72ab-049b-97cb-f295f4964895@gmail.com> (sfid-20180831_154527_806123_67EADF08)
-Date: Fri, 31 Aug 2018 16:44:52 +0300
+        Sun, 12 Aug 2018 03:25:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 4/5] staging: wilc1000: change permission to 0600 in debugfs_create_file() call
+Date: Sun, 12 Aug 2018 10:17:44 +0530
+Message-ID: <1534049265-5600-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180812_064838_717089_3641AD62)
+In-Reply-To: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87va7qdfry.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cleanup patch to use more restrictive access permission for debugfs
+file.
 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 31/08/18 12:52, Kalle Valo wrote:
-> + linux-wireless
-
-> IMHO you could fold patches 10, 11 and 12 into one to avoid having three
-> patches with duplicate titles. Or alternatively use proper driver
-> prefixes like "ath10k:", "b43:" and so on.
-
-I was wondering if it would be ok to fold them, but it's easier to fold 
-than to split, so I started with 3
-
-> But how do you want these to be applied? For the wireless patches you
-> didn't Cc linux-wireless so our patchwork won't see them and hence I
-> can't take them. So if you want me to take these, please resend and
-> include linux-wireless.
-
-
-ok, I was hoping to avoid joining the ml but it's done
-I had patches for about 20 different trees, so I decided to first see if 
-the patches could be taken in right away.
-In at least one case (pinctrl) I got lucky :-)
-
---
-thanks, igor
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index c9bc325..15e797b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -65,7 +65,7 @@ ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
+ int wilc_debugfs_init(const struct file_operations *fops)
+ {
+ 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	debugfs_create_file("wilc_debug_level", 0666, wilc_dir, NULL, fops);
++	debugfs_create_file("wilc_debug_level", 0600, wilc_dir, NULL, fops);
+ 
+ 	return 0;
+ }
+-- 
+2.7.4
