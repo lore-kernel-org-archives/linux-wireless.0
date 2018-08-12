@@ -1,83 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:40208 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726472AbeHUJl5 (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:42360 "EHLO
+        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727963AbeHLWdF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:41:57 -0400
-Received: by mail-lf1-f66.google.com with SMTP id y200-v6so12713233lfd.7
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2018 23:23:10 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: remove division by size of sizeof(struct
- ieee80211_wmm_rule)
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-References: <20180820073705.9683-1-johannes@sipsolutions.net>
- <20180820102710.GA2760@redhat.com>
-From: =?UTF-8?Q?Grzegorz_Duszy=c5=84ski?= <gfduszynski@gmail.com>
-Message-ID: <63f44789-11c3-0549-b8b8-cd3b25c40547@gmail.com> (sfid-20180821_082316_528992_33B5CDDB)
-Date: Tue, 21 Aug 2018 08:23:07 +0200
+        Sun, 12 Aug 2018 18:33:05 -0400
+Received: by mail-oi0-f50.google.com with SMTP id b16-v6so23889897oic.9
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Aug 2018 12:54:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180820102710.GA2760@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: =?UTF-8?Q?Grzegorz_Duszy=C5=84ski?= <gfduszynski@gmail.com>
+Date: Sun, 12 Aug 2018 21:54:00 +0200
+Message-ID: <CAD7cUuBrMscCMzLHCdxaAf+m9XHLr6XWD+FmZqNSdAuYnKCZfw@mail.gmail.com> (sfid-20180812_215553_225914_AD82A05E)
+Subject: Cpu stall caused by hostapd running two interfaces
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20.08.2018 12:27, Stanislaw Gruszka wrote:
-> On Mon, Aug 20, 2018 at 09:37:05AM +0200, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> Pointer arithmetic already adjusts by the size of the struct,
->> so the sizeof() calculation is wrong. This is basically the
->> same as Colin King's patch for similar code in the iwlwifi
->> driver.
->>
->> Fixes: 230ebaa189af ("cfg80211: read wmm rules from regulatory database")
->> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->> ---
->>   net/wireless/reg.c | 3 +--
->>   1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 4fc66a117b7d..283902974fbf 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -452,8 +452,7 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
->>   			continue;
->>   
->>   		regd->reg_rules[i].wmm_rule = d_wmm +
->> -			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
->> -			sizeof(struct ieee80211_wmm_rule);
->> +			(src_regd->reg_rules[i].wmm_rule - s_wmm);
->>   	}
->>   	return regd;
->>   }
-> As side note those pointer aritmetics related with rule->wmm_rule is
-> really involuted in various places in reg.c . Seems would be better to
-> just make wmm_rule part of iee80211_reg_rule structure like this:
->
-> struct ieee80211_reg_rule {
->          struct ieee80211_freq_range freq_range;
->          struct ieee80211_power_rule power_rule;
->          struct ieee80211_wmm_rule wmm_rule;
->          u32 flags;
->          u32 dfs_cac_ms;
-> };
->
-> and use a flag to intdicate wmm_rule is valid. There should be no
-> big memory overhead sice there are only few reg_rules for the regdomain.
-> Or I'm wrong?
->
-> Regards
-> Stanislaw
+Hello,
 
-Thank you for the patch.
+I'm running into problems while trying to start AP's on 2 interfaces.
+Devices are:
+- Compex WLE900VX (QCA9880)
+- Killer 1535 (QCA6174)
 
-I've applied the patch, but it does not seem to help.
-Spawning second instance of hostapd causes same error as before.
+The 1535 is a new addition to the system.
+Compex by itself runs fine, Killer also can run alone.
 
-I don't follow why this issue would not occur with single NIC.
-It's not like I am an expert in this field, but those rules should be 
-applied to both interfaces, right?
-Both interfaces use ath10k, that should imply same code path for setting 
-rules.
+But when running them together all hell breaks lose.
+System is unusable, cannot even reboot.
+
+I'm running Arch Linux.
+My system was updated before testing & posting.
+
+Attachments:
+dmesg - https://pastebin.com/wf3Fq8gh
+
+Please let me know if additional info is required.
