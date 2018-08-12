@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway34.websitewelcome.com ([192.185.149.13]:14984 "EHLO
-        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727204AbeH2WJN (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:50644 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725883AbeHLHYv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 18:09:13 -0400
-Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
-        by gateway34.websitewelcome.com (Postfix) with ESMTP id 0330B3E019
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 12:50:47 -0500 (CDT)
-Date: Wed, 29 Aug 2018 12:50:18 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Maya Erez <merez@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] wil6210: fix unsigned cid comparison with >= 0
-Message-ID: <20180829175018.GA3776@embeddedor.com> (sfid-20180829_201112_746930_7AB7AAFF)
+        Sun, 12 Aug 2018 03:24:51 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 0/5] staging: wilc1000: compilation error fixes & cleanup changes
+Date: Sun, 12 Aug 2018 10:17:40 +0530
+Message-ID: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180812_064820_329001_1A03FBC1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The comparison of cid >= 0 is always true because cid is of type u8
-(8 bits, unsigned).
+This patch series contains the changes to avoid below compilation error.
 
-Fix this by removing such comparison and updating the type of
-variable cid to u8 in the caller function.
+ "drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
+ reference to `__this_module'"
 
-Addresses-Coverity-ID: 1473079 ("Unsigned compared against 0")
-Fixes: b9010f105f21 ("wil6210: add FT roam support for AP and station")
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
- drivers/net/wireless/ath/wil6210/wmi.c     | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Split the changes into multiple patches, as discussed in [1].
 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cf6a691..abb8201 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -455,7 +455,7 @@ static inline void parse_cidxtid(u8 cidxtid, u8 *cid, u8 *tid)
-  */
- static inline bool wil_cid_valid(u8 cid)
- {
--	return (cid >= 0 && cid < WIL6210_MAX_CID);
-+	return cid < WIL6210_MAX_CID;
- }
- 
- struct wil6210_mbox_ring {
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index c3ad8e4..4859f0e 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1177,7 +1177,7 @@ static void wmi_evt_ring_en(struct wil6210_vif *vif, int id, void *d, int len)
- 	u8 vri = evt->ring_index;
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	struct wil_sta_info *sta;
--	int cid;
-+	u8 cid;
- 	struct key_params params;
- 
- 	wil_dbg_wmi(wil, "Enable vring %d MID %d\n", vri, vif->mid);
+[1]. https://www.spinics.net/lists/linux-wireless/msg176009.html
+
+Ajay Singh (5):
+  staging: wilc1000: avoid arrray of 'wilc_debugfs_info_t' type
+  staging: wilc1000: fixes for undefined reference to `__this_module'
+    error
+  staging: wilc1000: remove the use of 'wilc_debugfs_info_t' struct
+  staging: wilc1000: change permission to 0600 in debugfs_create_file()
+    call
+  staging: wilc1000: use void return for wilc_debugfs_init()
+
+ drivers/staging/wilc1000/linux_wlan.c   |  1 -
+ drivers/staging/wilc1000/wilc_debugfs.c | 48 +++++----------------------------
+ drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++
+ drivers/staging/wilc1000/wilc_spi.c     |  7 +++++
+ drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++-
+ 5 files changed, 26 insertions(+), 44 deletions(-)
+
 -- 
 2.7.4
