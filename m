@@ -1,217 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58966 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726958AbeH0SoB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:44:01 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 08/17] mt76: unify mac_shared_key_setup
-Date: Mon, 27 Aug 2018 16:56:22 +0200
-Message-Id: <1535381791-14908-9-git-send-email-sgruszka@redhat.com> (sfid-20180827_165711_997889_EF4F933B)
-In-Reply-To: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
-References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36138 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727550AbeHLVNC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Aug 2018 17:13:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers-next 2018-08-12
+Date: Sun, 12 Aug 2018 21:34:03 +0300
+Message-ID: <87wosvxwmc.fsf@kamboji.qca.qualcomm.com> (sfid-20180812_203426_560675_DB9C3376)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Merge mt76x{0,2} mac_shared_key_setup into common code.
+Hi Dave,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 24 ----------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |  2 --
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 23 +++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  2 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  3 ++-
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  3 ---
- .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 23 ---------------------
- 9 files changed, 29 insertions(+), 55 deletions(-)
+one more request to net-next for 4.19. I hope I'm not too late with
+this. These have been in linux-next since Friday so I'm hoping there are
+no surprises. Please let me know if you have any problems.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-index 4b5d48246879..6d0a6fb18be9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-@@ -606,27 +606,3 @@ int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
- 
- 	return 0;
- }
--
--int mt76x0_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
--			      struct ieee80211_key_conf *key)
--{
--	enum mt76x02_cipher_type cipher;
--	u8 key_data[32];
--	u32 val;
--
--	cipher = mt76x02_mac_get_key_info(key, key_data);
--	if (cipher == MT_CIPHER_NONE && key)
--		return -EINVAL;
--
--	trace_mt76x0_set_shared_key(&dev->mt76, vif_idx, key_idx);
--
--	mt76_wr_copy(dev, MT_SKEY(vif_idx, key_idx),
--			key_data, sizeof(key_data));
--
--	val = mt76_rr(dev, MT_SKEY_MODE(vif_idx));
--	val &= ~(MT_SKEY_MODE_MASK << MT_SKEY_MODE_SHIFT(vif_idx, key_idx));
--	val |= cipher << MT_SKEY_MODE_SHIFT(vif_idx, key_idx);
--	mt76_wr(dev, MT_SKEY_MODE(vif_idx), val);
--
--	return 0;
--}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-index bea067b71c13..d44ef1e9a1dd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-@@ -143,8 +143,6 @@ int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
- void mt76x0_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
- 			    const struct ieee80211_tx_rate *rate);
- 
--int mt76x0_mac_shared_key_setup(struct mt76x0_dev *dev, u8 vif_idx, u8 key_idx,
--			      struct ieee80211_key_conf *key);
- u16 mt76x0_mac_tx_rate_val(struct mt76x0_dev *dev,
- 			 const struct ieee80211_tx_rate *rate, u8 *nss_val);
- struct mt76_tx_status
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index 8fc270b94819..fb31c103aeee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -264,7 +264,7 @@ mt76x0_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 				return ret;
- 		}
- 
--		return mt76x0_mac_shared_key_setup(dev, mvif->idx, idx, key);
-+		return mt76x02_mac_shared_key_setup(&dev->mt76, mvif->idx, idx, key);
- 	}
- 
- 	return mt76x0_mac_wcid_set_key(dev, msta->wcid.idx, key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 7137fd2a370e..6d45adc0522f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -44,3 +44,26 @@ mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
- 	}
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_get_key_info);
-+
-+int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
-+				struct ieee80211_key_conf *key)
-+{
-+	enum mt76x02_cipher_type cipher;
-+	u8 key_data[32];
-+	u32 val;
-+
-+	cipher = mt76x02_mac_get_key_info(key, key_data);
-+	if (cipher == MT_CIPHER_NONE && key)
-+		return -EOPNOTSUPP;
-+
-+	val = __mt76_rr(dev, MT_SKEY_MODE(vif_idx));
-+	val &= ~(MT_SKEY_MODE_MASK << MT_SKEY_MODE_SHIFT(vif_idx, key_idx));
-+	val |= cipher << MT_SKEY_MODE_SHIFT(vif_idx, key_idx);
-+	__mt76_wr(dev, MT_SKEY_MODE(vif_idx), val);
-+
-+	__mt76_wr_copy(dev, MT_SKEY(vif_idx, key_idx), key_data,
-+		       sizeof(key_data));
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_mac_shared_key_setup);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index e06a1ff3a77f..6f8b8a1d02cf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -42,4 +42,6 @@ static inline bool mt76x02_wait_for_mac(struct mt76_dev *dev)
- enum mt76x02_cipher_type
- mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data);
- 
-+int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
-+				struct ieee80211_key_conf *key);
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-index fe0b394fd9ea..56cceeac78d8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-@@ -16,6 +16,7 @@
-  */
- 
- #include "mt76x2.h"
-+#include "mt76x02_mac.h"
- 
- void mt76x2_txq_init(struct mt76x2_dev *dev, struct ieee80211_txq *txq)
- {
-@@ -223,7 +224,7 @@ int mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 				return ret;
- 		}
- 
--		return mt76x2_mac_shared_key_setup(dev, mvif->idx, idx, key);
-+		return mt76x02_mac_shared_key_setup(&dev->mt76, mvif->idx, idx, key);
- 	}
- 
- 	return mt76x2_mac_wcid_set_key(dev, msta->wcid.idx, key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 07ef0a368f1e..1c5c3552a719 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -167,7 +167,7 @@ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
- 
- 	for (i = 0; i < 16; i++)
- 		for (k = 0; k < 4; k++)
--			mt76x2_mac_shared_key_setup(dev, i, k, NULL);
-+			mt76x02_mac_shared_key_setup(&dev->mt76, i, k, NULL);
- 
- 	for (i = 0; i < 8; i++) {
- 		mt76x2_mac_set_bssid(dev, i, null_addr);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index 0f07fc1a19ab..4be2e0e64847 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -175,9 +175,6 @@ void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
- 			      const struct ieee80211_tx_rate *rate);
- void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop);
- 
--int mt76x2_mac_shared_key_setup(struct mt76x2_dev *dev, u8 vif_idx, u8 key_idx,
--				struct ieee80211_key_conf *key);
--
- int mt76x2_mac_set_beacon(struct mt76x2_dev *dev, u8 vif_idx,
- 			  struct sk_buff *skb);
- void mt76x2_mac_set_beacon_enable(struct mt76x2_dev *dev, u8 vif_idx, bool val);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-index 92621fc5fbf8..7359ef647268 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-@@ -229,29 +229,6 @@ void mt76x2_send_tx_status(struct mt76x2_dev *dev,
- }
- EXPORT_SYMBOL_GPL(mt76x2_send_tx_status);
- 
--int mt76x2_mac_shared_key_setup(struct mt76x2_dev *dev, u8 vif_idx, u8 key_idx,
--				struct ieee80211_key_conf *key)
--{
--	enum mt76x02_cipher_type cipher;
--	u8 key_data[32];
--	u32 val;
--
--	cipher = mt76x02_mac_get_key_info(key, key_data);
--	if (cipher == MT_CIPHER_NONE && key)
--		return -EOPNOTSUPP;
--
--	val = mt76_rr(dev, MT_SKEY_MODE(vif_idx));
--	val &= ~(MT_SKEY_MODE_MASK << MT_SKEY_MODE_SHIFT(vif_idx, key_idx));
--	val |= cipher << MT_SKEY_MODE_SHIFT(vif_idx, key_idx);
--	mt76_wr(dev, MT_SKEY_MODE(vif_idx), val);
--
--	mt76_wr_copy(dev, MT_SKEY(vif_idx, key_idx), key_data,
--		     sizeof(key_data));
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(mt76x2_mac_shared_key_setup);
--
- int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
- 			    struct ieee80211_key_conf *key)
- {
--- 
-2.7.5
+Kalle
+
+The following changes since commit 981467033a37d916649647fa3afe1fe99bba1817:
+
+  tc-testing: remove duplicate spaces in skbedit match patterns (2018-08-05 17:39:24 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2018-08-12
+
+for you to fetch changes up to 209b43759d65b2cc99ce7757249aacc82b03c4e2:
+
+  ssb: Remove SSB_WARN_ON, SSB_BUG_ON and SSB_DEBUG (2018-08-09 18:47:47 +0300)
+
+----------------------------------------------------------------
+wireless-drivers-next patches for 4.19
+
+Last set of new features for 4.19. Most notable is simplifying SSB
+debugging code with two Kconfig option removals and fixing mt76 USB
+build problems.
+
+Major changes:
+
+ath10k
+
+* add debugfs file warm_hw_reset
+
+wil6210
+
+* add debugfs files tx_latency, link_stats and link_stats_global
+
+* add 3-MSI support
+
+* allow scan on AP interface
+
+* support max aggregation window size 64
+
+ssb
+
+* remove CONFIG_SSB_SILENT and CONFIG_SSB_DEBUG Kconfig options
+
+mt76
+
+* fix build problems with recently added USB support
+
+----------------------------------------------------------------
+Ahmad Masri (3):
+      wil6210: allow scan on AP interface
+      wil6210: align to latest auto generated wmi.h
+      wil6210: off channel transmit management frames in AP mode
+
+Alexei Avshalom Lazar (3):
+      wil6210: add 3-MSI support
+      wil6210: fix min() compilation errors
+      wil6210: set default 3-MSI
+
+Colin Ian King (5):
+      ath10k: remove redundant pointers 'dev' and 'noa'
+      ath5k: remove redundant pointer rf
+      ath6kl: remove redundant variables netlen, orig_buf, orig_len, dropped and stats
+      rsi: remove redundant variables bss, wh and temp_flash_content
+      iwlegacy: fix spelling mistake "acumulative" -> "accumulative"
+
+Dedy Lansky (6):
+      wil6210: Rx multicast packets duplicate detection
+      wil6210: drop Rx packets with L2 error indication from HW
+      wil6210: add TX latency statistics
+      wil6210: fix temperature debugfs
+      wil6210: align to latest auto generated wmi.h
+      wil6210: add support for link statistics
+
+Felix Fietkau (8):
+      ath9k_hw: set spectral scan enable bit on trigger for AR9003+
+      ath9k: don't run periodic and nf calibation at the same time
+      ath9k: fix moredata bit in PS buffered frame release
+      ath9k: clear potentially stale EOSP status bit in intermediate queues
+      ath9k: report tx status on EOSP
+      ath9k: fix block-ack window tracking issues
+      ath9k_hw: fix channel maximum power level test
+      ath9k: fix more-data flag for buffered multicast packets
+
+Gustavo A. R. Silva (1):
+      ssb: driver_gige: use true and false for boolean values
+
+Hamad Kadmany (1):
+      wil6210: increase firmware ready timeout
+
+Jia-Ju Bai (1):
+      ath6kl: replace GFP_ATOMIC with GFP_KERNEL in ath6kl_bmi_init()
+
+Kalle Valo (3):
+      ath10k: fix open brace location in ath10k_wmi_tlv_op_gen_dbglog_cfg()
+      ath10k: fix parenthesis alignment
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+
+Kees Cook (1):
+      mt76x0: Remove VLA usage
+
+Maharaja Kennadyrajan (1):
+      ath10k: add debugfs file warm_hw_reset
+
+Maya Erez (6):
+      wil6210: fix RX checksum report to network stack
+      wil6210: support Talyn specific FW file
+      wil6210: support max aggregation window size 64
+      wil6210: support Talyn specific board file
+      wil6210: prevent FW download if HW is configured for secured boot
+      wil6210: fix eDMA RX chaining
+
+Michael Buesch (4):
+      b43/leds: Ensure NUL-termination of LED name string
+      b43legacy/leds: Ensure NUL-termination of LED name string
+      ssb: Remove home-grown printk wrappers
+      ssb: Remove SSB_WARN_ON, SSB_BUG_ON and SSB_DEBUG
+
+Nicholas Mc Guire (1):
+      ath10k: htt_tx: move lock into id_get function
+
+Pradeep Kumar Chitrapu (1):
+      ath10k: support for multicast rate control
+
+Rakesh Pillai (1):
+      ath10k: handle mgmt tx completion event
+
+Stanislaw Gruszka (2):
+      mt76x0: correct type for eeprom gain value
+      mt76x0: perform mt76x0_mac_set_ampdu_factor
+
+Surabhi Vishnoi (1):
+      ath10k: disable bundle mgmt tx completion event support
+
+Sven Eckelmann (1):
+      ath10k: prevent active scans on potential unusable channels
+
+Valdis Kletnieks (1):
+      mt76: fix build for MediaTek MT7610U USB wireless dongle
+
+Winnie Chang (1):
+      brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
+
+YueHaibing (1):
+      rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
+
+ arch/mips/configs/bcm47xx_defconfig                |   1 -
+ arch/powerpc/configs/wii_defconfig                 |   1 -
+ drivers/net/wireless/ath/ath10k/ahb.c              |   5 -
+ drivers/net/wireless/ath/ath10k/core.c             |   1 +
+ drivers/net/wireless/ath/ath10k/core.h             |   5 +
+ drivers/net/wireless/ath/ath10k/debug.c            |  49 ++
+ drivers/net/wireless/ath/ath10k/htt_tx.c           |  10 +-
+ drivers/net/wireless/ath/ath10k/hw.h               |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c              |  67 +-
+ drivers/net/wireless/ath/ath10k/wmi-ops.h          |  12 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c          |  75 ++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h          |  17 +
+ drivers/net/wireless/ath/ath10k/wmi.c              |  87 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h              |  23 +-
+ drivers/net/wireless/ath/ath5k/phy.c               |   5 -
+ drivers/net/wireless/ath/ath6kl/bmi.c              |   2 +-
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c         |  10 +-
+ drivers/net/wireless/ath/ath6kl/main.c             |   3 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c             |   2 -
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c      |   6 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   2 +
+ drivers/net/wireless/ath/ath9k/hw.c                |   7 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |  67 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  50 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c         | 371 ++++++++++-
+ drivers/net/wireless/ath/wil6210/fw.c              |   3 +
+ drivers/net/wireless/ath/wil6210/fw_inc.c          |   2 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c       |  64 +-
+ drivers/net/wireless/ath/wil6210/main.c            |  65 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c        |  70 ++-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c      |  31 +-
+ drivers/net/wireless/ath/wil6210/txrx.c            |  71 ++-
+ drivers/net/wireless/ath/wil6210/txrx.h            |   7 +
+ drivers/net/wireless/ath/wil6210/txrx_edma.c       |  48 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.h       |   6 +
+ drivers/net/wireless/ath/wil6210/wil6210.h         |  96 ++-
+ drivers/net/wireless/ath/wil6210/wil_platform.h    |   1 +
+ drivers/net/wireless/ath/wil6210/wmi.c             | 221 +++++++
+ drivers/net/wireless/ath/wil6210/wmi.h             | 685 ++++++++++++++++++++-
+ drivers/net/wireless/broadcom/b43/leds.c           |   2 +-
+ drivers/net/wireless/broadcom/b43legacy/leds.c     |   2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   8 +-
+ drivers/net/wireless/intel/iwlegacy/3945-debug.c   |   2 +-
+ drivers/net/wireless/mediatek/mt76/Kconfig         |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    |   2 -
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 180 ++----
+ drivers/net/wireless/rsi/rsi_91x_hal.c             |  10 +-
+ drivers/ssb/Kconfig                                |  21 -
+ drivers/ssb/b43_pci_bridge.c                       |   4 +-
+ drivers/ssb/bridge_pcmcia_80211.c                  |   6 +-
+ drivers/ssb/driver_chipcommon.c                    |  14 +-
+ drivers/ssb/driver_chipcommon_pmu.c                |  40 +-
+ drivers/ssb/driver_chipcommon_sflash.c             |   6 +-
+ drivers/ssb/driver_extif.c                         |   4 +-
+ drivers/ssb/driver_gige.c                          |   2 +-
+ drivers/ssb/driver_gpio.c                          |   8 +-
+ drivers/ssb/driver_mipscore.c                      |  17 +-
+ drivers/ssb/driver_pcicore.c                       |  23 +-
+ drivers/ssb/embedded.c                             |  18 +-
+ drivers/ssb/host_soc.c                             |  16 +-
+ drivers/ssb/main.c                                 |  83 +--
+ drivers/ssb/pci.c                                  |  75 +--
+ drivers/ssb/pcmcia.c                               |  62 +-
+ drivers/ssb/scan.c                                 |  38 +-
+ drivers/ssb/sdio.c                                 |  16 +-
+ drivers/ssb/sprom.c                                |   4 +-
+ drivers/ssb/ssb_private.h                          |  39 +-
+ include/linux/ssb/ssb.h                            |   2 -
+ 69 files changed, 2308 insertions(+), 654 deletions(-)
