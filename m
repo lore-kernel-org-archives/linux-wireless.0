@@ -1,87 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:34872 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727655AbeHaRX5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbeHLFUf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 13:23:57 -0400
+        Sun, 12 Aug 2018 01:20:35 -0400
 MIME-Version: 1.0
-References: <1535533111-18301-1-git-send-email-siva8118@gmail.com>
-In-Reply-To: <1535533111-18301-1-git-send-email-siva8118@gmail.com>
-From: Siva Rebbagondla <siva8118@gmail.com>
-Date: Fri, 31 Aug 2018 18:50:27 +0530
-Message-ID: <CANGSkXTRHFF7VYso5-X16OL=xJMBu2ELd_CLrcBtfoSP0KdSQg@mail.gmail.com> (sfid-20180831_151646_123833_FB333989)
-Subject: Re: [PATCH] Bluetooth: btrsi: fix bt tx timeout issue
-To: Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>
-Cc: linux-bluetooth@vger.kernel.org,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Sasidhar Mudigonda <sasidhar.mudigonda@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sun, 12 Aug 2018 08:14:17 +0530
+From: Sriram R <srirrama@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFCv2 2/2] mac80211: Add support for per-rate rx statistics
+In-Reply-To: <1529065504.10037.18.camel@sipsolutions.net>
+References: <1527514479-6696-1-git-send-email-srirrama@codeaurora.org>
+ <1527514479-6696-3-git-send-email-srirrama@codeaurora.org>
+ <1529065504.10037.18.camel@sipsolutions.net>
+Message-ID: <655af9bf3136aefda93b137f80b9e726@codeaurora.org> (sfid-20180812_044915_214232_034AE3FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 2:24 PM Siva Rebbagondla <siva8118@gmail.com> wrote:
->
-> From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
->
-> observed sometimes data is coming with unaligned address from kernel
-> BT stack. If unaligned address is passed, some data in payload is
-> stripped when packet is loading to firmware and this results, BT
-> connection timeout is happening.
->
-> sh# hciconfig hci0 up
-> Can't init device hci0: hci0 command 0x0c03 tx timeout
->
-> Fixed this by moving the data to aligned address.
->
-> Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> ---
->  drivers/bluetooth/btrsi.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-> index 60d1419..3951f7b 100644
-> --- a/drivers/bluetooth/btrsi.c
-> +++ b/drivers/bluetooth/btrsi.c
-> @@ -21,8 +21,9 @@
->  #include <net/rsi_91x.h>
->  #include <net/genetlink.h>
->
-> -#define RSI_HEADROOM_FOR_BT_HAL        16
-> +#define RSI_DMA_ALIGN  8
->  #define RSI_FRAME_DESC_SIZE    16
-> +#define RSI_HEADROOM_FOR_BT_HAL        (RSI_FRAME_DESC_SIZE + RSI_DMA_ALIGN)
->
->  struct rsi_hci_adapter {
->         void *priv;
-> @@ -70,6 +71,16 @@ static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
->                 bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
->                 kfree_skb(skb);
->                 skb = new_skb;
-> +               if (!IS_ALIGNED((unsigned long)skb->data, RSI_DMA_ALIGN)) {
-> +                       u8 *skb_data = skb->data;
-> +                       int skb_len = skb->len;
-> +
-> +                       skb_push(skb, RSI_DMA_ALIGN);
-> +                       skb_pull(skb, PTR_ALIGN(skb->data,
-> +                                               RSI_DMA_ALIGN) - skb->data);
-> +                       memmove(skb->data, skb_data, skb_len);
-> +                       skb_trim(skb, skb_len);
-> +               }
->         }
->
->         return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
-> --
-> 2.7.4
->
-Kindly ignore this.
-Instead of adding linux-kernel@vger.kernel.org, I have added
-linux-wireless@vger.kernel.org, which results, this
-patch is showing in linux-wireless patch work.
-I will resend this patch by removing, "linux-wireless" from mailing list.
-
-Thanks,
-Siva Rebbagondla.
+On 2018-06-15 17:55, Johannes Berg wrote:
+> Why did you change to rhashtable?
+Hi Johannes,
+I wanted to give a try with rhashtable and get your thoughts, since it 
+gave below flexibility to original patch,
+1. avoids creating static memory when userspace starts accumulating 
+stats. 36 rate entries were used in original patch based on 10 (MCS 
+count) * 3 (entries per mcs)+ 6 escape entries, which would also 
+increase with HE supported now.
+2. avoids restricting to only 3 entries per MCS in the table. Using 
+hashtable gave flexibility to add/read the table dynamically based on 
+encoded rate key.
+> 
+> That seems very strange, since we explicitly want to limit the number 
+> of
+> entries, but rhashtable will grow/shrink as required.
+Yes you're right ,it might grow but, as per this patch when Packet count 
+is greater
+than 65000 in an exntry or when the number of rate table/hashtable 
+entries exceed a count of MAX_RATE_TABLE_ELEMS (10 was used in this 
+patch), the complete table is dumped to userspace and new stats starts 
+getting collected in a new table after we flush the old one.
+Hence with this approach also the memory consumption is limited similar 
+to the original patch.
+> 
+> I think I liked my approach better since it allowed us to clearly limit
+> the memory consumption for this.
+Sure Johannes, Could you please let me know if i can rebase your patch 
+and send it(with corresponding additional entries for HE MCS). Also as 
+mentioned above this patch also limits the memory consumption when the 
+rate table size exceeds MAX_RATE_TABLE_ELEMS.
+> 
+> johannes
