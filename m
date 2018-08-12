@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51003 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbeH0CPU (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:42894 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726773AbeHLJTu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Aug 2018 22:15:20 -0400
-From: Colin King <colin.king@canonical.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: mvm:  fix spelling mistake "Recieved" -> "Received"
-Date: Sun, 26 Aug 2018 23:31:17 +0100
-Message-Id: <20180826223117.12892-1-colin.king@canonical.com> (sfid-20180827_003140_329932_D5300EC4)
+        Sun, 12 Aug 2018 05:19:50 -0400
+Date: Sun, 12 Aug 2018 08:42:50 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, ganesh.krishna@microchip.com,
+        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
+Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
+ `__this_module' error
+Message-ID: <20180812064250.GA31152@kroah.com> (sfid-20180812_084321_053480_53B2ACFE)
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+ <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Sun, Aug 12, 2018 at 10:17:42AM +0530, Ajay Singh wrote:
+> wilc_debug.o object file is included for both SDIO and SPI module. When
+> anyone(either SDIO or SPI) module is compiled as loaded module and another
+> as buildin module then below compilation error occurs.
+> 
+> "drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
+> reference to `__this_module'"
+> 
+> Moved the declaration of file_operation variable in SDIO/SPI files and
+> pass this as parameter to wilc_debugfs_init(). Remove 'fops' element
+> from 'wilc_debugfs_info_t' struct, as its not required.
+> 
+> Fixes: 9abc44ba4e2f ("staging: wilc1000: fix TODO to compile spi and sdio components in single module")
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
 
-Trivial fix to spelling mistake in debug message.
+Can this be the first patch in the series so it can go to Linus for 4.19
+and the rest can be postponed for later?
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+thanks,
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b15b0d84bb7e..5f32d3131d62 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3320,7 +3320,7 @@ static bool iwl_mvm_rx_aux_roc(struct iwl_notif_wait_data *notif_wait,
- 	resp = (void *)pkt->data;
- 
- 	IWL_DEBUG_TE(mvm,
--		     "Aux ROC: Recieved response from ucode: status=%d uid=%d\n",
-+		     "Aux ROC: Received response from ucode: status=%d uid=%d\n",
- 		     resp->status, resp->event_unique_id);
- 
- 	te_data->uid = le32_to_cpu(resp->event_unique_id);
--- 
-2.17.1
+greg k-h
