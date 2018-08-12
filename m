@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39410 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727866AbeHCLJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 07:09:27 -0400
-Date: Fri, 3 Aug 2018 11:14:01 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] mt76x0: build driver only as module
-Message-ID: <20180803091401.GB10284@redhat.com> (sfid-20180803_111415_860237_998E8BD6)
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47282 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728089AbeHLOOP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 12 Aug 2018 10:14:15 -0400
+Date: Sun, 12 Aug 2018 13:36:27 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, ganesh.krishna@microchip.com,
+        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
+Subject: Re: [PATCH 4/5] staging: wilc1000: change permission to 0600 in
+ debugfs_create_file() call
+Message-ID: <20180812113627.GD25209@kroah.com> (sfid-20180812_133631_874168_9186FEDC)
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+ <1534049265-5600-5-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534049265-5600-5-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are various symbols that conflicts with mt7601u.
-Due to that kernel will not build with allyesconfig.
-For now limit the driver to be build only as module.
+On Sun, Aug 12, 2018 at 10:17:44AM +0530, Ajay Singh wrote:
+> Cleanup patch to use more restrictive access permission for debugfs
+> file.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Why?  What is the harm in writing to a value that is never used?  :)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index 850611ad347a..2f25af9a08df 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -11,7 +11,7 @@ config MT76x2_COMMON
- 
- config MT76x0U
- 	tristate "MediaTek MT76x0U (USB) support"
--	depends on MAC80211
-+	depends on MAC80211 && m
- 	depends on USB
- 	help
- 	  This adds support for MT7610U-based wireless USB dongles.
--- 
-2.7.5
+thanks,
+
+greg k-h
