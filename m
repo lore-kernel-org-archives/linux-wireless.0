@@ -1,42 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:46197 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726197AbeHTWFW (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:19987 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727780AbeHLO0Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Aug 2018 18:05:22 -0400
-Received: by mail-oi0-f66.google.com with SMTP id y207-v6so27605412oie.13
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2018 11:48:35 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
-Date: Mon, 20 Aug 2018 13:48:31 -0500
-Message-Id: <20180820184831.24206-1-Larry.Finger@lwfinger.net> (sfid-20180820_204838_651531_48C3F931)
+        Sun, 12 Aug 2018 10:26:24 -0400
+Date: Sun, 12 Aug 2018 17:18:29 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 1/5] staging: wilc1000: avoid arrray of
+ 'wilc_debugfs_info_t' type
+Message-ID: <20180812171829.1187a0cd@ajaysk-VirtualBox> (sfid-20180812_134839_970775_11A40120)
+In-Reply-To: <20180812112930.GB25209@kroah.com>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+        <1534049265-5600-2-git-send-email-ajay.kathat@microchip.com>
+        <20180812112930.GB25209@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In gcc8, when the 3rd argument (size) of a call to strncpy() matches the
-length of the first argument, the compiler warns of the possibility of an
-unterminated string. Using strlcpy() forces a null at the end.
+Hi Greg,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun, 12 Aug 2018 13:29:30 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
-index c2d5b495c179..c089540116fa 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
-@@ -146,7 +146,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
- 	led->dev = dev;
- 	led->ledpin = ledpin;
- 	led->is_radio = is_radio;
--	strncpy(led->name, name, sizeof(led->name));
-+	strlcpy(led->name, name, sizeof(led->name));
- 
- 	led->led_dev.name = led->name;
- 	led->led_dev.default_trigger = default_trigger;
--- 
-2.18.0
+> On Sun, Aug 12, 2018 at 10:17:41AM +0530, Ajay Singh wrote:
+> > Refactor code by removing array of 'wilc_debugfs_info_t' type and
+> > use single variable to store 'wilc_debugfs_info_t' struct value.
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/wilc_debugfs.c | 26
+> > +++++++++----------------- 1 file changed, 9 insertions(+), 17
+> > deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/wilc_debugfs.c
+> > b/drivers/staging/wilc1000/wilc_debugfs.c index edc7287..c5f67c9
+> > 100644 --- a/drivers/staging/wilc1000/wilc_debugfs.c
+> > +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+> > @@ -78,29 +78,21 @@ struct wilc_debugfs_info_t {
+> >  	const struct file_operations fops;
+> >  };
+> >  
+> > -static struct wilc_debugfs_info_t debugfs_info[] = {
+> > -	{
+> > -		"wilc_debug_level",
+> > -		0666,
+> > -		(DEBUG | ERR),
+> > -		FOPS(NULL, wilc_debug_level_read,
+> > wilc_debug_level_write, NULL),
+> > -	},
+> > +static struct wilc_debugfs_info_t debugfs_info = {
+> > +	"wilc_debug_level",
+> > +	0666,
+> > +	(DEBUG | ERR),
+> > +	FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write,
+> > NULL), };
+> >  
+> >  int wilc_debugfs_init(void)
+> >  {
+> > -	int i;
+> > -	struct wilc_debugfs_info_t *info;
+> > +	struct wilc_debugfs_info_t *info = &debugfs_info;
+> >  
+> >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+> > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+> > -		info = &debugfs_info[i];
+> > -		debugfs_create_file(info->name,
+> > -				    info->perm,
+> > -				    wilc_dir,
+> > -				    &info->data,
+> > -				    &info->fops);
+> > -	}
+> > +	debugfs_create_file(info->name, info->perm, wilc_dir,
+> > &info->data,
+> > +			    &info->fops);
+> > +
+> 
+> Why go through the extra step here in changing this variable from an
+> array to a single value and not just make the call to
+> debugfs_create_file() directly with the individual values like you do
+> in patch 3?  It feels like this step isn't needed at all here, right?
+> 
+> What am I missing?
+
+Actually, while calling debugfs_create_file() it also passed the
+"info->data", "info->perm" which was maintained in a static variable.
+So to have the changes in multiple patches, I first tried by removing
+the dependency of array and later changed the individual parameters
+for this debugfs_create_file().
+
+
+Regards
+Ajay
