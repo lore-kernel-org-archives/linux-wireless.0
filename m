@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:57198 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726343AbeHUMR4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58610 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727827AbeHLUxH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 08:17:56 -0400
-Message-ID: <1534841913.25523.0.camel@sipsolutions.net> (sfid-20180821_105841_103251_60977CFC)
-Subject: Re: [RFC] cfg80211: let's wmm_rule be part of reg_rule structure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Grzegorz =?UTF-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Aug 2018 10:58:33 +0200
-In-Reply-To: <7580e821-bfa0-e4d4-435f-a042b0eba555@gmail.com> (sfid-20180821_105723_922713_195D6893)
-References: <20180821074020.GA28952@redhat.com>
-         <7580e821-bfa0-e4d4-435f-a042b0eba555@gmail.com>
-         (sfid-20180821_105723_922713_195D6893)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 12 Aug 2018 16:53:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Kristian Evensen <kristian.evensen@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+Date: Sun, 12 Aug 2018 21:14:12 +0300
+In-Reply-To: <20180812145207.11395-1-kristian.evensen@gmail.com> (Kristian
+        Evensen's message of "Sun, 12 Aug 2018 16:52:07 +0200")
+Message-ID: <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> (sfid-20180812_201431_835786_F0E440EA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-21 at 10:57 +0200, Grzegorz Duszyński wrote:
-> I've just briefly tested it, looks like it's working!
-> I have only remote access to my machine at the moment so it's difficult 
-> to say for sure if everything is in order.
-> However stalls do not occur, nor there are any error/warnings anywhere.
-> 
-That probably just means you now have some invalid data somewhere,
-rather than a crash... Not sure which is better - I guess you'd rather
-have it not crash, and I'd rather figure out where the invalid data is
-coming from :)
+Kristian Evensen <kristian.evensen@gmail.com> writes:
 
-johannes
+> Enable the use of CQM with mt76-devices.
+>
+> Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mac80211.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+> index 029d54bc..3eb328ff 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+> @@ -305,6 +305,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+>  
+>  	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+>  
+> +	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+
+So have you tested this and with what devices? For example, does it work
+with recently added USB devices?
+
+-- 
+Kalle Valo
