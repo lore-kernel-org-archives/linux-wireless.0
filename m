@@ -1,87 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41867 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbeHWLh7 (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:13468 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728509AbeHMPXU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 07:37:59 -0400
-Subject: Re: [PATCH 00/24] staging: wilc1000: avoid use of static and global
- variable
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <3536aa12-233c-3a77-ca7f-1766d6a9bc6c@microchip.com> (sfid-20180823_101016_079857_BBA8231D)
-Date: Thu, 23 Aug 2018 11:09:29 +0300
-MIME-Version: 1.0
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 13 Aug 2018 11:23:20 -0400
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: [PATCH 1/3] cfg80211: Add support for 60GHz band channels 5 and 6
+Date: Mon, 13 Aug 2018 15:33:00 +0300
+Message-Id: <1534163582-9983-2-git-send-email-ailizaro@codeaurora.org> (sfid-20180813_144124_051097_CFD42B20)
+In-Reply-To: <1534163582-9983-1-git-send-email-ailizaro@codeaurora.org>
+References: <1534163582-9983-1-git-send-email-ailizaro@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ajay,
+The current support in the 60GHz band is for channels 1-4.
+Add support for channels 5 and 6.
+This requires enlarging ieee80211_channel.center_freq from u16 to u32.
 
-Few comments on this series. See per patch replies.
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 2 +-
+ include/net/cfg80211.h                     | 2 +-
+ include/uapi/linux/nl80211.h               | 2 +-
+ net/wireless/reg.c                         | 2 +-
+ net/wireless/trace.h                       | 2 +-
+ net/wireless/util.c                        | 6 +++---
+ 6 files changed, 8 insertions(+), 8 deletions(-)
 
-Thank you,
-Claudiu Beznea
-
-On 14.08.2018 09:49, Ajay Singh wrote:
-> This patch set mainly contains changes to avoid the use of static
-> and global variables. Also contains few patch to avoid the checkpatch
-> warning arise due to code refactor.
-> 
-> Ajay Singh (24):
->   staging: wilc1000: move 'wilc_enable_ps' global variable into 'wilc'
->     struct
->   staging: wilc1000: move 'aging_timer' static variable to wilc_priv
->     struct
->   staging: wilc1000: fix to use correct index to free scanned info in
->     clear_shadow_scan()
->   staging: wilc1000: remove unnecessary NULL check in
->     clear_shadow_scan()
->   staging: wilc1000: moved last_scanned_shadow & last_scanned_cnt to
->     wilc_priv struct
->   staging: wilc1000: move during_ip_timer & wilc_optaining_ip to
->     'wilc_vif' struct
->   staging: wilc1000: remove unused variable 'op_ifcs'
->   staging: wilc1000: avoid use of extra 'if' condition in wilc_init()
->   staging: wilc1000: move static variable clients_count to 'wilc'
->     structure
->   staging: wilc1000: move wilc_multicast_mac_addr_list to 'wilc_vif'
->     struct
->   staging: wilc1000: move hif specific static variables to 'wilc'
->     structure
->   staging: wilc1000: move static variable 'terminated_handle' to
->     wilc_vif struct
->   staging: wilc1000: move 'periodic_rssi' as part of 'wilc_vif' struct
->   staging: wilc1000: rename 'dummy_statistics' variable to
->     'periodic_stat'
->   staging: wilc1000: move 'rcv_assoc_resp' as part of hif_drv
->   staging: wilc1000: refactor tcp_process() to avoid extra leading tabs
->   staging: wilc1000: use lowercase for get_BSSID() and HIL variable
->   staging: wilc1000: move tcp_ack_filter algo related variables to
->     'wilc_vif' struct
->   staging: wilc1000: avoid line over 80 chars in
->     wilc_wlan_txq_filter_dup_tcp_ack()
->   staging: wilc1000: avoid line over 80 chars in tcp_process()
->   staging: wilc1000: remove unused code to set and get IP address
->   staging: wilc1000: move 'chip_ps_state' static variable as part of
->     'wilc' struct
->   staging: wilc1000: move 'wilc_connecting' static variable to
->     'wilc_vif' struct
->   staging: wilc1000: remove unnecessary static variable
->     'p2p_listen_state'
-> 
->  drivers/staging/wilc1000/coreconfigurator.c       |   4 +-
->  drivers/staging/wilc1000/host_interface.c         | 227 +++++-----------------
->  drivers/staging/wilc1000/host_interface.h         |   9 +-
->  drivers/staging/wilc1000/linux_wlan.c             |  29 ++-
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 191 +++++++++---------
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  47 ++++-
->  drivers/staging/wilc1000/wilc_wlan.c              | 167 ++++++++--------
->  drivers/staging/wilc1000/wilc_wlan.h              |   3 +-
->  8 files changed, 284 insertions(+), 393 deletions(-)
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 58ce044..4b329d1 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1435,7 +1435,7 @@ static int wil_freq_debugfs_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+ 	struct wireless_dev *wdev = wil->main_ndev->ieee80211_ptr;
+-	u16 freq = wdev->chandef.chan ? wdev->chandef.chan->center_freq : 0;
++	u32 freq = wdev->chandef.chan ? wdev->chandef.chan->center_freq : 0;
+ 
+ 	seq_printf(s, "Freq = %d\n", freq);
+ 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9a85097..73ca446 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -149,7 +149,7 @@ enum ieee80211_channel_flags {
+  */
+ struct ieee80211_channel {
+ 	enum nl80211_band band;
+-	u16 center_freq;
++	u32 center_freq;
+ 	u16 hw_value;
+ 	u32 flags;
+ 	int max_antenna_gain;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7acc16f..0239896 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4338,7 +4338,7 @@ enum nl80211_txrate_gi {
+  * enum nl80211_band - Frequency band
+  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
+- * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 64.80 GHz)
++ * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 69.12 GHz)
+  * @NUM_NL80211_BANDS: number of bands, avoid using this in userspace
+  *	since newer kernel versions may support more bands
+  */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4fc66a1..2f8e01a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3255,7 +3255,7 @@ void regulatory_hint_disconnect(void)
+ 	restore_regulatory_settings(false);
+ }
+ 
+-static bool freq_is_chan_12_13_14(u16 freq)
++static bool freq_is_chan_12_13_14(u32 freq)
+ {
+ 	if (freq == ieee80211_channel_to_frequency(12, NL80211_BAND_2GHZ) ||
+ 	    freq == ieee80211_channel_to_frequency(13, NL80211_BAND_2GHZ) ||
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 7c73510..5e7eec8 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -112,7 +112,7 @@
+ 	} while (0)
+ 
+ #define CHAN_ENTRY __field(enum nl80211_band, band) \
+-		   __field(u16, center_freq)
++		   __field(u32, center_freq)
+ #define CHAN_ASSIGN(chan)					  \
+ 	do {							  \
+ 		if (chan) {					  \
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index e0825a0..a450736 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -88,7 +88,7 @@ int ieee80211_channel_to_frequency(int chan, enum nl80211_band band)
+ 			return 5000 + chan * 5;
+ 		break;
+ 	case NL80211_BAND_60GHZ:
+-		if (chan < 5)
++		if (chan < 7)
+ 			return 56160 + chan * 2160;
+ 		break;
+ 	default:
+@@ -109,7 +109,7 @@ int ieee80211_frequency_to_channel(int freq)
+ 		return (freq - 4000) / 5;
+ 	else if (freq <= 45000) /* DMG band lower limit */
+ 		return (freq - 5000) / 5;
+-	else if (freq >= 58320 && freq <= 64800)
++	else if (freq >= 58320 && freq <= 70200)
+ 		return (freq - 56160) / 2160;
+ 	else
+ 		return 0;
+@@ -1568,7 +1568,7 @@ bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
+ 	}
+ 
+ 	/* 56.16 GHz, channel 1..4 */
+-	if (freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 4) {
++	if (freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 6) {
+ 		if (chandef->width >= NL80211_CHAN_WIDTH_40)
+ 			return false;
+ 
+-- 
+1.9.1
