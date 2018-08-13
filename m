@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:42181 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726633AbeH2X3T (ORCPT
+Received: from mail-pl0-f52.google.com ([209.85.160.52]:34435 "EHLO
+        mail-pl0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730326AbeHNBZB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 19:29:19 -0400
-Received: by mail-io0-f173.google.com with SMTP id n18-v6so5475068ioa.9
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 12:30:59 -0700 (PDT)
+        Mon, 13 Aug 2018 21:25:01 -0400
+Received: by mail-pl0-f52.google.com with SMTP id f6-v6so7492174plo.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 15:40:45 -0700 (PDT)
+Date: Mon, 13 Aug 2018 15:40:41 -0700
+From: Brian Norris <computersforpeace@gmail.com>
+To: Tomasz Kalbarczyk <tkalbar@utexas.edu>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Promiscuous (not monitor) Mode support for ath10k
+Message-ID: <20180813224041.GA165278@ban.mtv.corp.google.com> (sfid-20180814_004104_229692_F89BDEA1)
+References: <CAH9jq_Ow7Gt-m1QZoS3-JOEdU1CkC33S2mCfYz4bHNOMDX+q9A@mail.gmail.com>
 MIME-Version: 1.0
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
- <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
- <1535569548.5215.33.camel@sipsolutions.net> <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
- <1535570007.5215.34.camel@sipsolutions.net>
-In-Reply-To: <1535570007.5215.34.camel@sipsolutions.net>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Wed, 29 Aug 2018 21:30:47 +0200
-Message-ID: <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com> (sfid-20180829_213109_262456_C2BE0786)
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
- to one
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAH9jq_Ow7Gt-m1QZoS3-JOEdU1CkC33S2mCfYz4bHNOMDX+q9A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 9:13 PM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Wed, 2018-08-29 at 21:12 +0200, Lorenzo Bianconi wrote:
->
-> > That has been fixed by Sara's patch since now we add the pad directly
-> > on the head of the
-> > subsequent subframes (not to the tail of the first one). Am I missing something?
->
-> As far as the pad is concerned, yes, but I think the header length also
-> changes?
+On Mon, Aug 06, 2018 at 06:08:46PM -0400, Tomasz Kalbarczyk wrote:
+> Hello,
 
-Ops, maybe I got your point:
-ieee80211_amsdu_realloc_pad() in ieee80211_amsdu_prepare_head() can
-expand the headroom on the first frame
-but if ieee80211_amsdu_realloc_pad() on the second one fails, we do
-not take into account the extra len added on the
-first subframe. Is that what you mean?
+Hi!
 
->
-> I'm too tired now - will think about it again tomorrow.
->
+> I have a QCA6174 and I'm running tcpdump on the wireless interface to
+> listen for packets. I can receive packets addressed directly to the
+> device, but not any other packets on the network.
+> 
+> Does anyone know the status of promiscuous mode support on ath10k?
+> Note that this is different from monitor mode / supported on a larger
+> subset of hardware. Dmesg merely indicates that the device has
+> "entered promiscuous mode" when tcpdump is initiated.
+> 
+> Here is a link to similar discussion regarding the ath9k a few years
+> back: https://marc.info/?l=linux-wireless&m=135936563626791&w=2
 
-ack :)
+This might be relevant:
+
+commit df1404650ccbfeb76a84f301f22316be0d00a864
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed Apr 22 14:40:58 2015 +0200
+
+    mac80211: remove support for IFF_PROMISC
+
+    This support is essentially useless as typically networks are encrypted,
+    frames will be filtered by hardware, and rate scaling will be done with
+    the intended recipient in mind. For real monitoring of the network, the
+    monitor mode support should be used instead.
+
+    Removing it removes a lot of corner cases.
 
 Regards,
-Lorenzo
-
-> johannes
+Brian
