@@ -1,208 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57899 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgr (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:40364 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726037AbeHMHjU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:47 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/24] staging: wilc1000: move hif specific static variables to 'wilc' structure
-Date: Tue, 14 Aug 2018 12:20:03 +0530
-Message-ID: <1534229416-13254-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085102_262914_4C275A56)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 13 Aug 2018 03:39:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+ <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> <5B708025.4090906@broadcom.com>
+In-Reply-To: <5B708025.4090906@broadcom.com>
+From: Kristian Evensen <kristian.evensen@gmail.com>
+Date: Mon, 13 Aug 2018 06:58:35 +0200
+Message-ID: <CAKfDRXg=u_mZ_ZZsA2_A=+E5cPDXsWYB2RVXBJpXHp62zvDoHQ@mail.gmail.com> (sfid-20180813_065903_685857_037BE22C)
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+To: arend.vanspriel@broadcom.com
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid use of static variable and move it in 'wilc' structure related to
-hif and added NULL before accessing hif_workqueue in wilc_enqueue_work().
+Hi Kalle & Arnd,
+On Sun, Aug 12, 2018 at 8:44 PM Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> > So have you tested this and with what devices? For example, does it work
+> > with recently added USB devices?
+>
+> I was looking into this as it looks suspicious to me. From reading the
+> description of this ext_feature flag it seems this is an extention of CQM:
 
-Below variables are moved to 'wilc' struct:
- struct workqueue_struct *hif_workqueue;
- struct mutex hif_deinit_lock;
- struct completion hif_driver_comp;
+Thank you very much for your feedback. My commit message should have
+been more detailed, sorry about that. I have checked that the flag
+works as intended with mt7602-, mt7603- and mt7612-based wifi cards. I
+have not had the opportunity to test with any of the recently added
+USB devices, as I don't have access to any of those.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c     | 43 ++++++++++++++-------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  4 +++
- 2 files changed, 26 insertions(+), 21 deletions(-)
+In order to test the flag, I wrote a small program which subscribes to
+the CQM-multicast group, passes an RSSI threshold-list to the kernel
+and logs the received CQM-events. I then disconnected and connected
+the wifi-antennas of the different cards. My threshold list was {-70,
+-60, -50, -40} and while unscrewing the antenna I received multiple
+below-events. When I attached the antenna again, I received multiple
+above-events. As an example, here is the log when I tested with mt7612
+(singal level when starting was ~-48 dBm):
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 642c314..d5d81843 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -187,9 +187,6 @@ struct join_bss_param {
- 
- static struct host_if_drv *terminated_handle;
- static u8 p2p_listen_state;
--static struct workqueue_struct *hif_workqueue;
--static struct completion hif_driver_comp;
--static struct mutex hif_deinit_lock;
- static struct timer_list periodic_rssi;
- static struct wilc_vif *periodic_rssi_vif;
- 
-@@ -225,7 +222,11 @@ wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
- static int wilc_enqueue_work(struct host_if_msg *msg)
- {
- 	INIT_WORK(&msg->work, msg->fn);
--	if (!hif_workqueue || !queue_work(hif_workqueue, &msg->work))
-+
-+	if (!msg->vif || !msg->vif->wilc || !msg->vif->wilc->hif_workqueue)
-+		return -EINVAL;
-+
-+	if (!queue_work(msg->vif->wilc->hif_workqueue, &msg->work))
- 		return -EINVAL;
- 
- 	return 0;
-@@ -316,7 +317,7 @@ static void handle_set_wfi_drv_handler(struct work_struct *work)
- 	if (ret)
- 		netdev_err(vif->ndev, "Failed to set driver handler\n");
- 
--	complete(&hif_driver_comp);
-+	complete(&vif->wilc->hif_driver_comp);
- 	kfree(buffer);
- 
- free_msg:
-@@ -340,7 +341,7 @@ static void handle_set_operation_mode(struct work_struct *work)
- 				   wilc_get_vif_idx(vif));
- 
- 	if (hif_op_mode->mode == IDLE_MODE)
--		complete(&hif_driver_comp);
-+		complete(&vif->wilc->hif_driver_comp);
- 
- 	if (ret)
- 		netdev_err(vif->ndev, "Failed to set operation mode\n");
-@@ -3454,11 +3455,11 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	vif->obtaining_ip = false;
- 
- 	if (wilc->clients_count == 0) {
--		init_completion(&hif_driver_comp);
--		mutex_init(&hif_deinit_lock);
-+		init_completion(&wilc->hif_driver_comp);
-+		mutex_init(&wilc->hif_deinit_lock);
- 
--		hif_workqueue = create_singlethread_workqueue("WILC_wq");
--		if (!hif_workqueue) {
-+		wilc->hif_workqueue = create_singlethread_workqueue("WILC_wq");
-+		if (!wilc->hif_workqueue) {
- 			netdev_err(vif->ndev, "Failed to create workqueue\n");
- 			kfree(hif_drv);
- 			return -ENOMEM;
-@@ -3502,7 +3503,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 		return -EFAULT;
- 	}
- 
--	mutex_lock(&hif_deinit_lock);
-+	mutex_lock(&vif->wilc->hif_deinit_lock);
- 
- 	terminated_handle = hif_drv;
- 
-@@ -3512,7 +3513,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
- 	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
--	wait_for_completion(&hif_driver_comp);
-+	wait_for_completion(&vif->wilc->hif_driver_comp);
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
- 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
-@@ -3536,14 +3537,14 @@ int wilc_deinit(struct wilc_vif *vif)
- 				wait_for_completion(&msg->work_comp);
- 			kfree(msg);
- 		}
--		destroy_workqueue(hif_workqueue);
-+		destroy_workqueue(vif->wilc->hif_workqueue);
- 	}
- 
- 	kfree(hif_drv);
- 
- 	vif->wilc->clients_count--;
- 	terminated_handle = NULL;
--	mutex_unlock(&hif_deinit_lock);
-+	mutex_unlock(&vif->wilc->hif_deinit_lock);
- 	return result;
- }
- 
-@@ -3596,7 +3597,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	struct host_if_drv *hif_drv;
- 	struct wilc_vif *vif;
- 
--	mutex_lock(&hif_deinit_lock);
-+	mutex_lock(&wilc->hif_deinit_lock);
- 
- 	id = buffer[length - 4];
- 	id |= (buffer[length - 3] << 8);
-@@ -3604,26 +3605,26 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	id |= (buffer[length - 1] << 24);
- 	vif = wilc_get_vif_from_idx(wilc, id);
- 	if (!vif) {
--		mutex_unlock(&hif_deinit_lock);
-+		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
- 
- 	hif_drv = vif->hif_drv;
- 
- 	if (!hif_drv || hif_drv == terminated_handle) {
--		mutex_unlock(&hif_deinit_lock);
-+		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
- 
- 	if (!hif_drv->usr_conn_req.conn_result) {
- 		netdev_err(vif->ndev, "%s: conn_result is NULL\n", __func__);
--		mutex_unlock(&hif_deinit_lock);
-+		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
- 
- 	msg = wilc_alloc_work(vif, handle_rcvd_gnrl_async_info, false);
- 	if (IS_ERR(msg)) {
--		mutex_unlock(&hif_deinit_lock);
-+		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
- 
-@@ -3631,7 +3632,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg->body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
- 	if (!msg->body.async_info.buffer) {
- 		kfree(msg);
--		mutex_unlock(&hif_deinit_lock);
-+		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
- 
-@@ -3642,7 +3643,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 		kfree(msg);
- 	}
- 
--	mutex_unlock(&hif_deinit_lock);
-+	mutex_unlock(&wilc->hif_deinit_lock);
- }
- 
- void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length)
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index ee8eda7..eb00e42 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -173,6 +173,10 @@ struct wilc {
- 	struct rf_info dummy_statistics;
- 	bool enable_ps;
- 	int clients_count;
-+	struct workqueue_struct *hif_workqueue;
-+	/* deinitialization lock */
-+	struct mutex hif_deinit_lock;
-+	struct completion hif_driver_comp;
- };
- 
- struct wilc_wfi_mon_priv {
--- 
-2.7.4
+Requested nl80211 generic netlink id
+nl80211 has generic netlink id: 23
+mlme ID is 5
+Added socket to mlme group
+Sent NL80211_CMD_SET_CQM
+No error
+Wifi (idx 18) went below threshold. RSSI -52
+Wifi (idx 18) went above threshold. RSSI -49
+Wifi (idx 18) went below threshold. RSSI -52
+Wifi (idx 18) went below threshold. RSSI -62
+Wifi (idx 18) went above threshold. RSSI -59
+Wifi (idx 18) went above threshold. RSSI -49
+
+Based on how I interpret the output and my understanding of how CQM +
+RSSI_LIST works, this output shows that mt76 works fine with
+NL80211_EXT_FEATURE_CQM_RSSI_LIST (at least for my cards). The list
+was interpreted and handled correctly, as I received events when the
+RSSI passed different thresholds in my list (-50, -60).
+
+BR,
+Kristian
