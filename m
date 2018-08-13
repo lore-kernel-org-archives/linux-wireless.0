@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:64988 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726471AbeHXNFV (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59202 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728684AbeHMPWa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 09:05:21 -0400
-Subject: Re: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in
- tcp_process()
-To: Ajay Singh <ajay.kathat@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com>
- <c8362c8b-acb3-d5c3-8d47-be18424b8a1e@microchip.com>
- <20180823160315.168c49e5@ajaysk-VirtualBox>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com> (sfid-20180824_113135_980423_396AD0D4)
-Date: Fri, 24 Aug 2018 12:31:28 +0300
+        Mon, 13 Aug 2018 11:22:30 -0400
+Received: from mail-it0-f71.google.com ([209.85.214.71])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fpC90-0003s8-Qh
+        for linux-wireless@vger.kernel.org; Mon, 13 Aug 2018 12:40:22 +0000
+Received: by mail-it0-f71.google.com with SMTP id m185-v6so9149772itm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 05:40:22 -0700 (PDT)
+Date: Mon, 13 Aug 2018 07:40:19 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: bkil <bkil.hu+Aq@gmail.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] wireless-regdb: update rules for Hungary (HU) on
+ 2.4/5/60G, 5725-5875MHz
+Message-ID: <20180813124019.GA4063@ubuntu-xps13> (sfid-20180813_144054_033238_96557FA9)
+References: <CAPuHQ=EWtsOs2naY2pLx9D-JJbDr1kc8sisd-JNHiEekJ5ijDQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180823160315.168c49e5@ajaysk-VirtualBox>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAPuHQ=EWtsOs2naY2pLx9D-JJbDr1kc8sisd-JNHiEekJ5ijDQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jun 30, 2018 at 10:40:34PM +0200, bkil wrote:
+> * 2400-2483.5M: extend bounds
+> * 5150-5250M: extend bounds, add NO-OUTDOOR, no TPC so +3dB
+> * 5250-5350M: extend bounds, add NO-OUTDOOR
+> * 5470-5725M: extend bounds
+> * 5725-5875M: introduce, as EU SRD provisions have been implemented
+> * 57-66G: add NO-OUTDOOR
+> 
+> Freely available online references have been added hosted by the regulatory
+> body in Hungary, the National Media and Infocommunications Authority.
+> 
+> To refer to a specific section, you can grep for the frequency in question.
+> 
+> Translation key:
+> "Csak beltéri" / "Épületen belüli használatra korlátozott" = indoor only;
+> "Kültéri és beltéri" = both indoor and outdoor;
+> "Nem működő TPC esetén a maximális teljesítményjellemzők 3 dB-lel
+> csökkennek." = reduce max power specs by 3dB in case of no TPC;
+> "Rögzített kültéri telepítés nem megengedett" = no fixed outdoor install
+> 
+> Signed-off-by: bkil <b.K.il.h.u+tigbuh@gmail.com>
 
-
-On 23.08.2018 13:33, Ajay Singh wrote:
-> On Thu, 23 Aug 2018 11:12:08 +0300
-> Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> 
->> On 14.08.2018 09:50, Ajay Singh wrote:
->>> Cleanup patch to avoid line over 80 chars issue reported by
->>> checkpatch.pl script.
->>>
->>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
->>> ---
->>>  drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
->>>  1 file changed, 6 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c
->>> b/drivers/staging/wilc1000/wilc_wlan.c index 041c9dd..f0743d9 100644
->>> --- a/drivers/staging/wilc1000/wilc_wlan.c
->>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
->>> @@ -137,6 +137,11 @@ static inline int add_tcp_pending_ack(struct
->>> wilc_vif *vif, u32 ack, return 0;
->>>  }
->>>  
->>> +static inline void clear_tcp_session_txq(struct wilc_vif *vif, int
->>> index) +{
->>> +	vif->ack_filter.pending_acks_info[index].txqe = NULL;
->>> +}
->>> +  
->>
->> This seems useless to me...
-> 
-> Sorry, this point is not fully clear to me.
-> 
-> Did you mean setting of 'NULL' to 'pending_acks_info[index].txqe' is
-> not required?
-> 
-
-No, having a new function that sets a variable just to avoid line over 80
-warning.
-
-> 
->>
->>>  static inline void tcp_process(struct net_device *dev, struct
->>> txq_entry_t *tqe) {
->>>  	void *buffer = tqe->buffer;
->>> @@ -670,7 +675,7 @@ int wilc_wlan_handle_txq(struct net_device
->>> *dev, u32 *txq_count) tqe->tx_complete_func(tqe->priv, tqe->status);
->>>  		if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK &&
->>>  		    tqe->tcp_pending_ack_idx < MAX_PENDING_ACKS)
->>> -
->>> vif->ack_filter.pending_acks_info[tqe->tcp_pending_ack_idx].txqe =
->>> NULL;
->>> +			clear_tcp_session_txq(vif,
->>> tqe->tcp_pending_ack_idx); kfree(tqe);
->>>  	} while (--entries);
->>>  
->>>   
-> 
-> 
+Applied, thanks!
