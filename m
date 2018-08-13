@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45664 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727633AbeHaODN (ORCPT
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:34989 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730273AbeHMT6G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:03:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:56:05 +0300
-Message-Id: <20180831095614.14099-8-luca@coelho.fi> (sfid-20180831_115638_531304_CCDD817D)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: mvm: report RU offset is known
+        Mon, 13 Aug 2018 15:58:06 -0400
+Received: by mail-lf1-f67.google.com with SMTP id f18-v6so11802853lfc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 10:14:59 -0700 (PDT)
+Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com. [209.85.208.179])
+        by smtp.gmail.com with ESMTPSA id o74-v6sm3429928lfg.31.2018.08.13.10.14.56
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 13 Aug 2018 10:14:56 -0700 (PDT)
+Received: by mail-lj1-f179.google.com with SMTP id p10-v6so13208808ljg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 10:14:56 -0700 (PDT)
+MIME-Version: 1.0
+References: <20180810233948.144792-1-briannorris@chromium.org> <5B6F2A47.7070502@broadcom.com>
+In-Reply-To: <5B6F2A47.7070502@broadcom.com>
+From: Brian Norris <briannorris@chromium.org>
+Date: Mon, 13 Aug 2018 10:14:44 -0700
+Message-ID: <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com> (sfid-20180813_191502_916279_94AE7BC4)
+Subject: Re: [PATCH] ath10k: retrieve MAC address from firmware if provided
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, govinds@codeaurora.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Aug 11, 2018 at 11:26 AM Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+> On 8/11/2018 1:39 AM, Brian Norris wrote:
+> > Devices may provide their own MAC address via system firmware (e.g.,
+>
+> You got me confused by using just "firmware" in the subject.
 
-We already report the RU offset, so we'd better also
-report that we know the value.
+Yeah...I started by writing this patch with device tree specifically
+(of_get_mac_address()), and then later found that there were generic
+"device" helpers for this, which can assist with other sorts of
+firmware nodes. It was easier to put a name on a device tree patch
+than on a "device" patch. I suppose "system firmware" might be a
+better description?
 
-Fixes: e5721e3f770f ("iwlwifi: mvm: add radiotap data for HE")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > device tree), especially in the case where the device doesn't have a
+> > useful EEPROM on which to store its MAC address (e.g., for integrated
+> > Wifi).
+> >
+> > Use the generic device helper to retrieve the MAC address, and (if
+> > present) honor it above the MAC address advertised by the card.
+>
+> But this put me back on track ;-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 4400e69a39b6..89b4b882ef80 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1102,7 +1102,8 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			le16_encode_bits(offs,
- 					 IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
- 		he->data2 |=
--			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN);
-+			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN |
-+				    IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET_KNOWN);
- 		if (he_phy_data & IWL_RX_HE_PHY_RU_ALLOC_SEC80)
- 			he->data2 |=
- 				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC);
--- 
-2.18.0
+Let me know if you have a better way to clarify. I can resend with a
+slightly modified subject (s/firmware/system firmware/), or let Kalle
+do it, if that's the only thing to change.
+
+Brian
