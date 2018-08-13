@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51556 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726060AbeHTNpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Aug 2018 09:45:19 -0400
-Date: Mon, 20 Aug 2018 12:27:10 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from lorien.comfychair.org ([173.8.144.98]:65145 "EHLO
+        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728772AbeHMX25 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Aug 2018 19:28:57 -0400
+Date: Mon, 13 Aug 2018 13:41:32 -0700
+From: Danek Duvall <duvall@comfychair.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Grzegorz Duszy??ski <gfduszynski@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] cfg80211: remove division by size of sizeof(struct
- ieee80211_wmm_rule)
-Message-ID: <20180820102710.GA2760@redhat.com> (sfid-20180820_123018_771668_891B04D5)
-References: <20180820073705.9683-1-johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: help understanding HT capabilities bits
+Message-ID: <20180813204131.GA10207@lorien.comfychair.org> (sfid-20180813_224511_544271_9A01FBD4)
+References: <20180726234329.GA28336@lorien.comfychair.org>
+ <1534155955.3093.4.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180820073705.9683-1-johannes@sipsolutions.net>
+In-Reply-To: <1534155955.3093.4.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 09:37:05AM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Aug 13, 2018 at 12:25:55PM +0200, Johannes Berg wrote:
+
+> On Thu, 2018-07-26 at 16:43 -0700, Danek Duvall wrote:
+> > I'm writing a library using the nl80211 family to, well, do basically what
+> > iw does (I want a reusable Golang-native implementation, which saves me
+> > from parsing iw's output).  I have most of the bits that I need, but I'd
+> > like to fill out more of the library and make it useful to others.
 > 
-> Pointer arithmetic already adjusts by the size of the struct,
-> so the sizeof() calculation is wrong. This is basically the
-> same as Colin King's patch for similar code in the iwlwifi
-> driver.
+> Yes please, don't parse iw output :-)
+
+Believe me, I'm trying to get away from that as fast as possible.  :)
+
+> [ ... ]
+> > Otherwise, how should I interpret this?  I could simply leave it as a 0-3
+> > value and let consumers handle the interpretation, but I'd like to be a bit
+> > friendlier than that, if I can.
 > 
-> Fixes: 230ebaa189af ("cfg80211: read wmm rules from regulatory database")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/wireless/reg.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+> They're just the (default) state - disabled, static, dynamic (and
+> reserved).
 > 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 4fc66a117b7d..283902974fbf 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -452,8 +452,7 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
->  			continue;
->  
->  		regd->reg_rules[i].wmm_rule = d_wmm +
-> -			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
-> -			sizeof(struct ieee80211_wmm_rule);
-> +			(src_regd->reg_rules[i].wmm_rule - s_wmm);
->  	}
->  	return regd;
->  }
+> However, it really is just the default - the (non-AP) device may change
+> it on the fly using action frames.
+> 
+> It's not going to be very useful to userspace consumers, I think, since
+> it doesn't reflect the *current* state.
 
-As side note those pointer aritmetics related with rule->wmm_rule is
-really involuted in various places in reg.c . Seems would be better to
-just make wmm_rule part of iee80211_reg_rule structure like this:
+Okay, I think I see: it reflects neither the current state of the device,
+nor the capabilities of the device, but the initial, default state of the
+device (at power-on, presumably?).  Presumably if it doesn't represent the
+current state, then it also never changes.  I don't understand in what
+circumstances that's useful.
 
-struct ieee80211_reg_rule {
-        struct ieee80211_freq_range freq_range;
-        struct ieee80211_power_rule power_rule;
-        struct ieee80211_wmm_rule wmm_rule;
-        u32 flags;
-        u32 dfs_cac_ms;
-};
+I also think I now see that the current SMPS state comes from the SMPS_MODE
+attribute, and the device capability comes from the FEATURE_STATIC_SMPS and
+FEATURE_DYNAMIC_SMPS bits of the FEATURE_FLAGS attribute.  Is that correct?
 
-and use a flag to intdicate wmm_rule is valid. There should be no
-big memory overhead sice there are only few reg_rules for the regdomain.
-Or I'm wrong?
+Do any of the other fields in HT_CAPA (or VHT_CAPA) have the same kind of
+meaning as the SMPS bits?  For instance, if the HT20/40 bit is off, then
+can we say anything about whether the device supports 40MHz channels (as
+I've been interpreting it)?  Or is it also some sort of default value (and
+if so, where would I go looking for that particular device capability)?  Is
+the answer to that question related to HT_CAPABILITY_MASK?  Basically I'm
+wondering if I should ignore HT_CAPA for my purposes (which are to choose a
+suitable radio on which to build an AP stack) and pull the data from some
+other attributes.
 
-Regards
-Stanislaw
+Thanks,
+Danek
