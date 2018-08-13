@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45638 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727633AbeHaODK (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:36965 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728540AbeHMVMk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:03:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:56:02 +0300
-Message-Id: <20180831095614.14099-5-luca@coelho.fi> (sfid-20180831_115635_854119_AF86926F)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 04/16] iwlwifi: RX API: remove unnecessary anonymous struct
+        Mon, 13 Aug 2018 17:12:40 -0400
+Received: by mail-wr1-f67.google.com with SMTP id u12-v6so15097262wrr.4
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 11:29:17 -0700 (PDT)
+Subject: Re: [PATCH] ath10k: retrieve MAC address from firmware if provided
+To: Brian Norris <briannorris@chromium.org>
+References: <20180810233948.144792-1-briannorris@chromium.org>
+ <5B6F2A47.7070502@broadcom.com>
+ <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, govinds@codeaurora.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B71CDFB.60408@broadcom.com> (sfid-20180813_203030_235574_24B660E6)
+Date: Mon, 13 Aug 2018 20:29:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 8/13/2018 7:14 PM, Brian Norris wrote:
+> On Sat, Aug 11, 2018 at 11:26 AM Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>
+>> On 8/11/2018 1:39 AM, Brian Norris wrote:
+>>> Devices may provide their own MAC address via system firmware (e.g.,
+>>
+>> You got me confused by using just "firmware" in the subject.
+>
+> Yeah...I started by writing this patch with device tree specifically
+> (of_get_mac_address()), and then later found that there were generic
+> "device" helpers for this, which can assist with other sorts of
+> firmware nodes. It was easier to put a name on a device tree patch
+> than on a "device" patch. I suppose "system firmware" might be a
+> better description?
+>
+>>> device tree), especially in the case where the device doesn't have a
+>>> useful EEPROM on which to store its MAC address (e.g., for integrated
+>>> Wifi).
+>>>
+>>> Use the generic device helper to retrieve the MAC address, and (if
+>>> present) honor it above the MAC address advertised by the card.
+>>
+>> But this put me back on track ;-)
+>
+> Let me know if you have a better way to clarify. I can resend with a
+> slightly modified subject (s/firmware/system firmware/), or let Kalle
+> do it, if that's the only thing to change.
 
-There's no value in having an anonymous struct for holding
-a few fields, remove it.
+"system firmware" substitution works for me.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 28 +++++++++----------
- 1 file changed, 13 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index 2078ef425f8c..415b8842b426 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -601,23 +601,21 @@ struct iwl_rx_mpdu_desc {
- 	 */
- 	u8 mac_phy_idx;
- 	/* DW4 - carries csum data only when rpa_en == 1 */
--	struct {
-+	/**
-+	 * @raw_csum: raw checksum (alledgedly unreliable)
-+	 */
-+	__le16 raw_csum;
-+
-+	union {
-+		/**
-+		 * @l3l4_flags: &enum iwl_rx_l3l4_flags
-+		 */
-+		__le16 l3l4_flags;
-+
- 		/**
--		 * @raw_csum: raw checksum (alledgedly unreliable)
-+		 * @sigb_common2: for HE sniffer, HE-SIG-B common part 2
- 		 */
--		__le16 raw_csum;
--
--		union {
--			/**
--			 * @l3l4_flags: &enum iwl_rx_l3l4_flags
--			 */
--			__le16 l3l4_flags;
--
--			/**
--			 * @sigb_common2: for HE sniffer, HE-SIG-B common part 2
--			 */
--			__le16 sigb_common2;
--		};
-+		__le16 sigb_common2;
- 	};
- 	/* DW5 */
- 	/**
--- 
-2.18.0
+Regards,
+Arend
