@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:40344 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726399AbeHSUk4 (ORCPT
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34073 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728410AbeHMPVx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Aug 2018 16:40:56 -0400
-Received: by mail-oi0-f53.google.com with SMTP id w126-v6so21991571oie.7
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2018 10:28:44 -0700 (PDT)
+        Mon, 13 Aug 2018 11:21:53 -0400
+Received: by mail-wr1-f65.google.com with SMTP id c13-v6so14165540wrt.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 05:39:45 -0700 (PDT)
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+ <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> <5B708025.4090906@broadcom.com>
+ <CAJ0CqmVZNAnHwnU4YqRRv7R8DyHi2MiFJr1bvQDPVszUU5Ez3g@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, kristian.evensen@gmail.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B717C0F.5060302@broadcom.com> (sfid-20180813_144053_467634_4F7EBCE6)
+Date: Mon, 13 Aug 2018 14:39:43 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAD7cUuC6v5y_OH0CnhODk6c-6Fi2C+m0cdA2_0u=7XYA7KmgOA@mail.gmail.com>
-References: <CAD7cUuBrMscCMzLHCdxaAf+m9XHLr6XWD+FmZqNSdAuYnKCZfw@mail.gmail.com>
- <20180813084123.GA18180@redhat.com> <87tvnycw2b.fsf@purkki.adurom.net>
- <CAD7cUuD8b_b3riHPTEXROW64HCF8S0F2_XHgikz1J_seq-QxXQ@mail.gmail.com>
- <20180814051448.GA2400@redhat.com> <CAD7cUuC6v5y_OH0CnhODk6c-6Fi2C+m0cdA2_0u=7XYA7KmgOA@mail.gmail.com>
-From: =?UTF-8?Q?Grzegorz_Duszy=C5=84ski?= <gfduszynski@gmail.com>
-Date: Sun, 19 Aug 2018 19:28:42 +0200
-Message-ID: <CAD7cUuC2V50eRE8erOusxgi_XmbSrR39sx4an7RvOehB+jAvzg@mail.gmail.com> (sfid-20180819_192846_777404_AFC18989)
-Subject: Re: Cpu stall caused by hostapd running two interfaces
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAJ0CqmVZNAnHwnU4YqRRv7R8DyHi2MiFJr1bvQDPVszUU5Ez3g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dmesg for 4.18.1
+On 8/13/2018 12:55 PM, Lorenzo Bianconi wrote:
+>> On 8/12/2018 8:14 PM, Kalle Valo wrote:
+>>> Kristian Evensen <kristian.evensen@gmail.com> writes:
+>>>
+>>>> Enable the use of CQM with mt76-devices.
+>>>>
+>>>> Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
+>>>> ---
+>>>>    drivers/net/wireless/mediatek/mt76/mac80211.c | 2 ++
+>>>>    1 file changed, 2 insertions(+)
+>>>>
+>>>> diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+>>>> index 029d54bc..3eb328ff 100644
+>>>> --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
+>>>> +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+>>>> @@ -305,6 +305,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+>>>>
+>>>>       wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+>>>>
+>>>> +    wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+>>>
+>>> So have you tested this and with what devices? For example, does it work
+>>> with recently added USB devices?
+>>
+>> I was looking into this as it looks suspicious to me. From reading the
+>> description of this ext_feature flag it seems this is an extention of CQM:
+>>
+>> """
+>>    * @NL80211_EXT_FEATURE_CQM_RSSI_LIST: With this driver the
+>>    *     %NL80211_ATTR_CQM_RSSI_THOLD attribute accepts a list of zero or more
+>>    *     RSSI threshold values to monitor rather than exactly one threshold.
+>> """
+>>
+>> Also looking at mt76x2_bss_info_changed() it does not handle
+>> BSS_CHANGED_CQM so I doubt it has support for it (yet). The driver does
+>> not use IEEE80211_VIF_SUPPORTS_CQM_RSSI which is a requirement for it.
+>>
+>> Regards,
+>> Arend
+>>
+>
+> According to my understanding (please correct me if I am wrong)
+> BSS_CHANGED_CQM is only needed if CQM_RSSI is handled
+> by the driver/fw, while if it is not set mac80211 will take care of that
+> in ieee80211_handle_beacon_sig routine.
 
-https://pastebin.com/uPqRvU0F
+Yeah. That explains it. Seems like mac80211 could actually set the 
+NL80211_EXT_FEATURE_CQM_RSSI_LIST flag is the driver does not set 
+IEEE80211_VIF_SUPPORTS_CQM_RSSI. That way all mac80211 drivers support 
+the list. Just a problem as the ext_feature is not a per-vif flag.
 
-2018-08-19 18:09 GMT+02:00 Grzegorz Duszy=C5=84ski <gfduszynski@gmail.com>:
-> Hi,
->
-> I've updated the kernel to 4.18.1 and then followed the instructions
-> (I've checked and 0x6e did not changed)
-> Here is the gdb output:
->
-> (gdb) l *(ieee80211_regulatory_limit_wmm_params+0x6e)
-> 0x110e is in ieee80211_regulatory_limit_wmm_params (net/mac80211/util.c:1=
-151).
-> 1146
-> 1147            if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
-> 1148                    wmm_ac =3D &rrule->wmm_rule->ap[ac];
-> 1149            else
-> 1150                    wmm_ac =3D &rrule->wmm_rule->client[ac];
-> 1151            qparam->cw_min =3D max_t(u16, qparam->cw_min, wmm_ac->cw_=
-min);
-> 1152            qparam->cw_max =3D max_t(u16, qparam->cw_max, wmm_ac->cw_=
-max);
-> 1153            qparam->aifs =3D max_t(u8, qparam->aifs, wmm_ac->aifsn);
-> 1154            qparam->txop =3D !qparam->txop ? wmm_ac->cot / 32 :
-> 1155                    min_t(u16, qparam->txop, wmm_ac->cot / 32);
-> (gdb)
->
-> 2018-08-14 7:14 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
->> On Mon, Aug 13, 2018 at 08:48:17PM +0200, Grzegorz Duszy=C5=84ski wrote:
->>> Can I help you somehow with this ?
->>
->> Enable CONFIG_DEBUG_INFO=3Dy in .config if not done already.
->> Then do:
->>
->> make net/mac80211/util.o
->> gdb net/mac80211/util.o
->> l *(ieee80211_regulatory_limit_wmm_params+0x6e)
->>
->> and provide output of gdb l command, this should show code
->> line number where oops occurs.
->>
->> Thanks
->> Stanislaw
+Regards,
+Arend
