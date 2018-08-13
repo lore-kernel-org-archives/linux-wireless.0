@@ -1,36 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57692 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727885AbeHNOjT (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:23295 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726345AbeHMHRN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 10:39:19 -0400
-Subject: Re: [PATCH] mac80211: allow station search on AP/VLANs
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org>
- <1534246103.3547.23.camel@sipsolutions.net>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org> (sfid-20180814_135231_876176_FD8C8C3D)
-Date: Tue, 14 Aug 2018 17:22:25 +0530
+        Mon, 13 Aug 2018 03:17:13 -0400
+Date: Mon, 13 Aug 2018 10:06:35 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 1/5] staging: wilc1000: avoid arrray of
+ 'wilc_debugfs_info_t' type
+Message-ID: <20180813100635.356583ae@ajaysk-VirtualBox> (sfid-20180813_063649_009239_1BD4D393)
+In-Reply-To: <20180812152421.GB30273@kroah.com>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+        <1534049265-5600-2-git-send-email-ajay.kathat@microchip.com>
+        <20180812112930.GB25209@kroah.com>
+        <20180812171829.1187a0cd@ajaysk-VirtualBox>
+        <20180812152421.GB30273@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <1534246103.3547.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/14/2018 4:58 PM, Johannes Berg wrote:
+Hi Greg,
 
-> On Mon, 2018-07-30 at 11:50 +0530, Manikanta Pubbisetty wrote:
->> When mac80211 receives a packet, we interate over the list of
->> active interfaces to find the station(which transmitted the packet).
->> Currently, station search is not allowed on AP/VLAN interface; since
->> stations can also get mapped to AP/VLAN interfaces, they are worth
->> considering for station search.
-> I don't see how this makes sense. We use sta_info_get_bss() later, so
-> any AP/AP_VLAN would be OK, so we don't need to try it twice for
-> AP_VLAN?
+On Sun, 12 Aug 2018 17:24:21 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-AP/VLANs are skipped currently, we don't even get to sta_info_get_bss() 
-if the iftype is AP/VLAN. No?
+> On Sun, Aug 12, 2018 at 05:18:29PM +0530, Ajay Singh wrote:
+> > Hi Greg,
+> > 
+> > On Sun, 12 Aug 2018 13:29:30 +0200
+> > Greg KH <gregkh@linuxfoundation.org> wrote:
+> > 
+> > > On Sun, Aug 12, 2018 at 10:17:41AM +0530, Ajay Singh wrote:
+> > > > Refactor code by removing array of 'wilc_debugfs_info_t' type
+> > > > and use single variable to store 'wilc_debugfs_info_t' struct
+> > > > value.
+> > > > 
+> > > > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > > > ---
+> > > >  drivers/staging/wilc1000/wilc_debugfs.c | 26
+> > > > +++++++++----------------- 1 file changed, 9 insertions(+), 17
+> > > > deletions(-)
+> > > > 
+> > > > diff --git a/drivers/staging/wilc1000/wilc_debugfs.c
+> > > > b/drivers/staging/wilc1000/wilc_debugfs.c index edc7287..c5f67c9
+> > > > 100644 --- a/drivers/staging/wilc1000/wilc_debugfs.c
+> > > > +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+> > > > @@ -78,29 +78,21 @@ struct wilc_debugfs_info_t {
+> > > >  	const struct file_operations fops;
+> > > >  };
+> > > >  
+> > > > -static struct wilc_debugfs_info_t debugfs_info[] = {
+> > > > -	{
+> > > > -		"wilc_debug_level",
+> > > > -		0666,
+> > > > -		(DEBUG | ERR),
+> > > > -		FOPS(NULL, wilc_debug_level_read,
+> > > > wilc_debug_level_write, NULL),
+> > > > -	},
+> > > > +static struct wilc_debugfs_info_t debugfs_info = {
+> > > > +	"wilc_debug_level",
+> > > > +	0666,
+> > > > +	(DEBUG | ERR),
+> > > > +	FOPS(NULL, wilc_debug_level_read,
+> > > > wilc_debug_level_write, NULL), };
+> > > >  
+> > > >  int wilc_debugfs_init(void)
+> > > >  {
+> > > > -	int i;
+> > > > -	struct wilc_debugfs_info_t *info;
+> > > > +	struct wilc_debugfs_info_t *info = &debugfs_info;
+> > > >  
+> > > >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+> > > > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+> > > > -		info = &debugfs_info[i];
+> > > > -		debugfs_create_file(info->name,
+> > > > -				    info->perm,
+> > > > -				    wilc_dir,
+> > > > -				    &info->data,
+> > > > -				    &info->fops);
+> > > > -	}
+> > > > +	debugfs_create_file(info->name, info->perm, wilc_dir,
+> > > > &info->data,
+> > > > +			    &info->fops);
+> > > > +
+> > > 
+> > > Why go through the extra step here in changing this variable from
+> > > an array to a single value and not just make the call to
+> > > debugfs_create_file() directly with the individual values like
+> > > you do in patch 3?  It feels like this step isn't needed at all
+> > > here, right?
+> > > 
+> > > What am I missing?
+> > 
+> > Actually, while calling debugfs_create_file() it also passed the
+> > "info->data", "info->perm" which was maintained in a static
+> > variable. So to have the changes in multiple patches, I first tried
+> > by removing the dependency of array and later changed the
+> > individual parameters for this debugfs_create_file().
+> 
+> But you don't need/want that here anyway, it would have been simpler
+> to just do it correct in one patch.  That would have also been easier
+> to review :)
+> 
+> But for now, just delete this file as it is not used at all.  Want me
+> to do it for you?
+> 
 
-Manikanta
+Thanks for giving your time and support.
+
+I will make the changes and submit the patch to delete wilc_debugfs.c
+file. 
+
+Regards,
+Ajay
