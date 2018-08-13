@@ -1,37 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f174.google.com ([209.85.216.174]:38159 "EHLO
-        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727067AbeH1OXh (ORCPT
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:40872 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730326AbeHNBYS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 10:23:37 -0400
-Received: by mail-qt0-f174.google.com with SMTP id x7-v6so1039252qtk.5
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 03:32:37 -0700 (PDT)
+        Mon, 13 Aug 2018 21:24:18 -0400
+Received: by mail-pf1-f194.google.com with SMTP id e13-v6so8318809pff.7
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 15:40:02 -0700 (PDT)
+From: Suren Baghdasaryan <surenb@google.com>
+Cc: security@kernel.org, kdeus@google.com, surenb@google.com,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/1] NFC: Fix possible memory corruption when handling SHDLC I-Frame commands
+Date: Mon, 13 Aug 2018 15:39:08 -0700
+Message-Id: <20180813223910.26276-1-surenb@google.com> (sfid-20180814_004011_887275_7E164D8B)
 MIME-Version: 1.0
-From: Jukka Pirinen <jukka.pirinen@gmail.com>
-Date: Tue, 28 Aug 2018 13:32:25 +0300
-Message-ID: <CADyz9cHb+T3dTfQGShs3oHiZagQDdJP8LRKwmWPzp1fD_EPxag@mail.gmail.com> (sfid-20180828_123240_499444_11E3B386)
-Subject: wireless-regdb: Update regulatory rules for Finland (FI) on 5GHz (SRD devices)
-To: seth.forshee@canonical.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Viestint=C3=A4virasto 15 AM/2018 M
+When handling SHDLC I-Frame commands "pipe" field used for indexing
+into an array should be checked before usage. If left unchecked it
+might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
 
-Section 10 Non-specific short range devices
-https://www.finlex.fi/data/normit/32670/Regulation_15AM.pdf
+Malformed NFC HCI frames could be injected by a malicious NFC device
+communicating with the device being attacked (remote attack vector),
+or even by an attacker with physical access to the I2C bus such that
+they could influence the data transfers on that bus (local attack vector).
+skb->data is controlled by the attacker and has only been sanitized in
+the most trivial ways (CRC check), therefore we can consider the
+create_info struct and all of its members to tainted. 'create_info->pipe'
+with max value of 255 (uint8) is used to take an offset of the
+hdev->pipes array of 127 elements which can lead to OOB write.
 
+Suggested-by: Kevin Deus <kdeus@google.com>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+---
+ net/nfc/hci/core.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 8cf7dee..7abb064 100644
---- a/db.txt
-+++ b/db.txt
-@@ -460,6 +460,8 @@ country FI: DFS-ETSI
-        (5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=3DETSI
-        (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=3DETSI
-        (5470 - 5725 @ 160), (27), DFS, wmmrule=3DETSI
-+        # short range devices (ETSI EN 300 440-1)
-+        (5725 - 5875 @ 80), (25 mW)
-        # 60 GHz band channels 1-4, ref: Etsi En 302 567
-        (57000 - 66000 @ 2160), (40)
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index ac8030c4bcf8..19cb2e473ea6 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -209,6 +209,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+ 		}
+ 		create_info = (struct hci_create_pipe_resp *)skb->data;
+ 
++		if (create_info->pipe >= NFC_HCI_MAX_PIPES) {
++			status = NFC_HCI_ANY_E_NOK;
++			goto exit;
++		}
++
+ 		/* Save the new created pipe and bind with local gate,
+ 		 * the description for skb->data[3] is destination gate id
+ 		 * but since we received this cmd from host controller, we
+@@ -232,6 +237,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+ 		}
+ 		delete_info = (struct hci_delete_pipe_noti *)skb->data;
+ 
++		if (delete_info->pipe >= NFC_HCI_MAX_PIPES) {
++			status = NFC_HCI_ANY_E_NOK;
++			goto exit;
++		}
++
+ 		hdev->pipes[delete_info->pipe].gate = NFC_HCI_INVALID_GATE;
+ 		hdev->pipes[delete_info->pipe].dest_host = NFC_HCI_INVALID_HOST;
+ 		break;
+-- 
+2.18.0.597.ga71716f1ad-goog
