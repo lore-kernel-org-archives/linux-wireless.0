@@ -1,131 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39808 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51656 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727611AbeHOMSJ (ORCPT
+        with ESMTP id S1730203AbeHNB6M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 08:18:09 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, briannorris@chromium.org,
-        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        andy.gross@linaro.org, devicetree@vger.kernel.org
+        Mon, 13 Aug 2018 21:58:12 -0400
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v5 0/6] *** Add support for wifi QMI client handshakes *** 
-Date: Wed, 15 Aug 2018 14:56:31 +0530
-Message-Id: <20180815092637.11455-1-govinds@codeaurora.org> (sfid-20180815_112649_457203_61E547F5)
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [RFC 2/3] mac80211: pause txq transmission on negative airtime deficit
+Date: Mon, 13 Aug 2018 16:13:30 -0700
+Message-Id: <1534202011-13101-3-git-send-email-rmanohar@codeaurora.org> (sfid-20180814_011423_037932_DCCE050C)
+In-Reply-To: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
+References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add QMI client handshakes for Q6 integrated WLAN connectivity subsystem.
-This module is responsible for communicating WLAN control messages to FW
-over QMI interface. This patch series enables the qmi handshakes required for
-WCN3990 chipset.
+Airtime fairness prioritizes txqs and picks high priority txq. Once
+a txq is selected for transmission by next_txq(), dequeue routine is
+not preventing over downloading packets. i.e the driver is still
+allowed to dequeue frames from txq even when its fairness deficit
+goes negative. This is also causing inefficient fq-codel of mac80211
+when the driver/firmware is maintaining another set of data queues.
+To address this problem, pause txq transmission when given txq's
+was already served for the assigned quantum and resume the transmission
+upon prioritization.
 
-QUALCOMM MSM Interface(QMI) provides the control interface between
-components running b/w remote processors with underlying transport layer
-based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+---
+ net/mac80211/debugfs_sta.c | 7 ++++---
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/sta_info.c    | 9 +++++++++
+ net/mac80211/tx.c          | 9 ++++++++-
+ 4 files changed, 22 insertions(+), 4 deletions(-)
 
-QMI client driver implementation is based on qmi framework https://lwn.net/Articles/729924/.
-
-Below is the sequence of qmi handshake.
-
-       QMI CLIENT(APPS)                                         QMI SERVER(FW in Q6)
-
-                         <------wlan service discoverd----
-
-                       -----connect to wlam qmi service----->
-
-                       ------------wlan info request----->
-
-                       <------------wlan info resp------------
-
-                       ------------msa info req-------->
-
-                     <------------msa info resp------------
-
-                     ------------msa ready req-------->
-
-                     <------------msa ready resp------------
-
-                     <------------msa ready indication-------
-
-                     ------------capability req------->
-
-                    <------------capability resp------------
-
-                    ------------qmi bdf req--------->
-
-                     <------------qmi bdf resp------------
-
-                      ------------qmi cal trigger------->
-
-                  <------------ QMI FW ready indication-------
-
-WLAN fw is running in modem Q6 dsp as user PD(protection domain).
-Sequence of user PD loading is as following.
-
-1) Remote proc PIL driver loads the modem fw/ROOT PD.
-2) As part of ROOT pd boot-up it queries to a daemon(pd_mapper) running in apps
-processor to determine how many usre pd's to be loaded by the remote processor(Q6).
-3) Once user pd info is known to remote processor it loads the user pd via tftp
-protocol.
-
-https://github.com/andersson/pd-mapper
-https://github.com/andersson/tqftpserv
-
-Changes since V4:
-	Minor change in unload sequence, qmi handle is released prior work destroy.
-
-Changes since V3:
-	Removed msa memory child node and used only memory-region property.
-	Fixed sparse warning reported in v3 change.
-	Changed qmi board id data type to u32 to align with fw defined value.
-
-Changes since V2:
-	Addressed review comments from v2 version.
-	Removed msa-size from dt binding and added reference to reserved-memory/reserved-memory.txt.
-
-Changes since V1:
-	Removed qmi client driver and integrated qmi client handshakes in snoc platform driver.
-	Addressed comments on v1 version.
-	Switched to ath10k bdf download infra(board-2.bin)
-	Added MSA fixed region support to support unload use-case.
-	Unified logging.
-
-Testing:
-	Tested all qmi handshakes, driver load/unload and STA/SAP sanity testing.
-	Tested HW: SDM845(WCN3990)
-	Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1
-
-
-Govind Singh (5):
-  ath10k: Add qmi service helpers for wcn3990 qmi client
-  dt: bindings: add bindings for msa memory region
-  firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-  ath10k: Add debug mask for QMI layer
-  ath10k: Add QMI message handshake for wcn3990 client
-
-Rakesh Pillai (1):
-  ath10k: Add support to create boardname for non-bmi target
-
- .../bindings/net/wireless/qcom,ath10k.txt     |    6 +
- drivers/net/wireless/ath/ath10k/Kconfig       |    1 +
- drivers/net/wireless/ath/ath10k/Makefile      |    4 +-
- drivers/net/wireless/ath/ath10k/core.c        |   14 +-
- drivers/net/wireless/ath/ath10k/core.h        |    4 +
- drivers/net/wireless/ath/ath10k/debug.h       |    1 +
- drivers/net/wireless/ath/ath10k/qmi.c         | 1019 ++++++++
- drivers/net/wireless/ath/ath10k/qmi.h         |  129 +
- .../net/wireless/ath/ath10k/qmi_wlfw_v01.c    | 2072 +++++++++++++++++
- .../net/wireless/ath/ath10k/qmi_wlfw_v01.h    |  677 ++++++
- drivers/net/wireless/ath/ath10k/snoc.c        |  262 ++-
- drivers/net/wireless/ath/ath10k/snoc.h        |    4 +
- include/linux/qcom_scm.h                      |    4 +-
- 13 files changed, 4186 insertions(+), 11 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.c
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.h
-
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index bae0fa7ff95a..5c38994cd95c 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -178,9 +178,10 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 			       txqi->tin.tx_bytes,
+ 			       txqi->tin.tx_packets,
+ 			       txqi->flags,
+-			       txqi->flags & (1<<IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
+-			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
+-			       txqi->flags & (1<<IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" : "");
++			       txqi->flags & (1 << IEEE80211_TXQ_STOP) ? "STOP" :
++			       txqi->flags & (1 << IEEE80211_TXQ_PAUSE) ? "PAUSE": "RUN",
++			       txqi->flags & (1 << IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
++			       txqi->flags & (1 << IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" : "");
+ 	}
+ 
+ 	rcu_read_unlock();
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5825824cfe5b..3ef287075cb1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -818,6 +818,7 @@ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
+ 	IEEE80211_TXQ_NO_AMSDU,
++	IEEE80211_TXQ_PAUSE,
+ };
+ 
+ /**
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 8af9e5c05ce4..215ae3a690aa 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1830,6 +1830,8 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_local *local = sta->sdata->local;
++	struct fq *fq = &local->fq;
++	struct txq_info *txqi;
+ 	u8 ac = ieee80211_ac_from_tid(tid);
+ 	u32 airtime = 0;
+ 
+@@ -1844,6 +1846,13 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+ 	sta->airtime.deficit[ac] -= airtime;
+ 	if (airtime)
+ 		sta->local->airtime_flags |= AIRTIME_ACTIVE;
++
++	if (sta->airtime.deficit[ac] < 0) {
++		txqi = to_txq_info(pubsta->txq[tid]);
++		spin_lock_bh(&fq->lock);
++		set_bit(IEEE80211_TXQ_PAUSE, &txqi->flags);
++		spin_unlock_bh(&fq->lock);
++	}
+ 	spin_unlock_bh(&local->active_txq_lock);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_register_airtime);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6a76852ba1f3..0af35c08e0d9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3475,7 +3475,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 
+ 	spin_lock_bh(&fq->lock);
+ 
+-	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
++	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags) ||
++	    test_bit(IEEE80211_TXQ_PAUSE, &txqi->flags))
+ 		goto out;
+ 
+ 	/* Make sure fragments stay together. */
+@@ -3636,6 +3637,7 @@ static inline struct txq_info *find_txqi(struct ieee80211_local *local, s8 ac)
+ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	struct fq *fq = &local->fq;
+ 	struct txq_info *txqi = NULL;
+ 
+ 	spin_lock_bh(&local->active_txq_lock);
+@@ -3653,6 +3655,11 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac)
+ 			sta->airtime.deficit[txqi->txq.ac] += IEEE80211_AIRTIME_QUANTUM * sta->airtime.weight;
+ 			list_move_tail(&txqi->schedule_order,
+ 				       &local->active_txqs[txqi->txq.ac]);
++			if (sta->airtime.deficit[txqi->txq.ac] > 0) {
++				spin_lock_bh(&fq->lock);
++				clear_bit(IEEE80211_TXQ_PAUSE, &txqi->flags);
++				spin_unlock_bh(&fq->lock);
++			}
+ 			goto begin;
+ 		}
+ 	}
 -- 
-2.17.0
+1.9.1
