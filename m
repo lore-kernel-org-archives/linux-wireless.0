@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:43848 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726633AbeH2XEO (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57944 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJha (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 19:04:14 -0400
-Message-ID: <1535569548.5215.33.camel@sipsolutions.net> (sfid-20180829_210602_281832_93449A35)
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is
- set to one
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, sara.sharon@intel.com
-Date: Wed, 29 Aug 2018 21:05:48 +0200
-In-Reply-To: <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com> (sfid-20180829_210349_105825_7C40E092)
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
-         <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
-         (sfid-20180829_210349_105825_7C40E092)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 14 Aug 2018 05:37:30 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 24/24] staging: wilc1000: remove unnecessary static variable 'p2p_listen_state'
+Date: Tue, 14 Aug 2018 12:20:16 +0530
+Message-ID: <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085144_100235_6727E740)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-29 at 21:03 +0200, Lorenzo Bianconi wrote:
-> Do not try to aggregate packets in a A-MSDU frame and add A-MSDU header
-> on the first packet if max_tx_fragments or max_amsdu_subframes are
-> set to one
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> ---
-> Changes since v1:
-> - rebased on top of mac80211 master branch
-> - removed ieee80211_amsdu_realloc_pad chunk
-> 
-Don't you still have to account for the changed header length if the
-second one fails or something?
+Remove the use of unnecessary static variable 'p2p_listen_state'.
+Already 'p2p_listen_state' is present in 'wilc_priv' struct. So making
+use of that variable as its getting set in channel ready and
+remain on channel expired callback.
 
-You said you wanted to account for the pad bytes - which now aren't
-there - but didn't that also take the changed header of the first
-subframe into account?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d8cc08b..cf7ead5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -185,8 +185,6 @@ struct join_bss_param {
+ 	u8 start_time[4];
+ };
+ 
+-static u8 p2p_listen_state;
+-
+ /* 'msg' should be free by the caller for syc */
+ static struct host_if_msg*
+ wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
+@@ -2351,7 +2349,6 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Failed to set remain on channel\n");
+ 
+ error:
+-	p2p_listen_state = 1;
+ 	hif_drv->remain_on_ch_timer_vif = vif;
+ 	mod_timer(&hif_drv->remain_on_ch_timer,
+ 		  jiffies + msecs_to_jiffies(hif_remain_ch->duration));
+@@ -2407,8 +2404,9 @@ static void handle_listen_state_expired(struct work_struct *work)
+ 	struct wid wid;
+ 	int result;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
++	struct wilc_priv *priv = wdev_priv(vif->ndev->ieee80211_ptr);
+ 
+-	if (p2p_listen_state) {
++	if (priv->p2p_listen_state) {
+ 		remain_on_chan_flag = false;
+ 		wid.id = WID_REMAIN_ON_CHAN;
+ 		wid.type = WID_STR;
+@@ -2433,7 +2431,6 @@ static void handle_listen_state_expired(struct work_struct *work)
+ 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+ 						      hif_remain_ch->id);
+ 		}
+-		p2p_listen_state = 0;
+ 	} else {
+ 		netdev_dbg(vif->ndev, "Not in listen state\n");
+ 	}
+-- 
+2.7.4
