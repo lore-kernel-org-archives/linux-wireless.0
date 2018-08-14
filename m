@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:35516 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726715AbeHUUjV (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41316 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJgT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 16:39:21 -0400
-Message-ID: <1534871894.25523.34.camel@sipsolutions.net> (sfid-20180821_191901_973187_C5DA740F)
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tejun Heo <tj@kernel.org>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Tue, 21 Aug 2018 19:18:14 +0200
-In-Reply-To: <20180821160814.GP3978217@devbig004.ftw2.facebook.com> (sfid-20180821_180819_283179_8D636508)
-References: <20180821120317.4115-1-johannes@sipsolutions.net>
-         <20180821120317.4115-2-johannes@sipsolutions.net>
-         <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
-         (sfid-20180821_180819_283179_8D636508)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 14 Aug 2018 05:36:19 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 03/24] staging: wilc1000: fix to use correct index to free scanned info in clear_shadow_scan()
+Date: Tue, 14 Aug 2018 12:19:55 +0530
+Message-ID: <1534229416-13254-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085033_790819_5A2D0FE9)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-21 at 09:08 -0700, Tejun Heo wrote:
-> 
-> > -static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
-> > +static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
-> > +			     bool from_cancel)
-> >  {
-> >  	struct worker *worker = NULL;
-> >  	struct worker_pool *pool;
-> > @@ -2885,7 +2886,8 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
-> >  	 * workqueues the deadlock happens when the rescuer stalls, blocking
-> >  	 * forward progress.
-> >  	 */
-> > -	if (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer) {
-> > +	if (!from_cancel &&
-> > +	    (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer)) {
-> >  		lock_map_acquire(&pwq->wq->lockdep_map);
-> >  		lock_map_release(&pwq->wq->lockdep_map);
-> >  	}
-> 
-> But this can lead to a deadlock.  I'd much rather err on the side of
-> discouraging complex lock dancing around ordered workqueues, no?
+Fixes to use correct index to free the allocated memory for ies
+information. The check was done using 'last_scanned_cnt' index and its
+not correct, so use the correct index ('i') to check for before freeing
+the allocated memory.
 
-What can lead to a deadlock?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Writing out the example again, with the unlock now:
-
-   work1_function() { mutex_lock(&mutex); mutex_unlock(&mutex); }
-   work2_function() { /* nothing */ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d853508..ede9134 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -165,9 +165,9 @@ static void clear_shadow_scan(void)
+ 		return;
  
-   other_function() {
-     queue_work(ordered_wq, &work1);
-     queue_work(ordered_wq, &work2);
-     mutex_lock(&mutex);
-     cancel_work_sync(&work2);
-     mutex_unlock(&mutex);
-   }
-
-This shouldn't be able to lead to a deadlock like I had explained:
-
-> In cancel_work_sync(), we can only have one of two cases, even
-> with an ordered workqueue:
->  * the work isn't running, just cancelled before it started
->  * the work is running, but then nothing else can be on the
->    workqueue before it
-
-johannes
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+-		if (last_scanned_shadow[last_scanned_cnt].ies) {
++		if (last_scanned_shadow[i].ies) {
+ 			kfree(last_scanned_shadow[i].ies);
+-			last_scanned_shadow[last_scanned_cnt].ies = NULL;
++			last_scanned_shadow[i].ies = NULL;
+ 		}
+ 
+ 		kfree(last_scanned_shadow[i].join_params);
+-- 
+2.7.4
