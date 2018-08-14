@@ -1,108 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42692 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726637AbeHUI2w (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:44821 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727986AbeHNLUx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:28:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:51 +0300
-Message-Id: <20180821050952.31603-17-luca@coelho.fi> (sfid-20180821_071020_737845_6488CC9C)
-In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
-References: <20180821050952.31603-1-luca@coelho.fi>
-Subject: [PATCH v2 16/17] iwlwifi: pcie: allow using tx init for other queues but the command queue
+        Tue, 14 Aug 2018 07:20:53 -0400
+MIME-Version: 1.0
+References: <20180813212108.2442868-1-arnd@arndb.de> <20180814105237.64b01528@ajaysk-VirtualBox>
+In-Reply-To: <20180814105237.64b01528@ajaysk-VirtualBox>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 14 Aug 2018 10:34:27 +0200
+Message-ID: <CAK8P3a3bk7urG9zO=F1NtH8hTnGQQ_Hk0qq=o8fmeYY_nEyy5w@mail.gmail.com> (sfid-20180814_103515_878061_26224BC2)
+Subject: Re: [PATCH] staging: wilc1000: revert "fix TODO to compile spi and
+ sdio components in single module"
+To: ajay.kathat@microchip.com
+Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        gregkh <gregkh@linuxfoundation.org>,
+        driverdevel <devel@driverdev.osuosl.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On Tue, Aug 14, 2018 at 7:22 AM Ajay Singh <ajay.kathat@microchip.com> wrote:
+>
+> Hi Arnd,
+>
+> On Mon, 13 Aug 2018 23:20:33 +0200
+> Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> > The TODO item named "make spi and sdio components coexist in one
+> > build" was apparently addressed a long time ago, but never removed
+> > from the TODO file. However, the new patch that tries to address it
+> > actually makes it worse again by duplicating the common parts of the
+> > driver into two separate modules rather than sharing them. This also
+> > introduces a build regression when one of the two is built-in while
+> > the other is a loadable module:
+>
+> Thanks for sharing your inputs and submitting patch.
+> I have also submitted a patch to address the compilation error[1].
+> We can ignore my patch and proceed with your changes.
+>
+> [1].https://patchwork.kernel.org/patch/10563873/
 
-We would like to allow using tx init code for other queues but
-the command queue - for newer devices.
+That patch seems useful regardless, as it removes dead code,
+but I'd still prefer to revert the 9abc44ba4e2f ("staging: wilc1000:
+fix TODO to compile spi and sdio components in single module")
+commit for the other reasons I explained.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/internal.h    |  3 ++-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 23 ++++++++++---------
- 3 files changed, 15 insertions(+), 13 deletions(-)
+> In my understanding, even when the common part is compiled separately,
+> the wilc1000-sdio/wilc1000-spi module still expects separate instance of
+> common part for each of them because of use of static variables.
+>
+> Shouldn't it be correct to compile the components required for SDIO and
+> SPI separately and then get rid of use of global variables to support
+> running of SDIO/SPI module at same time?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 0127386de6c6..da6d367de76e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -640,7 +640,8 @@ void iwl_pcie_disable_ict(struct iwl_trans *trans);
- * TX / HCMD
- ******************************************************/
- int iwl_pcie_tx_init(struct iwl_trans *trans);
--int iwl_pcie_gen2_tx_init(struct iwl_trans *trans);
-+int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id,
-+			  int queue_size);
- void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr);
- int iwl_pcie_tx_stop(struct iwl_trans *trans);
- void iwl_pcie_tx_free(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 2bc67219ed3e..3e5c732a89db 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -265,7 +265,7 @@ static int iwl_pcie_gen2_nic_init(struct iwl_trans *trans)
- 		return -ENOMEM;
- 
- 	/* Allocate or reset and init all Tx and Command queues */
--	if (iwl_pcie_gen2_tx_init(trans))
-+	if (iwl_pcie_gen2_tx_init(trans, trans_pcie->cmd_queue, TFD_CMD_SLOTS))
- 		return -ENOMEM;
- 
- 	/* enable shadow regs in HW */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b99f33ff9123..9ce7b2072613 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1251,30 +1251,31 @@ void iwl_pcie_gen2_tx_free(struct iwl_trans *trans)
- 	}
- }
- 
--int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
-+int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id, int queue_size)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_txq *cmd_queue;
--	int txq_id = trans_pcie->cmd_queue, ret;
-+	struct iwl_txq *queue;
-+	int ret;
- 
--	/* alloc and init the command queue */
-+	/* alloc and init the tx queue */
- 	if (!trans_pcie->txq[txq_id]) {
--		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
--		if (!cmd_queue) {
--			IWL_ERR(trans, "Not enough memory for command queue\n");
-+		queue = kzalloc(sizeof(*queue), GFP_KERNEL);
-+		if (!queue) {
-+			IWL_ERR(trans, "Not enough memory for tx queue\n");
- 			return -ENOMEM;
- 		}
--		trans_pcie->txq[txq_id] = cmd_queue;
--		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+		trans_pcie->txq[txq_id] = queue;
-+		ret = iwl_pcie_txq_alloc(trans, queue, queue_size, true);
- 		if (ret) {
- 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
- 			goto error;
- 		}
- 	} else {
--		cmd_queue = trans_pcie->txq[txq_id];
-+		queue = trans_pcie->txq[txq_id];
- 	}
- 
--	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+	ret = iwl_pcie_txq_init(trans, queue, queue_size,
-+				(txq_id == trans_pcie->cmd_queue));
- 	if (ret) {
- 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
- 		goto error;
--- 
-2.18.0
+What your patch does is to change the behavior so that for loadable
+modules, you get two copies of each global variable and function,
+but for built-in drivers, you still only get one. The old behavior was
+arguably better here because at least it was consistent and always
+shared the common part.
+
+> > In order to have multiple instances working (sdio, spi, or mixed),
+> > all such variables need to be dynamically allocated per instance and
+> > stored in 'struct wilc' or one of the structures referenced by it.
+> >
+>
+> Actually, I have been locally working on this patch for a while now
+> and I will submit a patch to avoid use of most of global and static
+> variable soon.
+
+Ok, very nice!
+
+      Arnd
