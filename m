@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43826 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726330AbeHXOE0 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41347 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJg4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:04 +0300
-Message-Id: <20180824103018.15011-3-luca@coelho.fi> (sfid-20180824_123028_898172_2AED4728)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 02/16] iwlwifi: mvm: put LTF symbol size into HE radiotap
+        Tue, 14 Aug 2018 05:36:56 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/24] staging: wilc1000: rename 'dummy_statistics' variable to 'periodic_stat'
+Date: Tue, 14 Aug 2018 12:20:06 +0530
+Message-ID: <1534229416-13254-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085110_661707_29E71917)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Cleanup patch to use appropriate variable name to fetch the periodic
+statistics.
 
-I evidently completely confused "number of LTF symbols" and "LTF size".
-Radiotap was reporting the former, while I thought it was the latter,
-and we really need both.
-
-Add the LTF symbol size into the newly defined field in radiotap.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c     | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index fd66ea7c4b66..f644bcf7e048 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -925,7 +925,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	struct ieee80211_radiotap_he *he = NULL;
- 	struct ieee80211_radiotap_he_mu *he_mu = NULL;
- 	u32 he_type = 0xffffffff;
--	u8 stbc;
-+	u8 stbc, ltf;
- 
- 	static const struct ieee80211_radiotap_he known = {
- 		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
-@@ -1151,21 +1151,33 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		RATE_MCS_HE_GI_LTF_POS) {
- 	case 0:
- 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
-+		if (he_type == RATE_MCS_HE_TYPE_MU)
-+			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
-+		else
-+			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_1X;
- 		break;
- 	case 1:
- 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
-+		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
- 		break;
- 	case 2:
- 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
-+		if (he_type == RATE_MCS_HE_TYPE_TRIG)
-+			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
-+		else
-+			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
- 		break;
- 	case 3:
- 		if (rate_n_flags & RATE_MCS_SGI_MSK)
- 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
- 		else
- 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
-+		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
- 		break;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a440f84..98098fb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3425,7 +3425,7 @@ static void get_periodic_rssi(struct timer_list *t)
  	}
  
-+	he->data5 |= le16_encode_bits(ltf, IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
-+
- 	switch (he_type) {
- 	case RATE_MCS_HE_TYPE_SU: {
- 		u16 val;
+ 	if (vif->hif_drv->hif_state == HOST_IF_CONNECTED)
+-		wilc_get_statistics(vif, &vif->dummy_statistics, false);
++		wilc_get_statistics(vif, &vif->periodic_stat, false);
+ 
+ 	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index cdb90c3..c53d38f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -123,7 +123,7 @@ struct wilc_vif {
+ 	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 	bool is_termination_progress;
+ 	struct timer_list periodic_rssi;
+-	struct rf_info dummy_statistics;
++	struct rf_info periodic_stat;
+ };
+ 
+ struct wilc {
 -- 
-2.18.0
+2.7.4
