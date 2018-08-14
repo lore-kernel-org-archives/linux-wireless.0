@@ -1,105 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50148 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727594AbeHCJlp (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57907 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJgx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 05:41:45 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rsi: remove redundant variables bss, wh and temp_flash_content
-Date: Fri,  3 Aug 2018 08:46:36 +0100
-Message-Id: <20180803074636.20479-1-colin.king@canonical.com> (sfid-20180803_094657_053033_C5FF4EB5)
+        Tue, 14 Aug 2018 05:36:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 13/24] staging: wilc1000: move 'periodic_rssi' as part of 'wilc_vif' struct
+Date: Tue, 14 Aug 2018 12:20:05 +0530
+Message-ID: <1534229416-13254-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085107_741243_3C41B385)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Refactor code to move 'periodic_rssi' as part of wilc_vif struct.Move
+'dummy_statistics' from 'wilc' struct to 'wilc_vif' to maintain for
+each interface separatly.
 
-Variables bss, wh and temp_flash_content are being assigned but are
-never used hence they are redundant and can be removed.
-
-Cleans up clang warnings:
-warning: variable 'bss' set but not used [-Wunused-but-set-variable]
-warning: variable 'wh' set but not used [-Wunused-but-set-variable]
-warning: variable 'temp_flash_content' set but not used
- [-Wunused-but-set-variable]
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_hal.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ drivers/staging/wilc1000/host_interface.c     | 19 ++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
+ 2 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 27e6baf12e90..01edf960ff3c 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -57,7 +57,6 @@ int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct ieee80211_vif *vif;
- 	struct rsi_mgmt_desc *mgmt_desc;
- 	struct skb_info *tx_params;
--	struct ieee80211_bss_conf *bss = NULL;
- 	struct rsi_xtended_desc *xtend_desc = NULL;
- 	u8 header_size;
- 	u32 dword_align_bytes = 0;
-@@ -91,7 +90,6 @@ int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f71f451f..a440f84 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -186,8 +186,6 @@ struct join_bss_param {
+ };
  
- 	tx_params->internal_hdr_size = header_size;
- 	memset(&skb->data[0], 0, header_size);
--	bss = &vif->bss_conf;
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
+ static u8 p2p_listen_state;
+-static struct timer_list periodic_rssi;
+-static struct wilc_vif *periodic_rssi_vif;
  
- 	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
-@@ -148,7 +146,6 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct ieee80211_hdr *wh = NULL;
- 	struct ieee80211_tx_info *info;
- 	struct skb_info *tx_params;
--	struct ieee80211_bss_conf *bss;
- 	struct rsi_data_desc *data_desc;
- 	struct rsi_xtended_desc *xtend_desc;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
-@@ -159,7 +156,6 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
  
- 	info = IEEE80211_SKB_CB(skb);
- 	vif = info->control.vif;
--	bss = &vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
+@@ -3417,9 +3415,9 @@ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 	return result;
+ }
  
- 	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
-@@ -288,7 +284,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	struct ieee80211_tx_info *info;
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
--	struct ieee80211_hdr *wh;
- 	int status = -EINVAL;
- 	u8 header_size;
- 
-@@ -304,7 +299,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	bss = &vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
- 	header_size = tx_params->internal_hdr_size;
--	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 
- 	if (((vif->type == NL80211_IFTYPE_STATION) ||
- 	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
-@@ -747,13 +741,11 @@ static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
- static int auto_fw_upgrade(struct rsi_hw *adapter, u8 *flash_content,
- 			   u32 content_size)
+-static void get_periodic_rssi(struct timer_list *unused)
++static void get_periodic_rssi(struct timer_list *t)
  {
--	u8 cmd, *temp_flash_content;
-+	u8 cmd;
- 	u32 temp_content_size, num_flash, index;
- 	u32 flash_start_address;
- 	int status;
+-	struct wilc_vif *vif = periodic_rssi_vif;
++	struct wilc_vif *vif = from_timer(vif, t, periodic_rssi);
  
--	temp_flash_content = flash_content;
+ 	if (!vif->hif_drv) {
+ 		netdev_err(vif->ndev, "%s: hif driver is NULL", __func__);
+@@ -3427,9 +3425,9 @@ static void get_periodic_rssi(struct timer_list *unused)
+ 	}
+ 
+ 	if (vif->hif_drv->hif_state == HOST_IF_CONNECTED)
+-		wilc_get_statistics(vif, &vif->wilc->dummy_statistics, false);
++		wilc_get_statistics(vif, &vif->dummy_statistics, false);
+ 
+-	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
++	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
+ 
+ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+@@ -3463,12 +3461,11 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 			kfree(hif_drv);
+ 			return -ENOMEM;
+ 		}
 -
- 	if (content_size > MAX_FLASH_FILE_SIZE) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Flash Content size is more than 400K %u\n",
+-		periodic_rssi_vif = vif;
+-		timer_setup(&periodic_rssi, get_periodic_rssi, 0);
+-		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
++	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
++	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
++
+ 	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
+ 	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
+ 	timer_setup(&hif_drv->remain_on_ch_timer, listen_timer_cb, 0);
+@@ -3508,7 +3505,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	del_timer_sync(&hif_drv->scan_timer);
+ 	del_timer_sync(&hif_drv->connect_timer);
+-	del_timer_sync(&periodic_rssi);
++	del_timer_sync(&vif->periodic_rssi);
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+ 	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index ba606d0..cdb90c3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -122,6 +122,8 @@ struct wilc_vif {
+ 	bool obtaining_ip;
+ 	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 	bool is_termination_progress;
++	struct timer_list periodic_rssi;
++	struct rf_info dummy_statistics;
+ };
+ 
+ struct wilc {
+@@ -171,7 +173,6 @@ struct wilc {
+ 	struct device *dev;
+ 	bool suspend_event;
+ 
+-	struct rf_info dummy_statistics;
+ 	bool enable_ps;
+ 	int clients_count;
+ 	struct workqueue_struct *hif_workqueue;
 -- 
-2.17.1
+2.7.4
