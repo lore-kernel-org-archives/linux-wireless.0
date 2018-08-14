@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56980 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727716AbeH1RfE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37514 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731681AbeHNOMJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 13:35:04 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] ath10k: use struct_size() in kzalloc()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180824011247.GA25648@embeddedor.com>
-References: <20180824011247.GA25648@embeddedor.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-Id: <20180828134320.5E6726044E@smtp.codeaurora.org> (sfid-20180828_154333_168442_77D9AA45)
-Date: Tue, 28 Aug 2018 13:43:20 +0000 (UTC)
+        Tue, 14 Aug 2018 10:12:09 -0400
+Message-ID: <1534245864.3547.22.camel@sipsolutions.net> (sfid-20180814_132529_235870_14D9AA5E)
+Subject: Re: [PATCH] cfg80211/mac80211: make ieee80211_send_layer2_update a
+ public function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dedy Lansky <dlansky@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Date: Tue, 14 Aug 2018 13:24:24 +0200
+In-Reply-To: <1532865556-25398-1-git-send-email-dlansky@codeaurora.org>
+References: <1532865556-25398-1-git-send-email-dlansky@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+On Sun, 2018-07-29 at 14:59 +0300, Dedy Lansky wrote:
+> Make ieee80211_send_layer2_update() a common function so other drivers
+> can re-use it.
+> Add support in wil6210 to send L2UF on behalf of newly associated
+> station by calling the common function.
+> 
+> Change-Id: Ic2daa1b8392122931103eb5a963e14f8270818bb
+> 
 
-> One of the more common cases of allocation size calculations is finding
-> the size of a structure that has a zero-sized array at the end, along
-> with memory for some number of elements for that array. For example:
-> 
-> struct foo {
-> 	int stuff;
->         void *entry[];
-> };
-> 
-> instance = kzalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
-> 
-> Instead of leaving these open-coded and prone to type mistakes, we can
-> now use the new struct_size() helper:
-> 
-> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL);
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Reviewed-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Applied, but without the wil6210 support - please make a separate patch
+for that. I also stripped the Change-Id :)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-06ae8dc00433 ath10k: use struct_size() in kzalloc()
-
--- 
-https://patchwork.kernel.org/patch/10574741/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
