@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:38756 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727286AbeHaTju (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57924 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJhH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:39:50 -0400
-Received: by mail-it0-f51.google.com with SMTP id p129-v6so7658338ite.3
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2018 08:31:49 -0700 (PDT)
+        Tue, 14 Aug 2018 05:37:07 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 17/24] staging: wilc1000: use lowercase for get_BSSID() and HIL variable
+Date: Tue, 14 Aug 2018 12:20:09 +0530
+Message-ID: <1534229416-13254-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085120_611362_8388CA30)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-References: <HE1PR0702MB38043B23810E618B01413959980F0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
-In-Reply-To: <HE1PR0702MB38043B23810E618B01413959980F0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Fri, 31 Aug 2018 08:31:11 -0700
-Message-ID: <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com> (sfid-20180831_173152_482153_3EDAB3C1)
-Subject: Re: Build iw for 32bit ARM
-To: jakov.simunic@ericsson.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jakov,
+Cleanup patch to use lowercase name for get_BSSID() and HIL variable.
 
-On Fri, Aug 31, 2018 at 5:59 AM Jakov Simunic
-<jakov.simunic@ericsson.com> wrote:
->
-> Hello,
-> I am working on an embedded project which uses an armv7l architecture, which is a 32bit platform, and I am trying to compile iw-4.9 for it, and I don't know how to compile it for 32bit arches.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c        | 8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Unless you're building your Linux system 100% from scratch, you should
-leverage the build system for your platform. It will automatically do
-the right thing. You're likely using Buildroot, OpenWRT, OpenEmbedded,
-Yocto or some other platform that has compilers, build systems,
-packages and so on. First off, most likely iw is already included. And
-even if you want to build from your own modified version, theres ways
-to build using the systems above to just build it in-tree. And
-finally, even if not, you should use the target libraries and the
-cross-compilers that are used by your platform.
-
-Step one, if you haven't already, is to get the build system for your
-platform and configure and build it. Then try building your modified
-version of iw if the stock one isn't helpful for you. I'd integrate it
-into the platform build system, but you could build out-of-tree by
-setting up the right flags and CROSS_COMPILER to point to the
-toolchain used for your platform. If I were doing that, I'd build the
-platform in verbose output mode and examine the compiler commandlines
-for hints.
-
-> Tried adding -m32 to the CFLAGS, everything passes the build except the iw binary, which says:
->
-> iw.o: could not read symbols: File in wrong format
-> collect2: ld returned 1 exit status
-> make: *** [iw] Error 1
->
-
-Most likely your architecture flags to the linker don't match what you
-gave in the compiler stage. You could always also confirm the format
-of iw.o with the `file` command.
-
-- Steve
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index e542067..d6d3a97 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -116,7 +116,7 @@ static inline void get_address3(u8 *msa, u8 *addr)
+ 	memcpy(addr, msa + 16, 6);
+ }
+ 
+-static inline void get_BSSID(u8 *data, u8 *bssid)
++static inline void get_bssid(u8 *data, u8 *bssid)
+ {
+ 	if (get_from_ds(data) == 1)
+ 		get_address2(data, bssid);
+@@ -233,7 +233,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+ 	network_info->tsf_hi = tsf_lo | ((u64)tsf_hi << 32);
+ 
+ 	get_ssid(msa, network_info->ssid, &network_info->ssid_len);
+-	get_BSSID(msa, network_info->bssid);
++	get_bssid(msa, network_info->bssid);
+ 
+ 	network_info->ch = get_current_channel_802_11n(msa, rx_len
+ 						       + FCS_LEN);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index bf45b4c..d397c27 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -164,7 +164,7 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	struct wilc *wilc = vif->wilc;
+ 	const struct iphdr *ip_hdr_ptr;
+ 	const struct tcphdr *tcp_hdr_ptr;
+-	u32 IHL, total_length, data_offset;
++	u32 ihl, total_length, data_offset;
+ 
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+@@ -176,12 +176,12 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	if (ip_hdr_ptr->protocol != IPPROTO_TCP)
+ 		goto out;
+ 
+-	IHL = ip_hdr_ptr->ihl << 2;
+-	tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
++	ihl = ip_hdr_ptr->ihl << 2;
++	tcp_hdr_ptr = buffer + ETH_HLEN + ihl;
+ 	total_length = ntohs(ip_hdr_ptr->tot_len);
+ 
+ 	data_offset = tcp_hdr_ptr->doff << 2;
+-	if (total_length == (IHL + data_offset)) {
++	if (total_length == (ihl + data_offset)) {
+ 		u32 seq_no, ack_no;
+ 
+ 		seq_no = ntohl(tcp_hdr_ptr->seq);
+-- 
+2.7.4
