@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42950 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726253AbeHUJ4Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:56:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:54 +0300
-Message-Id: <20180821063657.30071-13-luca@coelho.fi> (sfid-20180821_083743_759052_B0E0C70D)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 12/15] iwlwifi: mvm: fix BAR seq ctrl reporting
+Received: from mx01-sz.bfs.de ([194.94.69.67]:63784 "EHLO mx01-sz.bfs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727858AbeHNNEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Aug 2018 09:04:30 -0400
+Date: Tue, 14 Aug 2018 12:17:56 +0200 (CEST)
+From: Walter Harms <wharms@bfs.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-ID: <1853234188.165364.1534241877338@ox-groupware.bfs.de> (sfid-20180814_121803_132859_762F4802)
+Subject: re:[PATCH] libertas_tf: prevent underflow in process_cmdrequest()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+If recvlength is less than MESSAGE_HEADER_LEN (4) we would end up
+corrupting memory.
 
-There is a bug in FW where the sequence control may be
-incorrect, and the driver overrides it with the value
-of the ieee80211 header.
-
-However, in BAR there is no sequence control in the header,
-which result with arbitrary sequence.
-
-This access to an unknown location is bad and it makes the
-logs very confusing - so fix it.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: c305a19a0d0a ("libertas_tf: usb specific functions")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+This is from static analysis.  I'm not positive that this is a real
+bug, but it's harmless to check.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 796f010204d5..31a81a4c6e78 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1480,6 +1480,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 	while (!skb_queue_empty(&skbs)) {
- 		struct sk_buff *skb = __skb_dequeue(&skbs);
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+		struct ieee80211_hdr *hdr = (void *)skb->data;
- 		bool flushed = false;
- 
- 		skb_freed++;
-@@ -1524,11 +1525,11 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
- 
--		/* W/A FW bug: seq_ctl is wrong when the status isn't success */
--		if (status != TX_STATUS_SUCCESS) {
--			struct ieee80211_hdr *hdr = (void *)skb->data;
-+		/* W/A FW bug: seq_ctl is wrong upon failure / BAR frame */
-+		if (ieee80211_is_back_req(hdr->frame_control))
-+			seq_ctl = 0;
-+		else if (status != TX_STATUS_SUCCESS)
- 			seq_ctl = le16_to_cpu(hdr->seq_ctrl);
--		}
- 
- 		if (unlikely(!seq_ctl)) {
- 			struct ieee80211_hdr *hdr = (void *)skb->data;
--- 
-2.18.0
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index e92fc5001171..789337ea676a 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -605,9 +605,10 @@ static inline void process_cmdrequest(int recvlength,
+uint8_t *recvbuff,
+ {
+ 	unsigned long flags;
+ -	if (recvlength > LBS_CMD_BUFFER_SIZE) {
++	if (recvlength < MESSAGE_HEADER_LEN ||
++	    recvlength > LBS_CMD_BUFFER_SIZE) {
+ 		lbtf_deb_usbd(&cardp->udev->dev,
+-			     "The receive buffer is too large\n");
++			     "The receive buffer is invalid: %d\n", recvlength);
+
+The wording here is a bit unfortunate, and give the user a false impression (at
+least me).
+The problem is the paketsize not the buffer.
+therefor i suggest to change that into:
+ "received invalid paketsize %d\n"
+
+just my 2 cents,
+
+re,
+ wh
+ 		kfree_skb(skb);
+ 		return;
+ 	}
