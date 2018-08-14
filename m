@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727481AbeH1PKm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 11:10:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Rob Herring <robh@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: ath: Convert to using %pOFn instead of device_node.name
-References: <20180828015252.28511-1-robh@kernel.org>
-        <20180828015252.28511-36-robh@kernel.org>
-Date: Tue, 28 Aug 2018 14:19:27 +0300
-In-Reply-To: <20180828015252.28511-36-robh@kernel.org> (Rob Herring's message
-        of "Mon, 27 Aug 2018 20:52:37 -0500")
-Message-ID: <87h8jeg2m8.fsf@kamboji.qca.qualcomm.com> (sfid-20180828_132010_336905_4AD39CEE)
+Received: from mail.kernel.org ([198.145.29.99]:42238 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731101AbeHNRby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Aug 2018 13:31:54 -0400
+Received: from mail-qt0-f182.google.com (mail-qt0-f182.google.com [209.85.216.182])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6A9D121741
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:44:26 +0000 (UTC)
+Received: by mail-qt0-f182.google.com with SMTP id b15-v6so21300769qtp.11
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 07:44:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <1533306095-19946-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1533306095-19946-1-git-send-email-sgruszka@redhat.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Tue, 14 Aug 2018 10:44:14 -0400
+Message-ID: <CA+5PVA43=DQBdGE4CvpTki5caSyfQ02TgV=6CRHukGzAuhsytQ@mail.gmail.com> (sfid-20180814_164429_612763_A6EF0AE4)
+Subject: Re: [PATCH] linux-firmware: add firmware for mt76x0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Linux Firmware <linux-firmware@kernel.org>,
+        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
+        linux-mediatek@lists.infradead.org,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rob Herring <robh@kernel.org> writes:
-
-> In preparation to remove the node name pointer from struct device_node,
-> convert printf users to use the %pOFn format specifier.
+On Fri, Aug 3, 2018 at 10:21 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 >
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> Add binary firmware for MT7610u based devices.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > ---
->  drivers/net/wireless/ath/ath6kl/init.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  WHENCE               |   9 +++++++++
+>  mediatek/mt7610u.bin | Bin 0 -> 80288 bytes
+>  2 files changed, 9 insertions(+)
+>  create mode 100644 mediatek/mt7610u.bin
 
-The correct prefix is "ath6kl:" but I can fix that.
+Applied and pushed out.  Thanks.
 
--- 
-Kalle Valo
+josh
