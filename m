@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34260 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726360AbeHWOnH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37802 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729472AbeHNOlf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 10:43:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Subject: Re: [PATCH 07/15] iwlwifi: add 80211 hdr offset to trace data
-References: <20180821063657.30071-1-luca@coelho.fi>
-        <20180821063657.30071-8-luca@coelho.fi>
-        <877ekir5f2.fsf@kamboji.qca.qualcomm.com>
-        <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi>
-Date: Thu, 23 Aug 2018 14:13:51 +0300
-In-Reply-To: <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi> (Luca
-        Coelho's message of "Wed, 22 Aug 2018 14:58:37 +0300")
-Message-ID: <87mutdnxn4.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_131358_329893_C9C0DC2C)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 14 Aug 2018 10:41:35 -0400
+Message-ID: <1534247624.3547.28.camel@sipsolutions.net> (sfid-20180814_135447_527237_756C88B4)
+Subject: Re: [PATCH] mac80211: allow station search on AP/VLANs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 14 Aug 2018 13:53:44 +0200
+In-Reply-To: <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org>
+References: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org>
+         <1534246103.3547.23.camel@sipsolutions.net>
+         <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Tue, 2018-08-14 at 17:22 +0530, Manikanta Pubbisetty wrote:
+> On 8/14/2018 4:58 PM, Johannes Berg wrote:
+> 
+> > On Mon, 2018-07-30 at 11:50 +0530, Manikanta Pubbisetty wrote:
+> > > When mac80211 receives a packet, we interate over the list of
+> > > active interfaces to find the station(which transmitted the packet).
+> > > Currently, station search is not allowed on AP/VLAN interface; since
+> > > stations can also get mapped to AP/VLAN interfaces, they are worth
+> > > considering for station search.
+> > 
+> > I don't see how this makes sense. We use sta_info_get_bss() later, so
+> > any AP/AP_VLAN would be OK, so we don't need to try it twice for
+> > AP_VLAN?
+> 
+> AP/VLANs are skipped currently, we don't even get to sta_info_get_bss() 
+> if the iftype is AP/VLAN. No?
 
->> > - * You should have received a copy of the GNU General Public
->> > License along with
->> > - * this program; if not, write to the Free Software Foundation,
->> > Inc.,
->> > - * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
->> > - *
->> >   * The full GNU General Public License is included in this
->> > distribution in the
->> >   * file called LICENSE.
->> >   *
->> 
->> Ok, you have more of these removals in this patch so I guess it's
->> intentional. But IMHO it would be nicer to remove these all in one go
->> instead of sprinkle around in different patches.
->
-> IMHO it's too much fuzz for mostly useless warning removal... We need
-> to update the copyright when this hits, so we just do it at the same
-> time.
->
-> But you're the boss, I can submit a patch to remove just that, all at
-> once.
+Yes, we won't try anything for the AP_VLANs, but when we hit the AP we
+look up through everything, no?
 
-Yeah, please do that. It shouldn't take more than few minutes anyway.
+Or maybe not - the _bss() just means fallback to AP?
 
-The thing is that then you are reviewing a big patchset and all of
-sudden see a license text changes without no mention in the commit log,
-it takes extra time to check it. Sure, with one patch it doens't matter
-but then you are going through 20+ patches (or even more) it makes a
-difference. So it's a lot easier for me to change all license text in
-one go.
+Hmm. But even then I can't really see where this would apply?
 
--- 
-Kalle Valo
+johannes
