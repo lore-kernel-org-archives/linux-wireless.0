@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33298 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726535AbeHTPUv (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:43546 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727858AbeHNN5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Aug 2018 11:20:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: fix tx99 with monitor mode interface
-References: <20180820093751.63406-1-nbd@nbd.name>
-Date: Mon, 20 Aug 2018 15:05:25 +0300
-In-Reply-To: <20180820093751.63406-1-nbd@nbd.name> (Felix Fietkau's message of
-        "Mon, 20 Aug 2018 11:37:51 +0200")
-Message-ID: <87r2itp7ju.fsf@codeaurora.org> (sfid-20180820_140533_068460_3A2E3A98)
+        Tue, 14 Aug 2018 09:57:19 -0400
+Date: Tue, 14 Aug 2018 16:40:28 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Greg KH <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>,
+        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
+ `__this_module' error
+Message-ID: <20180814164028.5b8703aa@ajaysk-VirtualBox> (sfid-20180814_131040_229195_EC6F0CA4)
+In-Reply-To: <20180814105621.hu3kpbxwz4kjc2o3@mwanda>
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+        <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
+        <20180812113555.GC25209@kroah.com>
+        <20180812174852.2eecf7da@ajaysk-VirtualBox>
+        <20180814105621.hu3kpbxwz4kjc2o3@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+Hi Dan,
 
-> Tx99 is typically configured via a monitor mode interface, which does
-> not get added to the driver as a vif. Since the code currently expects
-> a configured virtual interface for tx99, enabling tx99 via debugfs fails.
-> Since the vif is not needed anyway, remove all checks for it.
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+On Tue, 14 Aug 2018 13:56:21 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-[...]
+> On Sun, Aug 12, 2018 at 05:48:52PM +0530, Ajay Singh wrote:
+> > Yes, currently only code to read and writing for "wilc_debug_level"
+> > exists.
+> > 
+> > The main purpose for this file was to configure(enable/disable)
+> > specific level debug logs to print.
+> >  
+> 
+> The kernel's dev_dbg() macros are really very clever.  You can enable
+> them for one file or for a specific line or for a function.
+> 
 
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1251,15 +1251,10 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
->  	struct ath_vif *avp = (void *)vif->drv_priv;
->  	struct ath_node *an = &avp->mcast_node;
->  
-> -	mutex_lock(&sc->mutex);
-> +	if (IS_ENABLED(CPTCFG_ATH9K_TX99))
-> +		return -EOPNOTSUPP;
+Thanks for the information.
 
-Obviously this should be CONFIG_ATH9K_TX99, I'll fix that in the pending
-branch.
+I will explore these debug macros in future.
 
--- 
-Kalle Valo
+Regards,
+Ajay
