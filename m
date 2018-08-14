@@ -1,57 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0135.outbound.protection.outlook.com ([104.47.37.135]:1902
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726258AbeHHEuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 00:50:04 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH v2] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer
- dereference
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Winnie Chang <winnie.chang@cypress.com>
-References: <1533649107-157808-1-git-send-email-chi-hsien.lin@cypress.com>
- <5B69F407.6040004@broadcom.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <61e55b75-2505-0fd8-f58d-aa85fe8431fd@cypress.com> (sfid-20180808_043247_647564_05AEC99D)
-Date: Wed, 8 Aug 2018 10:32:25 +0800
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:32957 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728315AbeHOAjK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Aug 2018 20:39:10 -0400
+Received: by mail-yw1-f68.google.com with SMTP id c135-v6so17412916ywa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:50:00 -0700 (PDT)
+Received: from mail-yw1-f42.google.com (mail-yw1-f42.google.com. [209.85.161.42])
+        by smtp.gmail.com with ESMTPSA id x125-v6sm8994506ywc.0.2018.08.14.14.49.56
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 14 Aug 2018 14:49:56 -0700 (PDT)
+Received: by mail-yw1-f42.google.com with SMTP id e23-v6so17379347ywe.13
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:49:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5B69F407.6040004@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
+References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
+ <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+ <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com>
+ <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com> <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Tue, 14 Aug 2018 14:49:54 -0700
+Message-ID: <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com> (sfid-20180814_235013_072798_D3C8DB9B)
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Security Officers <security@kernel.org>,
+        Kevin Deus <kdeus@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 08/08/2018 3:33, Arend van Spriel wrote:
-> On 8/7/2018 3:38 PM, Chi-Hsien Lin wrote:
->> From: Winnie Chang <winnie.chang@cypress.com>
+On Tue, Aug 14, 2018 at 1:55 PM, Suren Baghdasaryan <surenb@google.com> wrote:
+> On Tue, Aug 14, 2018 at 1:33 PM, Kees Cook <keescook@chromium.org> wrote:
+>> On Tue, Aug 14, 2018 at 1:26 PM, Suren Baghdasaryan <surenb@google.com> wrote:
+>>> On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
+>>>> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>>>>> Thanks.  This is great.  I'm so glad these are finally getting fixed.
+>>>>>
+>>>>> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
+>>>>> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
+>>>>> (0x7f) so that's one element beyond the end of the array and the
+>>>>> NFC_HCI_HCP_RESPONSE isn't checked.
+>>>>>
+>>>>> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
+>>>>> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
+>>>>
+>>>> Good point. From hci.h:
+>>>>
+>>>> /*
+>>>>  * According to specification 102 622 chapter 4.4 Pipes,
+>>>>  * the pipe identifier is 7 bits long.
+>>>>  */
+>>>> #define NFC_HCI_MAX_PIPES 127
+>>>>
+>>>> And then:
+>>>>
+>>>> struct nfc_hci_dev {
+>>>>   ...
+>>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
+>>>>   ...
+>>>> }
+>>>>
+>>>> I think the correct fix would be to change it to:
+>>>>
+>>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
+>>>>
+>>>> What do you think?
+>>>>
+>>>
+>>> Just to be clear, this would fix the problem Dan described in his
+>>> reply and it should be implemented in a separate patch. The original
+>>> fix is still valid.
 >>
->> The kernel BUG happens when wowl is enabled from firmware. In
->> brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
->> drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
->> yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
->> calls brcmf_wiphy_wowl_params().
->>
->> The kernel panic is introduced in below commit:
->> commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
->> brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
-> 
-> The above info should be in Fixes: tag, but maybe Kalle is willing to
-> reformat it this time.
+>> I think you could merge the fixes into a single patch.
+>
+> Couple reasons I would prefer to keep them separate:
+> - I feel that descriptions for these two issues should be different
+> and it's easier if we don't mix them up
+> - This one is already merged into Android kernels, so would be easier
+> to introduce the second fix separately
+> - I would like to give credit to people who noticed the problem (in
+> this case those are different people)
+>
+> However if more people think we should fix both issues in the same
+> patch I'll happily do that.
+> Thanks!
 
-Thanks for the note. I've fixed this and submitted v3.
+If it's already landed separately somewhere else, then yeah, 2 patches
+sounds good. No objection either way from me!
 
-> 
-> Regards,
-> Arend
-> 
->> Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
->> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
->> ---
+-Kees
+
+-- 
+Kees Cook
+Pixel Security
