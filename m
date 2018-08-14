@@ -1,89 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:39014 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727204AbeH2Pup (ORCPT
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:35246 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730745AbeHNDNG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 11:50:45 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2018-08-29
-Date: Wed, 29 Aug 2018 13:53:52 +0200
-Message-Id: <20180829115353.31679-1-johannes@sipsolutions.net> (sfid-20180829_135414_524022_8D07555C)
+        Mon, 13 Aug 2018 23:13:06 -0400
+Received: by mail-yw1-f65.google.com with SMTP id s68-v6so14991494ywg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 17:28:29 -0700 (PDT)
+Received: from mail-yw1-f50.google.com (mail-yw1-f50.google.com. [209.85.161.50])
+        by smtp.gmail.com with ESMTPSA id u140-v6sm7691519ywf.4.2018.08.13.17.28.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 13 Aug 2018 17:28:26 -0700 (PDT)
+Received: by mail-yw1-f50.google.com with SMTP id s68-v6so14991412ywg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 17:28:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180813223910.26276-1-surenb@google.com>
+References: <20180813223910.26276-1-surenb@google.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Mon, 13 Aug 2018 17:28:24 -0700
+Message-ID: <CAGXu5jJGxr8fEJDEVciDo1VcF95brx31fAWV0ydYQj6Nq81MqQ@mail.gmail.com> (sfid-20180814_022843_022618_F401A2A5)
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Security Officers <security@kernel.org>, kdeus@google.com,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Mon, Aug 13, 2018 at 3:39 PM, Suren Baghdasaryan <surenb@google.com> wrote:
+> When handling SHDLC I-Frame commands "pipe" field used for indexing
+> into an array should be checked before usage. If left unchecked it
+> might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
+>
+> Malformed NFC HCI frames could be injected by a malicious NFC device
+> communicating with the device being attacked (remote attack vector),
+> or even by an attacker with physical access to the I2C bus such that
+> they could influence the data transfers on that bus (local attack vector).
+> skb->data is controlled by the attacker and has only been sanitized in
+> the most trivial ways (CRC check), therefore we can consider the
+> create_info struct and all of its members to tainted. 'create_info->pipe'
+> with max value of 255 (uint8) is used to take an offset of the
+> hdev->pipes array of 127 elements which can lead to OOB write.
+>
+> Suggested-by: Kevin Deus <kdeus@google.com>
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 
-Here's a small update for net-next, there's not much but since we
-still don't have a shared tree, the ieee80211_send_layer2_update()
-should go to Kalle through your tree :)
+Nice find!
 
-Please pull and let me know if there's any problem.
+Acked-by: Kees Cook <keescook@chromium.org>
 
-Thanks,
-johannes
+> ---
+>  net/nfc/hci/core.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+> index ac8030c4bcf8..19cb2e473ea6 100644
+> --- a/net/nfc/hci/core.c
+> +++ b/net/nfc/hci/core.c
+> @@ -209,6 +209,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+>                 }
+>                 create_info = (struct hci_create_pipe_resp *)skb->data;
+>
+> +               if (create_info->pipe >= NFC_HCI_MAX_PIPES) {
+> +                       status = NFC_HCI_ANY_E_NOK;
+> +                       goto exit;
+> +               }
+> +
+>                 /* Save the new created pipe and bind with local gate,
+>                  * the description for skb->data[3] is destination gate id
+>                  * but since we received this cmd from host controller, we
+> @@ -232,6 +237,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
+>                 }
+>                 delete_info = (struct hci_delete_pipe_noti *)skb->data;
+>
+> +               if (delete_info->pipe >= NFC_HCI_MAX_PIPES) {
+> +                       status = NFC_HCI_ANY_E_NOK;
+> +                       goto exit;
+> +               }
+> +
+>                 hdev->pipes[delete_info->pipe].gate = NFC_HCI_INVALID_GATE;
+>                 hdev->pipes[delete_info->pipe].dest_host = NFC_HCI_INVALID_HOST;
+>                 break;
+> --
+> 2.18.0.597.ga71716f1ad-goog
+>
 
 
 
-The following changes since commit 050cdc6c9501abcd64720b8cc3e7941efee9547d:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-08-27 11:59:39 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-08-29
-
-for you to fetch changes up to 9c06602b1b920ed6b546632bdbbc1f400eea5242:
-
-  cfg80211: clarify frames covered by average ACK signal report (2018-08-29 11:01:51 +0200)
-
-----------------------------------------------------------------
-Only a few changes at this point:
- * new channels in 60 GHz
- * clarify (average) ACK signal reporting API
- * expose ieee80211_send_layer2_update() for all drivers
- * start/stop mac80211's TXQs properly when required
- * avoid regulatory restore with IE ignoring
- * spelling: contidion -> condition
- * fully implement WFA Multi-AP backhaul
-
-----------------------------------------------------------------
-Alexei Avshalom Lazar (1):
-      cfg80211: Add support for 60GHz band channels 5 and 6
-
-Balaji Pothunoori (1):
-      cfg80211: clarify frames covered by average ACK signal report
-
-Dedy Lansky (1):
-      cfg80211/mac80211: make ieee80211_send_layer2_update a public function
-
-Manikanta Pubbisetty (1):
-      mac80211: add stop/start logic for software TXQs
-
-Rajeev Kumar Sirasanagandla (1):
-      cfg80211: Avoid regulatory restore when COUNTRY_IE_IGNORE is set
-
-Richard Guy Briggs (1):
-      rfkill: fix spelling mistake contidion to condition
-
-Sathishkumar Muruganandam (1):
-      mac80211: add missing WFA Multi-AP backhaul STA Rx requirement
-
- drivers/net/wireless/ath/wil6210/debugfs.c |   2 +-
- include/net/cfg80211.h                     |  13 +++-
- include/net/mac80211.h                     |   4 ++
- include/uapi/linux/nl80211.h               |  20 +++---
- net/mac80211/cfg.c                         |  48 +------------
- net/mac80211/ieee80211_i.h                 |   3 +
- net/mac80211/main.c                        |   4 ++
- net/mac80211/rx.c                          |   2 +-
- net/mac80211/sta_info.c                    |   6 +-
- net/mac80211/tx.c                          |  11 ++-
- net/mac80211/util.c                        | 110 +++++++++++++++++++++++++++--
- net/rfkill/core.c                          |   4 +-
- net/wireless/nl80211.c                     |   7 +-
- net/wireless/reg.c                         |  48 ++++++++++++-
- net/wireless/trace.h                       |   2 +-
- net/wireless/util.c                        |  51 ++++++++++++-
- 16 files changed, 258 insertions(+), 77 deletions(-)
+-- 
+Kees Cook
+Pixel Security
