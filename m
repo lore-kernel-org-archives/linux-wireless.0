@@ -1,101 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42588 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726346AbeHUI2h (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36446 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731429AbeHNMx4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:28:37 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:37 +0300
-Message-Id: <20180821050952.31603-3-luca@coelho.fi> (sfid-20180821_071006_979547_C6C9E02E)
-In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
-References: <20180821050952.31603-1-luca@coelho.fi>
-Subject: [PATCH v2 02/17] iwlwifi: remove unused TLC debugging commands
+        Tue, 14 Aug 2018 08:53:56 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>
+Subject: [PATCH 2/2] mac80211: support FTM responder setup/statistics
+Date: Tue, 14 Aug 2018 12:06:23 +0200
+Message-Id: <20180814100623.28976-2-johannes@sipsolutions.net> (sfid-20180814_120730_056716_605316A1)
+In-Reply-To: <20180814100623.28976-1-johannes@sipsolutions.net>
+References: <20180814100623.28976-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: David Spinadel <david.spinadel@intel.com>
 
-The iwl_dhc_tlc_cmd struct is not used, so remove it, including the
-iwl_tcl_debug_flags enumeration.
+Plumb the new cfg80211 API for FTM responders through to
+the driver API in mac80211.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/rs.h    | 60 -------------------
- 1 file changed, 60 deletions(-)
+ include/net/mac80211.h    |  9 +++++++++
+ net/mac80211/cfg.c        | 23 +++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 32 ++++++++++++++++++++++++++++++++
+ net/mac80211/trace.h      | 29 +++++++++++++++++++++++++++++
+ 4 files changed, 93 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-index 087fae91baef..fe2763cfc3b5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-@@ -217,66 +217,6 @@ struct iwl_tlc_update_notif {
- 	__le32 amsdu_enabled;
- } __packed; /* TLC_MNG_UPDATE_NTFY_API_S_VER_2 */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5790f55c241d..096f51c9e131 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3542,6 +3542,9 @@ enum ieee80211_reconfig_type {
+  * @del_nan_func: Remove a NAN function. The driver must call
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
++ * @start_ftm_responder: configure and start FTM responder activity on an AP
++ * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
++ *	Statistics should be cumulative, currently no way to reset is provided.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3824,6 +3827,12 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*start_ftm_responder)(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct cfg80211_ftm_responder_params *params);
++	int (*get_ftm_responder_stats)(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct cfg80211_ftm_responder_stats *ftm_stats);
+ };
  
--/**
-- * enum iwl_tlc_debug_flags - debug options
-- * @IWL_TLC_DEBUG_FIXED_RATE: set fixed rate for rate scaling
-- * @IWL_TLC_DEBUG_STATS_TH: threshold for sending statistics to the driver, in
-- *	frames
-- * @IWL_TLC_DEBUG_STATS_TIME_TH: threshold for sending statistics to the
-- *	driver, in msec
-- * @IWL_TLC_DEBUG_AGG_TIME_LIM: time limit for a BA session
-- * @IWL_TLC_DEBUG_AGG_DIS_START_TH: frame with try-count greater than this
-- *	threshold should not start an aggregation session
-- * @IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM: set max number of frames in an aggregation
-- * @IWL_TLC_DEBUG_RENEW_ADDBA_DELAY: delay between retries of ADD BA
-- * @IWL_TLC_DEBUG_START_AC_RATE_IDX: frames per second to start a BA session
-- * @IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK: disable BW scaling
-- */
--enum iwl_tlc_debug_flags {
--	IWL_TLC_DEBUG_FIXED_RATE,
--	IWL_TLC_DEBUG_STATS_TH,
--	IWL_TLC_DEBUG_STATS_TIME_TH,
--	IWL_TLC_DEBUG_AGG_TIME_LIM,
--	IWL_TLC_DEBUG_AGG_DIS_START_TH,
--	IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM,
--	IWL_TLC_DEBUG_RENEW_ADDBA_DELAY,
--	IWL_TLC_DEBUG_START_AC_RATE_IDX,
--	IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK,
--}; /* TLC_MNG_DEBUG_FLAGS_API_E_VER_1 */
--
--/**
-- * struct iwl_dhc_tlc_dbg - fixed debug config
-- * @sta_id: bit 0 - enable/disable, bits 1 - 7 hold station id
-- * @reserved1: reserved
-- * @flags: bitmap of %IWL_TLC_DEBUG_\*
-- * @fixed_rate: rate value
-- * @stats_threshold: if number of tx-ed frames is greater, send statistics
-- * @time_threshold: statistics threshold in usec
-- * @agg_time_lim: max agg time
-- * @agg_dis_start_threshold: frames with try-cont greater than this count will
-- *			     not be aggregated
-- * @agg_frame_count_lim: agg size
-- * @addba_retry_delay: delay between retries of ADD BA
-- * @start_ac_rate_idx: frames per second to start a BA session
-- * @no_far_range_tweak: disable BW scaling
-- * @reserved2: reserved
-- */
--struct iwl_dhc_tlc_cmd {
--	u8 sta_id;
--	u8 reserved1[3];
--	__le32 flags;
--	__le32 fixed_rate;
--	__le16 stats_threshold;
--	__le16 time_threshold;
--	__le16 agg_time_lim;
--	__le16 agg_dis_start_threshold;
--	__le16 agg_frame_count_lim;
--	__le16 addba_retry_delay;
--	u8 start_ac_rate_idx[IEEE80211_NUM_ACS];
--	u8 no_far_range_tweak;
--	u8 reserved2[3];
--} __packed;
--
- /*
-  * These serve as indexes into
-  * struct iwl_rate_info fw_rate_idx_to_plcp[IWL_RATE_COUNT];
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d25da0e66da1..349cf866c0e4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3808,6 +3808,27 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
+ 	return ret;
+ }
+ 
++static int ieee80211_start_ftm_responder(struct wiphy *wiphy,
++					 struct net_device *dev,
++			       struct cfg80211_ftm_responder_params *params)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	return drv_start_ftm_responder(local, sdata, params);
++}
++
++static int
++ieee80211_get_ftm_responder_stats(struct wiphy *wiphy,
++				  struct net_device *dev,
++				  struct cfg80211_ftm_responder_stats *ftm_stats)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	return drv_get_ftm_responder_stats(local, sdata, ftm_stats);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3902,4 +3923,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
+ 	.tx_control_port = ieee80211_tx_control_port,
+ 	.get_txq_stats = ieee80211_get_txq_stats,
++	.start_ftm_responder = ieee80211_start_ftm_responder,
++	.get_ftm_responder_stats = ieee80211_get_ftm_responder_stats,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 8f6998091d26..d4022e67341b 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1173,6 +1173,22 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
+ 
++static inline int
++drv_get_ftm_responder_stats(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata,
++			    struct cfg80211_ftm_responder_stats *ftm_stats)
++{
++	u32 ret = -EOPNOTSUPP;
++
++	if (local->ops->get_ftm_responder_stats)
++		ret = local->ops->get_ftm_responder_stats(&local->hw,
++							 &sdata->vif,
++							 ftm_stats);
++	trace_drv_get_ftm_responder_stats(local, sdata, ftm_stats);
++
++	return ret;
++}
++
+ static inline int drv_start_nan(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				struct cfg80211_nan_conf *conf)
+@@ -1252,4 +1268,20 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int
++drv_start_ftm_responder(struct ieee80211_local *local,
++			struct ieee80211_sub_if_data *sdata,
++			struct cfg80211_ftm_responder_params *params)
++{
++	u32 ret = -EOPNOTSUPP;
++
++	trace_drv_start_ftm_responder(local, sdata);
++	if (local->ops->start_ftm_responder)
++		ret = local->ops->start_ftm_responder(&local->hw, &sdata->vif,
++						      params);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0ab69a1964f8..ed91b7afcd31 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -2600,6 +2600,35 @@ TRACE_EVENT(drv_wake_tx_queue,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_start_ftm_responder,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
++TRACE_EVENT(drv_get_ftm_responder_stats,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct cfg80211_ftm_responder_stats *ftm_stats),
++
++	TP_ARGS(local, sdata, ftm_stats),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT VIF_PR_FMT,
++		LOCAL_PR_ARG, VIF_PR_ARG
++	)
++);
++
+ #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
-2.18.0
+2.14.4
