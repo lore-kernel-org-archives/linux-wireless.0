@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:54540 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727543AbeH3NFS (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41327 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJgd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 09:05:18 -0400
-Received: by mail-wm0-f68.google.com with SMTP id c14-v6so1156602wmb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2018 02:04:09 -0700 (PDT)
-Date: Thu, 30 Aug 2018 11:04:06 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: always account for A-MSDU header changes
-Message-ID: <20180830090406.GD9867@localhost.localdomain> (sfid-20180830_110412_647509_93AB21DF)
-References: <20180830085549.21955-1-johannes@sipsolutions.net>
+        Tue, 14 Aug 2018 05:36:33 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 07/24] staging: wilc1000: remove unused variable 'op_ifcs'
+Date: Tue, 14 Aug 2018 12:19:59 +0530
+Message-ID: <1534229416-13254-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085047_542406_BE22AA8F)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180830085549.21955-1-johannes@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In the error path of changing the SKB headroom of the second
-> A-MSDU subframe, we would not account for the already-changed
-> length of the first frame that just got converted to be in
-> A-MSDU format and thus is a bit longer now.
-> 
-> Fix this by doing the necessary accounting.
-> 
-> It would be possible to reorder the operations, but that would
-> make the code more complex (to calculate the necessary pad),
-> and the headroom expansion should not fail frequently enough
-> to make that worthwhile.
-> 
-> Fixes: 6e0456b54545 ("mac80211: add A-MSDU tx support")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+After code refactor in previous commit now 'op_ifcs' is not require any
+more, so remove it.
 
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1690890..3418d2d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -82,8 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
+ 
+-static u8 op_ifcs;
+-
+ #define CHAN2G(_channel, _freq, _flags) {	 \
+ 		.band             = NL80211_BAND_2GHZ, \
+ 		.center_freq      = (_freq),		 \
+@@ -2164,7 +2162,6 @@ int wilc_init_host_int(struct net_device *net)
+ 
+ 	timer_setup(&priv->aging_timer, remove_network_from_shadow, 0);
+ 	timer_setup(&vif->during_ip_timer, clear_during_ip, 0);
+-	op_ifcs++;
+ 
+ 	priv->p2p_listen_state = false;
+ 
+@@ -2184,8 +2181,6 @@ int wilc_deinit_host_int(struct net_device *net)
+ 
+ 	priv->p2p_listen_state = false;
+ 
+-	op_ifcs--;
+-
+ 	mutex_destroy(&priv->scan_req_lock);
+ 	ret = wilc_deinit(vif);
+ 
+-- 
+2.7.4
