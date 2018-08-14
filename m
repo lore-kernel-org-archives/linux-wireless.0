@@ -1,28 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:35246 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730745AbeHNDNG (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:55190 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728450AbeHOBIb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 23:13:06 -0400
-Received: by mail-yw1-f65.google.com with SMTP id s68-v6so14991494ywg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 17:28:29 -0700 (PDT)
-Received: from mail-yw1-f50.google.com (mail-yw1-f50.google.com. [209.85.161.50])
-        by smtp.gmail.com with ESMTPSA id u140-v6sm7691519ywf.4.2018.08.13.17.28.25
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 13 Aug 2018 17:28:26 -0700 (PDT)
-Received: by mail-yw1-f50.google.com with SMTP id s68-v6so14991412ywg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 17:28:25 -0700 (PDT)
+        Tue, 14 Aug 2018 21:08:31 -0400
+Received: by mail-it0-f66.google.com with SMTP id s7-v6so20658327itb.4
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 15:19:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180813223910.26276-1-surenb@google.com>
-References: <20180813223910.26276-1-surenb@google.com>
-From: Kees Cook <keescook@chromium.org>
-Date: Mon, 13 Aug 2018 17:28:24 -0700
-Message-ID: <CAGXu5jJGxr8fEJDEVciDo1VcF95brx31fAWV0ydYQj6Nq81MqQ@mail.gmail.com> (sfid-20180814_022843_022618_F401A2A5)
+In-Reply-To: <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com>
+References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
+ <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+ <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com>
+ <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com>
+ <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com> <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Date: Tue, 14 Aug 2018 15:19:14 -0700
+Message-ID: <CAJuCfpEX+F-EPxQYXNdUg-uT9ecwYYdxBsr9y_69zQ0Fq50GeA@mail.gmail.com> (sfid-20180815_001933_895938_03898E53)
 Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
  SHDLC I-Frame commands
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Security Officers <security@kernel.org>, kdeus@google.com,
+To: Kees Cook <keescook@chromium.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Security Officers <security@kernel.org>,
+        Kevin Deus <kdeus@google.com>,
         Samuel Ortiz <sameo@linux.intel.com>,
         "David S. Miller" <davem@davemloft.net>,
         Allen Pais <allen.pais@oracle.com>,
@@ -33,66 +32,80 @@ Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2018 at 3:39 PM, Suren Baghdasaryan <surenb@google.com> wrote:
-> When handling SHDLC I-Frame commands "pipe" field used for indexing
-> into an array should be checked before usage. If left unchecked it
-> might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
->
-> Malformed NFC HCI frames could be injected by a malicious NFC device
-> communicating with the device being attacked (remote attack vector),
-> or even by an attacker with physical access to the I2C bus such that
-> they could influence the data transfers on that bus (local attack vector).
-> skb->data is controlled by the attacker and has only been sanitized in
-> the most trivial ways (CRC check), therefore we can consider the
-> create_info struct and all of its members to tainted. 'create_info->pipe'
-> with max value of 255 (uint8) is used to take an offset of the
-> hdev->pipes array of 127 elements which can lead to OOB write.
->
-> Suggested-by: Kevin Deus <kdeus@google.com>
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+On Tue, Aug 14, 2018 at 2:49 PM, Kees Cook <keescook@chromium.org> wrote:
+> On Tue, Aug 14, 2018 at 1:55 PM, Suren Baghdasaryan <surenb@google.com> wrote:
+>> On Tue, Aug 14, 2018 at 1:33 PM, Kees Cook <keescook@chromium.org> wrote:
+>>> On Tue, Aug 14, 2018 at 1:26 PM, Suren Baghdasaryan <surenb@google.com> wrote:
+>>>> On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
+>>>>> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>>>>>> Thanks.  This is great.  I'm so glad these are finally getting fixed.
+>>>>>>
+>>>>>> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
+>>>>>> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
+>>>>>> (0x7f) so that's one element beyond the end of the array and the
+>>>>>> NFC_HCI_HCP_RESPONSE isn't checked.
+>>>>>>
+>>>>>> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
+>>>>>> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
+>>>>>
+>>>>> Good point. From hci.h:
+>>>>>
+>>>>> /*
+>>>>>  * According to specification 102 622 chapter 4.4 Pipes,
+>>>>>  * the pipe identifier is 7 bits long.
+>>>>>  */
+>>>>> #define NFC_HCI_MAX_PIPES 127
+>>>>>
+>>>>> And then:
+>>>>>
+>>>>> struct nfc_hci_dev {
+>>>>>   ...
+>>>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
+>>>>>   ...
+>>>>> }
+>>>>>
+>>>>> I think the correct fix would be to change it to:
+>>>>>
+>>>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
+>>>>>
+>>>>> What do you think?
+>>>>>
 
-Nice find!
+Actually, after looking more closely, NFC_HCI_MAX_PIPES is always used
+as the number of supported pipes and not as the max pipe ID, so the
+right fix would be:
 
-Acked-by: Kees Cook <keescook@chromium.org>
+-#define NFC_HCI_MAX_PIPES 127
++#define NFC_HCI_MAX_PIPES 128
 
-> ---
->  net/nfc/hci/core.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+I would prefer to rename it into NFC_HCI_PIPE_COUNT but don't want to
+introduce unnecessary churn for one-line change, so will keep the
+name. Will post a separate fix for this shortly.
+
+>>>>
+>>>> Just to be clear, this would fix the problem Dan described in his
+>>>> reply and it should be implemented in a separate patch. The original
+>>>> fix is still valid.
+>>>
+>>> I think you could merge the fixes into a single patch.
+>>
+>> Couple reasons I would prefer to keep them separate:
+>> - I feel that descriptions for these two issues should be different
+>> and it's easier if we don't mix them up
+>> - This one is already merged into Android kernels, so would be easier
+>> to introduce the second fix separately
+>> - I would like to give credit to people who noticed the problem (in
+>> this case those are different people)
+>>
+>> However if more people think we should fix both issues in the same
+>> patch I'll happily do that.
+>> Thanks!
 >
-> diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-> index ac8030c4bcf8..19cb2e473ea6 100644
-> --- a/net/nfc/hci/core.c
-> +++ b/net/nfc/hci/core.c
-> @@ -209,6 +209,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
->                 }
->                 create_info = (struct hci_create_pipe_resp *)skb->data;
+> If it's already landed separately somewhere else, then yeah, 2 patches
+> sounds good. No objection either way from me!
 >
-> +               if (create_info->pipe >= NFC_HCI_MAX_PIPES) {
-> +                       status = NFC_HCI_ANY_E_NOK;
-> +                       goto exit;
-> +               }
-> +
->                 /* Save the new created pipe and bind with local gate,
->                  * the description for skb->data[3] is destination gate id
->                  * but since we received this cmd from host controller, we
-> @@ -232,6 +237,11 @@ void nfc_hci_cmd_received(struct nfc_hci_dev *hdev, u8 pipe, u8 cmd,
->                 }
->                 delete_info = (struct hci_delete_pipe_noti *)skb->data;
+> -Kees
 >
-> +               if (delete_info->pipe >= NFC_HCI_MAX_PIPES) {
-> +                       status = NFC_HCI_ANY_E_NOK;
-> +                       goto exit;
-> +               }
-> +
->                 hdev->pipes[delete_info->pipe].gate = NFC_HCI_INVALID_GATE;
->                 hdev->pipes[delete_info->pipe].dest_host = NFC_HCI_INVALID_HOST;
->                 break;
 > --
-> 2.18.0.597.ga71716f1ad-goog
->
-
-
-
--- 
-Kees Cook
-Pixel Security
+> Kees Cook
+> Pixel Security
