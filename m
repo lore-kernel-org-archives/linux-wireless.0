@@ -1,256 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40634 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727049AbeH0SoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:44:04 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 09/17] mt76: unify mt76x02_mac_wcid_set_key
-Date: Mon, 27 Aug 2018 16:56:23 +0200
-Message-Id: <1535381791-14908-10-git-send-email-sgruszka@redhat.com> (sfid-20180827_165712_611278_D8536B8C)
-In-Reply-To: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
-References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57888 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJga (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Aug 2018 05:36:30 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/24] staging: wilc1000: move during_ip_timer & wilc_optaining_ip to 'wilc_vif' struct
+Date: Tue, 14 Aug 2018 12:19:58 +0530
+Message-ID: <1534229416-13254-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085044_971406_B8D98C8C)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Merge mt76x{0,2}_mac_wcid_set_key into common code.
+Move global variable 'wilc_during_ip_timer' and 'wilc_optaining_ip' to
+'wilc_vif' structure.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Rename these variables like below
+
+wilc_during_ip_timer -> during_ip_timer
+wilc_optaining_ip -> obtaining_ip.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h          |  3 ++
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 41 ----------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |  2 --
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  4 +--
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 29 +++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  2 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  4 +--
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  2 --
- .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 29 ---------------
- 9 files changed, 38 insertions(+), 78 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 15 +++++++-------
+ drivers/staging/wilc1000/host_interface.h         |  2 --
+ drivers/staging/wilc1000/linux_wlan.c             |  6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 ++
+ 5 files changed, 24 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 10959c4669bd..b02b4191ef37 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -423,6 +423,9 @@ struct mt76_rx_status {
- #define mt76_rmw_field(_dev, _reg, _field, _val)	\
- 	mt76_rmw(_dev, _reg, _field, FIELD_PREP(_field, _val))
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 42d8acc..11eb632 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -186,7 +186,6 @@ struct join_bss_param {
+ };
  
-+#define __mt76_rmw_field(_dev, _reg, _field, _val)	\
-+	__mt76_rmw(_dev, _reg, _field, FIELD_PREP(_field, _val))
-+
- #define mt76_hw(dev) (dev)->mt76.hw
- 
- bool __mt76_poll(struct mt76_dev *dev, u32 offset, u32 mask, u32 val,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-index 6d0a6fb18be9..2fcdedd0cadc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-@@ -565,44 +565,3 @@ u32 mt76x0_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
- 
- 	return len;
- }
--
--int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
--			  struct ieee80211_key_conf *key)
--{
--	enum mt76x02_cipher_type cipher;
--	u8 key_data[32];
--	u8 iv_data[8];
--	u32 val;
--
--	cipher = mt76x02_mac_get_key_info(key, key_data);
--	if (cipher == MT_CIPHER_NONE && key)
--		return -EINVAL;
--
--	trace_mt76x0_set_key(&dev->mt76, idx);
--
--	mt76_wr_copy(dev, MT_WCID_KEY(idx), key_data, sizeof(key_data));
--
--	memset(iv_data, 0, sizeof(iv_data));
--	if (key) {
--		iv_data[3] = key->keyidx << 6;
--		if (cipher >= MT_CIPHER_TKIP) {
--			/* Note: start with 1 to comply with spec,
--			 *	 (see comment on common/cmm_wpa.c:4291).
--			 */
--			iv_data[0] |= 1;
--			iv_data[3] |= 0x20;
--		}
--	}
--	mt76_wr_copy(dev, MT_WCID_IV(idx), iv_data, sizeof(iv_data));
--
--	val = mt76_rr(dev, MT_WCID_ATTR(idx));
--	val &= ~MT_WCID_ATTR_PKEY_MODE & ~MT_WCID_ATTR_PKEY_MODE_EXT;
--	val |= FIELD_PREP(MT_WCID_ATTR_PKEY_MODE, cipher & 7) |
--	       FIELD_PREP(MT_WCID_ATTR_PKEY_MODE_EXT, cipher >> 3);
--	val &= ~MT_WCID_ATTR_PAIRWISE;
--	val |= MT_WCID_ATTR_PAIRWISE *
--		!!(key && key->flags & IEEE80211_KEY_FLAG_PAIRWISE);
--	mt76_wr(dev, MT_WCID_ATTR(idx), val);
--
--	return 0;
--}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-index d44ef1e9a1dd..f8074c477044 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
-@@ -138,8 +138,6 @@ struct mt76_txwi {
- 
- u32 mt76x0_mac_process_rx(struct mt76x0_dev *dev, struct sk_buff *skb,
- 			u8 *data, void *rxi);
--int mt76x0_mac_wcid_set_key(struct mt76x0_dev *dev, u8 idx,
--			  struct ieee80211_key_conf *key);
- void mt76x0_mac_wcid_set_rate(struct mt76x0_dev *dev, struct mt76_wcid *wcid,
- 			    const struct ieee80211_tx_rate *rate);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index fb31c103aeee..5b39f4d28072 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -259,7 +259,7 @@ mt76x0_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	if (!msta) {
- 		if (key || wcid->hw_key_idx == idx) {
--			ret = mt76x0_mac_wcid_set_key(dev, wcid->idx, key);
-+			ret = mt76x02_mac_wcid_set_key(&dev->mt76, wcid->idx, key);
- 			if (ret)
- 				return ret;
- 		}
-@@ -267,7 +267,7 @@ mt76x0_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return mt76x02_mac_shared_key_setup(&dev->mt76, mvif->idx, idx, key);
+ static struct host_if_drv *terminated_handle;
+-bool wilc_optaining_ip;
+ static u8 p2p_listen_state;
+ static struct workqueue_struct *hif_workqueue;
+ static struct completion hif_driver_comp;
+@@ -791,7 +790,7 @@ static void handle_scan(struct work_struct *work)
+ 		goto error;
  	}
  
--	return mt76x0_mac_wcid_set_key(dev, msta->wcid.idx, key);
-+	return mt76x02_mac_wcid_set_key(&dev->mt76, msta->wcid.idx, key);
- }
+-	if (wilc_optaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || wilc_connecting) {
+ 		netdev_err(vif->ndev, "Don't do obss scan\n");
+ 		result = -EBUSY;
+ 		goto error;
+@@ -1562,8 +1561,8 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
  
- static int mt76x0_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 6d45adc0522f..3261c510a8c8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -67,3 +67,32 @@ int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_shared_key_setup);
-+
-+int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
-+			    struct ieee80211_key_conf *key)
-+{
-+	enum mt76x02_cipher_type cipher;
-+	u8 key_data[32];
-+	u8 iv_data[8];
-+
-+	cipher = mt76x02_mac_get_key_info(key, key_data);
-+	if (cipher == MT_CIPHER_NONE && key)
-+		return -EOPNOTSUPP;
-+
-+	__mt76_wr_copy(dev, MT_WCID_KEY(idx), key_data, sizeof(key_data));
-+	__mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PKEY_MODE, cipher);
-+
-+	memset(iv_data, 0, sizeof(iv_data));
-+	if (key) {
-+		__mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PAIRWISE,
-+				 !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
-+		iv_data[3] = key->keyidx << 6;
-+		if (cipher >= MT_CIPHER_TKIP)
-+			iv_data[3] |= 0x20;
-+	}
-+
-+	__mt76_wr_copy(dev, MT_WCID_IV(idx), iv_data, sizeof(iv_data));
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index 6f8b8a1d02cf..aebc7dcf7435 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -44,4 +44,6 @@ mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data);
+ 		hif_drv->hif_state = HOST_IF_CONNECTED;
  
- int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
- 				struct ieee80211_key_conf *key);
-+int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
-+			    struct ieee80211_key_conf *key);
+-		wilc_optaining_ip = true;
+-		mod_timer(&wilc_during_ip_timer,
++		vif->obtaining_ip = true;
++		mod_timer(&vif->during_ip_timer,
+ 			  jiffies + msecs_to_jiffies(10000));
+ 	} else {
+ 		hif_drv->hif_state = HOST_IF_IDLE;
+@@ -1595,7 +1594,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+ 	disconn_info.ie_len = 0;
+ 
+ 	if (conn_result) {
+-		wilc_optaining_ip = false;
++		vif->obtaining_ip = false;
+ 		wilc_set_power_mgmt(vif, 0, 0);
+ 
+ 		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
+@@ -1942,7 +1941,7 @@ static void handle_disconnect(struct work_struct *work)
+ 	wid.val = (s8 *)&dummy_reason_code;
+ 	wid.size = sizeof(char);
+ 
+-	wilc_optaining_ip = false;
++	vif->obtaining_ip = false;
+ 	wilc_set_power_mgmt(vif, 0, 0);
+ 
+ 	eth_zero_addr(wilc_connected_ssid);
+@@ -2397,7 +2396,7 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+ 		goto error;
+ 	}
+ 
+-	if (wilc_optaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || wilc_connecting) {
+ 		result = -EBUSY;
+ 		goto error;
+ 	}
+@@ -3455,7 +3454,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 			break;
+ 		}
+ 
+-	wilc_optaining_ip = false;
++	vif->obtaining_ip = false;
+ 
+ 	if (clients_count == 0) {
+ 		init_completion(&hif_driver_comp);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 84866a6..d026f44 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -361,11 +361,9 @@ int wilc_get_vif_idx(struct wilc_vif *vif);
+ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
+ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+ 
+-extern bool wilc_optaining_ip;
+ extern u8 wilc_connected_ssid[6];
+ extern u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 
+ extern int wilc_connecting;
+-extern struct timer_list wilc_during_ip_timer;
+ 
  #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-index 56cceeac78d8..1de191c4f6a0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-@@ -219,7 +219,7 @@ int mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	if (!msta) {
- 		if (key || wcid->hw_key_idx == idx) {
--			ret = mt76x2_mac_wcid_set_key(dev, wcid->idx, key);
-+			ret = mt76x02_mac_wcid_set_key(&dev->mt76, wcid->idx, key);
- 			if (ret)
- 				return ret;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 57e3176..283bb74 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -48,8 +48,8 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 	case NETDEV_UP:
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->ifc_up = 1;
+-			wilc_optaining_ip = false;
+-			del_timer(&wilc_during_ip_timer);
++			vif->obtaining_ip = false;
++			del_timer(&vif->during_ip_timer);
  		}
-@@ -227,7 +227,7 @@ int mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return mt76x02_mac_shared_key_setup(&dev->mt76, mvif->idx, idx, key);
- 	}
  
--	return mt76x2_mac_wcid_set_key(dev, msta->wcid.idx, key);
-+	return mt76x02_mac_wcid_set_key(&dev->mt76, msta->wcid.idx, key);
+ 		if (vif->wilc->enable_ps)
+@@ -68,7 +68,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 	case NETDEV_DOWN:
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->ifc_up = 0;
+-			wilc_optaining_ip = false;
++			vif->obtaining_ip = false;
+ 		}
+ 
+ 		if (memcmp(dev_iface->ifa_label, wlan_dev_name, 5) == 0)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1eac244..1690890 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -82,7 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
+ 
+-struct timer_list wilc_during_ip_timer;
+ static u8 op_ifcs;
+ 
+ #define CHAN2G(_channel, _freq, _flags) {	 \
+@@ -261,9 +260,11 @@ static void remove_network_from_shadow(struct timer_list *t)
+ 			  jiffies + msecs_to_jiffies(AGING_TIME));
  }
- EXPORT_SYMBOL_GPL(mt76x2_set_key);
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index 4be2e0e64847..77dd01da9bb9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -169,8 +169,6 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
- 			   struct ieee80211_sta *sta, int len);
- void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
--int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
--			    struct ieee80211_key_conf *key);
- void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
- 			      const struct ieee80211_tx_rate *rate);
- void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-index 7359ef647268..c218434af347 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-@@ -229,35 +229,6 @@ void mt76x2_send_tx_status(struct mt76x2_dev *dev,
+-static void clear_during_ip(struct timer_list *unused)
++static void clear_during_ip(struct timer_list *t)
+ {
+-	wilc_optaining_ip = false;
++	struct wilc_vif *vif = from_timer(vif, t, during_ip_timer);
++
++	vif->obtaining_ip = false;
  }
- EXPORT_SYMBOL_GPL(mt76x2_send_tx_status);
  
--int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
--			    struct ieee80211_key_conf *key)
--{
--	enum mt76x02_cipher_type cipher;
--	u8 key_data[32];
--	u8 iv_data[8];
--
--	cipher = mt76x02_mac_get_key_info(key, key_data);
--	if (cipher == MT_CIPHER_NONE && key)
--		return -EOPNOTSUPP;
--
--	mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PKEY_MODE, cipher);
--	mt76_wr_copy(dev, MT_WCID_KEY(idx), key_data, sizeof(key_data));
--
--	memset(iv_data, 0, sizeof(iv_data));
--	if (key) {
--		mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PAIRWISE,
--			       !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
--		iv_data[3] = key->keyidx << 6;
--		if (cipher >= MT_CIPHER_TKIP)
--			iv_data[3] |= 0x20;
--	}
--
--	mt76_wr_copy(dev, MT_WCID_IV(idx), iv_data, sizeof(iv_data));
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(mt76x2_mac_wcid_set_key);
--
- static __le16
- mt76x2_mac_tx_rate_val(struct mt76x2_dev *dev,
- 		       const struct ieee80211_tx_rate *rate, u8 *nss_val)
+ static int is_network_in_shadow(struct network_info *nw_info,
+@@ -518,7 +519,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 					conn_info->resp_ies_len, connect_status,
+ 					GFP_KERNEL);
+ 	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF) {
+-		wilc_optaining_ip = false;
++		vif->obtaining_ip = false;
+ 		p2p_local_random = 0x01;
+ 		p2p_recv_random = 0x00;
+ 		wilc_ie = false;
+@@ -1743,8 +1744,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	p2p_local_random = 0x01;
+ 	p2p_recv_random = 0x00;
+ 	wilc_ie = false;
+-	wilc_optaining_ip = false;
+-	del_timer(&wilc_during_ip_timer);
++	vif->obtaining_ip = false;
++	del_timer(&vif->during_ip_timer);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -1789,8 +1790,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		break;
+ 
+ 	case NL80211_IFTYPE_P2P_GO:
+-		wilc_optaining_ip = true;
+-		mod_timer(&wilc_during_ip_timer,
++		vif->obtaining_ip = true;
++		mod_timer(&vif->during_ip_timer,
+ 			  jiffies + msecs_to_jiffies(DURING_IP_TIME_OUT));
+ 		wilc_set_operation_mode(vif, AP_MODE);
+ 		dev->ieee80211_ptr->iftype = type;
+@@ -2159,10 +2160,10 @@ int wilc_init_host_int(struct net_device *net)
+ {
+ 	int ret;
+ 	struct wilc_priv *priv = wdev_priv(net->ieee80211_ptr);
++	struct wilc_vif *vif = netdev_priv(priv->dev);
+ 
+ 	timer_setup(&priv->aging_timer, remove_network_from_shadow, 0);
+-	if (op_ifcs == 0)
+-		timer_setup(&wilc_during_ip_timer, clear_during_ip, 0);
++	timer_setup(&vif->during_ip_timer, clear_during_ip, 0);
+ 	op_ifcs++;
+ 
+ 	priv->p2p_listen_state = false;
+@@ -2190,8 +2191,7 @@ int wilc_deinit_host_int(struct net_device *net)
+ 
+ 	del_timer_sync(&priv->aging_timer);
+ 	clear_shadow_scan(priv);
+-	if (op_ifcs == 0)
+-		del_timer_sync(&wilc_during_ip_timer);
++	del_timer_sync(&vif->during_ip_timer);
+ 
+ 	if (ret)
+ 		netdev_err(net, "Error while deinitializing host interface\n");
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3767e31..8e56a28 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -118,6 +118,8 @@ struct wilc_vif {
+ 	struct net_device *ndev;
+ 	u8 mode;
+ 	u8 ifc_id;
++	struct timer_list during_ip_timer;
++	bool obtaining_ip;
+ };
+ 
+ struct wilc {
 -- 
-2.7.5
+2.7.4
