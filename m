@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:19216 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728479AbeHPJ1o (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55854 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727689AbeHNL3t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 05:27:44 -0400
-Date: Thu, 16 Aug 2018 01:52:43 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>
-CC: <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <nicolas.ferre@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: feedback on mainlining wilc1000 staging driver
-Message-ID: <20180816015243.545cd009@ajaysk-VirtualBox> (sfid-20180816_083159_201852_EC0F4898)
+        Tue, 14 Aug 2018 07:29:49 -0400
+Date: Tue, 14 Aug 2018 10:43:35 +0200
+From: gregkh <gregkh@linuxfoundation.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: ajay.kathat@microchip.com, aditya.shankar@microchip.com,
+        ganesh.krishna@microchip.com,
+        driverdevel <devel@driverdev.osuosl.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging: wilc1000: revert "fix TODO to compile spi and
+ sdio components in single module"
+Message-ID: <20180814084335.GB7208@kroah.com> (sfid-20180814_104413_191696_C9F817DF)
+References: <20180813212108.2442868-1-arnd@arndb.de>
+ <20180814105237.64b01528@ajaysk-VirtualBox>
+ <CAK8P3a3bk7urG9zO=F1NtH8hTnGQQ_Hk0qq=o8fmeYY_nEyy5w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK8P3a3bk7urG9zO=F1NtH8hTnGQQ_Hk0qq=o8fmeYY_nEyy5w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+On Tue, Aug 14, 2018 at 10:34:27AM +0200, Arnd Bergmann wrote:
+> On Tue, Aug 14, 2018 at 7:22 AM Ajay Singh <ajay.kathat@microchip.com> wrote:
+> >
+> > Hi Arnd,
+> >
+> > On Mon, 13 Aug 2018 23:20:33 +0200
+> > Arnd Bergmann <arnd@arndb.de> wrote:
+> >
+> > > The TODO item named "make spi and sdio components coexist in one
+> > > build" was apparently addressed a long time ago, but never removed
+> > > from the TODO file. However, the new patch that tries to address it
+> > > actually makes it worse again by duplicating the common parts of the
+> > > driver into two separate modules rather than sharing them. This also
+> > > introduces a build regression when one of the two is built-in while
+> > > the other is a loadable module:
+> >
+> > Thanks for sharing your inputs and submitting patch.
+> > I have also submitted a patch to address the compilation error[1].
+> > We can ignore my patch and proceed with your changes.
+> >
+> > [1].https://patchwork.kernel.org/patch/10563873/
+> 
+> That patch seems useful regardless, as it removes dead code,
+> but I'd still prefer to revert the 9abc44ba4e2f ("staging: wilc1000:
+> fix TODO to compile spi and sdio components in single module")
+> commit for the other reasons I explained.
 
-We all are working on submitting and reviewing patches for wilc1000 in
-staging driver for quite some time. 
+I agree, I'll queue it up soon, I have other patches to get to Linus
+first.
 
-We would like to have feedback on the next steps to bring wilc1000
-driver closer to move into the wireless subsystem tree. 
+thanks,
 
-In summary, the following major things from TODO have been addressed in
-staging:
--remove the defined feature as kernel versions
--remove OS wrapper functions
--remove custom debug and tracing functions
--rework comments and function headers(also coding style)
--remove build warnings
--replace all semaphores with mutexes or completions
--make spi and sdio components coexist in one build
--turn compile-time platform configuration (BEAGLE_BOARD, PANDA_BOARD,
-PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...) into run-time
-options that are read from DT
--replace SIOCDEVPRIVATE commands with generic API functions
--use wext-core handling instead of private SIOCSIWPRIV implementation
--Move handling for each individual members of 'union message_body' out
-into a separate 'struct work_struct' and completely remove the
-multiplexer that is currently part of host_if_work(), allowing movement
-of the implementation of each message handler into the callsite of the
-function that currently queues the 'host_if_msg'.
--convert all uses of the old GPIO API from <linux/gpio.h> to the GPIO
-descriptor API in <linux/gpio/consumer.h> and look up GPIO lines from
-device tree, ACPI or board files, board files should use
-<linux/gpio/machine.h>
-
-I have few patches to submit based on last week comments. I
-will send these patches as soon as the merge window is closed.
-
-1. Delete wilc_debugfs.c file, as not used.
-2. Remove use of remaining global variables.
-3. Remove udelay realted checkpatch warning.
-4. Use void return for function whose return value is not used.
-
-
-Currently, there are 2 known items pending in our TODO. 
--support soft-ap and p2p mode
--support resume/suspend function
- 
-For the above 2 remaining TODO items, we need to add extra code but as
-suggested in [1], we have not taken up this activity yet.
- 
-We would like to know your opinion whether we should start working on
-these features in staging-next tree or take it up after having moved
-the code to wireless sub-system.
-
-Do you think it’s better to initiate review in parallel with
-wireless subsystem maintainer to identify any pending TODO items. 
-
-Please guide us on how to proceed further.
-
-[1] . https://patchwork.kernel.org/patch/9809145
- 
-
-Regards,
-Ajay
+greg k-h
