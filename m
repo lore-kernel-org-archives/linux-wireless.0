@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43870 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726572AbeHXOEa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37444 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730923AbeHNOFE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:09 +0300
-Message-Id: <20180824103018.15011-8-luca@coelho.fi> (sfid-20180824_123036_456165_E4FA2884)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: mvm: send BCAST management frames to the right station
+        Tue, 14 Aug 2018 10:05:04 -0400
+Message-ID: <1534245439.3547.21.camel@sipsolutions.net> (sfid-20180814_131823_000897_6FBD4C10)
+Subject: Re: [PATCH] mac80211: ignore SA Query Requests with unknown payload
+ data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>,
+        linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>
+Date: Tue, 14 Aug 2018 13:17:19 +0200
+In-Reply-To: <1534245376.3547.20.camel@sipsolutions.net> (sfid-20180814_131719_782736_EFD9923D)
+References: <20180806224857.14853-1-Mathy.Vanhoef@cs.kuleuven.be>
+         <1534245118.3547.18.camel@sipsolutions.net>
+         (sfid-20180814_131303_339421_811029D4) <1534245376.3547.20.camel@sipsolutions.net>
+         (sfid-20180814_131719_782736_EFD9923D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2018-08-14 at 13:16 +0200, Johannes Berg wrote:
+> 
+> > Since you change wpa_s to subscribe to the relevant action frame:
+> > 
+> > > +       /* SA Query Request */
+> > > +       if (nl80211_register_action_frame(bss, (u8 *) "\x08\x00", 2) < 0)
+> > > +               ret = -1;
+> > 
+> > we could change the logic to be
+> > 
+> > if (!frame_includes_OCV || !cfg80211_rx_mgmt(...))
+> > 	respond_in_kernel();
+> > 
+> 
+> An easier alternative might be to push ieee80211_process_sa_query_req()
+> to after ieee80211_rx_h_userspace_mgmt() so it won't see the frames if
+> userspace claimed them, but I'm not sure how that works in AP mode where
+> hostapd claims all frames - though I guess these aren't relevant in AP
+> mode?
 
-Probe responses were sent to the multicast station while
-they should be routed to the broadcast station.
-This has no negative effect since the frame was still
-routed to the right queue, but it looked very fishy
-to send a frame to a (queue, station) tuple where
-'queue' is not mapped to 'station'.
+However, then obviously wpa_s has to be able to handle them if OCV isn't
+included, which I haven't checked. It probably should be able to anyway
+though, since the frame might include other elements that aren't OCV,
+causing the kernel to punt it to wpa_s.
 
-Fixes: 7c305de2b954 ("iwlwifi: mvm: Direct multicast frames to the correct station")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index c99b79d686d0..ffc0ad1eef15 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -730,7 +730,7 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 		if (info.control.vif->type == NL80211_IFTYPE_P2P_DEVICE ||
- 		    info.control.vif->type == NL80211_IFTYPE_AP ||
- 		    info.control.vif->type == NL80211_IFTYPE_ADHOC) {
--			if (info.control.vif->type == NL80211_IFTYPE_P2P_DEVICE)
-+			if (!ieee80211_is_data(hdr->frame_control))
- 				sta_id = mvmvif->bcast_sta.sta_id;
- 			else
- 				sta_id = mvmvif->mcast_sta.sta_id;
--- 
-2.18.0
+johannes
