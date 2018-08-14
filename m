@@ -1,60 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:40880 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726199AbeHPLK0 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41331 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731824AbeHNJgk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 07:10:26 -0400
-Message-ID: <1534407150.3547.58.camel@sipsolutions.net> (sfid-20180816_101342_272663_9D11F9A3)
-Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pradeepc@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Aug 2018 10:12:30 +0200
-In-Reply-To: <4aaa3a6185dbd116ba5c1a2ce76b691f@codeaurora.org>
-References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
-         <1534323867.3547.30.camel@sipsolutions.net>
-         <4aaa3a6185dbd116ba5c1a2ce76b691f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 14 Aug 2018 05:36:40 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/24] staging: wilc1000: move static variable clients_count to 'wilc' structure
+Date: Tue, 14 Aug 2018 12:20:01 +0530
+Message-ID: <1534229416-13254-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085054_337689_5C3B295D)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-15 at 18:50 -0700, pradeepc@codeaurora.org wrote:
+Avoid use of static variable 'clients_count' and move it part of 'wilc'
+structure.
 
-> > All you describe above is really a driver bug - it shouldn't have
-> > enabled it to start with?
-> 
-> Sure.. But isn't it justifiable for drivers/firmware choosing to enable
-> ftm responder by default when there is no way for userspace to specify 
-> this parameter?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c     | 9 ++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-No? FTM needs higher-level configuration/advertisement, so how could the
-driver/firmware enable it when it's not supposed to be?
-
-I really do think this is a driver bug.
-
-Nothing stopped you from submitting these patches months/years ago when
-the capability was first added to the firmware, after all.
-
-> > This makes sense anyway. Funny you should post this within hours of me
-> > doing the same, basically.
-> 
-> Sorry, I missed your patches before posting mine :)
-
-No worries.
-
-> > 
-> > I have no objection to your approach, though I guess it'd be nice if 
-> > you
-> > could take a look at the statistics I have exposed and see if those
-> > makes sense or if additional ones are desirable for you, and then we 
-> > can combine the work that way, i.e. have your configuration and our stats?
-> 
-> I looked at the patch you posted and this makes sense. I will try to 
-> align ath10k driver changes with your approach.
-
-I tend to actually like your patch better for configuration - no new
-command, though it is, I think, lacking configuration of the necessary
-elements (where do you take the LCI/Civic location from?).
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6225e67..d930f06 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -199,7 +199,6 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ 
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+-static u32 clients_count;
+ 
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ 
+@@ -3456,7 +3455,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	vif->obtaining_ip = false;
+ 
+-	if (clients_count == 0) {
++	if (wilc->clients_count == 0) {
+ 		init_completion(&hif_driver_comp);
+ 		mutex_init(&hif_deinit_lock);
+ 
+@@ -3490,7 +3489,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	mutex_unlock(&hif_drv->cfg_values_lock);
+ 
+-	clients_count++;
++	wilc->clients_count++;
+ 
+ 	return 0;
+ }
+@@ -3526,7 +3525,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	hif_drv->hif_state = HOST_IF_IDLE;
+ 
+-	if (clients_count == 1)	{
++	if (vif->wilc->clients_count == 1) {
+ 		struct host_if_msg *msg;
+ 
+ 		msg = wilc_alloc_work(vif, handle_hif_exit_work, true);
+@@ -3544,7 +3543,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	kfree(hif_drv);
+ 
+-	clients_count--;
++	vif->wilc->clients_count--;
+ 	terminated_handle = NULL;
+ 	mutex_unlock(&hif_deinit_lock);
+ 	return result;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8e56a28..8cccbbc 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -171,6 +171,7 @@ struct wilc {
+ 
+ 	struct rf_info dummy_statistics;
+ 	bool enable_ps;
++	int clients_count;
+ };
+ 
+ struct wilc_wfi_mon_priv {
+-- 
+2.7.4
