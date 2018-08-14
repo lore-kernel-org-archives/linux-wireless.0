@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36566 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727371AbeHIMdA (ORCPT
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:38384 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728103AbeHOBZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 08:33:00 -0400
-Date: Thu, 9 Aug 2018 13:08:38 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH] staging: wilc1000: fix undefined reference to
- `__this_module' compilation error
-Message-ID: <20180809100838.pduj5s5lvbpjuljn@mwanda> (sfid-20180809_120924_942765_EAA60E50)
-References: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 14 Aug 2018 21:25:36 -0400
+Received: by mail-pg1-f195.google.com with SMTP id k3-v6so9745699pgq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 15:36:18 -0700 (PDT)
+From: Suren Baghdasaryan <surenb@google.com>
+Cc: security@kernel.org, dan.carpenter@oracle.com, kdeus@google.com,
+        surenb@google.com, Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/1] NFC: Fix the number of pipes
+Date: Tue, 14 Aug 2018 15:35:19 -0700
+Message-Id: <20180814223519.13610-1-surenb@google.com> (sfid-20180815_003620_630465_140ED191)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com>
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 12:13:06PM +0530, Ajay Singh wrote:
-> wilc_debug.o object file is included for both SDIO and SPI module. When
-> anyone(either SDIO or SPI) module is compiled as loaded module and another
-> as buildin module then below compilation error occurs.
-> 
-> "drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
-> reference to `__this_module'"
-> 
-> Moved the declaration of file_operation variable in SDIO/SPI files and
-> pass this as parameter to wilc_debugfs_init().
-> Refactor wilc_debugfs_init() as its not required to maintain
-> 'wilc_debugfs_info_t' in debugfs_info[] array. Also modified file
-> permission from 0666 to 0600 & use 'data' field as 'NULL' in
-> debugfs_create_file() call.
-> 
-> Fixes: 9abc44ba4e2f("staging: wilc1000: fix TODO to compile spi and sdio
-> components in single module")
-> 
-> Reported-by: kbuild test robot <lkp@intel.com>
+According to ETSI TS 102 622 specification chapter 4.4 pipe identifier
+is 7 bits long which allows for 128 unique pipe IDs. Because
+NFC_HCI_MAX_PIPES is used as the number of pipes supported and not
+as the max pipe ID, its value should be 128 instead of 127.
 
-I don't think you need to resend, but the Fixes tag format isn't
-right.
+nfc_hci_recv_from_llc extracts pipe ID from packet header using
+NFC_HCI_FRAGMENT(0x7F) mask which allows for pipe ID value of 127.
+Same happens when NCI_HCP_MSG_GET_PIPE() is being used. With
+pipes array having only 127 elements and pipe ID of 127 the OOB memory
+access will result.
 
-1) Don't line wrap it.  (Maybe checkpatch complains?  Ignore checkpatch).
-2) Put a space between the git hash and the '('.
-3) No blank line between the Fixes and the Reported-by.
+Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+---
+ include/net/nfc/hci.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> -int wilc_debugfs_init(void)
-> +int wilc_debugfs_init(const struct file_operations *fops)
-
-You may as well make wilc_debugfs_init() void since no one checks it.
-
->  {
-> -	int i;
-> -	struct wilc_debugfs_info_t *info;
-> -
->  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-> -		info = &debugfs_info[i];
-> -		debugfs_create_file(info->name,
-> -				    info->perm,
-> -				    wilc_dir,
-> -				    &info->data,
-> -				    &info->fops);
-> +	if (IS_ERR_OR_NULL(wilc_dir)) {
-> +		pr_err("Error creating debugfs\n");
-> +		return -EFAULT;
->  	}
-
-Just check for NULL.  If someone builds without debugfs enabled in their
-.config, that's their choice.  No need to print a warning.
-
-regards,
-dan carpenter
+diff --git a/include/net/nfc/hci.h b/include/net/nfc/hci.h
+index 316694dafa5b..008f466d1da7 100644
+--- a/include/net/nfc/hci.h
++++ b/include/net/nfc/hci.h
+@@ -87,7 +87,7 @@ struct nfc_hci_pipe {
+  * According to specification 102 622 chapter 4.4 Pipes,
+  * the pipe identifier is 7 bits long.
+  */
+-#define NFC_HCI_MAX_PIPES		127
++#define NFC_HCI_MAX_PIPES		128
+ struct nfc_hci_init_data {
+ 	u8 gate_count;
+ 	struct nfc_hci_gate gates[NFC_HCI_MAX_CUSTOM_GATES];
+-- 
+2.18.0.865.gffc8e1a3cd6-goog
