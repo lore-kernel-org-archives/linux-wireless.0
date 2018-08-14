@@ -1,151 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39428 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726631AbeHBJpG (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59680 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728101AbeHNMIA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Aug 2018 05:45:06 -0400
-Message-ID: <0919a20b8b06324dd8e408a1f136c64c6e0dd4de.camel@coelho.fi> (sfid-20180802_095513_512705_FE1654E7)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Date: Thu, 02 Aug 2018 10:55:06 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-RszgWp1dIijITEVOqy/8"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2018-08-02
+        Tue, 14 Aug 2018 08:08:00 -0400
+Date: Tue, 14 Aug 2018 11:21:35 +0200
+From: Greg KH <greg@kroah.com>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: security@kernel.org, kdeus@google.com,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+Message-ID: <20180814092135.GA10316@kroah.com> (sfid-20180814_112215_720124_655C4449)
+References: <20180813223910.26276-1-surenb@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180813223910.26276-1-surenb@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 13, 2018 at 03:39:08PM -0700, Suren Baghdasaryan wrote:
+> When handling SHDLC I-Frame commands "pipe" field used for indexing
+> into an array should be checked before usage. If left unchecked it
+> might access memory outside of the array of size NFC_HCI_MAX_PIPES(127).
+> 
+> Malformed NFC HCI frames could be injected by a malicious NFC device
+> communicating with the device being attacked (remote attack vector),
+> or even by an attacker with physical access to the I2C bus such that
+> they could influence the data transfers on that bus (local attack vector).
+> skb->data is controlled by the attacker and has only been sanitized in
+> the most trivial ways (CRC check), therefore we can consider the
+> create_info struct and all of its members to tainted. 'create_info->pipe'
+> with max value of 255 (uint8) is used to take an offset of the
+> hdev->pipes array of 127 elements which can lead to OOB write.
+> 
+> Suggested-by: Kevin Deus <kdeus@google.com>
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 
---=-RszgWp1dIijITEVOqy/8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi Kalle,
-
-This is another batch of patches intended for v4.19.  Usual development
-work, mostly focused on the new 22560, and some other small fixes and
-improvements.  More details about the contents in the tag description.
-
-I have sent this out before and kbuildbot this morning, but I didn't
-get any replies from it yet.
-
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit 24ebfcbdd1ba623daa1ba140067d7b6102bcfe0d=
-:
-
-  rt2x00: remove redundant functions rt2x00mac_sta_{add/remove} (2018-07-31=
- 10:27:40 +0300)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2018-08-02
-
-for you to fetch changes up to 45904e7edcd08730d1888cb79071654e344774a7:
-
-  iwlwifi: pcie: split tx to amsdu and non amsdu (2018-08-02 10:50:09 +0300=
-)
-
-----------------------------------------------------------------
-More iwlwifi patches for 4.19
-
-* New PCI IDs for 22000 and 22560;
-* Some fixes and an improvement in debug dumps and recording;
-* Remove some old dead code;
-* Fix compilation when only IPv6 is not enabled;
-* Continued work on 22560 devices;
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: pcie: don't access periphery registers when not available
-
-Golan Ben Ami (4):
-      iwlwifi: pcie: support rx structures for 22560 devices
-      iwlwifi: support new rx_mpdu_desc api
-      iwlwifi: hard code power save mode to CAM for 22560 devices
-      iwlwifi: move some msix and rx functions to a common place
-
-Luca Coelho (4):
-      iwlwifi: pcie: add a bunch of PCI IDs for 22000 and 22560
-      iwlwifi: d3: disable dbg recording before entering D3
-      iwlwifi: mvm: remove dead gscan code
-      iwlwifi: pcie: include tcp.h implicitly
-
-Sara Sharon (6):
-      iwlwifi: pcie: unionize used bd and completion descriptor
-      iwlwifi: pcie: move rxb retrieval to a helper function
-      iwlwifi: trans: add a new op for getting DMA data
-      iwlwifi: mvm: configure multi RX queue
-      Revert "iwlwifi: implement fseq version mismatch warning"
-      iwlwifi: pcie: split tx to amsdu and non amsdu
-
-Shahar S Matityahu (1):
-      iwlwifi: allow masking out memory areas from the fw dump
-
- drivers/net/wireless/intel/iwlwifi/Makefile          |   1 -
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c       |   2 +-
- drivers/net/wireless/intel/iwlwifi/fw/api/alive.h    |  18 +------
- drivers/net/wireless/intel/iwlwifi/fw/api/commands.h |   7 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h |   7 +++
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h       | 211 +++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++----------------
- drivers/net/wireless/intel/iwlwifi/fw/common_rx.c    |  88 ---------------=
----------------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c          | 284 +++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++----------------------------------=
--------
- drivers/net/wireless/intel/iwlwifi/fw/file.h         |  40 ++------------
- drivers/net/wireless/intel/iwlwifi/fw/img.h          |  37 +------------
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h      |   3 --
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c         |  67 +++++----------=
---------
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h       |  27 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c          |   7 +++
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     |   8 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c          |  48 +++++++++++++++=
---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |   7 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |  20 ++++---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |  95 +++++++++++++++=
-++++++++++--------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c        |  25 +++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h   |  78 +++++++++++++++=
-++++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c         | 170 +++++++++++++++=
-+++++++++++++++++++++++--------------------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 174 +++++++++++++++=
-+++++++++++++++++---------------------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c    | 150 +++++++++++++++=
-+++++++++++++++++++-----------------
- 24 files changed, 936 insertions(+), 638 deletions(-)
- delete mode 100644 drivers/net/wireless/intel/iwlwifi/fw/common_rx.c
---=-RszgWp1dIijITEVOqy/8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAltiuNoACgkQoUecoho8
-xfqy6g//ZjAZiJCivWqy84sZvDQsIjmYZVKGssPFJkhoBBvfX8sapd5bZFKpM1kF
-VfgDA2kSbUbUWqNYYLRsSCjvbpx1RLz61h9xUMXRuQs2OgfjIAcGcns7B+hSxKqP
-Lh9pcOPbaCPGv3zZSYHpHi5/cmdyDorLuX49uZi6uzoVnWkUZO3ATCPQpT9E05Gh
-Vn36l+MM4Jh7tAC2q/ETWBOrb4CEMEZLbj1WO3Jjb/06r7D6jPJHhJFCYXXwMGq2
-kbTZMPi/iCcNmXIqqgki3txLT6nrNj1ozAbIbtCIsFuk9oN7qJhyJJwx2xUWGHqQ
-KPKZDwwcpFHhGRyuhNKxU3wGmqrw5W4Y64z2oJeQzQc9rDfZ9tMEEW88XL61r4gA
-llOLTlzvE5Rcq4nDifLbSq+G7FVtZ3YcL750h3ZM/68vTSH07JP+hY3FTEiKfULN
-i+QXv+XXFFqkAdLmSXubOJJJQP3+dR4xFExsV02SKBLuzdgrgUr0M3LJ2X6AWkOz
-1XZZGW8CRw/OTHKkCqS6y67+MnYgGvsSI30DSm0cwjyEvR7dlm1WPegER5M19diS
-urXmfZSk6MKcPPw61w/cxZQ8tEmoTVTGco3iA01ARO0RUJ/nBgAgCaIbNr9FH3rd
-mczPOzYIEHE8sZwgqWF4uTgDtv0zLb/GBHorgaTYgtVz6R0o0qM=
-=8mTO
------END PGP SIGNATURE-----
-
---=-RszgWp1dIijITEVOqy/8--
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
