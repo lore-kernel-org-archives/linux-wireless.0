@@ -1,139 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:43137 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726300AbeHRTRV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 15:17:21 -0400
-Date: Sat, 18 Aug 2018 18:08:40 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Craig Matsuura <cmatsuura@vivint.com>
+Received: from mail.kernel.org ([198.145.29.99]:40700 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726648AbeHNXwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Aug 2018 19:52:13 -0400
+Date: Tue, 14 Aug 2018 16:03:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Kofi Agor <nenekofi@gmail.com>,
-        Enrico Mioso <mrkiko.rs@gmail.com>,
-        Mathias Kresin <dev@kresin.me>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
-        Jamie Stuart <jamie@onebillion.org>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180818160836.GB1468@makrotopia.org> (sfid-20180818_180925_524363_77436E67)
-References: <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com>
- <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
- <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
- <20180417194255.GA17067@redhat.com>
- <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
- <20180528125039.GA22122@redhat.com>
- <20180815114029.GA1862@redhat.com>
- <20180815223526.GC1243@makrotopia.org>
- <20180816110103.GB2797@redhat.com>
- <DM5PR02MB365669D5E9F2DE20DAE4CB7AD43E0@DM5PR02MB3656.namprd02.prod.outlook.com>
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>, joe@perches.com
+Subject: Re: [PATCH v4] PCI: Add PCI_DEVICE_DATA() macro to fully describe
+ device ID entry
+Message-ID: <20180814210310.GA28888@bhelgaas-glaptop.roam.corp.google.com> (sfid-20180814_230315_741129_3599E943)
+References: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <DM5PR02MB365669D5E9F2DE20DAE4CB7AD43E0@DM5PR02MB3656.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Still seeing a lot of those
+On Sun, Jul 29, 2018 at 04:16:56PM +0300, Andy Shevchenko wrote:
+> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
+> looks not so convenient due to additional driver_data field attached.
+> 
+> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
+> possible form. For example,
+> 
+>   before:
+> 
+>     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
+>       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
+> 
+>   after:
+> 
+>     { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
+> 
+> Drivers can be converted later on in independent way.
+> 
+> While here, remove the unused macro with the same name
+> from Ralink wireless driver.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.972151] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
-Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.981622] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
-Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.991070] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
-Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8365.000506] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
-Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8365.009935] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+Applied with Kalle's ack to pci/misc for v4.19, thanks!
 
-while wifi somehow keeps working at degraded level once the error
-occured.
-
-On Thu, Aug 16, 2018 at 07:30:40PM +0000, Craig Matsuura wrote:
-> FWIW we would use iperf and push a lot of data to a STA and would cause lock ups and issues with the queues.
+> ---
 > 
+> - Add vend to the device (Bjorn)
 > 
-> Craig
+> Bjorn, this also looks good.
 > 
+>  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
+>  include/linux/pci.h                            | 15 +++++++++++++++
+>  2 files changed, 15 insertions(+), 6 deletions(-)
 > 
-> Craig Matsuura • Technical Director, Embedded Software Architecture
-> 
-> cmatsuura@vivint.com<mailto:cmatsuura@vivint.com> • P: 801.229.6005
-> 
-> 
-> 
-> simply smarter • vivint.com
-> 
-> 3401 N Ashton Blvd. Lehi, UT 84043
-> 
-> 
-> 
-> [1497369905956_vivint-logo-orange.png]
-> 
-> ________________________________
-> From: linux-wireless-owner@vger.kernel.org <linux-wireless-owner@vger.kernel.org> on behalf of Stanislaw Gruszka <sgruszka@redhat.com>
-> Sent: Thursday, August 16, 2018 5:01:04 AM
-> To: Daniel Golle
-> Cc: Kofi Agor; Enrico Mioso; Craig Matsuura; Mathias Kresin; Tom Psyborg; linux-wireless; John Crispin; Felix Fietkau; Jamie Stuart
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue...?
-> 
-> Hello
-> 
-> On Thu, Aug 16, 2018 at 12:35:29AM +0200, Daniel Golle wrote:
-> > Clone the master branch of
-> > https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fgit.openwrt.org%2Fopenwrt%2Fstaging%2Fdangole.git&amp;data=01%7C01%7Ccmatsuura%40vivint.com%7C259b5ae9949e445dd9fe08d603680486%7C54cc98ca024a470185483741e3b8d59d%7C0&amp;sdata=8mOOSNRnqvjDVnCNHH15c%2BfEzr69yPpCkbSdD6Q8ZuA%3D&amp;reserved=0
-> > and give it shot and let us know the results.
-> 
-> Thanks!
-> 
-> > > Please also remove:
-> > > 600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
-> > > 991-rt2800_change_rx_ampdu_factor.patch
-> > > 992-rt2800_change_ba_size.patch
-> > > 993-rt2800_change_rx_ampdu_density.patch
-> > > Those are not needed and can be harmful with the test patches,
-> > > (especially spurious interrupt one, patches will not apply cleanly
-> > > with it).
-> >
-> > Ack. Hope it doesn't break Rt3883 and/or Rt3663 for which that patch
-> > was added by Gabor Juhos a decade ago...
-> 
-> The new patches change the way we handle TX status interrupt. I think
-> spurious interrupts were a problem because we do not disable the IRQ
-> and read statuses, so we could get interrupt after we empty TX_STA_FIFO
-> register. With current implementation this should not be an issue.
-> 
-> > > Another thing is fixing RATE_PROBE frames which are aggregated with
-> > > other frames and not sent at requested rate. I implemented qsel queue patch
-> > > similar to mt76, but this not work as expected on older Ralink chips.
-> > > https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fgithub.com%2Fsgruszka%2Fwireless-drivers-next%2Fcommit%2F846d205edd8c36d1b7828fee54bf4cf40bf8cb1a&amp;data=01%7C01%7Ccmatsuura%40vivint.com%7C259b5ae9949e445dd9fe08d603680486%7C54cc98ca024a470185483741e3b8d59d%7C0&amp;sdata=mI%2BPAh7OalmB1hxzjF%2FL6GqxwHDPi7Hy5P9IWADu5gI%3D&amp;reserved=0
-> >
-> > Which hardware did you try? Just so I can reproduce what's going on
-> > and maybe help fixing it...
-> 
-> I tested on RT3062 PCI and some USB dongles, don't remember chip version.
-> Basically HW become unresponsive after sent some traffic.
-> 
-> I debugged the problem by printing sequence number and rate of RATE PROBE
-> frames by something like this:
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> index 92ddc19..d7f250b 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-> @@ -334,6 +334,12 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
->                          txdesc->u.ht.mcs |= 0x08;
->          }
-> 
-> +       if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) {
-> +               int ssn = le16_to_cpu(hdr->seq_ctrl) >> 4;
-> +               printk("RATE PROBE %d %d\n", ssn, txdesc->u.ht.mcs);
-> +       }
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> index bc0ca5f58f38..283e2e607bba 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
+> @@ -27,12 +27,6 @@
+>  #include <linux/io.h>
+>  #include <linux/pci.h>
+>  
+> -/*
+> - * This variable should be used with the
+> - * pci_driver structure initialization.
+> - */
+> -#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+> -
+>  /*
+>   * PCI driver handlers.
+>   */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d0961aefdbae..fe060114a647 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -825,6 +825,21 @@ struct pci_driver {
+>  	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+>  	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+>  
+> +/**
+> + * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
+> + * @vend: the vendor name (without PCI_VENDOR_ID_ prefix)
+> + * @dev: the device name (without PCI_DEVICE_ID_<vend>_ prefix)
+> + * @data: the driver data to be filled
+> + *
+> + * This macro is used to create a struct pci_device_id that matches a
+> + * specific PCI device.  The subvendor, and subdevice fields will be set
+> + * to PCI_ANY_ID.
+> + */
+> +#define PCI_DEVICE_DATA(vend, dev, data) \
+> +	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##vend##_##dev, \
+> +	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0, \
+> +	.driver_data = (kernel_ulong_t)(data)
 > +
-> +
->          if (test_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags)) {
->                  if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
->                          txdesc->u.ht.txop = TXOP_SIFS;
+>  enum {
+>  	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
+>  	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
+> -- 
+> 2.18.0
 > 
-> and compared that with on air traffic captured in monitor mode on
-> different device in wireshark. On air traffic showed different
-> probe frames rate than requested.
-> 
-> Regards
-> Stanislaw
