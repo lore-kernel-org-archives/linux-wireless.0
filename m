@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59120 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57692 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727664AbeHaTw3 (ORCPT
+        with ESMTP id S1727885AbeHNOjT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:52:29 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 14 Aug 2018 10:39:19 -0400
+Subject: Re: [PATCH] mac80211: allow station search on AP/VLANs
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org>
+ <1534246103.3547.23.camel@sipsolutions.net>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org> (sfid-20180814_135231_876176_FD8C8C3D)
+Date: Tue, 14 Aug 2018 17:22:25 +0530
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] brcmfmac: add CYW89342 mini-PCIe device
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1534324989-59871-1-git-send-email-chi-hsien.lin@cypress.com>
-References: <1534324989-59871-1-git-send-email-chi-hsien.lin@cypress.com>
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Jia-Shyr Chuang <saint.chuang@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-Id: <20180831154424.4516E6053D@smtp.codeaurora.org> (sfid-20180831_174431_482598_E123145A)
-Date: Fri, 31 Aug 2018 15:44:24 +0000 (UTC)
+In-Reply-To: <1534246103.3547.23.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chi-Hsien Lin <chi-hsien.lin@cypress.com> wrote:
+On 8/14/2018 4:58 PM, Johannes Berg wrote:
 
-> From: Jia-Shyr Chuang <saint.chuang@cypress.com>
-> 
-> CYW89342 is a 2x2 MIMO, 802.11a/b/g/n/ac for WLAN. It is a member of
-> 4355/4359 family.
-> 
-> Signed-off-by: Jia-Shyr Chuang <saint.chuang@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+> On Mon, 2018-07-30 at 11:50 +0530, Manikanta Pubbisetty wrote:
+>> When mac80211 receives a packet, we interate over the list of
+>> active interfaces to find the station(which transmitted the packet).
+>> Currently, station search is not allowed on AP/VLAN interface; since
+>> stations can also get mapped to AP/VLAN interfaces, they are worth
+>> considering for station search.
+> I don't see how this makes sense. We use sta_info_get_bss() later, so
+> any AP/AP_VLAN would be OK, so we don't need to try it twice for
+> AP_VLAN?
 
-Patch applied to wireless-drivers-next.git, thanks.
+AP/VLANs are skipped currently, we don't even get to sta_info_get_bss() 
+if the iftype is AP/VLAN. No?
 
-2fef681a4cf7 brcmfmac: add CYW89342 mini-PCIe device
-
--- 
-https://patchwork.kernel.org/patch/10566391/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Manikanta
