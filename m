@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45532 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727222AbeHaNAj (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:35244 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725977AbeHNXO5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 09:00:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:28 +0300
-Message-Id: <20180831083130.15525-27-luca@coelho.fi> (sfid-20180831_105448_791318_1F2372CB)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 26/28] cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
+        Tue, 14 Aug 2018 19:14:57 -0400
+Received: by mail-it0-f65.google.com with SMTP id 139-v6so21869241itf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 13:26:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
+ <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Date: Tue, 14 Aug 2018 13:26:04 -0700
+Message-ID: <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com> (sfid-20180814_222617_976297_E57262D4)
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: security@kernel.org, Kevin Deus <kdeus@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-)
+On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
+> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>> Thanks.  This is great.  I'm so glad these are finally getting fixed.
+>>
+>> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
+>> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
+>> (0x7f) so that's one element beyond the end of the array and the
+>> NFC_HCI_HCP_RESPONSE isn't checked.
+>>
+>> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
+>> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
+>
+> Good point. From hci.h:
+>
+> /*
+>  * According to specification 102 622 chapter 4.4 Pipes,
+>  * the pipe identifier is 7 bits long.
+>  */
+> #define NFC_HCI_MAX_PIPES 127
+>
+> And then:
+>
+> struct nfc_hci_dev {
+>   ...
+>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
+>   ...
+> }
+>
+> I think the correct fix would be to change it to:
+>
+>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
+>
+> What do you think?
+>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Just to be clear, this would fix the problem Dan described in his
+reply and it should be implemented in a separate patch. The original
+fix is still valid.
 
-Core regulatory hints didn't set wiphy_idx to WIPHY_IDX_INVALID. Since
-the regulatory request is zeroed, wiphy_idx was always implicitly set to
-0. This resulted in updating only phy #0.
-Fix that.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/wireless/reg.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 043d43573ca2..0eb5e44f8a74 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2932,6 +2932,7 @@ static int regulatory_hint_core(const char *alpha2)
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_CORE;
-+	request->wiphy_idx = WIPHY_IDX_INVALID;
- 
- 	queue_regulatory_request(request);
- 
--- 
-2.18.0
+>>
+>> regards,
+>> dan carpenter
+>>
