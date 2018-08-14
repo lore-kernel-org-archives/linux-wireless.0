@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58936 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726181AbeH1Rgv (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:41256 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727858AbeHNNnS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 13:36:51 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 14 Aug 2018 09:43:18 -0400
+Date: Tue, 14 Aug 2018 13:56:21 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, linux-wireless@vger.kernel.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
+ `__this_module' error
+Message-ID: <20180814105621.hu3kpbxwz4kjc2o3@mwanda> (sfid-20180814_125653_891113_9FE8232A)
+References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
+ <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
+ <20180812113555.GC25209@kroah.com>
+ <20180812174852.2eecf7da@ajaysk-VirtualBox>
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath9k: remove unused array firstep_table
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180816125030.4416-1-colin.king@canonical.com>
-References: <20180816125030.4416-1-colin.king@canonical.com>
-To: Colin King <colin.king@canonical.com>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180828134507.19787603D2@smtp.codeaurora.org> (sfid-20180828_154521_040490_904920C4)
-Date: Tue, 28 Aug 2018 13:45:07 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180812174852.2eecf7da@ajaysk-VirtualBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> wrote:
-
-> Array firstep_table is being assigned but is never used
-> hence it is redundant and can be removed.
+On Sun, Aug 12, 2018 at 05:48:52PM +0530, Ajay Singh wrote:
+> Yes, currently only code to read and writing for "wilc_debug_level"
+> exists.
 > 
-> Cleans up clang warning:
-> warning: 'firstep_table' defined but not used [-Wunused-const-variable=]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> The main purpose for this file was to configure(enable/disable)
+> specific level debug logs to print.
+>
 
-Patch applied to ath-next branch of ath.git, thanks.
+The kernel's dev_dbg() macros are really very clever.  You can enable
+them for one file or for a specific line or for a function.
 
-a2f73a167dc1 ath9k: remove unused array firstep_table
-
--- 
-https://patchwork.kernel.org/patch/10567385/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
