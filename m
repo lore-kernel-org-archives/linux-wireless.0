@@ -1,118 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42814 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726602AbeHUJzx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37826 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729420AbeHNPAE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:55:53 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:43 +0300
-Message-Id: <20180821063657.30071-2-luca@coelho.fi> (sfid-20180821_083712_341837_7E5E3A6D)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 01/15] iwlwifi: remove dump_regs() from transport ops
+        Tue, 14 Aug 2018 11:00:04 -0400
+Subject: Re: [PATCH] mac80211: allow station search on AP/VLANs
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <1532931620-3161-1-git-send-email-mpubbise@codeaurora.org>
+ <1534246103.3547.23.camel@sipsolutions.net>
+ <1f50369a-61ae-cd7b-1300-78392852ebb5@codeaurora.org>
+ <1534247624.3547.28.camel@sipsolutions.net>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <3dda8067-6a9c-4d3f-5332-0cb6f9904d6a@codeaurora.org> (sfid-20180814_141315_109582_074ADE94)
+Date: Tue, 14 Aug 2018 17:43:03 +0530
+MIME-Version: 1.0
+In-Reply-To: <1534247624.3547.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-This is used only within PCIe, and there's no reason to go through
-the transport methods for a function call within PCIe itself.
-Remove the dump_regs() method and call the function directly.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 11 -----------
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  3 +--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  2 +-
- 4 files changed, 3 insertions(+), 14 deletions(-)
+On 8/14/2018 5:23 PM, Johannes Berg wrote:
+> On Tue, 2018-08-14 at 17:22 +0530, Manikanta Pubbisetty wrote:
+>> On 8/14/2018 4:58 PM, Johannes Berg wrote:
+>>
+>>> On Mon, 2018-07-30 at 11:50 +0530, Manikanta Pubbisetty wrote:
+>>>> When mac80211 receives a packet, we interate over the list of
+>>>> active interfaces to find the station(which transmitted the packet).
+>>>> Currently, station search is not allowed on AP/VLAN interface; since
+>>>> stations can also get mapped to AP/VLAN interfaces, they are worth
+>>>> considering for station search.
+>>> I don't see how this makes sense. We use sta_info_get_bss() later, so
+>>> any AP/AP_VLAN would be OK, so we don't need to try it twice for
+>>> AP_VLAN?
+>> AP/VLANs are skipped currently, we don't even get to sta_info_get_bss()
+>> if the iftype is AP/VLAN. No?
+> Yes, we won't try anything for the AP_VLANs, but when we hit the AP we
+> look up through everything, no?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 0b8cf7f3af93..dbac9ac80ce9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -539,9 +539,6 @@ struct iwl_trans_rxq_dma_data {
-  * @dump_data: return a vmalloc'ed buffer with debug data, maybe containing last
-  *	TX'ed commands and similar. The buffer will be vfree'd by the caller.
-  *	Note that the transport must fill in the proper file headers.
-- * @dump_regs: dump using IWL_ERR configuration space and memory mapped
-- *	registers of the device to diagnose failure, e.g., when HW becomes
-- *	inaccessible.
-  */
- struct iwl_trans_ops {
- 
-@@ -612,8 +609,6 @@ struct iwl_trans_ops {
- 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
- 						 const struct iwl_fw_dbg_trigger_tlv
- 						 *trigger);
--
--	void (*dump_regs)(struct iwl_trans *trans);
- };
- 
- /**
-@@ -898,12 +893,6 @@ iwl_trans_dump_data(struct iwl_trans *trans,
- 	return trans->ops->dump_data(trans, trigger);
- }
- 
--static inline void iwl_trans_dump_regs(struct iwl_trans *trans)
--{
--	if (trans->ops->dump_regs)
--		trans->ops->dump_regs(trans);
--}
--
- static inline struct iwl_device_cmd *
- iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index cb43b194dc05..74442189d639 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -988,6 +988,7 @@ static inline void __iwl_trans_pcie_set_bit(struct iwl_trans *trans,
- }
- 
- void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
-+void iwl_trans_pcie_dump_regs(struct iwl_trans *trans);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 7d319b6863fe..7cc438f31154 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -92,7 +92,7 @@
- #define IWL_FW_MEM_EXTENDED_START	0x40000
- #define IWL_FW_MEM_EXTENDED_END		0x57FFF
- 
--static void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
-+void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
- {
- #define PCI_DUMP_SIZE	64
- #define PREFIX_LEN	32
-@@ -3175,7 +3175,6 @@ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
- 	.ref = iwl_trans_pcie_ref,					\
- 	.unref = iwl_trans_pcie_unref,					\
- 	.dump_data = iwl_trans_pcie_dump_data,				\
--	.dump_regs = iwl_trans_pcie_dump_regs,				\
- 	.d3_suspend = iwl_trans_pcie_d3_suspend,			\
- 	.d3_resume = iwl_trans_pcie_d3_resume
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index da8e0e7c7844..debff193016e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1912,7 +1912,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
--		iwl_trans_dump_regs(trans);
-+		iwl_trans_pcie_dump_regs(trans);
- 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
- 			iwl_get_cmd_string(trans, cmd->id));
- 		dump_stack();
--- 
-2.18.0
+I think it does, it gets the correct station information when AP iftype 
+is hit.
+Makes sense, we can drop this patch.
+
+Manikanta
