@@ -1,129 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53988 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728824AbeHVNNZ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57882 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 09:13:25 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Byungchul Park <byungchul.park@lge.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 1/2] workqueue: skip lockdep wq dependency in cancel_work_sync()
-Date: Wed, 22 Aug 2018 11:49:03 +0200
-Message-Id: <20180822094904.15718-2-johannes@sipsolutions.net> (sfid-20180822_114938_188367_7D7BEB89)
-In-Reply-To: <20180822094904.15718-1-johannes@sipsolutions.net>
-References: <20180822094904.15718-1-johannes@sipsolutions.net>
+        Tue, 14 Aug 2018 05:36:23 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 04/24] staging: wilc1000: remove unnecessary NULL check in clear_shadow_scan()
+Date: Tue, 14 Aug 2018 12:19:56 +0530
+Message-ID: <1534229416-13254-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085037_470252_D3C0603E)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Cleanup patch to remove the unnecessary NULL check before freeing up ies
+information in clear_shadow_scan().
 
-In cancel_work_sync(), we can only have one of two cases, even
-with an ordered workqueue:
- * the work isn't running, just cancelled before it started
- * the work is running, but then nothing else can be on the
-   workqueue before it
-
-Thus, we need to skip the lockdep workqueue dependency handling,
-otherwise we get false positive reports from lockdep saying that
-we have a potential deadlock when the workqueue also has other
-work items with locking, e.g.
-
-  work1_function() { mutex_lock(&mutex); ... }
-  work2_function() { /* nothing */ }
-
-  other_function() {
-    queue_work(ordered_wq, &work1);
-    queue_work(ordered_wq, &work2);
-    mutex_lock(&mutex);
-    cancel_work_sync(&work2);
-  }
-
-As described above, this isn't a problem, but lockdep will
-currently flag it as if cancel_work_sync() was flush_work(),
-which *is* a problem.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- kernel/workqueue.c | 37 ++++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 78b192071ef7..a6c2b823f348 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -2843,7 +2843,8 @@ void drain_workqueue(struct workqueue_struct *wq)
- }
- EXPORT_SYMBOL_GPL(drain_workqueue);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ede9134..00a167b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -165,10 +165,8 @@ static void clear_shadow_scan(void)
+ 		return;
  
--static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
-+static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
-+			     bool from_cancel)
- {
- 	struct worker *worker = NULL;
- 	struct worker_pool *pool;
-@@ -2885,7 +2886,8 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
- 	 * workqueues the deadlock happens when the rescuer stalls, blocking
- 	 * forward progress.
- 	 */
--	if (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer) {
-+	if (!from_cancel &&
-+	    (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer)) {
- 		lock_map_acquire(&pwq->wq->lockdep_map);
- 		lock_map_release(&pwq->wq->lockdep_map);
- 	}
-@@ -2896,6 +2898,22 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
- 	return false;
- }
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+-		if (last_scanned_shadow[i].ies) {
+-			kfree(last_scanned_shadow[i].ies);
+-			last_scanned_shadow[i].ies = NULL;
+-		}
++		kfree(last_scanned_shadow[i].ies);
++		last_scanned_shadow[i].ies = NULL;
  
-+static bool __flush_work(struct work_struct *work, bool from_cancel)
-+{
-+	struct wq_barrier barr;
-+
-+	if (WARN_ON(!wq_online))
-+		return false;
-+
-+	if (start_flush_work(work, &barr, from_cancel)) {
-+		wait_for_completion(&barr.done);
-+		destroy_work_on_stack(&barr.work);
-+		return true;
-+	} else {
-+		return false;
-+	}
-+}
-+
- /**
-  * flush_work - wait for a work to finish executing the last queueing instance
-  * @work: the work to flush
-@@ -2909,18 +2927,7 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
-  */
- bool flush_work(struct work_struct *work)
- {
--	struct wq_barrier barr;
--
--	if (WARN_ON(!wq_online))
--		return false;
--
--	if (start_flush_work(work, &barr)) {
--		wait_for_completion(&barr.done);
--		destroy_work_on_stack(&barr.work);
--		return true;
--	} else {
--		return false;
--	}
-+	return __flush_work(work, false);
- }
- EXPORT_SYMBOL_GPL(flush_work);
- 
-@@ -2986,7 +2993,7 @@ static bool __cancel_work_timer(struct work_struct *work, bool is_dwork)
- 	 * isn't executing.
- 	 */
- 	if (wq_online)
--		flush_work(work);
-+		__flush_work(work, true);
- 
- 	clear_work_data(work);
- 
+ 		kfree(last_scanned_shadow[i].join_params);
+ 		last_scanned_shadow[i].join_params = NULL;
 -- 
-2.14.4
+2.7.4
