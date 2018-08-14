@@ -1,152 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35592 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726793AbeHHM7l (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41306 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJgN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 08:59:41 -0400
-From: Wen Gong <wgong@codeaurora.org>
-To: ath10k@lists.infradead.org, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-Date: Wed,  8 Aug 2018 18:40:02 +0800
-Message-Id: <1533724802-30944-3-git-send-email-wgong@codeaurora.org> (sfid-20180808_124037_578033_860F5C09)
-In-Reply-To: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+        Tue, 14 Aug 2018 05:36:13 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/24] staging: wilc1000: move 'wilc_enable_ps' global variable into 'wilc' struct
+Date: Tue, 14 Aug 2018 12:19:53 +0530
+Message-ID: <1534229416-13254-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085027_674887_FD55800F)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upstream kernel has an interface to help adjust sk_pacing_shift to help
-improve TCP UL throughput.
-The sk_pacing_shift is 8 in mac80211, this is based on test with 11N
-WiFi chips with ath9k. For QCA6174/QCA9377 PCI 11AC chips, the 11AC
-VHT80 TCP UL throughput testing result shows 6 is the optimal.
-Overwrite the sk_pacing_shift to 6 in ath10k driver for QCA6174/9377 PCI.
+Instead of having 'wilc_enable_ps' as global variable moved it to 'wilc'
+structure. Rename 'wilc_enable_ps' to 'enable_ps' as its already part of
+'wilc' structure
 
-Tested with QCA6174 PCI with firmware
-WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
-It's not a regression with new firmware releases.
-
-There have 2 test result of different settings:
-
-ARM CPU based device with QCA6174A PCI with different
-sk_pacing_shift:
-
- sk_pacing_shift  throughput(Mbps)             CPU utilization
-         6            500(-P5)      ~75% idle, Focus on CPU1: ~14%idle
-         7            454(-P5)      ~80% idle, Focus on CPU1: ~4%idle
-         8               288        ~90% idle, Focus on CPU1: ~35%idle
-         9              ~200        ~92% idle, Focus on CPU1: ~50%idle
-
-5G TCP UL VTH80 on X86 platform with QCA6174A PCI with sk_packing_shift
-set to 6:
-
-  tcp_limit_output_bytes            throughput(Mbps)
- default(262144)+1 Stream                 336
- default(262144)+2 Streams                558
- default(262144)+3 Streams                584
- default(262144)+4 Streams                602
- default(262144)+5 Streams                598
- changed(2621440)+1 Stream                598
- changed(2621440)+2 Streams               601
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
-V2:
--add the optimal for configurable for each hardware type
- drivers/net/wireless/ath/ath10k/core.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/hw.h   | 6 ++++++
- drivers/net/wireless/ath/ath10k/mac.c  | 3 +++
- 3 files changed, 15 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c             |  5 ++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ drivers/staging/wilc1000/wilc_wlan.h              |  1 -
+ 4 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 85c58eb..fbd13ec 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -189,6 +189,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_6174,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -221,6 +222,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_6174,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -253,6 +255,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_6174,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -288,6 +291,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_6174,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -443,6 +447,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_9377,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -477,6 +482,7 @@
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.tx_sk_pacing_shift = SK_PACING_SHIFT_9377,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index a274bd8..1f956d6 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -161,6 +161,9 @@ enum qca9377_chip_id_rev {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 01cf4bd..57e3176 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -12,8 +12,6 @@
  
- #define REG_DUMP_COUNT_QCA988X 60
+ #include "wilc_wfi_cfgoperations.h"
  
-+#define SK_PACING_SHIFT_6174 6
-+#define SK_PACING_SHIFT_9377 6
-+
- struct ath10k_fw_ie {
- 	__le32 id;
- 	__le32 len;
-@@ -589,6 +592,9 @@ struct ath10k_hw_params {
+-bool wilc_enable_ps = true;
+-
+ static int dev_state_ev_handler(struct notifier_block *this,
+ 				unsigned long event, void *ptr)
+ {
+@@ -54,7 +52,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 			del_timer(&wilc_during_ip_timer);
+ 		}
  
- 	/* Number of bytes to be the offset for each FFT sample */
- 	int spectral_bin_offset;
-+
-+	/* Number of shift to override the default value of ieee80211_hw*/
-+	u8 tx_sk_pacing_shift;
+-		if (wilc_enable_ps)
++		if (vif->wilc->enable_ps)
+ 			wilc_set_power_mgmt(vif, 1, 0);
+ 
+ 		netdev_dbg(dev, "[%s] Up IP\n", dev_iface->ifa_label);
+@@ -1066,6 +1064,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	*wilc = wl;
+ 	wl->io_type = io_type;
+ 	wl->hif_func = ops;
++	wl->enable_ps = true;
+ 	INIT_LIST_HEAD(&wl->txq_head.list);
+ 	INIT_LIST_HEAD(&wl->rxq_head.list);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7cd0330..4727a8a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1732,7 +1732,7 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	if (!priv->hif_drv)
+ 		return -EIO;
+ 
+-	if (wilc_enable_ps)
++	if (vif->wilc->enable_ps)
+ 		wilc_set_power_mgmt(vif, enabled, timeout);
+ 
+ 	return 0;
+@@ -1764,7 +1764,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		memset(priv->assoc_stainfo.sta_associated_bss, 0,
+ 		       MAX_NUM_STA * ETH_ALEN);
+ 
+-		wilc_enable_ps = true;
++		wl->enable_ps = true;
+ 		wilc_set_power_mgmt(vif, 1, 0);
+ 		break;
+ 
+@@ -1776,12 +1776,12 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		vif->iftype = CLIENT_MODE;
+ 		wilc_set_operation_mode(vif, STATION_MODE);
+ 
+-		wilc_enable_ps = false;
++		wl->enable_ps = false;
+ 		wilc_set_power_mgmt(vif, 0, 0);
+ 		break;
+ 
+ 	case NL80211_IFTYPE_AP:
+-		wilc_enable_ps = false;
++		wl->enable_ps = false;
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->iftype = AP_MODE;
+@@ -1803,7 +1803,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		priv->wdev->iftype = type;
+ 		vif->iftype = GO_MODE;
+ 
+-		wilc_enable_ps = false;
++		wl->enable_ps = false;
+ 		wilc_set_power_mgmt(vif, 0, 0);
+ 		break;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index b7eee77..8b74d61 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -166,6 +166,7 @@ struct wilc {
+ 	bool suspend_event;
+ 
+ 	struct rf_info dummy_statistics;
++	bool enable_ps;
  };
  
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 95243b4..4f2c07f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8361,6 +8361,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->wiphy->max_scan_ssids = WLAN_SCAN_PARAMS_MAX_SSID;
- 	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
- 
-+	if (ar->hw_params.tx_sk_pacing_shift != 0)
-+		ar->hw->tx_sk_pacing_shift = ar->hw_params.tx_sk_pacing_shift;
-+
- 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
- 	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
- 	ar->hw->txq_data_size = sizeof(struct ath10k_txq);
+ struct wilc_wfi_mon_priv {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 7467188..1f874d1 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -289,7 +289,6 @@ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
+ void host_wakeup_notify(struct wilc *wilc);
+ void host_sleep_notify(struct wilc *wilc);
+-extern bool wilc_enable_ps;
+ void chip_allow_sleep(struct wilc *wilc);
+ void chip_wakeup(struct wilc *wilc);
+ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
 -- 
-1.9.1
+2.7.4
