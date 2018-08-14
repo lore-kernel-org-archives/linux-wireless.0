@@ -1,82 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f50.google.com ([209.85.214.50]:36166 "EHLO
-        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726619AbeHJVmZ (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41367 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727670AbeHNJh1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Aug 2018 17:42:25 -0400
-Received: by mail-it0-f50.google.com with SMTP id p81-v6so4115992itp.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Aug 2018 12:11:16 -0700 (PDT)
+        Tue, 14 Aug 2018 05:37:27 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 23/24] staging: wilc1000: move 'wilc_connecting' static variable to 'wilc_vif' struct
+Date: Tue, 14 Aug 2018 12:20:15 +0530
+Message-ID: <1534229416-13254-24-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085141_274421_8B2A402F)
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-From: Menion <menion@gmail.com>
-Date: Fri, 10 Aug 2018 21:11:05 +0200
-Message-ID: <CAJVZm6cZ5yF+PjiMMnVmcu0MhOmaMFWV2E9EaK3=k4ogo3Lj6Q@mail.gmail.com> (sfid-20180810_211120_041707_C2190EF1)
-Subject: mwl8k: Expand non-DFS 5G channels (linux master commit 4628257)
-To: linux-wireless@vger.kernel.org
-Cc: waveletboy@gmail.com, kvalo@codeaurora.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all
-I have backported the commit above on the 4.14.x kernel used by
-Openwrt 18.06.x image family.
-I planned to use it with my kirkwood based router, linksys ea4500,
-which use mwl8k to control two radio, 2.4Ghz and 5Ghz, based on
-88W8366 (see: https://wiki.openwrt.org/toh/linksys/ea4500)
-I built the image and loaded it on my routers (actually I have two ea4500)
-Unfortunately only the old 4 ch shows as supported.
-My question is if the modification should be enough to unlock higher
-non DFS channels, or if I require some other patches, or maybe new
-firmware.
-In case suggestions to troubleshoot the problem are appreciated
-Bye
+Move static variable 'wilc_connecting' as part of 'wilc_vif' private
+struct. Remove "wilc_" prefix from name as its already part of wilc_vif
+struct.
 
-Following the "iw list" output for the 5Ghz radio
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 ++--
+ drivers/staging/wilc1000/host_interface.h         |  2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 ++++++++----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ 4 files changed, 11 insertions(+), 14 deletions(-)
 
-Wiphy phy1
-        max # scan SSIDs: 4
-        max scan IEs length: 2261 bytes
-        max # sched scan SSIDs: 0
-        max # match sets: 0
-        max # scan plans: 1
-        max scan plan interval: -1
-        max scan plan iterations: 0
-        Retry short limit: 7
-        Retry long limit: 4
-        Coverage class: 0 (up to 0m)
-        Available Antennas: TX 0 RX 0
-        Supported interface modes:
-                 * managed
-                 * AP
-                 * AP/VLAN
-                 * monitor
-        Band 2:
-                Capabilities: 0xffe
-                        HT20/HT40
-                        SM Power Save disabled
-                        RX Greenfield
-                        RX HT20 SGI
-                        RX HT40 SGI
-                        TX STBC
-                        RX STBC 3-streams
-                        HT Delayed Block Ack
-                        Max AMSDU length: 7935 bytes
-                        No DSSS/CCK HT40
-                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-                Minimum RX AMPDU time spacing: No restriction (0x00)
-                HT TX/RX MCS rate indexes supported: 0-23, 32
-                Frequencies:
-                        * 5180 MHz [36] (20.0 dBm)
-                        * 5200 MHz [40] (20.0 dBm)
-                        * 5220 MHz [44] (20.0 dBm)
-                        * 5240 MHz [48] (20.0 dBm)
-        valid interface combinations:
-                 * #{ AP } <= 8, #{ managed } <= 1,
-                   total <= 8, #channels <= 1
-        HT Capability overrides:
-                 * MCS: ff ff ff ff ff ff ff ff ff ff
-                 * maximum A-MSDU length
-                 * supported channel width
-                 * short GI for 40 MHz
-                 * max A-MPDU length exponent
-                 * min MPDU start spacing
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f37ba64..d8cc08b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -720,7 +720,7 @@ static void handle_scan(struct work_struct *work)
+ 		goto error;
+ 	}
+ 
+-	if (vif->obtaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || vif->connecting) {
+ 		netdev_err(vif->ndev, "Don't do obss scan\n");
+ 		result = -EBUSY;
+ 		goto error;
+@@ -2326,7 +2326,7 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+ 		goto error;
+ 	}
+ 
+-	if (vif->obtaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || vif->connecting) {
+ 		result = -EBUSY;
+ 		goto error;
+ 	}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0f0d509..4048eab 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -361,6 +361,4 @@ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+ 
+ extern u8 wilc_connected_ssid[6];
+ 
+-extern int wilc_connecting;
+-
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 35a83d4..cc44640 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -453,8 +453,6 @@ static inline bool wilc_cfg_scan_time_expired(struct wilc_priv *priv, int i)
+ 		return false;
+ }
+ 
+-int wilc_connecting;
+-
+ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 			       struct connect_info *conn_info,
+ 			       u8 mac_status,
+@@ -468,7 +466,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 	struct host_if_drv *wfi_drv = priv->hif_drv;
+ 	u8 null_bssid[ETH_ALEN] = {0};
+ 
+-	wilc_connecting = 0;
++	vif->connecting = 0;
+ 
+ 	if (conn_disconn_evt == CONN_DISCONN_EVENT_CONN_RESP) {
+ 		u16 connect_status;
+@@ -666,7 +664,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	enum authtype auth_type = ANY;
+ 	u32 cipher_group;
+ 
+-	wilc_connecting = 1;
++	vif->connecting = 1;
+ 
+ 	if (!(strncmp(sme->ssid, "DIRECT-", 7)))
+ 		wfi_drv->p2p_connect = 1;
+@@ -698,7 +696,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		nw_info = &priv->scanned_shadow[sel_bssi_idx];
+ 	} else {
+ 		ret = -ENOENT;
+-		wilc_connecting = 0;
++		vif->connecting = 0;
+ 		return ret;
+ 	}
+ 
+@@ -741,7 +739,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 			ret = -ENOTSUPP;
+ 			netdev_err(dev, "%s: Unsupported cipher\n",
+ 				   __func__);
+-			wilc_connecting = 0;
++			vif->connecting = 0;
+ 			return ret;
+ 		}
+ 	}
+@@ -792,7 +790,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	if (ret != 0) {
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		ret = -ENOENT;
+-		wilc_connecting = 0;
++		vif->connecting = 0;
+ 		return ret;
+ 	}
+ 
+@@ -809,7 +807,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev,
+ 	int ret;
+ 	u8 null_bssid[ETH_ALEN] = {0};
+ 
+-	wilc_connecting = 0;
++	vif->connecting = 0;
+ 
+ 	if (!wilc)
+ 		return -EIO;
+@@ -1747,7 +1745,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+-		wilc_connecting = 0;
++		vif->connecting = 0;
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+@@ -1762,7 +1760,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		break;
+ 
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-		wilc_connecting = 0;
++		vif->connecting = 0;
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 9d57adb..fd3e69e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -151,6 +151,7 @@ struct wilc_vif {
+ 	struct timer_list periodic_rssi;
+ 	struct rf_info periodic_stat;
+ 	struct tcp_ack_filter ack_filter;
++	int connecting;
+ };
+ 
+ struct wilc {
+-- 
+2.7.4
