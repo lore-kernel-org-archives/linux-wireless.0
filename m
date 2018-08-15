@@ -1,386 +1,394 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45284 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727479AbeHaMh6 (ORCPT
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:34087 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726013AbeHOIJt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:37:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <idox.yariv@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:03 +0300
-Message-Id: <20180831083130.15525-2-luca@coelho.fi> (sfid-20180831_103151_219549_87A63D5A)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 01/28] mac80211: Add he_capa debugfs entry
+        Wed, 15 Aug 2018 04:09:49 -0400
+Received: by mail-yw1-f67.google.com with SMTP id j68-v6so89088ywg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 22:19:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180810111425.GA16269@redhat.com>
+References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+ <20180809111049.GC1955@redhat.com> <CAAemcoOkA4y7zDMCKzD+nKJAQFoWCGPVHdbEV0j9ZOeaCe144g@mail.gmail.com>
+ <20180810111425.GA16269@redhat.com>
+From: Randy Oostdyk <linux-kernel@oostdyk.com>
+Date: Tue, 14 Aug 2018 23:19:09 -0600
+Message-ID: <CAAemcoOK6pxENmX8By=WJR3PVE7u2HwbE50LD3v0+Cif6bS5Lg@mail.gmail.com> (sfid-20180815_071926_600476_054CA5BC)
+Subject: Re: wireless dongle causing entire machine to hang
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <idox.yariv@intel.com>
+Finally got an opportunity to implement the patch and test it out.
+Looks like it suppressed the log spam (excellent!), but the machine
+unfortunately remains unresponsive. Attached is a relevant section of
+the log: I'm not able to interpret the CPU stall backtrace info, but
+perhaps someone here can determine whether it's USB or the wireless
+driver hanging the machine? In the log, it repeats with further
+warnings and CPU stall backtraces. I can supply more, if needed.
 
-Export HE capabilities information via debugfs, similar to HT & VHT.
+As mentioned earlier, it seems clear I have some kind of USB hardware
+issue going on, and I'll sort that out myself, I just wanted to report
+the hang, in case it might help contribute toward improving the
+reliability of the kernel.
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/debugfs_sta.c | 325 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 325 insertions(+)
+Cheers!
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 4105081dc1df..de66f685a107 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -4,6 +4,7 @@
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright(c) 2016 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -487,12 +488,335 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
- 			p += scnprintf(p, sizeof(buf)+buf-p,
- 				       "MCS TX highest: %d Mbps\n",
- 				       le16_to_cpu(vhtc->vht_mcs.tx_highest));
-+#undef PFLAG
- 	}
- 
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
- }
- STA_OPS(vht_capa);
- 
-+static ssize_t sta_he_capa_read(struct file *file, char __user *userbuf,
-+				size_t count, loff_t *ppos)
-+{
-+	char *buf, *p;
-+	size_t buf_sz = PAGE_SIZE;
-+	struct sta_info *sta = file->private_data;
-+	struct ieee80211_sta_he_cap *hec = &sta->sta.he_cap;
-+	struct ieee80211_he_mcs_nss_supp *nss = &hec->he_mcs_nss_supp;
-+	u8 ppe_size;
-+	u8 *cap;
-+	int i;
-+	ssize_t ret;
-+
-+	buf = kmalloc(buf_sz, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+	p = buf;
-+
-+	p += scnprintf(p, buf_sz + buf - p, "HE %ssupported\n",
-+		       hec->has_he ? "" : "not ");
-+	if (!hec->has_he)
-+		goto out;
-+
-+	cap = hec->he_cap_elem.mac_cap_info;
-+	p += scnprintf(p, buf_sz + buf - p,
-+		       "MAC-CAP: %#.2x %#.2x %#.2x %#.2x %#.2x\n",
-+		       cap[0], cap[1], cap[2], cap[3], cap[4]);
-+
-+#define PRINT(fmt, ...)							\
-+	p += scnprintf(p, buf_sz + buf - p, "\t\t" fmt "\n",		\
-+		       ##__VA_ARGS__)
-+
-+#define PFLAG(t, n, a, b)						\
-+	do {								\
-+		if (cap[n] & IEEE80211_HE_##t##_CAP##n##_##a)		\
-+			PRINT("%s", b);					\
-+	} while (0)
-+
-+#define PFLAG_RANGE(t, i, n, s, m, off, fmt)				\
-+	do {								\
-+		u8 msk = IEEE80211_HE_##t##_CAP##i##_##n##_MASK;	\
-+		u8 idx = ((cap[i] & msk) >> (ffs(msk) - 1)) + off;	\
-+		PRINT(fmt, (s << idx) + (m * idx));			\
-+	} while (0)
-+
-+#define PFLAG_RANGE_DEFAULT(t, i, n, s, m, off, fmt, a, b)		\
-+	do {								\
-+		if (cap[i] == IEEE80211_HE_##t ##_CAP##i##_##n##_##a) {	\
-+			PRINT("%s", b);					\
-+			break;						\
-+		}							\
-+		PFLAG_RANGE(t, i, n, s, m, off, fmt);			\
-+	} while (0)
-+
-+	PFLAG(MAC, 0, HTC_HE, "HTC-HE");
-+	PFLAG(MAC, 0, TWT_REQ, "TWT-REQ");
-+	PFLAG(MAC, 0, TWT_RES, "TWT-RES");
-+	PFLAG_RANGE_DEFAULT(MAC, 0, DYNAMIC_FRAG, 0, 1, 0,
-+			    "DYNAMIC-FRAG-LEVEL-%d", NOT_SUPP, "NOT-SUPP");
-+	PFLAG_RANGE_DEFAULT(MAC, 0, MAX_NUM_FRAG_MSDU, 1, 0, 0,
-+			    "MAX-NUM-FRAG-MSDU-%d", UNLIMITED, "UNLIMITED");
-+
-+	PFLAG_RANGE_DEFAULT(MAC, 1, MIN_FRAG_SIZE, 128, 0, -1,
-+			    "MIN-FRAG-SIZE-%d", UNLIMITED, "UNLIMITED");
-+	PFLAG_RANGE_DEFAULT(MAC, 1, TF_MAC_PAD_DUR, 0, 8, 0,
-+			    "TF-MAC-PAD-DUR-%dUS", MASK, "UNKNOWN");
-+	PFLAG_RANGE(MAC, 1, MULTI_TID_AGG_QOS, 0, 1, 1, "MULTI-TID-AGG-QOS-%d");
-+
-+	if (cap[0] & IEEE80211_HE_MAC_CAP0_HTC_HE) {
-+		switch (((cap[2] << 1) | (cap[1] >> 7)) & 0x3) {
-+		case 0:
-+			PRINT("LINK-ADAPTATION-NO-FEEDBACK");
-+			break;
-+		case 1:
-+			PRINT("LINK-ADAPTATION-RESERVED");
-+			break;
-+		case 2:
-+			PRINT("LINK-ADAPTATION-UNSOLICITED-FEEDBACK");
-+			break;
-+		case 3:
-+			PRINT("LINK-ADAPTATION-BOTH");
-+			break;
-+		}
-+	}
-+
-+	PFLAG(MAC, 2, ALL_ACK, "ALL-ACK");
-+	PFLAG(MAC, 2, UL_MU_RESP_SCHED, "UL-MU-RESP-SCHED");
-+	PFLAG(MAC, 2, BSR, "BSR");
-+	PFLAG(MAC, 2, BCAST_TWT, "BCAST-TWT");
-+	PFLAG(MAC, 2, 32BIT_BA_BITMAP, "32BIT-BA-BITMAP");
-+	PFLAG(MAC, 2, MU_CASCADING, "MU-CASCADING");
-+	PFLAG(MAC, 2, ACK_EN, "ACK-EN");
-+
-+	PFLAG(MAC, 3, GRP_ADDR_MULTI_STA_BA_DL_MU,
-+	      "GRP-ADDR-MULTI-STA-BA-DL-MU");
-+	PFLAG(MAC, 3, OMI_CONTROL, "OMI-CONTROL");
-+	PFLAG(MAC, 3, OFDMA_RA, "OFDMA-RA");
-+
-+	switch (cap[3] & IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_MASK) {
-+	case IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_USE_VHT:
-+		PRINT("MAX-A-AMPDU-LEN-EXP-USE-VHT");
-+		break;
-+	case IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_1:
-+		PRINT("MAX-A-AMPDU-LEN-EXP-VHT-1");
-+		break;
-+	case IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_2:
-+		PRINT("MAX-A-AMPDU-LEN-EXP-VHT-2");
-+		break;
-+	case IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_RESERVED:
-+		PRINT("MAX-A-AMPDU-LEN-EXP-RESERVED");
-+		break;
-+	}
-+
-+	PFLAG(MAC, 3, A_AMSDU_FRAG, "A-AMSDU-FRAG");
-+	PFLAG(MAC, 3, FLEX_TWT_SCHED, "FLEX-TWT-SCHED");
-+	PFLAG(MAC, 3, RX_CTRL_FRAME_TO_MULTIBSS, "RX-CTRL-FRAME-TO-MULTIBSS");
-+
-+	PFLAG(MAC, 4, BSRP_BQRP_A_MPDU_AGG, "BSRP-BQRP-A-MPDU-AGG");
-+	PFLAG(MAC, 4, QTP, "QTP");
-+	PFLAG(MAC, 4, BQR, "BQR");
-+	PFLAG(MAC, 4, SR_RESP, "SR-RESP");
-+	PFLAG(MAC, 4, NDP_FB_REP, "NDP-FB-REP");
-+	PFLAG(MAC, 4, OPS, "OPS");
-+	PFLAG(MAC, 4, AMDSU_IN_AMPDU, "AMSDU-IN-AMPDU");
-+
-+	cap = hec->he_cap_elem.phy_cap_info;
-+	p += scnprintf(p, buf_sz + buf - p,
-+		       "PHY CAP: %#.2x %#.2x %#.2x %#.2x %#.2x %#.2x %#.2x %#.2x %#.2x\n",
-+		       cap[0], cap[1], cap[2], cap[3], cap[4], cap[5], cap[6],
-+		       cap[7], cap[8]);
-+
-+	PFLAG(PHY, 0, DUAL_BAND, "DUAL-BAND");
-+
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_40MHZ_IN_2G,
-+	      "CHANNEL-WIDTH-SET-40MHZ-IN-2G");
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G,
-+	      "CHANNEL-WIDTH-SET-40MHZ-80MHZ-IN-5G");
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_160MHZ_IN_5G,
-+	      "CHANNEL-WIDTH-SET-160MHZ-IN-5G");
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G,
-+	      "CHANNEL-WIDTH-SET-80PLUS80-MHZ-IN-5G");
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_RU_MAPPING_IN_2G,
-+	      "CHANNEL-WIDTH-SET-RU-MAPPING-IN-2G");
-+	PFLAG(PHY, 0, CHANNEL_WIDTH_SET_RU_MAPPING_IN_5G,
-+	      "CHANNEL-WIDTH-SET-RU-MAPPING-IN-5G");
-+
-+	switch (cap[1] & IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK) {
-+	case IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_80MHZ_ONLY_SECOND_20MHZ:
-+		PRINT("PREAMBLE-PUNC-RX-80MHZ-ONLY-SECOND-20MHZ");
-+		break;
-+	case IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_80MHZ_ONLY_SECOND_40MHZ:
-+		PRINT("PREAMBLE-PUNC-RX-80MHZ-ONLY-SECOND-40MHZ");
-+		break;
-+	case IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_160MHZ_ONLY_SECOND_20MHZ:
-+		PRINT("PREAMBLE-PUNC-RX-160MHZ-ONLY-SECOND-20MHZ");
-+		break;
-+	case IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_160MHZ_ONLY_SECOND_40MHZ:
-+		PRINT("PREAMBLE-PUNC-RX-160MHZ-ONLY-SECOND-40MHZ");
-+		break;
-+	}
-+
-+	PFLAG(PHY, 1, DEVICE_CLASS_A,
-+	      "IEEE80211-HE-PHY-CAP1-DEVICE-CLASS-A");
-+	PFLAG(PHY, 1, LDPC_CODING_IN_PAYLOAD,
-+	      "LDPC-CODING-IN-PAYLOAD");
-+	PFLAG(PHY, 1, HE_LTF_AND_GI_FOR_HE_PPDUS_0_8US,
-+	      "HY-CAP1-HE-LTF-AND-GI-FOR-HE-PPDUS-0-8US");
-+	PRINT("MIDAMBLE-RX-MAX-NSTS-%d", ((cap[2] << 1) | (cap[1] >> 7)) & 0x3);
-+
-+	PFLAG(PHY, 2, NDP_4x_LTF_AND_3_2US, "NDP-4X-LTF-AND-3-2US");
-+	PFLAG(PHY, 2, STBC_TX_UNDER_80MHZ, "STBC-TX-UNDER-80MHZ");
-+	PFLAG(PHY, 2, STBC_RX_UNDER_80MHZ, "STBC-RX-UNDER-80MHZ");
-+	PFLAG(PHY, 2, DOPPLER_TX, "DOPPLER-TX");
-+	PFLAG(PHY, 2, DOPPLER_RX, "DOPPLER-RX");
-+	PFLAG(PHY, 2, UL_MU_FULL_MU_MIMO, "UL-MU-FULL-MU-MIMO");
-+	PFLAG(PHY, 2, UL_MU_PARTIAL_MU_MIMO, "UL-MU-PARTIAL-MU-MIMO");
-+
-+	switch (cap[3] & IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_MASK) {
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_NO_DCM:
-+		PRINT("DCM-MAX-CONST-TX-NO-DCM");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_BPSK:
-+		PRINT("DCM-MAX-CONST-TX-BPSK");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_QPSK:
-+		PRINT("DCM-MAX-CONST-TX-QPSK");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_16_QAM:
-+		PRINT("DCM-MAX-CONST-TX-16-QAM");
-+		break;
-+	}
-+
-+	PFLAG(PHY, 3, DCM_MAX_TX_NSS_1, "DCM-MAX-TX-NSS-1");
-+	PFLAG(PHY, 3, DCM_MAX_TX_NSS_2, "DCM-MAX-TX-NSS-2");
-+
-+	switch (cap[3] & IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_RX_MASK) {
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_RX_NO_DCM:
-+		PRINT("DCM-MAX-CONST-RX-NO-DCM");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_RX_BPSK:
-+		PRINT("DCM-MAX-CONST-RX-BPSK");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_RX_QPSK:
-+		PRINT("DCM-MAX-CONST-RX-QPSK");
-+		break;
-+	case IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_RX_16_QAM:
-+		PRINT("DCM-MAX-CONST-RX-16-QAM");
-+		break;
-+	}
-+
-+	PFLAG(PHY, 3, DCM_MAX_RX_NSS_1, "DCM-MAX-RX-NSS-1");
-+	PFLAG(PHY, 3, DCM_MAX_RX_NSS_2, "DCM-MAX-RX-NSS-2");
-+	PFLAG(PHY, 3, RX_HE_MU_PPDU_FROM_NON_AP_STA,
-+	      "RX-HE-MU-PPDU-FROM-NON-AP-STA");
-+	PFLAG(PHY, 3, SU_BEAMFORMER, "SU-BEAMFORMER");
-+
-+	PFLAG(PHY, 4, SU_BEAMFORMEE, "SU-BEAMFORMEE");
-+	PFLAG(PHY, 4, MU_BEAMFORMER, "MU-BEAMFORMER");
-+
-+	PFLAG_RANGE(PHY, 4, BEAMFORMEE_MAX_STS_UNDER_80MHZ, 0, 1, 4,
-+		    "BEAMFORMEE-MAX-STS-UNDER-%d");
-+	PFLAG_RANGE(PHY, 4, BEAMFORMEE_MAX_STS_ABOVE_80MHZ, 0, 1, 4,
-+		    "BEAMFORMEE-MAX-STS-ABOVE-%d");
-+
-+	PFLAG_RANGE(PHY, 5, BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ, 0, 1, 1,
-+		    "NUM-SND-DIM-UNDER-80MHZ-%d");
-+	PFLAG_RANGE(PHY, 5, BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ, 0, 1, 1,
-+		    "NUM-SND-DIM-ABOVE-80MHZ-%d");
-+	PFLAG(PHY, 5, NG16_SU_FEEDBACK, "NG16-SU-FEEDBACK");
-+	PFLAG(PHY, 5, NG16_MU_FEEDBACK, "NG16-MU-FEEDBACK");
-+
-+	PFLAG(PHY, 6, CODEBOOK_SIZE_42_SU, "CODEBOOK-SIZE-42-SU");
-+	PFLAG(PHY, 6, CODEBOOK_SIZE_75_MU, "CODEBOOK-SIZE-75-MU");
-+	PFLAG(PHY, 6, TRIG_SU_BEAMFORMER_FB, "TRIG-SU-BEAMFORMER-FB");
-+	PFLAG(PHY, 6, TRIG_MU_BEAMFORMER_FB, "TRIG-MU-BEAMFORMER-FB");
-+	PFLAG(PHY, 6, TRIG_CQI_FB, "TRIG-CQI-FB");
-+	PFLAG(PHY, 6, PARTIAL_BW_EXT_RANGE, "PARTIAL-BW-EXT-RANGE");
-+	PFLAG(PHY, 6, PARTIAL_BANDWIDTH_DL_MUMIMO,
-+	      "PARTIAL-BANDWIDTH-DL-MUMIMO");
-+	PFLAG(PHY, 6, PPE_THRESHOLD_PRESENT, "PPE-THRESHOLD-PRESENT");
-+
-+	PFLAG(PHY, 7, SRP_BASED_SR, "SRP-BASED-SR");
-+	PFLAG(PHY, 7, POWER_BOOST_FACTOR_AR, "POWER-BOOST-FACTOR-AR");
-+	PFLAG(PHY, 7, HE_SU_MU_PPDU_4XLTF_AND_08_US_GI,
-+	      "HE-SU-MU-PPDU-4XLTF-AND-08-US-GI");
-+	PFLAG_RANGE(PHY, 7, MAX_NC, 0, 1, 1, "MAX-NC-%d");
-+	PFLAG(PHY, 7, STBC_TX_ABOVE_80MHZ, "STBC-TX-ABOVE-80MHZ");
-+	PFLAG(PHY, 7, STBC_RX_ABOVE_80MHZ, "STBC-RX-ABOVE-80MHZ");
-+
-+	PFLAG(PHY, 8, HE_ER_SU_PPDU_4XLTF_AND_08_US_GI,
-+	      "HE-ER-SU-PPDU-4XLTF-AND-08-US-GI");
-+	PFLAG(PHY, 8, 20MHZ_IN_40MHZ_HE_PPDU_IN_2G,
-+	      "20MHZ-IN-40MHZ-HE-PPDU-IN-2G");
-+	PFLAG(PHY, 8, 20MHZ_IN_160MHZ_HE_PPDU, "20MHZ-IN-160MHZ-HE-PPDU");
-+	PFLAG(PHY, 8, 80MHZ_IN_160MHZ_HE_PPDU, "80MHZ-IN-160MHZ-HE-PPDU");
-+	PFLAG(PHY, 8, HE_ER_SU_1XLTF_AND_08_US_GI,
-+	      "HE-ER-SU-1XLTF-AND-08-US-GI");
-+	PFLAG(PHY, 8, MIDAMBLE_RX_2X_AND_1XLTF, "MIDAMBLE-RX-2X-AND-1XLTF");
-+
-+#undef PFLAG_RANGE_DEFAULT
-+#undef PFLAG_RANGE
-+#undef PFLAG
-+
-+#define PRINT_NSS_SUPP(f, n)						\
-+	do {								\
-+		int i;							\
-+		u16 v = le16_to_cpu(nss->f);				\
-+		p += scnprintf(p, buf_sz + buf - p, n ": %#.4x\n", v);	\
-+		for (i = 0; i < 8; i += 2) {				\
-+			switch ((v >> i) & 0x3) {			\
-+			case 0:						\
-+				PRINT(n "-%d-SUPPORT-0-7", i / 2);	\
-+				break;					\
-+			case 1:						\
-+				PRINT(n "-%d-SUPPORT-0-9", i / 2);	\
-+				break;					\
-+			case 2:						\
-+				PRINT(n "-%d-SUPPORT-0-11", i / 2);	\
-+				break;					\
-+			case 3:						\
-+				PRINT(n "-%d-NOT-SUPPORTED", i / 2);	\
-+				break;					\
-+			}						\
-+		}							\
-+	} while (0)
-+
-+	PRINT_NSS_SUPP(rx_mcs_80, "RX-MCS-80");
-+	PRINT_NSS_SUPP(tx_mcs_80, "TX-MCS-80");
-+
-+	if (cap[0] & IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G) {
-+		PRINT_NSS_SUPP(rx_mcs_160, "RX-MCS-160");
-+		PRINT_NSS_SUPP(tx_mcs_160, "TX-MCS-160");
-+	}
-+
-+	if (cap[0] &
-+	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G) {
-+		PRINT_NSS_SUPP(rx_mcs_80p80, "RX-MCS-80P80");
-+		PRINT_NSS_SUPP(tx_mcs_80p80, "TX-MCS-80P80");
-+	}
-+
-+#undef PRINT_NSS_SUPP
-+#undef PRINT
-+
-+	if (!(cap[6] & IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT))
-+		goto out;
-+
-+	p += scnprintf(p, buf_sz + buf - p, "PPE-THRESHOLDS: %#.2x",
-+		       hec->ppe_thres[0]);
-+
-+	ppe_size = ieee80211_he_ppe_size(hec->ppe_thres[0], cap);
-+	for (i = 1; i < ppe_size; i++) {
-+		p += scnprintf(p, buf_sz + buf - p, " %#.2x",
-+			       hec->ppe_thres[i]);
-+	}
-+	p += scnprintf(p, buf_sz + buf - p, "\n");
-+
-+out:
-+	ret = simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
-+	kfree(buf);
-+	return ret;
-+}
-+STA_OPS(he_capa);
- 
- #define DEBUGFS_ADD(name) \
- 	debugfs_create_file(#name, 0400, \
-@@ -538,6 +862,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(agg_status);
- 	DEBUGFS_ADD(ht_capa);
- 	DEBUGFS_ADD(vht_capa);
-+	DEBUGFS_ADD(he_capa);
- 
- 	DEBUGFS_ADD_COUNTER(rx_duplicates, rx_stats.num_duplicates);
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
--- 
-2.18.0
+
+Aug 10 14:44:09 RCBLpi kernel: [  284.697778] wlan1: AP
+fc:2d:5e:dd:54:32 changed bandwidth, new config is 2437 MHz, width 1
+(2437/0 MHz)
+Aug 10 14:45:00 RCBLpi kernel: [  335.680872]
+rt2800usb_tx_sta_fifo_read_completed: 1389 callbacks suppressed
+Aug 10 14:45:00 RCBLpi kernel: [  335.680887] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.680986] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681059] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681126] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681193] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681282] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681348] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681415] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681548] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  335.681623] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:00 RCBLpi kernel: [  336.171569] ieee80211 phy4:
+rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for
+offset 0x1700 with error -71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681558]
+rt2800usb_tx_sta_fifo_read_completed: 73528 callbacks suppressed
+Aug 10 14:45:05 RCBLpi kernel: [  340.681573] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681659] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681754] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681829] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681903] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.681984] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.682079] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.682149] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.682236] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:05 RCBLpi kernel: [  340.682302] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691516]
+rt2800usb_tx_sta_fifo_read_completed: 76991 callbacks suppressed
+Aug 10 14:45:10 RCBLpi kernel: [  345.691530] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691603] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691704] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691810] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691877] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.691958] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.692024] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.692091] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.692173] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:10 RCBLpi kernel: [  345.692241] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.701580]
+rt2800usb_tx_sta_fifo_read_completed: 77030 callbacks suppressed
+Aug 10 14:45:15 RCBLpi kernel: [  350.701596] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.701722] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.701789] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.701870] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.701935] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.702001] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.702084] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.702150] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.702241] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:15 RCBLpi kernel: [  350.702307] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711589]
+rt2800usb_tx_sta_fifo_read_completed: 77771 callbacks suppressed
+Aug 10 14:45:20 RCBLpi kernel: [  355.711603] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711674] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711763] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711829] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711917] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.711983] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.712048] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.712135] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.712199] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  355.712265] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:20 RCBLpi kernel: [  356.171492] INFO: rcu_sched
+self-detected stall on CPU
+Aug 10 14:45:20 RCBLpi kernel: [  356.171522]   0-...: (2099 ticks
+this GP) idle=72a/140000000000002/0 softirq=11632/11632 fqs=1002
+Aug 10 14:45:20 RCBLpi kernel: [  356.171525]    (t=2100 jiffies
+g=5626 c=5625 q=17568)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171541] NMI backtrace for cpu 0
+Aug 10 14:45:20 RCBLpi kernel: [  356.171553] CPU: 0 PID: 1007 Comm:
+kworker/u8:17 Tainted: G         C      4.14.61-v7+ #1
+Aug 10 14:45:20 RCBLpi kernel: [  356.171558] Hardware name: BCM2835
+Aug 10 14:45:20 RCBLpi kernel: [  356.171588] Workqueue: phy4
+rt2x00usb_work_rxdone [rt2x00usb]
+Aug 10 14:45:20 RCBLpi kernel: [  356.171622] [<8010ffc0>]
+(unwind_backtrace) from [<8010c1fc>] (show_stack+0x20/0x24)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171640] [<8010c1fc>]
+(show_stack) from [<807894fc>] (dump_stack+0xc8/0x10c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171659] [<807894fc>]
+(dump_stack) from [<8078f43c>] (nmi_cpu_backtrace+0x11c/0x120)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171676] [<8078f43c>]
+(nmi_cpu_backtrace) from [<8078f520>]
+(nmi_trigger_cpumask_backtrace+0xe0/0x12c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171692] [<8078f520>]
+(nmi_trigger_cpumask_backtrace) from [<8010e648>]
+(arch_trigger_cpumask_backtrace+0x20/0x24)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171710] [<8010e648>]
+(arch_trigger_cpumask_backtrace) from [<80185710>]
+(rcu_dump_cpu_stacks+0xb0/0xdc)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171728] [<80185710>]
+(rcu_dump_cpu_stacks) from [<801850b0>]
+(rcu_check_callbacks+0x7e8/0x960)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171745] [<801850b0>]
+(rcu_check_callbacks) from [<8018b314>]
+(update_process_times+0x44/0x70)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171762] [<8018b314>]
+(update_process_times) from [<8019d32c>] (tick_sched_handle+0x64/0x70)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171779] [<8019d32c>]
+(tick_sched_handle) from [<8019d590>] (tick_sched_timer+0x50/0xac)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171795] [<8019d590>]
+(tick_sched_timer) from [<8018c2cc>]
+(__hrtimer_run_queues+0x158/0x2ec)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171810] [<8018c2cc>]
+(__hrtimer_run_queues) from [<8018c704>]
+(hrtimer_interrupt+0xb8/0x20c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171827] [<8018c704>]
+(hrtimer_interrupt) from [<8063de74>]
+(arch_timer_handler_phys+0x40/0x48)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171846] [<8063de74>]
+(arch_timer_handler_phys) from [<8017a150>]
+(handle_percpu_devid_irq+0x88/0x23c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171863] [<8017a150>]
+(handle_percpu_devid_irq) from [<801749fc>]
+(generic_handle_irq+0x34/0x44)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171879] [<801749fc>]
+(generic_handle_irq) from [<80175050>] (__handle_domain_irq+0x6c/0xc4)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171894] [<80175050>]
+(__handle_domain_irq) from [<80101520>]
+(bcm2836_arm_irqchip_handle_irq+0xac/0xb0)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171911] [<80101520>]
+(bcm2836_arm_irqchip_handle_irq) from [<807a4ffc>]
+(__irq_svc+0x5c/0x7c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171918] Exception
+stack(0xadbffab0 to 0xadbffaf8)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171927] faa0:
+                 00000000 00000000 a980bd00 00000000
+Aug 10 14:45:20 RCBLpi kernel: [  356.171939] fac0: b7716e80 60000113
+b9fbe400 adae99d0 00000001 adbfe000 00000001 adbffb1c
+Aug 10 14:45:20 RCBLpi kernel: [  356.171949] fae0: adbffb00 adbffb00
+805b3388 805b339c 60000113 ffffffff
+Aug 10 14:45:20 RCBLpi kernel: [  356.171969] [<807a4ffc>] (__irq_svc)
+from [<805b339c>] (__usb_hcd_giveback_urb+0x118/0x15c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.171988] [<805b339c>]
+(__usb_hcd_giveback_urb) from [<805b3530>]
+(usb_hcd_giveback_urb+0x4c/0xfc)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172006] [<805b3530>]
+(usb_hcd_giveback_urb) from [<805dde40>]
+(completion_tasklet_func+0x80/0xac)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172024] [<805dde40>]
+(completion_tasklet_func) from [<805ecc60>]
+(tasklet_callback+0x20/0x24)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172040] [<805ecc60>]
+(tasklet_callback) from [<80123ac4>] (tasklet_hi_action+0x70/0x104)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172055] [<80123ac4>]
+(tasklet_hi_action) from [<8010169c>] (__do_softirq+0x174/0x3d8)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172069] [<8010169c>]
+(__do_softirq) from [<801236a8>] (irq_exit+0xe4/0x140)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172083] [<801236a8>] (irq_exit)
+from [<80175054>] (__handle_domain_irq+0x70/0xc4)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172097] [<80175054>]
+(__handle_domain_irq) from [<80101520>]
+(bcm2836_arm_irqchip_handle_irq+0xac/0xb0)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172111] [<80101520>]
+(bcm2836_arm_irqchip_handle_irq) from [<807a4ffc>]
+(__irq_svc+0x5c/0x7c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172117] Exception
+stack(0xadbffc58 to 0xadbffca0)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172125] fc40:
+                                   b9d83a40 00000000
+Aug 10 14:45:20 RCBLpi kernel: [  356.172136] fc60: 00000001 00000000
+60000013 00000000 aa2d4b00 a9949600 b9db0400 b9fbe400
+Aug 10 14:45:20 RCBLpi kernel: [  356.172148] fc80: 00000000 adbffcbc
+adbffca8 adbffca8 807a4d2c 807a4d40 60000013 ffffffff
+Aug 10 14:45:20 RCBLpi kernel: [  356.172164] [<807a4ffc>] (__irq_svc)
+from [<807a4d40>] (_raw_spin_unlock_irqrestore+0x50/0x70)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172180] [<807a4d40>]
+(_raw_spin_unlock_irqrestore) from [<805ecbf8>]
+(DWC_SPINUNLOCK_IRQRESTORE+0x18/0x1c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172196] [<805ecbf8>]
+(DWC_SPINUNLOCK_IRQRESTORE) from [<805e27f4>]
+(dwc_otg_urb_enqueue+0x1dc/0x31c)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172212] [<805e27f4>]
+(dwc_otg_urb_enqueue) from [<805b4f34>]
+(usb_hcd_submit_urb+0xc8/0x934)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172226] [<805b4f34>]
+(usb_hcd_submit_urb) from [<805b687c>] (usb_submit_urb+0x284/0x510)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172250] [<805b687c>]
+(usb_submit_urb) from [<7f4a76e0>] (rt2x00usb_kick_rx_entry+0xb4/0xfc
+[rt2x00usb])
+Aug 10 14:45:20 RCBLpi kernel: [  356.172296] [<7f4a76e0>]
+(rt2x00usb_kick_rx_entry [rt2x00usb]) from [<7f4a7758>]
+(rt2x00usb_clear_entry+0x30/0x34 [rt2x00usb])
+Aug 10 14:45:20 RCBLpi kernel: [  356.172354] [<7f4a7758>]
+(rt2x00usb_clear_entry [rt2x00usb]) from [<7f492a44>]
+(rt2x00lib_rxdone+0x148/0x5b8 [rt2x00lib])
+Aug 10 14:45:20 RCBLpi kernel: [  356.172412] [<7f492a44>]
+(rt2x00lib_rxdone [rt2x00lib]) from [<7f4a8088>]
+(rt2x00usb_work_rxdone+0x58/0x8c [rt2x00usb])
+Aug 10 14:45:20 RCBLpi kernel: [  356.172440] [<7f4a8088>]
+(rt2x00usb_work_rxdone [rt2x00usb]) from [<80137384>]
+(process_one_work+0x224/0x518)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172459] [<80137384>]
+(process_one_work) from [<8013835c>] (worker_thread+0x60/0x5f0)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172476] [<8013835c>]
+(worker_thread) from [<8013db68>] (kthread+0x144/0x174)
+Aug 10 14:45:20 RCBLpi kernel: [  356.172492] [<8013db68>] (kthread)
+from [<801080ac>] (ret_from_fork+0x14/0x28)
+Aug 10 14:45:22 RCBLpi kernel: [  357.591518] INFO: rcu_sched detected
+expedited stalls on CPUs/tasks: { 0-... } 2109 jiffies s: 221 root:
+0x1/.
+Aug 10 14:45:22 RCBLpi kernel: [  357.591545] blocking rcu_node structures:
+Aug 10 14:45:22 RCBLpi kernel: [  357.591554] Task dump for CPU 0:
+Aug 10 14:45:22 RCBLpi kernel: [  357.591560] kworker/u8:17   R
+running task        0  1007      2 0x00000002
+Aug 10 14:45:22 RCBLpi kernel: [  357.591603] Workqueue: phy4
+rt2x00usb_work_rxdone [rt2x00usb]
+Aug 10 14:45:25 RCBLpi kernel: [  360.721537]
+rt2800usb_tx_sta_fifo_read_completed: 77886 callbacks suppressed
+Aug 10 14:45:25 RCBLpi kernel: [  360.721552] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:25 RCBLpi kernel: [  360.721651] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+Aug 10 14:45:25 RCBLpi kernel: [  360.721720] ieee80211 phy4:
+rt2800usb_tx_sta_fifo_read_completed: Warning - TX status read failed
+-71
+
+On Fri, Aug 10, 2018 at 5:14 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Aug 09, 2018 at 12:49:58PM -0600, Randy Oostdyk wrote:
+>> On Thu, Aug 9, 2018 at 5:10 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> > I'm reluctant to replace _warn by _dbg messages as if somethings
+>> > will go wrong we will not notice that. We can use printk_ratelimited()
+>> > variant instead to do not spam log in speed that it will hung
+>> > the machine. But the correct fix should be in USB host drivers,
+>> > which seems to be not in perfect shape on those embedded platforms.
+>>
+>> Agreed about the "correct" fix likely being on the USB side, but at
+>> least using printk_ratelimited() will avoid the log spamming, and
+>> avoid locking the machine, as you said.
+>>
+>> Will someone else take that approach and come up with a patch, or is
+>> this something I should try to take on myself? I could certainly test
+>> such a patch, if desired.
+>>
+>> Meanwhile, I'll look into reporting the USB bug, if it hasn't already been.
+>
+> I'm attaching the ratelimit patch for test.
+>
+> However after reading email from Larry I withdraw blaming USB host
+> driver. The issue could be faulty HW and USB host driver can not do
+> much much about this.
+>
+> Another question is if machine hung due to log spam or because there
+> was some crash. Those error conditions trigger code paths that are
+> not usually used, so there could be some oops that hung the system.
+>
+> Anyway you can test the patch and report back.
+>
+> Cheers
+> Stanislaw
