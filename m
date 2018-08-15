@@ -1,29 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:42746 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726870AbeHFCnI (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:19216 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728479AbeHPJ1o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Aug 2018 22:43:08 -0400
-Date: Sun, 05 Aug 2018 17:36:37 -0700 (PDT)
-Message-Id: <20180805.173637.1963283713395587312.davem@davemloft.net> (sfid-20180806_023649_312033_1C5E150E)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2018-08-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87effc68u3.fsf@kamboji.qca.qualcomm.com>
-References: <87effc68u3.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 16 Aug 2018 05:27:44 -0400
+Date: Thu, 16 Aug 2018 01:52:43 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>
+CC: <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <nicolas.ferre@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: feedback on mainlining wilc1000 staging driver
+Message-ID: <20180816015243.545cd009@ajaysk-VirtualBox> (sfid-20180816_083159_201852_EC0F4898)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Sun, 05 Aug 2018 20:07:16 +0300
+Hi Greg,
 
-> a pull request to net-next tree for 4.19. If the merge window doesn't
-> open today I'm planning to submit one more pull request later next week.
-> 
-> Please let me know if you have any problems.
+We all are working on submitting and reviewing patches for wilc1000 in
+staging driver for quite some time. 
 
-Pulled, thanks Kalle.
+We would like to have feedback on the next steps to bring wilc1000
+driver closer to move into the wireless subsystem tree. 
+
+In summary, the following major things from TODO have been addressed in
+staging:
+-remove the defined feature as kernel versions
+-remove OS wrapper functions
+-remove custom debug and tracing functions
+-rework comments and function headers(also coding style)
+-remove build warnings
+-replace all semaphores with mutexes or completions
+-make spi and sdio components coexist in one build
+-turn compile-time platform configuration (BEAGLE_BOARD, PANDA_BOARD,
+PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...) into run-time
+options that are read from DT
+-replace SIOCDEVPRIVATE commands with generic API functions
+-use wext-core handling instead of private SIOCSIWPRIV implementation
+-Move handling for each individual members of 'union message_body' out
+into a separate 'struct work_struct' and completely remove the
+multiplexer that is currently part of host_if_work(), allowing movement
+of the implementation of each message handler into the callsite of the
+function that currently queues the 'host_if_msg'.
+-convert all uses of the old GPIO API from <linux/gpio.h> to the GPIO
+descriptor API in <linux/gpio/consumer.h> and look up GPIO lines from
+device tree, ACPI or board files, board files should use
+<linux/gpio/machine.h>
+
+I have few patches to submit based on last week comments. I
+will send these patches as soon as the merge window is closed.
+
+1. Delete wilc_debugfs.c file, as not used.
+2. Remove use of remaining global variables.
+3. Remove udelay realted checkpatch warning.
+4. Use void return for function whose return value is not used.
+
+
+Currently, there are 2 known items pending in our TODO. 
+-support soft-ap and p2p mode
+-support resume/suspend function
+ 
+For the above 2 remaining TODO items, we need to add extra code but as
+suggested in [1], we have not taken up this activity yet.
+ 
+We would like to know your opinion whether we should start working on
+these features in staging-next tree or take it up after having moved
+the code to wireless sub-system.
+
+Do you think it’s better to initiate review in parallel with
+wireless subsystem maintainer to identify any pending TODO items. 
+
+Please guide us on how to proceed further.
+
+[1] . https://patchwork.kernel.org/patch/9809145
+ 
+
+Regards,
+Ajay
