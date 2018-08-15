@@ -1,94 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60690 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727683AbeHLXoL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39972 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726195AbeHOMSR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 19:44:11 -0400
-Message-ID: <5B70A1A6.3010906@candelatech.com> (sfid-20180812_230522_966017_5C1F5087)
-Date: Sun, 12 Aug 2018 14:07:50 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: use-after free bug in hacked 4.16 kernel, related to fq_flow_dequeue
-References: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com> <87in4sy2ks.fsf@toke.dk> <cbfd3c11-6896-ff43-2434-7c29b04f8a79@candelatech.com> <877el8y0yo.fsf@toke.dk>
-In-Reply-To: <877el8y0yo.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 15 Aug 2018 08:18:17 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, briannorris@chromium.org,
+        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v5 2/6] ath10k: Add support to create boardname for non-bmi target
+Date: Wed, 15 Aug 2018 14:56:33 +0530
+Message-Id: <20180815092637.11455-3-govinds@codeaurora.org> (sfid-20180815_112656_466837_280DC7B1)
+In-Reply-To: <20180815092637.11455-1-govinds@codeaurora.org>
+References: <20180815092637.11455-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2018 01:20 PM, Toke Høiland-Jørgensen wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 08/02/2018 12:45 PM, Toke Høiland-Jørgensen wrote:
->>> Ben Greear <greearb@candelatech.com> writes:
->>>
->>>> This is from my hacked kernel, could be my fault. I thought the fq
->>>> guys might want to know however...
->>>
->>> Hmm, nothing obvious comes to mind; fq_flow_dequeue() just dequeues a
->>> packet from the queue; it only has two memory derefs, to fq->lock and
->>> flow->queue. Don't see why either of those should be freed at this
->>> point.
->>>
->>> Unless fq_adjust_removal() is being inlined, perhaps? Then I suppose the
->>> flow->tin reference could be the problem, if the txq_info struct was
->>> already freed; did you change anything around the handling of TXQs?
->>
->> I have worked on some stuff to fix other leaks and corruptions in ath10k related
->> to txqs, maybe that is part of this problem.  My full tree is here:
->>
->> https://github.com/greearb/linux-ct-4.16
->>
->> This bug in question is fairly repeatable on my current setup, which
->> is high speed tx + rx on a 9984 NIC, with buggy firmware that crashes
->> often in the tx path. I think the crash only happens when I rmmod the
->> driver under load, but possibly some of the fw crash cleanup logic
->> that ran previously is also involved.
->
-> Yeah, if it happens under load that is consistent with packets being
-> queued.
->
-> It seems that mac80211 frees the netdevs of an interface before flushing
-> the TXQs, which may be the cause of the bug you are seeing. Could you
-> try the patch below and see if that fixes the issue?
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-I've run with this for a few days, and it seems to at least not cause
-any extra problems.  I mostly fixed the firmware crashing I was seeing
-before, so not certain it fixes the root cause of the crashes I
-saw before.  I'm going to roll this into my 4.16 ct kernel for wider
-testing.
+Add support to create the boardname for non-bmi targets
+like WCN3990, which uses qmi for bdf download. This
+boardname is used to parse the board data from board-2.bin.
 
-Thanks,
-Ben
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
+ drivers/net/wireless/ath/ath10k/core.h | 2 ++
+ 2 files changed, 10 insertions(+)
 
->
-> -Toke
->
->
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index e65c2abb2a54..d21ef14d327d 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -1213,6 +1213,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
->   #if IS_ENABLED(CONFIG_IPV6)
->   	unregister_inet6addr_notifier(&local->ifa6_notifier);
->   #endif
-> +	ieee80211_txq_teardown_flows(local);
->
->   	rtnl_lock();
->
-> @@ -1241,7 +1242,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
->   	skb_queue_purge(&local->skb_queue);
->   	skb_queue_purge(&local->skb_queue_unreliable);
->   	skb_queue_purge(&local->skb_queue_tdls_chsw);
-> -	ieee80211_txq_teardown_flows(local);
->
->   	destroy_workqueue(local->workqueue);
->   	wiphy_unregister(local->hw.wiphy);
->
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 85c58ebbfb26..840e301b6a6e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1440,6 +1440,14 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 		goto out;
+ 	}
+ 
++	if (ar->id.qmi_ids_valid) {
++		scnprintf(name, name_len,
++			  "bus=%s,qmi-board-id=%x",
++			  ath10k_bus_str(ar->hif.bus),
++			  ar->id.qmi_board_id);
++		goto out;
++	}
++
+ 	scnprintf(name, name_len,
+ 		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
+ 		  ath10k_bus_str(ar->hif.bus),
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 427ee5752bb0..3a4ac3c0d5a6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -941,6 +941,8 @@ struct ath10k {
+ 		u32 subsystem_device;
+ 
+ 		bool bmi_ids_valid;
++		bool qmi_ids_valid;
++		u32 qmi_board_id;
+ 		u8 bmi_board_id;
+ 		u8 bmi_chip_id;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.17.0
