@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32844 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728375AbeHaTxr (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:45592 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726193AbeHOLV1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:53:47 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 15 Aug 2018 07:21:27 -0400
+Date: Wed, 15 Aug 2018 11:29:56 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Kees Cook <keescook@chromium.org>,
+        Security Officers <security@kernel.org>,
+        Kevin Deus <kdeus@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+Message-ID: <20180815082956.u6grueiyshwgqt3a@mwanda> (sfid-20180815_103033_742728_54115D85)
+References: <20180813223910.26276-1-surenb@google.com>
+ <20180814095413.vbjkcjkmytkffyaz@mwanda>
+ <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+ <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com>
+ <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com>
+ <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
+ <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com>
+ <CAJuCfpEX+F-EPxQYXNdUg-uT9ecwYYdxBsr9y_69zQ0Fq50GeA@mail.gmail.com>
+ <CAJuCfpGSPkB-tk4GHaJeStRph-ibVhUZ119Sfd16xgf9x=qUwQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] orinoco: remove unused array encaps_hdr and macro
- ENCAPS_OVERHEAD
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180816125944.7804-1-colin.king@canonical.com>
-References: <20180816125944.7804-1-colin.king@canonical.com>
-To: Colin King <colin.king@canonical.com>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180831154542.78A9260242@smtp.codeaurora.org> (sfid-20180831_174610_644000_E25D9AF9)
-Date: Fri, 31 Aug 2018 15:45:42 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJuCfpGSPkB-tk4GHaJeStRph-ibVhUZ119Sfd16xgf9x=qUwQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> wrote:
-
-> From: Colin Ian King <colin.king@canonical.com>
+On Tue, Aug 14, 2018 at 03:38:14PM -0700, Suren Baghdasaryan wrote:
+> The separate fix for the size of pipes[] array is posted here:
+> https://lkml.org/lkml/2018/8/14/1034
+> Thanks!
 > 
-> Array encaps_hdr and macro ENCAPS_OVERHEAD are declared but are
-> not being used, hence they are redundant and can be removed.
-> 
-> Cleans up clang warning:
-> warning: 'encaps_hdr' defined but not used [-Wunused-const-variable=]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+That's great!  Let's add some bounds checking to nfc_hci_msg_rx_work()
+and nfc_hci_recv_from_llc() as well and then we can close the chapter on
+these bugs.
 
-5945310a1755 orinoco: remove unused array encaps_hdr and macro ENCAPS_OVERHEAD
-
--- 
-https://patchwork.kernel.org/patch/10567409/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
