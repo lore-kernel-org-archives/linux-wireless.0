@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49012 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:40080 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727094AbeH2Dsq (ORCPT
+        with ESMTP id S1728986AbeHOMSU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 23:48:46 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 28 Aug 2018 16:54:43 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
-In-Reply-To: <87d0u24wsw.fsf@toke.dk>
-References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
- <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
- <87a7pfaovy.fsf@toke.dk> <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org>
- <87a7pe8xn5.fsf@toke.dk> <5a697a77c65745cdabb0e8a3ab0931ef@codeaurora.org>
- <87d0u24wsw.fsf@toke.dk>
-Message-ID: <a0fa5a1bb754b56b6d076afa71d14c57@codeaurora.org> (sfid-20180829_015446_791687_14A7A4C8)
+        Wed, 15 Aug 2018 08:18:20 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, briannorris@chromium.org,
+        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v5 3/6] dt: bindings: add bindings for msa memory region
+Date: Wed, 15 Aug 2018 14:56:34 +0530
+Message-Id: <20180815092637.11455-4-govinds@codeaurora.org> (sfid-20180815_112700_050771_9408075D)
+In-Reply-To: <20180815092637.11455-1-govinds@codeaurora.org>
+References: <20180815092637.11455-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-28 03:20, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
-> Ah, excellent; then it should be no problem to enforce the head node
-> access; worst case the pull mechanism will be at a different point in
-> the round-robin, which will sync up quickly.
-> 
->> Will fix it and rename as ieee80211_txq_can_transmit().
-> 
-> Cool. If you send an updated patchset I can fold it into an updated
-> version of my RFC and send it as a proper patch once I've verified
-> everything works with ath9k :)
-> 
-Sure. Found an issue in txq pause change. The drivers assume that
-ieee80211_tx_dequeue() returns NULL only when txq is empty. Adding a
-IEEE80211_TXQ_PAUSE check in tx_dequeue() breaks this assumption. 
-Moreover
-once txq is paused, it should be queued to tail not at head.
+Add device tree binding documentation details of msa
+memory region for ath10k qmi client for SDM845/APQ8098
+SoC into "qcom,ath10k.txt".
 
-Will send updated version ASAP.
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ .../devicetree/bindings/net/wireless/qcom,ath10k.txt        | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
--Rajkumar
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 7fd4e8ce4149..2196d1ab3c8c 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -56,6 +56,11 @@ Optional properties:
+ 				     the length can vary between hw versions.
+ - <supply-name>-supply: handle to the regulator device tree node
+ 			   optional "supply-name" is "vdd-0.8-cx-mx".
++- memory-region:
++	Usage: optional
++	Value type: <phandle>
++	Definition: reference to the reserved-memory for the msa region
++		    used by the wifi firmware running in Q6.
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -149,4 +154,5 @@ wifi@18000000 {
+ 			   <0 140 0 /* CE10 */ >,
+ 			   <0 141 0 /* CE11 */ >;
+ 		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++		memory-region = <&wifi_msa_mem>;
+ };
+-- 
+2.17.0
