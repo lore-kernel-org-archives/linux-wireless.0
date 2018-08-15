@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr40073.outbound.protection.outlook.com ([40.107.4.73]:2734
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57486 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727181AbeHaWaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 18:30:11 -0400
-Subject: Re: [PATCH 28/28] mac80211: Don't wake up from PS for offchannel TX
-To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180831083130.15525-29-luca@coelho.fi>
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <54391176-d540-9665-a51f-06eb75a7376f@bowerswilkins.com> (sfid-20180831_202134_291928_90BED723)
-Date: Fri, 31 Aug 2018 11:21:13 -0700
+        id S1728668AbeHOOcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Aug 2018 10:32:24 -0400
+Date: Wed, 15 Aug 2018 13:40:30 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kofi Agor <nenekofi@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>
+Cc: Enrico Mioso <mrkiko.rs@gmail.com>,
+        Craig Matsuura <cmatsuura@vivint.com>,
+        Mathias Kresin <dev@kresin.me>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180815114029.GA1862@redhat.com> (sfid-20180815_134037_716568_993777F6)
+References: <20180327174302.GB1206@makrotopia.org>
+ <alpine.LNX.2.21.99.1803280605580.2911@mStation.localdomain>
+ <CAOt++SeSQ2j1KuVkbqt77LfznXN7JV0Lx5O8d7-m2VBrz8=85g@mail.gmail.com>
+ <alpine.LNX.2.21.99.1803301642110.31428@mStation.localdomain>
+ <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com>
+ <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
+ <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
+ <20180417194255.GA17067@redhat.com>
+ <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
+ <20180528125039.GA22122@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180831083130.15525-29-luca@coelho.fi>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180528125039.GA22122@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, May 28, 2018 at 02:50:39PM +0200, Stanislaw Gruszka wrote:
+> I have some updates here.
 
+And now more updates. I have 5 patches to test here:
+https://github.com/sgruszka/wireless-drivers-next/commits/rt2800-draft-v2
 
-On 08/31/2018 01:31 AM, Luca Coelho wrote:
-> )
->
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->
-> Otherwise the offchannel frame might be queued due to
-> IEEE80211_QUEUE_STOP_REASON_PS and later dropped (in
-> ieee80211_tx_frags()).  Anyway, it doesn't make much sense to wake up
-> the device during ROC.
->
-> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->
-Please write a cover letter that explains what this patch series is 
-trying to do.
-28 patches are too many to catch the purpose at once.
+as reported by T-Bone here:
+https://bugzilla.kernel.org/show_bug.cgi?id=82751
+first 3 patches made Netgear WN3000RPv3 router workable.
+Another 2 should be further improvement, but were not tested broadly
+and can have some bugs.
 
-Thanks,
-Peter
+Daniel, could you apply this on your staging tree for testing?
+Please also remove:
+600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
+991-rt2800_change_rx_ampdu_factor.patch
+992-rt2800_change_ba_size.patch
+993-rt2800_change_rx_ampdu_density.patch
+Those are not needed and can be harmful with the test patches,
+(especially spurious interrupt one, patches will not apply cleanly 
+with it).
+
+Patches should make "Dropping frame due to full tx queue" and
+"Queue 2 failed to flush" errors gone. However if device is somewhat
+wrongly configured by driver at low level (i.e. wrong MAC/BBP/RF
+registers programing) there still will be troubles to have stable
+and fast wireless connection.
+
+On TODO site, the proper watchdog should be added, but I'm not sure
+how to exactly detect device/firmware hung and how exactly device should
+be rested (by some HW reset by register or by doing full reinitialization).
+
+Another thing is fixing RATE_PROBE frames which are aggregated with
+other frames and not sent at requested rate. I implemented qsel queue patch
+similar to mt76, but this not work as expected on older Ralink chips.  
+https://github.com/sgruszka/wireless-drivers-next/commit/846d205edd8c36d1b7828fee54bf4cf40bf8cb1a
+
+Any help with those 2 problems are welcome.
+ 
+Thanks
+Stanislaw
