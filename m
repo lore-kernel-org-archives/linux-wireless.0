@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:3347 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725833AbeHQHea (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Aug 2018 03:34:30 -0400
-Date: Fri, 17 Aug 2018 10:02:33 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <nicolas.ferre@microchip.com>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: feedback on mainlining wilc1000 staging driver
-Message-ID: <20180817100233.7f1c00d9@ajaysk-VirtualBox> (sfid-20180817_063244_064136_46ACF50E)
-In-Reply-To: <87o9e2twe9.fsf@purkki.adurom.net>
-References: <20180816015243.545cd009@ajaysk-VirtualBox>
-        <87sh3etwoj.fsf@purkki.adurom.net>
-        <87o9e2twe9.fsf@purkki.adurom.net>
+Received: from mail-dm3nam03on0128.outbound.protection.outlook.com ([104.47.41.128]:7920
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728984AbeHOMPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Aug 2018 08:15:03 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jia-Shyr Chuang <saint.chuang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH v3] brcmfmac: add CYW89342 mini-PCIe device
+Date: Wed, 15 Aug 2018 04:23:09 -0500
+Message-Id: <1534324989-59871-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180815_112344_585552_048385C4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 16 Aug 2018 13:53:50 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
+From: Jia-Shyr Chuang <saint.chuang@cypress.com>
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
-> > Ajay Singh <ajay.kathat@microchip.com> writes:
-> >  
-> >> Hi Greg,
-> >>
-> >> We all are working on submitting and reviewing patches for
-> >> wilc1000 in staging driver for quite some time. 
-> >>
-> >> We would like to have feedback on the next steps to bring wilc1000
-> >> driver closer to move into the wireless subsystem tree. 
-> >>
-> >> In summary, the following major things from TODO have been
-> >> addressed in staging:
-> >> -remove the defined feature as kernel versions
-> >> -remove OS wrapper functions
-> >> -remove custom debug and tracing functions
-> >> -rework comments and function headers(also coding style)
-> >> -remove build warnings
-> >> -replace all semaphores with mutexes or completions
-> >> -make spi and sdio components coexist in one build
-> >> -turn compile-time platform configuration (BEAGLE_BOARD,
-> >> PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
-> >> into run-time options that are read from DT
-> >> -replace SIOCDEVPRIVATE commands with generic API functions
-> >> -use wext-core handling instead of private SIOCSIWPRIV
-> >> implementation  
-> >
-> > From wireless point of view: if I see wext mentioned anywhere in the
-> > driver I stop right there. cfg80211 is a hard requirement for us
-> > nowadays.  
-> 
-> Clarification: Depending on the hardware design either cfg80211 or
-> mac80211 is a hard requirement. I haven't checked wilc1000 at all so I
-> don't know what design it has but if it's a "softmac" design then it
-> has to use mac80211, we do not want to support multiple 802.11 UMAC
-> stacks.
-> 
+CYW89342 is a 2x2 MIMO, 802.11a/b/g/n/ac for WLAN. It is a member of
+4355/4359 family.
 
-The TODO item to make use of wext-core is obsolete. Previously wilc1000
-driver also had few wext ioctl use but now it’s completely removed and
-cfg80211 operation callbacks are used.
+Signed-off-by: Jia-Shyr Chuang <saint.chuang@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-wilc1000 driver make use of cfg80211 and isn’t a "softmac".
-
-We need help to review and identify if there are any pending items
-for wilc1000 driver, so we can address those issues and make it ready
-to move to the wireless subsystem.
-
-Regards,
-Ajay
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 45928b5b8d97..f787ee5a6b6a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -2016,6 +2016,7 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
+ 
+ static const struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
++	BRCMF_PCIE_DEVICE_SUB(0x4355, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4355),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
+-- 
+2.1.0
