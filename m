@@ -1,173 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:50318 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727797AbeHVL0P (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 07:26:15 -0400
-Message-ID: <1534924940.25523.70.camel@sipsolutions.net> (sfid-20180822_100239_036766_26EE5398)
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        kernel-team@lge.com
-Date: Wed, 22 Aug 2018 10:02:20 +0200
-In-Reply-To: <20180822075010.GA29722@X58A-UD3R>
-References: <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
-         <1534871894.25523.34.camel@sipsolutions.net>
-         <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
-         <1534872621.25523.39.camel@sipsolutions.net>
-         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
-         <1534879241.25523.44.camel@sipsolutions.net>
-         <20180822024535.GA2414@X58A-UD3R>
-         <1534910543.25523.50.camel@sipsolutions.net>
-         <20180822054731.GB2414@X58A-UD3R>
-         <1534921643.25523.56.camel@sipsolutions.net>
-         <20180822075010.GA29722@X58A-UD3R>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-sn1nam01on0139.outbound.protection.outlook.com ([104.47.32.139]:58000
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726195AbeHOMMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Aug 2018 08:12:02 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jia-Shyr Chuang <saint.chuang@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH v2] brcmfmac: add CYW89342 mini-PCIe device
+Date: Wed, 15 Aug 2018 04:20:09 -0500
+Message-Id: <1534324809-57218-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180815_112108_634231_C4DD7108)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 16:50 +0900, Byungchul Park wrote:
+From: Jia-Shyr Chuang <saint.chuang@cypress.com>
 
-> > You're basically saying if we don't get to do a wait_for_completion(),
-> > then we don't need any lockdep annotation. I'm saying this isn't true.
-> 
-> Strictly no. But I'm just talking about the case in wq flush code.
+CYW89342 is a 2x2 MIMO, 802.11a/b/g/n/ac, SDIO 3.0 and PCIe 3.0 for
+WLAN. It is a member of 4355/4359 family.
 
-Sure, I meant it's not true in the wq flush code, not talking about
-anything else.
+Signed-off-by: Jia-Shyr Chuang <saint.chuang@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> > Consider the following case:
-> > 
-> > work_function()
-> > {
-> > 	mutex_lock(&mutex);
-> > 	mutex_unlock(&mutex);
-> > }
-> > 
-> > other_function()
-> > {
-> > 	queue_work(&my_wq, &work);
-> > 
-> > 	if (common_case) {
-> > 		schedule_and_wait_for_something_that_takes_a_long_time()
-> > 	}
-> > 
-> > 	mutex_lock(&mutex);
-> > 	flush_workqueue(&my_wq);
-> > 	mutex_unlock(&mutex);
-> > }
-> > 
-> > 
-> > Clearly this code is broken, right?
-> > 
-> > However, you'll almost never get lockdep to indicate that, because of
-> > the "if (common_case)".
-> 
-> Sorry I don't catch you. Why is that problem with the example? Please
-> a deadlock example.
-
-sure, I thought that was easy:
-
-thread 1			thread 2 (wq thread)
-
-common_case = false;
-queue_work(&my_wq, &work);
-mutex_lock(&mutex);
-
-flush_workqueue(&my_wq);
-				work_function()
-				-> mutex_lock(&mutex);
-				-> schedule(), wait for mutex
-wait_for_completion()
-
--> deadlock - we can't make any forward progress here.
-
-
-> > My argument basically is that the lockdep annotations in the workqueue
-> > code should be entirely independent of the actual need to call
-> > wait_for_completion().
-> 
-> No. Lockdep annotations always do with either wait_for_something or self
-> event loop within a single context e.g. fs -> memory reclaim -> fs -> ..
-
-Yes, but I'm saying that we should catch *potential* deadlocks *before*
-they happen.
-
-See the example above. Clearly, you're actually deadlocking, and
-obviously (assuming all the wait_for_completion() things work right)
-lockdep will show why we just deadlocked.
-
-BUT.
-
-This is useless. We want/need lockdep to show *potential* deadlocks,
-even when they didn't happen. Consider the other case in the above
-scenario:
-
-thread 1			thread 2 (wq thread)
-
-common_case = true;
-queue_work(&my_wq, &work);
-
-schedule_and_wait_...();	work_function()
-				-> mutex_lock(&mutex);
-				-> mutex_unlock()
-				done
-
-
-mutex_lock(&mutex);
-flush_workqueue(&my_wq);
--> nothing to do, will NOT
-   call wait_for_completion();
-
--> no deadlock
-
-Here we don't have a deadlock, but without the revert we will also not
-get a lockdep report. We should though, because we're doing something
-that's quite clearly dangerous - we simply don't know if the work
-function will complete before we get to flush_workqueue(). Maybe the
-work function has an uncommon case itself that takes forever, etc.
-
-> > Therefore, the commit should be reverted regardless of any cross-release
-> 
-> No. That is necessary only when the wait_for_completion() cannot be
-> tracked in checking dependencies automatically by cross-release.
-
-No. See above. We want the annotation regardless of invoking
-wait_for_completion().
-
-> It might be the key to understand you, could you explain it more why you
-> think lockdep annotations are independent of the actual need to call
-> wait_for_completion()(or wait_for_something_else) hopefully with a
-> deadlock example?
-
-See above.
-
-You're getting too hung up about a deadlock example. We don't want to
-have lockdep only catch *actual* deadlocks. The code I wrote clearly has
-a potential deadlock (sequence given above), but in most cases the code
-above will *not* deadlock. This is the interesting part we want lockdep
-to catch.
-
-> > work (that I neither know and thus don't understand right now), since it
-> > makes workqueue code rely on lockdep for the completion, whereas we
-> 
-> Using wait_for_completion(), right?
-
-Yes.
-
-> > really want to have annotations here even when we didn't actually need
-> > to wait_for_completion().
-> 
-> Please an example of deadlock even w/o wait_for_completion().
-
-No, here's where you get confused. Clearly, there is no lockdep if we
-don't do wait_for_completion(). But if you have the code above, lockdep
-should still warn about the potential deadlock that happens when you
-*do* get to wait_for_completion(). Lockdep shouldn't be restricted to
-warning about a deadlock that *actually* happened.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 45928b5b8d97..f787ee5a6b6a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -2016,6 +2016,7 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
+ 
+ static const struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
++	BRCMF_PCIE_DEVICE_SUB(0x4355, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4355),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
+-- 
+2.1.0
