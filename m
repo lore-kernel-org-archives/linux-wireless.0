@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:11211 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726990AbeHaPPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 11:15:03 -0400
-Subject: Re: [PATCH] rsi: remove set but not used variable 'header_size'
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Kees Cook <keescook@chromium.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-References: <1535707647-191888-1-git-send-email-yuehaibing@huawei.com>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <9c1571f1-b353-7621-c7e0-20d54cbd59c4@huawei.com> (sfid-20180831_130826_611689_D1004F91)
-Date: Fri, 31 Aug 2018 19:07:55 +0800
-MIME-Version: 1.0
-In-Reply-To: <1535707647-191888-1-git-send-email-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from s3.sipsolutions.net ([144.76.63.242]:33016 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727981AbeHOXUS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Aug 2018 19:20:18 -0400
+Message-ID: <1534364728.3547.46.camel@sipsolutions.net> (sfid-20180815_222643_881353_72CB5837)
+Subject: Re: [PATCH net-next v2 00/11] devlink: Add support for region access
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Alex Vesker <valex@mellanox.com>
+Cc: netdev@vger.kernel.org, jiri@mellanox.com, dsahern@gmail.com,
+        andrew@lunn.ch, rahul.lakkireddy@chelsio.com,
+        linux-wireless@vger.kernel.org
+Date: Wed, 15 Aug 2018 22:25:28 +0200
+In-Reply-To: <20180711114821.1d50ba63@cakuba.lan> (sfid-20180711_204833_719898_307A4DC2)
+References: <1531305788-29420-1-git-send-email-valex@mellanox.com>
+         <20180711114821.1d50ba63@cakuba.lan> (sfid-20180711_204833_719898_307A4DC2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2018-07-11 at 11:48 -0700, Jakub Kicinski wrote:
+> CC: linux-wireless, wifi chips used to have similar problem
+> 
+> On Wed, 11 Jul 2018 13:42:57 +0300, Alex Vesker wrote:
+> > This is a proposal which will allow access to driver defined address
+> > regions using devlink. Each device can create its supported address
+> > regions and register them. A device which exposes a region will allow
+> > access to it using devlink.
 
-On 2018/8/31 17:27, YueHaibing wrote:
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_send_data_pkt':
-> drivers/net/wireless/rsi/rsi_91x_hal.c:288:5: warning:
->  variable 'header_size' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/rsi/rsi_91x_hal.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> index 01edf96..c4fb319 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> @@ -285,7 +285,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
->  	struct skb_info *tx_params;
->  	struct ieee80211_bss_conf *bss;
->  	int status = -EINVAL;
-> -	u8 header_size;
->  
->  	if (!skb)
->  		return 0;
-> @@ -298,7 +297,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
->  	vif = info->control.vif;
->  	bss = &vif->bss_conf;
->  	tx_params = (struct skb_info *)info->driver_data;
 
-tx_params also can be removed.
+We usually just implement it for debug dumping, and use devcoredump for
+that. How does this overlap? Some of the devcoredump data may be
+"synthetic" in the sense that it doesn't really have to be strictly a
+device memory region, so it's not quite the same, but what's the
+intended use case for this?
 
-Will send V2.
-
-> -	header_size = tx_params->internal_hdr_size;
->  
->  	if (((vif->type == NL80211_IFTYPE_STATION) ||
->  	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
-> 
-> 
-> .
-> 
+johannes
