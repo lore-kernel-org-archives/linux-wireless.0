@@ -1,226 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:5885 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726382AbeHXMUV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41158 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726249AbeHPLZF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 08:20:21 -0400
-Subject: Re: [PATCH 12/24] staging: wilc1000: move static variable
- 'terminated_handle' to wilc_vif struct
-To: Ajay Singh <ajay.kathat@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-13-git-send-email-ajay.kathat@microchip.com>
- <8e7928a5-1d9f-d36e-f7b2-dbbbddff94ae@microchip.com>
- <20180823200600.47e1b418@ajaysk-VirtualBox>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <e21007c8-c043-54aa-433e-e7a2467fbda8@microchip.com> (sfid-20180824_104646_624258_5852622E)
-Date: Fri, 24 Aug 2018 11:46:39 +0300
-MIME-Version: 1.0
-In-Reply-To: <20180823200600.47e1b418@ajaysk-VirtualBox>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 16 Aug 2018 07:25:05 -0400
+Message-ID: <1534408023.3547.64.camel@sipsolutions.net> (sfid-20180816_102815_993334_F97CA404)
+Subject: Re: [PATCH] ath10k: add dynamic vlan support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Date: Thu, 16 Aug 2018 10:27:03 +0200
+In-Reply-To: <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org>
+References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
+         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
+         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
+         <1526637270.3805.15.camel@sipsolutions.net>
+         <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
+         <1527069018.3759.15.camel@sipsolutions.net>
+         <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2018-08-14 at 18:23 +0530, Manikanta Pubbisetty wrote:
 
+> > I don't think that makes sense. If we split the capability of AP_VLAN
+> > and AP_VLAN_FOR_4ADDR at the "root", then we don't need to play with all
+> > these things. Yes, this is slightly awkward for userspace, and perhaps
+> > with the interface combination checks, but I'd like you to look at that.
 
-On 23.08.2018 17:36, Ajay Singh wrote:
-> On Thu, 23 Aug 2018 11:11:18 +0300
-> Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> I was working on splitting the 4-addr functionality from AP/VLAN iftype; 
+> I have introduced a new iftype NL80211_IFTYPE_AP_4ADDR and moved the 
+> 4-addr handling from AP/VLAN to this new iftype. But this approach 
+> breaks the backward compatibility with older userspace applications. 
+
+Yeah ...
+
+I'm confused and no longer sure what I was thinking, nor even what we're
+trying to achieve here...
+
+> Since I am completely moving the 4-addr handling to the new type, older 
+> applications which do not understand this new type will simply fail and 
+> 4-addr mode will be completely broken.
 > 
->> On 14.08.2018 09:50, Ajay Singh wrote:
->>> Remove the use of static variable 'terminated_handle' and instead
->>> move in wilc_vif struct.
->>> After moving this variable to wilc_vif struct its not required to
->>> keep 'terminated_handle', so changed it to boolean type.  
->>
->> You can remove it at all and use wilc->hif_deinit_lock mutex also in
->> wilc_scan_complete_received() and wilc_network_info_received() it is
->> used in wilc_gnrl_async_info_received().
+> Currently, whenever a 4-addr client attempts a connection, hostapd just 
+> creates a AP/VLAN interface and moves the 4-addr client to the AP/VLAN 
+> iface; there are no other checks. I had no other option other than going 
+> with a new iftype for 4-addr handling.
 > 
-> In my understanding, 'terminated_handle' is used to know the
-> status when interface is getting deinit(). During deinitialization
-> of an interface if any async event received for the interface(from
-> firmware) should be ignored.
+> Is there a way we can maintain backward compatibility with this 
+> approach? Retaining the 4-addr handling in AP/VLAN and duplicating the 
+> same functionality to the new iftype seems will work but I am not sure 
+> if this is the right approach.
 
-'terminated_handle' true only inside mutex. So, outside of it it will be
-false, so *mostly* it will tell you when mutex is locked for deinit.
-*Mostly*, because context switches may happen while a mutex is locked.
+I think we have to keep the 4-addr handling in AP_VLAN iftype either
+way, to not break existing hostapd. We could introduce a separate
+AP_VLAN_NO_4ADDR and then require updating hostapd to get non-4addr
+VLAN, but that also seems awkward.
 
-With the current approach you have this code:
+Since hostapd doesn't currently check anything...
 
-int wilc_deinit(struct wilc_vif *vif)
-{
-	// ...
-	mutex_lock(&vif->wilc->hif_deinit_lock);
+Ok, no, I'm confused now. If we just clear WIPHY_FLAG_4ADDR_AP, don't we
+get what we want? 4-addr AP_VLAN interfaces would no longer be permitted
+to be created?
 
-	// (A)
-
-	vif->is_termination_progress = true;
-	// ...
-	vif->is_termination_progress = false;
-
-	mutex_unlokc(&vif->wilc->hif_deinit_lock);
-}
-
-And:
-
-void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
-{
-	// ...
-	if (!hif_drv || vif->is_termination_progress) {
-		netdev_err(vif->ndev, "driver not init[%p]\n", hif_drv);
-		return;
-	}
-
-	// ...
-	
-	// (B)
-	result = wilc_enqueue_work(msg);	
-	// ...
-}
-
-And:
-
-static int wilc_enqueue_work(struct host_if_msg *msg)
-
-{
-
-        INIT_WORK(&msg->work, msg->fn);
-
-
-
-        if (!msg->vif || !msg->vif->wilc || !msg->vif->wilc->hif_workqueue)
-
-                return -EINVAL;
-
-
-	// (C)
-        if (!queue_work(msg->vif->wilc->hif_workqueue, &msg->work))
-
-                return -EINVAL;
-
-
-
-        return 0;
-
-}
-
-
-You may have the following scenario:
-1. context switch in wilc_deinit() just after the mutex is taken (point A
-above). vif->is_termination_progress = false at this point.
-
-2. a new packet is received and wilc_network_info_received() gets executed
-and execution reaches point B, goes to wilc_enqueue_work() and suspend at
-point C then context switch.
-
-3. wilc_deinit() resumes and finish its execution.
-
-4. wilc_enqueue_work() resumes and queue_work() is executed but you already
-freed the hif_workqueue. You will have a crash here.
-
-Notice that hif_drv is not set to NULL on wilc_deinit() after it is kfree().
-
-> 
-> In my opinion its not right to only wait for the mutex in any of
-> callback e.g wilc_scan_complete_received() because it will delay the
-> handling of callback and try to process the event once lock is
-> available for the interface which is already de-initialized.
-
-But this is already done for wilc_gnrl_async_info_received().
-
-> 
-> Based on my understand 'mutex' alone is not enough to
-> handle this and we some extra check to know if interface is down.
-
-terminated_handle will *mostly* tell you when the mutex is locked, nothing
-more.
-
-I will
-> check more about this patch how to handle the extra scenario for this
-> case.
-> Please suggest if someone has better idea on how to handle this. 
-> 
->>
->>>
->>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
->>> ---
->>>  drivers/staging/wilc1000/host_interface.c     | 11 +++++------
->>>  drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
->>>  2 files changed, 6 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/host_interface.c
->>> b/drivers/staging/wilc1000/host_interface.c index
->>> d5d81843..f71f451f 100644 ---
->>> a/drivers/staging/wilc1000/host_interface.c +++
->>> b/drivers/staging/wilc1000/host_interface.c @@ -185,7 +185,6 @@
->>> struct join_bss_param { u8 start_time[4];
->>>  };
->>>  
->>> -static struct host_if_drv *terminated_handle;
->>>  static u8 p2p_listen_state;
->>>  static struct timer_list periodic_rssi;
->>>  static struct wilc_vif *periodic_rssi_vif;
->>> @@ -3505,7 +3504,7 @@ int wilc_deinit(struct wilc_vif *vif)
->>>  
->>>  	mutex_lock(&vif->wilc->hif_deinit_lock);
->>>  
->>> -	terminated_handle = hif_drv;
->>> +	vif->is_termination_progress = true;
->>>  
->>>  	del_timer_sync(&hif_drv->scan_timer);
->>>  	del_timer_sync(&hif_drv->connect_timer);
->>> @@ -3543,7 +3542,7 @@ int wilc_deinit(struct wilc_vif *vif)
->>>  	kfree(hif_drv);
->>>  
->>>  	vif->wilc->clients_count--;
->>> -	terminated_handle = NULL;
->>> +	vif->is_termination_progress = false;
->>>  	mutex_unlock(&vif->wilc->hif_deinit_lock);
->>>  	return result;
->>>  }
->>> @@ -3565,7 +3564,7 @@ void wilc_network_info_received(struct wilc
->>> *wilc, u8 *buffer, u32 length) return;
->>>  	hif_drv = vif->hif_drv;
->>>  
->>> -	if (!hif_drv || hif_drv == terminated_handle) {
->>> +	if (!hif_drv || vif->is_termination_progress) {
->>>  		netdev_err(vif->ndev, "driver not init[%p]\n",
->>> hif_drv); return;
->>>  	}
->>> @@ -3611,7 +3610,7 @@ void wilc_gnrl_async_info_received(struct
->>> wilc *wilc, u8 *buffer, u32 length) 
->>>  	hif_drv = vif->hif_drv;
->>>  
->>> -	if (!hif_drv || hif_drv == terminated_handle) {
->>> +	if (!hif_drv || vif->is_termination_progress) {
->>>  		mutex_unlock(&wilc->hif_deinit_lock);
->>>  		return;
->>>  	}
->>> @@ -3662,7 +3661,7 @@ void wilc_scan_complete_received(struct wilc
->>> *wilc, u8 *buffer, u32 length) return;
->>>  	hif_drv = vif->hif_drv;
->>>  
->>> -	if (!hif_drv || hif_drv == terminated_handle)
->>> +	if (!hif_drv || vif->is_termination_progress)
->>>  		return;
->>>  
->>>  	if (hif_drv->usr_scan_req.scan_result) {
->>> diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
->>> b/drivers/staging/wilc1000/wilc_wfi_netdevice.h index
->>> eb00e42..ba606d0 100644 ---
->>> a/drivers/staging/wilc1000/wilc_wfi_netdevice.h +++
->>> b/drivers/staging/wilc1000/wilc_wfi_netdevice.h @@ -121,6 +121,7 @@
->>> struct wilc_vif { struct timer_list during_ip_timer;
->>>  	bool obtaining_ip;
->>>  	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
->>> +	bool is_termination_progress;
->>>  };
->>>  
->>>  struct wilc {
->>>   
-> 
-> 
+johannes
