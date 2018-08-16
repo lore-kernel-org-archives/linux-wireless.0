@@ -1,100 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45448 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727410AbeHaMp2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:45:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:12 +0300
-Message-Id: <20180831083130.15525-11-luca@coelho.fi> (sfid-20180831_103937_402313_8544B8FF)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 10/28] mac80211: don't Tx a deauth frame if the AP forbade Tx
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34108 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727823AbeHPODm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Aug 2018 10:03:42 -0400
+Date: Thu, 16 Aug 2018 13:02:48 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Randy Oostdyk <linux-kernel@oostdyk.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless dongle causing entire machine to hang
+Message-ID: <20180816110247.GC2797@redhat.com> (sfid-20180816_130555_753031_8B60A19E)
+References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
+ <20180809111049.GC1955@redhat.com>
+ <CAAemcoOkA4y7zDMCKzD+nKJAQFoWCGPVHdbEV0j9ZOeaCe144g@mail.gmail.com>
+ <20180810111425.GA16269@redhat.com>
+ <CAAemcoOK6pxENmX8By=WJR3PVE7u2HwbE50LD3v0+Cif6bS5Lg@mail.gmail.com>
+ <20180815080747.GA26839@redhat.com>
+ <CAAemcoMUm=O3yviObt3+u-Cf+ySrVD2HXOzUHHOU0L4wBm=e9w@mail.gmail.com>
+ <20180816103107.GA2797@redhat.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="jho1yZJdad60DJr+"
+In-Reply-To: <20180816103107.GA2797@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If the driver fails to properly prepare for the channel
-switch, mac80211 will disconnect. If the CSA IE had mode
-set to 1, it means that the clients are not allowed to send
-any Tx on the current channel, and that includes the
-deauthentication frame.
+--jho1yZJdad60DJr+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Make sure that we don't send the deauthentication frame in
-this case.
+On Thu, Aug 16, 2018 at 12:31:07PM +0200, Stanislaw Gruszka wrote:
+> I prepared a patch that count EPROTO errors and if it's bigger
+> than 10 mark device as gone. It should not make a problem
+> when we will get one time random error.  I'm attaching it,
+> please test.
 
-In iwlwifi, this caused a failure to flush queues since the
-firmware already closed the queues after having parsed the
-CSA IE. Then mac80211 would wait until the deauthentication
-frame would go out (drv_flush(drop=false)) and that would
-never happen.
+Forgot to compile the patch, here is one that compiles.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/mlme.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Cheers
+Stanislaw
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4b53bbd10a3a..3dbecae4be73 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1365,6 +1365,16 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 					 cbss->beacon_interval));
- 	return;
-  drop_connection:
-+	/*
-+	 * This is just so that the disconnect flow will know that
-+	 * we were trying to switch channel and failed. In case the
-+	 * mode is 1 (we are not allowed to Tx), we will know not to
-+	 * send a deauthentication frame. Those two fields will be
-+	 * reset when the disconnection worker runs.
-+	 */
-+	sdata->vif.csa_active = true;
-+	sdata->csa_block_tx = csa_ie.mode;
+--jho1yZJdad60DJr+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="rt2x00_check_proto_err_v2.patch"
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index 086aad2..60b8bcc 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -31,6 +31,22 @@
+ #include "rt2x00.h"
+ #include "rt2x00usb.h"
+ 
++static bool rt2x00usb_check_usb_error(struct rt2x00_dev *rt2x00dev, int status)
++{
++	if (status == -ENODEV || status == -ENOENT)
++		return true;
++	
++	if (status == -EPROTO)
++		rt2x00dev->num_proto_errs++;
++	else
++		rt2x00dev->num_proto_errs = 0;
 +
- 	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
- 	mutex_unlock(&local->chanctx_mtx);
- 	mutex_unlock(&local->mtx);
-@@ -2575,6 +2585,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
-+	bool tx;
- 
- 	sdata_lock(sdata);
- 	if (!ifmgd->associated) {
-@@ -2582,6 +2593,8 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 
-+	tx = !sdata->csa_block_tx;
++	if (rt2x00dev->num_proto_errs > 10)
++		return true;
 +
- 	/* AP is probably out of range (or not reachable for another reason) so
- 	 * remove the bss struct for that AP.
- 	 */
-@@ -2589,7 +2602,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
++	return false;
++}
++
+ /*
+  * Interfacing with the HW.
+  */
+@@ -57,7 +73,7 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 		if (status >= 0)
+ 			return 0;
  
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
--			       true, frame_buf);
-+			       tx, frame_buf);
- 	mutex_lock(&local->mtx);
- 	sdata->vif.csa_active = false;
- 	ifmgd->csa_waiting_bcn = false;
-@@ -2600,7 +2613,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 	}
- 	mutex_unlock(&local->mtx);
+-		if (status == -ENODEV || status == -ENOENT) {
++		if (rt2x00usb_check_usb_error(rt2x00dev, status)) {
+ 			/* Device has disappeared. */
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 			break;
+@@ -321,7 +337,7 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
  
--	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
-+	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), tx,
- 				    WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		if (status == -ENODEV || status == -ENOENT)
++		if (rt2x00usb_check_usb_error(rt2x00dev, status))
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 		rt2x00lib_dmadone(entry);
+@@ -410,7 +426,7 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
  
- 	sdata_unlock(sdata);
--- 
-2.18.0
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
+-		if (status == -ENODEV || status == -ENOENT)
++		if (rt2x00usb_check_usb_error(rt2x00dev, status))
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 		rt2x00lib_dmadone(entry);
+
+--jho1yZJdad60DJr+--
