@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51524 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730203AbeHNB6H (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42225 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726062AbeHPPs6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 21:58:07 -0400
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [RFC 0/3] mac80211: handle push-pull path in ATF
-Date: Mon, 13 Aug 2018 16:13:28 -0700
-Message-Id: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org> (sfid-20180814_011347_559967_6EE0A410)
+        Thu, 16 Aug 2018 11:48:58 -0400
+From: Colin King <colin.king@canonical.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: remove unused array firstep_table
+Date: Thu, 16 Aug 2018 13:50:30 +0100
+Message-Id: <20180816125030.4416-1-colin.king@canonical.com> (sfid-20180816_145054_284250_7EA907D1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke,
+From: Colin Ian King <colin.king@canonical.com>
 
-Here are my pending changes on top of your 1st version of ATF.
-I am posting these RFCs for more feedback. I havn't posted ath10k changes
-and planned to do it later. Kindly review.
+Array firstep_table is being assigned but is never used
+hence it is redundant and can be removed.
 
--Rajkumar
+Cleans up clang warning:
+warning: 'firstep_table' defined but not used [-Wunused-const-variable=]
 
-Rajkumar Manoharan (3):
-  mac80211: make airtime txq list per ac
-  mac80211: pause txq transmission on negative airtime deficit
-  mac80211: add ieee80211_reorder_txq
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
- include/net/mac80211.h     | 15 ++++++++
- net/mac80211/debugfs_sta.c |  7 ++--
- net/mac80211/ieee80211_i.h |  3 +-
- net/mac80211/main.c        |  3 +-
- net/mac80211/sta_info.c    |  9 +++++
- net/mac80211/tx.c          | 87 +++++++++++++++++++++++++++++++++++-----------
- 6 files changed, 98 insertions(+), 26 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index ef2dd68d3f77..11d6f975c87d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -37,10 +37,6 @@
+ #define AR5008_11NG_HT_SS_SHIFT		12
+ #define AR5008_11NG_HT_DS_SHIFT		20
+ 
+-static const int firstep_table[] =
+-/* level:  0   1   2   3   4   5   6   7   8  */
+-	{ -4, -2,  0,  2,  4,  6,  8, 10, 12 }; /* lvl 0-8, default 2 */
+-
+ /*
+  * register values to turn OFDM weak signal detection OFF
+  */
 -- 
-1.9.1
+2.17.1
