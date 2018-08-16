@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:8461 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726024AbeHTOL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Aug 2018 10:11:28 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        "#4 . 16+" <stable@vger.kernel.org>
-Subject: [PATCH] mac80211: don't update the PM state of a peer upon a multicast frame
-Date: Mon, 20 Aug 2018 13:56:07 +0300
-Message-Id: <1534762567-6217-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20180820_125623_537016_32E8B7E5)
+Received: from smtp.codeaurora.org ([198.145.29.96]:36318 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727640AbeHPNp0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Aug 2018 09:45:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
+        <aditya.shankar@microchip.com>, <nicolas.ferre@microchip.com>,
+        <claudiu.beznea@microchip.com>, <adham.abozaeid@microchip.com>
+Subject: Re: feedback on mainlining wilc1000 staging driver
+References: <20180816015243.545cd009@ajaysk-VirtualBox>
+Date: Thu, 16 Aug 2018 13:47:40 +0300
+In-Reply-To: <20180816015243.545cd009@ajaysk-VirtualBox> (Ajay Singh's message
+        of "Thu, 16 Aug 2018 01:52:43 +0530")
+Message-ID: <87sh3etwoj.fsf@purkki.adurom.net> (sfid-20180816_124752_510786_52C0D8B7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I changed the way mac80211 updates the PM state of the peer.
-I forgot that we could also have multicast frames from the
-peer and that those frame should of course not change the
-PM state of the peer: A peer goes to power save when it
-needs to scan, but it won't send the broadcast Probe Request
-with the PM bit set.
+Ajay Singh <ajay.kathat@microchip.com> writes:
 
-This made us mark the peer as awake when it wasn't and then
-Intel's firmware would fail to transmit because the peer is
-asleep according to its database. The driver warned about
-this and it looked like this:
+> Hi Greg,
+>
+> We all are working on submitting and reviewing patches for wilc1000 in
+> staging driver for quite some time. 
+>
+> We would like to have feedback on the next steps to bring wilc1000
+> driver closer to move into the wireless subsystem tree. 
+>
+> In summary, the following major things from TODO have been addressed in
+> staging:
+> -remove the defined feature as kernel versions
+> -remove OS wrapper functions
+> -remove custom debug and tracing functions
+> -rework comments and function headers(also coding style)
+> -remove build warnings
+> -replace all semaphores with mutexes or completions
+> -make spi and sdio components coexist in one build
+> -turn compile-time platform configuration (BEAGLE_BOARD, PANDA_BOARD,
+> PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...) into run-time
+> options that are read from DT
+> -replace SIOCDEVPRIVATE commands with generic API functions
+> -use wext-core handling instead of private SIOCSIWPRIV implementation
 
- WARNING: CPU: 0 PID: 184 at /usr/src/linux-4.16.14/drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1369 iwl_mvm_rx_tx_cmd+0x53b/0x860
- CPU: 0 PID: 184 Comm: irq/124-iwlwifi Not tainted 4.16.14 #1
- RIP: 0010:iwl_mvm_rx_tx_cmd+0x53b/0x860
- Call Trace:
-  iwl_pcie_rx_handle+0x220/0x880
-  iwl_pcie_irq_handler+0x6c9/0xa20
-  ? irq_forced_thread_fn+0x60/0x60
-  ? irq_thread_dtor+0x90/0x90
+>From wireless point of view: if I see wext mentioned anywhere in the
+driver I stop right there. cfg80211 is a hard requirement for us
+nowadays.
 
-The relevant code that spits the WARNING is:
-
-        case TX_STATUS_FAIL_DEST_PS:
-                /* the FW should have stopped the queue and not
-                 * return this status
-                 */
-                WARN_ON(1);
-                info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=199967.
-
-Fixes: 9fef65443388 ("mac80211: always update the PM state of a peer on MGMT / DATA frames")
-Cc: <stable@vger.kernel.org>   #4.16+
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/rx.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a16ba56..3cf6027 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1728,6 +1728,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	 */
- 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
- 	    !ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !is_multicast_ether_addr(hdr->addr1) &&
- 	    (ieee80211_is_mgmt(hdr->frame_control) ||
- 	     ieee80211_is_data(hdr->frame_control)) &&
- 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
 -- 
-2.7.4
+Kalle Valo
