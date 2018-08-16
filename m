@@ -1,304 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:42051 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726726AbeHFHDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 03:03:32 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <pkshih@realtek.com>, <kvalo@codeaurora.org>,
-        <Larry.Finger@lwfinger.net>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <davem@davemloft.net>, <colin.king@canonical.com>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
-Date: Mon, 6 Aug 2018 12:54:40 +0800
-Message-ID: <20180806045440.11920-1-yuehaibing@huawei.com> (sfid-20180806_065629_830333_9DFAB1E2)
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:38849 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387572AbeHPPCl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Aug 2018 11:02:41 -0400
+Received: by mail-yw1-f67.google.com with SMTP id r3-v6so2943394ywc.5
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2018 05:04:32 -0700 (PDT)
+Subject: Re: [DEBUG PATCH] brcmfmac: add firmware watchdog running on host
+ machine
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <20180815180101.15087-1-zajec5@gmail.com>
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B75684E.9010102@broadcom.com> (sfid-20180816_140436_540612_95B1CC75)
+Date: Thu, 16 Aug 2018 14:04:30 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180815180101.15087-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix following coccinelle warning:
+On 8/15/2018 8:01 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> It may happen for FullMAC firmware to crash. It should be detected and
+> ideally somehow handled by a driver.
+>
+> Since commit ff4445a8502c ("brcmfmac: expose device memory to
+> devcoredump subsystem") brcmfmac has BRCMF_E_PSM_WATCHDOG event handler
+> but it wasn't enough to detect all kind of crashes. E.g. Netgear R8000
+> (BCM4709A0 + 3 x BCM43602) user was exepriencing firmware crashes that
+> never resulted in passing BRCMF_E_PSM_WATCHDOG to the host driver.
 
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2952:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2961:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3011:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3020:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3439:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3448:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3339:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3348:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3074:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3083:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3192:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3201:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3267:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3276:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3124:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:3133:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2821:2-4: WARNING: possible condition with no effect (if == else)
-./drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c:2830:2-4: WARNING: possible condition with no effect (if == else)
+Thanks, Rafał
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 180 +++++----------------
- 1 file changed, 36 insertions(+), 144 deletions(-)
+The PSM watchdog is actually not a firmware crash. It means the lower 
+part of the stack, which runs in the d11 core aka PSM, did not complete 
+its work in the required timing budget.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index df3facc..6597f7c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -2818,23 +2818,11 @@ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
- 
- 	/* sw mechanism */
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, true,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, true,
-+					  false, false);
- 	}
- }
- 
-@@ -2949,23 +2937,11 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
- 	/* sw mechanism */
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, false,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, false,
-+					  false, false);
- 	}
- }
- 
-@@ -3008,23 +2984,11 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
- 	/* sw mechanism */
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, false,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, false,
-+					  false, false);
- 	}
- }
- 
-@@ -3071,23 +3035,11 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
- 	/* sw mechanism */
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, false,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, false,
-+					  false, false);
- 	}
- }
- 
-@@ -3121,23 +3073,11 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
- 
- 	btcoexist->btc_get(btcoexist, BTC_GET_U4_WIFI_BW, &wifi_bw);
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, false,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, false,
-+					  false, false);
- 	}
- }
- 
-@@ -3189,23 +3129,11 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
- 
- 	/* sw mechanism	*/
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, false,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, false,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, false,
-+					  false, false);
- 	}
- }
- 
-@@ -3264,23 +3192,11 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
- 
- 	/* sw mechanism */
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, true,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, true,
-+					  false, false);
- 	}
- }
- 
-@@ -3336,23 +3252,11 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
- 
- 	/* sw mechanism */
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, true,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, true,
-+					  false, false);
- 	}
- }
- 
-@@ -3436,23 +3340,11 @@ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
- 
- 	/* sw mechanism */
- 	if (BTC_WIFI_BW_HT40 == wifi_bw) {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, true, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, true, true,
-+					  false, false);
- 	} else {
--		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		} else {
--			btc8723b2ant_sw_mechanism(btcoexist, false, true,
--						  false, false);
--		}
-+		btc8723b2ant_sw_mechanism(btcoexist, false, true,
-+					  false, false);
- 	}
- }
- 
--- 
-2.7.0
+> That made me implement this trivial software watchdog that simply checks
+> periodically if firmware still replies to the commands.
+>
+> Luckily this patch DOES NOT seem to be needed anymore since the commit
+> 8a3ab2f38f16 ("brcmfmac: trigger memory dump upon firmware halt
+> signal"). That change allows brcmfmac to detect firmware crashes
+> successfully.
+
+It can still miss a firmware crash if it happens really soon. Those 
+crashes mostly happens when trying to load firmware for chip revision A 
+on chip with revision B due to differences in code contained in ROM.
+
+Regards,
+Arend
+
+> This patch is being posted for research/debugging purposes only. It
+> SHOULD NOT be applied until someone notices a firmware crash that
+> doesn't trigger the BRCMF_D2H_DEV_FWHALT signal.
+>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
