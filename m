@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nyet.org ([66.175.217.148]:49826 "EHLO ln.curtisfong.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726341AbeHRTTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 15:19:33 -0400
-Subject: Re: [PATCH] Fix Bug 199967 - change WARN_ON(1) to IWL_ERR()
-To: Luciano Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org
-References: <20180818033555.18110-1-nyet@nyet.org>
- <c052cdda16fa0df1b3672f4be9c20df053703ac0.camel@intel.com>
-From: Nye Liu <nyet@nyet.org>
-Message-ID: <084b662c-4701-9a18-ffb1-c661f4534d8c@nyet.org> (sfid-20180818_181123_702144_989DF870)
-Date: Sat, 18 Aug 2018 09:11:18 -0700
+Received: from lorien.comfychair.org ([173.8.144.98]:64457 "EHLO
+        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727218AbeHQWcr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Aug 2018 18:32:47 -0400
+Date: Fri, 17 Aug 2018 12:22:01 -0700
+From: Danek Duvall <duvall@comfychair.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: help understanding HT capabilities bits
+Message-ID: <20180817192201.GA12970@lorien.comfychair.org> (sfid-20180817_212904_505465_42C2DDB3)
+References: <20180726234329.GA28336@lorien.comfychair.org>
+ <1534155955.3093.4.camel@sipsolutions.net>
+ <20180813204131.GA10207@lorien.comfychair.org>
+ <1534232917.3547.2.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <c052cdda16fa0df1b3672f4be9c20df053703ac0.camel@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534232917.3547.2.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/18/2018 1:41 AM, Luciano Coelho wrote:
+On Tue, Aug 14, 2018 at 09:48:37AM +0200, Johannes Berg wrote:
 
-> On Fri, 2018-08-17 at 20:35 -0700, Nye Liu wrote:
->> The TX_STATUS_FAIL_DEST_PS case fills logs with full backtraces, which
->> are pretty useless. Just do IWL_ERR() printk.
->>
->> Signed-off-by: Nye Liu <nyet@nyet.org>
->> ---
->>   drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
->> index cf2591f2ac23..87044953e6b4 100644
->> --- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
->> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
->> @@ -1407,8 +1407,10 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
->>   			/* the FW should have stopped the queue and not
->>   			 * return this status
->>   			 */
->> -			WARN_ON(1);
->>   			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
->> +			IWL_ERR(mvm, "TX_STATUS_FAIL_DEST_PS: "
->> +				"tid %d, status %x, flags %x\n", tid, status,
->> +				info->flags);
->>   			break;
->>   		default:
->>   			break;
-> I think this error is serious enough and we would like to catch it when
-> it occurs so we can debug the actual cause.
->
-> But I agree that we shouldn't be repeating it millions of times.  What
-> about just changing it to WARN_ON_ONCE() instead?
->
-That would be fine, but IMO the WARN_ON() provides less information that 
-the printk(). I'm not an IWL devel but there is limited information on 
-the wifi state itself in the WARN() - just call stack and register 
-information. Also, with WARN_ON_ONCE() the frequency of the error is masked.
+> Hi,
+> 
+> > Okay, I think I see: it reflects neither the current state of the device,
+> > nor the capabilities of the device, but the initial, default state of the
+> > device (at power-on, presumably?).  
+> 
+> It's really the default state for each new connection, unless it's
+> changed. It is actually changed though by mac80211, for example, so it
+> probably change these bits before sending them to the AP.
+> 
+> > Presumably if it doesn't represent the
+> > current state, then it also never changes.  I don't understand in what
+> > circumstances that's useful.
+> 
+> It isn't really. It's just a side effect of
+>  * the 802.11 protocol including it in the capabilities
+>  * nl80211 including the whole protocol struct instead of breaking it up
+> 
+> > I also think I now see that the current SMPS state comes from the SMPS_MODE
+> > attribute, and the device capability comes from the FEATURE_STATIC_SMPS and
+> > FEATURE_DYNAMIC_SMPS bits of the FEATURE_FLAGS attribute.  Is that correct?
+> 
+> Yeah, those are more useful than the capability.
+> 
+> > Do any of the other fields in HT_CAPA (or VHT_CAPA) have the same kind of
+> > meaning as the SMPS bits?  For instance, if the HT20/40 bit is off, then
+> > can we say anything about whether the device supports 40MHz channels (as
+> > I've been interpreting it)?  Or is it also some sort of default value (and
+> > if so, where would I go looking for that particular device capability)?  Is
+> > the answer to that question related to HT_CAPABILITY_MASK?  Basically I'm
+> > wondering if I should ignore HT_CAPA for my purposes (which are to choose a
+> > suitable radio on which to build an AP stack) and pull the data from some
+> > other attributes.
+> 
+> A lot of these might be possible to change, but I think for the most
+> part they're static. The 20/40 is a bit special as there's also a
+> cfg80211 module parameter that controls it on 2.4 GHz though.
+
+Okay, I think I got it.
+
+Thanks!
+Danek
