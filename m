@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33696 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726963AbeHJN2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Aug 2018 09:28:19 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] cfg80211: allow to build without CFG80211_REQUIRE_SIGNED_REGDB
-Date: Fri, 10 Aug 2018 12:55:47 +0200
-Message-Id: <1533898547-14449-1-git-send-email-sgruszka@redhat.com> (sfid-20180810_125902_042211_A5A70028)
+Received: from userp2130.oracle.com ([156.151.31.86]:55174 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726815AbeHQRvt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Aug 2018 13:51:49 -0400
+Date: Fri, 17 Aug 2018 17:47:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Kees Cook <keescook@chromium.org>,
+        Security Officers <security@kernel.org>,
+        Kevin Deus <kdeus@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Allen Pais <allen.pais@oracle.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
+ SHDLC I-Frame commands
+Message-ID: <20180817144751.4jqwapq52z4tsnf4@mwanda> (sfid-20180817_164851_573083_5A181406)
+References: <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
+ <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com>
+ <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com>
+ <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
+ <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com>
+ <CAJuCfpEX+F-EPxQYXNdUg-uT9ecwYYdxBsr9y_69zQ0Fq50GeA@mail.gmail.com>
+ <CAJuCfpGSPkB-tk4GHaJeStRph-ibVhUZ119Sfd16xgf9x=qUwQ@mail.gmail.com>
+ <20180815082956.u6grueiyshwgqt3a@mwanda>
+ <CAJuCfpH9n2vVjBF7RoMNng3T=URY1eusKfbVGyq44LWcjwNTPw@mail.gmail.com>
+ <20180817120650.6mx6icxif2o52qyx@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180817120650.6mx6icxif2o52qyx@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to kconfig-language.txt conditional dependency should be
-expressed 2 times:
+Never mind.  This code is a bit subtle for static analysis so those
+warnings are false positives.  Thanks for taking a look at this, Suren.
 
-        bool "foo" if BAR
-        default y if BAR
-
-Indeed, without additional if expression we always build with
-CFG80211_REQUIRE_SIGNED_REGDB even when CFG80211_CERTIFICATION_ONUS
-is not set.
-
-Fixes: 90a53e4432b1 ("cfg80211: implement regdb signature checking")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/wireless/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 4172204..bd63b73 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -89,7 +89,7 @@ config CFG80211_CERTIFICATION_ONUS
- 
- config CFG80211_REQUIRE_SIGNED_REGDB
- 	bool "require regdb signature" if CFG80211_CERTIFICATION_ONUS
--	default y
-+	default y if CFG80211_CERTIFICATION_ONUS
- 	select SYSTEM_DATA_VERIFICATION
- 	help
- 	  Require that in addition to the "regulatory.db" file a
--- 
-1.7.1
+regards,
+dan carpenter
