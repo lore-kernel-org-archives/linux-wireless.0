@@ -1,197 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42960 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726253AbeHUJ43 (ORCPT
+Received: from lorien.comfychair.org ([173.8.144.98]:44960 "EHLO
+        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726292AbeHRAdD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:56:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:56 +0300
-Message-Id: <20180821063657.30071-15-luca@coelho.fi> (sfid-20180821_083744_412033_E7076414)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 14/15] iwlwifi: mvm: Send LQ command as async when necessary
+        Fri, 17 Aug 2018 20:33:03 -0400
+Date: Fri, 17 Aug 2018 14:21:20 -0700
+From: Danek Duvall <duvall@comfychair.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: Use of IEEE80211_VHT_CAP_RXSTBC_* in mac80211_hwsim
+Message-ID: <20180817212120.GA16270@lorien.comfychair.org> (sfid-20180818_004155_053007_4313902F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+The mac80211_hwsim driver puts this in its VHT capabilities info field:
 
-The parameter that indicated whether the LQ command should be sent
-as sync or async was removed, causing the LQ command to be sent as
-sync from interrupt context (e.g. from the RX path). This resulted
-in a kernel warning: "scheduling while atomic" and failing to send
-the LQ command, which ultimately leads to a queue hang.
+    IEEE80211_VHT_CAP_RXSTBC_1 | 
+    IEEE80211_VHT_CAP_RXSTBC_2 |
+    IEEE80211_VHT_CAP_RXSTBC_3 |
+    IEEE80211_VHT_CAP_RXSTBC_4
 
-Fix it by adding back the required parameter to send the command as
-sync only when it is allowed.
+and I don't understand what that's supposed to mean.  According to
+802.11-2016, the three-bit field isn't a series of boolean values, but a
+single numerical value in its three bits, where the value is the maximum
+number of STBC streams, and the maximum defined value is 4.
 
-Fixes: d94c5a820d10 ("iwlwifi: mvm: open BA session only when sta is authorized")
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c    | 18 ++++++++----------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h    |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c |  7 +++----
- 5 files changed, 17 insertions(+), 18 deletions(-)
+But the way that the code treats it, we end up with a value of 7.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index c0c3ff6a0e6a..c95c1f3c1fb4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2949,7 +2949,8 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 		}
- 
--		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
-+		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
-+				     false);
- 		ret = iwl_mvm_update_sta(mvm, vif, sta);
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
-@@ -2965,7 +2966,8 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		/* enable beacon filtering */
- 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
- 
--		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
-+		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
-+				     true);
- 
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 762abfc42b62..98189f2f1e65 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1708,7 +1708,7 @@ iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
- 
- /* rate scaling */
--int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init);
-+int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool sync);
- void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg);
- int rs_pretty_print_rate(char *buf, int bufsz, const u32 rate);
- void rs_update_last_rssi(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 30cfd7d50bc9..d3e389a99a8a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1276,7 +1276,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		       (unsigned long)(lq_sta->last_tx +
- 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
- 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
--		iwl_mvm_rs_rate_init(mvm, sta, info->band);
-+		iwl_mvm_rs_rate_init(mvm, sta, info->band, true);
- 		return;
- 	}
- 	lq_sta->last_tx = jiffies;
-@@ -2859,9 +2859,8 @@ void rs_update_last_rssi(struct iwl_mvm *mvm,
- static void rs_initialize_lq(struct iwl_mvm *mvm,
- 			     struct ieee80211_sta *sta,
- 			     struct iwl_lq_sta *lq_sta,
--			     enum nl80211_band band)
-+			     enum nl80211_band band, bool update)
- {
--	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_scale_tbl_info *tbl;
- 	struct rs_rate *rate;
- 	u8 active_tbl = 0;
-@@ -2890,8 +2889,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
- 	rs_set_expected_tpt_table(lq_sta, tbl);
- 	rs_fill_lq_cmd(mvm, sta, lq_sta, rate);
- 	/* TODO restore station should remember the lq cmd */
--	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq,
--			    mvmsta->sta_state < IEEE80211_STA_AUTHORIZED);
-+	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq, !update);
- }
- 
- static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
-@@ -3144,7 +3142,7 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
-  * Called after adding a new station to initialize rate scaling
-  */
- static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			     enum nl80211_band band)
-+			     enum nl80211_band band, bool update)
- {
- 	int i, j;
- 	struct ieee80211_hw *hw = mvm->hw;
-@@ -3224,7 +3222,7 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	iwl_mvm_reset_frame_stats(mvm);
- #endif
--	rs_initialize_lq(mvm, sta, lq_sta, band);
-+	rs_initialize_lq(mvm, sta, lq_sta, band, update);
- }
- 
- static void rs_drv_rate_update(void *mvm_r,
-@@ -3244,7 +3242,7 @@ static void rs_drv_rate_update(void *mvm_r,
- 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
- 		ieee80211_stop_tx_ba_session(sta, tid);
- 
--	iwl_mvm_rs_rate_init(mvm, sta, sband->band);
-+	iwl_mvm_rs_rate_init(mvm, sta, sband->band, true);
- }
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
-@@ -4098,12 +4096,12 @@ static const struct rate_control_ops rs_mvm_ops_drv = {
- };
- 
- void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  enum nl80211_band band)
-+			  enum nl80211_band band, bool update)
- {
- 	if (iwl_mvm_has_tlc_offload(mvm))
- 		rs_fw_rate_init(mvm, sta, band);
- 	else
--		rs_drv_rate_init(mvm, sta, band);
-+		rs_drv_rate_init(mvm, sta, band, update);
- }
- 
- int iwl_mvm_rate_control_register(void)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index d2cf484e2b73..8e7f993e2911 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -420,7 +420,7 @@ struct iwl_lq_sta {
- 
- /* Initialize station's rate scaling information after adding station */
- void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  enum nl80211_band band);
-+			  enum nl80211_band band, bool init);
- 
- /* Notify RS about Tx status */
- void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index b002a7afb5f5..6a5349401aa9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -900,20 +900,19 @@ int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 
- /**
-  * iwl_mvm_send_lq_cmd() - Send link quality command
-- * @init: This command is sent as part of station initialization right
-- *        after station has been added.
-+ * @sync: This command can be sent synchronously.
-  *
-  * The link quality command is sent as the last step of station creation.
-  * This is the special case in which init is set and we call a callback in
-  * this case to clear the state indicating that station creation is in
-  * progress.
-  */
--int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init)
-+int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool sync)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = LQ_CMD,
- 		.len = { sizeof(struct iwl_lq_cmd), },
--		.flags = init ? 0 : CMD_ASYNC,
-+		.flags = sync ? 0 : CMD_ASYNC,
- 		.data = { lq, },
- 	};
- 
--- 
-2.18.0
+There seems to be a similar issue in mac80211/main.c, in the definition of
+mac80211_vht_capa_mod_mask.
+
+Is that a bug in the code, or a misunderstanding on my part?  No other
+(in-tree) drivers use any of the macros other than _1, so I don't have any
+other references for how the other values might be used.
+
+Thanks,
+Danek
