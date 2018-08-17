@@ -1,121 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40231 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727190AbeH2NkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 09:40:19 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: Re: [RFC v2 2/2] mac80211: manage txq transmission based on airtime deficit
-In-Reply-To: <1535503594-32051-2-git-send-email-rmanohar@codeaurora.org>
-References: <1535503594-32051-1-git-send-email-rmanohar@codeaurora.org> <1535503594-32051-2-git-send-email-rmanohar@codeaurora.org>
-Date: Wed, 29 Aug 2018 11:44:13 +0200
-Message-ID: <874lfd4idu.fsf@toke.dk> (sfid-20180829_114418_573013_BC290C7C)
+Received: from smtp.codeaurora.org ([198.145.29.96]:33924 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726349AbeHQLii (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Aug 2018 07:38:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Ajay Singh <ajay.kathat@microchip.com>, devel@driverdev.osuosl.org,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        nicolas.ferre@microchip.com, ganesh.krishna@microchip.com,
+        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
+Subject: Re: feedback on mainlining wilc1000 staging driver
+References: <20180816015243.545cd009@ajaysk-VirtualBox>
+        <87sh3etwoj.fsf@purkki.adurom.net> <87o9e2twe9.fsf@purkki.adurom.net>
+        <20180817100233.7f1c00d9@ajaysk-VirtualBox>
+        <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
+        <5B768574.6060009@broadcom.com>
+Date: Fri, 17 Aug 2018 11:36:02 +0300
+In-Reply-To: <5B768574.6060009@broadcom.com> (Arend van Spriel's message of
+        "Fri, 17 Aug 2018 10:21:08 +0200")
+Message-ID: <87y3d5tmod.fsf@kamboji.qca.qualcomm.com> (sfid-20180817_103615_978316_8CCFB271)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> Once a txq is selected for transmission by next_txq(), all data from
-> txq are dequeued by driver till hardware descriptors are drained.
-> i.e the driver is still allowed to dequeue frames from txq even when
-> its fairness deficit goes negative during transmission. This breaks
-> fairness and also cause inefficient fq-codel in mac80211 when data
-> queues are maintained in driver/firmware. To address this problem,
-> pause txq transmission immediately upon driver airtime report.
+> On 8/17/2018 9:49 AM, Kalle Valo wrote:
+>> Ajay Singh <ajay.kathat@microchip.com> writes:
+>>
+>>> On Thu, 16 Aug 2018 13:53:50 +0300
+>>> Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>
+>>>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>>>
+>>>>>  From wireless point of view: if I see wext mentioned anywhere in the
+>>>>> driver I stop right there. cfg80211 is a hard requirement for us
+>>>>> nowadays.
+>>>>
+>>>> Clarification: Depending on the hardware design either cfg80211 or
+>>>> mac80211 is a hard requirement. I haven't checked wilc1000 at all so I
+>>>> don't know what design it has but if it's a "softmac" design then it
+>>>> has to use mac80211, we do not want to support multiple 802.11 UMAC
+>>>> stacks.
+>>>>
+>>>
+>>> The TODO item to make use of wext-core is obsolete. Previously wilc1000
+>>> driver also had few wext ioctl use but now it=E2=80=99s completely remo=
+ved and
+>>> cfg80211 operation callbacks are used.
+>>>
+>>> wilc1000 driver make use of cfg80211 and isn=E2=80=99t a "softmac".
+>>
+>> Good.
+>>
+>>> We need help to review and identify if there are any pending items
+>>> for wilc1000 driver, so we can address those issues and make it ready
+>>> to move to the wireless subsystem.
+>>
+>> I think the best way to get that forward is to submit a patch (or
+>> patchset) to linux-wireless, that's the easiest for reviewers.
+>
+> For brcm80211 drivers we used a single patch introducing it under the
+> wireless drivers folder. Because it was quite a sizable patch we
+> parked it on the wireless wiki page. Had a few iterations doing it
+> like that.
 
-Hmm, interesting observation about the queues moving to mac80211. Not
-sure it will actually work that way; depends on how timely the ath10k
-airtime report is, I guess. But would be interesting to test! :)
+Another option is to split it so that there's one patch per file, should
+be even pretty easy to automate that. It's just so much easier to
+comment on a patch submitted by email compared to the reviewer manually
+copying code and then commenting it, yuck.
 
-Just one comment on your patch, below.
-
-> +static bool ieee80211_txq_requeued(struct ieee80211_local *local,
-> +				   struct txq_info *txqi)
-> +{
-> +	struct sta_info *sta;
-> +
-> +	lockdep_assert_held(&local->active_txq_lock);
-> +
-> +	if (!txqi->txq.sta)
-> +		return false;
-> +
-> +	sta = container_of(txqi->txq.sta, struct sta_info, sta);
-> +
-> +	if (sta->airtime.deficit[txqi->txq.ac] > 0) {
-> +		clear_bit(IEEE80211_TXQ_PAUSE, &txqi->flags);
-> +		return false;
-> +	}
-> +
-> +	sta->airtime.deficit[txqi->txq.ac] +=
-> +		local->airtime_quantum * sta->airtime.weight;
-> +	list_move_tail(&txqi->schedule_order,
-> +		       &local->active_txqs[txqi->txq.ac]);
-> +
-> +	return true;
-> +}
-> +
->  struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
->  					 bool inc_seqno)
->  {
-> @@ -3655,18 +3682,8 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
->  	if (!txqi)
->  		goto out;
->  
-> -	if (txqi->txq.sta) {
-> -		struct sta_info *sta = container_of(txqi->txq.sta,
-> -						struct sta_info, sta);
-> -
-> -		if (sta->airtime.deficit[txqi->txq.ac] < 0) {
-> -			sta->airtime.deficit[txqi->txq.ac] +=
-> -				local->airtime_quantum * sta->airtime.weight;
-> -			list_move_tail(&txqi->schedule_order,
-> -				       &local->active_txqs[txqi->txq.ac]);
-> -			goto begin;
-> -		}
-> -	}
-> +	if (ieee80211_txq_requeued(local, txqi))
-> +		goto begin;
->  
->  	/* If seqnos are equal, we've seen this txqi before in this scheduling
->  	 * round, so abort.
-> @@ -3687,6 +3704,39 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
->  }
->  EXPORT_SYMBOL(ieee80211_next_txq);
->  
-> +bool ieee80211_txq_can_transmit(struct ieee80211_hw *hw,
-> +				struct ieee80211_txq *txq)
-> +{
-> +	struct ieee80211_local *local = hw_to_local(hw);
-> +	struct txq_info *txqi, *f_txqi;
-> +	bool can_tx;
-> +
-> +	txqi = to_txq_info(txq);
-> +	/* Check whether txq is paused or not */
-> +	if (test_bit(IEEE80211_TXQ_PAUSE, &txqi->flags))
-> +		return false;
-> +
-> +	can_tx = false;
-> +	spin_lock_bh(&local->active_txq_lock);
-> +	f_txqi = find_txqi(local, txq->ac);
-> +	if (!f_txqi)
-> +		goto out;
-> +
-> +	/* Allow only head node to ensure fairness */
-> +	if (f_txqi != txqi)
-> +		goto out;
-> +
-> +	/* Check if txq is in negative deficit */
-> +	if (!ieee80211_txq_requeued(local, txqi))
-> +		can_tx = true;
-> +
-> +	list_del_init(&txqi->schedule_order);
-
-Why are you removing the txq from the list here, and how do you expect
-it to get added back?
-
--Toke
+--=20
+Kalle Valo
