@@ -1,217 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-blr-01.qualcomm.com ([103.229.18.197]:18155 "EHLO
-        alexa-out-blr-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727054AbeH2K4Q (ORCPT
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:45328 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726528AbeHQLXi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 06:56:16 -0400
-From: Rakesh Pillai <pillair@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Enable Factory Test Mode for WCN3990
-Date: Wed, 29 Aug 2018 12:30:38 +0530
-Message-Id: <1535526038-4299-1-git-send-email-pillair@codeaurora.org> (sfid-20180829_090056_601899_07C795FD)
+        Fri, 17 Aug 2018 07:23:38 -0400
+Received: by mail-qt0-f182.google.com with SMTP id y5-v6so7882842qti.12
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Aug 2018 01:21:11 -0700 (PDT)
+Subject: Re: feedback on mainlining wilc1000 staging driver
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Ajay Singh <ajay.kathat@microchip.com>
+References: <20180816015243.545cd009@ajaysk-VirtualBox>
+ <87sh3etwoj.fsf@purkki.adurom.net> <87o9e2twe9.fsf@purkki.adurom.net>
+ <20180817100233.7f1c00d9@ajaysk-VirtualBox>
+ <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
+Cc: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, nicolas.ferre@microchip.com,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B768574.6060009@broadcom.com> (sfid-20180817_102227_504714_4C8C4385)
+Date: Fri, 17 Aug 2018 10:21:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The support to put WCN3990 firmware into Factory
-test mode is not present currently. The WCN3990
-firmware can operate in Factory test mode based
-on the mode it receives in the wlan enable message
-from the host driver.
+On 8/17/2018 9:49 AM, Kalle Valo wrote:
+> Ajay Singh <ajay.kathat@microchip.com> writes:
+>
+>> On Thu, 16 Aug 2018 13:53:50 +0300
+>> Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>>
+>>>> Ajay Singh <ajay.kathat@microchip.com> writes:
+>>>>
+>>>>> Hi Greg,
+>>>>>
+>>>>> We all are working on submitting and reviewing patches for
+>>>>> wilc1000 in staging driver for quite some time.
+>>>>>
+>>>>> We would like to have feedback on the next steps to bring wilc1000
+>>>>> driver closer to move into the wireless subsystem tree.
+>>>>>
+>>>>> In summary, the following major things from TODO have been
+>>>>> addressed in staging:
+>>>>> -remove the defined feature as kernel versions
+>>>>> -remove OS wrapper functions
+>>>>> -remove custom debug and tracing functions
+>>>>> -rework comments and function headers(also coding style)
+>>>>> -remove build warnings
+>>>>> -replace all semaphores with mutexes or completions
+>>>>> -make spi and sdio components coexist in one build
+>>>>> -turn compile-time platform configuration (BEAGLE_BOARD,
+>>>>> PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
+>>>>> into run-time options that are read from DT
+>>>>> -replace SIOCDEVPRIVATE commands with generic API functions
+>>>>> -use wext-core handling instead of private SIOCSIWPRIV
+>>>>> implementation
+>>>>
+>>>>  From wireless point of view: if I see wext mentioned anywhere in the
+>>>> driver I stop right there. cfg80211 is a hard requirement for us
+>>>> nowadays.
+>>>
+>>> Clarification: Depending on the hardware design either cfg80211 or
+>>> mac80211 is a hard requirement. I haven't checked wilc1000 at all so I
+>>> don't know what design it has but if it's a "softmac" design then it
+>>> has to use mac80211, we do not want to support multiple 802.11 UMAC
+>>> stacks.
+>>>
+>>
+>> The TODO item to make use of wext-core is obsolete. Previously wilc1000
+>> driver also had few wext ioctl use but now it’s completely removed and
+>> cfg80211 operation callbacks are used.
+>>
+>> wilc1000 driver make use of cfg80211 and isn’t a "softmac".
+>
+> Good.
+>
+>> We need help to review and identify if there are any pending items
+>> for wilc1000 driver, so we can address those issues and make it ready
+>> to move to the wireless subsystem.
+>
+> I think the best way to get that forward is to submit a patch (or
+> patchset) to linux-wireless, that's the easiest for reviewers.
 
-When the host driver is started in testmode send
-the operating mode as UTF mode, to the WCN3990
-firmware, in the wlan enable message to start the
-firmware in Factory test mode.
+For brcm80211 drivers we used a single patch introducing it under the 
+wireless drivers folder. Because it was quite a sizable patch we parked 
+it on the wireless wiki page. Had a few iterations doing it like that.
 
-Tested on: WCN3990
-Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1.
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ahb.c      |  3 ++-
- drivers/net/wireless/ath/ath10k/core.c     |  2 +-
- drivers/net/wireless/ath/ath10k/hif.h      |  7 ++++---
- drivers/net/wireless/ath/ath10k/mac.c      |  2 +-
- drivers/net/wireless/ath/ath10k/pci.c      |  3 ++-
- drivers/net/wireless/ath/ath10k/sdio.c     |  3 ++-
- drivers/net/wireless/ath/ath10k/snoc.c     | 20 ++++++++++++++++----
- drivers/net/wireless/ath/ath10k/testmode.c |  2 +-
- drivers/net/wireless/ath/ath10k/usb.c      |  3 ++-
- 9 files changed, 31 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index c9bd0e2..8c0e605 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -661,7 +661,8 @@ static void ath10k_ahb_hif_stop(struct ath10k *ar)
- 	napi_disable(&ar->napi);
- }
- 
--static int ath10k_ahb_hif_power_up(struct ath10k *ar)
-+static int ath10k_ahb_hif_power_up(struct ath10k *ar,
-+				   enum ath10k_firmware_mode fw_mode)
- {
- 	int ret;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7ff70a6..fe6169d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2515,7 +2515,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 	struct bmi_target_info target_info;
- 	int ret = 0;
- 
--	ret = ath10k_hif_power_up(ar);
-+	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_NORMAL);
- 	if (ret) {
- 		ath10k_err(ar, "could not power on hif bus (%d)\n", ret);
- 		return ret;
-diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
-index 1a59ea0..171fdd0 100644
---- a/drivers/net/wireless/ath/ath10k/hif.h
-+++ b/drivers/net/wireless/ath/ath10k/hif.h
-@@ -81,7 +81,7 @@ struct ath10k_hif_ops {
- 	void (*write32)(struct ath10k *ar, u32 address, u32 value);
- 
- 	/* Power up the device and enter BMI transfer mode for FW download */
--	int (*power_up)(struct ath10k *ar);
-+	int (*power_up)(struct ath10k *ar, enum ath10k_firmware_mode fw_mode);
- 
- 	/* Power down the device and free up resources. stop() must be called
- 	 * before this if start() was called earlier
-@@ -165,9 +165,10 @@ static inline u16 ath10k_hif_get_free_queue_number(struct ath10k *ar,
- 	return ar->hif.ops->get_free_queue_number(ar, pipe_id);
- }
- 
--static inline int ath10k_hif_power_up(struct ath10k *ar)
-+static inline int ath10k_hif_power_up(struct ath10k *ar,
-+				      enum ath10k_firmware_mode fw_mode)
- {
--	return ar->hif.ops->power_up(ar);
-+	return ar->hif.ops->power_up(ar, fw_mode);
- }
- 
- static inline void ath10k_hif_power_down(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 90f9372..155b720 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4654,7 +4654,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		goto err;
- 	}
- 
--	ret = ath10k_hif_power_up(ar);
-+	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_NORMAL);
- 	if (ret) {
- 		ath10k_err(ar, "Could not init hif: %d\n", ret);
- 		goto err_off;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index af2cf55..b867171 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2789,7 +2789,8 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
- 	return ar_pci->pci_hard_reset(ar);
- }
- 
--static int ath10k_pci_hif_power_up(struct ath10k *ar)
-+static int ath10k_pci_hif_power_up(struct ath10k *ar,
-+				   enum ath10k_firmware_mode fw_mode)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 7f61591..90abfc6 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1381,7 +1381,8 @@ static int ath10k_sdio_hif_disable_intrs(struct ath10k *ar)
- 	return ret;
- }
- 
--static int ath10k_sdio_hif_power_up(struct ath10k *ar)
-+static int ath10k_sdio_hif_power_up(struct ath10k *ar,
-+				    enum ath10k_firmware_mode fw_mode)
- {
- 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index e9a6b3d..c79cca1 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -942,7 +942,8 @@ static int ath10k_snoc_init_pipes(struct ath10k *ar)
- 	return 0;
- }
- 
--static int ath10k_snoc_wlan_enable(struct ath10k *ar)
-+static int ath10k_snoc_wlan_enable(struct ath10k *ar,
-+				   enum ath10k_firmware_mode fw_mode)
- {
- 	struct ath10k_tgt_pipe_cfg tgt_cfg[CE_COUNT_MAX];
- 	struct ath10k_qmi_wlan_enable_cfg cfg;
-@@ -976,7 +977,17 @@ static int ath10k_snoc_wlan_enable(struct ath10k *ar)
- 	cfg.shadow_reg_cfg = (struct ath10k_shadow_reg_cfg *)
- 		&target_shadow_reg_cfg_map;
- 
--	mode = QMI_WLFW_MISSION_V01;
-+	switch (fw_mode) {
-+	case ATH10K_FIRMWARE_MODE_NORMAL:
-+		mode = QMI_WLFW_MISSION_V01;
-+		break;
-+	case ATH10K_FIRMWARE_MODE_UTF:
-+		mode = QMI_WLFW_FTM_V01;
-+		break;
-+	default:
-+		ath10k_err(ar, "invalid firmware mode %d\n", fw_mode);
-+		return -EINVAL;
-+	}
- 
- 	return ath10k_qmi_wlan_enable(ar, &cfg, mode,
- 				       NULL);
-@@ -995,14 +1006,15 @@ static void ath10k_snoc_hif_power_down(struct ath10k *ar)
- 	ath10k_ce_free_rri(ar);
- }
- 
--static int ath10k_snoc_hif_power_up(struct ath10k *ar)
-+static int ath10k_snoc_hif_power_up(struct ath10k *ar,
-+				    enum ath10k_firmware_mode fw_mode)
- {
- 	int ret;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "%s:WCN3990 driver state = %d\n",
- 		   __func__, ar->state);
- 
--	ret = ath10k_snoc_wlan_enable(ar);
-+	ret = ath10k_snoc_wlan_enable(ar, fw_mode);
- 	if (ret) {
- 		ath10k_err(ar, "failed to enable wcn3990: %d\n", ret);
- 		return ret;
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index c24ee61..67faafe 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -270,7 +270,7 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
- 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode wmi version %d\n",
- 		   ar->testmode.utf_mode_fw.fw_file.wmi_op_version);
- 
--	ret = ath10k_hif_power_up(ar);
-+	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_UTF);
- 	if (ret) {
- 		ath10k_err(ar, "failed to power up hif (testmode): %d\n", ret);
- 		ar->state = ATH10K_STATE_OFF;
-diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
-index d4803ff..a91524f5 100644
---- a/drivers/net/wireless/ath/ath10k/usb.c
-+++ b/drivers/net/wireless/ath/ath10k/usb.c
-@@ -706,7 +706,8 @@ static void ath10k_usb_hif_send_complete_check(struct ath10k *ar,
- {
- }
- 
--static int ath10k_usb_hif_power_up(struct ath10k *ar)
-+static int ath10k_usb_hif_power_up(struct ath10k *ar,
-+				   enum ath10k_firmware_mode fw_mode)
- {
- 	return 0;
- }
--- 
-2.7.4
+Regards,
+Arend
