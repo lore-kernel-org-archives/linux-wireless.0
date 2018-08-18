@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:42087 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725796AbeH1GOd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42216 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726417AbeHRLf3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 02:14:33 -0400
-From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        fu3mo6goo@gmail.com
-Subject: [PATCH] mac80211: fix to follow standard
-Date: Tue, 28 Aug 2018 10:24:34 +0800
-Message-Id: <1535423074-130862-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180828_042528_741119_C56CF38E)
+        Sat, 18 Aug 2018 07:35:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 18 Aug 2018 11:27:44 +0300
+Message-Id: <20180818082750.28717-11-luca@coelho.fi> (sfid-20180818_102841_841230_E7D83BB3)
+In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
+References: <20180818082750.28717-1-luca@coelho.fi>
+Subject: [PATCH 10/16] iwlwifi: mvm: add bss color to radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE 802.11-2016 14.10.8.3 HWMP sequence numbering says:
-If it is a target mesh STA, it shall update its own HWMP SN to
-maximum (current HWMP SN, target HWMP SN in the PREQ element) + 1
-immediately before it generates a PREP element in response to a
-PREQ element.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+Add BSS color to the HE radiotap.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mesh_hwmp.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 35ad398..6c21a26 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -572,6 +572,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		forward = false;
- 		reply = true;
- 		target_metric = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index b53148f972a4..4af3ab2ee1a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1042,6 +1042,20 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW);
+ 	}
 +
-+		if (SN_GT(target_sn, ifmsh->sn)) {
-+			ifmsh->sn = target_sn;
++	if (he_phy_data != HE_PHY_DATA_INVAL &&
++	    (he_type == RATE_MCS_HE_TYPE_SU ||
++	     he_type == RATE_MCS_HE_TYPE_MU)) {
++		u8 bss_color = FIELD_GET(IWL_RX_HE_PHY_BSS_COLOR_MASK,
++					 he_phy_data);
++
++		if (bss_color) {
++			he->data1 |=
++				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN);
++			he->data3 |= cpu_to_le16(bss_color);
 +		}
++	}
 +
- 		if (time_after(jiffies, ifmsh->last_sn_update +
- 					net_traversal_jiffies(sdata)) ||
- 		    time_before(jiffies, ifmsh->last_sn_update)) {
+ 	rx_status->device_timestamp = gp2_on_air_rise;
+ 	rx_status->band = channel > 14 ? NL80211_BAND_5GHZ :
+ 		NL80211_BAND_2GHZ;
 -- 
-2.7.4
+2.18.0
