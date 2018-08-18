@@ -1,88 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37504 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727159AbeHAVyW (ORCPT
+Received: from 6.mo3.mail-out.ovh.net ([188.165.43.173]:36799 "EHLO
+        6.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726488AbeHSCdI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 17:54:22 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id A0D0F40A5C4
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Aug 2018 13:06:53 -0700 (PDT)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: use-after free bug in hacked 4.16 kernel, related to fq_flow_dequeue
-Message-ID: <a5e579a2-5c20-5438-83c6-1eb5ae3e5630@candelatech.com> (sfid-20180801_220658_869971_8E6E2CEC)
-Date: Wed, 1 Aug 2018 13:06:53 -0700
+        Sat, 18 Aug 2018 22:33:08 -0400
+Received: from player718.ha.ovh.net (unknown [10.109.160.143])
+        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 7293E1CA0DC
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 22:54:20 +0200 (CEST)
+Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
+To: Denis Kenzior <denkenz@gmail.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+ <20180814104255.4183-2-alexander@wetzel-home.de>
+ <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
+From: Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de> (sfid-20180819_012444_247762_FA3A40E7)
+Date: Sat, 18 Aug 2018 22:53:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is from my hacked kernel, could be my fault.  I thought the fq guys might
-want to know however...
+Hi Denis
 
-==================================================================
-BUG: KASAN: use-after-free in fq_flow_dequeue+0x353/0x3c0 [mac80211]
-Read of size 4 at addr ffff88013d92a700 by task rmmod/813
+Am 16.08.18 um 18:30 schrieb Denis Kenzior:
+> Hi Alexander,
+> 
+> On 08/14/2018 05:42 AM, Alexander Wetzel wrote:
+>> Drivers able to correctly replace a in-use key should set
+>> NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
+>> hostapd or wpa_supplicant) to rekey PTK keys.
+>>
+>> The userspace must detect a PTK rekey attempt and only go ahead with the
+>> rekey when the driver has set this flag. If the driver is not supporting
+>> the feature the userspace either must not replace the PTK key or perform
+>> a full re-association.
+>>
+>> Ignoring this flag and continuing to rekey the connection can still
+>> work but has to be considered insecure and broken. It can leak cleartext
+>> packets or freeze the connection and is only supported to allow the
+>> userspace to be updated.
+>>
+>> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+>> ---
+>>   include/uapi/linux/nl80211.h | 6 ++++++
+>>   1 file changed, 6 insertions(+)
+>>
+> 
+> This looks good to me from a userspace perspective.  I will try to
+> implement support for this in iwd soon to give you a prototype to play
+> with.
 
-audit: type=1130 audit(1533153605.287:233): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=sysstat-collect comm="systemd" exe="/usr/lib/systemd/s'
-CPU: 0 PID: 813 Comm: rmmod Tainted: G        W        4.16.18+ #24
-Hardware name: _ _/, BIOS 5.11 08/26/2016
-Call Trace:
-  dump_stack+0x7c/0xbf
-  print_address_description+0x70/0x280
-audit: type=1131 audit(1533153605.287:234): pid=1 uid=0 auid=4294967295 ses=4294967295 msg='unit=sysstat-collect comm="systemd" exe="/usr/lib/systemd/s'
-  ? fq_flow_dequeue+0x353/0x3c0 [mac80211]
-  kasan_report+0x25c/0x350
-  fq_flow_dequeue+0x353/0x3c0 [mac80211]
-  fq_flow_reset.constprop.56+0x2b/0x2d0 [mac80211]
-  fq_reset.constprop.53+0x79/0x110 [mac80211]
-  ieee80211_txq_teardown_flows+0xc2/0x100 [mac80211]
-  ieee80211_unregister_hw+0x17b/0x260 [mac80211]
-  ath10k_mac_unregister+0x35/0x1a0 [ath10k_core]
-  ath10k_core_unregister+0x60/0x160 [ath10k_core]
-  ath10k_pci_remove+0x53/0x100 [ath10k_pci]
-  pci_device_remove+0x97/0x1d0
-  device_release_driver_internal+0x26f/0x520
-  driver_detach+0x9d/0x140
-  bus_remove_driver+0xde/0x2c0
-  pci_unregister_driver+0x28/0x1a0
-  ath10k_pci_exit+0xc/0x14 [ath10k_pci]
-  SyS_delete_module+0x39a/0x4a0
-  ? free_module+0x7d0/0x7d0
-  ? exit_to_usermode_loop+0x75/0xf0
-  ? free_module+0x7d0/0x7d0
-  do_syscall_64+0x193/0x5e0
-  entry_SYSCALL_64_after_hwframe+0x42/0xb7
-RIP: 0033:0x7f65a31ac5e7
-RSP: 002b:00007ffd0781e9a8 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
-RAX: ffffffffffffffda RBX: 00007ffd0781e9f8 RCX: 00007f65a31ac5e7
-RDX: 000000000000000a RSI: 0000000000000800 RDI: 000055e08a426248
-RBP: 000055e08a4261e0 R08: 000000000000000a R09: 1999999999999999
-R10: 00007f65a321c1a0 R11: 0000000000000206 R12: 00007ffd0781ebc0
-R13: 00007ffd07820643 R14: 0000000000000000 R15: 000055e08a4261e0
+Sounds promising, thank you!
 
-The buggy address belongs to the page:
-page:ffffea0004f64a80 count:0 mapcount:0 mapping:0000000000000000 index:0xffff88013d92a640
-flags: 0x5fff8000000000()
-raw: 005fff8000000000 0000000000000000 ffff88013d92a640 00000000ffffffff
-raw: 0000000000000000 dead000000000200 ffff88014c02a600 0000000000000000
-page dumped because: kasan: bad access detected
+I'm still unsure if we really need the API changes to fix that issue:
+"Tagging" the new requirements to current set_key calls would also work.
+With the downside that there would be no way to detect "broken"
+drivers... replace_key is basically only there to differentiate between
+audited/fixed drivers and those not.
 
-Memory state around the buggy address:
-  ffff88013d92a600: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-  ffff88013d92a680: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- >ffff88013d92a700: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-                    ^
-  ffff88013d92a780: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-  ffff88013d92a800: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-==================================================================
+But since my current impression is, that ptk rekeys are mostly broken
+independent of mac80211 or even linux a driver flag signaling support
+for it sounds like a good idea regardless how we want to fix the issue
+in mac80211. Just wondering if we should name it differently for that
+and I'm considering renaming it to NL80211_EXT_FEATURE_CAN_REKEY_PTK0 in
+the next patch.
 
+As for mac80211 driver status:
+The only known "really broken" driver at the moment is ath9k. With
+iwlwifi, - and less thorough tested - ath10k to be ok from a driver
+point of view. (ath9k needs just a driver flush as minimal fix.)
+rt2800usb is also working fine with this patch series, but I have not
+looked into the driver to figure out if this is due to the additional
+flush or not.
 
-Thanks,
-Ben
+> Reviewed-by: Denis Kenzior <denkenz@gmail.com>
+Again thanks. I've added that to my git tree and it will be in next
+patch version.
+I'll just wait some  days for more feedback to hopefully accumulate more
+changes in the next series.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Alexander
