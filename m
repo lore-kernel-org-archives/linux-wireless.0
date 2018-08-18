@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41316 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgT (ORCPT
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:45315 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726334AbeHRPJV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:19 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 03/24] staging: wilc1000: fix to use correct index to free scanned info in clear_shadow_scan()
-Date: Tue, 14 Aug 2018 12:19:55 +0530
-Message-ID: <1534229416-13254-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085033_790819_5A2D0FE9)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Sat, 18 Aug 2018 11:09:21 -0400
+Received: by mail-wr1-f65.google.com with SMTP id 20-v6so3214733wrb.12
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 05:01:52 -0700 (PDT)
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+From: Henrik Laxhuber <henrik@laxhuber.com>
+Subject: wireless-regdb: Update regulatory rules for Switzerland (CH), and
+ Liechtenstein (LI) on 5GHz
+Message-ID: <d7dddf8e-b434-2492-3564-6f35b558d750@laxhuber.com> (sfid-20180818_140156_801774_E15A593A)
+Date: Sat, 18 Aug 2018 14:01:50 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes to use correct index to free the allocated memory for ies
-information. The check was done using 'last_scanned_cnt' index and its
-not correct, so use the correct index ('i') to check for before freeing
-the allocated memory.
+[ My previous message didn't go through because I hadn't signed up to ]
+[   the wireless-regdb mailing list; I apologise if anyone receives   ]
+[                         this message twice                          ]
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+As far as I could tell, the regulatory information for Switzerland and
+Liechtenstein did not match the information published by the national
+regulator. I have gone ahead and updated the information according to
+the 'National Frequency Allocation Strategy Table' [0] for both
+countries.
+
+On a somewhat related note, are there any plans to properly support TPC?
+There are quite a few entries in the database where maximum transmission
+power could be increased when TPC is in use. Being able to set a
+different maximum antenna gain and/or EIRP when TCP is in use could be
+helpful in these cases. I guess what's holding this back is lacking
+driver support?
+
+PS: Since [0] can be cumbersome to navigate, I am also providing the
+direct links to the applicable tables. It's possible that these links
+will rot:
+5150 - 5350 MHz: [1]
+5470 - 5725 MHz: [2]
+
+[0] https://www.ofcomnet.ch/#/fatTable
+[1] https://www.ofcomnet.ch/api/rir/1010/05
+[2] https://www.ofcomnet.ch/api/rir/1010/04
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+  db.txt | 19 +++++++++++++++----
+  1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d853508..ede9134 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -165,9 +165,9 @@ static void clear_shadow_scan(void)
- 		return;
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
--		if (last_scanned_shadow[last_scanned_cnt].ies) {
-+		if (last_scanned_shadow[i].ies) {
- 			kfree(last_scanned_shadow[i].ies);
--			last_scanned_shadow[last_scanned_cnt].ies = NULL;
-+			last_scanned_shadow[i].ies = NULL;
- 		}
- 
- 		kfree(last_scanned_shadow[i].join_params);
+diff --git a/db.txt b/db.txt
+index 8cf7dee..69cea85 100644
+--- a/db.txt
++++ b/db.txt
+@@ -265,10 +265,14 @@ country CF: DFS-FCC
+      (5490 - 5730 @ 40), (24), DFS
+      (5735 - 5835 @ 40), (30)
+
++# Source:
++# https://www.ofcomnet.ch/#/fatTable
++# Note that the maximum transmitter power can be doubled for 
+5250-5710MHz if
++# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
+  country CH: DFS-ETSI
+      (2402 - 2482 @ 40), (20)
+-    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
+-    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
++    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
++    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
+      # 60 GHz band channels 1-4, ref: Etsi En 302 567
+      (57000 - 66000 @ 2160), (40)
+@@ -743,11 +747,18 @@ country LC: DFS-ETSI
+      (5490 - 5710 @ 160), (30), DFS
+      (5735 - 5815 @ 80), (30)
+
++
++# Source:
++# https://www.ofcomnet.ch/#/fatTable
++# Note that the maximum transmitter power can be doubled for 
+5250-5710MHz if
++# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
+  country LI: DFS-ETSI
+      (2402 - 2482 @ 40), (20)
+-    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
+-    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
++    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
++    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
++    # 60 GHz band channels 1-4, ref: Etsi En 302 567
++    (57000 - 66000 @ 2160), (40)
+
+  country LK: DFS-FCC
+      (2402 - 2482 @ 40), (20)
 -- 
-2.7.4
+2.18.0
