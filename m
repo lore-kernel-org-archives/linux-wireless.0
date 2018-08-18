@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:33905 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728540AbeHMWuW (ORCPT
+Received: from 7.mo4.mail-out.ovh.net ([178.33.253.54]:37055 "EHLO
+        7.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726478AbeHSCgx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 18:50:22 -0400
-Received: by mail-pg1-f194.google.com with SMTP id y5-v6so8032476pgv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 13:06:39 -0700 (PDT)
-Date: Mon, 13 Aug 2018 13:06:35 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, andy.gross@linaro.org, robh@kernel.org,
-        devicetree@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 6/6] ath10k: Add QMI message handshake for wcn3990
- client
-Message-ID: <20180813200633.GA38014@ban.mtv.corp.google.com> (sfid-20180813_220642_708870_F4A97FAA)
-References: <20180723123428.12993-1-govinds@codeaurora.org>
- <20180723123428.12993-7-govinds@codeaurora.org>
+        Sat, 18 Aug 2018 22:36:53 -0400
+Received: from player787.ha.ovh.net (unknown [10.109.143.232])
+        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 9492A1957C9
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 23:02:00 +0200 (CEST)
+Subject: Re: [PATCH v6 2/3] mac80211: Define new driver callback replace_key
+To: Denis Kenzior <denkenz@gmail.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+ <20180814104255.4183-3-alexander@wetzel-home.de>
+ <6b36b011-d02e-778b-d7a1-951ab8aee721@gmail.com>
+From: Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <43174c6c-5745-ab9b-4adf-a67cce9c0404@wetzel-home.de> (sfid-20180819_012806_296674_2AFBDEE9)
+Date: Sat, 18 Aug 2018 23:01:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180723123428.12993-7-govinds@codeaurora.org>
+In-Reply-To: <6b36b011-d02e-778b-d7a1-951ab8aee721@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Govind,
-
-On Mon, Jul 23, 2018 at 06:04:28PM +0530, Govind Singh wrote:
-> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
-> subsystem. This layer is responsible for communicating qmi control
-> messages to wifi fw QMI service using QMI messaging protocol.
+Hi,
+> Hi Alexander,
 > 
-> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
-> between components running between remote processors with underlying
-> transport layer based on integrated chipset(shared memory) or
-> discrete chipset(PCI/USB/SDIO/UART).
+> Just minor nitpicks:
 > 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/Kconfig  |    1 +
->  drivers/net/wireless/ath/ath10k/Makefile |    4 +-
->  drivers/net/wireless/ath/ath10k/core.c   |    6 +-
->  drivers/net/wireless/ath/ath10k/core.h   |    2 +
->  drivers/net/wireless/ath/ath10k/qmi.c    | 1019 ++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/qmi.h    |  129 +++
->  drivers/net/wireless/ath/ath10k/snoc.c   |  262 +++++-
->  drivers/net/wireless/ath/ath10k/snoc.h   |    4 +
->  8 files changed, 1417 insertions(+), 10 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
->  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
+>> + * @replace_key: Replace an exiting in use key with a new one while
+>> guaranteeing
+>> + *     to not leak clear text packets. Implementing this callback
+>> will enable
+>> + *     mac80211 to announce NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE.
+>> + *     Packets already queued must not be send out encrypted with the
+>> new key
+> send out -> sent out
+
+fixed in local git. Will wait some days for more feedback and then post v7.
+
+>> + *     and packets decoded with the old key must not be handed over
+>> to mac80211
+>> + *     when the driver is not checking IV/ICV itself once the
+>> callback has been
+>> + *     completed.
+>> + *     Mac80211 will log an error when asked to use replace a PTK key
+>> + *     without replace_key but will still perform the then potentially
+>> + *     insecure action via set_key for backward compatibility for now.
+>> + *
 > 
+> Not sure this part really belongs in the driver method description?
+>
+>>    * @update_tkip_key: See the section "Hardware crypto acceleration"
+>>    *     This callback will be called in the context of Rx. Called for
+>> drivers
+>>    *     which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
+> 
+> <snip>
+>
 
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-> new file mode 100644
-> index 000000000000..d91499a7354c
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
-> @@ -0,0 +1,1019 @@
+I'll update that and move parts of it to the "Hardware crypto
+acceleration" DOC section.
 
-...
+>> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+>> index 4fb2709cb527..84cc8005c19a 100644
+>> --- a/net/mac80211/main.c
+>> +++ b/net/mac80211/main.c
+>> @@ -572,9 +572,14 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t
+>> priv_data_len,
+>>                         NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT);
+>>       }
+>>   +    if (ops->replace_key)
+>> +        wiphy_ext_feature_set(wiphy,
+>> +                      NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE);
+>> +
+>>       if (!ops->set_key)
+>>           wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+>>   +
+> 
+> Stray whitespace?
+> 
+Yup, the new line makes zero sense. will also be fixed in v7.
 
-> +int ath10k_qmi_deinit(struct ath10k *ar)
-> +{
-> +	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-> +	struct ath10k_qmi *qmi = ar_snoc->qmi;
-> +
-> +	cancel_work_sync(&qmi->event_work);
-> +	destroy_workqueue(qmi->event_wq);
+>>       if (ops->wake_tx_queue)
+>>           wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_TXQS);
+>>   
+> 
+> Regards,
+> -Denis
 
-I believe this is incorrect ordering. You should not be destroying the
-work queue that handles QMI event responses before you release the QMI
-handle. As it stands, this means you segfault during 'rmmod'.
-
-> +	qmi_handle_release(&qmi->qmi_hdl);
-
-I think this should be:
-
-	qmi_handle_release(&qmi->qmi_hdl);
-	cancel_work_sync(&qmi->event_work);
-	destroy_workqueue(qmi->event_wq);
-
-> +	qmi = NULL;
-
-This assignment is pointless, as 'qmi' is a local variable. Maybe you
-meant to clear the struct member, as a precaution? So this would be:
-
-	ar_snoc->qmi = NULL;
-
-Brian
-
-> +
-> +	return 0;
-> +} 
+Alexander
