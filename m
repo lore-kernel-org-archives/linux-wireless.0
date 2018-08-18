@@ -1,96 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:45315 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726334AbeHRPJV (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42056 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726054AbeHRLes (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 11:09:21 -0400
-Received: by mail-wr1-f65.google.com with SMTP id 20-v6so3214733wrb.12
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 05:01:52 -0700 (PDT)
-To: seth.forshee@canonical.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-From: Henrik Laxhuber <henrik@laxhuber.com>
-Subject: wireless-regdb: Update regulatory rules for Switzerland (CH), and
- Liechtenstein (LI) on 5GHz
-Message-ID: <d7dddf8e-b434-2492-3564-6f35b558d750@laxhuber.com> (sfid-20180818_140156_801774_E15A593A)
-Date: Sat, 18 Aug 2018 14:01:50 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sat, 18 Aug 2018 07:34:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 18 Aug 2018 11:27:34 +0300
+Message-Id: <20180818082750.28717-1-luca@coelho.fi> (sfid-20180818_102811_277528_10CDA8FA)
+Subject: [PATCH 00/16] iwlwifi: updates intended for v4.20 2018-08-18
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ My previous message didn't go through because I hadn't signed up to ]
-[   the wireless-regdb mailing list; I apologise if anyone receives   ]
-[                         this message twice                          ]
+From: Luca Coelho <luciano.coelho@intel.com>
 
-As far as I could tell, the regulatory information for Switzerland and
-Liechtenstein did not match the information published by the national
-regulator. I have gone ahead and updated the information according to
-the 'National Frequency Allocation Strategy Table' [0] for both
-countries.
+Hi,
 
-On a somewhat related note, are there any plans to properly support TPC?
-There are quite a few entries in the database where maximum transmission
-power could be increased when TPC is in use. Being able to set a
-different maximum antenna gain and/or EIRP when TCP is in use could be
-helpful in these cases. I guess what's holding this back is lacking
-driver support?
+Here's the first set of patches intended for v4.20.  It's the usual developments, with some small new feauters, cleanups and bugfixes.
 
-PS: Since [0] can be cumbersome to navigate, I am also providing the
-direct links to the applicable tables. It's possible that these links
-will rot:
-5150 - 5350 MHz: [1]
-5470 - 5725 MHz: [2]
+The changes are:
 
-[0] https://www.ofcomnet.ch/#/fatTable
-[1] https://www.ofcomnet.ch/api/rir/1010/05
-[2] https://www.ofcomnet.ch/api/rir/1010/04
----
-  db.txt | 19 +++++++++++++++----
-  1 file changed, 15 insertions(+), 4 deletions(-)
+* One fix for channel-switch handling;
+* Some improvements in the HE code;
+* New FW API handling;
+* Improvements in the debugging code;
+* Other clean-ups and small fixes;
 
-diff --git a/db.txt b/db.txt
-index 8cf7dee..69cea85 100644
---- a/db.txt
-+++ b/db.txt
-@@ -265,10 +265,14 @@ country CF: DFS-FCC
-      (5490 - 5730 @ 40), (24), DFS
-      (5735 - 5835 @ 40), (30)
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
 
-+# Source:
-+# https://www.ofcomnet.ch/#/fatTable
-+# Note that the maximum transmitter power can be doubled for 
-5250-5710MHz if
-+# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
-  country CH: DFS-ETSI
-      (2402 - 2482 @ 40), (20)
--    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
--    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
-+    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
-      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
-      # 60 GHz band channels 1-4, ref: Etsi En 302 567
-      (57000 - 66000 @ 2160), (40)
-@@ -743,11 +747,18 @@ country LC: DFS-ETSI
-      (5490 - 5710 @ 160), (30), DFS
-      (5735 - 5815 @ 80), (30)
+I have a lot of pending patches in our internal tree, so I'll probably
+send another patchset before sending the pull-request.
 
-+
-+# Source:
-+# https://www.ofcomnet.ch/#/fatTable
-+# Note that the maximum transmitter power can be doubled for 
-5250-5710MHz if
-+# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
-  country LI: DFS-ETSI
-      (2402 - 2482 @ 40), (20)
--    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
--    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
-+    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
-      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
-+    # 60 GHz band channels 1-4, ref: Etsi En 302 567
-+    (57000 - 66000 @ 2160), (40)
+Please review.
 
-  country LK: DFS-FCC
-      (2402 - 2482 @ 40), (20)
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: set the tid for non-QOS frames to zero
+
+Golan Ben Ami (3):
+  iwlwifi: add required include to iwl-fh.h
+  iwlwifi: pcie: allow using tx init for other queues but the command
+    queue
+  iwlwifi: pcie: make non-static hcmd and rx code
+
+Gregory Greenman (1):
+  iwlwifi: mvm: add NOA and CSA to a probe response
+
+Liad Kaufman (2):
+  iwlwifi: mvm: add bss color to radiotap
+  iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
+
+Luca Coelho (3):
+  iwlwifi: remove unused TLC debugging commands
+  iwlwifi: mvm: remove duplicate if in iwl_mvm_setup_connection_keep()
+  iwlwifi: mvm: support new WoWLAN status FW API
+
+Mordechay Goodstein (2):
+  iwlwifi: turn timestamp marker cmd off by default
+  iwlwifi: enable reading the value of delay in timestamp_marker cmd
+
+Naftali Goldstein (1):
+  iwlwifi: runtime: avoid calling debugfs read functions more than once
+
+Sara Sharon (2):
+  iwlwifi: mvm: move he RX handling to a separate function
+  iwlwifi: drop packets with bad status in CD
+
+Shahar S Matityahu (1):
+  iwlwifi: add d3 debug data support
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |   4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |   4 +-
+ .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  89 ++-
+ .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   |  49 ++
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  60 --
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  63 ++
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  51 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  10 +
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 121 +++-
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |   8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |   1 +
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |   4 +
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h   |   2 +
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 160 +++--
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  61 ++
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   9 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  19 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  23 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 569 +++++++++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |  91 ++-
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  71 +--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  12 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   2 +-
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  33 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |   2 +-
+ 30 files changed, 1003 insertions(+), 526 deletions(-)
+
 -- 
 2.18.0
