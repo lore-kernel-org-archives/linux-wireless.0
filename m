@@ -1,259 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:32794 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726842AbeHYOTn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42200 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726417AbeHRLfW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Aug 2018 10:19:43 -0400
-Received: by mail-wr1-f67.google.com with SMTP id v90-v6so9469960wrc.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:07 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 05/16] mt76x0: use mt76u_init for bus initialization
-Date: Sat, 25 Aug 2018 12:40:45 +0200
-Message-Id: <20180825104056.9130-6-lorenzo.bianconi@redhat.com> (sfid-20180825_124113_444396_C9B763C1)
+        Sat, 18 Aug 2018 07:35:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 18 Aug 2018 11:27:48 +0300
+Message-Id: <20180818082750.28717-15-luca@coelho.fi> (sfid-20180818_102835_349623_8099CF8D)
+In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
+References: <20180818082750.28717-1-luca@coelho.fi>
+Subject: [PATCH 14/16] iwlwifi: drop packets with bad status in CD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use mt76u_init utility routine for usb initialization.
-Moreover remove following unused routines:
-- mt76x0_rr
-- mt76x0_wr
-- mt76x0_rmw
-- mt76x0_wr_copy
-- mt76x0_assign_pipes
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+We need to drop packets with errors (such as replay,
+MIC, ICV, conversion, duplicate and so on).
+
+Drop invalid packets, put the status bits in the metadata and
+move the enum definition to the correct place (FW API header).
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/dma.c   |   6 +-
- .../net/wireless/mediatek/mt76/mt76x0/init.c  |   3 +-
- .../net/wireless/mediatek/mt76/mt76x0/mcu.c   |   3 +-
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 109 +-----------------
- 4 files changed, 12 insertions(+), 109 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 63 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  1 +
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 60 ------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  8 ++-
+ 4 files changed, 70 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c b/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
-index e2efb430419b..715c3734a307 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
-@@ -279,7 +279,8 @@ static int mt76x0_dma_submit_tx(struct mt76x0_dev *dev,
- 				 struct sk_buff *skb, u8 ep)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index 2f599353c885..2ba1401e5c0d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -574,6 +574,69 @@ struct iwl_rx_mpdu_desc {
+ 
+ #define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
+ 
++#define IWL_CD_STTS_OPTIMIZED_POS	0
++#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
++#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
++#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
++#define IWL_CD_STTS_WIFI_STATUS_POS	4
++#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
++
++/**
++ * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
++ * @IWL_CD_STTS_UNUSED: unused
++ * @IWL_CD_STTS_UNUSED_2: unused
++ * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
++ *	In sniffer mode, when split is used, set in last CD completion. (RX)
++ * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
++ *	all CD completion. (RX)
++ * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
++ * @IWL_CD_STTS_ERROR: general error (RX)
++ */
++enum iwl_completion_desc_transfer_status {
++	IWL_CD_STTS_UNUSED,
++	IWL_CD_STTS_UNUSED_2,
++	IWL_CD_STTS_END_TRANSFER,
++	IWL_CD_STTS_OVERFLOW,
++	IWL_CD_STTS_ABORTED,
++	IWL_CD_STTS_ERROR,
++};
++
++/**
++ * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
++ * @IWL_CD_STTS_VALID: the packet is valid (RX)
++ * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
++ * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
++ * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
++ * @IWL_CD_STTS_DUP: duplicate packet (RX)
++ * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
++ * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
++ * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
++ * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
++ * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
++ * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
++ * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
++ * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
++ * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
++ * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
++ */
++enum iwl_completion_desc_wifi_status {
++	IWL_CD_STTS_VALID,
++	IWL_CD_STTS_FCS_ERR,
++	IWL_CD_STTS_SEC_KEY_ERR,
++	IWL_CD_STTS_DECRYPTION_ERR,
++	IWL_CD_STTS_DUP,
++	IWL_CD_STTS_ICV_MIC_ERR,
++	IWL_CD_STTS_INTERNAL_SNAP_ERR,
++	IWL_CD_STTS_SEC_PORT_FAIL,
++	IWL_CD_STTS_BA_OLD_SN,
++	IWL_CD_STTS_QOS_NULL,
++	IWL_CD_STTS_MAC_HDR_ERR,
++	IWL_CD_STTS_MAX_RETRANS,
++	IWL_CD_STTS_EX_LIFETIME,
++	IWL_CD_STTS_NOT_USED,
++	IWL_CD_STTS_REPLAY_ERR,
++};
++
+ struct iwl_frame_release {
+ 	u8 baid;
+ 	u8 reserved;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 279dd7b7a3fb..0b8cf7f3af93 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -269,6 +269,7 @@ struct iwl_rx_cmd_buffer {
+ 	bool _page_stolen;
+ 	u32 _rx_page_order;
+ 	unsigned int truesize;
++	u8 status;
+ };
+ 
+ static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index b63d44b7cd7c..0127386de6c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -102,66 +102,6 @@ struct isr_statistics {
+ 	u32 unhandled;
+ };
+ 
+-#define IWL_CD_STTS_OPTIMIZED_POS	0
+-#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
+-#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
+-#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
+-#define IWL_CD_STTS_WIFI_STATUS_POS	4
+-#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
+-
+-/**
+- * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
+- * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
+- *	In sniffer mode, when split is used, set in last CD completion. (RX)
+- * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
+- *	all CD completion. (RX)
+- * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
+- */
+-enum iwl_completion_desc_transfer_status {
+-	IWL_CD_STTS_UNUSED,
+-	IWL_CD_STTS_UNUSED_2,
+-	IWL_CD_STTS_END_TRANSFER,
+-	IWL_CD_STTS_OVERFLOW,
+-	IWL_CD_STTS_ABORTED,
+-	IWL_CD_STTS_ERROR,
+-};
+-
+-/**
+- * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
+- * @IWL_CD_STTS_VALID: the packet is valid (RX)
+- * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
+- * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
+- * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
+- * @IWL_CD_STTS_DUP: duplicate packet (RX)
+- * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
+- * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
+- * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
+- * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
+- * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
+- * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
+- * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
+- * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
+- * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
+- * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
+- */
+-enum iwl_completion_desc_wifi_status {
+-	IWL_CD_STTS_VALID,
+-	IWL_CD_STTS_FCS_ERR,
+-	IWL_CD_STTS_SEC_KEY_ERR,
+-	IWL_CD_STTS_DECRYPTION_ERR,
+-	IWL_CD_STTS_DUP,
+-	IWL_CD_STTS_ICV_MIC_ERR,
+-	IWL_CD_STTS_INTERNAL_SNAP_ERR,
+-	IWL_CD_STTS_SEC_PORT_FAIL,
+-	IWL_CD_STTS_BA_OLD_SN,
+-	IWL_CD_STTS_QOS_NULL,
+-	IWL_CD_STTS_MAC_HDR_ERR,
+-	IWL_CD_STTS_MAX_RETRANS,
+-	IWL_CD_STTS_EX_LIFETIME,
+-	IWL_CD_STTS_NOT_USED,
+-	IWL_CD_STTS_REPLAY_ERR,
+-};
+-
+ #define IWL_RX_TD_TYPE_MSK	0xff000000
+ #define IWL_RX_TD_SIZE_MSK	0x00ffffff
+ #define IWL_RX_TD_SIZE_2K	BIT(11)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index d017aa2a0a8b..b82f7a0509ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1187,7 +1187,8 @@ static void iwl_pcie_rx_reuse_rbd(struct iwl_trans *trans,
+ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 				struct iwl_rxq *rxq,
+ 				struct iwl_rx_mem_buffer *rxb,
+-				bool emergency)
++				bool emergency,
++				int i)
  {
- 	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
--	unsigned snd_pipe = usb_sndbulkpipe(usb_dev, dev->out_ep[ep]);
-+	struct mt76_usb *usb = &dev->mt76.usb;
-+	unsigned snd_pipe = usb_sndbulkpipe(usb_dev, usb->out_ep[ep]);
- 	struct mt76x0_dma_buf_tx *e;
- 	struct mt76x0_tx_queue *q = &dev->tx_q[ep];
- 	unsigned long flags;
-@@ -375,11 +376,12 @@ static int mt76x0_submit_rx_buf(struct mt76x0_dev *dev,
- 				 struct mt76x0_dma_buf_rx *e, gfp_t gfp)
- {
- 	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 	u8 *buf = page_address(e->p);
- 	unsigned pipe;
- 	int ret;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_txq *txq = trans_pcie->txq[trans_pcie->cmd_queue];
+@@ -1213,6 +1214,9 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 			.truesize = max_len,
+ 		};
  
--	pipe = usb_rcvbulkpipe(usb_dev, dev->in_ep[MT_EP_IN_PKT_RX]);
-+	pipe = usb_rcvbulkpipe(usb_dev, usb->in_ep[MT_EP_IN_PKT_RX]);
++		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++			rxcb.status = rxq->cd[i].status;
++
+ 		pkt = rxb_addr(&rxcb);
  
- 	usb_fill_bulk_urb(e->urb, usb_dev, pipe, buf, MT_RX_URB_SIZE,
- 			  mt76x0_complete_rx, dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index d020df859e30..48d7eb1599d7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -109,6 +109,7 @@ static void mt76x0_reset_csr_bbp(struct mt76x0_dev *dev)
+ 		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID)) {
+@@ -1406,7 +1410,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
+ 			goto out;
  
- static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
- {
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 	u32 val;
+ 		IWL_DEBUG_RX(trans, "Q %d: HW = %d, SW = %d\n", rxq->id, r, i);
+-		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency);
++		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency, i);
  
- 	val = mt76_rr(dev, MT_USB_DMA_CFG);
-@@ -117,7 +118,7 @@ static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
- 	       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_LMT, MT_USB_AGGR_SIZE_LIMIT) |
- 	       MT_USB_DMA_CFG_RX_BULK_EN |
- 	       MT_USB_DMA_CFG_TX_BULK_EN;
--	if (dev->in_max_packet == 512)
-+	if (usb->in_max_packet == 512)
- 		val |= MT_USB_DMA_CFG_RX_BULK_AGG_EN;
- 	mt76_wr(dev, MT_USB_DMA_CFG, val);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-index 96e04afc73f4..75768ebf8b30 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -154,8 +154,9 @@ __mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
- 		      enum mcu_cmd cmd, bool wait_resp)
- {
- 	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 	unsigned cmd_pipe = usb_sndbulkpipe(usb_dev,
--					    dev->out_ep[MT_EP_OUT_INBAND_CMD]);
-+					    usb->out_ep[MT_EP_OUT_INBAND_CMD]);
- 	int sent, ret;
- 	u8 seq = 0;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index d535012c506e..09e7f9590f01 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -71,13 +71,14 @@ int mt76x0_usb_submit_buf(struct mt76x0_dev *dev, int dir, int ep_idx,
- 			   usb_complete_t complete_fn, void *context)
- {
- 	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 	unsigned pipe;
- 	int ret;
- 
- 	if (dir == USB_DIR_IN)
--		pipe = usb_rcvbulkpipe(usb_dev, dev->in_ep[ep_idx]);
-+		pipe = usb_rcvbulkpipe(usb_dev, usb->in_ep[ep_idx]);
- 	else
--		pipe = usb_sndbulkpipe(usb_dev, dev->out_ep[ep_idx]);
-+		pipe = usb_sndbulkpipe(usb_dev, usb->out_ep[ep_idx]);
- 
- 	usb_fill_bulk_urb(buf->urb, usb_dev, pipe, buf->buf, buf->len,
- 			  complete_fn, context);
-@@ -136,30 +137,6 @@ void mt76x0_vendor_reset(struct mt76x0_dev *dev)
- 			      MT_VEND_DEV_MODE_RESET, 0, NULL, 0);
- }
- 
--static u32 mt76x0_rr(struct mt76_dev *dev, u32 offset)
--{
--	struct mt76x0_dev *mdev = (struct mt76x0_dev *) dev;
--	int ret;
--	u32 val = ~0;
--
--	WARN_ONCE(offset > USHRT_MAX, "read high off:%08x", offset);
--
--	mutex_lock(&mdev->usb_ctrl_mtx);
--
--	ret = mt76x0_vendor_request((struct mt76x0_dev *)dev, MT_VEND_MULTI_READ, USB_DIR_IN,
--				    0, offset, mdev->data, MT_VEND_BUF);
--	if (ret == MT_VEND_BUF)
--		val = get_unaligned_le32(mdev->data);
--	else if (ret > 0)
--		dev_err(dev->dev, "Error: wrong size read:%d off:%08x\n",
--			ret, offset);
--
--	mutex_unlock(&mdev->usb_ctrl_mtx);
--
--	trace_mt76x0_reg_read(dev, offset, val);
--	return val;
--}
--
- int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
- 			     const u16 offset, const u32 val)
- {
-@@ -179,82 +156,12 @@ int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
- 	return ret;
- }
- 
--static void mt76x0_wr(struct mt76_dev *dev, u32 offset, u32 val)
--{
--	struct mt76x0_dev *mdev = (struct mt76x0_dev *) dev;
--	int ret;
--
--	WARN_ONCE(offset > USHRT_MAX, "write high off:%08x", offset);
--
--	mutex_lock(&mdev->usb_ctrl_mtx);
--
--	put_unaligned_le32(val, mdev->data);
--	ret = mt76x0_vendor_request(mdev, MT_VEND_MULTI_WRITE, USB_DIR_OUT,
--				    0, offset, mdev->data, MT_VEND_BUF);
--	trace_mt76x0_reg_write(dev, offset, val);
--
--	mutex_unlock(&mdev->usb_ctrl_mtx);
--}
--
--static u32 mt76x0_rmw(struct mt76_dev *dev, u32 offset, u32 mask, u32 val)
--{
--	val |= mt76x0_rr(dev, offset) & ~mask;
--	mt76x0_wr(dev, offset, val);
--	return val;
--}
--
--static void mt76x0_wr_copy(struct mt76_dev *dev, u32 offset,
--			   const void *data, int len)
--{
--	WARN_ONCE(offset & 3, "unaligned write copy off:%08x", offset);
--	WARN_ONCE(len & 3, "short write copy off:%08x", offset);
--
--	mt76x0_burst_write_regs((struct mt76x0_dev *) dev, offset, data, len / 4);
--}
--
- void mt76x0_addr_wr(struct mt76x0_dev *dev, const u32 offset, const u8 *addr)
- {
- 	mt76_wr(dev, offset, get_unaligned_le32(addr));
- 	mt76_wr(dev, offset + 4, addr[4] | addr[5] << 8);
- }
- 
--static int mt76x0_assign_pipes(struct usb_interface *usb_intf,
--				struct mt76x0_dev *dev)
--{
--	struct usb_endpoint_descriptor *ep_desc;
--	struct usb_host_interface *intf_desc = usb_intf->cur_altsetting;
--	unsigned i, ep_i = 0, ep_o = 0;
--
--	BUILD_BUG_ON(sizeof(dev->in_ep) < __MT_EP_IN_MAX);
--	BUILD_BUG_ON(sizeof(dev->out_ep) < __MT_EP_OUT_MAX);
--
--	for (i = 0; i < intf_desc->desc.bNumEndpoints; i++) {
--		ep_desc = &intf_desc->endpoint[i].desc;
--
--		if (usb_endpoint_is_bulk_in(ep_desc) &&
--		    ep_i++ < __MT_EP_IN_MAX) {
--			dev->in_ep[ep_i - 1] = usb_endpoint_num(ep_desc);
--			dev->in_max_packet = usb_endpoint_maxp(ep_desc);
--			/* Note: this is ignored by usb sub-system but vendor
--			 *	 code does it. We can drop this at some point.
--			 */
--			dev->in_ep[ep_i - 1] |= USB_DIR_IN;
--		} else if (usb_endpoint_is_bulk_out(ep_desc) &&
--			   ep_o++ < __MT_EP_OUT_MAX) {
--			dev->out_ep[ep_o - 1] = usb_endpoint_num(ep_desc);
--			dev->out_max_packet = usb_endpoint_maxp(ep_desc);
--		}
--	}
--
--	if (ep_i != __MT_EP_IN_MAX || ep_o != __MT_EP_OUT_MAX) {
--		dev_err(dev->mt76.dev, "Error: wrong pipe number in:%d out:%d\n",
--			ep_i, ep_o);
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
- static int mt76x0_probe(struct usb_interface *usb_intf,
- 			 const struct usb_device_id *id)
- {
-@@ -262,12 +169,6 @@ static int mt76x0_probe(struct usb_interface *usb_intf,
- 	struct mt76x0_dev *dev;
- 	u32 asic_rev, mac_rev;
- 	int ret;
--	static const struct mt76_bus_ops usb_ops = {
--		.rr = mt76x0_rr,
--		.wr = mt76x0_wr,
--		.rmw = mt76x0_rmw,
--		.copy = mt76x0_wr_copy,
--	};
- 
- 	dev = mt76x0_alloc_device(&usb_intf->dev);
- 	if (!dev)
-@@ -278,9 +179,7 @@ static int mt76x0_probe(struct usb_interface *usb_intf,
- 
- 	usb_set_intfdata(usb_intf, dev);
- 
--	dev->mt76.bus = &usb_ops;
--
--	ret = mt76x0_assign_pipes(usb_intf, dev);
-+	ret = mt76u_init(&dev->mt76, usb_intf);
- 	if (ret)
- 		goto err;
+ 		i = (i + 1) & (rxq->queue_size - 1);
  
 -- 
 2.18.0
