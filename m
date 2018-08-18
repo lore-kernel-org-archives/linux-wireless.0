@@ -1,87 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swan.media.mit.edu ([18.85.44.157]:38199 "EHLO swan.laptop.org"
+Received: from nyet.org ([66.175.217.148]:49826 "EHLO ln.curtisfong.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727168AbeH3B5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 21:57:38 -0400
-Date: Thu, 30 Aug 2018 07:58:37 +1000
-From: James Cameron <quozl@laptop.org>
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Mylene JOSSERAND <mylene.josserand@free-electrons.com>,
-        Stefan Pappalardo <stefan.pappalardo@gmx.de>,
-        Carlo Caione <carlo@endlessm.com>
-Subject: Re: rtl8723bu: low signal, fails to associate
-Message-ID: <20180829215837.GD7778@us.netrek.org> (sfid-20180829_235847_813779_F2E01C4F)
-References: <20180824013645.GB761@us.netrek.org>
- <bd9ef21e-b0f6-f947-b14d-cbb8abf4efdb@gmail.com>
+        id S1726341AbeHRTTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Aug 2018 15:19:33 -0400
+Subject: Re: [PATCH] Fix Bug 199967 - change WARN_ON(1) to IWL_ERR()
+To: Luciano Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org
+References: <20180818033555.18110-1-nyet@nyet.org>
+ <c052cdda16fa0df1b3672f4be9c20df053703ac0.camel@intel.com>
+From: Nye Liu <nyet@nyet.org>
+Message-ID: <084b662c-4701-9a18-ffb1-c661f4534d8c@nyet.org> (sfid-20180818_181123_702144_989DF870)
+Date: Sat, 18 Aug 2018 09:11:18 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bd9ef21e-b0f6-f947-b14d-cbb8abf4efdb@gmail.com>
+In-Reply-To: <c052cdda16fa0df1b3672f4be9c20df053703ac0.camel@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 29, 2018 at 04:19:01PM -0400, Jes Sorensen wrote:
-> On 08/23/2018 09:36 PM, James Cameron wrote:
-> > G'day Carlo, Mylene, and James,
-> > 
-> > Thanks for your earlier reports about RTL8723bu.  Have you any more
-> > recent experiences you might share?
-> > 
-> > I'm evaluating a sample laptop which worked fine with Windows 10, but
-> > not very well with Ubuntu 18.04, and kernel v4.15 or kernel v4.18.4.
-> > 
-> > The laptop is by Hena, model NT16-PRO-C-E, with a wireless device on
-> > internal USB (0x0bda:0xb720) which loads rtl8xxxu, identifying as
-> > RTL8723BU.
-> > 
-> > http://dev.laptop.org/~quozl/z/1ft0qv.txt (dmesg)
-> > 
-> > Symptoms are low RSSI on scan, very short range, and often a failure
-> > to associate over a distance of two metres in a radio quiet location.
-> > 
-> > Symptoms began after first power off, which suggests that device
-> > registers programmed by the previous operating system Windows 10 had
-> > not been reset by reboot into the Ubuntu 18.04 installer.  The device
-> > worked fine in Ubuntu 18.04 before the first power off.
-> > 
-> > Jes, let me know if there is anything I can do to help.
-> 
-> It's been a while since I had time to look at the 8723bu support, and
-> rtl8xxxu doesn't have BT coexist support. I notice that your laptop does
-> load the bluetooth module for 8723bu which I believe fiddles with the
-> antenna configuration and is likely to take control of the antennas. I
-> suspect this is why you see low signal quality on the WiFi side.
-> 
-> If you blacklist the BT module, does it work better?
+On 8/18/2018 1:41 AM, Luciano Coelho wrote:
 
-Thanks.  No, it doesn't work any better, or worse.
-
-Method: add "blacklist btusb" to /etc/modprobe.d/blacklist.conf,
-regenerate initramfs, and boot.
-
-Also, a difference in symptom between cold and warm boot;
-
-*  on cold boot after 15 seconds of power off, device connects but has
-   short range, with received power at monitor of -76dBm,
-
-   http://dev.laptop.org/~quozl/z/1fv7sW.txt (dmesg, cold boot, no btusb)
-
-*  on warm boot with less than 5 seconds of power off, device does not
-   connect, dmesg "authentication with xx:yy:zz:aa:bb:cc timed out",
-   and probe request, authentication, and association packets are not
-   seen by monitor,
-
-   http://dev.laptop.org/~quozl/z/1fv8IO.txt (dmesg, warm boot, no btusb)
-
-In both cases, scan results are normal, and similar signal level.  An
-active scan for cold boot, and a passive scan for warm boot.
-
-Monitor device is an ath9k about 30cm away; a radio quiet environment
-on a farm.
-
-Speculation; device registers are not being reset.  Would not have
-been a problem for RTL8723BU on removable USB.
-
--- 
-James Cameron
-http://quozl.netrek.org/
+> On Fri, 2018-08-17 at 20:35 -0700, Nye Liu wrote:
+>> The TX_STATUS_FAIL_DEST_PS case fills logs with full backtraces, which
+>> are pretty useless. Just do IWL_ERR() printk.
+>>
+>> Signed-off-by: Nye Liu <nyet@nyet.org>
+>> ---
+>>   drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 +++-
+>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+>> index cf2591f2ac23..87044953e6b4 100644
+>> --- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+>> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+>> @@ -1407,8 +1407,10 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+>>   			/* the FW should have stopped the queue and not
+>>   			 * return this status
+>>   			 */
+>> -			WARN_ON(1);
+>>   			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+>> +			IWL_ERR(mvm, "TX_STATUS_FAIL_DEST_PS: "
+>> +				"tid %d, status %x, flags %x\n", tid, status,
+>> +				info->flags);
+>>   			break;
+>>   		default:
+>>   			break;
+> I think this error is serious enough and we would like to catch it when
+> it occurs so we can debug the actual cause.
+>
+> But I agree that we shouldn't be repeating it millions of times.  What
+> about just changing it to WARN_ON_ONCE() instead?
+>
+That would be fine, but IMO the WARN_ON() provides less information that 
+the printk(). I'm not an IWL devel but there is limited information on 
+the wifi state itself in the WARN() - just call stack and register 
+information. Also, with WARN_ON_ONCE() the frequency of the error is masked.
