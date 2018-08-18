@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:34118 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726746AbeHFMql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 08:46:41 -0400
-Subject: Re: [PATCH v3 00/11] NFC: A bunch of cleanups for st95hf
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com
-References: <20180724095941.25777-1-daniel@zonque.org>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <2b5303c6-d9b6-de58-690b-9508c139e7d6@zonque.org> (sfid-20180806_123817_745444_0B88636D)
-Date: Mon, 6 Aug 2018 12:38:12 +0200
+Received: from mail-it0-f65.google.com ([209.85.214.65]:55975 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725853AbeHRFeY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Aug 2018 01:34:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180724095941.25777-1-daniel@zonque.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAKfDRXia3zwW9Q=7RZGqK_DWCsyQzG4KEZHsyHzGcNb70Ge1kA@mail.gmail.com>
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+ <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> <5B708025.4090906@broadcom.com>
+ <CAJ0CqmVZNAnHwnU4YqRRv7R8DyHi2MiFJr1bvQDPVszUU5Ez3g@mail.gmail.com> <CAKfDRXia3zwW9Q=7RZGqK_DWCsyQzG4KEZHsyHzGcNb70Ge1kA@mail.gmail.com>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Sat, 18 Aug 2018 04:28:27 +0200
+Message-ID: <CAOq732JS81W+UGfpQ4KnswoV0tTgvCA-c5ZFoSmmVfatJfHRGQ@mail.gmail.com> (sfid-20180818_043033_721831_1AA3E8E2)
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+To: Kristian Evensen <kristian.evensen@gmail.com>
+Cc: lorenzo.bianconi@redhat.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+Hi,
 
-On Tuesday, July 24, 2018 11:59 AM, Daniel Mack wrote:
-> This v3 of a series of patches for the ST95HF driver.
-> 
-> Patch #1 reverts a change that I have submitted earlier and which is
-> sitting in nfc-next already. Given that the tree hasn't been sent out
-> for being merged yet, it could also still be removed with rebasing, in
-> which case #1 is not necessary of course.
-> 
-> The changes are all rather simple and are explained in their individual
-> commit logs.
-> 
-> Note that this series builds upon the patch titled "nfc: st95hf: remove
-> redundant pointers 'dev' and 'nfcddev'" that Colin posted the other day.
+On 13 August 2018 at 16:25, Kristian Evensen <kristian.evensen@gmail.com> wrote:
+> On Mon, Aug 13, 2018 at 12:55 PM Lorenzo Bianconi
+> <lorenzo.bianconi@redhat.com> wrote:
+>> According to my understanding (please correct me if I am wrong)
+>> BSS_CHANGED_CQM is only needed if CQM_RSSI is handled
+>> by the driver/fw, while if it is not set mac80211 will take care of that
+>> in ieee80211_handle_beacon_sig routine.
+>> I am AFK at the moment, I will test that patch when I am back from vacations.
+>
+> That matches my understanding as well (base on for example the message
+> for commit ae44b502669d0cd1f167cdb48994292aa20fd3dd).
 
-Could you still apply this set for 4.19?
+This is right, mt7601u had this flag added in that commit but the mt76
+drivers were added later.  It seems mt76_rx_convert always sets the
+ieee80211_rx_status.signal field so mac80211 can check the rssi values
+and call any CQM callbacks if needed.
 
-At least #1 should go in, or commit c99f996b2ba49 ("NFC: st95hf: drop 
-illegal kfree_skb()") which is already in your tree should be removed 
-with a rebase.
-
-For the rest, I'm in no hurry. I just want to prevent a regression in 4.19.
-
-
-Thanks,
-Daniel
-
-
-
-> 
-> 
-> Thanks,
-> Daniel
-> 
-> Changelog:
-> 
-> v1 → v2:
-> 
->   * Improved commit logs, identical patch content.
-> 
-> 
-> v2 → v3:
-> 
->   * Added another patch titled "NFC: st95hf: ignore spurious interrupts"
-> 
-> 
-> Daniel Mack (11):
->    Revert "NFC: st95hf: drop illegal kfree_skb()"
->    NFC: st95hf: drop nfcdev_free
->    NFC: st95hf: drop illegal kfree_skb() in IRQ handler
->    NFC: st95hf: remove logging from spi functions
->    NFC: st95hf: remove exchange_lock
->    NFC: st95hf: move skb allocation to ISR
->    NFC: st95hf: ignore spurious interrupts
->    NFC: st95hf: re-order command defines
->    NFC: st95hf: unify sync/async flags
->    NFC: st95hf: two small style nits
->    NFC: st95hf: add of match table
-> 
->   drivers/nfc/st95hf/core.c | 154 ++++++++++++++------------------------
->   drivers/nfc/st95hf/spi.c  |  31 +++-----
->   drivers/nfc/st95hf/spi.h  |   8 +-
->   3 files changed, 66 insertions(+), 127 deletions(-)
-> 
+Best regards
