@@ -1,50 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726665AbeHBUe0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42076 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726072AbeHRLeu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Aug 2018 16:34:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2018-08-02
-References: <0919a20b8b06324dd8e408a1f136c64c6e0dd4de.camel@coelho.fi>
-Date: Thu, 02 Aug 2018 21:42:00 +0300
-In-Reply-To: <0919a20b8b06324dd8e408a1f136c64c6e0dd4de.camel@coelho.fi> (Luca
-        Coelho's message of "Thu, 02 Aug 2018 10:55:06 +0300")
-Message-ID: <878t5o7gqv.fsf@kamboji.qca.qualcomm.com> (sfid-20180802_204209_173609_E0A5FEE1)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 18 Aug 2018 07:34:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 18 Aug 2018 11:27:37 +0300
+Message-Id: <20180818082750.28717-4-luca@coelho.fi> (sfid-20180818_102813_349932_2BB5D889)
+In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
+References: <20180818082750.28717-1-luca@coelho.fi>
+Subject: [PATCH 03/16] iwlwifi: runtime: avoid calling debugfs read functions more than once
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-> Hi Kalle,
->
-> This is another batch of patches intended for v4.19.  Usual development
-> work, mostly focused on the new 22560, and some other small fixes and
-> improvements.  More details about the contents in the tag description.
->
-> I have sent this out before and kbuildbot this morning, but I didn't
-> get any replies from it yet.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 24ebfcbdd1ba623daa1ba140067d7b6102bcfe0d:
->
->   rt2x00: remove redundant functions rt2x00mac_sta_{add/remove} (2018-07-31 10:27:40 +0300)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-08-02
+Upon first calling read() on a debugfs file, invoke
+iwl_dbgfs_##name##_read and store the response buffer on the heap, so
+subsequent read() calls don't need to invoke said function again.
 
-Pulled, thanks.
+This is done because cat etc will call read() repeatedly until EOF is
+reached (or read() returns 0), which in the current implementation will
+cause said function to be invoked multiple times.
 
+With the current implementation this can also cause buggy behavior in
+some weird edge cases where the first invocation returns a string of
+length n, and the second of length m>n: The last m-n characters of
+the second invocation will be printed to screen.
+
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 111 ++++++++++++++----
+ 1 file changed, 87 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+index 8ba5a60ec9ed..2dd534b474b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -66,55 +68,117 @@
+ #include "debugfs.h"
+ #include "dbg.h"
+ 
+-#define FWRT_DEBUGFS_READ_FILE_OPS(name)				\
+-static ssize_t iwl_dbgfs_##name##_read(struct iwl_fw_runtime *fwrt,	\
+-				       char *buf, size_t count,		\
+-				       loff_t *ppos);			\
++#define FWRT_DEBUGFS_OPEN_WRAPPER(name, buflen, argtype)		\
++struct dbgfs_##name##_data {						\
++	argtype *arg;							\
++	bool read_done;							\
++	ssize_t rlen;							\
++	char rbuf[buflen];						\
++};									\
++static int _iwl_dbgfs_##name##_open(struct inode *inode,		\
++				    struct file *file)			\
++{									\
++	struct dbgfs_##name##_data *data;				\
++									\
++	data = kzalloc(sizeof(*data), GFP_KERNEL);			\
++	if (!data)							\
++		return -ENOMEM;						\
++									\
++	data->read_done = false;					\
++	data->arg = inode->i_private;					\
++	file->private_data = data;					\
++									\
++	return 0;							\
++}
++
++#define FWRT_DEBUGFS_READ_WRAPPER(name)					\
++static ssize_t _iwl_dbgfs_##name##_read(struct file *file,		\
++					char __user *user_buf,		\
++					size_t count, loff_t *ppos)	\
++{									\
++	struct dbgfs_##name##_data *data = file->private_data;		\
++									\
++	if (!data->read_done) {						\
++		data->read_done = true;					\
++		data->rlen = iwl_dbgfs_##name##_read(data->arg,		\
++						     sizeof(data->rbuf),\
++						     data->rbuf);	\
++	}								\
++									\
++	if (data->rlen < 0)						\
++		return data->rlen;					\
++	return simple_read_from_buffer(user_buf, count, ppos,		\
++				       data->rbuf, data->rlen);		\
++}
++
++static int _iwl_dbgfs_release(struct inode *inode, struct file *file)
++{
++	kfree(file->private_data);
++
++	return 0;
++}
++
++#define _FWRT_DEBUGFS_READ_FILE_OPS(name, buflen, argtype)		\
++FWRT_DEBUGFS_OPEN_WRAPPER(name, buflen, argtype)			\
++FWRT_DEBUGFS_READ_WRAPPER(name)						\
+ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
+-	.read = iwl_dbgfs_##name##_read,				\
+-	.open = simple_open,						\
++	.read = _iwl_dbgfs_##name##_read,				\
++	.open = _iwl_dbgfs_##name##_open,				\
+ 	.llseek = generic_file_llseek,					\
++	.release = _iwl_dbgfs_release,					\
+ }
+ 
+-#define FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)			\
+-static ssize_t iwl_dbgfs_##name##_write(struct iwl_fw_runtime *fwrt,	\
+-					char *buf, size_t count,	\
+-					loff_t *ppos);			\
++#define FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen, argtype)		\
+ static ssize_t _iwl_dbgfs_##name##_write(struct file *file,		\
+ 					 const char __user *user_buf,	\
+ 					 size_t count, loff_t *ppos)	\
+ {									\
+-	struct iwl_fw_runtime *fwrt = file->private_data;		\
++	argtype *arg =							\
++		((struct dbgfs_##name##_data *)file->private_data)->arg;\
+ 	char buf[buflen] = {};						\
+ 	size_t buf_size = min(count, sizeof(buf) -  1);			\
+ 									\
+ 	if (copy_from_user(buf, user_buf, buf_size))			\
+ 		return -EFAULT;						\
+ 									\
+-	return iwl_dbgfs_##name##_write(fwrt, buf, buf_size, ppos);	\
++	return iwl_dbgfs_##name##_write(arg, buf, buf_size);		\
+ }
+ 
+-#define FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, buflen)			\
+-FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
++#define _FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, buflen, argtype)	\
++FWRT_DEBUGFS_OPEN_WRAPPER(name, buflen, argtype)			\
++FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen, argtype)			\
++FWRT_DEBUGFS_READ_WRAPPER(name)						\
+ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
+ 	.write = _iwl_dbgfs_##name##_write,				\
+-	.read = iwl_dbgfs_##name##_read,				\
+-	.open = simple_open,						\
++	.read = _iwl_dbgfs_##name##_read,				\
++	.open = _iwl_dbgfs_##name##_open,				\
+ 	.llseek = generic_file_llseek,					\
++	.release = _iwl_dbgfs_release,					\
+ }
+ 
+-#define FWRT_DEBUGFS_WRITE_FILE_OPS(name, buflen)			\
+-FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen)				\
++#define _FWRT_DEBUGFS_WRITE_FILE_OPS(name, buflen, argtype)		\
++FWRT_DEBUGFS_OPEN_WRAPPER(name, buflen, argtype)			\
++FWRT_DEBUGFS_WRITE_WRAPPER(name, buflen, argtype)			\
+ static const struct file_operations iwl_dbgfs_##name##_ops = {		\
+ 	.write = _iwl_dbgfs_##name##_write,				\
+-	.open = simple_open,						\
++	.open = _iwl_dbgfs_##name##_open,				\
+ 	.llseek = generic_file_llseek,					\
++	.release = _iwl_dbgfs_release,					\
+ }
+ 
++#define FWRT_DEBUGFS_READ_FILE_OPS(name, bufsz)				\
++	_FWRT_DEBUGFS_READ_FILE_OPS(name, bufsz, struct iwl_fw_runtime)
++
++#define FWRT_DEBUGFS_WRITE_FILE_OPS(name, bufsz)			\
++	_FWRT_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct iwl_fw_runtime)
++
++#define FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz)			\
++	_FWRT_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz, struct iwl_fw_runtime)
++
+ #define FWRT_DEBUGFS_ADD_FILE_ALIAS(alias, name, parent, mode) do {	\
+-		if (!debugfs_create_file(alias, mode, parent, fwrt,	\
+-					 &iwl_dbgfs_##name##_ops))	\
+-			goto err;					\
++	if (!debugfs_create_file(alias, mode, parent, fwrt,		\
++				 &iwl_dbgfs_##name##_ops))		\
++		goto err;						\
+ 	} while (0)
+ #define FWRT_DEBUGFS_ADD_FILE(name, parent, mode) \
+ 	FWRT_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
+@@ -173,8 +237,7 @@ void iwl_fw_trigger_timestamp(struct iwl_fw_runtime *fwrt, u32 delay)
+ }
+ 
+ static ssize_t iwl_dbgfs_timestamp_marker_write(struct iwl_fw_runtime *fwrt,
+-						char *buf, size_t count,
+-						loff_t *ppos)
++						char *buf, size_t count)
+ {
+ 	int ret;
+ 	u32 delay;
 -- 
-Kalle Valo
+2.18.0
