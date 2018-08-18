@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45768 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726990AbeHaOFi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:05:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:56:11 +0300
-Message-Id: <20180831095614.14099-14-luca@coelho.fi> (sfid-20180831_115859_574147_A9C26F22)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 13/16] iwlwifi: pcie: read correct prph address for newer devices
+Received: from nyet.org ([66.175.217.148]:46668 "EHLO ln.curtisfong.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726161AbeHRHBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 18 Aug 2018 03:01:16 -0400
+Subject: Re: iwlwifi: completely opaque WARN_ON(1) at
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363. Please remove or fix it
+ (TX_STATUS_FAIL_DEST_PS)
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
+References: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org>
+ <1522665761.3786.365.camel@coelho.fi>
+From: Nye Liu <nyet@nyet.org>
+Message-ID: <7992041e-b276-4310-1c7a-5882c4fab209@nyet.org> (sfid-20180818_060405_513962_4EEB940E)
+Date: Fri, 17 Aug 2018 20:45:57 -0700
+MIME-Version: 1.0
+In-Reply-To: <1522665761.3786.365.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=199967
 
-For newer devices we have higher range of periphery
-addresses. Currently it is masked out, so we end up
-reading another address.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 93c336ebfa40..ab0a5a663a6d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1805,18 +1805,30 @@ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
- 	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
- }
- 
-+static u32 iwl_trans_pcie_prph_msk(struct iwl_trans *trans)
-+{
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+		return 0x00FFFFFF;
-+	else
-+		return 0x000FFFFF;
-+}
-+
- static u32 iwl_trans_pcie_read_prph(struct iwl_trans *trans, u32 reg)
- {
-+	u32 mask = iwl_trans_pcie_prph_msk(trans);
-+
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_RADDR,
--			       ((reg & 0x000FFFFF) | (3 << 24)));
-+			       ((reg & mask) | (3 << 24)));
- 	return iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
- }
- 
- static void iwl_trans_pcie_write_prph(struct iwl_trans *trans, u32 addr,
- 				      u32 val)
- {
-+	u32 mask = iwl_trans_pcie_prph_msk(trans);
-+
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WADDR,
--			       ((addr & 0x000FFFFF) | (3 << 24)));
-+			       ((addr & mask) | (3 << 24)));
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WDAT, val);
- }
- 
--- 
-2.18.0
+On 4/2/2018 3:42 AM, Luca Coelho wrote:
+> Hi,
+>
+> Please report this as a bug in the kernel bugzilla[1] and provide the
+> logs as explained in our wiki[2].
+>
+> [1] https://bugzilla.kernel.org/
+> [2] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
+>
+> Thanks.
+>
+> --
+> Luca.
+>
+> On Mon, 2018-04-02 at 02:44 -0700, Nye Liu wrote:
+>> TX_STATUS_FAIL_DEST_PS
+>>
+>> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=887045
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1733194
+>>
+>> Please remove or fix the WARN_ON(1) at
+>> drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363 it is filling my
+>> kernel
+>> logs
+>>
