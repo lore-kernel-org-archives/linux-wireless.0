@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:13372 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732101AbeHWPQp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42168 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726417AbeHRLfG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 11:16:45 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 9/9] wil6210: fix invalid memory access for rx_buff_mgmt debugfs
-Date: Thu, 23 Aug 2018 14:47:13 +0300
-Message-Id: <1535024833-15178-10-git-send-email-merez@codeaurora.org> (sfid-20180823_134729_987130_0F563711)
-In-Reply-To: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
-References: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
+        Sat, 18 Aug 2018 07:35:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 18 Aug 2018 11:27:45 +0300
+Message-Id: <20180818082750.28717-12-luca@coelho.fi> (sfid-20180818_102828_629559_DBDA16D1)
+In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
+References: <20180818082750.28717-1-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Check rx_buff_mgmt is allocated before accessing its internal fields.
+Current implementation turns this bit on only for HE MU.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 6973333..965c61b 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1237,6 +1237,9 @@ static int wil_rx_buff_mgmt_debugfs_show(struct seq_file *s, void *data)
- 	int num_active;
- 	int num_free;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 4af3ab2ee1a8..311c639e23de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1082,7 +1082,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			mvm->ampdu_toggle = toggle_bit;
  
-+	if (!rbm->buff_arr)
-+		return -EINVAL;
-+
- 	seq_printf(s, "  size = %zu\n", rbm->size);
- 	seq_printf(s, "  free_list_empty_cnt = %lu\n",
- 		   rbm->free_list_empty_cnt);
+ 			if (he_phy_data != HE_PHY_DATA_INVAL &&
+-			    he_type == RATE_MCS_HE_TYPE_MU) {
++			    (he_type == RATE_MCS_HE_TYPE_MU ||
++			     he_type == RATE_MCS_HE_TYPE_SU)) {
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+ 				if (FIELD_GET(IWL_RX_HE_PHY_DELIM_EOF,
+ 					      he_phy_data))
 -- 
-1.9.1
+2.18.0
