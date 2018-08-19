@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43852 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726572AbeHXOE3 (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:44858 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725781AbeHSFcP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:07 +0300
-Message-Id: <20180824103018.15011-6-luca@coelho.fi> (sfid-20180824_123035_124785_D37FF7F0)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 05/16] iwlwifi: mvm: remove channel 2 from HE radiotap if not applicable
+        Sun, 19 Aug 2018 01:32:15 -0400
+Received: by mail-qt0-f180.google.com with SMTP id b15-v6so12799368qtp.11
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 19:22:26 -0700 (PDT)
+Received: from ?IPv6:2001:470:8:209:ffff:ffff:ffff:ffff? ([2001:470:8:209:ffff:ffff:ffff:ffff])
+        by smtp.gmail.com with ESMTPSA id e29-v6sm4677711qte.47.2018.08.18.19.22.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 18 Aug 2018 19:22:25 -0700 (PDT)
+From: Farhan Khan <khanzf@gmail.com>
+Subject: rtlwifi/rtl8188ee: _rtl_pci_rx_interrupt equivalent dropping frames
+To: linux-wireless@vger.kernel.org
+Message-ID: <37b22f82-8246-1f2e-019c-f78382995ca9@gmail.com> (sfid-20180819_042236_355273_30254415)
+Date: Sat, 18 Aug 2018 22:22:24 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi all,
 
-If the bandwidth is only 20 MHz, then the second channel doesn't
-exist, but the hardware reports the CRC was OK. Suppress the data
-of the second channel in the HE radiotap in this case, by marking
-it as not known.
+I am working on porting the rtlwifi/rtl8188ee to expand FreeBSD's 
+equivalent rtwn driver. In the equivalent code, the function 
+_rtl_pci_rx_interrupt from drivers/net/wireless/realtek/rtlwifi/pci.c 
+runs into the if-condition:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+if (own) /* wait data to be filled by hardware */
+	return;
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 05ce253b8c30..2eae657b16b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -858,6 +858,7 @@ static void iwl_mvm_flip_address(u8 *addr)
- 
- static void iwl_mvm_decode_he_sigb(struct iwl_mvm *mvm,
- 				   struct iwl_rx_mpdu_desc *desc,
-+				   u32 rate_n_flags,
- 				   struct ieee80211_radiotap_he_mu *he_mu)
- {
- 	u32 sigb0, sigb1;
-@@ -893,7 +894,8 @@ static void iwl_mvm_decode_he_sigb(struct iwl_mvm *mvm,
- 					     sigb1);
- 	}
- 
--	if (FIELD_GET(IWL_RX_HE_SIGB_COMMON2_CH2_CRC_OK, sigb2)) {
-+	if (FIELD_GET(IWL_RX_HE_SIGB_COMMON2_CH2_CRC_OK, sigb2) &&
-+	    (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) != RATE_MCS_CHAN_WIDTH_20) {
- 		he_mu->flags1 |=
- 			cpu_to_le16(IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN |
- 				    IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN);
-@@ -1010,7 +1012,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 				      he_phy_data) ==
- 				IWL_RX_HE_PHY_INFO_TYPE_MU_EXT_INFO;
- 		if (sigb_data)
--			iwl_mvm_decode_he_sigb(mvm, desc, he_mu);
-+			iwl_mvm_decode_he_sigb(mvm, desc, rate_n_flags, he_mu);
- 	}
- 	if (he_phy_data != HE_PHY_DATA_INVAL &&
- 	    (he_type == RATE_MCS_HE_TYPE_SU ||
--- 
-2.18.0
+The equivalent of this on FreeBSD is returning true, thus resulting in 
+excessively dropped frames. Based on the surrounding code on the Linux 
+side, this suggests that data has not been filled by Realtek device, 
+despite the device triggering an interrupt.
+
+What would cause the device to issue an interrupt, but continuously 
+return true on this if-statement? Is this indicative of anything?
+Are there any register values during initialization that may suggest 
+this happening?
+
+Its quite difficult to work on this without documentation, so your help 
+is *greatly* appreciated.
+
+Thank you,
+
+--
+Farhan Khan
+PGP Fingerprint: B28D 2726 E2BC A97E 3854 5ABE 9A9F 00BC D525 16EE
