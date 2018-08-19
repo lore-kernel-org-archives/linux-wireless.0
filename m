@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41364 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJhQ (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:43689 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726637AbeHSTVp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:37:16 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in tcp_process()
-Date: Tue, 14 Aug 2018 12:20:12 +0530
-Message-ID: <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085130_515185_8677A22C)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Sun, 19 Aug 2018 15:21:45 -0400
+Received: by mail-oi0-f48.google.com with SMTP id b15-v6so21785180oib.10
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2018 09:09:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180814051448.GA2400@redhat.com>
+References: <CAD7cUuBrMscCMzLHCdxaAf+m9XHLr6XWD+FmZqNSdAuYnKCZfw@mail.gmail.com>
+ <20180813084123.GA18180@redhat.com> <87tvnycw2b.fsf@purkki.adurom.net>
+ <CAD7cUuD8b_b3riHPTEXROW64HCF8S0F2_XHgikz1J_seq-QxXQ@mail.gmail.com> <20180814051448.GA2400@redhat.com>
+From: =?UTF-8?Q?Grzegorz_Duszy=C5=84ski?= <gfduszynski@gmail.com>
+Date: Sun, 19 Aug 2018 18:09:48 +0200
+Message-ID: <CAD7cUuC6v5y_OH0CnhODk6c-6Fi2C+m0cdA2_0u=7XYA7KmgOA@mail.gmail.com> (sfid-20180819_181000_543367_975D2FD9)
+Subject: Re: Cpu stall caused by hostapd running two interfaces
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to avoid line over 80 chars issue reported by
-checkpatch.pl script.
+Hi,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I've updated the kernel to 4.18.1 and then followed the instructions
+(I've checked and 0x6e did not changed)
+Here is the gdb output:
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 041c9dd..f0743d9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -137,6 +137,11 @@ static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
- 	return 0;
- }
- 
-+static inline void clear_tcp_session_txq(struct wilc_vif *vif, int index)
-+{
-+	vif->ack_filter.pending_acks_info[index].txqe = NULL;
-+}
-+
- static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- {
- 	void *buffer = tqe->buffer;
-@@ -670,7 +675,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 			tqe->tx_complete_func(tqe->priv, tqe->status);
- 		if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK &&
- 		    tqe->tcp_pending_ack_idx < MAX_PENDING_ACKS)
--			vif->ack_filter.pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
-+			clear_tcp_session_txq(vif, tqe->tcp_pending_ack_idx);
- 		kfree(tqe);
- 	} while (--entries);
- 
--- 
-2.7.4
+(gdb) l *(ieee80211_regulatory_limit_wmm_params+0x6e)
+0x110e is in ieee80211_regulatory_limit_wmm_params (net/mac80211/util.c:115=
+1).
+1146
+1147            if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
+1148                    wmm_ac =3D &rrule->wmm_rule->ap[ac];
+1149            else
+1150                    wmm_ac =3D &rrule->wmm_rule->client[ac];
+1151            qparam->cw_min =3D max_t(u16, qparam->cw_min, wmm_ac->cw_mi=
+n);
+1152            qparam->cw_max =3D max_t(u16, qparam->cw_max, wmm_ac->cw_ma=
+x);
+1153            qparam->aifs =3D max_t(u8, qparam->aifs, wmm_ac->aifsn);
+1154            qparam->txop =3D !qparam->txop ? wmm_ac->cot / 32 :
+1155                    min_t(u16, qparam->txop, wmm_ac->cot / 32);
+(gdb)
+
+2018-08-14 7:14 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Mon, Aug 13, 2018 at 08:48:17PM +0200, Grzegorz Duszy=C5=84ski wrote:
+>> Can I help you somehow with this ?
+>
+> Enable CONFIG_DEBUG_INFO=3Dy in .config if not done already.
+> Then do:
+>
+> make net/mac80211/util.o
+> gdb net/mac80211/util.o
+> l *(ieee80211_regulatory_limit_wmm_params+0x6e)
+>
+> and provide output of gdb l command, this should show code
+> line number where oops occurs.
+>
+> Thanks
+> Stanislaw
