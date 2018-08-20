@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57944 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJha (ORCPT
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:44518 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeHTMgp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:37:30 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 24/24] staging: wilc1000: remove unnecessary static variable 'p2p_listen_state'
-Date: Tue, 14 Aug 2018 12:20:16 +0530
-Message-ID: <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085144_100235_6727E740)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 20 Aug 2018 08:36:45 -0400
+Received: by mail-wr1-f68.google.com with SMTP id r16-v6so12346375wrt.11
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2018 02:21:53 -0700 (PDT)
+Date: Mon, 20 Aug 2018 11:21:50 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76x2u: Add support for Alfa AWUS036ACM
+Message-ID: <20180820092149.GA4245@localhost.localdomain> (sfid-20180820_112156_807278_37A88C13)
+References: <1534030432-229-1-git-send-email-rosenp@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534030432-229-1-git-send-email-rosenp@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the use of unnecessary static variable 'p2p_listen_state'.
-Already 'p2p_listen_state' is present in 'wilc_priv' struct. So making
-use of that variable as its getting set in channel ready and
-remain on channel expired callback.
+On Aug 11, Rosen Penev wrote:
+> A 2x2 unit with a USB dock for optimal placement.
+> 
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76x2_usb.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+> index 1428cfd..f5338c3 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+> @@ -20,6 +20,7 @@
+>  #include "mt76x2u.h"
+>  
+>  static const struct usb_device_id mt76x2u_device_table[] = {
+> +	{ USB_DEVICE(0x0e8d, 0x7612) }, /* Alfa AWUS036ACM */
+>  	{ USB_DEVICE(0x0b05, 0x1833) },	/* Asus USB-AC54 */
+>  	{ USB_DEVICE(0x0b05, 0x17eb) },	/* Asus USB-AC55 */
+>  	{ USB_DEVICE(0x0b05, 0x180b) },	/* Asus USB-N53 B1 */
+> -- 
+> 2.7.4
+> 
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d8cc08b..cf7ead5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -185,8 +185,6 @@ struct join_bss_param {
- 	u8 start_time[4];
- };
- 
--static u8 p2p_listen_state;
--
- /* 'msg' should be free by the caller for syc */
- static struct host_if_msg*
- wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
-@@ -2351,7 +2349,6 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
- 		netdev_err(vif->ndev, "Failed to set remain on channel\n");
- 
- error:
--	p2p_listen_state = 1;
- 	hif_drv->remain_on_ch_timer_vif = vif;
- 	mod_timer(&hif_drv->remain_on_ch_timer,
- 		  jiffies + msecs_to_jiffies(hif_remain_ch->duration));
-@@ -2407,8 +2404,9 @@ static void handle_listen_state_expired(struct work_struct *work)
- 	struct wid wid;
- 	int result;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-+	struct wilc_priv *priv = wdev_priv(vif->ndev->ieee80211_ptr);
- 
--	if (p2p_listen_state) {
-+	if (priv->p2p_listen_state) {
- 		remain_on_chan_flag = false;
- 		wid.id = WID_REMAIN_ON_CHAN;
- 		wid.type = WID_STR;
-@@ -2433,7 +2431,6 @@ static void handle_listen_state_expired(struct work_struct *work)
- 			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
- 						      hif_remain_ch->id);
- 		}
--		p2p_listen_state = 0;
- 	} else {
- 		netdev_dbg(vif->ndev, "Not in listen state\n");
- 	}
--- 
-2.7.4
+Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
