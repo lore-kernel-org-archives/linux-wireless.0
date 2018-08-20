@@ -1,99 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37690 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727158AbeH0Pr2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 11:47:28 -0400
-Date: Mon, 27 Aug 2018 15:00:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
-        devel@driverdev.osuosl.org, venkateswara.kaja@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in
- tcp_process()
-Message-ID: <20180827120050.mrzhtrstrg7or2to@mwanda> (sfid-20180827_140108_701903_9F2BF759)
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com>
- <c8362c8b-acb3-d5c3-8d47-be18424b8a1e@microchip.com>
- <20180823160315.168c49e5@ajaysk-VirtualBox>
- <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
- <20180827105438.5443cdfa@ajaysk-VirtualBox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180827105438.5443cdfa@ajaysk-VirtualBox>
+Received: from nbd.name ([46.4.11.11]:53402 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725948AbeHTMwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Aug 2018 08:52:47 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH] ath9k: fix tx99 with monitor mode interface
+Date: Mon, 20 Aug 2018 11:37:51 +0200
+Message-Id: <20180820093751.63406-1-nbd@nbd.name> (sfid-20180820_113757_239877_AE2CFA01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 27, 2018 at 10:54:38AM +0530, Ajay Singh wrote:
-> Hi Claudiu,
-> 
-> On Fri, 24 Aug 2018 12:31:28 +0300
-> Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> 
-> > On 23.08.2018 13:33, Ajay Singh wrote:
-> > > On Thu, 23 Aug 2018 11:12:08 +0300
-> > > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> > >   
-> > >> On 14.08.2018 09:50, Ajay Singh wrote:  
-> > >>> Cleanup patch to avoid line over 80 chars issue reported by
-> > >>> checkpatch.pl script.
-> > >>>
-> > >>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > >>> ---
-> > >>>  drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
-> > >>>  1 file changed, 6 insertions(+), 1 deletion(-)
-> > >>>
-> > >>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > >>> b/drivers/staging/wilc1000/wilc_wlan.c index 041c9dd..f0743d9
-> > >>> 100644 --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > >>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > >>> @@ -137,6 +137,11 @@ static inline int add_tcp_pending_ack(struct
-> > >>> wilc_vif *vif, u32 ack, return 0;
-> > >>>  }
-> > >>>  
-> > >>> +static inline void clear_tcp_session_txq(struct wilc_vif *vif,
-> > >>> int index) +{
-> > >>> +	vif->ack_filter.pending_acks_info[index].txqe = NULL;
-> > >>> +}
-> > >>> +    
-> > >>
-> > >> This seems useless to me...  
-> > > 
-> > > Sorry, this point is not fully clear to me.
-> > > 
-> > > Did you mean setting of 'NULL' to 'pending_acks_info[index].txqe' is
-> > > not required?
-> > >   
-> > 
-> > No, having a new function that sets a variable just to avoid line
-> > over 80 warning.
-> 
-> Okay got it.
-> How about using a temp variable to hold the value of
-> 'tqe->tcp_pending_ack_idx'. It can also help to overcome the
-> checkpatch warning.
+Tx99 is typically configured via a monitor mode interface, which does
+not get added to the driver as a vif. Since the code currently expects
+a configured virtual interface for tx99, enabling tx99 via debugfs fails.
+Since the vif is not needed anyway, remove all checks for it.
 
-Just ignore the checkpatch warning...  Don't add a temporary variable
-just to please checkpatch...  It's good to fix checkpatch warnings if
-it makes the code cleaner, but I hate when people do:
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 -
+ drivers/net/wireless/ath/ath9k/main.c  | 12 +++---------
+ drivers/net/wireless/ath/ath9k/tx99.c  |  9 ---------
+ drivers/net/wireless/ath/ath9k/xmit.c  |  2 +-
+ 4 files changed, 4 insertions(+), 20 deletions(-)
 
-	tmp = some_long_variable_name;
-	some_other_long_variable = tmp;
-
-The tmp variable is only used one time and a simple statement becomes
-two statements and it breaks grep.
-
-You could consider renaming some of the variables.  I think the "_info"
-doesn't add anything, because obviously it's information.  Maybe
-"tcp_pending_ack_index" could just become "->ack_idx".
-
-			vif->ack_filter.pending_ack[tqe->ack_idx].txqe = NULL;
-
-It's still very searchable.  If you grep for "ack_idx" then the pending
-and TCP are right there so no information is lost.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 21ba20981a80..003e9fb456ac 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -1074,7 +1074,6 @@ struct ath_softc {
+ 
+ 	struct ath_spec_scan_priv spec_priv;
+ 
+-	struct ieee80211_vif *tx99_vif;
+ 	struct sk_buff *tx99_skb;
+ 	bool tx99_state;
+ 	s16 tx99_power;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1049773378f2..fea1f17500aa 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1251,15 +1251,10 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+ 	struct ath_node *an = &avp->mcast_node;
+ 
+-	mutex_lock(&sc->mutex);
++	if (IS_ENABLED(CPTCFG_ATH9K_TX99))
++		return -EOPNOTSUPP;
+ 
+-	if (IS_ENABLED(CONFIG_ATH9K_TX99)) {
+-		if (sc->cur_chan->nvifs >= 1) {
+-			mutex_unlock(&sc->mutex);
+-			return -EOPNOTSUPP;
+-		}
+-		sc->tx99_vif = vif;
+-	}
++	mutex_lock(&sc->mutex);
+ 
+ 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
+ 	sc->cur_chan->nvifs++;
+@@ -1342,7 +1337,6 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	ath9k_p2p_remove_vif(sc, vif);
+ 
+ 	sc->cur_chan->nvifs--;
+-	sc->tx99_vif = NULL;
+ 	if (!ath9k_is_chanctx_enabled())
+ 		list_del(&avp->list);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index ce50d8f5835e..9b05ffb68c34 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -54,12 +54,6 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct sk_buff *skb;
+-	struct ath_vif *avp;
+-
+-	if (!sc->tx99_vif)
+-		return NULL;
+-
+-	avp = (struct ath_vif *)sc->tx99_vif->drv_priv;
+ 
+ 	skb = alloc_skb(len, GFP_KERNEL);
+ 	if (!skb)
+@@ -77,14 +71,11 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
+ 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
+ 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+ 
+-	hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
+-
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 	memset(tx_info, 0, sizeof(*tx_info));
+ 	rate = &tx_info->control.rates[0];
+ 	tx_info->band = sc->cur_chan->chandef.chan->band;
+ 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
+-	tx_info->control.vif = sc->tx99_vif;
+ 	rate->count = 1;
+ 	if (ah->curchan && IS_CHAN_HT(ah->curchan)) {
+ 		rate->flags |= IEEE80211_TX_RC_MCS;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 43b6c8508e49..66b6a8872c06 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2973,7 +2973,7 @@ int ath9k_tx99_send(struct ath_softc *sc, struct sk_buff *skb,
+ 		return -EINVAL;
+ 	}
+ 
+-	ath_set_rates(sc->tx99_vif, NULL, bf);
++	ath_set_rates(NULL, NULL, bf);
+ 
+ 	ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, bf->bf_daddr);
+ 	ath9k_hw_tx99_start(sc->sc_ah, txctl->txq->axq_qnum);
+-- 
+2.17.0
