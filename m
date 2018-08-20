@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35198 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726332AbeHWPyV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 11:54:21 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51556 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726060AbeHTNpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Aug 2018 09:45:19 -0400
+Date: Mon, 20 Aug 2018 12:27:10 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-Subject: Re: [PATCH 07/15] iwlwifi: add 80211 hdr offset to trace data
-References: <20180821063657.30071-1-luca@coelho.fi>
-        <20180821063657.30071-8-luca@coelho.fi>
-        <877ekir5f2.fsf@kamboji.qca.qualcomm.com>
-        <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi>
-        <87mutdnxn4.fsf@kamboji.qca.qualcomm.com>
-        <e95c118f8fb24b560809cd498417b399b28609d4.camel@coelho.fi>
-Date: Thu, 23 Aug 2018 15:24:46 +0300
-In-Reply-To: <e95c118f8fb24b560809cd498417b399b28609d4.camel@coelho.fi> (Luca
-        Coelho's message of "Thu, 23 Aug 2018 14:50:27 +0300")
-Message-ID: <87lg8xmfsh.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_142454_772917_269B2C44)
+        Grzegorz Duszy??ski <gfduszynski@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] cfg80211: remove division by size of sizeof(struct
+ ieee80211_wmm_rule)
+Message-ID: <20180820102710.GA2760@redhat.com> (sfid-20180820_123018_771668_891B04D5)
+References: <20180820073705.9683-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180820073705.9683-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Mon, Aug 20, 2018 at 09:37:05AM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Pointer arithmetic already adjusts by the size of the struct,
+> so the sizeof() calculation is wrong. This is basically the
+> same as Colin King's patch for similar code in the iwlwifi
+> driver.
+> 
+> Fixes: 230ebaa189af ("cfg80211: read wmm rules from regulatory database")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/reg.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 4fc66a117b7d..283902974fbf 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -452,8 +452,7 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+>  			continue;
+>  
+>  		regd->reg_rules[i].wmm_rule = d_wmm +
+> -			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
+> -			sizeof(struct ieee80211_wmm_rule);
+> +			(src_regd->reg_rules[i].wmm_rule - s_wmm);
+>  	}
+>  	return regd;
+>  }
 
-> On Thu, 2018-08-23 at 14:13 +0300, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > > > - * You should have received a copy of the GNU General Public
->> > > > License along with
->> > > > - * this program; if not, write to the Free Software
->> > > > Foundation,
->> > > > Inc.,
->> > > > - * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
->> > > > - *
->> > > >   * The full GNU General Public License is included in this
->> > > > distribution in the
->> > > >   * file called LICENSE.
->> > > >   *
->> > > 
->> > > Ok, you have more of these removals in this patch so I guess it's
->> > > intentional. But IMHO it would be nicer to remove these all in
->> > > one go
->> > > instead of sprinkle around in different patches.
->> > 
->> > IMHO it's too much fuzz for mostly useless warning removal... We
->> > need
->> > to update the copyright when this hits, so we just do it at the
->> > same
->> > time.
->> > 
->> > But you're the boss, I can submit a patch to remove just that, all
->> > at
->> > once.
->> 
->> Yeah, please do that. It shouldn't take more than few minutes anyway.
->> 
->> The thing is that then you are reviewing a big patchset and all of
->> sudden see a license text changes without no mention in the commit
->> log,
->> it takes extra time to check it. Sure, with one patch it doens't
->> matter
->> but then you are going through 20+ patches (or even more) it makes a
->> difference. So it's a lot easier for me to change all license text in
->> one go.
->
-> Okay.  I'll send one patch on top of all these ones I sent already,
-> okay?
+As side note those pointer aritmetics related with rule->wmm_rule is
+really involuted in various places in reg.c . Seems would be better to
+just make wmm_rule part of iee80211_reg_rule structure like this:
 
-Yeah, no need to change existing patches. So sounds good, thanks!
+struct ieee80211_reg_rule {
+        struct ieee80211_freq_range freq_range;
+        struct ieee80211_power_rule power_rule;
+        struct ieee80211_wmm_rule wmm_rule;
+        u32 flags;
+        u32 dfs_cac_ms;
+};
 
--- 
-Kalle Valo
+and use a flag to intdicate wmm_rule is valid. There should be no
+big memory overhead sice there are only few reg_rules for the regdomain.
+Or I'm wrong?
+
+Regards
+Stanislaw
