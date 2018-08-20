@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:51070 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728082AbeHWTP2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 15:15:28 -0400
-Date: Thu, 23 Aug 2018 08:45:10 -0700 (PDT)
-Message-Id: <20180823.084510.864066255490001088.davem@davemloft.net> (sfid-20180823_174522_830539_A9754A23)
+Received: from mga18.intel.com ([134.134.136.126]:8461 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726024AbeHTOL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Aug 2018 10:11:28 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        johannes.berg@intel.com
-Subject: Re: [PATCH] netlink: add nl_set_extack_cookie_u64()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180823084813.5727-1-johannes@sipsolutions.net>
-References: <20180823084813.5727-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "#4 . 16+" <stable@vger.kernel.org>
+Subject: [PATCH] mac80211: don't update the PM state of a peer upon a multicast frame
+Date: Mon, 20 Aug 2018 13:56:07 +0300
+Message-Id: <1534762567-6217-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20180820_125623_537016_32E8B7E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 23 Aug 2018 10:48:13 +0200
+I changed the way mac80211 updates the PM state of the peer.
+I forgot that we could also have multicast frames from the
+peer and that those frame should of course not change the
+PM state of the peer: A peer goes to power save when it
+needs to scan, but it won't send the broadcast Probe Request
+with the PM bit set.
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Add a helper function nl_set_extack_cookie_u64() to use a u64 as
-> the netlink extended ACK cookie, to avoid having to open-code it
-> in any users of the cookie.
-> 
-> A u64 should be sufficient for most subsystems though we allow
-> for up to 20 bytes right now. This also matches the cookies in
-> nl80211 where I intend to use this.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This made us mark the peer as awake when it wasn't and then
+Intel's firmware would fail to transmit because the peer is
+asleep according to its database. The driver warned about
+this and it looked like this:
 
-Feel free to merge this in your wireless tree since the first
-user will be there.
+ WARNING: CPU: 0 PID: 184 at /usr/src/linux-4.16.14/drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1369 iwl_mvm_rx_tx_cmd+0x53b/0x860
+ CPU: 0 PID: 184 Comm: irq/124-iwlwifi Not tainted 4.16.14 #1
+ RIP: 0010:iwl_mvm_rx_tx_cmd+0x53b/0x860
+ Call Trace:
+  iwl_pcie_rx_handle+0x220/0x880
+  iwl_pcie_irq_handler+0x6c9/0xa20
+  ? irq_forced_thread_fn+0x60/0x60
+  ? irq_thread_dtor+0x90/0x90
 
-Acked-by: David S. Miller <davem@davemloft.net>
+The relevant code that spits the WARNING is:
+
+        case TX_STATUS_FAIL_DEST_PS:
+                /* the FW should have stopped the queue and not
+                 * return this status
+                 */
+                WARN_ON(1);
+                info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=199967.
+
+Fixes: 9fef65443388 ("mac80211: always update the PM state of a peer on MGMT / DATA frames")
+Cc: <stable@vger.kernel.org>   #4.16+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/rx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a16ba56..3cf6027 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1728,6 +1728,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	 */
+ 	if (!ieee80211_hw_check(&sta->local->hw, AP_LINK_PS) &&
+ 	    !ieee80211_has_morefrags(hdr->frame_control) &&
++	    !is_multicast_ether_addr(hdr->addr1) &&
+ 	    (ieee80211_is_mgmt(hdr->frame_control) ||
+ 	     ieee80211_is_data(hdr->frame_control)) &&
+ 	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
+-- 
+2.7.4
