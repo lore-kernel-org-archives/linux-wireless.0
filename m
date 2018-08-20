@@ -1,114 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:47024 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726579AbeHZT5k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Aug 2018 15:57:40 -0400
-Received: by mail-oi0-f66.google.com with SMTP id y207-v6so23226599oie.13
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2018 09:14:41 -0700 (PDT)
-Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
-To: prabhu <d.praabhu@gmail.com>, Taketo Kabe <kabe@sra-tohoku.co.jp>
-Cc: kvalo@codeaurora.org, m@bues.ch, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org
-References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
- <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
- <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net>
- <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net> (sfid-20180826_181529_761184_9652D9E1)
-Date: Sun, 26 Aug 2018 11:14:38 -0500
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56656 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726197AbeHTPgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Aug 2018 11:36:10 -0400
+Date: Mon, 20 Aug 2018 14:20:42 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: Craig Matsuura <cmatsuura@vivint.com>,
+        Kofi Agor <nenekofi@gmail.com>,
+        Enrico Mioso <mrkiko.rs@gmail.com>,
+        Mathias Kresin <dev@kresin.me>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180820122041.GA8109@redhat.com> (sfid-20180820_142048_572122_40A22D04)
+References: <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
+ <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
+ <20180417194255.GA17067@redhat.com>
+ <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
+ <20180528125039.GA22122@redhat.com>
+ <20180815114029.GA1862@redhat.com>
+ <20180815223526.GC1243@makrotopia.org>
+ <20180816110103.GB2797@redhat.com>
+ <DM5PR02MB365669D5E9F2DE20DAE4CB7AD43E0@DM5PR02MB3656.namprd02.prod.outlook.com>
+ <20180818160836.GB1468@makrotopia.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------2089F2158891A7E781A0BA33"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180818160836.GB1468@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------2089F2158891A7E781A0BA33
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi Daniel
 
-On 08/26/2018 02:23 AM, prabhu wrote:
-> Larry,
+On Sat, Aug 18, 2018 at 06:08:40PM +0200, Daniel Golle wrote:
+> Still seeing a lot of those
 > 
-> Upgrading the firmware didn't fix the issue.
+> Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.972151] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+> Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.981622] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+> Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8364.991070] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+> Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8365.000506] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
+> Sat Aug 18 16:05:51 2018 kern.err kernel: [ 8365.009935] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping frame due to full tx queue 2
 > 
-> The patch fixes it. My system has been running without any issues
-> since yesterday.
+> while wifi somehow keeps working at degraded level once the error
+> occured.
 
-I did not think the new firmware would help, but it had to be tried. Thanks for 
-the testing.
+I would like to know why we get those errors at all. Perhaps there is
+something wrong with queue pause/unpasue logic. Or with locking.
+Or maybe this is normal, we pausue queue in mac80211 but it still have
+some pending skbs which are scheduled to the driver.
 
-@Pradhu & @Taketo: Attached is a new (improved?) patch for you to try. You need 
-to start from an unmodified 4.18 source. This patch should allow both of your 
-systems to work and avoid needing to revert Taketo's fix for his setup.
+Let's check if pausing is correct. Please apply this patch:
+https://github.com/sgruszka/wireless-drivers-next/commit/525c50486e17446793b21ac7a8498cb48b3bb210.patch
+and provide dmesg output.
 
-Thanks,
+Note that adding printk messages can make itself somehow AP
+unresponsive, as I pointed earlier in this thread. However
+at this point I would like to check if queue pause works as it
+should in the driver. 
 
-Larry
+Also, how do test? I can not reproduce those errors.
 
-
-
---------------2089F2158891A7E781A0BA33
-Content-Type: text/x-patch;
- name="0001-b43-Fix-regression-in-kernel-4.18.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-b43-Fix-regression-in-kernel-4.18.patch"
-
->From 4805a08715de42d49587975979425031307218b6 Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sun, 26 Aug 2018 10:47:52 -0500
-Subject: [PATCH] b43: Fix regression in kernel 4.18
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org
-
-In commit 66cffd6daab7 ("b43: fix transmit failure when VT is switched"),
-a condition is noted where the network controller needs to be reset. Note
-that this situation happens when running the open-source firmware
-(http://netweb.ing.unibs.it/~openfwwf/), plus a number of other special
-conditions.
-
-for a different card model, it is reported that this change breaks
-operation running the proprietary firmware
-(https://marc.info/?l=linux-wireless&m=153504546924558&w=2). Rather
-than reverting the previous patch, the code is tweaked to avoid the
-reset unless the open-source firmware is being used.
-
-Fixes: 66cffd6daab7 ("b43: fix transmit failure when VT is switched")
-Cc: Stable <stable@vger.kernel.org> # 4.18+
-Cc: Taketo Kabe <kabe@sra-tohoku.co.jp>
-Cc: D. Prabhu <d.praabhu@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/broadcom/b43/dma.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
-index 6b0e1ec346cb..d46d57b989ae 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1518,13 +1518,15 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 			}
- 		} else {
- 			/* More than a single header/data pair were missed.
--			 * Report this error, and reset the controller to
-+			 * Report this error. If running with open-source
-+			 * firmware, then reset the controller to
- 			 * revive operation.
- 			 */
- 			b43dbg(dev->wl,
- 			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
- 			       ring->index, firstused, slot);
--			b43_controller_restart(dev, "Out of order TX");
-+			if (dev->fw.opensource)
-+				b43_controller_restart(dev, "Out of order TX");
- 			return;
- 		}
- 	}
--- 
-2.18.0
-
-
---------------2089F2158891A7E781A0BA33--
+Thanks
+Stanislaw
