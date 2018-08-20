@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47240 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33298 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731793AbeHIRlf (ORCPT
+        with ESMTP id S1726535AbeHTPUv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 13:41:35 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] ssb: driver_gige: use true and false for boolean values
+        Mon, 20 Aug 2018 11:20:51 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180805000453.GA19115@embeddedor.com>
-References: <20180805000453.GA19115@embeddedor.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-Id: <20180809151613.6A1BE60B23@smtp.codeaurora.org> (sfid-20180809_171620_948967_42B60D8A)
-Date: Thu,  9 Aug 2018 15:16:13 +0000 (UTC)
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: fix tx99 with monitor mode interface
+References: <20180820093751.63406-1-nbd@nbd.name>
+Date: Mon, 20 Aug 2018 15:05:25 +0300
+In-Reply-To: <20180820093751.63406-1-nbd@nbd.name> (Felix Fietkau's message of
+        "Mon, 20 Aug 2018 11:37:51 +0200")
+Message-ID: <87r2itp7ju.fsf@codeaurora.org> (sfid-20180820_140533_068460_3A2E3A98)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+Felix Fietkau <nbd@nbd.name> writes:
 
-> Return statements in functions returning bool should use true or false
-> instead of an integer value.
-> 
-> This code was detected with the help of Coccinelle.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Reviewed-by: Michael Buesch <m@bues.ch>
+> Tx99 is typically configured via a monitor mode interface, which does
+> not get added to the driver as a vif. Since the code currently expects
+> a configured virtual interface for tx99, enabling tx99 via debugfs fails.
+> Since the vif is not needed anyway, remove all checks for it.
+>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-Patch applied to wireless-drivers-next.git, thanks.
+[...]
 
-c7743c428111 ssb: driver_gige: use true and false for boolean values
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1251,15 +1251,10 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+>  	struct ath_vif *avp = (void *)vif->drv_priv;
+>  	struct ath_node *an = &avp->mcast_node;
+>  
+> -	mutex_lock(&sc->mutex);
+> +	if (IS_ENABLED(CPTCFG_ATH9K_TX99))
+> +		return -EOPNOTSUPP;
+
+Obviously this should be CONFIG_ATH9K_TX99, I'll fix that in the pending
+branch.
 
 -- 
-https://patchwork.kernel.org/patch/10555985/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
