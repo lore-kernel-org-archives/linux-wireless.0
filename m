@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40198 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726195AbeHOMSY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:40450 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725944AbeHTLXb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 08:18:24 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, briannorris@chromium.org,
-        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        andy.gross@linaro.org, devicetree@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v5 4/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-Date: Wed, 15 Aug 2018 14:56:35 +0530
-Message-Id: <20180815092637.11455-5-govinds@codeaurora.org> (sfid-20180815_112703_740314_C2968EF7)
-In-Reply-To: <20180815092637.11455-1-govinds@codeaurora.org>
-References: <20180815092637.11455-1-govinds@codeaurora.org>
+        Mon, 20 Aug 2018 07:23:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        =?UTF-8?q?Grzegorz=20Duszy=C5=84ski?= <gfduszynski@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: remove division by size of sizeof(struct ieee80211_wmm_rule)
+Date: Mon, 20 Aug 2018 09:37:05 +0200
+Message-Id: <20180820073705.9683-1-johannes@sipsolutions.net> (sfid-20180820_100856_002045_44BFB39F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WLAN related VMID's to support wlan driver to set up
-the remote's permissions call via TrustZone.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Pointer arithmetic already adjusts by the size of the struct,
+so the sizeof() calculation is wrong. This is basically the
+same as Colin King's patch for similar code in the iwlwifi
+driver.
+
+Fixes: 230ebaa189af ("cfg80211: read wmm rules from regulatory database")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/qcom_scm.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/wireless/reg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
-index b401b962afff..da63d84e1e91 100644
---- a/include/linux/qcom_scm.h
-+++ b/include/linux/qcom_scm.h
-@@ -1,4 +1,4 @@
--/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
-+/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
-  * Copyright (C) 2015 Linaro Ltd.
-  *
-  * This program is free software; you can redistribute it and/or modify
-@@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4fc66a117b7d..283902974fbf 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -452,8 +452,7 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ 			continue;
  
- #define QCOM_SCM_VMID_HLOS       0x3
- #define QCOM_SCM_VMID_MSS_MSA    0xF
-+#define QCOM_SCM_VMID_WLAN       0x18
-+#define QCOM_SCM_VMID_WLAN_CE    0x19
- #define QCOM_SCM_PERM_READ       0x4
- #define QCOM_SCM_PERM_WRITE      0x2
- #define QCOM_SCM_PERM_EXEC       0x1
+ 		regd->reg_rules[i].wmm_rule = d_wmm +
+-			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
+-			sizeof(struct ieee80211_wmm_rule);
++			(src_regd->reg_rules[i].wmm_rule - s_wmm);
+ 	}
+ 	return regd;
+ }
 -- 
-2.17.0
+2.14.4
