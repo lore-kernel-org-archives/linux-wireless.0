@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48294 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727835AbeHVPB5 (ORCPT
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:40208 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726472AbeHUJl5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 11:01:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
+        Tue, 21 Aug 2018 05:41:57 -0400
+Received: by mail-lf1-f66.google.com with SMTP id y200-v6so12713233lfd.7
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Aug 2018 23:23:10 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: remove division by size of sizeof(struct
+ ieee80211_wmm_rule)
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH v2 05/17] iwlwifi: add d3 debug data support
-References: <20180821050952.31603-1-luca@coelho.fi>
-        <20180821050952.31603-6-luca@coelho.fi>
-Date: Wed, 22 Aug 2018 14:37:19 +0300
-In-Reply-To: <20180821050952.31603-6-luca@coelho.fi> (Luca Coelho's message of
-        "Tue, 21 Aug 2018 08:09:40 +0300")
-Message-ID: <87bm9ur5sg.fsf@kamboji.qca.qualcomm.com> (sfid-20180822_133726_877091_E6E9C122)
+        Johannes Berg <johannes.berg@intel.com>
+References: <20180820073705.9683-1-johannes@sipsolutions.net>
+ <20180820102710.GA2760@redhat.com>
+From: =?UTF-8?Q?Grzegorz_Duszy=c5=84ski?= <gfduszynski@gmail.com>
+Message-ID: <63f44789-11c3-0549-b8b8-cd3b25c40547@gmail.com> (sfid-20180821_082316_528992_33B5CDDB)
+Date: Tue, 21 Aug 2018 08:23:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180820102710.GA2760@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
-
-> From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+On 20.08.2018 12:27, Stanislaw Gruszka wrote:
+> On Mon, Aug 20, 2018 at 09:37:05AM +0200, Johannes Berg wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> Pointer arithmetic already adjusts by the size of the struct,
+>> so the sizeof() calculation is wrong. This is basically the
+>> same as Colin King's patch for similar code in the iwlwifi
+>> driver.
+>>
+>> Fixes: 230ebaa189af ("cfg80211: read wmm rules from regulatory database")
+>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> ---
+>>   net/wireless/reg.c | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 4fc66a117b7d..283902974fbf 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -452,8 +452,7 @@ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+>>   			continue;
+>>   
+>>   		regd->reg_rules[i].wmm_rule = d_wmm +
+>> -			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
+>> -			sizeof(struct ieee80211_wmm_rule);
+>> +			(src_regd->reg_rules[i].wmm_rule - s_wmm);
+>>   	}
+>>   	return regd;
+>>   }
+> As side note those pointer aritmetics related with rule->wmm_rule is
+> really involuted in various places in reg.c . Seems would be better to
+> just make wmm_rule part of iee80211_reg_rule structure like this:
 >
-> During d3, the firmware records debug data into internal buffer
-> if debug data collection occurs, collect the data that was written to the
-> buffer
+> struct ieee80211_reg_rule {
+>          struct ieee80211_freq_range freq_range;
+>          struct ieee80211_power_rule power_rule;
+>          struct ieee80211_wmm_rule wmm_rule;
+>          u32 flags;
+>          u32 dfs_cac_ms;
+> };
 >
-> Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> and use a flag to intdicate wmm_rule is valid. There should be no
+> big memory overhead sice there are only few reg_rules for the regdomain.
+> Or I'm wrong?
+>
+> Regards
+> Stanislaw
 
-[...]
+Thank you for the patch.
 
-> --- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-> @@ -8,6 +8,7 @@
->   * Copyright(c) 2014 Intel Corporation. All rights reserved.
->   * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
->   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-> + * Copyright (C) 2018 Intel Corporation
->   *
->   * This program is free software; you can redistribute it and/or modify
->   * it under the terms of version 2 of the GNU General Public License as
-> @@ -18,11 +19,6 @@
->   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
->   * General Public License for more details.
->   *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write to the Free Software
-> - * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-> - * USA
-> - *
->   * The full GNU General Public License is included in this distribution
->   * in the file called COPYING.
->   *
+I've applied the patch, but it does not seem to help.
+Spawning second instance of hostapd causes same error as before.
 
-Is this removal intentional? Just curious.
-
--- 
-Kalle Valo
+I don't follow why this issue would not occur with single NIC.
+It's not like I am an expert in this field, but those rules should be 
+applied to both interfaces, right?
+Both interfaces use ath10k, that should imply same code path for setting 
+rules.
