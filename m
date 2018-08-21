@@ -1,29 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51206 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727516AbeH1NQI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42692 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726637AbeHUI2w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 09:16:08 -0400
-Message-ID: <1535448313.5895.22.camel@sipsolutions.net> (sfid-20180828_112525_971701_CD3E42EE)
-Subject: Re: [PATCH 1/3] cfg80211: Add support for 60GHz band channels 5 and
- 6
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
-Date: Tue, 28 Aug 2018 11:25:13 +0200
-In-Reply-To: <1534163582-9983-2-git-send-email-ailizaro@codeaurora.org>
-References: <1534163582-9983-1-git-send-email-ailizaro@codeaurora.org>
-         <1534163582-9983-2-git-send-email-ailizaro@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 21 Aug 2018 04:28:52 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 08:09:51 +0300
+Message-Id: <20180821050952.31603-17-luca@coelho.fi> (sfid-20180821_071020_737845_6488CC9C)
+In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
+References: <20180821050952.31603-1-luca@coelho.fi>
+Subject: [PATCH v2 16/17] iwlwifi: pcie: allow using tx init for other queues but the command queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-08-13 at 15:33 +0300, Alexei Avshalom Lazar wrote:
-> The current support in the 60GHz band is for channels 1-4.
-> Add support for channels 5 and 6.
-> This requires enlarging ieee80211_channel.center_freq from u16 to u32.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Applied.
+We would like to allow using tx init code for other queues but
+the command queue - for newer devices.
 
-johannes
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  3 ++-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 23 ++++++++++---------
+ 3 files changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 0127386de6c6..da6d367de76e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -640,7 +640,8 @@ void iwl_pcie_disable_ict(struct iwl_trans *trans);
+ * TX / HCMD
+ ******************************************************/
+ int iwl_pcie_tx_init(struct iwl_trans *trans);
+-int iwl_pcie_gen2_tx_init(struct iwl_trans *trans);
++int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id,
++			  int queue_size);
+ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr);
+ int iwl_pcie_tx_stop(struct iwl_trans *trans);
+ void iwl_pcie_tx_free(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 2bc67219ed3e..3e5c732a89db 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -265,7 +265,7 @@ static int iwl_pcie_gen2_nic_init(struct iwl_trans *trans)
+ 		return -ENOMEM;
+ 
+ 	/* Allocate or reset and init all Tx and Command queues */
+-	if (iwl_pcie_gen2_tx_init(trans))
++	if (iwl_pcie_gen2_tx_init(trans, trans_pcie->cmd_queue, TFD_CMD_SLOTS))
+ 		return -ENOMEM;
+ 
+ 	/* enable shadow regs in HW */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index b99f33ff9123..9ce7b2072613 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1251,30 +1251,31 @@ void iwl_pcie_gen2_tx_free(struct iwl_trans *trans)
+ 	}
+ }
+ 
+-int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
++int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id, int queue_size)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_txq *cmd_queue;
+-	int txq_id = trans_pcie->cmd_queue, ret;
++	struct iwl_txq *queue;
++	int ret;
+ 
+-	/* alloc and init the command queue */
++	/* alloc and init the tx queue */
+ 	if (!trans_pcie->txq[txq_id]) {
+-		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
+-		if (!cmd_queue) {
+-			IWL_ERR(trans, "Not enough memory for command queue\n");
++		queue = kzalloc(sizeof(*queue), GFP_KERNEL);
++		if (!queue) {
++			IWL_ERR(trans, "Not enough memory for tx queue\n");
+ 			return -ENOMEM;
+ 		}
+-		trans_pcie->txq[txq_id] = cmd_queue;
+-		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
++		trans_pcie->txq[txq_id] = queue;
++		ret = iwl_pcie_txq_alloc(trans, queue, queue_size, true);
+ 		if (ret) {
+ 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
+ 			goto error;
+ 		}
+ 	} else {
+-		cmd_queue = trans_pcie->txq[txq_id];
++		queue = trans_pcie->txq[txq_id];
+ 	}
+ 
+-	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
++	ret = iwl_pcie_txq_init(trans, queue, queue_size,
++				(txq_id == trans_pcie->cmd_queue));
+ 	if (ret) {
+ 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
+ 		goto error;
+-- 
+2.18.0
