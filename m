@@ -1,51 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:38217 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388581AbeHGVtY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53346 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726413AbeHULFP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 17:49:24 -0400
-Received: by mail-qt0-f195.google.com with SMTP id w26-v6so6660146qto.5
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2018 12:33:31 -0700 (PDT)
-Subject: Re: [PATCH v2] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer
- dereference
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-wireless@vger.kernel.org
-References: <1533649107-157808-1-git-send-email-chi-hsien.lin@cypress.com>
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Winnie Chang <winnie.chang@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B69F407.6040004@broadcom.com> (sfid-20180807_213409_215861_91DD798A)
-Date: Tue, 7 Aug 2018 21:33:27 +0200
+        Tue, 21 Aug 2018 07:05:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Anilkumar Kolli <akolli@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
+References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
+        <87zi1tav6h.fsf@kamboji.qca.qualcomm.com>
+        <6b57525f3edc2b7d06b7662efc5d7e5f@codeaurora.org>
+        <87y3hb8jtp.fsf@kamboji.qca.qualcomm.com>
+        <dbab2233f2fe01136ef827328deac61f@codeaurora.org>
+Date: Tue, 21 Aug 2018 10:46:07 +0300
+In-Reply-To: <dbab2233f2fe01136ef827328deac61f@codeaurora.org> (Anilkumar
+        Kolli's message of "Tue, 21 Aug 2018 11:34:52 +0530")
+Message-ID: <87k1okqi0w.fsf@kamboji.qca.qualcomm.com> (sfid-20180821_094614_238086_7143755E)
 MIME-Version: 1.0
-In-Reply-To: <1533649107-157808-1-git-send-email-chi-hsien.lin@cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/7/2018 3:38 PM, Chi-Hsien Lin wrote:
-> From: Winnie Chang <winnie.chang@cypress.com>
+Anilkumar Kolli <akolli@codeaurora.org> writes:
+
+> On 2018-04-25 19:33, Kalle Valo wrote:
+>> Anilkumar Kolli <akolli@codeaurora.org> writes:
+>>
+>>> On 2018-04-24 13:32, Kalle Valo wrote:
+>>>> Anilkumar Kolli <akolli@codeaurora.org> writes:
+>>>>
+>>>>> Mesh path metric needs txrate information from ieee80211_tx_status()
+>>>>> call but in ath10k there is no mechanism to report tx rate
+>>>>> information
+>>>>> via ieee80211_tx_status(), the rate is only accessible via
+>>>>> sta_statiscs() op.
+>>>>>
+>>>>> Per peer stats has tx rate info available, this patch stores per
+>>>>> peer
+>>>>> last tx rate and updates the tx rate info structures in tx
+>>>>> completition.
+>>>>> The rate updated in ieee80211_tx_status() is not exactly for the
+>>>>> last
+>>>>> transmitted frame instead the rate is from one of the previous
+>>>>> frames.
+>>>>>
+>>>>> Per peer txrate information is updated through per peer statistics
+>>>>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+>>>>>
+>>>>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+>>>>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+>>>>>
+>>>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+>>>>
+>>>> BTW, your name in patchwork is "akolli@codeaurora.org" but it
+>>>> should be
+>>>> "Anilkumar Kolli" and that's why my script uses the wrong name.
+>>>> Please
+>>>> fix it by registering to patchwork as it's possible to change your
+>>>> name
+>>>> during registration, but only one time. If that doesn't work then
+>>>> send a
+>>>> request to helpdesk@kernel.org and the admins will fix it.
+>>>
+>>> I registered and updated name in the patchwork website.
+>>
+>> It seems that your name still is "akolli@codeaurora.org" in the
+>> Submitter field:
+>>
+>> https://patchwork.kernel.org/patch/10353959/
+>>
+>> An example how it should look like:
+>>
+>> https://patchwork.kernel.org/patch/10359823/
+>>
+>> I think you need to contact helpdesk now and ask them to fix it.
+>>
+>>> Do I need to resend the patch ?
+>>
+>> No need to resend because of this.
 >
-> The kernel BUG happens when wowl is enabled from firmware. In
-> brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
-> drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
-> yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
-> calls brcmf_wiphy_wowl_params().
+> Hi Kalle,
 >
-> The kernel panic is introduced in below commit:
-> commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
-> brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+> Do you have any comments on this RFC. Shall I submit as a patch ?
 
-The above info should be in Fixes: tag, but maybe Kalle is willing to 
-reformat it this time.
+I have some questions about it but I haven't had a chance to look at in
+detail yet, hopefully later this week.
 
-Regards,
-Arend
-
-> Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-> ---
+-- 
+Kalle Valo
