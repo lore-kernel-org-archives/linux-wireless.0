@@ -1,72 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:35244 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725977AbeHNXO5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42588 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726346AbeHUI2h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 19:14:57 -0400
-Received: by mail-it0-f65.google.com with SMTP id 139-v6so21869241itf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 13:26:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
-References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
- <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Tue, 14 Aug 2018 13:26:04 -0700
-Message-ID: <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com> (sfid-20180814_222617_976297_E57262D4)
-Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
- SHDLC I-Frame commands
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: security@kernel.org, Kevin Deus <kdeus@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Allen Pais <allen.pais@oracle.com>,
-        Kees Cook <keescook@chromium.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 21 Aug 2018 04:28:37 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 08:09:37 +0300
+Message-Id: <20180821050952.31603-3-luca@coelho.fi> (sfid-20180821_071006_979547_C6C9E02E)
+In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
+References: <20180821050952.31603-1-luca@coelho.fi>
+Subject: [PATCH v2 02/17] iwlwifi: remove unused TLC debugging commands
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
-> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->> Thanks.  This is great.  I'm so glad these are finally getting fixed.
->>
->> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
->> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
->> (0x7f) so that's one element beyond the end of the array and the
->> NFC_HCI_HCP_RESPONSE isn't checked.
->>
->> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
->> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
->
-> Good point. From hci.h:
->
-> /*
->  * According to specification 102 622 chapter 4.4 Pipes,
->  * the pipe identifier is 7 bits long.
->  */
-> #define NFC_HCI_MAX_PIPES 127
->
-> And then:
->
-> struct nfc_hci_dev {
->   ...
->   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
->   ...
-> }
->
-> I think the correct fix would be to change it to:
->
->   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
->
-> What do you think?
->
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Just to be clear, this would fix the problem Dan described in his
-reply and it should be implemented in a separate patch. The original
-fix is still valid.
+The iwl_dhc_tlc_cmd struct is not used, so remove it, including the
+iwl_tcl_debug_flags enumeration.
 
->>
->> regards,
->> dan carpenter
->>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    | 60 -------------------
+ 1 file changed, 60 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+index 087fae91baef..fe2763cfc3b5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+@@ -217,66 +217,6 @@ struct iwl_tlc_update_notif {
+ 	__le32 amsdu_enabled;
+ } __packed; /* TLC_MNG_UPDATE_NTFY_API_S_VER_2 */
+ 
+-/**
+- * enum iwl_tlc_debug_flags - debug options
+- * @IWL_TLC_DEBUG_FIXED_RATE: set fixed rate for rate scaling
+- * @IWL_TLC_DEBUG_STATS_TH: threshold for sending statistics to the driver, in
+- *	frames
+- * @IWL_TLC_DEBUG_STATS_TIME_TH: threshold for sending statistics to the
+- *	driver, in msec
+- * @IWL_TLC_DEBUG_AGG_TIME_LIM: time limit for a BA session
+- * @IWL_TLC_DEBUG_AGG_DIS_START_TH: frame with try-count greater than this
+- *	threshold should not start an aggregation session
+- * @IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM: set max number of frames in an aggregation
+- * @IWL_TLC_DEBUG_RENEW_ADDBA_DELAY: delay between retries of ADD BA
+- * @IWL_TLC_DEBUG_START_AC_RATE_IDX: frames per second to start a BA session
+- * @IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK: disable BW scaling
+- */
+-enum iwl_tlc_debug_flags {
+-	IWL_TLC_DEBUG_FIXED_RATE,
+-	IWL_TLC_DEBUG_STATS_TH,
+-	IWL_TLC_DEBUG_STATS_TIME_TH,
+-	IWL_TLC_DEBUG_AGG_TIME_LIM,
+-	IWL_TLC_DEBUG_AGG_DIS_START_TH,
+-	IWL_TLC_DEBUG_AGG_FRAME_CNT_LIM,
+-	IWL_TLC_DEBUG_RENEW_ADDBA_DELAY,
+-	IWL_TLC_DEBUG_START_AC_RATE_IDX,
+-	IWL_TLC_DEBUG_NO_FAR_RANGE_TWEAK,
+-}; /* TLC_MNG_DEBUG_FLAGS_API_E_VER_1 */
+-
+-/**
+- * struct iwl_dhc_tlc_dbg - fixed debug config
+- * @sta_id: bit 0 - enable/disable, bits 1 - 7 hold station id
+- * @reserved1: reserved
+- * @flags: bitmap of %IWL_TLC_DEBUG_\*
+- * @fixed_rate: rate value
+- * @stats_threshold: if number of tx-ed frames is greater, send statistics
+- * @time_threshold: statistics threshold in usec
+- * @agg_time_lim: max agg time
+- * @agg_dis_start_threshold: frames with try-cont greater than this count will
+- *			     not be aggregated
+- * @agg_frame_count_lim: agg size
+- * @addba_retry_delay: delay between retries of ADD BA
+- * @start_ac_rate_idx: frames per second to start a BA session
+- * @no_far_range_tweak: disable BW scaling
+- * @reserved2: reserved
+- */
+-struct iwl_dhc_tlc_cmd {
+-	u8 sta_id;
+-	u8 reserved1[3];
+-	__le32 flags;
+-	__le32 fixed_rate;
+-	__le16 stats_threshold;
+-	__le16 time_threshold;
+-	__le16 agg_time_lim;
+-	__le16 agg_dis_start_threshold;
+-	__le16 agg_frame_count_lim;
+-	__le16 addba_retry_delay;
+-	u8 start_ac_rate_idx[IEEE80211_NUM_ACS];
+-	u8 no_far_range_tweak;
+-	u8 reserved2[3];
+-} __packed;
+-
+ /*
+  * These serve as indexes into
+  * struct iwl_rate_info fw_rate_idx_to_plcp[IWL_RATE_COUNT];
+-- 
+2.18.0
