@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 17.mo3.mail-out.ovh.net ([87.98.178.58]:38823 "EHLO
-        17.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726794AbeHEXEY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:37132 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726694AbeHUWmN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Aug 2018 19:04:24 -0400
-Received: from player738.ha.ovh.net (unknown [10.109.159.7])
-        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 653841C8DF9
-        for <linux-wireless@vger.kernel.org>; Sun,  5 Aug 2018 20:32:09 +0200 (CEST)
-From: Alexander Wetzel <alexander@wetzel-home.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH v5 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
-Date: Sun,  5 Aug 2018 20:31:22 +0200
-Message-Id: <20180805183124.29921-2-alexander@wetzel-home.de> (sfid-20180805_225834_063700_7EACB9A9)
-In-Reply-To: <20180805183124.29921-1-alexander@wetzel-home.de>
-References: <20180805183124.29921-1-alexander@wetzel-home.de>
+        Tue, 21 Aug 2018 18:42:13 -0400
+Message-ID: <1534879241.25523.44.camel@sipsolutions.net> (sfid-20180821_212058_769566_F202B54E)
+Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
+ cancel_work_sync()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Byungchul Park <byungchul.park@lge.com>
+Date: Tue, 21 Aug 2018 21:20:41 +0200
+In-Reply-To: <20180821175550.GS3978217@devbig004.ftw2.facebook.com> (sfid-20180821_195557_005865_AFE22844)
+References: <20180821120317.4115-1-johannes@sipsolutions.net>
+         <20180821120317.4115-2-johannes@sipsolutions.net>
+         <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
+         <1534871894.25523.34.camel@sipsolutions.net>
+         <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
+         <1534872621.25523.39.camel@sipsolutions.net>
+         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
+         (sfid-20180821_195557_005865_AFE22844)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers able to correctly replace a in-use key should set
-NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
-hostapd or wpa_supplicant) to rekey PTK keys.
+On Tue, 2018-08-21 at 10:55 -0700, Tejun Heo wrote:
 
-The userspace must detect a PTK rekey attempt and only go ahead with the
-rekey when the driver has set this flag. If the driver is not supporting
-the feature the userspace either must not replace the PTK key or perform
-a full re-association.
+> > I'm not really sure what you think we might be missing? Am I missing
+> > some case where cancel_work_sync() can possibly deadlock? Apart from the
+> > issue I addressed in the second patch, obviously.
+> 
+> Ah, that was me being slow.  I thought you were skipping the work's
+> lockdep_map.  I can almost swear we had that before (the part you're
+> adding on the second patch).  Right, fd1a5b04dfb8 ("workqueue: Remove
+> now redundant lock acquisitions wrt. workqueue flushes") removed it
+> because it gets propagated through wait_for_completion().  Did we miss
+> some cases with that change?
 
-Ignoring this flag and continuing to rekey the connection can still
-work but has to be considered insecure and broken. It can leak cleartext
-packets or freeze the connection and is only supported to allow the
-userspace to be updated.
+Hmm.
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
- include/uapi/linux/nl80211.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+It doesn't seem to be working.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7acc16f34942..b41b9ade0449 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
-  *	except for supported rates from the probe request content if requested
-  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
-  *
-+ * @NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE: Driver/device confirm that they are
-+ *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
-+ *      if this flag is not set. Ignoring this can leak clear text packets and/or
-+ *      freeze the connection.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -5259,6 +5264,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_TXQS,
- 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
- 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
-+	NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
--- 
-2.18.0
+No, ok, actually it probably *does*, but the point is similar to my
+issue # 3 before - we don't do any of this unless the work is actually
+running, but we really want the lockdep annotation *regardless* of that,
+so that we catch the error unconditionally.
+
+So perhaps that commit just needs to be reverted entirely - I'd only
+looked at a small subset of it, but the flush_workqueue() case has the
+same problem - we only get to the completion when there's something to
+flush, not when the workqueue happens to actually be empty. But again,
+for lockdep we want to catch *potential* problems, not only *actual*
+ones.
+
+The remaining part of the patch I'm not sure I fully understand (removal
+of lockdep_init_map_crosslock()), but I suppose if we revert the other
+bits we need to revert this as well.
+
+So please drop this patch, but revert Byungchul Park's commit
+fd1a5b04dfb8 again, I don't think the lockdep annotations there are
+really redundant as I just explained.
+
+johannes
