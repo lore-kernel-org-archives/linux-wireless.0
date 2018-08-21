@@ -1,95 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52272 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726062AbeHPPqD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59498 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726932AbeHUPXU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 11:46:03 -0400
-From: Sathishkumar Muruganandam <murugana@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Sathishkumar Muruganandam <murugana@codeaurora.org>
-Subject: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
-Date: Thu, 16 Aug 2018 18:17:15 +0530
-Message-Id: <1534423635-28222-1-git-send-email-murugana@codeaurora.org> (sfid-20180816_144745_205490_C47B9321)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 21 Aug 2018 11:23:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] workqueue: create lockdep dependency in flush_work()
+Date: Tue, 21 Aug 2018 14:03:17 +0200
+Message-Id: <20180821120317.4115-3-johannes@sipsolutions.net> (sfid-20180821_140330_094925_D662ADF1)
+In-Reply-To: <20180821120317.4115-1-johannes@sipsolutions.net>
+References: <20180821120317.4115-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current mac80211 WDS (4-address mode) can be used to cover most of the 
-Multi-AP requirements for Data frames per the WFA Multi-AP Specification v1.0.
-When configuring AP/STA interfaces in 4-address mode, they are able to function 
-as fronthaul AP/backhaul STA of Multi-AP device complying below 
-Tx, Rx requirements except one STA Rx requirement.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Multi-AP specification section 14.1 describes the following requirements:
+In flush_work(), we need to create a lockdep dependency so that
+the following scenario is appropriately tagged as a problem:
 
-Transmitter requirements
-------------------------
-1. Fronthaul AP
-        i) When DA!=RA of backhaul STA, must use 4-address format
-        ii) When DA==RA of backhaul STA, shall use either 3-address
-            or 4-address format with RA updated with STA MAC
+  work_function()
+  {
+    mutex_lock(&mutex);
+    ...
+  }
 
-            (mac80211 support 4-address format via AP/VLAN interface)
+  other_function()
+  {
+    mutex_lock(&mutex);
+    flush_work(&work); // or cancel_work_sync(&work);
+  }
 
-2. Backhaul STA
-        i) When SA!=TA of backhaul STA, must use 4-address format
-        ii) When SA==TA of backhaul STA, shall use either 3-address
-            or 4-address format with RA updated with AP MAC
+This is a problem since the work might be running and be blocked
+on trying to acquire the mutex.
 
-            (mac80211 support 4-address format via use_4addr)
-
-Receiver requirements
----------------------
-1. Fronthaul AP
-        i) When SA!=TA of backhaul STA, must support receiving 4-address
-           format frames
-        ii) When SA==TA of backhaul STA, must support receiving both
-            3-address and 4-address format frames
-
-            (mac80211 support both 3-addr & 4-addr via AP/VLAN interface)
-
-2. Backhaul STA
-        i) When DA!=RA of backhaul STA, must support receiving 4-address
-           format frames
-        ii) When DA==RA of backhaul STA,  must support receiving both
-            3-address and 4-address format frames
-
-            (mac80211 support only receiving 4-address format via
-             use_4addr)
-
-This patch addresses the above Rx requirement (ii) for backhaul STA.
-
-The current design doesn't accept 3-address frames when configured in 4-address
-mode (use_4addr). Hence add a check to allow 3-address frames when DA==RA of
-backhaul STA (adhering to Table 9-26 of IEEE Std 802.11™-2016).
-
-This case was tested with a bridged station interface when associated with
-a non-mac80211 based vendor AP implementation using 3-address frames for WDS.
-
-STA was able to support the Multi-AP Rx requirement when DA==RA. No issues,
-no loops seen when tested with mac80211 based AP as well.
-
-Verified and confirmed all other Tx and Rx requirements of AP and STA for 
-Multi-AP respectively. They all work using the current mac80211-WDS design.
-
-Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/workqueue.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a16ba568e2a3..686e5586e1f4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2313,7 +2313,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index a6c2b823f348..29d4d84ba512 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2852,6 +2852,11 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
  
- 		if (!sdata->u.mgd.use_4addr)
- 			return -1;
--		else
-+		else if (!ether_addr_equal(hdr->addr1, sdata->vif.addr))
- 			check_port_control = true;
- 	}
+ 	might_sleep();
  
++	if (!from_cancel) {
++		lock_map_acquire(&work->lockdep_map);
++		lock_map_release(&work->lockdep_map);
++	}
++
+ 	local_irq_disable();
+ 	pool = get_work_pool(work);
+ 	if (!pool) {
 -- 
-2.7.4
+2.14.4
