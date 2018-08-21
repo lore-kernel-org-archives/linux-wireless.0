@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45416 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42846 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727238AbeHaMkX (ORCPT
+        with ESMTP id S1726809AbeHUJzz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:40:23 -0400
+        Tue, 21 Aug 2018 05:55:55 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:22 +0300
-Message-Id: <20180831083130.15525-21-luca@coelho.fi> (sfid-20180831_103408_175125_ADD9DE68)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 20/28] mac80211: fix saving a few HE values
+Date: Tue, 21 Aug 2018 09:36:47 +0300
+Message-Id: <20180821063657.30071-6-luca@coelho.fi> (sfid-20180821_083712_909073_AC656183)
+In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
+References: <20180821063657.30071-1-luca@coelho.fi>
+Subject: [PATCH 05/15] iwlwifi: pcie: store the default rxq number
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-)
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-From: Naftali Goldstein <naftali.goldstein@intel.com>
+Store the default rxq number in a variable, so we won't need
+to use the actual number in the code.
 
-After masking the he_oper_params, to get the requested values as
-integers one must rshift and not lshift. Fix that.
-
-Fixes: 41cbb0f5a295 ("mac80211: add support for HE")
-Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 764a0f8e1dd1..b2a5ca96412d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3246,11 +3246,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK;
- 		bss_conf->htc_trig_based_pkt_ext =
- 			(he_oper_params &
--			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) <<
-+			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) >>
- 			IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET;
- 		bss_conf->frame_time_rts_th =
- 			(he_oper_params &
--			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) <<
-+			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) >>
- 			IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 74442189d639..c03de2bc5739 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -456,6 +456,7 @@ struct iwl_self_init_dram {
+  * @ucode_write_complete: indicates that the ucode has been copied.
+  * @ucode_write_waitq: wait queue for uCode load
+  * @cmd_queue - command queue number
++ * @def_rx_queue - default rx queue number
+  * @rx_buf_size: Rx buffer size
+  * @bc_table_dword: true if the BC table expects DWORD (as opposed to bytes)
+  * @scd_set_active: should the transport configure the SCD for HCMD queue
+@@ -536,6 +537,7 @@ struct iwl_trans_pcie {
+ 	u8 page_offs, dev_cmd_offs;
  
- 		bss_conf->multi_sta_back_32bit =
+ 	u8 cmd_queue;
++	u8 def_rx_queue;
+ 	u8 cmd_fifo;
+ 	unsigned int cmd_q_wdg_timeout;
+ 	u8 n_no_reclaim_cmds;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index acae8f967912..8075466aa4c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1271,7 +1271,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		index = SEQ_TO_INDEX(sequence);
+ 		cmd_index = iwl_pcie_get_cmd_index(txq, index);
+ 
+-		if (rxq->id == 0)
++		if (rxq->id == trans_pcie->def_rx_queue)
+ 			iwl_op_mode_rx(trans->op_mode, &rxq->napi,
+ 				       &rxcb);
+ 		else
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 7cc438f31154..631f0015102b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3276,6 +3276,8 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 				       PCIE_LINK_STATE_CLKPM);
+ 	}
+ 
++	trans_pcie->def_rx_queue = 0;
++
+ 	if (cfg->use_tfh) {
+ 		addr_size = 64;
+ 		trans_pcie->max_tbs = IWL_TFH_NUM_TBS;
 -- 
 2.18.0
