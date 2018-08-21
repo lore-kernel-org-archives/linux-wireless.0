@@ -1,109 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41331 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42960 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726253AbeHUJ43 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:43 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/24] staging: wilc1000: move wilc_multicast_mac_addr_list to 'wilc_vif' struct
-Date: Tue, 14 Aug 2018 12:20:02 +0530
-Message-ID: <1534229416-13254-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085101_732726_9FEC5966)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 21 Aug 2018 05:56:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 09:36:56 +0300
+Message-Id: <20180821063657.30071-15-luca@coelho.fi> (sfid-20180821_083744_412033_E7076414)
+In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
+References: <20180821063657.30071-1-luca@coelho.fi>
+Subject: [PATCH 14/15] iwlwifi: mvm: Send LQ command as async when necessary
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using 'wilc_multicast_mac_addr_list' as global variable move
-it part of wilc_vif struct. Rename 'wilc_multicast_mac_addr_list'
-variable to 'mc_mac_addr_list' as its now part of 'wilc_vif' struct.
+From: Avraham Stern <avraham.stern@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+The parameter that indicated whether the LQ command should be sent
+as sync or async was removed, causing the LQ command to be sent as
+sync from interrupt context (e.g. from the RX path). This resulted
+in a kernel warning: "scheduling while atomic" and failing to send
+the LQ command, which ultimately leads to a queue hang.
+
+Fix it by adding back the required parameter to send the command as
+sync only when it is allowed.
+
+Fixes: d94c5a820d10 ("iwlwifi: mvm: open BA session only when sta is authorized")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c     |  4 +---
- drivers/staging/wilc1000/host_interface.h     |  1 -
- drivers/staging/wilc1000/linux_wlan.c         | 14 +++++++-------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
- 4 files changed, 9 insertions(+), 11 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c    | 18 ++++++++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c |  7 +++----
+ 5 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d930f06..642c314 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -193,8 +193,6 @@ static struct mutex hif_deinit_lock;
- static struct timer_list periodic_rssi;
- static struct wilc_vif *periodic_rssi_vif;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c0c3ff6a0e6a..c95c1f3c1fb4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2949,7 +2949,8 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 		}
  
--u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
--
- static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+-		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
++		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
++				     false);
+ 		ret = iwl_mvm_update_sta(mvm, vif, sta);
+ 	} else if (old_state == IEEE80211_STA_ASSOC &&
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
+@@ -2965,7 +2966,8 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 		/* enable beacon filtering */
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
  
- static u8 set_ip[2][4];
-@@ -2588,7 +2586,7 @@ static void handle_set_mcast_filter(struct work_struct *work)
- 	*cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
+-		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
++		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
++				     true);
  
- 	if (hif_set_mc->cnt > 0)
--		memcpy(cur_byte, wilc_multicast_mac_addr_list,
-+		memcpy(cur_byte, vif->mc_mac_addr_list,
- 		       ((hif_set_mc->cnt) * ETH_ALEN));
+ 		ret = 0;
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 762abfc42b62..98189f2f1e65 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1708,7 +1708,7 @@ iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
  
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d026f44..4a84dd2 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -362,7 +362,6 @@ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
- int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
- 
- extern u8 wilc_connected_ssid[6];
--extern u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
- 
- extern int wilc_connecting;
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 283bb74..bbaa653 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -822,14 +822,14 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ /* rate scaling */
+-int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init);
++int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool sync);
+ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg);
+ int rs_pretty_print_rate(char *buf, int bufsz, const u32 rate);
+ void rs_update_last_rssi(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 30cfd7d50bc9..d3e389a99a8a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1276,7 +1276,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		       (unsigned long)(lq_sta->last_tx +
+ 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
+ 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
+-		iwl_mvm_rs_rate_init(mvm, sta, info->band);
++		iwl_mvm_rs_rate_init(mvm, sta, info->band, true);
+ 		return;
  	}
+ 	lq_sta->last_tx = jiffies;
+@@ -2859,9 +2859,8 @@ void rs_update_last_rssi(struct iwl_mvm *mvm,
+ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 			     struct ieee80211_sta *sta,
+ 			     struct iwl_lq_sta *lq_sta,
+-			     enum nl80211_band band)
++			     enum nl80211_band band, bool update)
+ {
+-	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	struct iwl_scale_tbl_info *tbl;
+ 	struct rs_rate *rate;
+ 	u8 active_tbl = 0;
+@@ -2890,8 +2889,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	rs_set_expected_tpt_table(lq_sta, tbl);
+ 	rs_fill_lq_cmd(mvm, sta, lq_sta, rate);
+ 	/* TODO restore station should remember the lq cmd */
+-	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq,
+-			    mvmsta->sta_state < IEEE80211_STA_AUTHORIZED);
++	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq, !update);
+ }
  
- 	netdev_for_each_mc_addr(ha, dev) {
--		memcpy(wilc_multicast_mac_addr_list[i], ha->addr, ETH_ALEN);
-+		memcpy(vif->mc_mac_addr_list[i], ha->addr, ETH_ALEN);
- 		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i,
--			   wilc_multicast_mac_addr_list[i][0],
--			   wilc_multicast_mac_addr_list[i][1],
--			   wilc_multicast_mac_addr_list[i][2],
--			   wilc_multicast_mac_addr_list[i][3],
--			   wilc_multicast_mac_addr_list[i][4],
--			   wilc_multicast_mac_addr_list[i][5]);
-+			   vif->mc_mac_addr_list[i][0],
-+			   vif->mc_mac_addr_list[i][1],
-+			   vif->mc_mac_addr_list[i][2],
-+			   vif->mc_mac_addr_list[i][3],
-+			   vif->mc_mac_addr_list[i][4],
-+			   vif->mc_mac_addr_list[i][5]);
- 		i++;
- 	}
+ static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
+@@ -3144,7 +3142,7 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
+  * Called after adding a new station to initialize rate scaling
+  */
+ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			     enum nl80211_band band)
++			     enum nl80211_band band, bool update)
+ {
+ 	int i, j;
+ 	struct ieee80211_hw *hw = mvm->hw;
+@@ -3224,7 +3222,7 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	iwl_mvm_reset_frame_stats(mvm);
+ #endif
+-	rs_initialize_lq(mvm, sta, lq_sta, band);
++	rs_initialize_lq(mvm, sta, lq_sta, band, update);
+ }
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 8cccbbc..ee8eda7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -120,6 +120,7 @@ struct wilc_vif {
- 	u8 ifc_id;
- 	struct timer_list during_ip_timer;
- 	bool obtaining_ip;
-+	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ static void rs_drv_rate_update(void *mvm_r,
+@@ -3244,7 +3242,7 @@ static void rs_drv_rate_update(void *mvm_r,
+ 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
+ 		ieee80211_stop_tx_ba_session(sta, tid);
+ 
+-	iwl_mvm_rs_rate_init(mvm, sta, sband->band);
++	iwl_mvm_rs_rate_init(mvm, sta, sband->band, true);
+ }
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+@@ -4098,12 +4096,12 @@ static const struct rate_control_ops rs_mvm_ops_drv = {
  };
  
- struct wilc {
+ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  enum nl80211_band band)
++			  enum nl80211_band band, bool update)
+ {
+ 	if (iwl_mvm_has_tlc_offload(mvm))
+ 		rs_fw_rate_init(mvm, sta, band);
+ 	else
+-		rs_drv_rate_init(mvm, sta, band);
++		rs_drv_rate_init(mvm, sta, band, update);
+ }
+ 
+ int iwl_mvm_rate_control_register(void)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index d2cf484e2b73..8e7f993e2911 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -420,7 +420,7 @@ struct iwl_lq_sta {
+ 
+ /* Initialize station's rate scaling information after adding station */
+ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  enum nl80211_band band);
++			  enum nl80211_band band, bool init);
+ 
+ /* Notify RS about Tx status */
+ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index b002a7afb5f5..6a5349401aa9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -900,20 +900,19 @@ int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 
+ /**
+  * iwl_mvm_send_lq_cmd() - Send link quality command
+- * @init: This command is sent as part of station initialization right
+- *        after station has been added.
++ * @sync: This command can be sent synchronously.
+  *
+  * The link quality command is sent as the last step of station creation.
+  * This is the special case in which init is set and we call a callback in
+  * this case to clear the state indicating that station creation is in
+  * progress.
+  */
+-int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool init)
++int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq, bool sync)
+ {
+ 	struct iwl_host_cmd cmd = {
+ 		.id = LQ_CMD,
+ 		.len = { sizeof(struct iwl_lq_cmd), },
+-		.flags = init ? 0 : CMD_ASYNC,
++		.flags = sync ? 0 : CMD_ASYNC,
+ 		.data = { lq, },
+ 	};
+ 
 -- 
-2.7.4
+2.18.0
