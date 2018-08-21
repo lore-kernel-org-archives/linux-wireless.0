@@ -1,110 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51552 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727094AbeH1NtF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42630 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726390AbeHUI2l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 09:49:05 -0400
-Message-ID: <1535450281.5895.34.camel@sipsolutions.net> (sfid-20180828_115815_595163_8686DF9E)
-Subject: Re: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sathishkumar Muruganandam <murugana@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Date: Tue, 28 Aug 2018 11:58:01 +0200
-In-Reply-To: <1534423635-28222-1-git-send-email-murugana@codeaurora.org> (sfid-20180816_144745_205490_C47B9321)
-References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>
-         (sfid-20180816_144745_205490_C47B9321)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 21 Aug 2018 04:28:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 08:09:42 +0300
+Message-Id: <20180821050952.31603-8-luca@coelho.fi> (sfid-20180821_071016_357796_D4DA0768)
+In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
+References: <20180821050952.31603-1-luca@coelho.fi>
+Subject: [PATCH v2 07/17] iwlwifi: mvm: protect D0i3 code behind CONFIG_PM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm. The subject/patch title isn't very clear - does it *implement* this
-requirement? Or do something else with it? Please clarify.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-On Thu, 2018-08-16 at 18:17 +0530, Sathishkumar Muruganandam wrote:
-> The current mac80211 WDS (4-address mode) can be used to cover most of the 
-> Multi-AP requirements for Data frames per the WFA Multi-AP Specification v1.0.
+Runtime PM can only be used if CONFIG_PM is set.  Move all the d0i3
+code (which is essentially runtime PM) behind the CONFIG_PM flag.
 
-Be more clear here please - I think you don't mean WDS
-(NL80211_IF_TYPE_WDS) but the - currently for all I know Linux-specific
-- 4-addr mode of AP/client interfaces?
+This prevents undefined usage of some functions when CONFIG_PM is not
+defined.
 
-> When configuring AP/STA interfaces in 4-address mode, they are able to function 
-> as fronthaul AP/backhaul STA of Multi-AP device complying below 
-> Tx, Rx requirements except one STA Rx requirement.
-> 
-> Multi-AP specification section 14.1 describes the following requirements:
-> 
-> Transmitter requirements
-> ------------------------
-> 1. Fronthaul AP
->         i) When DA!=RA of backhaul STA, must use 4-address format
->         ii) When DA==RA of backhaul STA, shall use either 3-address
->             or 4-address format with RA updated with STA MAC
-> 
->             (mac80211 support 4-address format via AP/VLAN interface)
-> 
-> 2. Backhaul STA
->         i) When SA!=TA of backhaul STA, must use 4-address format
->         ii) When SA==TA of backhaul STA, shall use either 3-address
->             or 4-address format with RA updated with AP MAC
-> 
->             (mac80211 support 4-address format via use_4addr)
-> 
-> Receiver requirements
-> ---------------------
-> 1. Fronthaul AP
->         i) When SA!=TA of backhaul STA, must support receiving 4-address
->            format frames
->         ii) When SA==TA of backhaul STA, must support receiving both
->             3-address and 4-address format frames
-> 
->             (mac80211 support both 3-addr & 4-addr via AP/VLAN interface)
-> 
-> 2. Backhaul STA
->         i) When DA!=RA of backhaul STA, must support receiving 4-address
->            format frames
->         ii) When DA==RA of backhaul STA,  must support receiving both
->             3-address and 4-address format frames
-> 
->             (mac80211 support only receiving 4-address format via
->              use_4addr)
-> 
-> This patch addresses the above Rx requirement (ii) for backhaul STA.
-> 
-> The current design doesn't accept 3-address frames when configured in 4-address
-> mode (use_4addr). Hence add a check to allow 3-address frames when DA==RA of
-> backhaul STA (adhering to Table 9-26 of IEEE Std 802.11™-2016).
-> 
-> This case was tested with a bridged station interface when associated with
-> a non-mac80211 based vendor AP implementation using 3-address frames for WDS.
-> 
-> STA was able to support the Multi-AP Rx requirement when DA==RA. No issues,
-> no loops seen when tested with mac80211 based AP as well.
-> 
-> Verified and confirmed all other Tx and Rx requirements of AP and STA for 
-> Multi-AP respectively. They all work using the current mac80211-WDS design.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Ok.
-
-> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
-> ---
->  net/mac80211/rx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a16ba568e2a3..686e5586e1f4 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2313,7 +2313,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
->  
->  		if (!sdata->u.mgd.use_4addr)
->  			return -1;
-> -		else
-> +		else if (!ether_addr_equal(hdr->addr1, sdata->vif.addr))
->  			check_port_control = true;
-
-I guess I have no objection to this. Felix?
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index bce5d150eb58..421509c63f23 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -495,7 +495,9 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
+ 
+ /* this forward declaration can avoid to export the function */
+ static void iwl_mvm_async_handlers_wk(struct work_struct *wk);
++#ifdef CONFIG_PM
+ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk);
++#endif
+ 
+ static u32 iwl_mvm_min_backoff(struct iwl_mvm *mvm)
+ {
+@@ -665,7 +667,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 
+ 	INIT_WORK(&mvm->async_handlers_wk, iwl_mvm_async_handlers_wk);
+ 	INIT_WORK(&mvm->roc_done_wk, iwl_mvm_roc_done_wk);
++#ifdef CONFIG_PM
+ 	INIT_WORK(&mvm->d0i3_exit_work, iwl_mvm_d0i3_exit_work);
++#endif
+ 	INIT_DELAYED_WORK(&mvm->tdls_cs.dwork, iwl_mvm_tdls_ch_switch_work);
+ 	INIT_DELAYED_WORK(&mvm->scan_timeout_dwork, iwl_mvm_scan_timeout_wk);
+ 	INIT_WORK(&mvm->add_stream_wk, iwl_mvm_add_new_dqa_stream_wk);
+@@ -1278,6 +1282,7 @@ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
+ 	iwl_mvm_nic_restart(mvm, true);
+ }
+ 
++#ifdef CONFIG_PM
+ struct iwl_d0i3_iter_data {
+ 	struct iwl_mvm *mvm;
+ 	struct ieee80211_vif *connected_vif;
+@@ -1689,6 +1694,13 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
+ 	return _iwl_mvm_exit_d0i3(mvm);
+ }
+ 
++#define IWL_MVM_D0I3_OPS					\
++	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
++	.exit_d0i3 = iwl_mvm_exit_d0i3,
++#else /* CONFIG_PM */
++#define IWL_MVM_D0I3_OPS
++#endif /* CONFIG_PM */
++
+ #define IWL_MVM_COMMON_OPS					\
+ 	/* these could be differentiated */			\
+ 	.async_cb = iwl_mvm_async_cb,				\
+@@ -1699,8 +1711,7 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
+ 	.nic_error = iwl_mvm_nic_error,				\
+ 	.cmd_queue_full = iwl_mvm_cmd_queue_full,		\
+ 	.nic_config = iwl_mvm_nic_config,			\
+-	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
+-	.exit_d0i3 = iwl_mvm_exit_d0i3,				\
++	IWL_MVM_D0I3_OPS					\
+ 	/* as we only register one, these MUST be common! */	\
+ 	.start = iwl_op_mode_mvm_start,				\
+ 	.stop = iwl_op_mode_mvm_stop
+-- 
+2.18.0
