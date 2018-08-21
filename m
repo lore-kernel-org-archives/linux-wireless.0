@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32880 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53986 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbeHXTYF (ORCPT
+        with ESMTP id S1726829AbeHVBaB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 15:24:05 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 21 Aug 2018 21:30:01 -0400
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] wcn36xx: Use dma_zalloc_coherent instead of
- dma_alloc_coherent + memset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1534761895-10457-1-git-send-email-zhongjiang@huawei.com>
-References: <1534761895-10457-1-git-send-email-zhongjiang@huawei.com>
-To: zhong jiang <zhongjiang@huawei.com>
-Cc: <davem@davemloft.net>, <wcn36xx@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Message-Id: <20180824154852.96B9760214@smtp.codeaurora.org> (sfid-20180824_174910_720144_2B5A81C5)
-Date: Fri, 24 Aug 2018 15:48:52 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 21 Aug 2018 15:08:02 -0700
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
+Message-ID: <7999c366492a4523456227fb49329bf2@codeaurora.org> (sfid-20180822_000805_438355_76A4A4B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-zhong jiang <zhongjiang@huawei.com> wrote:
-
-> dma_zalloc_coherent has implemented the dma_alloc_coherent() + memset(),
-> We prefer to dma_zalloc_coherent instead of open-codeing.
+On 2018-08-21 12:24, Johannes Berg wrote:
+> On Tue, 2018-08-21 at 11:32 -0700, Pradeep Kumar Chitrapu wrote:
+>> 
+>> I wasn't aware of this android api.
 > 
-> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+> OK.
+> 
+>> However, looking at the api, the
+>> assumption is that bss is started by a different
+>> api and the 'enableResponder' api is used for enabling rtt for a given
+>> duration.
+> 
+> It looks like. Note that there's also *disable*, which we hadn't even
+> implemented before.
+> 
+>> The reason we have added enabling ftm responder through start ap is 
+>> that
+>> this can reflect beacon IE change in the
+>> configuration in the same place.
+> 
+> Which makes sense, yeah.
+> 
+>> In case of the separate command,
+>> enabling responder will not update the beacon,
+>> however, the application must issue the new command, whenever its
+>> updating beacon template.
+> 
+> Right. However, I guess we could allow updating/changing this setting 
+> on
+> the fly through nl80211_set_beacon() which already allows changing 
+> other
+> non-beacon parameters (like the probe or assoc response templates), and
+> then we can use your approach. Basically changing "SET_BEACON" to be a
+> bit like "CHANGE_AP".
+Agree. ( ftm_responder param will have to be added in 
+cfg80211_beacon_data
+instead of cfg80211_ap_settings)
 
-Doesn't apply as I had already applied similar patch:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=ath-next&id=d410e28f3ae476e1572b8893c646ef44fae7bbbd
-
-error: patch failed: drivers/net/wireless/ath/wcn36xx/dxe.c:174
-error: drivers/net/wireless/ath/wcn36xx/dxe.c: patch does not apply
-stg import: Diff does not apply cleanly
-
-Patch set to Rejected.
-
--- 
-https://patchwork.kernel.org/patch/10570243/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> In that case we definitely would need the
+> attribute to be 0/1 as you had it so that it not present can be used to
+> indicate "no change".
+OK.
+> 
+> johannes
