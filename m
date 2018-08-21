@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:41158 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726249AbeHPLZF (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56184 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726593AbeHULNN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 07:25:05 -0400
-Message-ID: <1534408023.3547.64.camel@sipsolutions.net> (sfid-20180816_102815_993334_F97CA404)
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Date: Thu, 16 Aug 2018 10:27:03 +0200
-In-Reply-To: <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org>
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
-         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
-         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
-         <1526637270.3805.15.camel@sipsolutions.net>
-         <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
-         <1527069018.3759.15.camel@sipsolutions.net>
-         <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 21 Aug 2018 07:13:13 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Rakesh Parmar <rakeshp@marvell.com>,
+        Vidya Dharmaraju <vidyad@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 1/2] mwifiex: do no submit URB in suspended state
+Date: Tue, 21 Aug 2018 13:23:01 +0530
+Message-ID: <1534837982-31206-1-git-send-email-gbhat@marvell.com> (sfid-20180821_095412_077232_525AD007)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-14 at 18:23 +0530, Manikanta Pubbisetty wrote:
+There is a possible race between USB suspend and main thread:
 
-> > I don't think that makes sense. If we split the capability of AP_VLAN
-> > and AP_VLAN_FOR_4ADDR at the "root", then we don't need to play with all
-> > these things. Yes, this is slightly awkward for userspace, and perhaps
-> > with the interface combination checks, but I'd like you to look at that.
+1. After processing the command response, main thread will submit
+rx_cmd URB back so as to process next command response, by
+calling mwifiex_usb_submit_rx_urb.
 
-> I was working on splitting the 4-addr functionality from AP/VLAN iftype; 
-> I have introduced a new iftype NL80211_IFTYPE_AP_4ADDR and moved the 
-> 4-addr handling from AP/VLAN to this new iftype. But this approach 
-> breaks the backward compatibility with older userspace applications. 
+2. During USB suspend, the suspend handler will check if rx_cmd
+URB is pending(submitted) and if true, kill this URB.
 
-Yeah ...
+There is a possible race between #1 and #2, where rx_cmd URB will
+be submitted by main thread(#1) after the suspend handler check
+in #2.
 
-I'm confused and no longer sure what I was thinking, nor even what we're
-trying to achieve here...
+To fix this, check if device is already suspended in
+mwifiex_usb_submit_rx_urb, in which case do not submit the URB.
 
-> Since I am completely moving the 4-addr handling to the new type, older 
-> applications which do not understand this new type will simply fail and 
-> 4-addr mode will be completely broken.
-> 
-> Currently, whenever a 4-addr client attempts a connection, hostapd just 
-> creates a AP/VLAN interface and moves the 4-addr client to the AP/VLAN 
-> iface; there are no other checks. I had no other option other than going 
-> with a new iftype for 4-addr handling.
-> 
-> Is there a way we can maintain backward compatibility with this 
-> approach? Retaining the 4-addr handling in AP/VLAN and duplicating the 
-> same functionality to the new iftype seems will work but I am not sure 
-> if this is the right approach.
+Signed-off-by: Vidya Dharmaraju <vidyad@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I think we have to keep the 4-addr handling in AP_VLAN iftype either
-way, to not break existing hostapd. We could introduce a separate
-AP_VLAN_NO_4ADDR and then require updating hostapd to get non-4addr
-VLAN, but that also seems awkward.
-
-Since hostapd doesn't currently check anything...
-
-Ok, no, I'm confused now. If we just clear WIPHY_FLAG_4ADDR_AP, don't we
-get what we want? 4-addr AP_VLAN interfaces would no longer be permitted
-to be created?
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 433c6a16..76d80fd 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -298,6 +298,13 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
+ 	struct mwifiex_adapter *adapter = ctx->adapter;
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 
++	if (test_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags)) {
++		mwifiex_dbg(adapter, ERROR,
++			    "%s: card removed/suspended, EP %d rx_cmd URB submit skipped\n",
++			    __func__, ctx->ep);
++		return -1;
++	}
++
+ 	if (card->rx_cmd_ep != ctx->ep) {
+ 		ctx->skb = dev_alloc_skb(size);
+ 		if (!ctx->skb) {
+-- 
+1.9.1
