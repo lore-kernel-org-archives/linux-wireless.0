@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45828 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727432AbeHaSGH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:57586 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726343AbeHUMnm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 14:06:07 -0400
-Message-ID: <bee7acd19d5d340897233b303f50ef40963b2457.camel@coelho.fi> (sfid-20180831_155835_018353_B7FC7936)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>
-Date: Fri, 31 Aug 2018 16:58:24 +0300
-In-Reply-To: <8736uuu6he.fsf@purkki.adurom.net>
-References: <20180831083130.15525-1-luca@coelho.fi>
-         <20180831083130.15525-22-luca@coelho.fi> <877ek6u6mv.fsf@purkki.adurom.net>
-         <8736uuu6he.fsf@purkki.adurom.net>
+        Tue, 21 Aug 2018 08:43:42 -0400
+Message-ID: <1534843455.25523.8.camel@sipsolutions.net> (sfid-20180821_112423_156901_69B84741)
+Subject: Re: [RFC] cfg80211: let's wmm_rule be part of reg_rule structure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Grzegorz =?UTF-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 21 Aug 2018 11:24:15 +0200
+In-Reply-To: <20180821091858.GA9376@redhat.com>
+References: <20180821074020.GA28952@redhat.com>
+         <7580e821-bfa0-e4d4-435f-a042b0eba555@gmail.com>
+         <1534841913.25523.0.camel@sipsolutions.net>
+         <20180821091858.GA9376@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH 21/28] wireless: align to draft 11ax D3.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-08-31 at 14:21 +0300, Kalle Valo wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
-> > Luca Coelho <luca@coelho.fi> writes:
-> > 
-> > > )
+On Tue, 2018-08-21 at 11:18 +0200, Stanislaw Gruszka wrote:
+> On Tue, Aug 21, 2018 at 10:58:33AM +0200, Johannes Berg wrote:
+> > On Tue, 2018-08-21 at 10:57 +0200, Grzegorz Duszyński wrote:
+> > > I've just briefly tested it, looks like it's working!
+> > > I have only remote access to my machine at the moment so it's difficult 
+> > > to say for sure if everything is in order.
+> > > However stalls do not occur, nor there are any error/warnings anywhere.
 > > > 
-> > > From: Shaul Triebitz <shaul.triebitz@intel.com>
 > > 
-> > That ')' in the first line doesn't look correct and don't know how
-> > patchwork or git will handle it.
+> > That probably just means you now have some invalid data somewhere,
+> > rather than a crash... Not sure which is better - I guess you'd rather
+> > have it not crash, and I'd rather figure out where the invalid data is
+> > coming from :)
 > 
-> Actually all patches from 20 to 28 seem to have the same problem.
+> I think corruption of ieee80211_wmm_rule could came from strange
+> pointers aritmetic and fwdb_wmm_rule can be fine.
 
-Bah, were on Earth did this come from?! If it were in a single patch,
-I'd assume I accidentally typed it when editing or something, but in 9
-consecutive patches?! Very weird.
+Yes, could also be the case. I had the same suspicion really and that's
+why I remembered the sizeof() thing.
 
-I'll resend this stuff.
+> Anyway perhaps
+> something like this on top of RFC patch would be helpful. 
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index eb78c34d2357..4f84a67a0959 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -853,6 +853,11 @@ static void set_wmm_rule(struct ieee80211_reg_rule *rrule,
+>  	struct ieee80211_wmm_rule *rule = &rrule->wmm_rule;
+>  	unsigned int i;
+>  
+> +	if (!valid_wmm(wmm)) {
+> +		pr_err("Invalid WMM rule\n");
+> +		return;
+> +	}
 
---
-Luca.
+Sure, but probably better with some actual identification, like which
+rule it was, and what country code, etc.?
+
+johannes
