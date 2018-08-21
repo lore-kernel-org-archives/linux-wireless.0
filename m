@@ -1,93 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:52181 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728743AbeHNXoX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42816 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726790AbeHUJzx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 19:44:23 -0400
-Received: by mail-it0-f67.google.com with SMTP id e14-v6so20336441itf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 13:55:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com>
-References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
- <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
- <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com> <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Tue, 14 Aug 2018 13:55:23 -0700
-Message-ID: <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com> (sfid-20180814_225537_469562_5BB6CE84)
-Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
- SHDLC I-Frame commands
-To: Kees Cook <keescook@chromium.org>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Security Officers <security@kernel.org>,
-        Kevin Deus <kdeus@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Allen Pais <allen.pais@oracle.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 21 Aug 2018 05:55:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 09:36:42 +0300
+Message-Id: <20180821063657.30071-1-luca@coelho.fi> (sfid-20180821_083730_946756_091B1408)
+Subject: [PATCH 00/15] iwlwifi: updates intended for v4.20 2018-08-21
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 1:33 PM, Kees Cook <keescook@chromium.org> wrote:
-> On Tue, Aug 14, 2018 at 1:26 PM, Suren Baghdasaryan <surenb@google.com> wrote:
->> On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
->>> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->>>> Thanks.  This is great.  I'm so glad these are finally getting fixed.
->>>>
->>>> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
->>>> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
->>>> (0x7f) so that's one element beyond the end of the array and the
->>>> NFC_HCI_HCP_RESPONSE isn't checked.
->>>>
->>>> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
->>>> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
->>>
->>> Good point. From hci.h:
->>>
->>> /*
->>>  * According to specification 102 622 chapter 4.4 Pipes,
->>>  * the pipe identifier is 7 bits long.
->>>  */
->>> #define NFC_HCI_MAX_PIPES 127
->>>
->>> And then:
->>>
->>> struct nfc_hci_dev {
->>>   ...
->>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
->>>   ...
->>> }
->>>
->>> I think the correct fix would be to change it to:
->>>
->>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
->>>
->>> What do you think?
->>>
->>
->> Just to be clear, this would fix the problem Dan described in his
->> reply and it should be implemented in a separate patch. The original
->> fix is still valid.
->
-> I think you could merge the fixes into a single patch.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Couple reasons I would prefer to keep them separate:
-- I feel that descriptions for these two issues should be different
-and it's easier if we don't mix them up
-- This one is already merged into Android kernels, so would be easier
-to introduce the second fix separately
-- I would like to give credit to people who noticed the problem (in
-this case those are different people)
+Hi,
 
-However if more people think we should fix both issues in the same
-patch I'll happily do that.
-Thanks!
+Here's the second set of patches intended for v4.20.  It's the usual
+developments, with some small new feauters, cleanups and bugfixes.
 
->
-> -Kees
->
-> --
-> Kees Cook
-> Pixel Security
+The changes are:
+
+* Some improvements in the PCI recovery mechanism;
+* Support for a few FW API changes;
+* Miscellaneous bugfixes;
+* Other clean-ups and small improvements;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+I have a lot of pending patches in our internal tree, so I'll probably
+send another patchset before sending the pull-request.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: Send LQ command as async when necessary
+
+Ayala Beker (1):
+  iwlwifi: mvm: skip EBS in low latency mode while fragmented scan isn't
+    supported
+
+Emmanuel Grumbach (1):
+  iwlwifi: improve the flow when a NIC is disconnected
+
+Erel Geron (1):
+  iwlwifi: mvm: support Coex Schema 2
+
+Golan Ben Ami (3):
+  iwlwifi: remove FSF's address from the license notice
+  iwlwifi: pcie: store the default rxq number
+  iwlwifi: pcie: make gen2 of apm_init non-static
+
+Haim Dreyfuss (1):
+  iwlwifi: mvm: support new reduce tx power FW API.
+
+Johannes Berg (2):
+  iwlwifi: remove dump_regs() from transport ops
+  iwlwifi: don't WARN on trying to dump dead firmware
+
+Matt Chen (1):
+  iwlwifi: pcie: avoid unnecessary work if NIC is disconnected
+
+Mordechay Goodstein (1):
+  iwlwifi: add 80211 hdr offset to trace data
+
+Sara Sharon (3):
+  iwlwifi: mvm: fix BAR seq ctrl reporting
+  iwlwifi: mvm: avoid sending too many BARs
+  iwlwifi: pcie: set interrupt coalescing also for gen2
+
+ .../net/wireless/intel/iwlwifi/fw/api/coex.h  |  3 ++
+ .../wireless/intel/iwlwifi/fw/api/commands.h  |  3 +-
+ .../net/wireless/intel/iwlwifi/fw/api/power.h | 30 ++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  7 ++---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  7 +++++
+ .../intel/iwlwifi/iwl-devtrace-data.h         | 10 ++----
+ .../intel/iwlwifi/iwl-devtrace-iwlwifi.h      | 14 +++++----
+ .../net/wireless/intel/iwlwifi/iwl-devtrace.h | 22 +++++++------
+ .../net/wireless/intel/iwlwifi/iwl-op-mode.h  |  6 ++--
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 11 -------
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c |  9 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 23 +++++++++-----
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 31 +++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  7 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  6 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 18 +++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h   |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 11 ++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 17 +++++++---
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  7 ++---
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  6 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  5 ++-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 13 +++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 10 +++++-
+ 25 files changed, 186 insertions(+), 94 deletions(-)
+
+-- 
+2.18.0
