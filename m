@@ -1,105 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:48686 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726838AbeHVKbG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 06:31:06 -0400
-Message-ID: <1534921643.25523.56.camel@sipsolutions.net> (sfid-20180822_090740_232124_0E6B04D9)
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Byungchul Park <byungchul.park@lge.com>
-Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        kernel-team@lge.com
-Date: Wed, 22 Aug 2018 09:07:23 +0200
-In-Reply-To: <20180822054731.GB2414@X58A-UD3R>
-References: <20180821120317.4115-1-johannes@sipsolutions.net>
-         <20180821120317.4115-2-johannes@sipsolutions.net>
-         <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
-         <1534871894.25523.34.camel@sipsolutions.net>
-         <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
-         <1534872621.25523.39.camel@sipsolutions.net>
-         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
-         <1534879241.25523.44.camel@sipsolutions.net>
-         <20180822024535.GA2414@X58A-UD3R>
-         <1534910543.25523.50.camel@sipsolutions.net>
-         <20180822054731.GB2414@X58A-UD3R>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.toke.dk ([52.28.52.200]:51755 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727437AbeHUPoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Aug 2018 11:44:32 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
+In-Reply-To: <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
+References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org> <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
+Date: Tue, 21 Aug 2018 14:24:33 +0200
+Message-ID: <87a7pfaovy.fsf@toke.dk> (sfid-20180821_142442_191223_58F9162D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 14:47 +0900, Byungchul Park wrote:
-> On Wed, Aug 22, 2018 at 06:02:23AM +0200, Johannes Berg wrote:
-> > On Wed, 2018-08-22 at 11:45 +0900, Byungchul Park wrote:
-> > 
-> > > That should've been adjusted as well when Ingo reverted Cross-release.
-> > 
-> > I can't really say.
-> 
-> What do you mean?
+Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 
-I haven't followed any of this, so I just don't know.
+> This allows the driver to refill airtime fairness deficit
+> where the driver will not access txqs by ieee80211_next_txq.
+> In tx push mode data path, high priority txqs will be scheduled
+> for data transmission by ieee80211_next_txq and driver will not
+> prioritize txqs whereas in push-pull mode, the drivers can
+> prioritize txqs and access them directly. In such mode, airtime
+> deficit can not filled by ieee80211_next_txq.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+> ---
+>  include/net/mac80211.h | 15 +++++++++++++
+>  net/mac80211/tx.c      | 59 +++++++++++++++++++++++++++++++++++---------------
+>  2 files changed, 57 insertions(+), 17 deletions(-)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index cc16847bd52d..a2f0b6800100 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -6033,6 +6033,21 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+>  struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac);
+>  
+>  /**
+> + * ieee80211_reorder_txq - change txq position in scheduling loop
+> + *
+> + * This function is used to reorder txq's position in scheduling loop.
+> + * The txq fairness deficit will be refilled. The drivers calling this
+> + * function should ensure the txq won't be accessed by ieee80211_next_txq
+> + * in the same path.
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from station or virtual interface
+> + *
+> + */
+> +void ieee80211_reorder_txq(struct ieee80211_hw *hw,
+> +			   struct ieee80211_txq *txq);
+> +
+> +/**
+>   * ieee80211_txq_get_depth - get pending frame/byte count of given txq
+>   *
+>   * The values are not guaranteed to be coherent with regard to each other, i.e.
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 0af35c08e0d9..b7b2f93152f8 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -3634,10 +3634,38 @@ static inline struct txq_info *find_txqi(struct ieee80211_local *local, s8 ac)
+>  	return txqi;
+>  }
+>  
+> +static bool ieee80211_txq_refill_deficit(struct ieee80211_local *local,
+> +					 struct txq_info *txqi)
+> +{
+> +	struct fq *fq = &local->fq;
+> +	struct sta_info *sta;
+> +
+> +	lockdep_assert_held(&local->active_txq_lock);
+> +
+> +	if (!txqi->txq.sta)
+> +		return false;
+> +
+> +	sta = container_of(txqi->txq.sta, struct sta_info, sta);
+> +
+> +	if (sta->airtime.deficit[txqi->txq.ac] > 0)
+> +		return false;
+> +
+> +	sta->airtime.deficit[txqi->txq.ac] +=
+> +		IEEE80211_AIRTIME_QUANTUM * sta->airtime.weight;
+> +	list_move_tail(&txqi->schedule_order,
+> +		       &local->active_txqs[txqi->txq.ac]);
 
-> > > It would be much easier to add each pair, acquire/release, before
-> > > wait_for_completion() in both flush_workqueue() and flush_work() than
-> > > reverting the whole commit.
-> > 
-> > The commit doesn't do much more than this though.
-> 
-> That also has named of lockdep_map for wq/work in a better way.
+This needs to check that the txq is currently at the head of
+local->active_txqs[txqi->txq.ac]; otherwise fairness enforcement doesn't
+work. And with this check I'm not sure the reorder function is terribly
+useful for what you want to use it for?
 
-What do you mean?
-
-> > > What's lacking is only lockdep annotations for wait_for_completion().
-> > 
-> > No, I disagree. Like I said before, we need the lockdep annotations on
-> 
-> You seem to be confused. I was talking about wait_for_completion() in
-> both flush_workqueue() and flush_work(). Without
-> the wait_for_completion()s, nothing matters wrt what you are concerning.
-
-Yes and no.
-
-You're basically saying if we don't get to do a wait_for_completion(),
-then we don't need any lockdep annotation. I'm saying this isn't true.
-
-Consider the following case:
-
-work_function()
-{
-	mutex_lock(&mutex);
-	mutex_unlock(&mutex);
-}
-
-other_function()
-{
-	queue_work(&my_wq, &work);
-
-	if (common_case) {
-		schedule_and_wait_for_something_that_takes_a_long_time()
-	}
-
-	mutex_lock(&mutex);
-	flush_workqueue(&my_wq);
-	mutex_unlock(&mutex);
-}
-
-
-Clearly this code is broken, right?
-
-However, you'll almost never get lockdep to indicate that, because of
-the "if (common_case)".
-
-My argument basically is that the lockdep annotations in the workqueue
-code should be entirely independent of the actual need to call
-wait_for_completion().
-
-Therefore, the commit should be reverted regardless of any cross-release 
-work (that I neither know and thus don't understand right now), since it
-makes workqueue code rely on lockdep for the completion, whereas we
-really want to have annotations here even when we didn't actually need
-to wait_for_completion().
-
-johannes
+-Toke
