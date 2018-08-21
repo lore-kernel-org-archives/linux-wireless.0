@@ -1,142 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42084 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726364AbeHRLev (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59496 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726910AbeHUPXU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:34:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:38 +0300
-Message-Id: <20180818082750.28717-5-luca@coelho.fi> (sfid-20180818_102813_984387_529C2864)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 04/16] iwlwifi: set the tid for non-QOS frames to zero
+        Tue, 21 Aug 2018 11:23:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] workqueue: skip lockdep wq dependency in cancel_work_sync()
+Date: Tue, 21 Aug 2018 14:03:16 +0200
+Message-Id: <20180821120317.4115-2-johannes@sipsolutions.net> (sfid-20180821_140330_714843_CEB79617)
+In-Reply-To: <20180821120317.4115-1-johannes@sipsolutions.net>
+References: <20180821120317.4115-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The tid for Non-QOS frames is set to IWL_MAX_TID_COUNT. This value
-is also used for configuring the queue for non-QOS data. However, this
-tid is used by the FW for management queues. As a result, the FW
-does not encrypt non-QOS data frames.
+In cancel_work_sync(), we can only have one of two cases, even
+with an ordered workqueue:
+ * the work isn't running, just cancelled before it started
+ * the work is running, but then nothing else can be on the
+   workqueue before it
 
-Fix this by setting the tid for non-QOS data frames to zero, which
-is a valid value for data frames in the FW.
+Thus, we need to skip the lockdep workqueue dependency handling,
+otherwise we get false positive reports from lockdep saying that
+we have a potential deadlock when the workqueue also has other
+work items with locking, e.g.
 
-This also fixes a bug in sending multicast frames, where the queues
-are allocated with tid == 0, but are sent with tid == 8, which may
-lead to unexpected behavior.
+  work1_function() { mutex_lock(&mutex); ... }
+  work2_function() { /* nothing */ }
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+  other_function() {
+    queue_work(ordered_wq, &work1);
+    queue_work(ordered_wq, &work2);
+    mutex_lock(&mutex);
+    cancel_work_sync(&work2);
+  }
+
+As described above, this isn't a problem, but lockdep will
+currently flag it as if cancel_work_sync() was flush_work(),
+which *is* a problem.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 24 ++++++++++++++-----
- 2 files changed, 19 insertions(+), 7 deletions(-)
+ kernel/workqueue.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 514b86123d3d..135135d80d4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -186,7 +186,7 @@ enum iwl_tx_cmd_sec_ctrl {
- /*
-  * TID for non QoS frames - to be written in tid_tspec
-  */
--#define IWL_TID_NON_QOS	IWL_MAX_TID_COUNT
-+#define IWL_TID_NON_QOS	0
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 78b192071ef7..a6c2b823f348 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2843,7 +2843,8 @@ void drain_workqueue(struct workqueue_struct *wq)
+ }
+ EXPORT_SYMBOL_GPL(drain_workqueue);
  
- /*
-  * Limits on the retransmissions - to be written in {data,rts}_retry_limit
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index ff193dca2020..83f3e74337db 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -35,6 +36,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -245,14 +247,18 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		iwl_mvm_bar_check_trigger(mvm, bar->ra, tx_cmd->tid_tspec,
- 					  ssn);
- 	} else {
--		tx_cmd->tid_tspec = IWL_TID_NON_QOS;
-+		if (ieee80211_is_data(fc))
-+			tx_cmd->tid_tspec = IWL_TID_NON_QOS;
-+		else
-+			tx_cmd->tid_tspec = IWL_MAX_TID_COUNT;
+-static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
++static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
++			     bool from_cancel)
+ {
+ 	struct worker *worker = NULL;
+ 	struct worker_pool *pool;
+@@ -2885,7 +2886,8 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+ 	 * workqueues the deadlock happens when the rescuer stalls, blocking
+ 	 * forward progress.
+ 	 */
+-	if (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer) {
++	if (!from_cancel &&
++	    (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer)) {
+ 		lock_map_acquire(&pwq->wq->lockdep_map);
+ 		lock_map_release(&pwq->wq->lockdep_map);
+ 	}
+@@ -2896,6 +2898,22 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+ 	return false;
+ }
+ 
++static bool __flush_work(struct work_struct *work, bool from_cancel)
++{
++	struct wq_barrier barr;
 +
- 		if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
- 			tx_flags |= TX_CMD_FLG_SEQ_CTL;
- 		else
- 			tx_flags &= ~TX_CMD_FLG_SEQ_CTL;
- 	}
- 
--	/* Default to 0 (BE) when tid_spec is set to IWL_TID_NON_QOS */
-+	/* Default to 0 (BE) when tid_spec is set to IWL_MAX_TID_COUNT */
- 	if (tx_cmd->tid_tspec < IWL_MAX_TID_COUNT)
- 		ac = tid_to_mac80211_ac[tx_cmd->tid_tspec];
- 	else
-@@ -1049,6 +1055,8 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			/* update the tx_cmd hdr as it was already copied */
- 			tx_cmd->hdr->seq_ctrl = hdr->seq_ctrl;
- 		}
-+	} else if (ieee80211_is_data(fc) && !ieee80211_is_data_qos(fc)) {
-+		tid = IWL_TID_NON_QOS;
- 	}
- 
- 	txq_id = mvmsta->tid_data[tid].txq_id;
-@@ -1525,7 +1533,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 		iwl_mvm_tx_airtime(mvm, mvmsta,
- 				   le16_to_cpu(tx_resp->wireless_media_time));
- 
--		if (tid != IWL_TID_NON_QOS && tid != IWL_MGMT_TID) {
-+		if (sta->wme && tid != IWL_MGMT_TID) {
- 			struct iwl_mvm_tid_data *tid_data =
- 				&mvmsta->tid_data[tid];
- 			bool send_eosp_ndp = false;
-@@ -1645,20 +1653,24 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
- 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
- 	struct iwl_mvm_sta *mvmsta;
- 	int queue = SEQ_TO_QUEUE(sequence);
-+	struct ieee80211_sta *sta;
- 
- 	if (WARN_ON_ONCE(queue < IWL_MVM_DQA_MIN_DATA_QUEUE &&
- 			 (queue != IWL_MVM_DQA_BSS_CLIENT_QUEUE)))
- 		return;
- 
--	if (WARN_ON_ONCE(tid == IWL_TID_NON_QOS))
--		return;
--
- 	iwl_mvm_rx_tx_cmd_agg_dbg(mvm, pkt);
- 
- 	rcu_read_lock();
- 
- 	mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, sta_id);
- 
-+	sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
-+	if (WARN_ON_ONCE(!sta || !sta->wme)) {
-+		rcu_read_unlock();
-+		return;
++	if (WARN_ON(!wq_online))
++		return false;
++
++	if (start_flush_work(work, &barr, from_cancel)) {
++		wait_for_completion(&barr.done);
++		destroy_work_on_stack(&barr.work);
++		return true;
++	} else {
++		return false;
 +	}
++}
 +
- 	if (!WARN_ON_ONCE(!mvmsta)) {
- 		mvmsta->tid_data[tid].rate_n_flags =
- 			le32_to_cpu(tx_resp->initial_rate);
+ /**
+  * flush_work - wait for a work to finish executing the last queueing instance
+  * @work: the work to flush
+@@ -2909,18 +2927,7 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+  */
+ bool flush_work(struct work_struct *work)
+ {
+-	struct wq_barrier barr;
+-
+-	if (WARN_ON(!wq_online))
+-		return false;
+-
+-	if (start_flush_work(work, &barr)) {
+-		wait_for_completion(&barr.done);
+-		destroy_work_on_stack(&barr.work);
+-		return true;
+-	} else {
+-		return false;
+-	}
++	return __flush_work(work, false);
+ }
+ EXPORT_SYMBOL_GPL(flush_work);
+ 
+@@ -2986,7 +2993,7 @@ static bool __cancel_work_timer(struct work_struct *work, bool is_dwork)
+ 	 * isn't executing.
+ 	 */
+ 	if (wq_online)
+-		flush_work(work);
++		__flush_work(work, true);
+ 
+ 	clear_work_data(work);
+ 
 -- 
-2.18.0
+2.14.4
