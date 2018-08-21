@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:59492 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733000AbeHWMRF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42874 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727142AbeHUJz5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 08:17:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] netlink: add nl_set_extack_cookie_u64()
-Date: Thu, 23 Aug 2018 10:48:13 +0200
-Message-Id: <20180823084813.5727-1-johannes@sipsolutions.net> (sfid-20180823_105758_022800_F1BBA367)
+        Tue, 21 Aug 2018 05:55:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 09:36:50 +0300
+Message-Id: <20180821063657.30071-9-luca@coelho.fi> (sfid-20180821_083714_794410_ECC526F3)
+In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
+References: <20180821063657.30071-1-luca@coelho.fi>
+Subject: [PATCH 08/15] iwlwifi: don't WARN on trying to dump dead firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add a helper function nl_set_extack_cookie_u64() to use a u64 as
-the netlink extended ACK cookie, to avoid having to open-code it
-in any users of the cookie.
+There's no point in warning here, the user will just get an
+error back to the debugfs file write, and warning just makes
+it seem like there's an internal consistency problem when in
+reality the user just happened to hit this at a bad time.
+Remove the warning.
 
-A u64 should be sufficient for most subsystems though we allow
-for up to 20 bytes right now. This also matches the cookies in
-nl80211 where I intend to use this.
-
+Fixes: f45f979dc208 ("iwlwifi: mvm: disable dbg data collect when fw isn't alive")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/netlink.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 71f121b66ca8..dc3c21dc4ba2 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -110,6 +110,15 @@ struct netlink_ext_ack {
- 	}						\
- } while (0)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 70173ad11050..9c1d13e6bad3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1041,7 +1041,7 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 	 * If the loading of the FW completed successfully, the next step is to
+ 	 * get the SMEM config data. Thus, if fwrt->smem_cfg.num_lmacs is non
+ 	 * zero, the FW was already loaded successully. If the state is "NO_FW"
+-	 * in such a case - WARN and exit, since FW may be dead. Otherwise, we
++	 * in such a case - exit, since FW may be dead. Otherwise, we
+ 	 * can try to collect the data, since FW might just not be fully
+ 	 * loaded (no "ALIVE" yet), and the debug data is accessible.
+ 	 *
+@@ -1049,9 +1049,8 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 	 *	config. In such a case, due to HW access problems, we might
+ 	 *	collect garbage.
+ 	 */
+-	if (WARN((fwrt->trans->state == IWL_TRANS_NO_FW) &&
+-		 fwrt->smem_cfg.num_lmacs,
+-		 "Can't collect dbg data when FW isn't alive\n"))
++	if (fwrt->trans->state == IWL_TRANS_NO_FW &&
++	    fwrt->smem_cfg.num_lmacs)
+ 		return -EIO;
  
-+static inline void nl_set_extack_cookie_u64(struct netlink_ext_ack *extack,
-+					    u64 cookie)
-+{
-+	u64 __cookie = cookie;
-+
-+	memcpy(extack->cookie, &__cookie, sizeof(__cookie));
-+	extack->cookie_len = sizeof(__cookie);
-+}
-+
- extern void netlink_kernel_release(struct sock *sk);
- extern int __netlink_change_ngroups(struct sock *sk, unsigned int groups);
- extern int netlink_change_ngroups(struct sock *sk, unsigned int groups);
+ 	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
 -- 
-2.14.4
+2.18.0
