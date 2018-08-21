@@ -1,318 +1,331 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41320 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJg1 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42618 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726585AbeHUI2k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:27 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 05/24] staging: wilc1000: moved last_scanned_shadow & last_scanned_cnt to wilc_priv struct
-Date: Tue, 14 Aug 2018 12:19:57 +0530
-Message-ID: <1534229416-13254-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085041_703368_B47F7EB5)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 21 Aug 2018 04:28:40 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 08:09:40 +0300
+Message-Id: <20180821050952.31603-6-luca@coelho.fi> (sfid-20180821_071013_748240_8A5CEA3A)
+In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
+References: <20180821050952.31603-1-luca@coelho.fi>
+Subject: [PATCH v2 05/17] iwlwifi: add d3 debug data support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid use of static variables and moved the varibles as part of private
-data. last_scanned_shadow & last_scanned_cnt variable is moved to
-'wilc_priv' to maintain for each interface. After moving static
-variable, clear_shadow_scan() doesn't require check 'op_ifcs'
-count as now for each interface the againg timer is initiated.
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+During d3, the firmware records debug data into internal buffer
+if debug data collection occurs, collect the data that was written to the
+buffer
+
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 105 +++++++++++-----------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   2 +
- 2 files changed, 52 insertions(+), 55 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 48 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 10 ++++
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  8 ++--
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  2 +
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  4 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  3 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  6 ++-
+ 12 files changed, 85 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 00a167b..1eac244 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -82,8 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
- 	.flags = WIPHY_WOWLAN_ANY
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 91ca77c7571c..c6b738c8fd84 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -155,7 +155,9 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
+ 	.gen2 = true,							\
+ 	.nvm_type = IWL_NVM_EXT,					\
+ 	.dbgc_supported = true,						\
+-	.min_umac_error_event_table = 0x400000
++	.min_umac_error_event_table = 0x400000,				\
++	.d3_debug_data_base_addr = 0x401000,				\
++	.d3_debug_data_length = 60 * 1024
+ 
+ #define IWL_DEVICE_22500						\
+ 	IWL_DEVICE_22000_COMMON,					\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index 24b2f7cbb308..37deaf4fd7b3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -155,7 +155,9 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.nvm_type = IWL_NVM_EXT,					\
+ 	.dbgc_supported = true,						\
+ 	.min_umac_error_event_table = 0x800000,				\
+-	.csr = &iwl_csr_v1
++	.csr = &iwl_csr_v1,						\
++	.d3_debug_data_base_addr = 0x401000,				\
++	.d3_debug_data_length = 92 * 1024
+ 
+ const struct iwl_cfg iwl9160_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9160",
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index bab54c9889af..70173ad11050 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -746,6 +746,11 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 			 sizeof(struct iwl_fw_error_dump_paging) +
+ 			 PAGING_BLOCK_SIZE);
+ 
++	if (iwl_fw_dbg_is_d3_debug_enabled(fwrt) && fwrt->dump.d3_debug_data) {
++		file_len += sizeof(*dump_data) +
++			fwrt->trans->cfg->d3_debug_data_length * 2;
++	}
++
+ 	/* If we only want a monitor dump, reset the file length */
+ 	if (monitor_dump_only) {
+ 		file_len = sizeof(*dump_file) + sizeof(*dump_data) * 2 +
+@@ -858,6 +863,26 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
++	if (iwl_fw_dbg_is_d3_debug_enabled(fwrt) && fwrt->dump.d3_debug_data) {
++		u32 addr = fwrt->trans->cfg->d3_debug_data_base_addr;
++		size_t data_size = fwrt->trans->cfg->d3_debug_data_length;
++
++		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_D3_DEBUG_DATA);
++		dump_data->len = cpu_to_le32(data_size * 2);
++
++		memcpy(dump_data->data, fwrt->dump.d3_debug_data,
++		       data_size);
++
++		kfree(fwrt->dump.d3_debug_data);
++		fwrt->dump.d3_debug_data = NULL;
++
++		iwl_trans_read_mem_bytes(fwrt->trans, addr,
++					 dump_data->data + data_size,
++					 data_size);
++
++		dump_data = iwl_fw_error_next_data(dump_data);
++	}
++
+ 	for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
+ 		u32 len = le32_to_cpu(fw_dbg_mem[i].len);
+ 		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
+@@ -1212,3 +1237,26 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
+ 		fwrt->ops->dump_end(fwrt->ops_ctx);
+ }
+ 
++void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt)
++{
++	const struct iwl_cfg *cfg = fwrt->trans->cfg;
++
++	if (!iwl_fw_dbg_is_d3_debug_enabled(fwrt))
++		return;
++
++	if (!fwrt->dump.d3_debug_data) {
++		fwrt->dump.d3_debug_data = kmalloc(cfg->d3_debug_data_length,
++						   GFP_KERNEL);
++		if (!fwrt->dump.d3_debug_data) {
++			IWL_ERR(fwrt,
++				"failed to allocate memory for D3 debug data\n");
++			return;
++		}
++	}
++
++	/* if the buffer holds previous debug data it is overwritten */
++	iwl_trans_read_mem_bytes(fwrt->trans, cfg->d3_debug_data_base_addr,
++				 fwrt->dump.d3_debug_data,
++				 cfg->d3_debug_data_length);
++}
++IWL_EXPORT_SYMBOL(iwl_fw_dbg_read_d3_debug_data);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 507d9a49fa97..2c6df7756927 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -217,6 +217,16 @@ static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
+ 
+ void iwl_fw_error_dump_wk(struct work_struct *work);
+ 
++static inline bool iwl_fw_dbg_is_d3_debug_enabled(struct iwl_fw_runtime *fwrt)
++{
++	return fw_has_capa(&fwrt->fw->ucode_capa,
++			   IWL_UCODE_TLV_CAPA_D3_DEBUG) &&
++		fwrt->trans->cfg->d3_debug_data_length &&
++		fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_D3_DEBUG_DATA);
++}
++
++void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt);
++
+ static inline void iwl_fw_flush_dump(struct iwl_fw_runtime *fwrt)
+ {
+ 	flush_delayed_work(&fwrt->dump.wk);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index ed7beca8817e..6d3ef331b7d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,11 +19,6 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+  * The full GNU General Public License is included in this distribution
+  * in the file called COPYING.
+  *
+@@ -35,6 +31,7 @@
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -116,6 +113,7 @@ enum iwl_fw_error_dump_type {
+ 	IWL_FW_ERROR_DUMP_INTERNAL_TXF = 14,
+ 	IWL_FW_ERROR_DUMP_EXTERNAL = 15, /* Do not move */
+ 	IWL_FW_ERROR_DUMP_MEM_CFG = 16,
++	IWL_FW_ERROR_DUMP_D3_DEBUG_DATA = 17,
+ 
+ 	IWL_FW_ERROR_DUMP_MAX,
+ };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index bbf2b265a06a..257ef70f8a1e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -349,6 +349,7 @@ typedef unsigned int __bitwise iwl_ucode_tlv_capa_t;
+  *	command size (command version 4) that supports toggling ACK TX
+  *	power reduction.
+  * @IWL_UCODE_TLV_CAPA_MLME_OFFLOAD: supports MLME offload
++ * @IWL_UCODE_TLV_CAPA_D3_DEBUG: supports debug recording during D3
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+  */
+@@ -397,6 +398,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_LQM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)81,
+ 	IWL_UCODE_TLV_CAPA_TX_POWER_ACK			= (__force iwl_ucode_tlv_capa_t)84,
+ 	IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT		= (__force iwl_ucode_tlv_capa_t)86,
++	IWL_UCODE_TLV_CAPA_D3_DEBUG			= (__force iwl_ucode_tlv_capa_t)87,
+ 	IWL_UCODE_TLV_CAPA_MLME_OFFLOAD			= (__force iwl_ucode_tlv_capa_t)96,
+ 
+ 	NUM_IWL_UCODE_TLV_CAPA
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index ed23367f7088..9ed5819defaf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -136,6 +136,7 @@ struct iwl_fw_runtime {
+ 
+ 		/* ts of the beginning of a non-collect fw dbg data period */
+ 		unsigned long non_collect_ts_start[FW_DBG_TRIGGER_MAX - 1];
++		u32 *d3_debug_data;
+ 	} dump;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 12fddcf15bab..4d16ac545269 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -388,6 +388,8 @@ struct iwl_csr_params {
+  * @gen2: 22000 and on transport operation
+  * @cdb: CDB support
+  * @nvm_type: see &enum iwl_nvm_type
++ * @d3_debug_data_base_addr: base address where D3 debug data is stored
++ * @d3_debug_data_length: length of the D3 debug data
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -452,6 +454,8 @@ struct iwl_cfg {
+ 	u8 ucode_api_min;
+ 	u32 min_umac_error_event_table;
+ 	u32 extra_phy_cfg_flags;
++	u32 d3_debug_data_base_addr;
++	u32 d3_debug_data_length;
  };
  
--static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
--static u32 last_scanned_cnt;
- struct timer_list wilc_during_ip_timer;
- static u8 op_ifcs;
+ static const struct iwl_csr_params iwl_csr_v1 = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index 9019de99f077..e2b29b844c3a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -188,6 +188,7 @@
+ #define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x000000C0)
+ #define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI		(0x00000100)
+ #define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
++#define CSR_HW_IF_CONFIG_REG_D3_DEBUG		(0x00000200)
+ #define CSR_HW_IF_CONFIG_REG_MSK_PHY_TYPE	(0x00000C00)
+ #define CSR_HW_IF_CONFIG_REG_MSK_PHY_DASH	(0x00003000)
+ #define CSR_HW_IF_CONFIG_REG_MSK_PHY_STEP	(0x0000C000)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index c0631255aee7..39a1eadfc4b7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1275,8 +1275,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	fw->ucode_capa.standard_phy_calibration_size =
+ 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
+ 	fw->ucode_capa.n_scan_channels = IWL_DEFAULT_SCAN_CHANNELS;
+-	/* dump all fw memory areas by default */
+-	fw->dbg_dump_mask = 0xffffffff;
++	/* dump all fw memory areas by default except d3 debug data */
++	fw->dbg_dump_mask = 0xfffdffff;
  
-@@ -157,21 +155,18 @@ static struct ieee80211_supported_band wilc_band_2ghz = {
- #define AGING_TIME	(9 * 1000)
- #define DURING_IP_TIME_OUT	15000
- 
--static void clear_shadow_scan(void)
-+static void clear_shadow_scan(struct wilc_priv *priv)
- {
- 	int i;
- 
--	if (op_ifcs != 0)
--		return;
--
--	for (i = 0; i < last_scanned_cnt; i++) {
--		kfree(last_scanned_shadow[i].ies);
--		last_scanned_shadow[i].ies = NULL;
-+	for (i = 0; i < priv->scanned_cnt; i++) {
-+		kfree(priv->scanned_shadow[i].ies);
-+		priv->scanned_shadow[i].ies = NULL;
- 
--		kfree(last_scanned_shadow[i].join_params);
--		last_scanned_shadow[i].join_params = NULL;
-+		kfree(priv->scanned_shadow[i].join_params);
-+		priv->scanned_shadow[i].join_params = NULL;
- 	}
--	last_scanned_cnt = 0;
-+	priv->scanned_cnt = 0;
- }
- 
- static u32 get_rssi_avg(struct network_info *network_info)
-@@ -193,14 +188,14 @@ static void refresh_scan(struct wilc_priv *priv, bool direct_scan)
- 	struct wiphy *wiphy = priv->dev->ieee80211_ptr->wiphy;
- 	int i;
- 
--	for (i = 0; i < last_scanned_cnt; i++) {
-+	for (i = 0; i < priv->scanned_cnt; i++) {
- 		struct network_info *network_info;
- 		s32 freq;
- 		struct ieee80211_channel *channel;
- 		int rssi;
- 		struct cfg80211_bss *bss;
- 
--		network_info = &last_scanned_shadow[i];
-+		network_info = &priv->scanned_shadow[i];
- 
- 		if (!memcmp("DIRECT-", network_info->ssid, 7) && !direct_scan)
- 			continue;
-@@ -224,20 +219,20 @@ static void refresh_scan(struct wilc_priv *priv, bool direct_scan)
- 	}
- }
- 
--static void reset_shadow_found(void)
-+static void reset_shadow_found(struct wilc_priv *priv)
- {
- 	int i;
- 
--	for (i = 0; i < last_scanned_cnt; i++)
--		last_scanned_shadow[i].found = 0;
-+	for (i = 0; i < priv->scanned_cnt; i++)
-+		priv->scanned_shadow[i].found = 0;
- }
- 
--static void update_scan_time(void)
-+static void update_scan_time(struct wilc_priv *priv)
- {
- 	int i;
- 
--	for (i = 0; i < last_scanned_cnt; i++)
--		last_scanned_shadow[i].time_scan = jiffies;
-+	for (i = 0; i < priv->scanned_cnt; i++)
-+		priv->scanned_shadow[i].time_scan = jiffies;
- }
- 
- static void remove_network_from_shadow(struct timer_list *t)
-@@ -246,22 +241,22 @@ static void remove_network_from_shadow(struct timer_list *t)
- 	unsigned long now = jiffies;
- 	int i, j;
- 
--	for (i = 0; i < last_scanned_cnt; i++) {
--		if (!time_after(now, last_scanned_shadow[i].time_scan +
-+	for (i = 0; i < priv->scanned_cnt; i++) {
-+		if (!time_after(now, priv->scanned_shadow[i].time_scan +
- 				(unsigned long)(SCAN_RESULT_EXPIRE)))
- 			continue;
--		kfree(last_scanned_shadow[i].ies);
--		last_scanned_shadow[i].ies = NULL;
-+		kfree(priv->scanned_shadow[i].ies);
-+		priv->scanned_shadow[i].ies = NULL;
- 
--		kfree(last_scanned_shadow[i].join_params);
-+		kfree(priv->scanned_shadow[i].join_params);
- 
--		for (j = i; (j < last_scanned_cnt - 1); j++)
--			last_scanned_shadow[j] = last_scanned_shadow[j + 1];
-+		for (j = i; (j < priv->scanned_cnt - 1); j++)
-+			priv->scanned_shadow[j] = priv->scanned_shadow[j + 1];
- 
--		last_scanned_cnt--;
-+		priv->scanned_cnt--;
+ 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
+ 	if (!pieces)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 79bdae994822..47ceffbfd9af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1883,6 +1883,7 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 		goto err;
  	}
  
--	if (last_scanned_cnt != 0)
-+	if (priv->scanned_cnt != 0)
- 		mod_timer(&priv->aging_timer,
- 			  jiffies + msecs_to_jiffies(AGING_TIME));
- }
-@@ -277,13 +272,13 @@ static int is_network_in_shadow(struct network_info *nw_info,
- 	int state = -1;
- 	int i;
++	iwl_fw_dbg_read_d3_debug_data(&mvm->fwrt);
+ 	/* query SRAM first in case we want event logging */
+ 	iwl_mvm_read_d3_sram(mvm);
  
--	if (last_scanned_cnt == 0) {
-+	if (priv->scanned_cnt == 0) {
- 		mod_timer(&priv->aging_timer,
- 			  jiffies + msecs_to_jiffies(AGING_TIME));
- 		state = -1;
- 	} else {
--		for (i = 0; i < last_scanned_cnt; i++) {
--			if (memcmp(last_scanned_shadow[i].bssid,
-+		for (i = 0; i < priv->scanned_cnt; i++) {
-+			if (memcmp(priv->scanned_shadow[i].bssid,
- 				   nw_info->bssid, 6) == 0) {
- 				state = i;
- 				break;
-@@ -301,16 +296,16 @@ static void add_network_to_shadow(struct network_info *nw_info,
- 	u8 rssi_index = 0;
- 	struct network_info *shadow_nw_info;
+@@ -2117,6 +2118,8 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
  
--	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
-+	if (priv->scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
- 		return;
+ 	mvm->d3_test_active = false;
  
- 	if (ap_found == -1) {
--		ap_index = last_scanned_cnt;
--		last_scanned_cnt++;
-+		ap_index = priv->scanned_cnt;
-+		priv->scanned_cnt++;
- 	} else {
- 		ap_index = ap_found;
- 	}
--	shadow_nw_info = &last_scanned_shadow[ap_index];
-+	shadow_nw_info = &priv->scanned_shadow[ap_index];
- 	rssi_index = shadow_nw_info->rssi_history.index;
- 	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
- 	if (rssi_index == NUM_RSSI) {
-@@ -402,7 +397,7 @@ static void cfg_scan_result(enum scan_event scan_event,
- 			u32 i;
++	iwl_fw_dbg_read_d3_debug_data(&mvm->fwrt);
++
+ 	rtnl_lock();
+ 	__iwl_mvm_resume(mvm, true);
+ 	rtnl_unlock();
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 0e26619fb330..bce5d150eb58 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -182,6 +182,9 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
+ 	if (mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_8000)
+ 		reg_val |= CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI;
  
- 			for (i = 0; i < priv->rcvd_ch_cnt; i++) {
--				if (memcmp(last_scanned_shadow[i].bssid,
-+				if (memcmp(priv->scanned_shadow[i].bssid,
- 					   network_info->bssid, 6) == 0)
- 					break;
- 			}
-@@ -410,8 +405,8 @@ static void cfg_scan_result(enum scan_event scan_event,
- 			if (i >= priv->rcvd_ch_cnt)
- 				return;
++	if (iwl_fw_dbg_is_d3_debug_enabled(&mvm->fwrt))
++		reg_val |= CSR_HW_IF_CONFIG_REG_D3_DEBUG;
++
+ 	iwl_trans_set_bits_mask(mvm->trans, CSR_HW_IF_CONFIG_REG,
+ 				CSR_HW_IF_CONFIG_REG_MSK_MAC_DASH |
+ 				CSR_HW_IF_CONFIG_REG_MSK_MAC_STEP |
+@@ -189,7 +192,8 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
+ 				CSR_HW_IF_CONFIG_REG_MSK_PHY_STEP |
+ 				CSR_HW_IF_CONFIG_REG_MSK_PHY_DASH |
+ 				CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+-				CSR_HW_IF_CONFIG_REG_BIT_MAC_SI,
++				CSR_HW_IF_CONFIG_REG_BIT_MAC_SI   |
++				CSR_HW_IF_CONFIG_REG_D3_DEBUG,
+ 				reg_val);
  
--			last_scanned_shadow[i].rssi = network_info->rssi;
--			last_scanned_shadow[i].time_scan = jiffies;
-+			priv->scanned_shadow[i].rssi = network_info->rssi;
-+			priv->scanned_shadow[i].time_scan = jiffies;
- 		}
- 	} else if (scan_event == SCAN_EVENT_DONE) {
- 		refresh_scan(priv, false);
-@@ -437,7 +432,7 @@ static void cfg_scan_result(enum scan_event scan_event,
- 				.aborted = false,
- 			};
- 
--			update_scan_time();
-+			update_scan_time(priv);
- 			refresh_scan(priv, false);
- 
- 			cfg80211_scan_done(priv->scan_req, &info);
-@@ -448,11 +443,11 @@ static void cfg_scan_result(enum scan_event scan_event,
- 	}
- }
- 
--static inline bool wilc_wfi_cfg_scan_time_expired(int i)
-+static inline bool wilc_cfg_scan_time_expired(struct wilc_priv *priv, int i)
- {
- 	unsigned long now = jiffies;
- 
--	if (time_after(now, last_scanned_shadow[i].time_scan_cached +
-+	if (time_after(now, priv->scanned_shadow[i].time_scan_cached +
- 		       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
- 		return true;
- 	else
-@@ -501,11 +496,11 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 			memcpy(priv->associated_bss, conn_info->bssid,
- 			       ETH_ALEN);
- 
--			for (i = 0; i < last_scanned_cnt; i++) {
--				if (memcmp(last_scanned_shadow[i].bssid,
-+			for (i = 0; i < priv->scanned_cnt; i++) {
-+				if (memcmp(priv->scanned_shadow[i].bssid,
- 					   conn_info->bssid,
- 					   ETH_ALEN) == 0) {
--					if (wilc_wfi_cfg_scan_time_expired(i))
-+					if (wilc_cfg_scan_time_expired(priv, i))
- 						scan_refresh = true;
- 
- 					break;
-@@ -619,7 +614,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 
- 	priv->rcvd_ch_cnt = 0;
- 
--	reset_shadow_found();
-+	reset_shadow_found(priv);
- 
- 	priv->cfg_scanning = true;
- 	if (request->n_channels <= MAX_NUM_SCANNED_NETWORKS) {
-@@ -679,18 +674,18 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	else
- 		wfi_drv->p2p_connect = 0;
- 
--	for (i = 0; i < last_scanned_cnt; i++) {
--		if (sme->ssid_len == last_scanned_shadow[i].ssid_len &&
--		    memcmp(last_scanned_shadow[i].ssid,
-+	for (i = 0; i < priv->scanned_cnt; i++) {
-+		if (sme->ssid_len == priv->scanned_shadow[i].ssid_len &&
-+		    memcmp(priv->scanned_shadow[i].ssid,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
- 			if (!sme->bssid) {
- 				if (sel_bssi_idx == UINT_MAX ||
--				    last_scanned_shadow[i].rssi >
--				    last_scanned_shadow[sel_bssi_idx].rssi)
-+				    priv->scanned_shadow[i].rssi >
-+				    priv->scanned_shadow[sel_bssi_idx].rssi)
- 					sel_bssi_idx = i;
- 			} else {
--				if (memcmp(last_scanned_shadow[i].bssid,
-+				if (memcmp(priv->scanned_shadow[i].bssid,
- 					   sme->bssid,
- 					   ETH_ALEN) == 0) {
- 					sel_bssi_idx = i;
-@@ -700,8 +695,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		}
- 	}
- 
--	if (sel_bssi_idx < last_scanned_cnt) {
--		nw_info = &last_scanned_shadow[sel_bssi_idx];
-+	if (sel_bssi_idx < priv->scanned_cnt) {
-+		nw_info = &priv->scanned_shadow[sel_bssi_idx];
- 	} else {
- 		ret = -ENOENT;
- 		wilc_connecting = 0;
-@@ -2194,7 +2189,7 @@ int wilc_deinit_host_int(struct net_device *net)
- 	ret = wilc_deinit(vif);
- 
- 	del_timer_sync(&priv->aging_timer);
--	clear_shadow_scan();
-+	clear_shadow_scan(priv);
- 	if (op_ifcs == 0)
- 		del_timer_sync(&wilc_during_ip_timer);
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index a76b68c..3767e31 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -95,6 +95,8 @@ struct wilc_priv {
- 	struct mutex scan_req_lock;
- 	bool p2p_listen_state;
- 	struct timer_list aging_timer;
-+	struct network_info scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
-+	int scanned_cnt;
- };
- 
- struct frame_reg {
+ 	IWL_DEBUG_INFO(mvm, "Radio type=0x%x-0x%x-0x%x\n", radio_cfg_type,
 -- 
-2.7.4
+2.18.0
