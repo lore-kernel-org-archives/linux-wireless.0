@@ -1,271 +1,411 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:41519 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726432AbeH1KVk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 06:21:40 -0400
-Received: by mail-oi0-f66.google.com with SMTP id k12-v6so866776oiw.8
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 23:31:32 -0700 (PDT)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40042 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726253AbeHUK72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Aug 2018 06:59:28 -0400
+Date: Tue, 21 Aug 2018 09:40:21 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Grzegorz =?utf-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>
+Subject: [RFC] cfg80211: let's wmm_rule be part of reg_rule structure
+Message-ID: <20180821074020.GA28952@redhat.com> (sfid-20180821_094028_808112_5059F398)
 MIME-Version: 1.0
-References: <CABCw=ciXSrxNumPtk_W+aso9eDbhjennsKT6VFq2va=hej7jKA@mail.gmail.com>
- <d2aafbe259d10d849aa0710530b328f9eae4ecf2.camel@coelho.fi>
-In-Reply-To: <d2aafbe259d10d849aa0710530b328f9eae4ecf2.camel@coelho.fi>
-From: =?UTF-8?Q?R=2E_Alejandro_Oquendo_Mu=C3=B1oz?= <rd.qnd.m@gmail.com>
-Date: Mon, 27 Aug 2018 22:31:24 -0400
-Message-ID: <CABCw=cgX4Q4RzQJ_F_=KNFEt5xqWPiBGkG1XBv_9mfYvVVWz3Q@mail.gmail.com> (sfid-20180828_083135_855475_EBAD868F)
-Subject: Re: Support for Killer/Wireless-AC 9260 wireless cards
-To: luca@coelho.fi
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 21, 2018 at 2:29 AM Luca Coelho <luca@coelho.fi> wrote:
->
-> Hi,
->
-> On Sun, 2018-07-29 at 22:59 -0400, R. Alejandro Oquendo Mu=C3=B1oz wrote:
-> > Hi,
-> > Are there any plans to officially support "Killer/Wireless-AC 9260
-> > wireless cards" in Linux 4.19?
-> > For now this card works using this patch [1] in Manjaro, and also
-> > works for Archlinux distro [2].
-> >
-> > Thanks,
-> > Alejandro
-> >
-> > [1] "Subject: [PATCH] iwlwifi: add killer cards for 9000 series"
-> >
-> https://gitlab.manjaro.org/packages/core/linux418/blob/master/0001-iwlwif=
-i-killer-ac-1550.patch
-> > [2] https://bugs.archlinux.org/task/59202
->
-> The PCI IDs for the Killer cards were sent upstream and are part of
-> 4.18 already, as well as some stable versions.  The commit is this:
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3D0a5257bc6d89c2ae69b9bf955679cb4f89261874
->
-> Please let us know if you still have issues with it.
-
-Hi Luca,
-The card generally works fine with 4.18, but sometimes fails and show
-an error when resuming from suspend. Removing and adding iwlwifi
-solves the problem for now.
-Please let me know if you need more information.
-Alejandro
-
-$ uname -a
-Linux r4 4.18.5-arch1-1-ARCH #1 SMP PREEMPT Fri Aug 24 12:48:58 UTC
-2018 x86_64 GNU/Linux
-
-[ 9168.857768] ACPI: button: The lid device is not compliant to SW_LID.
-[ 9169.054391] ------------[ cut here ]------------
-[ 9169.054392] Timeout waiting for hardware access (CSR_GP_CNTRL 0x0c040008=
-)
-[ 9169.054409] WARNING: CPU: 8 PID: 4223 at
-drivers/net/wireless/intel/iwlwifi/pcie/trans.c:2008
-iwl_trans_pcie_grab_nic_access+0x1e1/0x220 [iwlwifi]
-[ 9169.054409] Modules linked in: rfcomm fuse nvidia_modeset(PO)
-nvidia(PO) ipmi_devintf ipmi_msghandler 8021q mrp ccm joydev mousedev
-bnep arc4 snd_hda_codec_hdmi iwlmvm mac80211 intel_rapl
-x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel
-snd_hda_codec_realtek snd_hda_codec_generic kvm snd_hda_intel
-i2c_algo_bit iwlwifi irqbypass crct10dif_pclmul drm_kms_helper
-snd_hda_codec crc32_pclmul dell_wmi iTCO_wdt ghash_clmulni_intel
-dell_smbios drm iTCO_vendor_support pcbc btusb snd_hda_core dcdbas
-uvcvideo cfg80211 btrtl btbcm alienware_wmi btintel snd_hwdep
-videobuf2_vmalloc dell_wmi_descriptor wmi_bmof intel_wmi_thunderbolt
-snd_pcm mxm_wmi videobuf2_memops videobuf2_v4l2 bluetooth intel_gtt
-videobuf2_common agpgart aesni_intel idma64 aes_x86_64 videodev
-crypto_simd cryptd glue_helper intel_lpss_pci
-[ 9169.054431]  syscopyarea snd_timer mei_me input_leds sysfillrect
-intel_cstate sysimgblt snd ucsi_acpi intel_uncore typec_ucsi alx
-ecdh_generic processor_thermal_device media psmouse mei
-intel_rapl_perf rfkill mdio fb_sys_fops i2c_i801 led_class soundcore
-pcspkr intel_lpss intel_pch_thermal intel_soc_dts_iosf typec rtc_cmos
-int3403_thermal battery int340x_thermal_zone ac wmi int3400_thermal
-evdev intel_hid pcc_cpufreq acpi_thermal_rel mac_hid sparse_keymap
-crypto_user ip_tables x_tables ext4 crc32c_generic crc16 mbcache jbd2
-fscrypto hid_generic usbhid hid sd_mod ahci xhci_pci libahci xhci_hcd
-serio_raw atkbd libata libps2 usbcore crc32c_intel scsi_mod usb_common
-i8042 serio
-[ 9169.054455] CPU: 8 PID: 4223 Comm: kworker/u24:29 Tainted: P
-W  O      4.18.5-arch1-1-ARCH #1
-[ 9169.054455] Hardware name: Alienware Alienware 15 R4/Alienware 15
-R4, BIOS 1.2.1 05/29/2018
-[ 9169.054458] Workqueue: events_unbound async_run_entry_fn
-[ 9169.054462] RIP: 0010:iwl_trans_pcie_grab_nic_access+0x1e1/0x220 [iwlwif=
-i]
-[ 9169.054463] Code: 8b f6 49 8d 55 08 bf 40 01 00 00 e8 b9 c1 81 f5
-e9 31 ff ff ff 89 c6 48 c7 c7 28 d6 89 c0 c6 05 52 1a 03 00 01 e8 d9
-17 80 f5 <0f> 0b e9 ec fe ff ff 48 8b 7b 30 48 c7 c1 90 d6 89 c0 31 d2
-31 f6
-[ 9169.054478] RSP: 0000:ffff93ec8260bc08 EFLAGS: 00010086
-[ 9169.054479] RAX: 0000000000000000 RBX: ffff8c0b463f0018 RCX: 00000000000=
-00002
-[ 9169.054480] RDX: 0000000080000002 RSI: ffffffffb6e811ce RDI: 00000000fff=
-fffff
-[ 9169.054480] RBP: ffff8c0b463f8f10 R08: 00000000bc39adb0 R09: 00000000000=
-0003d
-[ 9169.054481] R10: 00000000000004c6 R11: 0000000000006afc R12: ffff93ec826=
-0bc70
-[ 9169.054481] R13: 000000000c040008 R14: ffff93ec85d49000 R15: ffff8c0b403=
-ba7f0
-[ 9169.054482] FS:  0000000000000000(0000) GS:ffff8c0b4d400000(0000)
-knlGS:0000000000000000
-[ 9169.054483] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 9169.054483] CR2: 0000000000000000 CR3: 000000038920a001 CR4: 00000000003=
-606e0
-[ 9169.054484] Call Trace:
-[ 9169.054490]  iwl_fw_error_dump+0xb38/0x1070 [iwlwifi]
-[ 9169.054495]  __iwl_mvm_mac_start+0x2ac/0x2f0 [iwlmvm]
-[ 9169.054497]  ? preempt_count_add+0x68/0xa0
-[ 9169.054501]  iwl_mvm_mac_start+0x53/0x120 [iwlmvm]
-[ 9169.054502]  ? __cancel_work_timer+0x105/0x190
-[ 9169.054512]  drv_start+0x3e/0x130 [mac80211]
-[ 9169.054522]  ieee80211_reconfig+0x84/0x1470 [mac80211]
-[ 9169.054523]  ? preempt_count_add+0x68/0xa0
-[ 9169.054533]  wiphy_resume+0x5f/0x130 [cfg80211]
-[ 9169.054539]  ? wiphy_namespace+0x10/0x10 [cfg80211]
-[ 9169.054541]  dpm_run_callback+0x59/0x180
-[ 9169.054542]  device_resume+0xac/0x1f0
-[ 9169.054543]  async_resume+0x19/0x30
-[ 9169.054545]  async_run_entry_fn+0x37/0x140
-[ 9169.054546]  process_one_work+0x1eb/0x3c0
-[ 9169.054547]  worker_thread+0x2d/0x3d0
-[ 9169.054548]  ? process_one_work+0x3c0/0x3c0
-[ 9169.054550]  kthread+0x112/0x130
-[ 9169.054552]  ? kthread_flush_work_fn+0x10/0x10
-[ 9169.054554]  ret_from_fork+0x35/0x40
-[ 9169.054555] ---[ end trace b117d1f26462321e ]---
-[ 9169.054557] iwlwifi 0000:45:00.0: iwlwifi transaction failed,
-dumping registers
-[ 9169.054558] iwlwifi 0000:45:00.0: iwlwifi device config registers:
-[ 9169.055444] iwlwifi 0000:45:00.0: 00000000: 25268086 00100406
-02800029 00000010 9db00004 00000000 00000000 00000000
-[ 9169.055446] iwlwifi 0000:45:00.0: 00000020: 00000000 00000000
-00000000 15501a56 00000000 000000c8 00000000 0000010b
-[ 9169.055446] iwlwifi 0000:45:00.0: iwlwifi device memory mapped registers=
-:
-[ 9169.055603] iwlwifi 0000:45:00.0: 00000000: 00880000 00000000
-00000000 00000000 00000000 00000000 00027e1f 00000000
-[ 9169.055604] iwlwifi 0000:45:00.0: 00000020: 00000011 0c040008
-00000321 d55555d5 d55555d5 d55555d5 80008040 001f0042
-[ 9169.055655] iwlwifi 0000:45:00.0: iwlwifi device AER capability structur=
-e:
-[ 9169.055728] iwlwifi 0000:45:00.0: 00000000: 14c10001 00000000
-00000000 00462031 00000000 00002000 00000000 00000000
-[ 9169.055728] iwlwifi 0000:45:00.0: 00000020: 00000000 00000000 00000000
-[ 9169.055729] iwlwifi 0000:45:00.0: iwlwifi parent port
-(0000:00:1d.7) config registers:
-[ 9169.055765] iwlwifi 0000:00:1d.7: 00000000: a3378086 00100407
-060400f0 00810010 00000000 00000000 00454500 000000f0
-[ 9169.055766] iwlwifi 0000:00:1d.7: 00000020: 9db09db0 0001fff1
-00000000 00000000 00000000 00000040 00000000 0010040b
-[ 9169.055769] iwlwifi 0000:45:00.0: iwlwifi root port (0000:00:1d.7)
-AER cap structure:
-[ 9169.055779] iwlwifi 0000:00:1d.7: 00000000: 14010001 00000000
-00010000 00060011 00000000 00002000 00000000 00000000
-[ 9169.055780] iwlwifi 0000:00:1d.7: 00000020: 00000000 00000000
-00000000 00000000 00000000 00000000
-[ 9169.153147] usb 1-14: reset full-speed USB device number 4 using xhci_hc=
-d
-[ 9169.416520] usb 1-7: reset high-speed USB device number 3 using xhci_hcd
-[ 9170.457761] WARNING: CPU: 1 PID: 4223 at
-drivers/net/wireless/intel/iwlwifi/mvm/sta.c:96
-iwl_mvm_find_free_sta_id+0x45/0x50 [iwlmvm]
-[ 9170.457765] Modules linked in: rfcomm fuse nvidia_modeset(PO)
-nvidia(PO) ipmi_devintf ipmi_msghandler 8021q mrp ccm joydev mousedev
-bnep arc4 snd_hda_codec_hdmi iwlmvm mac80211 intel_rapl
-x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel
-snd_hda_codec_realtek snd_hda_codec_generic kvm snd_hda_intel
-i2c_algo_bit iwlwifi irqbypass crct10dif_pclmul drm_kms_helper
-snd_hda_codec crc32_pclmul dell_wmi iTCO_wdt ghash_clmulni_intel
-dell_smbios drm iTCO_vendor_support pcbc btusb snd_hda_core dcdbas
-uvcvideo cfg80211 btrtl btbcm alienware_wmi btintel snd_hwdep
-videobuf2_vmalloc dell_wmi_descriptor wmi_bmof intel_wmi_thunderbolt
-snd_pcm mxm_wmi videobuf2_memops videobuf2_v4l2 bluetooth intel_gtt
-videobuf2_common agpgart aesni_intel idma64 aes_x86_64 videodev
-crypto_simd cryptd glue_helper intel_lpss_pci
-[ 9170.457858]  syscopyarea snd_timer mei_me input_leds sysfillrect
-intel_cstate sysimgblt snd ucsi_acpi intel_uncore typec_ucsi alx
-ecdh_generic processor_thermal_device media psmouse mei
-intel_rapl_perf rfkill mdio fb_sys_fops i2c_i801 led_class soundcore
-pcspkr intel_lpss intel_pch_thermal intel_soc_dts_iosf typec rtc_cmos
-int3403_thermal battery int340x_thermal_zone ac wmi int3400_thermal
-evdev intel_hid pcc_cpufreq acpi_thermal_rel mac_hid sparse_keymap
-crypto_user ip_tables x_tables ext4 crc32c_generic crc16 mbcache jbd2
-fscrypto hid_generic usbhid hid sd_mod ahci xhci_pci libahci xhci_hcd
-serio_raw atkbd libata libps2 usbcore crc32c_intel scsi_mod usb_common
-i8042 serio
-[ 9170.457954] CPU: 1 PID: 4223 Comm: kworker/u24:29 Tainted: P
-W  O      4.18.5-arch1-1-ARCH #1
-[ 9170.457957] Hardware name: Alienware Alienware 15 R4/Alienware 15
-R4, BIOS 1.2.1 05/29/2018
-[ 9170.457968] Workqueue: events_unbound async_run_entry_fn
-[ 9170.457991] RIP: 0010:iwl_mvm_find_free_sta_id+0x45/0x50 [iwlmvm]
-[ 9170.457993] Code: b6 f6 48 89 f2 89 c8 48 d3 ea 48 85 d2 75 0b 48
-83 bc cf 70 18 00 00 00 74 0f 48 83 c1 01 48 83 f9 10 75 de b8 ff 00
-00 00 c3 <0f> 0b eb c7 0f 1f 80 00 00 00 00 0f 1f 44 00 00 55 41 89 c8
-31 ed
-[ 9170.458074] RSP: 0000:ffff93ec8260bbe8 EFLAGS: 00010202
-[ 9170.458078] RAX: 0000000000000110 RBX: ffff8c0b403baee4 RCX: 00000000000=
-00000
-[ 9170.458081] RDX: 0000000000000002 RSI: 0000000000000000 RDI: ffff8c0b403=
-b9528
-[ 9170.458083] RBP: ffff8c0b403b9528 R08: 0000000000000004 R09: 00000000000=
-00000
-[ 9170.458086] R10: 0000000000000000 R11: ffff8c0b4d260a68 R12: 00000000000=
-00004
-[ 9170.458088] R13: 0000000000000002 R14: ffff8c0b403ba7f0 R15: ffffffffb6e=
-dc00f
-[ 9170.458092] FS:  0000000000000000(0000) GS:ffff8c0b4d240000(0000)
-knlGS:0000000000000000
-[ 9170.458095] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 9170.458098] CR2: 0000000000000000 CR3: 000000038920a001 CR4: 00000000003=
-606e0
-[ 9170.458100] Call Trace:
-[ 9170.458126]  iwl_mvm_allocate_int_sta+0x56/0x70 [iwlmvm]
-[ 9170.458148]  iwl_mvm_add_aux_sta+0x34/0xe0 [iwlmvm]
-[ 9170.458164]  iwl_mvm_up+0x330/0x9b0 [iwlmvm]
-[ 9170.458216]  ? __iterate_interfaces+0x72/0x110 [mac80211]
-[ 9170.458226]  ? _raw_spin_unlock_irqrestore+0x20/0x40
-[ 9170.458270]  ? ieee80211_wake_queues_by_reason+0x83/0xa0 [mac80211]
-[ 9170.458288]  __iwl_mvm_mac_start+0x259/0x2f0 [iwlmvm]
-[ 9170.458295]  ? preempt_count_add+0x68/0xa0
-[ 9170.458311]  iwl_mvm_mac_start+0x53/0x120 [iwlmvm]
-[ 9170.458318]  ? __cancel_work_timer+0x105/0x190
-[ 9170.458350]  drv_start+0x3e/0x130 [mac80211]
-[ 9170.458395]  ieee80211_reconfig+0x84/0x1470 [mac80211]
-[ 9170.458402]  ? preempt_count_add+0x68/0xa0
-[ 9170.458440]  wiphy_resume+0x5f/0x130 [cfg80211]
-[ 9170.458468]  ? wiphy_namespace+0x10/0x10 [cfg80211]
-[ 9170.458475]  dpm_run_callback+0x59/0x180
-[ 9170.458482]  device_resume+0xac/0x1f0
-[ 9170.458488]  async_resume+0x19/0x30
-[ 9170.458495]  async_run_entry_fn+0x37/0x140
-[ 9170.458501]  process_one_work+0x1eb/0x3c0
-[ 9170.458507]  worker_thread+0x2d/0x3d0
-[ 9170.458513]  ? process_one_work+0x3c0/0x3c0
-[ 9170.458519]  kthread+0x112/0x130
-[ 9170.458525]  ? kthread_flush_work_fn+0x10/0x10
-[ 9170.458533]  ret_from_fork+0x35/0x40
-[ 9170.458540] ---[ end trace b117d1f26462321f ]---
-
-
->
-> --
-> Cheers,
-> Luca.
->
-
-
---=20
-             _
- _ __ __|  |       ___
-|  '__/  _` |      /  _  \
-|  |  |  (_|  |     |  (_)  |
-|_|   \__,_|___ \___/
-            |_____|
-l.u. #425157
+I'm not sure if it works, I only copiled it for now.
+Looking for review/comments at this point.
+--
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index b4c3a957c102..73969dbeb5c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -985,15 +985,12 @@ struct ieee80211_regdomain *
+ 	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
+ 			     iwl_ext_nvm_channels : iwl_nvm_channels;
+ 	struct ieee80211_regdomain *regd, *copy_rd;
+-	int size_of_regd, regd_to_copy, wmms_to_copy;
+-	int size_of_wmms = 0;
++	int size_of_regd, regd_to_copy;
+ 	struct ieee80211_reg_rule *rule;
+-	struct ieee80211_wmm_rule *wmm_rule, *d_wmm, *s_wmm;
+ 	struct regdb_ptrs *regdb_ptrs;
+ 	enum nl80211_band band;
+ 	int center_freq, prev_center_freq = 0;
+-	int valid_rules = 0, n_wmms = 0;
+-	int i;
++	int valid_rules = 0;
+ 	bool new_rule;
+ 	int max_num_ch = cfg->nvm_type == IWL_NVM_EXT ?
+ 			 IWL_NVM_NUM_CHANNELS_EXT : IWL_NVM_NUM_CHANNELS;
+@@ -1012,11 +1009,7 @@ struct ieee80211_regdomain *
+ 		sizeof(struct ieee80211_regdomain) +
+ 		num_of_ch * sizeof(struct ieee80211_reg_rule);
+ 
+-	if (geo_info & GEO_WMM_ETSI_5GHZ_INFO)
+-		size_of_wmms =
+-			num_of_ch * sizeof(struct ieee80211_wmm_rule);
+-
+-	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
++	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1030,8 +1023,6 @@ struct ieee80211_regdomain *
+ 	regd->alpha2[0] = fw_mcc >> 8;
+ 	regd->alpha2[1] = fw_mcc & 0xff;
+ 
+-	wmm_rule = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-
+ 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
+ 		ch_flags = (u16)__le32_to_cpup(channels + ch_idx);
+ 		band = (ch_idx < NUM_2GHZ_CHANNELS) ?
+@@ -1085,26 +1076,10 @@ struct ieee80211_regdomain *
+ 		    band == NL80211_BAND_2GHZ)
+ 			continue;
+ 
+-		if (!reg_query_regdb_wmm(regd->alpha2, center_freq,
+-					 &regdb_ptrs[n_wmms].token, wmm_rule)) {
+-			/* Add only new rules */
+-			for (i = 0; i < n_wmms; i++) {
+-				if (regdb_ptrs[i].token ==
+-				    regdb_ptrs[n_wmms].token) {
+-					rule->wmm_rule = regdb_ptrs[i].rule;
+-					break;
+-				}
+-			}
+-			if (i == n_wmms) {
+-				rule->wmm_rule = wmm_rule;
+-				regdb_ptrs[n_wmms++].rule = wmm_rule;
+-				wmm_rule++;
+-			}
+-		}
++		reg_query_regdb_wmm(regd->alpha2, center_freq, rule);
+ 	}
+ 
+ 	regd->n_reg_rules = valid_rules;
+-	regd->n_wmm_rules = n_wmms;
+ 
+ 	/*
+ 	 * Narrow down regdom for unused regulatory rules to prevent hole
+@@ -1113,28 +1088,13 @@ struct ieee80211_regdomain *
+ 	regd_to_copy = sizeof(struct ieee80211_regdomain) +
+ 		valid_rules * sizeof(struct ieee80211_reg_rule);
+ 
+-	wmms_to_copy = sizeof(struct ieee80211_wmm_rule) * n_wmms;
+-
+-	copy_rd = kzalloc(regd_to_copy + wmms_to_copy, GFP_KERNEL);
++	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
+ 	if (!copy_rd) {
+ 		copy_rd = ERR_PTR(-ENOMEM);
+ 		goto out;
+ 	}
+ 
+ 	memcpy(copy_rd, regd, regd_to_copy);
+-	memcpy((u8 *)copy_rd + regd_to_copy, (u8 *)regd + size_of_regd,
+-	       wmms_to_copy);
+-
+-	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)copy_rd + regd_to_copy);
+-	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-
+-	for (i = 0; i < regd->n_reg_rules; i++) {
+-		if (!regd->reg_rules[i].wmm_rule)
+-			continue;
+-
+-		copy_rd->reg_rules[i].wmm_rule = d_wmm +
+-			(regd->reg_rules[i].wmm_rule - s_wmm);
+-	}
+ 
+ out:
+ 	kfree(regdb_ptrs);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9a850973e09a..8ebabc9873d1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4865,8 +4865,8 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  *
+  * Return: 0 on success. -ENODATA.
+  */
+-int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
+-			struct ieee80211_wmm_rule *rule);
++int reg_query_regdb_wmm(char *alpha2, int freq,
++			struct ieee80211_reg_rule *rule);
+ 
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 60f8cc86a447..4c4ec3951c48 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -217,7 +217,7 @@ struct ieee80211_wmm_rule {
+ struct ieee80211_reg_rule {
+ 	struct ieee80211_freq_range freq_range;
+ 	struct ieee80211_power_rule power_rule;
+-	struct ieee80211_wmm_rule *wmm_rule;
++	struct ieee80211_wmm_rule wmm_rule;
+ 	u32 flags;
+ 	u32 dfs_cac_ms;
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7acc16f34942..ef1f00266566 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3598,6 +3598,7 @@ enum nl80211_reg_rule_flags {
+ 	NL80211_RRF_NO_HT40PLUS		= 1<<14,
+ 	NL80211_RRF_NO_80MHZ		= 1<<15,
+ 	NL80211_RRF_NO_160MHZ		= 1<<16,
++	NL80211_RRF_HAS_WMM		= 1<<17,
+ };
+ 
+ #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 88efda7c9f8a..fccc1af0d027 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1135,7 +1135,7 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	const struct ieee80211_reg_rule *rrule;
+-	struct ieee80211_wmm_ac *wmm_ac;
++	const struct ieee80211_wmm_ac *wmm_ac;
+ 	u16 center_freq = 0;
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_AP &&
+@@ -1154,15 +1154,15 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 
+ 	rrule = freq_reg_info(sdata->wdev.wiphy, MHZ_TO_KHZ(center_freq));
+ 
+-	if (IS_ERR_OR_NULL(rrule) || !rrule->wmm_rule) {
++	if (IS_ERR_OR_NULL(rrule) || !(rrule->flags & NL80211_RRF_HAS_WMM)) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP)
+-		wmm_ac = &rrule->wmm_rule->ap[ac];
++		wmm_ac = &rrule->wmm_rule.ap[ac];
+ 	else
+-		wmm_ac = &rrule->wmm_rule->client[ac];
++		wmm_ac = &rrule->wmm_rule.client[ac];
+ 	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
+ 	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
+ 	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5fb9b7dd9831..461621b02573 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -669,13 +669,13 @@ static int nl80211_msg_put_wmm_rules(struct sk_buff *msg,
+ 			goto nla_put_failure;
+ 
+ 		if (nla_put_u16(msg, NL80211_WMMR_CW_MIN,
+-				rule->wmm_rule->client[j].cw_min) ||
++				rule->wmm_rule.client[j].cw_min) ||
+ 		    nla_put_u16(msg, NL80211_WMMR_CW_MAX,
+-				rule->wmm_rule->client[j].cw_max) ||
++				rule->wmm_rule.client[j].cw_max) ||
+ 		    nla_put_u8(msg, NL80211_WMMR_AIFSN,
+-			       rule->wmm_rule->client[j].aifsn) ||
++			       rule->wmm_rule.client[j].aifsn) ||
+ 		    nla_put_u8(msg, NL80211_WMMR_TXOP,
+-			       rule->wmm_rule->client[j].cot))
++			       rule->wmm_rule.client[j].cot))
+ 			goto nla_put_failure;
+ 
+ 		nla_nest_end(msg, nl_wmm_rule);
+@@ -768,7 +768,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
+ 		const struct ieee80211_reg_rule *rule =
+ 			freq_reg_info(wiphy, chan->center_freq);
+ 
+-		if (!IS_ERR(rule) && rule->wmm_rule) {
++		if (!IS_ERR(rule) && (rule->flags & NL80211_RRF_HAS_WMM)) {
+ 			if (nl80211_msg_put_wmm_rules(msg, rule))
+ 				goto nla_put_failure;
+ 		}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4fc66a117b7d..eb78c34d2357 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -425,35 +425,22 @@ static bool is_user_regdom_saved(void)
+ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ {
+ 	struct ieee80211_regdomain *regd;
+-	int size_of_regd, size_of_wmms;
++	int size_of_regd;
+ 	unsigned int i;
+-	struct ieee80211_wmm_rule *d_wmm, *s_wmm;
+ 
+ 	size_of_regd =
+ 		sizeof(struct ieee80211_regdomain) +
+ 		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
+-	size_of_wmms = src_regd->n_wmm_rules *
+-		sizeof(struct ieee80211_wmm_rule);
+ 
+-	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
++	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
+ 
+-	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)src_regd + size_of_regd);
+-	memcpy(d_wmm, s_wmm, size_of_wmms);
+-
+ 	for (i = 0; i < src_regd->n_reg_rules; i++) {
+ 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
+ 		       sizeof(struct ieee80211_reg_rule));
+-		if (!src_regd->reg_rules[i].wmm_rule)
+-			continue;
+-
+-		regd->reg_rules[i].wmm_rule = d_wmm +
+-			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
+-			sizeof(struct ieee80211_wmm_rule);
+ 	}
+ 	return regd;
+ }
+@@ -860,9 +847,10 @@ static bool valid_regdb(const u8 *data, unsigned int size)
+ 	return true;
+ }
+ 
+-static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
++static void set_wmm_rule(struct ieee80211_reg_rule *rrule,
+ 			 struct fwdb_wmm_rule *wmm)
+ {
++	struct ieee80211_wmm_rule *rule = &rrule->wmm_rule;
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+@@ -876,11 +864,13 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
+ 		rule->ap[i].aifsn = wmm->ap[i].aifsn;
+ 		rule->ap[i].cot = 1000 * be16_to_cpu(wmm->ap[i].cot);
+ 	}
++
++	rrule->flags |= NL80211_RRF_HAS_WMM;
+ }
+ 
+ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 			     const struct fwdb_country *country, int freq,
+-			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
++			     struct ieee80211_reg_rule *rule)
+ {
+ 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
+ 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
+@@ -901,8 +891,6 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
+ 			wmm = (void *)((u8 *)db + wmm_ptr);
+ 			set_wmm_rule(rule, wmm);
+-			if (dbptr)
+-				*dbptr = wmm_ptr;
+ 			return 0;
+ 		}
+ 	}
+@@ -910,8 +898,7 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 	return -ENODATA;
+ }
+ 
+-int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+-			struct ieee80211_wmm_rule *rule)
++int reg_query_regdb_wmm(char *alpha2, int freq, struct ieee80211_reg_rule *rule)
+ {
+ 	const struct fwdb_header *hdr = regdb;
+ 	const struct fwdb_country *country;
+@@ -925,8 +912,7 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+ 	country = &hdr->country[0];
+ 	while (country->coll_ptr) {
+ 		if (alpha2_equal(alpha2, country->alpha2))
+-			return __regdb_query_wmm(regdb, country, freq, dbptr,
+-						 rule);
++			return __regdb_query_wmm(regdb, country, freq, rule);
+ 
+ 		country++;
+ 	}
+@@ -935,32 +921,13 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+ }
+ EXPORT_SYMBOL(reg_query_regdb_wmm);
+ 
+-struct wmm_ptrs {
+-	struct ieee80211_wmm_rule *rule;
+-	u32 ptr;
+-};
+-
+-static struct ieee80211_wmm_rule *find_wmm_ptr(struct wmm_ptrs *wmm_ptrs,
+-					       u32 wmm_ptr, int n_wmms)
+-{
+-	int i;
+-
+-	for (i = 0; i < n_wmms; i++) {
+-		if (wmm_ptrs[i].ptr == wmm_ptr)
+-			return wmm_ptrs[i].rule;
+-	}
+-	return NULL;
+-}
+-
+ static int regdb_query_country(const struct fwdb_header *db,
+ 			       const struct fwdb_country *country)
+ {
+ 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
+ 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
+ 	struct ieee80211_regdomain *regdom;
+-	struct ieee80211_regdomain *tmp_rd;
+-	unsigned int size_of_regd, i, n_wmms = 0;
+-	struct wmm_ptrs *wmm_ptrs;
++	unsigned int size_of_regd, i;
+ 
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+ 		coll->n_rules * sizeof(struct ieee80211_reg_rule);
+@@ -969,12 +936,6 @@ static int regdb_query_country(const struct fwdb_header *db,
+ 	if (!regdom)
+ 		return -ENOMEM;
+ 
+-	wmm_ptrs = kcalloc(coll->n_rules, sizeof(*wmm_ptrs), GFP_KERNEL);
+-	if (!wmm_ptrs) {
+-		kfree(regdom);
+-		return -ENOMEM;
+-	}
+-
+ 	regdom->n_reg_rules = coll->n_rules;
+ 	regdom->alpha2[0] = country->alpha2[0];
+ 	regdom->alpha2[1] = country->alpha2[1];
+@@ -1013,37 +974,11 @@ static int regdb_query_country(const struct fwdb_header *db,
+ 				1000 * be16_to_cpu(rule->cac_timeout);
+ 		if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
+ 			u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
+-			struct ieee80211_wmm_rule *wmm_pos =
+-				find_wmm_ptr(wmm_ptrs, wmm_ptr, n_wmms);
+-			struct fwdb_wmm_rule *wmm;
+-			struct ieee80211_wmm_rule *wmm_rule;
+-
+-			if (wmm_pos) {
+-				rrule->wmm_rule = wmm_pos;
+-				continue;
+-			}
+-			wmm = (void *)((u8 *)db + wmm_ptr);
+-			tmp_rd = krealloc(regdom, size_of_regd + (n_wmms + 1) *
+-					  sizeof(struct ieee80211_wmm_rule),
+-					  GFP_KERNEL);
+-
+-			if (!tmp_rd) {
+-				kfree(regdom);
+-				kfree(wmm_ptrs);
+-				return -ENOMEM;
+-			}
+-			regdom = tmp_rd;
+-
+-			wmm_rule = (struct ieee80211_wmm_rule *)
+-				((u8 *)regdom + size_of_regd + n_wmms *
+-				sizeof(struct ieee80211_wmm_rule));
++			struct fwdb_wmm_rule *wmm = (void *)((u8 *)db + wmm_ptr);
+ 
+-			set_wmm_rule(wmm_rule, wmm);
+-			wmm_ptrs[n_wmms].ptr = wmm_ptr;
+-			wmm_ptrs[n_wmms++].rule = wmm_rule;
++			set_wmm_rule(rrule, wmm);
+ 		}
+ 	}
+-	kfree(wmm_ptrs);
+ 
+ 	return reg_schedule_apply(regdom);
+ }
+--
