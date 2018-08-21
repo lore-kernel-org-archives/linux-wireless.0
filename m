@@ -1,107 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:6039 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726246AbeHWPQl (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42854 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727142AbeHUJz4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 11:16:41 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 2/9] wil6210: add support for channel 4
-Date: Thu, 23 Aug 2018 14:47:06 +0300
-Message-Id: <1535024833-15178-3-git-send-email-merez@codeaurora.org> (sfid-20180823_134749_448488_C36E6697)
-In-Reply-To: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
-References: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
+        Tue, 21 Aug 2018 05:55:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 09:36:48 +0300
+Message-Id: <20180821063657.30071-7-luca@coelho.fi> (sfid-20180821_083714_166269_A0651659)
+In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
+References: <20180821063657.30071-1-luca@coelho.fi>
+Subject: [PATCH 06/15] iwlwifi: pcie: make gen2 of apm_init non-static
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-wil6210 supports channels 1-3 of the 60GHz band.
-New FW added support for channel 4. Add support for channel 4 also in
-wil6210 driver.
+This will allow using the same init in future generations.
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 22 +++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/main.c     |  2 ++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 ++
- drivers/net/wireless/ath/wil6210/wmi.h      |  1 +
- 4 files changed, 26 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h   | 1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index f79c337..1bdb026 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -48,9 +48,29 @@
- 	CHAN60G(1, 0),
- 	CHAN60G(2, 0),
- 	CHAN60G(3, 0),
--/* channel 4 not supported yet */
-+	CHAN60G(4, 0),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index c03de2bc5739..8fdef4a26db4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -1009,6 +1009,7 @@ void iwl_pcie_enable_rx_wake(struct iwl_trans *trans, bool enable);
+ void iwl_pcie_rx_allocator_work(struct work_struct *data);
  
-+static int wil_num_supported_channels(struct wil6210_priv *wil)
-+{
-+	int num_channels = ARRAY_SIZE(wil_60ghz_channels);
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_CHANNEL_4, wil->fw_capabilities))
-+		num_channels--;
-+
-+	return num_channels;
-+}
-+
-+void update_supported_bands(struct wil6210_priv *wil)
-+{
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+
-+	wil_dbg_misc(wil, "update supported bands");
-+
-+	wiphy->bands[NL80211_BAND_60GHZ]->n_channels =
-+						wil_num_supported_channels(wil);
-+}
-+
- /* Vendor id to be used in vendor specific command and events
-  * to user space.
-  * NOTE: The authoritative place for definition of QCA_NL80211_VENDOR_ID,
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7debed6..8820cee 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1154,6 +1154,8 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
- 		wil->max_agg_wsize = WIL_MAX_AGG_WSIZE;
- 		wil->max_ampdu_size = WIL_MAX_AMPDU_SIZE;
- 	}
-+
-+	update_supported_bands(wil);
- }
- 
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 17c294b..85565de 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1370,4 +1370,6 @@ int wmi_addba_rx_resp_edma(struct wil6210_priv *wil, u8 mid, u8 cid,
- 			   u8 tid, u8 token, u16 status, bool amsdu,
- 			   u16 agg_wsize, u16 timeout);
- 
-+void update_supported_bands(struct wil6210_priv *wil);
-+
- #endif /* __WIL6210_H__ */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 139acb2..f430e1d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -103,6 +103,7 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_AMSDU				= 23,
- 	WMI_FW_CAPABILITY_RAW_MODE			= 24,
- 	WMI_FW_CAPABILITY_TX_REQ_EXT			= 25,
-+	WMI_FW_CAPABILITY_CHANNEL_4			= 26,
- 	WMI_FW_CAPABILITY_MAX,
- };
+ /* common functions that are used by gen2 transport */
++int iwl_pcie_gen2_apm_init(struct iwl_trans *trans);
+ void iwl_pcie_apm_config(struct iwl_trans *trans);
+ int iwl_pcie_prepare_card_hw(struct iwl_trans *trans);
+ void iwl_pcie_synchronize_irqs(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 3e5c732a89db..9b2a248e88b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -61,7 +61,7 @@
+  * (e.g. after platform boot, or shutdown via iwl_pcie_apm_stop())
+  * NOTE:  This does not load uCode nor start the embedded processor
+  */
+-static int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
++int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
+ {
+ 	int ret = 0;
  
 -- 
-1.9.1
+2.18.0
