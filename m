@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56236 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729511AbeHWQHc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 12:07:32 -0400
-Date: Thu, 23 Aug 2018 15:37:40 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, linux-wireless@vger.kernel.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 23/24] staging: wilc1000: move 'wilc_connecting' static
- variable to 'wilc_vif' struct
-Message-ID: <20180823123740.u3dnrnmxir3fq5uw@mwanda> (sfid-20180823_143803_795072_171AC3BD)
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-24-git-send-email-ajay.kathat@microchip.com>
- <20180823105527.GA1404@kroah.com>
- <20180823165748.0dbc7149@ajaysk-VirtualBox>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34000 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726343AbeHUMiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 21 Aug 2018 08:38:23 -0400
+Date: Tue, 21 Aug 2018 11:18:59 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Grzegorz =?utf-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC] cfg80211: let's wmm_rule be part of reg_rule structure
+Message-ID: <20180821091858.GA9376@redhat.com> (sfid-20180821_111904_478927_7BAE7C81)
+References: <20180821074020.GA28952@redhat.com>
+ <7580e821-bfa0-e4d4-435f-a042b0eba555@gmail.com>
+ <1534841913.25523.0.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180823165748.0dbc7149@ajaysk-VirtualBox>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1534841913.25523.0.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 23, 2018 at 04:57:48PM +0530, Ajay Singh wrote:
-> Hi Greg,
-> 
-> On Thu, 23 Aug 2018 12:55:27 +0200
-> Greg KH <gregkh@linuxfoundation.org> wrote:
-> 
-> > On Tue, Aug 14, 2018 at 12:20:15PM +0530, Ajay Singh wrote:
-> > > --- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> > > +++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> > > @@ -151,6 +151,7 @@ struct wilc_vif {
-> > >  	struct timer_list periodic_rssi;
-> > >  	struct rf_info periodic_stat;
-> > >  	struct tcp_ack_filter ack_filter;
-> > > +	int connecting;  
+On Tue, Aug 21, 2018 at 10:58:33AM +0200, Johannes Berg wrote:
+> On Tue, 2018-08-21 at 10:57 +0200, Grzegorz Duszyński wrote:
+> > I've just briefly tested it, looks like it's working!
+> > I have only remote access to my machine at the moment so it's difficult 
+> > to say for sure if everything is in order.
+> > However stalls do not occur, nor there are any error/warnings anywhere.
 > > 
-> > Shouldn't this be a boolean?
-> > 
-> 
-> Yes, 'connecting' only have value as 0 or 1. I will change it to
-> bool and rename it to 'is_connecting'.
+> That probably just means you now have some invalid data somewhere,
+> rather than a crash... Not sure which is better - I guess you'd rather
+> have it not crash, and I'd rather figure out where the invalid data is
+> coming from :)
 
-I think just the name "connecting" implies bool so there is no need for
-the "is_".
+I think corruption of ieee80211_wmm_rule could came from strange
+pointers aritmetic and fwdb_wmm_rule can be fine. Anyway perhaps
+something like this on top of RFC patch would be helpful. 
 
-regards,
-dan carpenter
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index eb78c34d2357..4f84a67a0959 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -853,6 +853,11 @@ static void set_wmm_rule(struct ieee80211_reg_rule *rrule,
+ 	struct ieee80211_wmm_rule *rule = &rrule->wmm_rule;
+ 	unsigned int i;
+ 
++	if (!valid_wmm(wmm)) {
++		pr_err("Invalid WMM rule\n");
++		return;
++	}
++
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		rule->client[i].cw_min =
+ 			ecw2cw((wmm->client[i].ecw & 0xf0) >> 4);
