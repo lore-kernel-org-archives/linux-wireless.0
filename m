@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54948 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726287AbeHXUtr (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42700 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726253AbeHUI2z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 16:49:47 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wcn36xx: replace dma_alloc_coherent + memset with dma_zalloc_coherent
-Date: Fri, 24 Aug 2018 18:14:10 +0100
-Message-Id: <20180824171410.22539-1-colin.king@canonical.com> (sfid-20180824_191427_240536_D16FC418)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Tue, 21 Aug 2018 04:28:55 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 21 Aug 2018 08:09:47 +0300
+Message-Id: <20180821050952.31603-13-luca@coelho.fi> (sfid-20180821_071024_817453_829186B9)
+In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
+References: <20180821050952.31603-1-luca@coelho.fi>
+Subject: [PATCH v2 12/17] iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-It is preferable to use dma_zalloc_coherent rather than dam_alloc_coherent
-and memset, so use it.
+Current implementation turns this bit on only for HE MU.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 06cfe8d311f3..e66ddaa39523 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -174,13 +174,11 @@ static int wcn36xx_dxe_init_descs(struct device *dev, struct wcn36xx_dxe_ch *wcn
- 	int i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 4af3ab2ee1a8..311c639e23de 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1082,7 +1082,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			mvm->ampdu_toggle = toggle_bit;
  
- 	size = wcn_ch->desc_num * sizeof(struct wcn36xx_dxe_desc);
--	wcn_ch->cpu_addr = dma_alloc_coherent(dev, size, &wcn_ch->dma_addr,
--					      GFP_KERNEL);
-+	wcn_ch->cpu_addr = dma_zalloc_coherent(dev, size, &wcn_ch->dma_addr,
-+					       GFP_KERNEL);
- 	if (!wcn_ch->cpu_addr)
- 		return -ENOMEM;
- 
--	memset(wcn_ch->cpu_addr, 0, size);
--
- 	cur_dxe = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
- 	cur_ctl = wcn_ch->head_blk_ctl;
- 
+ 			if (he_phy_data != HE_PHY_DATA_INVAL &&
+-			    he_type == RATE_MCS_HE_TYPE_MU) {
++			    (he_type == RATE_MCS_HE_TYPE_MU ||
++			     he_type == RATE_MCS_HE_TYPE_SU)) {
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+ 				if (FIELD_GET(IWL_RX_HE_PHY_DELIM_EOF,
+ 					      he_phy_data))
 -- 
-2.17.1
+2.18.0
