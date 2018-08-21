@@ -1,178 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-blr-01.qualcomm.com ([103.229.18.197]:2659 "EHLO
-        alexa-out-blr-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732373AbeHFRG0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59242 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726628AbeHVAro (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 13:06:26 -0400
-From: Rakesh Pillai <pillair@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Skip resetting rx filter for WCN3990
-Date: Mon,  6 Aug 2018 20:18:08 +0530
-Message-Id: <1533566888-22221-1-git-send-email-pillair@codeaurora.org> (sfid-20180806_165702_652152_91030FCE)
+        Tue, 21 Aug 2018 20:47:44 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 21 Aug 2018 14:25:54 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
+In-Reply-To: <87a7pfaovy.fsf@toke.dk>
+References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
+ <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
+ <87a7pfaovy.fsf@toke.dk>
+Message-ID: <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org> (sfid-20180821_232558_466351_95210704)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 has the MAC_PCU_ADDR1 configured properly
-and hence it will not send spurious ack frames
-during boot up.
+On 2018-08-21 05:24, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> This allows the driver to refill airtime fairness deficit
+>> where the driver will not access txqs by ieee80211_next_txq.
+>> In tx push mode data path, high priority txqs will be scheduled
+>> for data transmission by ieee80211_next_txq and driver will not
+>> prioritize txqs whereas in push-pull mode, the drivers can
+>> prioritize txqs and access them directly. In such mode, airtime
+>> deficit can not filled by ieee80211_next_txq.
+>> 
+[...]
+> 
+> This needs to check that the txq is currently at the head of
+> local->active_txqs[txqi->txq.ac]; otherwise fairness enforcement 
+> doesn't
+> work. And with this check I'm not sure the reorder function is terribly
+> useful for what you want to use it for?
+> 
+Hmm.. I tried to keep the same policy of next_txq(). i.e do not allow 
+serving
+txqs when the deficit is negative. reorder_txq() limits over serving the 
+same
+txq by driver. So that driver is given chance to serve other txqs.
 
-Hence the reset_rx_filter workaround is not needed
-for WCN3990. Add a hw_param to indicate if hardware rx
-filter reset is needed and skip the reset_rx_filter for
-WCN3990.
+As mentioned earlier, next_txq() can not be used for fetching txq 
+directly.
+So reorder_txq() needs to take care of refilling txq after serving them.
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c | 17 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/hw.h   |  5 +++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dfaf7e3..b3ebb37 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -91,6 +91,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA988X_HW_2_0_VERSION,
-@@ -124,6 +125,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -157,6 +159,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -189,6 +192,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -221,6 +225,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -253,6 +258,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -288,6 +294,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -326,6 +333,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -369,6 +377,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -411,6 +420,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -443,6 +453,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -477,6 +488,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -516,6 +528,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
- 		.rri_on_ddr = false,
-+		.hw_filter_reset_required = true,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -539,6 +552,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.per_ce_irq = true,
- 		.shadow_reg_support = true,
- 		.rri_on_ddr = true,
-+		.hw_filter_reset_required = false,
- 	},
- };
- 
-@@ -2414,7 +2428,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	 * possible to implicitly make it correct by creating a dummy vdev and
- 	 * then deleting it.
- 	 */
--	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
-+	if (ar->hw_params.hw_filter_reset_required &&
-+	    mode == ATH10K_FIRMWARE_MODE_NORMAL) {
- 		status = ath10k_core_reset_rx_filter(ar);
- 		if (status) {
- 			ath10k_err(ar,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index a274bd8..7a8da75 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -589,6 +589,11 @@ struct ath10k_hw_params {
- 
- 	/* Number of bytes to be the offset for each FFT sample */
- 	int spectral_bin_offset;
-+
-+	/* targets which require hw filter reset during boot up,
-+	 * to avoid it sending spurious acks.
-+	 */
-+	bool hw_filter_reset_required;
- };
- 
- struct htt_rx_desc;
--- 
-2.7.4
+-Rajkumar
