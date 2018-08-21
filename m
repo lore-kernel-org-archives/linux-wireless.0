@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:38110 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727099AbeH2OKt (ORCPT
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:36138 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727650AbeHUTVY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 10:10:49 -0400
-Message-ID: <1535537670.5215.26.camel@sipsolutions.net> (sfid-20180829_121441_709680_6046F746)
-Subject: Re: [RFC v2 2/4] mac80211: Add airtime accounting and scheduling to
- TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
-Date: Wed, 29 Aug 2018 12:14:30 +0200
-In-Reply-To: <877ek94j66.fsf@toke.dk>
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
-         <153115422499.7447.2570671473822724496.stgit@alrua-x1>
-         <1535528658.5215.19.camel@sipsolutions.net> <877ek94j66.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 21 Aug 2018 15:21:24 -0400
+Date: Tue, 21 Aug 2018 09:00:39 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/2] workqueue lockdep limitations/bugs
+Message-ID: <20180821160039.GO3978217@devbig004.ftw2.facebook.com> (sfid-20180821_180126_052774_5D2E0BF7)
+References: <20180821120317.4115-1-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180821120317.4115-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-29 at 11:27 +0200, Toke Høiland-Jørgensen wrote:
+Hello, Johannes.
 
-> Hmm, the problem with a higher weight is that weight*quantum becomes the
-> time each station is scheduled, so having a higher value means higher
-> latency. This could be fixed by replacing the station weights with
-> per-station quantums, but I felt that this was exposing an
-> implementation detail in the API; if we ever change the enforcement
-> mechanism to not be quantum-based (as may be necessary for MU-MIMO for
-> instance), we'll have to convert values in the kernel. Whereas weights
-> are a conceptual measure that is not tied to any particular
-> implementation.
+On Tue, Aug 21, 2018 at 02:03:15PM +0200, Johannes Berg wrote:
+> 3)
+> The third problem is more complicated, but it means that we likely miss a
+> lot of potential locking problems with ordered workqueues, and I think we
+> should really try to fix this somehow.
+> 
+> Let's say we again have an ordered workqueue, and the following:
+> 
+> work1_function
+> {
+> 	mutex_lock(&mutex);
+> }
 
-Ok, but that's also an effect you should describe in the API for it.
+Regular mutexes complain when the locker isn't the unlocker already.
+Do we really care about this case?
 
-Perhaps then it should just be fractional? i.e. 8.8 bits or so?, so the
-default would be 1.0 (0x0100) and then you could scale down to 0.5
-(0x0080) etc?
+Thanks.
 
-> For the drivers that get airtime as part of TX completion, sure; but as
-> I understand it, at least ath10k gets airtime information in out of band
-> status reports, so there would need to be a callback for that in any
-> case...
-
-Hmm, ok, but perhaps then we should also tie those to the existing
-airtime things?
-
-johannes
+-- 
+tejun
