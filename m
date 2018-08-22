@@ -1,331 +1,421 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42618 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726585AbeHUI2k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:28:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60670 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728312AbeHVPRB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 22 Aug 2018 11:17:01 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:40 +0300
-Message-Id: <20180821050952.31603-6-luca@coelho.fi> (sfid-20180821_071013_748240_8A5CEA3A)
-In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
-References: <20180821050952.31603-1-luca@coelho.fi>
-Subject: [PATCH v2 05/17] iwlwifi: add d3 debug data support
+        =?UTF-8?q?Grzegorz=20Duszy=C5=84ski?= <gfduszynski@gmail.com>
+Subject: [PATCH 1/2] cfg80211: let's wmm_rule be part of reg_rule structure
+Date: Wed, 22 Aug 2018 13:52:21 +0200
+Message-Id: <1534938742-9998-1-git-send-email-sgruszka@redhat.com> (sfid-20180822_135229_531697_E38C19DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Make wmm_rule be part of reg_rule structure. This simplify code
+a lot at cost of having bigger memory usage. However in most cases
+we have only few reg_rule's and when we have many like in iwlwifi
+we do not save memory as we allocate wmm_rule for each channel.
 
-During d3, the firmware records debug data into internal buffer
-if debug data collection occurs, collect the data that was written to the
-buffer
-
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  4 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  4 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 48 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 10 ++++
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  8 ++--
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |  2 +
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  4 ++
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  6 ++-
- 12 files changed, 85 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 50 ++----------
+ include/net/cfg80211.h                             |  4 +-
+ include/net/regulatory.h                           |  4 +-
+ net/mac80211/util.c                                |  8 +-
+ net/wireless/nl80211.c                             | 10 +--
+ net/wireless/reg.c                                 | 91 ++++------------------
+ 6 files changed, 31 insertions(+), 136 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 91ca77c7571c..c6b738c8fd84 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -155,7 +155,9 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.gen2 = true,							\
- 	.nvm_type = IWL_NVM_EXT,					\
- 	.dbgc_supported = true,						\
--	.min_umac_error_event_table = 0x400000
-+	.min_umac_error_event_table = 0x400000,				\
-+	.d3_debug_data_base_addr = 0x401000,				\
-+	.d3_debug_data_length = 60 * 1024
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index b4c3a957c102..73969dbeb5c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -985,15 +985,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
+ 			     iwl_ext_nvm_channels : iwl_nvm_channels;
+ 	struct ieee80211_regdomain *regd, *copy_rd;
+-	int size_of_regd, regd_to_copy, wmms_to_copy;
+-	int size_of_wmms = 0;
++	int size_of_regd, regd_to_copy;
+ 	struct ieee80211_reg_rule *rule;
+-	struct ieee80211_wmm_rule *wmm_rule, *d_wmm, *s_wmm;
+ 	struct regdb_ptrs *regdb_ptrs;
+ 	enum nl80211_band band;
+ 	int center_freq, prev_center_freq = 0;
+-	int valid_rules = 0, n_wmms = 0;
+-	int i;
++	int valid_rules = 0;
+ 	bool new_rule;
+ 	int max_num_ch = cfg->nvm_type == IWL_NVM_EXT ?
+ 			 IWL_NVM_NUM_CHANNELS_EXT : IWL_NVM_NUM_CHANNELS;
+@@ -1012,11 +1009,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		sizeof(struct ieee80211_regdomain) +
+ 		num_of_ch * sizeof(struct ieee80211_reg_rule);
  
- #define IWL_DEVICE_22500						\
- 	IWL_DEVICE_22000_COMMON,					\
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 24b2f7cbb308..37deaf4fd7b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -155,7 +155,9 @@ static const struct iwl_tt_params iwl9000_tt_params = {
- 	.nvm_type = IWL_NVM_EXT,					\
- 	.dbgc_supported = true,						\
- 	.min_umac_error_event_table = 0x800000,				\
--	.csr = &iwl_csr_v1
-+	.csr = &iwl_csr_v1,						\
-+	.d3_debug_data_base_addr = 0x401000,				\
-+	.d3_debug_data_length = 92 * 1024
+-	if (geo_info & GEO_WMM_ETSI_5GHZ_INFO)
+-		size_of_wmms =
+-			num_of_ch * sizeof(struct ieee80211_wmm_rule);
+-
+-	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
++	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+ 		return ERR_PTR(-ENOMEM);
  
- const struct iwl_cfg iwl9160_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 9160",
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index bab54c9889af..70173ad11050 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -746,6 +746,11 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 			 sizeof(struct iwl_fw_error_dump_paging) +
- 			 PAGING_BLOCK_SIZE);
+@@ -1030,8 +1023,6 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 	regd->alpha2[0] = fw_mcc >> 8;
+ 	regd->alpha2[1] = fw_mcc & 0xff;
  
-+	if (iwl_fw_dbg_is_d3_debug_enabled(fwrt) && fwrt->dump.d3_debug_data) {
-+		file_len += sizeof(*dump_data) +
-+			fwrt->trans->cfg->d3_debug_data_length * 2;
-+	}
-+
- 	/* If we only want a monitor dump, reset the file length */
- 	if (monitor_dump_only) {
- 		file_len = sizeof(*dump_file) + sizeof(*dump_data) * 2 +
-@@ -858,6 +863,26 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 		dump_data = iwl_fw_error_next_data(dump_data);
+-	wmm_rule = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-
+ 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
+ 		ch_flags = (u16)__le32_to_cpup(channels + ch_idx);
+ 		band = (ch_idx < NUM_2GHZ_CHANNELS) ?
+@@ -1085,26 +1076,10 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 		    band == NL80211_BAND_2GHZ)
+ 			continue;
+ 
+-		if (!reg_query_regdb_wmm(regd->alpha2, center_freq,
+-					 &regdb_ptrs[n_wmms].token, wmm_rule)) {
+-			/* Add only new rules */
+-			for (i = 0; i < n_wmms; i++) {
+-				if (regdb_ptrs[i].token ==
+-				    regdb_ptrs[n_wmms].token) {
+-					rule->wmm_rule = regdb_ptrs[i].rule;
+-					break;
+-				}
+-			}
+-			if (i == n_wmms) {
+-				rule->wmm_rule = wmm_rule;
+-				regdb_ptrs[n_wmms++].rule = wmm_rule;
+-				wmm_rule++;
+-			}
+-		}
++		reg_query_regdb_wmm(regd->alpha2, center_freq, rule);
  	}
  
-+	if (iwl_fw_dbg_is_d3_debug_enabled(fwrt) && fwrt->dump.d3_debug_data) {
-+		u32 addr = fwrt->trans->cfg->d3_debug_data_base_addr;
-+		size_t data_size = fwrt->trans->cfg->d3_debug_data_length;
-+
-+		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_D3_DEBUG_DATA);
-+		dump_data->len = cpu_to_le32(data_size * 2);
-+
-+		memcpy(dump_data->data, fwrt->dump.d3_debug_data,
-+		       data_size);
-+
-+		kfree(fwrt->dump.d3_debug_data);
-+		fwrt->dump.d3_debug_data = NULL;
-+
-+		iwl_trans_read_mem_bytes(fwrt->trans, addr,
-+					 dump_data->data + data_size,
-+					 data_size);
-+
-+		dump_data = iwl_fw_error_next_data(dump_data);
-+	}
-+
- 	for (i = 0; i < fwrt->fw->n_dbg_mem_tlv; i++) {
- 		u32 len = le32_to_cpu(fw_dbg_mem[i].len);
- 		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
-@@ -1212,3 +1237,26 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
- 		fwrt->ops->dump_end(fwrt->ops_ctx);
+ 	regd->n_reg_rules = valid_rules;
+-	regd->n_wmm_rules = n_wmms;
+ 
+ 	/*
+ 	 * Narrow down regdom for unused regulatory rules to prevent hole
+@@ -1113,28 +1088,13 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 	regd_to_copy = sizeof(struct ieee80211_regdomain) +
+ 		valid_rules * sizeof(struct ieee80211_reg_rule);
+ 
+-	wmms_to_copy = sizeof(struct ieee80211_wmm_rule) * n_wmms;
+-
+-	copy_rd = kzalloc(regd_to_copy + wmms_to_copy, GFP_KERNEL);
++	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
+ 	if (!copy_rd) {
+ 		copy_rd = ERR_PTR(-ENOMEM);
+ 		goto out;
+ 	}
+ 
+ 	memcpy(copy_rd, regd, regd_to_copy);
+-	memcpy((u8 *)copy_rd + regd_to_copy, (u8 *)regd + size_of_regd,
+-	       wmms_to_copy);
+-
+-	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)copy_rd + regd_to_copy);
+-	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-
+-	for (i = 0; i < regd->n_reg_rules; i++) {
+-		if (!regd->reg_rules[i].wmm_rule)
+-			continue;
+-
+-		copy_rd->reg_rules[i].wmm_rule = d_wmm +
+-			(regd->reg_rules[i].wmm_rule - s_wmm);
+-	}
+ 
+ out:
+ 	kfree(regdb_ptrs);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9a850973e09a..8ebabc9873d1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4865,8 +4865,8 @@ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
+  *
+  * Return: 0 on success. -ENODATA.
+  */
+-int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
+-			struct ieee80211_wmm_rule *rule);
++int reg_query_regdb_wmm(char *alpha2, int freq,
++			struct ieee80211_reg_rule *rule);
+ 
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 60f8cc86a447..3469750df0f4 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -217,15 +217,15 @@ struct ieee80211_wmm_rule {
+ struct ieee80211_reg_rule {
+ 	struct ieee80211_freq_range freq_range;
+ 	struct ieee80211_power_rule power_rule;
+-	struct ieee80211_wmm_rule *wmm_rule;
++	struct ieee80211_wmm_rule wmm_rule;
+ 	u32 flags;
+ 	u32 dfs_cac_ms;
++	bool has_wmm;
+ };
+ 
+ struct ieee80211_regdomain {
+ 	struct rcu_head rcu_head;
+ 	u32 n_reg_rules;
+-	u32 n_wmm_rules;
+ 	char alpha2[3];
+ 	enum nl80211_dfs_regions dfs_region;
+ 	struct ieee80211_reg_rule reg_rules[];
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 88efda7c9f8a..7ad12c380861 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1135,7 +1135,7 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	const struct ieee80211_reg_rule *rrule;
+-	struct ieee80211_wmm_ac *wmm_ac;
++	const struct ieee80211_wmm_ac *wmm_ac;
+ 	u16 center_freq = 0;
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_AP &&
+@@ -1154,15 +1154,15 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 
+ 	rrule = freq_reg_info(sdata->wdev.wiphy, MHZ_TO_KHZ(center_freq));
+ 
+-	if (IS_ERR_OR_NULL(rrule) || !rrule->wmm_rule) {
++	if (IS_ERR_OR_NULL(rrule) || !rrule->has_wmm) {
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP)
+-		wmm_ac = &rrule->wmm_rule->ap[ac];
++		wmm_ac = &rrule->wmm_rule.ap[ac];
+ 	else
+-		wmm_ac = &rrule->wmm_rule->client[ac];
++		wmm_ac = &rrule->wmm_rule.client[ac];
+ 	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
+ 	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
+ 	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5fb9b7dd9831..6fce50e34882 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -669,13 +669,13 @@ static int nl80211_msg_put_wmm_rules(struct sk_buff *msg,
+ 			goto nla_put_failure;
+ 
+ 		if (nla_put_u16(msg, NL80211_WMMR_CW_MIN,
+-				rule->wmm_rule->client[j].cw_min) ||
++				rule->wmm_rule.client[j].cw_min) ||
+ 		    nla_put_u16(msg, NL80211_WMMR_CW_MAX,
+-				rule->wmm_rule->client[j].cw_max) ||
++				rule->wmm_rule.client[j].cw_max) ||
+ 		    nla_put_u8(msg, NL80211_WMMR_AIFSN,
+-			       rule->wmm_rule->client[j].aifsn) ||
++			       rule->wmm_rule.client[j].aifsn) ||
+ 		    nla_put_u8(msg, NL80211_WMMR_TXOP,
+-			       rule->wmm_rule->client[j].cot))
++			       rule->wmm_rule.client[j].cot))
+ 			goto nla_put_failure;
+ 
+ 		nla_nest_end(msg, nl_wmm_rule);
+@@ -768,7 +768,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
+ 		const struct ieee80211_reg_rule *rule =
+ 			freq_reg_info(wiphy, chan->center_freq);
+ 
+-		if (!IS_ERR(rule) && rule->wmm_rule) {
++		if (!IS_ERR_OR_NULL(rule) && rule->has_wmm) {
+ 			if (nl80211_msg_put_wmm_rules(msg, rule))
+ 				goto nla_put_failure;
+ 		}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4fc66a117b7d..2f702adf2912 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -425,36 +425,23 @@ static const struct ieee80211_regdomain *
+ reg_copy_regd(const struct ieee80211_regdomain *src_regd)
+ {
+ 	struct ieee80211_regdomain *regd;
+-	int size_of_regd, size_of_wmms;
++	int size_of_regd;
+ 	unsigned int i;
+-	struct ieee80211_wmm_rule *d_wmm, *s_wmm;
+ 
+ 	size_of_regd =
+ 		sizeof(struct ieee80211_regdomain) +
+ 		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
+-	size_of_wmms = src_regd->n_wmm_rules *
+-		sizeof(struct ieee80211_wmm_rule);
+ 
+-	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
++	regd = kzalloc(size_of_regd, GFP_KERNEL);
+ 	if (!regd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
+ 
+-	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
+-	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)src_regd + size_of_regd);
+-	memcpy(d_wmm, s_wmm, size_of_wmms);
+-
+-	for (i = 0; i < src_regd->n_reg_rules; i++) {
++	for (i = 0; i < src_regd->n_reg_rules; i++)
+ 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
+ 		       sizeof(struct ieee80211_reg_rule));
+-		if (!src_regd->reg_rules[i].wmm_rule)
+-			continue;
+ 
+-		regd->reg_rules[i].wmm_rule = d_wmm +
+-			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
+-			sizeof(struct ieee80211_wmm_rule);
+-	}
+ 	return regd;
  }
  
-+void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt)
-+{
-+	const struct iwl_cfg *cfg = fwrt->trans->cfg;
-+
-+	if (!iwl_fw_dbg_is_d3_debug_enabled(fwrt))
-+		return;
-+
-+	if (!fwrt->dump.d3_debug_data) {
-+		fwrt->dump.d3_debug_data = kmalloc(cfg->d3_debug_data_length,
-+						   GFP_KERNEL);
-+		if (!fwrt->dump.d3_debug_data) {
-+			IWL_ERR(fwrt,
-+				"failed to allocate memory for D3 debug data\n");
-+			return;
-+		}
-+	}
-+
-+	/* if the buffer holds previous debug data it is overwritten */
-+	iwl_trans_read_mem_bytes(fwrt->trans, cfg->d3_debug_data_base_addr,
-+				 fwrt->dump.d3_debug_data,
-+				 cfg->d3_debug_data_length);
-+}
-+IWL_EXPORT_SYMBOL(iwl_fw_dbg_read_d3_debug_data);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 507d9a49fa97..2c6df7756927 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -217,6 +217,16 @@ static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
+@@ -860,9 +847,10 @@ static bool valid_regdb(const u8 *data, unsigned int size)
+ 	return true;
+ }
  
- void iwl_fw_error_dump_wk(struct work_struct *work);
- 
-+static inline bool iwl_fw_dbg_is_d3_debug_enabled(struct iwl_fw_runtime *fwrt)
-+{
-+	return fw_has_capa(&fwrt->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_D3_DEBUG) &&
-+		fwrt->trans->cfg->d3_debug_data_length &&
-+		fwrt->fw->dbg_dump_mask & BIT(IWL_FW_ERROR_DUMP_D3_DEBUG_DATA);
-+}
-+
-+void iwl_fw_dbg_read_d3_debug_data(struct iwl_fw_runtime *fwrt);
-+
- static inline void iwl_fw_flush_dump(struct iwl_fw_runtime *fwrt)
+-static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
++static void set_wmm_rule(struct ieee80211_reg_rule *rrule,
+ 			 struct fwdb_wmm_rule *wmm)
  {
- 	flush_delayed_work(&fwrt->dump.wk);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index ed7beca8817e..6d3ef331b7d5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -18,11 +19,6 @@
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * General Public License for more details.
-  *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-  * The full GNU General Public License is included in this distribution
-  * in the file called COPYING.
-  *
-@@ -35,6 +31,7 @@
-  * Copyright(c) 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -116,6 +113,7 @@ enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_INTERNAL_TXF = 14,
- 	IWL_FW_ERROR_DUMP_EXTERNAL = 15, /* Do not move */
- 	IWL_FW_ERROR_DUMP_MEM_CFG = 16,
-+	IWL_FW_ERROR_DUMP_D3_DEBUG_DATA = 17,
++	struct ieee80211_wmm_rule *rule = &rrule->wmm_rule;
+ 	unsigned int i;
  
- 	IWL_FW_ERROR_DUMP_MAX,
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index bbf2b265a06a..257ef70f8a1e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -349,6 +349,7 @@ typedef unsigned int __bitwise iwl_ucode_tlv_capa_t;
-  *	command size (command version 4) that supports toggling ACK TX
-  *	power reduction.
-  * @IWL_UCODE_TLV_CAPA_MLME_OFFLOAD: supports MLME offload
-+ * @IWL_UCODE_TLV_CAPA_D3_DEBUG: supports debug recording during D3
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -397,6 +398,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_LQM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)81,
- 	IWL_UCODE_TLV_CAPA_TX_POWER_ACK			= (__force iwl_ucode_tlv_capa_t)84,
- 	IWL_UCODE_TLV_CAPA_LED_CMD_SUPPORT		= (__force iwl_ucode_tlv_capa_t)86,
-+	IWL_UCODE_TLV_CAPA_D3_DEBUG			= (__force iwl_ucode_tlv_capa_t)87,
- 	IWL_UCODE_TLV_CAPA_MLME_OFFLOAD			= (__force iwl_ucode_tlv_capa_t)96,
- 
- 	NUM_IWL_UCODE_TLV_CAPA
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index ed23367f7088..9ed5819defaf 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -136,6 +136,7 @@ struct iwl_fw_runtime {
- 
- 		/* ts of the beginning of a non-collect fw dbg data period */
- 		unsigned long non_collect_ts_start[FW_DBG_TRIGGER_MAX - 1];
-+		u32 *d3_debug_data;
- 	} dump;
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 12fddcf15bab..4d16ac545269 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -388,6 +388,8 @@ struct iwl_csr_params {
-  * @gen2: 22000 and on transport operation
-  * @cdb: CDB support
-  * @nvm_type: see &enum iwl_nvm_type
-+ * @d3_debug_data_base_addr: base address where D3 debug data is stored
-+ * @d3_debug_data_length: length of the D3 debug data
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -452,6 +454,8 @@ struct iwl_cfg {
- 	u8 ucode_api_min;
- 	u32 min_umac_error_event_table;
- 	u32 extra_phy_cfg_flags;
-+	u32 d3_debug_data_base_addr;
-+	u32 d3_debug_data_length;
- };
- 
- static const struct iwl_csr_params iwl_csr_v1 = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 9019de99f077..e2b29b844c3a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -188,6 +188,7 @@
- #define CSR_HW_IF_CONFIG_REG_MSK_BOARD_VER	(0x000000C0)
- #define CSR_HW_IF_CONFIG_REG_BIT_MAC_SI		(0x00000100)
- #define CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI	(0x00000200)
-+#define CSR_HW_IF_CONFIG_REG_D3_DEBUG		(0x00000200)
- #define CSR_HW_IF_CONFIG_REG_MSK_PHY_TYPE	(0x00000C00)
- #define CSR_HW_IF_CONFIG_REG_MSK_PHY_DASH	(0x00003000)
- #define CSR_HW_IF_CONFIG_REG_MSK_PHY_STEP	(0x0000C000)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index c0631255aee7..39a1eadfc4b7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1275,8 +1275,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	fw->ucode_capa.standard_phy_calibration_size =
- 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
- 	fw->ucode_capa.n_scan_channels = IWL_DEFAULT_SCAN_CHANNELS;
--	/* dump all fw memory areas by default */
--	fw->dbg_dump_mask = 0xffffffff;
-+	/* dump all fw memory areas by default except d3 debug data */
-+	fw->dbg_dump_mask = 0xfffdffff;
- 
- 	pieces = kzalloc(sizeof(*pieces), GFP_KERNEL);
- 	if (!pieces)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 79bdae994822..47ceffbfd9af 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1883,6 +1883,7 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 		goto err;
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+@@ -876,11 +864,13 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
+ 		rule->ap[i].aifsn = wmm->ap[i].aifsn;
+ 		rule->ap[i].cot = 1000 * be16_to_cpu(wmm->ap[i].cot);
  	}
- 
-+	iwl_fw_dbg_read_d3_debug_data(&mvm->fwrt);
- 	/* query SRAM first in case we want event logging */
- 	iwl_mvm_read_d3_sram(mvm);
- 
-@@ -2117,6 +2118,8 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
- 
- 	mvm->d3_test_active = false;
- 
-+	iwl_fw_dbg_read_d3_debug_data(&mvm->fwrt);
 +
- 	rtnl_lock();
- 	__iwl_mvm_resume(mvm, true);
- 	rtnl_unlock();
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 0e26619fb330..bce5d150eb58 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -182,6 +182,9 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
- 	if (mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_8000)
- 		reg_val |= CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI;
++	rrule->has_wmm = true;
+ }
  
-+	if (iwl_fw_dbg_is_d3_debug_enabled(&mvm->fwrt))
-+		reg_val |= CSR_HW_IF_CONFIG_REG_D3_DEBUG;
-+
- 	iwl_trans_set_bits_mask(mvm->trans, CSR_HW_IF_CONFIG_REG,
- 				CSR_HW_IF_CONFIG_REG_MSK_MAC_DASH |
- 				CSR_HW_IF_CONFIG_REG_MSK_MAC_STEP |
-@@ -189,7 +192,8 @@ static void iwl_mvm_nic_config(struct iwl_op_mode *op_mode)
- 				CSR_HW_IF_CONFIG_REG_MSK_PHY_STEP |
- 				CSR_HW_IF_CONFIG_REG_MSK_PHY_DASH |
- 				CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
--				CSR_HW_IF_CONFIG_REG_BIT_MAC_SI,
-+				CSR_HW_IF_CONFIG_REG_BIT_MAC_SI   |
-+				CSR_HW_IF_CONFIG_REG_D3_DEBUG,
- 				reg_val);
+ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 			     const struct fwdb_country *country, int freq,
+-			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
++			     struct ieee80211_reg_rule *rule)
+ {
+ 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
+ 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
+@@ -901,8 +891,6 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
+ 			wmm = (void *)((u8 *)db + wmm_ptr);
+ 			set_wmm_rule(rule, wmm);
+-			if (dbptr)
+-				*dbptr = wmm_ptr;
+ 			return 0;
+ 		}
+ 	}
+@@ -910,8 +898,7 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
+ 	return -ENODATA;
+ }
  
- 	IWL_DEBUG_INFO(mvm, "Radio type=0x%x-0x%x-0x%x\n", radio_cfg_type,
+-int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+-			struct ieee80211_wmm_rule *rule)
++int reg_query_regdb_wmm(char *alpha2, int freq, struct ieee80211_reg_rule *rule)
+ {
+ 	const struct fwdb_header *hdr = regdb;
+ 	const struct fwdb_country *country;
+@@ -925,8 +912,7 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+ 	country = &hdr->country[0];
+ 	while (country->coll_ptr) {
+ 		if (alpha2_equal(alpha2, country->alpha2))
+-			return __regdb_query_wmm(regdb, country, freq, dbptr,
+-						 rule);
++			return __regdb_query_wmm(regdb, country, freq, rule);
+ 
+ 		country++;
+ 	}
+@@ -935,32 +921,13 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
+ }
+ EXPORT_SYMBOL(reg_query_regdb_wmm);
+ 
+-struct wmm_ptrs {
+-	struct ieee80211_wmm_rule *rule;
+-	u32 ptr;
+-};
+-
+-static struct ieee80211_wmm_rule *find_wmm_ptr(struct wmm_ptrs *wmm_ptrs,
+-					       u32 wmm_ptr, int n_wmms)
+-{
+-	int i;
+-
+-	for (i = 0; i < n_wmms; i++) {
+-		if (wmm_ptrs[i].ptr == wmm_ptr)
+-			return wmm_ptrs[i].rule;
+-	}
+-	return NULL;
+-}
+-
+ static int regdb_query_country(const struct fwdb_header *db,
+ 			       const struct fwdb_country *country)
+ {
+ 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
+ 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
+ 	struct ieee80211_regdomain *regdom;
+-	struct ieee80211_regdomain *tmp_rd;
+-	unsigned int size_of_regd, i, n_wmms = 0;
+-	struct wmm_ptrs *wmm_ptrs;
++	unsigned int size_of_regd, i;
+ 
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+ 		coll->n_rules * sizeof(struct ieee80211_reg_rule);
+@@ -969,12 +936,6 @@ static int regdb_query_country(const struct fwdb_header *db,
+ 	if (!regdom)
+ 		return -ENOMEM;
+ 
+-	wmm_ptrs = kcalloc(coll->n_rules, sizeof(*wmm_ptrs), GFP_KERNEL);
+-	if (!wmm_ptrs) {
+-		kfree(regdom);
+-		return -ENOMEM;
+-	}
+-
+ 	regdom->n_reg_rules = coll->n_rules;
+ 	regdom->alpha2[0] = country->alpha2[0];
+ 	regdom->alpha2[1] = country->alpha2[1];
+@@ -1013,37 +974,11 @@ static int regdb_query_country(const struct fwdb_header *db,
+ 				1000 * be16_to_cpu(rule->cac_timeout);
+ 		if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
+ 			u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
+-			struct ieee80211_wmm_rule *wmm_pos =
+-				find_wmm_ptr(wmm_ptrs, wmm_ptr, n_wmms);
+-			struct fwdb_wmm_rule *wmm;
+-			struct ieee80211_wmm_rule *wmm_rule;
+-
+-			if (wmm_pos) {
+-				rrule->wmm_rule = wmm_pos;
+-				continue;
+-			}
+-			wmm = (void *)((u8 *)db + wmm_ptr);
+-			tmp_rd = krealloc(regdom, size_of_regd + (n_wmms + 1) *
+-					  sizeof(struct ieee80211_wmm_rule),
+-					  GFP_KERNEL);
+-
+-			if (!tmp_rd) {
+-				kfree(regdom);
+-				kfree(wmm_ptrs);
+-				return -ENOMEM;
+-			}
+-			regdom = tmp_rd;
+-
+-			wmm_rule = (struct ieee80211_wmm_rule *)
+-				((u8 *)regdom + size_of_regd + n_wmms *
+-				sizeof(struct ieee80211_wmm_rule));
++			struct fwdb_wmm_rule *wmm = (void *)((u8 *)db + wmm_ptr);
+ 
+-			set_wmm_rule(wmm_rule, wmm);
+-			wmm_ptrs[n_wmms].ptr = wmm_ptr;
+-			wmm_ptrs[n_wmms++].rule = wmm_rule;
++			set_wmm_rule(rrule, wmm);
+ 		}
+ 	}
+-	kfree(wmm_ptrs);
+ 
+ 	return reg_schedule_apply(regdom);
+ }
 -- 
-2.18.0
+2.7.5
