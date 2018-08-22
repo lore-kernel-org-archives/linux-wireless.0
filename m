@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:61270 "EHLO
-        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727203AbeIAAGD (ORCPT
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:46700 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728057AbeHVQrU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 20:06:03 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v2 0/3] support ftm responder configuration/statistics
-Date: Fri, 31 Aug 2018 12:56:55 -0700
-Message-Id: <1535745418-31336-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180831_215707_135456_A3E00913)
+        Wed, 22 Aug 2018 12:47:20 -0400
+Received: by mail-lf1-f68.google.com with SMTP id e23-v6so1354562lfc.13
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2018 06:22:25 -0700 (PDT)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] brcmfmac: fix wrong strnchr usage
+Date: Wed, 22 Aug 2018 15:22:15 +0200
+Message-Id: <20180822132215.27669-1-linux@rasmusvillemoes.dk> (sfid-20180822_152229_293745_B84822C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+strnchr takes arguments in the order of its name: string, max bytes to
+read, character to search for. Here we're passing '\n' aka 10 as the
+buffer size, and searching for sizeof(buf) aka BRCMF_DCMD_SMLEN aka
+256 (aka '\0', since it's implicitly converted to char) within those 10
+bytes.
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+Just interchanging the last two arguments would still leave a bug,
+because if we've been successful once, there are not sizeof(buf)
+characters left after the new value of p.
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
+Since clmver is immediately afterwards passed as a %s argument, I assume
+that it is actually a properly nul-terminated string. For that case, we
+have strreplace().
 
-changes in V2:
-- updated version number
-- rebased patches
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+Incidentally, I found this because I was looking at our strnchr
+implementation and noticed a corner case: strchr() is specified by C and
+POSIX standards to consider the trailing '\0' to be part of the string,
+so strchr(foo, '\0') must be equivalent to "foo +
+strlen(foo)". strnchr() is not specified by anyone. Our implementation
+returns NULL as soon as count is depleted or hitting a '\0' byte, so
+since we were here looking for a '\0' byte, the first strnchr() call was
+guaranteed to return NULL.
 
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
+Had strnchr() instead returned a pointer to the '\0' if such was found
+within the first count (in this case 10) bytes, we'd be overwriting that
+with a ' ', and continue until no '\0' was found within the next 10
+bytes.
 
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  29 +++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 +++++++++++++++++++
- include/net/mac80211.h                 |  12 ++++
- include/uapi/linux/nl80211.h           |  71 ++++++++++++++++++++
- net/mac80211/cfg.c                     |  74 +++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 +++++
- net/mac80211/trace.h                   |  23 +++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 115 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 +++++
- net/wireless/trace.h                   |  44 +++++++++++++
- 14 files changed, 478 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index cd3651069d0c..94044a7a6021 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -296,9 +296,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		/* Replace all newline/linefeed characters with space
+ 		 * character
+ 		 */
+-		ptr = clmver;
+-		while ((ptr = strnchr(ptr, '\n', sizeof(buf))) != NULL)
+-			*ptr = ' ';
++		strreplace(clmver, '\n', ' ');
+ 
+ 		brcmf_dbg(INFO, "CLM version = %s\n", clmver);
+ 	}
 -- 
-1.9.1
+2.16.4
