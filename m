@@ -1,45 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:38918 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbeHXPgR (ORCPT
+Received: from lgeamrelo13.lge.com ([156.147.23.53]:52592 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728559AbeHVQM7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 11:36:17 -0400
-Received: by mail-io0-f195.google.com with SMTP id l7-v6so6908066iok.6
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 05:01:56 -0700 (PDT)
+        Wed, 22 Aug 2018 12:12:59 -0400
+Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
+ cancel_work_sync()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        kernel-team@lge.com
+References: <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
+ <1534872621.25523.39.camel@sipsolutions.net>
+ <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
+ <1534879241.25523.44.camel@sipsolutions.net>
+ <20180822024535.GA2414@X58A-UD3R>
+ <1534910543.25523.50.camel@sipsolutions.net>
+ <20180822054731.GB2414@X58A-UD3R>
+ <1534921643.25523.56.camel@sipsolutions.net>
+ <20180822075010.GA29722@X58A-UD3R>
+ <1534924940.25523.70.camel@sipsolutions.net>
+ <20180822091547.GB29722@X58A-UD3R>
+ <1534930963.25523.87.camel@sipsolutions.net>
+From: Byungchul Park <byungchul.park@lge.com>
+Message-ID: <ea4d5b82-24e5-5e2f-d336-37bfbd32475b@lge.com> (sfid-20180822_144814_111452_E2AA0A55)
+Date: Wed, 22 Aug 2018 21:47:52 +0900
 MIME-Version: 1.0
-References: <cover.1535106415.git.lorenzo.bianconi@redhat.com>
- <56664707fd600dc2ff49c6e845b0d573a9cf9c89.1535106415.git.lorenzo.bianconi@redhat.com>
- <87k1ogt2wr.fsf@purkki.adurom.net>
-In-Reply-To: <87k1ogt2wr.fsf@purkki.adurom.net>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Fri, 24 Aug 2018 14:01:44 +0200
-Message-ID: <CAJ0CqmUnNDKdGC7QJPWhg=sq1Q56DrVaJZH-C8K-H_DLbawkVA@mail.gmail.com> (sfid-20180824_140158_745445_194D23C6)
-Subject: Re: [PATCH] mt76: verify evt type in usb mcu response
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1534930963.25523.87.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->
-> > Verify if evt field is set to EVT_CMD_DONE in usb mcu
-> > response messages
-> >
-> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->
-> Does this fix a real bug or is it just a cleanup? To which tree it
-> should go?
 
-Ops sorry, I forgot to mention that is a preliminary patch for usb_mcu layer
-unification between mt76x0u and mt76x2u driver. It should go to
-wireless-drivers-next.
 
-Regards,
-Lorenzo
+On 08/22/2018 06:42 PM, Johannes Berg wrote:
+> On Wed, 2018-08-22 at 18:15 +0900, Byungchul Park wrote:
+>>> thread 1			thread 2 (wq thread)
+>>>
+>>> common_case = false;
+>>> queue_work(&my_wq, &work);
+>>> mutex_lock(&mutex);
+>>>
+>>> flush_workqueue(&my_wq);
+>>> 				work_function()
+>>> 				-> mutex_lock(&mutex);
+>>> 				-> schedule(), wait for mutex
+>>> wait_for_completion()
+>>>
+>>> -> deadlock - we can't make any forward progress here.
+>> I see. Now, I understand what you are talking about.
+>>
+>>     if (common_case)
+>> 	schedule_and_wait_for_something_that_takes_a_long_time()
+>>
+>> should be:
+>>
+>>     if (common_case)
+>> 	schedule_and_wait_long_time_so_that_the_work_to_finish()
+> Fair point.
+>
+>> Ok. I didn't know what you are talking about but now I got it.
+> great.
+>
+>> You are talking about who knows whether common_case is true or not,
+>> so we must aggresively consider the case the wait_for_completion()
+>> so far hasn't been called but may be called in the future.
+> Yes.
+>
+>> I think it's a problem of how aggressively we need to check dependencies.
+>> If we choose the aggressive option, then we could get reported
+>> aggressively but could not avoid aggresive false positives either.
+>> I don't want to strongly argue that because it's a problem of policy.
+> I don't think you could consider a report from "aggressive reporting" to
+>   be a false positive. It's clearly possible that this happens, and once
+> you go to a workqueue you basically don't really know your sequencing
+> and timing any more.
+>
+>> Just, I would consider only waits that actually happened anyway. Of
+>> course, we gotta consider the waits definitely even if any actual
+>> deadlock doesn't happen since detecting potantial problem is more
+>> important than doing on actual ones as you said.
+>>
+>> So no big objection to check dependencies aggressively.
+>>
+>>> Here we don't have a deadlock, but without the revert we will also not
+>> You misunderstand me. The commit should be reverted or acquire/release
+>> pairs should be added in both flush functions.
+> Ok, I thought you were arguing we shouldn't revert it :)
+>
+> I don't know whether to revert or just add the pairs in the flush
+> functions, because I can't say I understand what the third part of the
+> patch does.
+>
+>> Anyway the annotation should be placed in the path where
+>> wait_for_completion() might be called.
+> Yes, it should be called regardless of whether we actually wait or not,
+> i.e. before most of the checking in the functions.
+>
+> My issue #3 that I outlined is related - we'd like to have lockdep
+> understand that if this work was on the WQ it might deadlock, but we
+> don't have a way to get the WQ unless the work is scheduled - and in the
+> case that it is scheduled we might already hitting the deadlock
+> (depending on the order of execution though I guess).
+>
+>> Absolutly true. You can find my opinion about that in
+>> Documentation/locking/crossrelease.txt which has been removed because
+>> crossrelease is strong at detecting *potential* deadlock problems.
+> Ok, you know what, I'm going to read this now ... hang on........
+
+But very sorry for poor English on it in advance...
+
+The document should have gotten contributed by ones who
+are good at English. It might be too naive for you to read.
 
 >
-> --
-> Kalle Valo
+> I see. You were trying to solve the problem of completions/context
+> transfers in lockdep.
+>
+> Given the revert of crossrelease though, we can't actually revert your
+> patch anyway, and looking at it again I see what you mean by the "name"
+> now ...
+>
+> So yeah, we should only re-add the two acquire/release pairs. I guess
+> I'll make a patch for that, replacing my patch 2.
+>
+> I'm intrigued by the crossrelease - but that's a separate topic.
+>
+> johannes
+>
