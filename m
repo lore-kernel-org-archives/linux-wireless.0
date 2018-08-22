@@ -1,60 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42942 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727669AbeHUJ4V (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:53988 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728824AbeHVNNZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:56:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:55 +0300
-Message-Id: <20180821063657.30071-14-luca@coelho.fi> (sfid-20180821_083743_172510_BAF45B5F)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 13/15] iwlwifi: mvm: avoid sending too many BARs
+        Wed, 22 Aug 2018 09:13:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Byungchul Park <byungchul.park@lge.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 1/2] workqueue: skip lockdep wq dependency in cancel_work_sync()
+Date: Wed, 22 Aug 2018 11:49:03 +0200
+Message-Id: <20180822094904.15718-2-johannes@sipsolutions.net> (sfid-20180822_114938_188367_7D7BEB89)
+In-Reply-To: <20180822094904.15718-1-johannes@sipsolutions.net>
+References: <20180822094904.15718-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When we receive TX response, we may release a few packets
-due to a hole that was closed in the transmission window.
+In cancel_work_sync(), we can only have one of two cases, even
+with an ordered workqueue:
+ * the work isn't running, just cancelled before it started
+ * the work is running, but then nothing else can be on the
+   workqueue before it
 
-However, if that frame failed, we will mark all the released
-frames as failed and will send multiple BARs.
+Thus, we need to skip the lockdep workqueue dependency handling,
+otherwise we get false positive reports from lockdep saying that
+we have a potential deadlock when the workqueue also has other
+work items with locking, e.g.
 
-This affects statistics badly, and cause unnecessary frames
-transmission.
+  work1_function() { mutex_lock(&mutex); ... }
+  work2_function() { /* nothing */ }
 
-Instead, mark all the following packets as success, with the
-desired result of sending a bar for the failed frame only.
+  other_function() {
+    queue_work(ordered_wq, &work1);
+    queue_work(ordered_wq, &work2);
+    mutex_lock(&mutex);
+    cancel_work_sync(&work2);
+  }
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+As described above, this isn't a problem, but lockdep will
+currently flag it as if cancel_work_sync() was flush_work(),
+which *is* a problem.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ kernel/workqueue.c | 37 ++++++++++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 31a81a4c6e78..b33b8357a8f7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1510,6 +1510,14 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			break;
- 		}
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 78b192071ef7..a6c2b823f348 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2843,7 +2843,8 @@ void drain_workqueue(struct workqueue_struct *wq)
+ }
+ EXPORT_SYMBOL_GPL(drain_workqueue);
  
-+		/*
-+		 * If we are freeing multiple frames, mark all the frames
-+		 * but the first one as acked, since they were acknowledged
-+		 * before
-+		 * */
-+		if (skb_freed > 1)
-+			info->flags |= IEEE80211_TX_STAT_ACK;
+-static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
++static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
++			     bool from_cancel)
+ {
+ 	struct worker *worker = NULL;
+ 	struct worker_pool *pool;
+@@ -2885,7 +2886,8 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+ 	 * workqueues the deadlock happens when the rescuer stalls, blocking
+ 	 * forward progress.
+ 	 */
+-	if (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer) {
++	if (!from_cancel &&
++	    (pwq->wq->saved_max_active == 1 || pwq->wq->rescuer)) {
+ 		lock_map_acquire(&pwq->wq->lockdep_map);
+ 		lock_map_release(&pwq->wq->lockdep_map);
+ 	}
+@@ -2896,6 +2898,22 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+ 	return false;
+ }
+ 
++static bool __flush_work(struct work_struct *work, bool from_cancel)
++{
++	struct wq_barrier barr;
 +
- 		iwl_mvm_tx_status_check_trigger(mvm, status);
++	if (WARN_ON(!wq_online))
++		return false;
++
++	if (start_flush_work(work, &barr, from_cancel)) {
++		wait_for_completion(&barr.done);
++		destroy_work_on_stack(&barr.work);
++		return true;
++	} else {
++		return false;
++	}
++}
++
+ /**
+  * flush_work - wait for a work to finish executing the last queueing instance
+  * @work: the work to flush
+@@ -2909,18 +2927,7 @@ static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr)
+  */
+ bool flush_work(struct work_struct *work)
+ {
+-	struct wq_barrier barr;
+-
+-	if (WARN_ON(!wq_online))
+-		return false;
+-
+-	if (start_flush_work(work, &barr)) {
+-		wait_for_completion(&barr.done);
+-		destroy_work_on_stack(&barr.work);
+-		return true;
+-	} else {
+-		return false;
+-	}
++	return __flush_work(work, false);
+ }
+ EXPORT_SYMBOL_GPL(flush_work);
  
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
+@@ -2986,7 +2993,7 @@ static bool __cancel_work_timer(struct work_struct *work, bool is_dwork)
+ 	 * isn't executing.
+ 	 */
+ 	if (wq_online)
+-		flush_work(work);
++		__flush_work(work, true);
+ 
+ 	clear_work_data(work);
+ 
 -- 
-2.18.0
+2.14.4
