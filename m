@@ -1,108 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42208 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726417AbeHRLfZ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:49142 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727649AbeHVKvZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:35:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:49 +0300
-Message-Id: <20180818082750.28717-16-luca@coelho.fi> (sfid-20180818_102838_949285_F9A28A09)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 15/16] iwlwifi: pcie: allow using tx init for other queues but the command queue
+        Wed, 22 Aug 2018 06:51:25 -0400
+Message-ID: <1534922856.25523.60.camel@sipsolutions.net> (sfid-20180822_092749_166175_B26CAA86)
+Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Date: Wed, 22 Aug 2018 09:27:36 +0200
+In-Reply-To: <7999c366492a4523456227fb49329bf2@codeaurora.org>
+References: <7999c366492a4523456227fb49329bf2@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On Tue, 2018-08-21 at 15:08 -0700, Pradeep Kumar Chitrapu wrote:
 
-We would like to allow using tx init code for other queues but
-the command queue - for newer devices.
+> > Right. However, I guess we could allow updating/changing this setting 
+> > on
+> > the fly through nl80211_set_beacon() which already allows changing 
+> > other
+> > non-beacon parameters (like the probe or assoc response templates), and
+> > then we can use your approach. Basically changing "SET_BEACON" to be a
+> > bit like "CHANGE_AP".
+> 
+> Agree. ( ftm_responder param will have to be added in 
+> cfg80211_beacon_data
+> instead of cfg80211_ap_settings)
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/internal.h    |  3 ++-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 23 ++++++++++---------
- 3 files changed, 15 insertions(+), 13 deletions(-)
+Right. I'm not even sure that all devices can disable it though, so we
+may be in a bind here? I think ours (Intel) can't, for example, disable
+FTM responder without disabling the AP (at least momentarily)...
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 0127386de6c6..da6d367de76e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -640,7 +640,8 @@ void iwl_pcie_disable_ict(struct iwl_trans *trans);
- * TX / HCMD
- ******************************************************/
- int iwl_pcie_tx_init(struct iwl_trans *trans);
--int iwl_pcie_gen2_tx_init(struct iwl_trans *trans);
-+int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id,
-+			  int queue_size);
- void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr);
- int iwl_pcie_tx_stop(struct iwl_trans *trans);
- void iwl_pcie_tx_free(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 2bc67219ed3e..3e5c732a89db 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -265,7 +265,7 @@ static int iwl_pcie_gen2_nic_init(struct iwl_trans *trans)
- 		return -ENOMEM;
- 
- 	/* Allocate or reset and init all Tx and Command queues */
--	if (iwl_pcie_gen2_tx_init(trans))
-+	if (iwl_pcie_gen2_tx_init(trans, trans_pcie->cmd_queue, TFD_CMD_SLOTS))
- 		return -ENOMEM;
- 
- 	/* enable shadow regs in HW */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b99f33ff9123..9ce7b2072613 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1251,30 +1251,31 @@ void iwl_pcie_gen2_tx_free(struct iwl_trans *trans)
- 	}
- }
- 
--int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
-+int iwl_pcie_gen2_tx_init(struct iwl_trans *trans, int txq_id, int queue_size)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_txq *cmd_queue;
--	int txq_id = trans_pcie->cmd_queue, ret;
-+	struct iwl_txq *queue;
-+	int ret;
- 
--	/* alloc and init the command queue */
-+	/* alloc and init the tx queue */
- 	if (!trans_pcie->txq[txq_id]) {
--		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
--		if (!cmd_queue) {
--			IWL_ERR(trans, "Not enough memory for command queue\n");
-+		queue = kzalloc(sizeof(*queue), GFP_KERNEL);
-+		if (!queue) {
-+			IWL_ERR(trans, "Not enough memory for tx queue\n");
- 			return -ENOMEM;
- 		}
--		trans_pcie->txq[txq_id] = cmd_queue;
--		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+		trans_pcie->txq[txq_id] = queue;
-+		ret = iwl_pcie_txq_alloc(trans, queue, queue_size, true);
- 		if (ret) {
- 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
- 			goto error;
- 		}
- 	} else {
--		cmd_queue = trans_pcie->txq[txq_id];
-+		queue = trans_pcie->txq[txq_id];
- 	}
- 
--	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
-+	ret = iwl_pcie_txq_init(trans, queue, queue_size,
-+				(txq_id == trans_pcie->cmd_queue));
- 	if (ret) {
- 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
- 		goto error;
--- 
-2.18.0
+Should we just ignore that? Or perhaps add a separate capability for it?
+
+Maybe there's even hardware that cannot change the elements (LCI/Civic
+location) on the fly?
+
+johannes
