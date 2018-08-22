@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f172.google.com ([209.85.208.172]:44679 "EHLO
-        mail-lj1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727665AbeHGAUP (ORCPT
+Received: from mail-yw1-f48.google.com ([209.85.161.48]:45842 "EHLO
+        mail-yw1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729024AbeHVS5f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 20:20:15 -0400
-Received: by mail-lj1-f172.google.com with SMTP id q127-v6so11797089ljq.11
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Aug 2018 15:09:07 -0700 (PDT)
+        Wed, 22 Aug 2018 14:57:35 -0400
+Date: Wed, 22 Aug 2018 08:32:10 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Byungchul Park <byungchul.park@lge.com>
+Subject: Re: [PATCH v2 0/2] workqueue lockdep limitations/bugs
+Message-ID: <20180822153210.GV3978217@devbig004.ftw2.facebook.com> (sfid-20180822_173221_430610_E555FE1C)
+References: <20180822094904.15718-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
-From: Tomasz Kalbarczyk <tkalbar@utexas.edu>
-Date: Mon, 6 Aug 2018 18:08:46 -0400
-Message-ID: <CAH9jq_Ow7Gt-m1QZoS3-JOEdU1CkC33S2mCfYz4bHNOMDX+q9A@mail.gmail.com> (sfid-20180807_000913_505458_996EB7DA)
-Subject: Promiscuous (not monitor) Mode support for ath10k
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180822094904.15718-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Aug 22, 2018 at 11:49:02AM +0200, Johannes Berg wrote:
+> This addresses the first two issues.
+> 
+> The third problem is actually caught when the flush ever does
+> anything, but that might be rare depending on the circumstances,
+> so I still think it'd be nice to catch it somehow, but right now
+> I don't have the time to look into it.
 
-I have a QCA6174 and I'm running tcpdump on the wireless interface to
-listen for packets. I can receive packets addressed directly to the
-device, but not any other packets on the network.
+Applied to libata/for-4.19.
 
-Does anyone know the status of promiscuous mode support on ath10k?
-Note that this is different from monitor mode / supported on a larger
-subset of hardware. Dmesg merely indicates that the device has
-"entered promiscuous mode" when tcpdump is initiated.
+Thanks.
 
-Here is a link to similar discussion regarding the ath9k a few years
-back: https://marc.info/?l=linux-wireless&m=135936563626791&w=2
-
-Thanks for the help!
-Tomasz
+-- 
+tejun
