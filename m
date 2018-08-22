@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:43546 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727858AbeHNN5T (ORCPT
+Received: from sitav-80046.hsr.ch ([152.96.80.46]:57638 "EHLO
+        mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728356AbeHVLDv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 09:57:19 -0400
-Date: Tue, 14 Aug 2018 16:40:28 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Greg KH <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>,
-        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
- `__this_module' error
-Message-ID: <20180814164028.5b8703aa@ajaysk-VirtualBox> (sfid-20180814_131040_229195_EC6F0CA4)
-In-Reply-To: <20180814105621.hu3kpbxwz4kjc2o3@mwanda>
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
-        <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
-        <20180812113555.GC25209@kroah.com>
-        <20180812174852.2eecf7da@ajaysk-VirtualBox>
-        <20180814105621.hu3kpbxwz4kjc2o3@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Wed, 22 Aug 2018 07:03:51 -0400
+From: Martin Willi <martin@strongswan.org>
+To: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: schedule hardware restart if WMI command times out
+Date: Wed, 22 Aug 2018 09:39:52 +0200
+Message-Id: <20180822073952.30922-1-martin@strongswan.org> (sfid-20180822_094023_145890_F27D7584)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+When running in AP mode, ath10k sometimes suffers from TX credit
+starvation. The issue is hard to reproduce and shows up once in a
+few days, but has been repeatedly seen with QCA9882 and a large
+range of firmwares, including 10.2.4.70.67.
 
-On Tue, 14 Aug 2018 13:56:21 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Once the module is in this state, TX credits are never replenished,
+which results in "SWBA overrun" errors, as no beacons can be sent.
+Even worse, WMI commands run in a timeout while holding the conf
+mutex for three seconds each, making any further operations slow
+and the whole system unresponsive.
 
-> On Sun, Aug 12, 2018 at 05:48:52PM +0530, Ajay Singh wrote:
-> > Yes, currently only code to read and writing for "wilc_debug_level"
-> > exists.
-> > 
-> > The main purpose for this file was to configure(enable/disable)
-> > specific level debug logs to print.
-> >  
-> 
-> The kernel's dev_dbg() macros are really very clever.  You can enable
-> them for one file or for a specific line or for a function.
-> 
+The firmware/driver never recovers from that state automatically,
+and triggering TX flush or warm restarts won't work over WMI. So
+issue a hardware restart if a WMI command times out due to missing
+TX credits. This implies a connectivity outage of about 1.4s in AP
+mode, but brings back the interface and the whole system to a usable
+state. WMI command timeouts have not been seen in absent of this
+specific issue, so taking such drastic actions seems legitimate.
 
-Thanks for the information.
+Signed-off-by: Martin Willi <martin@strongswan.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-I will explore these debug macros in future.
-
-Regards,
-Ajay
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index fd612d2905b0..40ce0e4006bc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1869,6 +1869,12 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+ 	if (ret)
+ 		dev_kfree_skb_any(skb);
+ 
++	if (ret == -EAGAIN) {
++		ath10k_warn(ar, "wmi command %d timeout, restarting hardware\n",
++			    cmd_id);
++		queue_work(ar->workqueue, &ar->restart_work);
++	}
++
+ 	return ret;
+ }
+ 
+-- 
+2.17.1
