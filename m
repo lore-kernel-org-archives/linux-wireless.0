@@ -1,111 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56062 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726997AbeH1Liv (ORCPT
+Received: from lgeamrelo11.lge.com ([156.147.23.51]:35318 "EHLO
+        lgeamrelo11.lge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727877AbeHVLOQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 07:38:51 -0400
-From: Wen Gong <wgong@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: Add waiting htt tx complete before wow enable
-Date: Tue, 28 Aug 2018 15:47:23 +0800
-Message-Id: <1535442443-22152-1-git-send-email-wgong@codeaurora.org> (sfid-20180828_094831_066974_F671F408)
+        Wed, 22 Aug 2018 07:14:16 -0400
+Date: Wed, 22 Aug 2018 16:50:10 +0900
+From: Byungchul Park <byungchul.park@lge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        kernel-team@lge.com
+Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
+ cancel_work_sync()
+Message-ID: <20180822075010.GA29722@X58A-UD3R> (sfid-20180822_095035_235357_A512F036)
+References: <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
+ <1534871894.25523.34.camel@sipsolutions.net>
+ <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
+ <1534872621.25523.39.camel@sipsolutions.net>
+ <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
+ <1534879241.25523.44.camel@sipsolutions.net>
+ <20180822024535.GA2414@X58A-UD3R>
+ <1534910543.25523.50.camel@sipsolutions.net>
+ <20180822054731.GB2414@X58A-UD3R>
+ <1534921643.25523.56.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1534921643.25523.56.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If there have some tx packets pending in firmware, and then system
-enter suspend, firmware will fail for wow enable. This will trigger
-mac80211 to stop ath10k and download firmware again, then it is
-non-wow suspend.
+On Wed, Aug 22, 2018 at 09:07:23AM +0200, Johannes Berg wrote:
+> On Wed, 2018-08-22 at 14:47 +0900, Byungchul Park wrote:
+> > On Wed, Aug 22, 2018 at 06:02:23AM +0200, Johannes Berg wrote:
+> > > On Wed, 2018-08-22 at 11:45 +0900, Byungchul Park wrote:
+> > > 
+> > > > That should've been adjusted as well when Ingo reverted Cross-release.
+> > > 
+> > > I can't really say.
+> > 
+> > What do you mean?
+> 
+> I haven't followed any of this, so I just don't know.
+> 
+> > > > It would be much easier to add each pair, acquire/release, before
+> > > > wait_for_completion() in both flush_workqueue() and flush_work() than
+> > > > reverting the whole commit.
+> > > 
+> > > The commit doesn't do much more than this though.
+> > 
+> > That also has named of lockdep_map for wq/work in a better way.
+> 
+> What do you mean?
 
-After add the waiting htt tx complete, then firmware will have some
-time window to send or flush the pending tx packets.
+Ah.. Not important thing. I just mentioned I changed lock names a bit
+when initializing lockdep_map instances which was suggested by Ingo. But
+no problem even if you revert the whole thing. I just informed it. ;)
 
-Tested with QCA6174 PCI with firmware
-WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
-It's not a regression with new firmware releases.
+> > > > What's lacking is only lockdep annotations for wait_for_completion().
+> > > 
+> > > No, I disagree. Like I said before, we need the lockdep annotations on
+> > 
+> > You seem to be confused. I was talking about wait_for_completion() in
+> > both flush_workqueue() and flush_work(). Without
+> > the wait_for_completion()s, nothing matters wrt what you are concerning.
+> 
+> Yes and no.
+> 
+> You're basically saying if we don't get to do a wait_for_completion(),
+> then we don't need any lockdep annotation. I'm saying this isn't true.
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 22 +++++++++++++---------
- drivers/net/wireless/ath/ath10k/mac.h |  1 +
- drivers/net/wireless/ath/ath10k/wow.c |  2 ++
- 3 files changed, 16 insertions(+), 9 deletions(-)
+Strictly no. But I'm just talking about the case in wq flush code.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 95243b4..4cd33c9 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6717,23 +6717,17 @@ static int ath10k_mac_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 	return -EOPNOTSUPP;
- }
- 
--static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--			 u32 queues, bool drop)
-+void ath10k_mac_wait_tx_complete(struct ath10k *ar)
- {
--	struct ath10k *ar = hw->priv;
- 	bool skip;
- 	long time_left;
- 
- 	/* mac80211 doesn't care if we really xmit queued frames or not
- 	 * we'll collect those frames either way if we stop/delete vdevs
- 	 */
--	if (drop)
--		return;
--
--	mutex_lock(&ar->conf_mutex);
- 
- 	if (ar->state == ATH10K_STATE_WEDGED)
--		goto skip;
-+		return;
- 
- 	time_left = wait_event_timeout(ar->htt.empty_tx_wq, ({
- 			bool empty;
-@@ -6752,8 +6746,18 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (time_left == 0 || skip)
- 		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %ld\n",
- 			    skip, ar->state, time_left);
-+}
- 
--skip:
-+static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 u32 queues, bool drop)
-+{
-+	struct ath10k *ar = hw->priv;
-+
-+	if (drop)
-+		return;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ath10k_mac_wait_tx_complete(ar);
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index 81f8d6c..570493d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -82,6 +82,7 @@ struct ieee80211_txq *ath10k_mac_txq_lookup(struct ath10k *ar,
- 					    u16 peer_id,
- 					    u8 tid);
- int ath10k_mac_ext_resource_config(struct ath10k *ar, u32 val);
-+void ath10k_mac_wait_tx_complete(struct ath10k *ar);
- 
- static inline void ath10k_tx_h_seq_no(struct ieee80211_vif *vif,
- 				      struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index a6b179f..af444df 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -374,6 +374,8 @@ int ath10k_wow_op_suspend(struct ieee80211_hw *hw,
- 		goto cleanup;
- 	}
- 
-+	ath10k_mac_wait_tx_complete(ar);
-+
- 	ret = ath10k_wow_enable(ar);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to start wow: %d\n", ret);
--- 
-1.9.1
+> Consider the following case:
+> 
+> work_function()
+> {
+> 	mutex_lock(&mutex);
+> 	mutex_unlock(&mutex);
+> }
+> 
+> other_function()
+> {
+> 	queue_work(&my_wq, &work);
+> 
+> 	if (common_case) {
+> 		schedule_and_wait_for_something_that_takes_a_long_time()
+> 	}
+> 
+> 	mutex_lock(&mutex);
+> 	flush_workqueue(&my_wq);
+> 	mutex_unlock(&mutex);
+> }
+> 
+> 
+> Clearly this code is broken, right?
+> 
+> However, you'll almost never get lockdep to indicate that, because of
+> the "if (common_case)".
+
+Sorry I don't catch you. Why is that problem with the example? Please
+a deadlock example.
+
+> My argument basically is that the lockdep annotations in the workqueue
+> code should be entirely independent of the actual need to call
+> wait_for_completion().
+
+No. Lockdep annotations always do with either wait_for_something or self
+event loop within a single context e.g. fs -> memory reclaim -> fs -> ..
+
+> Therefore, the commit should be reverted regardless of any cross-release
+
+No. That is necessary only when the wait_for_completion() cannot be
+tracked in checking dependencies automatically by cross-release.
+
+It might be the key to understand you, could you explain it more why you
+think lockdep annotations are independent of the actual need to call
+wait_for_completion()(or wait_for_something_else) hopefully with a
+deadlock example?
+
+> work (that I neither know and thus don't understand right now), since it
+> makes workqueue code rely on lockdep for the completion, whereas we
+
+Using wait_for_completion(), right?
+
+> really want to have annotations here even when we didn't actually need
+> to wait_for_completion().
+
+Please an example of deadlock even w/o wait_for_completion().
+
+> 
+> johannes
+
+Byungchul
