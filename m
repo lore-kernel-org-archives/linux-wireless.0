@@ -1,243 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45626 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727611AbeHaODL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:53664 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728315AbeHVNHA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:03:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:56:01 +0300
-Message-Id: <20180831095614.14099-4-luca@coelho.fi> (sfid-20180831_115635_219504_06A719CD)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 03/16] iwlwifi: fw: stop and start debugging using host command
+        Wed, 22 Aug 2018 09:07:00 -0400
+Message-ID: <1534930963.25523.87.camel@sipsolutions.net> (sfid-20180822_114303_382512_2C9D3984)
+Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
+ cancel_work_sync()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Byungchul Park <byungchul.park@lge.com>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        kernel-team@lge.com
+Date: Wed, 22 Aug 2018 11:42:43 +0200
+In-Reply-To: <20180822091547.GB29722@X58A-UD3R>
+References: <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
+         <1534872621.25523.39.camel@sipsolutions.net>
+         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
+         <1534879241.25523.44.camel@sipsolutions.net>
+         <20180822024535.GA2414@X58A-UD3R>
+         <1534910543.25523.50.camel@sipsolutions.net>
+         <20180822054731.GB2414@X58A-UD3R>
+         <1534921643.25523.56.camel@sipsolutions.net>
+         <20180822075010.GA29722@X58A-UD3R>
+         <1534924940.25523.70.camel@sipsolutions.net>
+         <20180822091547.GB29722@X58A-UD3R>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Wed, 2018-08-22 at 18:15 +0900, Byungchul Park wrote:
+> 
+> > thread 1			thread 2 (wq thread)
+> > 
+> > common_case = false;
+> > queue_work(&my_wq, &work);
+> > mutex_lock(&mutex);
+> > 
+> > flush_workqueue(&my_wq);
+> > 				work_function()
+> > 				-> mutex_lock(&mutex);
+> > 				-> schedule(), wait for mutex
+> > wait_for_completion()
+> > 
+> > -> deadlock - we can't make any forward progress here.
+> 
+> I see. Now, I understand what you are talking about.
+> 
+>    if (common_case)
+> 	schedule_and_wait_for_something_that_takes_a_long_time()
+> 
+> should be:
+> 
+>    if (common_case)
+> 	schedule_and_wait_long_time_so_that_the_work_to_finish()
 
-In new devices, access to periphery is forbidden. Send instead
-host command to start and stop debugging.
+Fair point.
 
-Memory allocation is written in context info, but in case we
-need to update it there is a dedicated command. Add definitions,
-currently unused, of the new command.
+> Ok. I didn't know what you are talking about but now I got it.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/debug.h | 32 +++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  4 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 46 +++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  2 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  2 +-
- 6 files changed, 79 insertions(+), 9 deletions(-)
+great.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-index 106782341544..dc1fa377087a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,6 +31,7 @@
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -336,6 +338,9 @@ struct iwl_dbg_mem_access_rsp {
- #define CONT_REC_COMMAND_SIZE	80
- #define ENABLE_CONT_RECORDING	0x15
- #define DISABLE_CONT_RECORDING	0x16
-+#define BUFFER_ALLOCATION	0x27
-+#define START_DEBUG_RECORDING	0x29
-+#define STOP_DEBUG_RECORDING	0x2A
- 
- /*
-  * struct iwl_continuous_record_mode - recording mode
-@@ -353,4 +358,31 @@ struct iwl_continuous_record_cmd {
- 		sizeof(struct iwl_continuous_record_mode)];
- } __packed;
- 
-+/* maximum fragments to be allocated per target of allocationId */
-+#define IWL_BUFFER_LOCATION_MAX_FRAGS	2
-+
-+/**
-+ * struct iwl_fragment_data single fragment structure
-+ * @address: 64bit start address
-+ * @size: size in bytes
-+ */
-+struct iwl_fragment_data {
-+	__le64 address;
-+	__le32 size;
-+} __packed; /* FRAGMENT_STRUCTURE_API_S_VER_1 */
-+
-+/**
-+ * struct iwl_buffer_allocation_cmd - buffer allocation command structure
-+ * @allocation_id: id of the allocation
-+ * @buffer_location: location of the buffer
-+ * @num_frags: number of fragments
-+ * @fragments: memory fragments
-+ */
-+struct iwl_buffer_allocation_cmd {
-+	__le32 allocation_id;
-+	__le32 buffer_location;
-+	__le32 num_frags;
-+	struct iwl_fragment_data fragments[IWL_BUFFER_LOCATION_MAX_FRAGS];
-+} __packed; /* BUFFER_ALLOCATION_CMD_API_S_VER_1 */
-+
- #endif /* __iwl_fw_api_debug_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index b0da16f3f474..cebc9e99961e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1163,7 +1163,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
- 		goto out;
- 	}
- 
--	iwl_fw_dbg_stop_recording(fwrt->trans, &params);
-+	iwl_fw_dbg_stop_recording(fwrt, &params);
- 
- 	iwl_fw_error_dump(fwrt);
- 
-@@ -1172,7 +1172,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
- 	    fwrt->fw->dbg_dest_tlv) {
- 		/* wait before we collect the data till the DBGC stop */
- 		udelay(500);
--		iwl_fw_dbg_restart_recording(fwrt->trans, &params);
-+		iwl_fw_dbg_restart_recording(fwrt, &params);
- 	}
- out:
- 	if (fwrt->ops && fwrt->ops->dump_end)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 878758b6c7ae..3c89230fae6a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -71,6 +71,7 @@
- #include "iwl-io.h"
- #include "file.h"
- #include "error-dump.h"
-+#include "api/commands.h"
- 
- /**
-  * struct iwl_fw_dump_desc - describes the dump
-@@ -206,9 +207,26 @@ _iwl_fw_dbg_trigger_simple_stop(struct iwl_fw_runtime *fwrt,
- 					iwl_fw_dbg_get_trigger((fwrt)->fw,\
- 							       (trig)))
- 
-+static int iwl_fw_dbg_start_stop_hcmd(struct iwl_fw_runtime *fwrt, bool start)
-+{
-+	struct iwl_continuous_record_cmd cont_rec = {};
-+	struct iwl_host_cmd hcmd = {
-+		.id = LDBG_CONFIG_CMD,
-+		.flags = CMD_ASYNC,
-+		.data[0] = &cont_rec,
-+		.len[0] = sizeof(cont_rec),
-+	};
-+
-+	cont_rec.record_mode.enable_recording = start ?
-+		cpu_to_le16(START_DEBUG_RECORDING) :
-+		cpu_to_le16(STOP_DEBUG_RECORDING);
-+
-+	return iwl_trans_send_cmd(fwrt->trans, &hcmd);
-+}
-+
- static inline void
--iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
--			  struct iwl_fw_dbg_params *params)
-+_iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
-+			   struct iwl_fw_dbg_params *params)
- {
- 	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
- 		iwl_set_bits_prph(trans, MON_BUFF_SAMPLE_CTL, 0x100);
-@@ -226,8 +244,18 @@ iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
- }
- 
- static inline void
--iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
--			     struct iwl_fw_dbg_params *params)
-+iwl_fw_dbg_stop_recording(struct iwl_fw_runtime *fwrt,
-+			  struct iwl_fw_dbg_params *params)
-+{
-+	if (fwrt->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		_iwl_fw_dbg_stop_recording(fwrt->trans, params);
-+	else
-+		iwl_fw_dbg_start_stop_hcmd(fwrt, false);
-+}
-+
-+static inline void
-+_iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
-+			      struct iwl_fw_dbg_params *params)
- {
- 	if (WARN_ON(!params))
- 		return;
-@@ -243,6 +271,16 @@ iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
- 	}
- }
- 
-+static inline void
-+iwl_fw_dbg_restart_recording(struct iwl_fw_runtime *fwrt,
-+			     struct iwl_fw_dbg_params *params)
-+{
-+	if (fwrt->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		_iwl_fw_dbg_restart_recording(fwrt->trans, params);
-+	else
-+		iwl_fw_dbg_start_stop_hcmd(fwrt, true);
-+}
-+
- static inline void iwl_fw_dump_conf_clear(struct iwl_fw_runtime *fwrt)
- {
- 	fwrt->dump.conf = FW_DBG_INVALID;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 5305342439b2..b09446697c46 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1042,7 +1042,7 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 	 * the recording automatically before entering D3.  This can
- 	 * be removed once the FW starts doing that.
- 	 */
--	iwl_fw_dbg_stop_recording(mvm->fwrt.trans, NULL);
-+	_iwl_fw_dbg_stop_recording(mvm->fwrt.trans, NULL);
- 
- 	/* must be last -- this switches firmware state */
- 	ret = iwl_mvm_send_cmd(mvm, &d3_cfg_cmd);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index b5902c74e5d0..77f3610e5ca9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -165,7 +165,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
- 	trans_pcie->is_down = true;
- 
- 	/* Stop dbgc before stopping device */
--	iwl_fw_dbg_stop_recording(trans, NULL);
-+	_iwl_fw_dbg_stop_recording(trans, NULL);
- 
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 5ecd5c8d0f02..1012d71bad6f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1243,7 +1243,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	trans_pcie->is_down = true;
- 
- 	/* Stop dbgc before stopping device */
--	iwl_fw_dbg_stop_recording(trans, NULL);
-+	_iwl_fw_dbg_stop_recording(trans, NULL);
- 
- 	/* tell the device to stop sending interrupts */
- 	iwl_disable_interrupts(trans);
--- 
-2.18.0
+> You are talking about who knows whether common_case is true or not,
+> so we must aggresively consider the case the wait_for_completion()
+> so far hasn't been called but may be called in the future.
+
+Yes.
+
+> I think it's a problem of how aggressively we need to check dependencies.
+> If we choose the aggressive option, then we could get reported
+> aggressively but could not avoid aggresive false positives either.
+> I don't want to strongly argue that because it's a problem of policy.
+
+I don't think you could consider a report from "aggressive reporting" to
+ be a false positive. It's clearly possible that this happens, and once
+you go to a workqueue you basically don't really know your sequencing
+and timing any more.
+
+> Just, I would consider only waits that actually happened anyway. Of
+> course, we gotta consider the waits definitely even if any actual
+> deadlock doesn't happen since detecting potantial problem is more
+> important than doing on actual ones as you said.
+> 
+> So no big objection to check dependencies aggressively.
+> 
+> > Here we don't have a deadlock, but without the revert we will also not
+> 
+> You misunderstand me. The commit should be reverted or acquire/release
+> pairs should be added in both flush functions.
+
+Ok, I thought you were arguing we shouldn't revert it :)
+
+I don't know whether to revert or just add the pairs in the flush
+functions, because I can't say I understand what the third part of the
+patch does.
+
+> Anyway the annotation should be placed in the path where
+> wait_for_completion() might be called.
+
+Yes, it should be called regardless of whether we actually wait or not,
+i.e. before most of the checking in the functions.
+
+My issue #3 that I outlined is related - we'd like to have lockdep
+understand that if this work was on the WQ it might deadlock, but we
+don't have a way to get the WQ unless the work is scheduled - and in the
+case that it is scheduled we might already hitting the deadlock
+(depending on the order of execution though I guess).
+
+> Absolutly true. You can find my opinion about that in
+> Documentation/locking/crossrelease.txt which has been removed because
+> crossrelease is strong at detecting *potential* deadlock problems.
+
+Ok, you know what, I'm going to read this now ... hang on........
+
+I see. You were trying to solve the problem of completions/context
+transfers in lockdep.
+
+Given the revert of crossrelease though, we can't actually revert your
+patch anyway, and looking at it again I see what you mean by the "name"
+now ...
+
+So yeah, we should only re-add the two acquire/release pairs. I guess
+I'll make a patch for that, replacing my patch 2.
+
+I'm intrigued by the crossrelease - but that's a separate topic.
+
+johannes
