@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lorien.comfychair.org ([173.8.144.98]:53192 "EHLO
-        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbeHWCdC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:44964 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726186AbeHVHZd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 22:33:02 -0400
-From: Danek Duvall <duvall@comfychair.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Danek Duvall <duvall@comfychair.org>
-Subject: [PATCH 1/2] mac80211: correct use of IEEE80211_VHT_CAP_RXSTBC_X
-Date: Wed, 22 Aug 2018 16:01:04 -0700
-Message-Id: <71e7e4d3d234740314f0a8e8c3ea51bea7a897d0.1534978104.git.duvall@comfychair.org> (sfid-20180823_010616_087647_3D7C6A4A)
-In-Reply-To: <cover.1534978104.git.duvall@comfychair.org>
-References: <cover.1534978104.git.duvall@comfychair.org>
-In-Reply-To: <cover.1534978104.git.duvall@comfychair.org>
-References: <cover.1534978104.git.duvall@comfychair.org>
+        Wed, 22 Aug 2018 03:25:33 -0400
+Message-ID: <1534910543.25523.50.camel@sipsolutions.net> (sfid-20180822_060244_479463_992E6E9A)
+Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
+ cancel_work_sync()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Byungchul Park <byungchul.park@lge.com>
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        kernel-team@lge.com
+Date: Wed, 22 Aug 2018 06:02:23 +0200
+In-Reply-To: <20180822024535.GA2414@X58A-UD3R>
+References: <20180821120317.4115-1-johannes@sipsolutions.net>
+         <20180821120317.4115-2-johannes@sipsolutions.net>
+         <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
+         <1534871894.25523.34.camel@sipsolutions.net>
+         <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
+         <1534872621.25523.39.camel@sipsolutions.net>
+         <20180821175550.GS3978217@devbig004.ftw2.facebook.com>
+         <1534879241.25523.44.camel@sipsolutions.net>
+         <20180822024535.GA2414@X58A-UD3R>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mod mask for VHT capabilities intends to say that you can override
-the number of STBC receive streams, and it does, but only by accident.
-The IEEE80211_VHT_CAP_RXSTBC_X aren't bits to be set, but values (albeit
-left-shifted).  ORing the bits together gets the right answer, but we
-should use the _MASK macro here instead.
+On Wed, 2018-08-22 at 11:45 +0900, Byungchul Park wrote:
 
-Signed-off-by: Danek Duvall <duvall@comfychair.org>
----
- net/mac80211/main.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+> That should've been adjusted as well when Ingo reverted Cross-release.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4fb2709cb527..c5ca329e008a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -471,10 +471,7 @@ static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
- 		cpu_to_le32(IEEE80211_VHT_CAP_RXLDPC |
- 			    IEEE80211_VHT_CAP_SHORT_GI_80 |
- 			    IEEE80211_VHT_CAP_SHORT_GI_160 |
--			    IEEE80211_VHT_CAP_RXSTBC_1 |
--			    IEEE80211_VHT_CAP_RXSTBC_2 |
--			    IEEE80211_VHT_CAP_RXSTBC_3 |
--			    IEEE80211_VHT_CAP_RXSTBC_4 |
-+			    IEEE80211_VHT_CAP_RXSTBC_MASK |
- 			    IEEE80211_VHT_CAP_TXSTBC |
- 			    IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
- 			    IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
--- 
-2.11.0
+I can't really say.
+
+> It would be much easier to add each pair, acquire/release, before
+> wait_for_completion() in both flush_workqueue() and flush_work() than
+> reverting the whole commit.
+
+The commit doesn't do much more than this though.
+
+> What's lacking is only lockdep annotations for wait_for_completion().
+
+No, I disagree. Like I said before, we need the lockdep annotations on
+the WQ even when we don't actually create/use the completion, so we can
+catch issues even when they don't actually happen.
+
+johannes
