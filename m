@@ -1,36 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:40778 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725749AbeHPLHh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48294 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727835AbeHVPB5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 07:07:37 -0400
-Message-ID: <1534406982.3547.55.camel@sipsolutions.net> (sfid-20180816_101054_407670_9BD21B24)
-Subject: Re: [PATCH 1/3] nl80211: add support to configure FTM responder
- functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pradeepc@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Aug 2018 10:09:42 +0200
-In-Reply-To: <15c381ce743aedca37f3eea67975f841@codeaurora.org>
-References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
-         <1534293018-4930-2-git-send-email-pradeepc@codeaurora.org>
-         <1534334948.3547.39.camel@sipsolutions.net>
-         <15c381ce743aedca37f3eea67975f841@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 22 Aug 2018 11:01:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 05/17] iwlwifi: add d3 debug data support
+References: <20180821050952.31603-1-luca@coelho.fi>
+        <20180821050952.31603-6-luca@coelho.fi>
+Date: Wed, 22 Aug 2018 14:37:19 +0300
+In-Reply-To: <20180821050952.31603-6-luca@coelho.fi> (Luca Coelho's message of
+        "Tue, 21 Aug 2018 08:09:40 +0300")
+Message-ID: <87bm9ur5sg.fsf@kamboji.qca.qualcomm.com> (sfid-20180822_133726_877091_E6E9C122)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-15 at 18:48 -0700, pradeepc@codeaurora.org wrote:
-> 
-> Using FLAG attribute may create uncertainty to userspace especially when 
-> flag attribute
-> is not set and the driver supports capability, instead of 
-> assuming/relying on the default
-> behavior of driver/firmware.
+Luca Coelho <luca@coelho.fi> writes:
 
-I don't think there should be any enabling it by default in firmware,
-and as such I think that's just a (separate) driver bug - I'm not
-convinced we should build the API with driver bugs in mind.
+> From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+>
+> During d3, the firmware records debug data into internal buffer
+> if debug data collection occurs, collect the data that was written to the
+> buffer
+>
+> Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-johannes
+[...]
+
+> --- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+> +++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+> @@ -8,6 +8,7 @@
+>   * Copyright(c) 2014 Intel Corporation. All rights reserved.
+>   * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+>   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+> + * Copyright (C) 2018 Intel Corporation
+>   *
+>   * This program is free software; you can redistribute it and/or modify
+>   * it under the terms of version 2 of the GNU General Public License as
+> @@ -18,11 +19,6 @@
+>   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>   * General Public License for more details.
+>   *
+> - * You should have received a copy of the GNU General Public License
+> - * along with this program; if not, write to the Free Software
+> - * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+> - * USA
+> - *
+>   * The full GNU General Public License is included in this distribution
+>   * in the file called COPYING.
+>   *
+
+Is this removal intentional? Just curious.
+
+-- 
+Kalle Valo
