@@ -1,157 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.e-nautia.com ([37.187.142.32]:36289 "EHLO ns.e-nautia.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729982AbeHBTN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Aug 2018 15:13:29 -0400
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-From: Berto Gerard <gerard.berto@e-nautia.com>
-Subject: bug: many pcieport errors
-Message-ID: <16fa1240-cc8d-1c6c-7bf2-ea8d176cec5b@e-nautia.com> (sfid-20180802_192134_779261_77CB3946)
-Date: Thu, 2 Aug 2018 19:16:16 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:34260 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726360AbeHWOnH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Aug 2018 10:43:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>
+Subject: Re: [PATCH 07/15] iwlwifi: add 80211 hdr offset to trace data
+References: <20180821063657.30071-1-luca@coelho.fi>
+        <20180821063657.30071-8-luca@coelho.fi>
+        <877ekir5f2.fsf@kamboji.qca.qualcomm.com>
+        <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi>
+Date: Thu, 23 Aug 2018 14:13:51 +0300
+In-Reply-To: <4d9dfd6108c4bdfab1811ac39d692f8e1272c134.camel@coelho.fi> (Luca
+        Coelho's message of "Wed, 22 Aug 2018 14:58:37 +0300")
+Message-ID: <87mutdnxn4.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_131358_329893_C9C0DC2C)
 MIME-Version: 1.0
-Content-Type: multipart/alternative;
- boundary="------------2EE078C6B1299E5CF2263ADD"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------2EE078C6B1299E5CF2263ADD
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Luca Coelho <luca@coelho.fi> writes:
 
-Hello,
+>> > - * You should have received a copy of the GNU General Public
+>> > License along with
+>> > - * this program; if not, write to the Free Software Foundation,
+>> > Inc.,
+>> > - * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+>> > - *
+>> >   * The full GNU General Public License is included in this
+>> > distribution in the
+>> >   * file called LICENSE.
+>> >   *
+>> 
+>> Ok, you have more of these removals in this patch so I guess it's
+>> intentional. But IMHO it would be nicer to remove these all in one go
+>> instead of sprinkle around in different patches.
+>
+> IMHO it's too much fuzz for mostly useless warning removal... We need
+> to update the copyright when this hits, so we just do it at the same
+> time.
+>
+> But you're the boss, I can submit a patch to remove just that, all at
+> once.
 
-I help on the Ubuntu French forum and we see many times the same 
-problem: kern.log and syslog are filled with an error which is repeated. 
-Here is the error:
+Yeah, please do that. It shouldn't take more than few minutes anyway.
 
-|[ 22.275320] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.275322] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.277322] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.277325] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.277327] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.278793] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.278795] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.278796] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.279211] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.279214] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.279216] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.279605] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.279608] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.279610] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.399607] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.399611] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.399613] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) [ 22.538521] pcieport 0000:00:1c.4: PCIe Bus 
-Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID) [ 
-22.538525] pcieport 0000:00:1c.4: device [8086:9d14] error 
-status/mask=00000001/00000000 [ 22.538527] pcieport 0000:00:1c.4: [ 0] 
-Receiver Error (First) |||||
+The thing is that then you are reviewing a big patchset and all of
+sudden see a license text changes without no mention in the commit log,
+it takes extra time to check it. Sure, with one patch it doens't matter
+but then you are going through 20+ patches (or even more) it makes a
+difference. So it's a lot easier for me to change all license text in
+one go.
 
-||This problem leads to filled hard drive (and it's fast!) for Ubuntu 
-16.04 versions, and for the 18.04.1 version, the live session can't be 
-used: screen remains black with these errors written in white.
-
-These two boot parameters avoid the problem but they have drawbacks, so 
-it's a just a bypass solution: "pci=noaer" or "pci_aspm=off"
-
-We also see that
-
-|[8086:9d14]|
-
-in the error is an intel bridge (Skylake architecture), and
-
-|0000:00:1c.4|
-
-is the RTL8723BE wifi card.
-Many of the Ubuntu's French forum threads have the RTL8723BE card, and 
-every thread has this intel bridge. So I don't know if it's specific of 
-the RTL8723BE card, but on my pc, I don't have the problem and I have 
-the RTL8723BE card but not the same intel bridge (Haswell architecture) 
-and I tried with Xubuntu 16.04.1, Ubuntu 16.04.3 and Xubuntu 18.04.1 and 
-no errors logged.
-
-When we do
-sudo modprobe -r rtl8723be
-the errors stop logged. So maybe the boot parameter 
-"modprobe.blacklist=rtl8723be" could be useful for tests.
-
-That's all we know. If you have questions or some tests for finding 
-where the problem is, don't hesitate.
-Best regards
-
---------------2EE078C6B1299E5CF2263ADD
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
-
-<html>
-  <head>
-
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <p>Hello, </p>
-    <p>I help on the Ubuntu French forum and we see many times the same
-      problem: kern.log and syslog are filled with an error which is
-      repeated. Here is the error:</p>
-    <pre><code>[   22.275320] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.275322] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.277322] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.277325] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.277327] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.278793] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.278795] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.278796] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.279211] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.279214] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.279216] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.279605] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.279608] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.279610] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.399607] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.399611] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.399613] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-[   22.538521] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e4(Receiver ID)
-[   22.538525] pcieport 0000:00:1c.4:   device [8086:9d14] error status/mask=00000001/00000000
-[   22.538527] pcieport 0000:00:1c.4:    [ 0] Receiver Error         (First)
-
-
-</code><code>
-</code><code></code></pre>
-    <p><code></code>This problem leads to filled hard drive (and it's
-      fast!) for Ubuntu 16.04 versions, and for the 18.04.1 version, the
-      live session can't be used: screen remains black with these errors
-      written in white.</p>
-    <p>These two boot parameters avoid the problem but they have
-      drawbacks, so it's a just a bypass solution: "pci=noaer" or
-      "pci_aspm=off"</p>
-    <p>We also see that <br>
-    </p>
-    <pre><code>[8086:9d14]</code></pre>
-    in the error is an intel bridge (Skylake architecture), and <br>
-    <pre><code>0000:00:1c.4</code></pre>
-    is the RTL8723BE wifi card. <br>
-    Many of the Ubuntu's French forum threads have the RTL8723BE card,
-    and every thread has this intel bridge. So I don't know if it's
-    specific of the RTL8723BE card, but on my pc, I don't have the
-    problem and I have the RTL8723BE card but not the same intel bridge
-    (Haswell architecture) and I tried with Xubuntu 16.04.1, Ubuntu
-    16.04.3 and Xubuntu 18.04.1 and no errors logged.<br>
-    <br>
-    When we do<br>
-    sudo modprobe -r rtl8723be<br>
-    the errors stop logged. So maybe the boot parameter
-    "modprobe.blacklist=rtl8723be" could be useful for tests.<br>
-    <br>
-    That's all we know. If you have questions or some tests for finding
-    where the problem is, don't hesitate.<br>
-    Best regards<br>
-  </body>
-</html>
-
---------------2EE078C6B1299E5CF2263ADD--
+-- 
+Kalle Valo
