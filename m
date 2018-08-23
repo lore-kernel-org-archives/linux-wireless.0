@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:35700 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:38132 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727544AbeH2Kwh (ORCPT
+        with ESMTP id S1726445AbeHWUKG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 06:52:37 -0400
-Message-ID: <1535525825.5215.1.camel@sipsolutions.net> (sfid-20180829_085720_148158_0E458EE3)
-Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set
- to one
+        Thu, 23 Aug 2018 16:10:06 -0400
+Message-ID: <1535042363.9999.4.camel@sipsolutions.net> (sfid-20180823_183949_047066_916A1212)
+Subject: Re: [PATCH] netlink: add nl_set_extack_cookie_u64()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, sara.sharon@intel.com
-Date: Wed, 29 Aug 2018 08:57:05 +0200
-In-Reply-To: <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com> (sfid-20180828_234116_503513_760A1610)
-References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
-         <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
-         <1535490861.20033.8.camel@sipsolutions.net>
-         <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com>
-         (sfid-20180828_234116_503513_760A1610)
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 23 Aug 2018 18:39:23 +0200
+In-Reply-To: <20180823.084510.864066255490001088.davem@davemloft.net>
+References: <20180823084813.5727-1-johannes@sipsolutions.net>
+         <20180823.084510.864066255490001088.davem@davemloft.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-28 at 23:41 +0200, Lorenzo Bianconi wrote:
-
-> Assuming the A-MSDU subframe is composed by two packets, the last one
-> must not contain padding, is my understanding correct?
-
-Yes. More generally, assuming the A-MSDU subframe is composed of *any
-number of* packets, the last one must not contain padding :)
-
-> > My colleague Sara (CC'ed now) has a patch to fix all of this (we just
-> > did that this morning). I'll send it out tomorrow morning. Can I bother
-> > you to try that?
-> > 
+On Thu, 2018-08-23 at 08:45 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Thu, 23 Aug 2018 10:48:13 +0200
 > 
-> Sure, no worries :)
-
-Thanks, patch coming up in a second.
-
-> > We'd have to fix the first point independently though, or I guess we can
-> > roll that into our bugfix too, which would you prefer?
+> > From: Johannes Berg <johannes.berg@intel.com>
 > > 
-> > johannes
+> > Add a helper function nl_set_extack_cookie_u64() to use a u64 as
+> > the netlink extended ACK cookie, to avoid having to open-code it
+> > in any users of the cookie.
 > > 
+> > A u64 should be sufficient for most subsystems though we allow
+> > for up to 20 bytes right now. This also matches the cookies in
+> > nl80211 where I intend to use this.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > 
-> If the patch is already done I can add the fix for the first point on
-> top of it, does it sound good?
+> Feel free to merge this in your wireless tree since the first
+> user will be there.
+> 
+> Acked-by: David S. Miller <davem@davemloft.net>
 
-Perfect.
+Will do, thanks.
 
 johannes
