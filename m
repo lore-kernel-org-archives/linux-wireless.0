@@ -1,244 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:58757 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731985AbeHNQxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 12:53:18 -0400
-Date: Tue, 14 Aug 2018 22:05:06 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Wen Gong <wgong@codeaurora.org>
-Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: support NET_DETECT WoWLAN feature
-Message-ID: <201808142153.ufdfzApi%fengguang.wu@intel.com> (sfid-20180814_160603_532472_9CF2132C)
-References: <1534214568-25226-1-git-send-email-wgong@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534214568-25226-1-git-send-email-wgong@codeaurora.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:43660 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726177AbeHWSVg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Aug 2018 14:21:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 23 Aug 2018 17:51:28 +0300
+Message-Id: <20180823145128.28803-1-luca@coelho.fi> (sfid-20180823_165138_468029_F2D0B9A8)
+In-Reply-To: <201808221759.dCS26eHv%fengguang.wu@intel.com>
+References: <201808221759.dCS26eHv%fengguang.wu@intel.com>
+Subject: [PATCH v3 07/17] iwlwifi: mvm: protect D0i3 code behind CONFIG_PM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wen,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Thank you for the patch! Perhaps something to improve:
+Runtime PM can only be used if CONFIG_PM is set.  Move all the d0i3
+code (which is essentially runtime PM) behind the CONFIG_PM flag.
 
-[auto build test WARNING on ath6kl/ath-next]
-[also build test WARNING on v4.18 next-20180813]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+This prevents undefined usage of some functions when CONFIG_PM is not
+defined.
 
-url:    https://github.com/0day-ci/linux/commits/Wen-Gong/ath10k-support-NET_DETECT-WoWLAN-feature/20180814-174257
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   include/linux/slab.h:631:13: sparse: undefined identifier '__builtin_mul_overflow'
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:2700:19: sparse: expression using sizeof(void)
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3461:30: sparse: expression using sizeof(void)
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3464:33: sparse: expression using sizeof(void)
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3477:22: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] vdev_id @@    got unsignerestricted __le32 [usertype] vdev_id @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3477:22:    expected restricted __le32 [usertype] vdev_id
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3477:22:    got unsigned char [unsigned] [usertype] vdev_id
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3478:20: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] flags @@    got e] flags @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3478:20:    expected restricted __le32 [usertype] flags
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3478:20:    got int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3481:32: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] active_dwell_time @@    got unsignrestricted __le32 [usertype] active_dwell_time @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3481:32:    expected restricted __le32 [usertype] active_dwell_time
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3481:32:    got unsigned int [unsigned] [usertype] active_max_time
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3482:33: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] passive_dwell_time @@    got unsignrestricted __le32 [usertype] passive_dwell_time @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3482:33:    expected restricted __le32 [usertype] passive_dwell_time
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3482:33:    got unsigned int [unsigned] [usertype] passive_max_time
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3485:28: sparse: invalid assignment: |=
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3485:28:    left side has type restricted __le32
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3485:28:    right side has type int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3487:31: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] fast_scan_period @@    got unsignrestricted __le32 [usertype] fast_scan_period @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3487:31:    expected restricted __le32 [usertype] fast_scan_period
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3487:31:    got unsigned int [unsigned] [usertype] fast_scan_period
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3488:31: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] slow_scan_period @@    got unsignrestricted __le32 [usertype] slow_scan_period @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3488:31:    expected restricted __le32 [usertype] slow_scan_period
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3488:31:    got unsigned int [unsigned] [usertype] slow_scan_period
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3489:35: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] fast_scan_max_cycles @@    got unsignerestricted __le32 [usertype] fast_scan_max_cycles @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3489:35:    expected restricted __le32 [usertype] fast_scan_max_cycles
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3489:35:    got unsigned char [unsigned] [usertype] fast_scan_max_cycles
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3490:31: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] delay_start_time @@    got unsignrestricted __le32 [usertype] delay_start_time @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3490:31:    expected restricted __le32 [usertype] delay_start_time
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3490:31:    got unsigned int [unsigned] [usertype] delay_start_time
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3492:28: sparse: invalid assignment: |=
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3492:28:    left side has type restricted __le32
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3492:28:    right side has type int
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3501:28: sparse: expression using sizeof(void)
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3501:26: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] no_of_ssids @@    got e] no_of_ssids @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3501:26:    expected restricted __le32 [usertype] no_of_ssids
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3501:26:    got int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3504:20: sparse: restricted __le32 degrades to integer
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3509:28: sparse: restricted __le32 degrades to integer
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3515:40: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] valid @@    got e] valid @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3515:40:    expected restricted __le32 [usertype] valid
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3515:40:    got int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3517:17: sparse: incorrect type in argument 3 (different base types) @@    expected unsigned long [unsigned] [usertype] len @@    got d long [unsigned] [usertype] len @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3517:17:    expected unsigned long [unsigned] [usertype] len
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3517:17:    got restricted __le32 [usertype] ssid_len
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3524:53: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] valid @@    got e] valid @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3524:53:    expected restricted __le32 [usertype] valid
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3524:53:    got int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3525:52: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] rssi @@    got signed int [signed] [urestricted __le32 [usertype] rssi @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3525:52:    expected restricted __le32 [usertype] rssi
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3525:52:    got signed int [signed] [usertype] [explicitly-signed] rssi_threshold
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3528:49: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] valid @@    got e] valid @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3528:49:    expected restricted __le32 [usertype] valid
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3528:49:    got int
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3529:57: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] bcast_nw_type @@    got unsignrestricted __le32 [usertype] bcast_nw_type @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3529:57:    expected restricted __le32 [usertype] bcast_nw_type
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3529:57:    got unsigned int [unsigned] [usertype] bcast_nw_type
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3533:19: sparse: restricted __le32 degrades to integer
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3536:32: sparse: expression using sizeof(void)
->> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3536:30: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] num_of_channels @@    got e] num_of_channels @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3536:30:    expected restricted __le32 [usertype] num_of_channels
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3536:30:    got int
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3541:20: sparse: restricted __le32 degrades to integer
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3545:28: sparse: restricted __le32 degrades to integer
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3580:20: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] flags @@    got e] flags @@
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3580:20:    expected restricted __le32 [usertype] flags
-   drivers/net/wireless/ath/ath10k/wmi-tlv.c:3580:20:    got int
-   include/linux/slab.h:631:13: sparse: call with no type!
---
->> drivers/net/wireless/ath/ath10k/wow.c:207:50: sparse: incorrect type in assignment (different base types) @@    expected restricted __le32 [usertype] ssid_len @@    got unsignerestricted __le32 [usertype] ssid_len @@
-   drivers/net/wireless/ath/ath10k/wow.c:207:50:    expected restricted __le32 [usertype] ssid_len
-   drivers/net/wireless/ath/ath10k/wow.c:207:50:    got unsigned char [unsigned] [usertype] ssid_len
->> drivers/net/wireless/ath/ath10k/wow.c:211:44: sparse: restricted __le32 degrades to integer
-   drivers/net/wireless/ath/ath10k/wow.c:242:52: sparse: restricted __le32 degrades to integer
->> drivers/net/wireless/ath/ath10k/wow.c:246:56: sparse: incorrect type in argument 3 (different base types) @@    expected unsigned long [unsigned] [usertype] <noident> @@    got d long [unsigned] [usertype] <noident> @@
-   drivers/net/wireless/ath/ath10k/wow.c:246:56:    expected unsigned long [unsigned] [usertype] <noident>
-   drivers/net/wireless/ath/ath10k/wow.c:246:56:    got restricted __le32 [usertype] ssid_len
-   drivers/net/wireless/ath/ath10k/wow.c: In function 'ath10k_wow_op_resume':
-   drivers/net/wireless/ath/ath10k/wow.c:451:6: warning: 'ret' may be used uninitialized in this function [-Wmaybe-uninitialized]
-      if (ret) {
-         ^
-   drivers/net/wireless/ath/ath10k/wow.c:421:6: note: 'ret' was declared here
-     int ret;
-         ^~~
-
-vim +3477 drivers/net/wireless/ath/ath10k/wmi-tlv.c
-
-  3437	
-  3438	/* Request FW to start PNO operation */
-  3439	static struct sk_buff *ath10k_wmi_tlv_op_gen_config_pno_start
-  3440					(struct ath10k *ar,
-  3441					u32 vdev_id,
-  3442					struct wmi_pno_scan_req *pno)
-  3443	{
-  3444		struct wmi_tlv_wow_nlo_config_cmd *cmd;
-  3445		struct wmi_tlv *tlv;
-  3446		struct sk_buff *skb;
-  3447		struct nlo_configured_parameters *nlo_list;
-  3448		u32 *channel_list;
-  3449		void *ptr;
-  3450		size_t len;
-  3451		u32 i;
-  3452	
-  3453		len = sizeof(*tlv) + sizeof(*cmd) +
-  3454		      sizeof(*tlv) +
-  3455		      /* TLV place holder for array of structures
-  3456		       * nlo_configured_parameters(nlo_list)
-  3457		       */
-  3458		      sizeof(*tlv);
-  3459		      /* TLV place holder for array of uint32 channel_list */
-  3460	
-  3461		len += sizeof(u32) * min_t(u8, pno->a_networks[0].channel_count,
-  3462					   WMI_NLO_MAX_CHAN);
-  3463		len += sizeof(struct nlo_configured_parameters) *
-  3464					min_t(u8, pno->uc_networks_count, WMI_NLO_MAX_SSIDS);
-  3465	
-  3466		skb = ath10k_wmi_alloc_skb(ar, len);
-  3467		if (!skb)
-  3468			return ERR_PTR(-ENOMEM);
-  3469	
-  3470		ptr = (void *)skb->data;
-  3471		tlv = ptr;
-  3472		tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_NLO_CONFIG_CMD);
-  3473		tlv->len = __cpu_to_le16(sizeof(*cmd));
-  3474		cmd = (void *)tlv->value;
-  3475	
-  3476		/* wmi_tlv_wow_nlo_config_cmd parameters*/
-> 3477		cmd->vdev_id = pno->vdev_id;
-> 3478		cmd->flags = WMI_NLO_CONFIG_START | WMI_NLO_CONFIG_SSID_HIDE_EN;
-  3479	
-  3480		/* Current FW does not support min-max range for dwell time */
-> 3481		cmd->active_dwell_time = pno->active_max_time;
-> 3482		cmd->passive_dwell_time = pno->passive_max_time;
-  3483	
-  3484		if (pno->do_passive_scan)
-> 3485			cmd->flags |= WMI_NLO_CONFIG_SCAN_PASSIVE;
-  3486		/* Copy scan interval */
-> 3487		cmd->fast_scan_period = pno->fast_scan_period;
-> 3488		cmd->slow_scan_period = pno->slow_scan_period;
-> 3489		cmd->fast_scan_max_cycles = pno->fast_scan_max_cycles;
-> 3490		cmd->delay_start_time = pno->delay_start_time;
-  3491		if (pno->enable_pno_scan_randomization) {
-> 3492			cmd->flags |= WMI_NLO_CONFIG_SPOOFED_MAC_IN_PROBE_REQ |
-  3493					WMI_NLO_CONFIG_RANDOM_SEQ_NO_IN_PROBE_REQ;
-  3494			ether_addr_copy(cmd->mac_addr.addr, pno->mac_addr);
-  3495			ether_addr_copy(cmd->mac_mask.addr, pno->mac_addr_mask);
-  3496		}
-  3497		ptr += sizeof(*tlv);
-  3498		ptr += sizeof(*cmd);
-  3499	
-  3500		/* nlo_configured_parameters(nlo_list) */
-> 3501		cmd->no_of_ssids = min_t(u8, pno->uc_networks_count, WMI_NLO_MAX_SSIDS);
-  3502		tlv = ptr;
-  3503		tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
-> 3504		tlv->len = __cpu_to_le16
-  3505			(cmd->no_of_ssids * sizeof(struct nlo_configured_parameters));
-  3506	
-  3507		ptr += sizeof(*tlv);
-  3508		nlo_list = ptr;
-  3509		for (i = 0; i < cmd->no_of_ssids; i++) {
-  3510			tlv = (struct wmi_tlv *)(&nlo_list[i].tlv_header);
-  3511			tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_BYTE);
-  3512			tlv->len = __cpu_to_le16
-  3513				(sizeof(struct nlo_configured_parameters) - sizeof(*tlv));
-  3514			/* Copy ssid and it's length */
-> 3515			nlo_list[i].ssid.valid = true;
-  3516			nlo_list[i].ssid.ssid.ssid_len = pno->a_networks[i].ssid.ssid_len;
-> 3517			memcpy(nlo_list[i].ssid.ssid.ssid,
-  3518			       pno->a_networks[i].ssid.ssid,
-  3519			       nlo_list[i].ssid.ssid.ssid_len);
-  3520	
-  3521			/* Copy rssi threshold */
-  3522			if (pno->a_networks[i].rssi_threshold &&
-  3523			    pno->a_networks[i].rssi_threshold > -300) {
-> 3524				nlo_list[i].rssi_cond.valid = true;
-> 3525				nlo_list[i].rssi_cond.rssi = pno->a_networks[i].rssi_threshold;
-  3526			}
-  3527	
-  3528			nlo_list[i].bcast_nw_type.valid = true;
-> 3529			nlo_list[i].bcast_nw_type.bcast_nw_type =
-  3530				pno->a_networks[i].bcast_nw_type;
-  3531		}
-  3532	
-  3533		ptr += cmd->no_of_ssids * sizeof(struct nlo_configured_parameters);
-  3534	
-  3535		/* Copy channel info */
-> 3536		cmd->num_of_channels = min_t(u8, pno->a_networks[0].channel_count,
-  3537					     WMI_NLO_MAX_CHAN);
-  3538	
-  3539		tlv = ptr;
-  3540		tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_UINT32);
-  3541		tlv->len = __cpu_to_le16(cmd->num_of_channels * sizeof(u_int32_t));
-  3542		ptr += sizeof(*tlv);
-  3543	
-  3544		channel_list = (u32 *)ptr;
-  3545		for (i = 0; i < cmd->num_of_channels; i++)
-  3546			channel_list[i] = pno->a_networks[0].channels[i];
-  3547	
-  3548		ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv start pno config vdev_id %d\n", vdev_id);
-  3549		return skb;
-  3550	}
-  3551	
-
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+In v3, fixed linkage, as reported by kbuildbot.
+
+drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 15 +++++++++++++--
+ 3 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index b15b0d84bb7e..0426cc614bfe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1124,7 +1124,9 @@ int __iwl_mvm_mac_start(struct iwl_mvm *mvm)
+ 		 * would do.
+ 		 */
+ 		clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
++#ifdef CONFIG_PM
+ 		iwl_mvm_d0i3_enable_tx(mvm, NULL);
++#endif
+ 	}
+ 
+ 	return ret;
+@@ -1162,7 +1164,9 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
+ 	mutex_lock(&mvm->mutex);
+ 
+ 	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
++#ifdef CONFIG_PM
+ 	iwl_mvm_d0i3_enable_tx(mvm, NULL);
++#endif
+ 	ret = iwl_mvm_update_quotas(mvm, true, NULL);
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to update quotas after restart (%d)\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b3987a0a7018..d73fb0ab9960 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1776,10 +1776,13 @@ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ int iwl_mvm_ref_sync(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
+ bool iwl_mvm_ref_taken(struct iwl_mvm *mvm);
++
++#ifdef CONFIG_PM
+ void iwl_mvm_d0i3_enable_tx(struct iwl_mvm *mvm, __le16 *qos_seq);
+ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode);
+ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode);
+ int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm);
++#endif CONFIG_PM
+ 
+ /* BT Coex */
+ int iwl_mvm_send_bt_init_conf(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index bce5d150eb58..421509c63f23 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -495,7 +495,9 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
+ 
+ /* this forward declaration can avoid to export the function */
+ static void iwl_mvm_async_handlers_wk(struct work_struct *wk);
++#ifdef CONFIG_PM
+ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk);
++#endif
+ 
+ static u32 iwl_mvm_min_backoff(struct iwl_mvm *mvm)
+ {
+@@ -665,7 +667,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 
+ 	INIT_WORK(&mvm->async_handlers_wk, iwl_mvm_async_handlers_wk);
+ 	INIT_WORK(&mvm->roc_done_wk, iwl_mvm_roc_done_wk);
++#ifdef CONFIG_PM
+ 	INIT_WORK(&mvm->d0i3_exit_work, iwl_mvm_d0i3_exit_work);
++#endif
+ 	INIT_DELAYED_WORK(&mvm->tdls_cs.dwork, iwl_mvm_tdls_ch_switch_work);
+ 	INIT_DELAYED_WORK(&mvm->scan_timeout_dwork, iwl_mvm_scan_timeout_wk);
+ 	INIT_WORK(&mvm->add_stream_wk, iwl_mvm_add_new_dqa_stream_wk);
+@@ -1278,6 +1282,7 @@ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
+ 	iwl_mvm_nic_restart(mvm, true);
+ }
+ 
++#ifdef CONFIG_PM
+ struct iwl_d0i3_iter_data {
+ 	struct iwl_mvm *mvm;
+ 	struct ieee80211_vif *connected_vif;
+@@ -1689,6 +1694,13 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
+ 	return _iwl_mvm_exit_d0i3(mvm);
+ }
+ 
++#define IWL_MVM_D0I3_OPS					\
++	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
++	.exit_d0i3 = iwl_mvm_exit_d0i3,
++#else /* CONFIG_PM */
++#define IWL_MVM_D0I3_OPS
++#endif /* CONFIG_PM */
++
+ #define IWL_MVM_COMMON_OPS					\
+ 	/* these could be differentiated */			\
+ 	.async_cb = iwl_mvm_async_cb,				\
+@@ -1699,8 +1711,7 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
+ 	.nic_error = iwl_mvm_nic_error,				\
+ 	.cmd_queue_full = iwl_mvm_cmd_queue_full,		\
+ 	.nic_config = iwl_mvm_nic_config,			\
+-	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
+-	.exit_d0i3 = iwl_mvm_exit_d0i3,				\
++	IWL_MVM_D0I3_OPS					\
+ 	/* as we only register one, these MUST be common! */	\
+ 	.start = iwl_op_mode_mvm_start,				\
+ 	.stop = iwl_op_mode_mvm_stop
+-- 
+2.18.0
