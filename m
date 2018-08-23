@@ -1,104 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:32957 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728315AbeHOAjK (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:13372 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728588AbeHWPQm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 20:39:10 -0400
-Received: by mail-yw1-f68.google.com with SMTP id c135-v6so17412916ywa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:50:00 -0700 (PDT)
-Received: from mail-yw1-f42.google.com (mail-yw1-f42.google.com. [209.85.161.42])
-        by smtp.gmail.com with ESMTPSA id x125-v6sm8994506ywc.0.2018.08.14.14.49.56
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 14 Aug 2018 14:49:56 -0700 (PDT)
-Received: by mail-yw1-f42.google.com with SMTP id e23-v6so17379347ywe.13
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:49:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
-References: <20180813223910.26276-1-surenb@google.com> <20180814095413.vbjkcjkmytkffyaz@mwanda>
- <CAJuCfpF0Y6wc1z-rbn2wdWROgc_FkD2EX5HzDMcZ1oB5Z=dXSw@mail.gmail.com>
- <CAJuCfpHSZuabLr6+t_n7UDamJCAP6EPTNEZ6kNqWOhk2mpYADg@mail.gmail.com>
- <CAGXu5jKqcpbpG0Ky4-yXV4d5q10HtGwJtdyPKcrwkJUPhA_Mpg@mail.gmail.com> <CAJuCfpEX69Sbd=0i0ismP6q2NsZGUF4gMSCr1G5NdXd3n1NyZA@mail.gmail.com>
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 14 Aug 2018 14:49:54 -0700
-Message-ID: <CAGXu5jJB9wMDJnfsurpxsXm6_0WsWWCaTuWBfy+3aMSE_LL9Rw@mail.gmail.com> (sfid-20180814_235013_072798_D3C8DB9B)
-Subject: Re: [PATCH 1/1] NFC: Fix possible memory corruption when handling
- SHDLC I-Frame commands
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Security Officers <security@kernel.org>,
-        Kevin Deus <kdeus@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Allen Pais <allen.pais@oracle.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 23 Aug 2018 11:16:42 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Karthick Gopalasubramanian <kargop@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 1/9] wil6210: remove reset file from debugfs
+Date: Thu, 23 Aug 2018 14:47:05 +0300
+Message-Id: <1535024833-15178-2-git-send-email-merez@codeaurora.org> (sfid-20180823_134729_371059_3AEFA5E7)
+In-Reply-To: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
+References: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 14, 2018 at 1:55 PM, Suren Baghdasaryan <surenb@google.com> wrote:
-> On Tue, Aug 14, 2018 at 1:33 PM, Kees Cook <keescook@chromium.org> wrote:
->> On Tue, Aug 14, 2018 at 1:26 PM, Suren Baghdasaryan <surenb@google.com> wrote:
->>> On Tue, Aug 14, 2018 at 9:57 AM, Suren Baghdasaryan <surenb@google.com> wrote:
->>>> On Tue, Aug 14, 2018 at 2:54 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->>>>> Thanks.  This is great.  I'm so glad these are finally getting fixed.
->>>>>
->>>>> Do we need to fix nfc_hci_msg_rx_work() and nfc_hci_recv_from_llc() as
->>>>> well?  In nfc_hci_recv_from_llc() we allow pipe to be NFC_HCI_FRAGMENT
->>>>> (0x7f) so that's one element beyond the end of the array and the
->>>>> NFC_HCI_HCP_RESPONSE isn't checked.
->>>>>
->>>>> Also nci_hci_msg_rx_work() and nci_hci_data_received_cb() use
->>>>> NCI_HCP_MSG_GET_PIPE() so those could be off by one.
->>>>
->>>> Good point. From hci.h:
->>>>
->>>> /*
->>>>  * According to specification 102 622 chapter 4.4 Pipes,
->>>>  * the pipe identifier is 7 bits long.
->>>>  */
->>>> #define NFC_HCI_MAX_PIPES 127
->>>>
->>>> And then:
->>>>
->>>> struct nfc_hci_dev {
->>>>   ...
->>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES];
->>>>   ...
->>>> }
->>>>
->>>> I think the correct fix would be to change it to:
->>>>
->>>>   struct nfc_hci_pipe pipes[NFC_HCI_MAX_PIPES + 1];
->>>>
->>>> What do you think?
->>>>
->>>
->>> Just to be clear, this would fix the problem Dan described in his
->>> reply and it should be implemented in a separate patch. The original
->>> fix is still valid.
->>
->> I think you could merge the fixes into a single patch.
->
-> Couple reasons I would prefer to keep them separate:
-> - I feel that descriptions for these two issues should be different
-> and it's easier if we don't mix them up
-> - This one is already merged into Android kernels, so would be easier
-> to introduce the second fix separately
-> - I would like to give credit to people who noticed the problem (in
-> this case those are different people)
->
-> However if more people think we should fix both issues in the same
-> patch I'll happily do that.
-> Thanks!
+From: Karthick Gopalasubramanian <kargop@codeaurora.org>
 
-If it's already landed separately somewhere else, then yeah, 2 patches
-sounds good. No objection either way from me!
+Reset file is not used and may cause race conditions
+with operational driver if used.
 
--Kees
+Signed-off-by: Karthick Gopalasubramanian <kargop@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 27 ---------------------------
+ 1 file changed, 27 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 51c3330..4057f06 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -725,32 +725,6 @@ struct dentry *wil_debugfs_create_ioblob(const char *name,
+ 	return debugfs_create_file(name, mode, parent, wil_blob, &fops_ioblob);
+ }
+ 
+-/*---reset---*/
+-static ssize_t wil_write_file_reset(struct file *file, const char __user *buf,
+-				    size_t len, loff_t *ppos)
+-{
+-	struct wil6210_priv *wil = file->private_data;
+-	struct net_device *ndev = wil->main_ndev;
+-
+-	/**
+-	 * BUG:
+-	 * this code does NOT sync device state with the rest of system
+-	 * use with care, debug only!!!
+-	 */
+-	rtnl_lock();
+-	dev_close(ndev);
+-	ndev->flags &= ~IFF_UP;
+-	rtnl_unlock();
+-	wil_reset(wil, true);
+-
+-	return len;
+-}
+-
+-static const struct file_operations fops_reset = {
+-	.write = wil_write_file_reset,
+-	.open  = simple_open,
+-};
+-
+ /*---write channel 1..4 to rxon for it, 0 to rxoff---*/
+ static ssize_t wil_write_file_rxon(struct file *file, const char __user *buf,
+ 				   size_t len, loff_t *ppos)
+@@ -2451,7 +2425,6 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"desc",	0444,		&fops_txdesc},
+ 	{"bf",		0444,		&fops_bf},
+ 	{"mem_val",	0644,		&fops_memread},
+-	{"reset",	0244,		&fops_reset},
+ 	{"rxon",	0244,		&fops_rxon},
+ 	{"tx_mgmt",	0244,		&fops_txmgmt},
+ 	{"wmi_send", 0244,		&fops_wmi},
 -- 
-Kees Cook
-Pixel Security
+1.9.1
