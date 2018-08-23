@@ -1,44 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:38132 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726445AbeHWUKG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45174 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726068AbeHWKV2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 16:10:06 -0400
-Message-ID: <1535042363.9999.4.camel@sipsolutions.net> (sfid-20180823_183949_047066_916A1212)
-Subject: Re: [PATCH] netlink: add nl_set_extack_cookie_u64()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 23 Aug 2018 18:39:23 +0200
-In-Reply-To: <20180823.084510.864066255490001088.davem@davemloft.net>
-References: <20180823084813.5727-1-johannes@sipsolutions.net>
-         <20180823.084510.864066255490001088.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 23 Aug 2018 06:21:28 -0400
+Subject: Re: FTM/measurement APIs
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <1534766611.6287.20.camel@sipsolutions.net>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <eea4129b-b994-ff31-2397-a1630b8a8e9a@codeaurora.org> (sfid-20180823_085336_048126_0609232A)
+Date: Thu, 23 Aug 2018 09:53:13 +0300
+MIME-Version: 1.0
+In-Reply-To: <1534766611.6287.20.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-08-23 at 08:45 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu, 23 Aug 2018 10:48:13 +0200
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Add a helper function nl_set_extack_cookie_u64() to use a u64 as
-> > the netlink extended ACK cookie, to avoid having to open-code it
-> > in any users of the cookie.
-> > 
-> > A u64 should be sufficient for most subsystems though we allow
-> > for up to 20 bytes right now. This also matches the cookies in
-> > nl80211 where I intend to use this.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Feel free to merge this in your wireless tree since the first
-> user will be there.
-> 
-> Acked-by: David S. Miller <davem@davemloft.net>
+Hi Johannes,
 
-Will do, thanks.
+On 8/20/2018 3:03 PM, Johannes Berg wrote:
+> Hi all,
+> 
+> After much delay on our side (don't ask), I'm contemplating upstream
+> APIs for FTM again.
+> 
+I appreciate the effort. I had a discussion with Luca on the previous API a long
+time ago and gave some comments, mainly to ensure it fits 11ad use cases, but
+sadly I also moved to other tasks...
 
-johannes
+> Luca tells me that there are also other things to take into
+> consideration, notably angle of arrival. Or CIR/CFR but I have no idea
+> what those are, unless they're "Channel Impulse/Frequency Response" and
+> then perhaps that's what's used for angle measurement?
+> 
+Yes AOA (angle of arrival) is based on CIR(channel impulse response) or CFR
+(channel frequency response). Our 11ad chip can do CIR but most other chips do
+CFR (I think). AOA finds azimuth and elevation from CIR by running some
+algorithm in user space and using a database. Not sure how easy it is to offload
+to FW. Anyhow I suggest calling the measurement CIR or CFR and not mentioning
+AOA, since the CIR/CFR can be useful for other stuff.
+
+> Anyway, I'll use the angle measurement as an example here.
+> 
+> In building the APIs for this, I'm wondering how much "generics" make
+> sense. We could build an API that's structured like this:
+> 
+> Measure(
+>  - [timeout]
+>  - [MAC randomization]
+>  - FTM
+>    - <FTM settings like TSF request?>
+>    - targets
+>      0: - MAC address
+>         - channel
+>         - ...
+>      1: - MAC address
+>         - channel
+>         - ...
+>  - Angle
+>    - <common settings>
+>    - targets
+>      0: - MAC address
+>         - channel
+>         - ...
+> )
+> 
+> This is very generic, so you could add something like
+> 
+>   - my_other_measurement
+>     - param1
+>     - param2
+> 
+> that's in no way connected to the target list.
+> 
+> However, note the duplication of MAC/channel.
+> 
+> You could also have only partially overlapping (or entirely disjoint)
+> target lists, in which case the concurrency no longer makes much sense.
+> The driver would have to build a combined target list, and then execute
+> the measurements. This implies more logic is needed.
+> 
+> 
+> The other option is to restrict this new API to doing "peer-related"
+> measurements, and build the list like this:
+> 
+> Peer-Measurement(
+>   - [timeout]
+>   - [MAC randomization]
+>   - global FTM options
+>     - ...
+>   - global angle options
+>     - ...
+>   - peers
+>     0: - MAC address
+>        - channel
+>        - FTM
+>          - ... [FTM settings]
+>        - Angle
+>          - ... [Angle settings]
+>     1: - MAC address
+>        - channel
+>        - ...
+> )
+> 
+> This is less generic, since it's restricted to a list of MAC/channel
+> pairs as the list of targets, and you can't add any other non-target
+> measurements to do simultaneously, at least not directly in this
+> structure. We could possibly still add it, but it would be more complex.
+> 
+> (And maybe the global options aren't really needed, for FTM the only one
+> I can think of is "request associated AP TSF" but that could be a per-
+> peer setting too.)
+> 
+> 
+> In a way, I prefer the second option. It's far simpler to start out
+> with, technically could be extended to non-peer measurements (though not
+> as cleanly perhaps), and matches the various location use cases far
+> better.
+> 
+I also prefer the second option. It is both simpler and allows the driver to
+better organize the measurements (for example, in our implementation we always
+do CIR at the beginning or end of FTM burst).
+
+> 
+> Any thoughts? Is anyone aware of any other measurements that are coming
+> up to be used in products that we'd want to cover here?
+> 
+We had some "exotic" measurements that we wanted to support but none are
+critical as far as I remember...
+I can provide more detailed comments when you send actual nl80211 API (I think I
+gave most comments to Luca but can find them again).
+
+Thanks,
+Lior
