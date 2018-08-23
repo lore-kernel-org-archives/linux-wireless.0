@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43884 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731007AbeHAAGk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39234 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728762AbeHWOr3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 20:06:40 -0400
-Subject: Re: [PATCH] ath10k: fix kernel panic by moving pci flush after
- napi_disable
-To: Tamizh chelvam <tamizhr@codeaurora.org>, ath10k@lists.infradead.org
-References: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <ef5defff-0687-4b47-4880-a88dd5e99e86@candelatech.com> (sfid-20180801_002420_686814_EC9FD1B9)
-Date: Tue, 31 Jul 2018 15:24:10 -0700
+        Thu, 23 Aug 2018 10:47:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: Felix Fietkau <nbd@nbd.name>, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k: turn on btcoex_enable as default
+References: <20180208052801.15670-1-kai.heng.feng@canonical.com>
+        <56d650e6-d26f-087c-4e86-2e5d4e859414@nbd.name>
+        <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com>
+        <87k1vmeip8.fsf@kamboji.qca.qualcomm.com>
+        <E500FA42-23F1-433F-9BFB-78A2FD1946AF@canonical.com>
+        <7170e2d5-a59d-8260-fa8e-f02f583b773f@nbd.name>
+        <6A0F65EF-A7C4-469F-8FAF-CBE314676237@canonical.com>
+        <9AF82E83-2EBE-4076-BAFA-EEA44B1DB423@canonical.com>
+Date: Thu, 23 Aug 2018 14:18:10 +0300
+In-Reply-To: <9AF82E83-2EBE-4076-BAFA-EEA44B1DB423@canonical.com> (Kai-Heng
+        Feng's message of "Thu, 23 Aug 2018 09:33:56 +0800")
+Message-ID: <87in41nxfx.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_131837_691417_AFF2E839)
 MIME-Version: 1.0
-In-Reply-To: <1532931051-20118-1-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2018 11:10 PM, Tamizh chelvam wrote:
-> When continuously running wifi up/down sequence, the napi poll
-> can be scheduled after the CE buffers being freed by ath10k_pci_flush
->
-> Steps:
->   In a certain condition, during wifi down below scenario might occur.
->
-> ath10k_stop->ath10k_hif_stop->napi_schedule->ath10k_pci_flush->napi_poll(napi_synchronize).
->
-> In the above scenario, CE buffer entries will be freed up and become NULL in
-> ath10k_pci_flush. And the napi_poll has been invoked after the flush process
-> and it will try to get the skb from the CE buffer entry and perform some action on that.
-> Since the CE buffer already cleaned by pci flush this action will create NULL
-> pointer dereference and trigger below kernel panic.
->
-> Unable to handle kernel NULL pointer dereference at virtual address 0000005c
-> PC is at ath10k_pci_htt_rx_cb+0x64/0x3ec [ath10k_pci]
-> ath10k_pci_htt_rx_cb [ath10k_pci]
-> ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci]
-> ath10k_ce_per_engine_service [ath10k_pci]
-> ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci]
-> ath10k_ce_per_engine_service_any [ath10k_pci]
-> ath10k_pci_napi_poll+0x48/0xec [ath10k_pci]
-> ath10k_pci_napi_poll [ath10k_pci]
-> net_rx_action+0xac/0x160
-> net_rx_action
-> __do_softirq+0xdc/0x208
-> __do_softirq
-> irq_exit+0x84/0xe0
-> irq_exit
-> __handle_domain_irq+0x80/0xa0
-> __handle_domain_irq
-> gic_handle_irq+0x38/0x5c
-> gic_handle_irq
-> __irq_usr+0x44/0x60
->
-> Tested on QCA4019 and firmware version 10.4.3.2.1.1-00010
+Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
 
-I have been testing this for two days while bisecting buggy 10.4 9984 firmware.  I still see
-crashes, but it is certainly no worse.  So, this patch seems OK to me.
+> at 12:15, Kai Heng Feng <kai.heng.feng@canonical.com> wrote:
+>
+>>
+>>
+>>> On 10 Feb 2018, at 10:05 PM, Felix Fietkau <nbd@nbd.name> wrote:
+>>>
+>>> On 2018-02-10 14:56, Kai Heng Feng wrote:
+>>>>> On 9 Feb 2018, at 3:16 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>>> Sure, but we have to make sure that we don't create regressions on
+>>>>> existing systems. For example, did you test this with any system which
+>>>>> don't support btcoex? (just asking, haven't tested this myself)
+>>>>
+>>>> No not really, but I will definitely test it.
+>>>> The only module I have that uses ath9k is Dell=E2=80=99s DW1707.
+>>>> How do I check if it support btcoex or not?
+>>> I just reviewed the code again, and I am sure that we cannot merge this
+>>> patch. Enabling the btcoex parameter makes the driver enable a whole
+>>> bunch of code starting timers, listening to some GPIOs, etc.
+>>>
+>>> On non-btcoex systems, some of those GPIOs might be floating or even
+>>> connected to different things, which could cause a lot of undefined
+>>> behavior.
+>>>
+>>> This is simply too big a risk, so there absolutely needs to be a
+>>> whitelist for systems that need this, otherwise it has to remain
+>>> disabled by default.
+>>
+>> So what information can we use to whitelist btcoex chips?
+>> Can we get btcoex support status at ath9k probing?
+>
+> Sorry for bringing this up again.
+>
+> Is DMI based match an acceptable approach for ath9k?
 
-Thanks,
-Ben
+I don't know what Felix thinkgs, but to me using DMI sounds like a good
+idea to try, assuming the matches are unique enough and there's no risk
+of enabling bt coex on wrong platforms. Should the PCI bus number etc
+checked as well in case the user adds more ath9k devices to the
+platform?
 
+But of course I need to see the patch to comment more.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--=20
+Kalle Valo
