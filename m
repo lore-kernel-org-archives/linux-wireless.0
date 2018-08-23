@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:39714 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727080AbeHDPIr (ORCPT
+Received: from laurent.telenet-ops.be ([195.130.137.89]:45986 "EHLO
+        laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727828AbeHXA7S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Aug 2018 11:08:47 -0400
-Received: by mail-qt0-f180.google.com with SMTP id q12-v6so9111787qtp.6
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2018 06:08:08 -0700 (PDT)
-Received: from [10.10.10.116] (c-76-100-58-62.hsd1.md.comcast.net. [76.100.58.62])
-        by smtp.gmail.com with ESMTPSA id x10-v6sm6729880qta.24.2018.08.04.06.08.06
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 04 Aug 2018 06:08:07 -0700 (PDT)
-From: Dan Kosek <daniel.kosek@gmail.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
-Subject: iw scanning broken?
-Message-Id: <C17ECAF6-E13C-40DB-A582-C9945D9BE7D7@gmail.com> (sfid-20180804_150912_902834_4E74D4FA)
-Date: Sat, 4 Aug 2018 09:08:06 -0400
-To: linux-wireless@vger.kernel.org
+        Thu, 23 Aug 2018 20:59:18 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] mt76: Fix comparisons with invalid hardware key index
+Date: Thu, 23 Aug 2018 23:27:38 +0200
+Message-Id: <20180823212738.18431-1-geert@linux-m68k.org> (sfid-20180823_232813_045507_03CBCA57)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you enter the following command, you should get a single channel =
-scan:
+With gcc 4.1.2:
 
-sudo iw wlan0 scan freq 2412
+    drivers/net/wireless/mediatek/mt76/mt76x0/tx.c: In function ‘mt76x0_tx’:
+    drivers/net/wireless/mediatek/mt76/mt76x0/tx.c:169: warning: comparison is always true due to limited range of data type
+    drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c: In function ‘mt76x2_tx’:
+    drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c:35: warning: comparison is always true due to limited range of data type
 
-You do not.  Instead you get a full (all) channels scan, which takes 3-5 =
-seconds.
+While assigning -1 to a u8 works fine, comparing with -1 does not work
+as expected.
 
-This has been tested on Raspberry Pi Raspian 9 and Peppermint OS 7 ( =
-Linux 4.4.0-53-generic #74-Ubuntu) with the same results.
+Fix this by comparing with 0xff, like is already done in some other
+places.
 
-i believe iw is broken or some command knowledge is missing.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+Compile-tested only.
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c        | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Dan
-
-daniel.kosek@gmail.com
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+index 751b49c28ae53f0f..c45d05d5aab1d207 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+@@ -166,7 +166,7 @@ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	if (sta) {
+ 		msta = (struct mt76_sta *) sta->drv_priv;
+ 		wcid = &msta->wcid;
+-	} else if (vif && (!info->control.hw_key && wcid->hw_key_idx != -1)) {
++	} else if (vif && (!info->control.hw_key && wcid->hw_key_idx != 0xff)) {
+ 		struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
+ 
+ 		wcid = &mvif->group_wcid;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+index 36afb166fa3ffd29..c0ca0df84ed8b86a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+@@ -32,7 +32,7 @@ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		msta = (struct mt76x2_sta *)control->sta->drv_priv;
+ 		wcid = &msta->wcid;
+ 		/* sw encrypted frames */
+-		if (!info->control.hw_key && wcid->hw_key_idx != -1)
++		if (!info->control.hw_key && wcid->hw_key_idx != 0xff)
+ 			control->sta = NULL;
+ 	}
+ 
+-- 
+2.17.1
