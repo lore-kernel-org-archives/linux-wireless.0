@@ -1,100 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:40668 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726624AbeHYOTk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:58194 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726429AbeHWKZc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Aug 2018 10:19:40 -0400
-Received: by mail-wr1-f68.google.com with SMTP id n2-v6so9429073wrw.7
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:05 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 03/16] mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
-Date: Sat, 25 Aug 2018 12:40:43 +0200
-Message-Id: <20180825104056.9130-4-lorenzo.bianconi@redhat.com> (sfid-20180825_124112_216819_37E2D693)
+        Thu, 23 Aug 2018 06:25:32 -0400
+Message-ID: <1535007433.9999.2.camel@sipsolutions.net> (sfid-20180823_085748_831005_F5A31D75)
+Subject: Re: FTM/measurement APIs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org
+Date: Thu, 23 Aug 2018 08:57:13 +0200
+In-Reply-To: <eea4129b-b994-ff31-2397-a1630b8a8e9a@codeaurora.org>
+References: <1534766611.6287.20.camel@sipsolutions.net>
+         <eea4129b-b994-ff31-2397-a1630b8a8e9a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76x2u_mcu_deinit routine in usb_mcu layer in order to
-be reused by mt76x0 driver in usb mcu layer unification between
-mt76x0 and mt76x2u drivers
+Hi Lior,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h         | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x2u.h      | 1 -
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c  | 8 --------
- drivers/net/wireless/mediatek/mt76/usb_mcu.c      | 9 +++++++++
- 5 files changed, 11 insertions(+), 10 deletions(-)
+> Yes AOA (angle of arrival) is based on CIR(channel impulse response) or CFR
+> (channel frequency response). Our 11ad chip can do CIR but most other chips do
+> CFR (I think). AOA finds azimuth and elevation from CIR by running some
+> algorithm in user space and using a database. Not sure how easy it is to offload
+> to FW. Anyhow I suggest calling the measurement CIR or CFR and not mentioning
+> AOA, since the CIR/CFR can be useful for other stuff.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 5579b90afee9..f84f35c2e37a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -629,5 +629,6 @@ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
- 		       int cmd, bool wait_resp);
- void mt76u_mcu_fw_reset(struct mt76_dev *dev);
- int mt76u_mcu_init_rx(struct mt76_dev *dev);
-+void mt76u_mcu_deinit(struct mt76_dev *dev);
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-index 008092f0cd8a..a83c17cb6be5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-@@ -65,7 +65,6 @@ int mt76x2u_mcu_load_cr(struct mt76x2_dev *dev, u8 type,
- 			u8 temp_level, u8 channel);
- int mt76x2u_mcu_init(struct mt76x2_dev *dev);
- int mt76x2u_mcu_fw_init(struct mt76x2_dev *dev);
--void mt76x2u_mcu_deinit(struct mt76x2_dev *dev);
- 
- int mt76x2u_alloc_queues(struct mt76x2_dev *dev);
- void mt76x2u_queues_deinit(struct mt76x2_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-index 4986f5388222..48b0b941c0fe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-@@ -312,5 +312,5 @@ void mt76x2u_cleanup(struct mt76x2_dev *dev)
- 	mt76x2u_mcu_set_radio_state(dev, false);
- 	mt76x2u_stop_hw(dev);
- 	mt76u_queues_deinit(&dev->mt76);
--	mt76x2u_mcu_deinit(dev);
-+	mt76u_mcu_deinit(&dev->mt76);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-index 22c16d638baa..31677e898427 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-@@ -453,11 +453,3 @@ int mt76x2u_mcu_init(struct mt76x2_dev *dev)
- 
- 	return mt76x2u_mcu_set_radio_state(dev, true);
- }
--
--void mt76x2u_mcu_deinit(struct mt76x2_dev *dev)
--{
--	struct mt76_usb *usb = &dev->mt76.usb;
--
--	usb_kill_urb(usb->mcu.res.urb);
--	mt76u_buf_free(&usb->mcu.res);
--}
-diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-index 4039b0b709a0..1edc5c3d637b 100644
---- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-@@ -250,3 +250,12 @@ int mt76u_mcu_init_rx(struct mt76_dev *dev)
- 	return err;
- }
- EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
-+
-+void mt76u_mcu_deinit(struct mt76_dev *dev)
-+{
-+	struct mt76_usb *usb = &dev->usb;
-+
-+	usb_kill_urb(usb->mcu.res.urb);
-+	mt76u_buf_free(&usb->mcu.res);
-+}
-+EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
--- 
-2.18.0
+Right.
+
+> > The other option is to restrict this new API to doing "peer-related"
+> > measurements, and build the list like this:
+> > 
+> > Peer-Measurement(
+> >   - [timeout]
+> >   - [MAC randomization]
+> >   - global FTM options
+> >     - ...
+> >   - global angle options
+> >     - ...
+> >   - peers
+> >     0: - MAC address
+> >        - channel
+> >        - FTM
+> >          - ... [FTM settings]
+> >        - Angle
+> >          - ... [Angle settings]
+> >     1: - MAC address
+> >        - channel
+> >        - ...
+> > )
+> > 
+> > This is less generic, since it's restricted to a list of MAC/channel
+> > pairs as the list of targets, and you can't add any other non-target
+> > measurements to do simultaneously, at least not directly in this
+> > structure. We could possibly still add it, but it would be more complex.
+> > 
+> > (And maybe the global options aren't really needed, for FTM the only one
+> > I can think of is "request associated AP TSF" but that could be a per-
+> > peer setting too.)
+> > 
+> > 
+> > In a way, I prefer the second option. It's far simpler to start out
+> > with, technically could be extended to non-peer measurements (though not
+> > as cleanly perhaps), and matches the various location use cases far
+> > better.
+> > 
+> 
+> I also prefer the second option. It is both simpler and allows the driver to
+> better organize the measurements (for example, in our implementation we always
+> do CIR at the beginning or end of FTM burst).
+
+I don't think it matters much to the driver - to organize them in a
+certain way, it could walk both lists first and build a combined list.
+
+However, come to think of it, it's also more obvious in this (second)
+way that this will actually happen, i.e. that the measurements are more
+or less simultaneous. If you organize it like the first way, you could
+argue more that you just requested two measurements, nothing about their
+relative time, whereas here you're at least requesting two measurements
+for each peer.
+
+> We had some "exotic" measurements that we wanted to support but none are
+> critical as far as I remember...
+
+If you remember any, let me know, but I guess it doesn't matter all that
+much for this discussion if we already agree :)
+
+> I can provide more detailed comments when you send actual nl80211 API (I think I
+> gave most comments to Luca but can find them again).
+
+I think what Luca gave me was your comments, but I'll double-check.
+
+johannes
