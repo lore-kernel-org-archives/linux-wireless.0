@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:43689 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726637AbeHSTVp (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:52139 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726132AbeHWLi0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Aug 2018 15:21:45 -0400
-Received: by mail-oi0-f48.google.com with SMTP id b15-v6so21785180oib.10
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Aug 2018 09:09:49 -0700 (PDT)
+        Thu, 23 Aug 2018 07:38:26 -0400
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Subject: Re: [PATCH 09/24] staging: wilc1000: move static variable
+ clients_count to 'wilc' structure
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+ <1534229416-13254-10-git-send-email-ajay.kathat@microchip.com>
+Message-ID: <e56a014d-3df2-9977-8b5a-9793b2969ceb@microchip.com> (sfid-20180823_101017_732137_C0717C0E)
+Date: Thu, 23 Aug 2018 11:09:56 +0300
 MIME-Version: 1.0
-In-Reply-To: <20180814051448.GA2400@redhat.com>
-References: <CAD7cUuBrMscCMzLHCdxaAf+m9XHLr6XWD+FmZqNSdAuYnKCZfw@mail.gmail.com>
- <20180813084123.GA18180@redhat.com> <87tvnycw2b.fsf@purkki.adurom.net>
- <CAD7cUuD8b_b3riHPTEXROW64HCF8S0F2_XHgikz1J_seq-QxXQ@mail.gmail.com> <20180814051448.GA2400@redhat.com>
-From: =?UTF-8?Q?Grzegorz_Duszy=C5=84ski?= <gfduszynski@gmail.com>
-Date: Sun, 19 Aug 2018 18:09:48 +0200
-Message-ID: <CAD7cUuC6v5y_OH0CnhODk6c-6Fi2C+m0cdA2_0u=7XYA7KmgOA@mail.gmail.com> (sfid-20180819_181000_543367_975D2FD9)
-Subject: Re: Cpu stall caused by hostapd running two interfaces
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1534229416-13254-10-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I've updated the kernel to 4.18.1 and then followed the instructions
-(I've checked and 0x6e did not changed)
-Here is the gdb output:
 
-(gdb) l *(ieee80211_regulatory_limit_wmm_params+0x6e)
-0x110e is in ieee80211_regulatory_limit_wmm_params (net/mac80211/util.c:115=
-1).
-1146
-1147            if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
-1148                    wmm_ac =3D &rrule->wmm_rule->ap[ac];
-1149            else
-1150                    wmm_ac =3D &rrule->wmm_rule->client[ac];
-1151            qparam->cw_min =3D max_t(u16, qparam->cw_min, wmm_ac->cw_mi=
-n);
-1152            qparam->cw_max =3D max_t(u16, qparam->cw_max, wmm_ac->cw_ma=
-x);
-1153            qparam->aifs =3D max_t(u8, qparam->aifs, wmm_ac->aifsn);
-1154            qparam->txop =3D !qparam->txop ? wmm_ac->cot / 32 :
-1155                    min_t(u16, qparam->txop, wmm_ac->cot / 32);
-(gdb)
+On 14.08.2018 09:50, Ajay Singh wrote:
+> Avoid use of static variable 'clients_count' and move it part of 'wilc'
+> structure.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c     | 9 ++++-----
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 6225e67..d930f06 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -199,7 +199,6 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+>  
+>  static u8 set_ip[2][4];
+>  static u8 get_ip[2][4];
+> -static u32 clients_count;
+>  
+>  static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+>  
+> @@ -3456,7 +3455,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+>  
+>  	vif->obtaining_ip = false;
+>  
+> -	if (clients_count == 0) {
+> +	if (wilc->clients_count == 0) {
 
-2018-08-14 7:14 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
-> On Mon, Aug 13, 2018 at 08:48:17PM +0200, Grzegorz Duszy=C5=84ski wrote:
->> Can I help you somehow with this ?
->
-> Enable CONFIG_DEBUG_INFO=3Dy in .config if not done already.
-> Then do:
->
-> make net/mac80211/util.o
-> gdb net/mac80211/util.o
-> l *(ieee80211_regulatory_limit_wmm_params+0x6e)
->
-> and provide output of gdb l command, this should show code
-> line number where oops occurs.
->
-> Thanks
-> Stanislaw
+The check of this should be mutex protected or a hif init/deinit should be
+done in probe/remove code not not in open (I'm for the second approach).
+Imagine this scenario:
+
+vif 1: is down
+vif 2: is down. "ifconfig vif2 up" is executed and the execution reach this
+       point and then suspends after "if (wilc->clients_count == 0)" check
+vif 1: "ifconfig vif1 up" and execution reach the end of this function and
+       then the execution for vif 2 resumes. This will init twice the hif
+       mutex, completion etc.
+
+>  		init_completion(&hif_driver_comp);
+>  		mutex_init(&hif_deinit_lock);
+>  
+> @@ -3490,7 +3489,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+>  
+>  	mutex_unlock(&hif_drv->cfg_values_lock);
+>  
+> -	clients_count++;
+> +	wilc->clients_count++;
+>  
+>  	return 0;
+>  }
+> @@ -3526,7 +3525,7 @@ int wilc_deinit(struct wilc_vif *vif)
+>  
+>  	hif_drv->hif_state = HOST_IF_IDLE;
+>  
+> -	if (clients_count == 1)	{
+> +	if (vif->wilc->clients_count == 1) {
+>  		struct host_if_msg *msg;
+>  
+>  		msg = wilc_alloc_work(vif, handle_hif_exit_work, true);
+> @@ -3544,7 +3543,7 @@ int wilc_deinit(struct wilc_vif *vif)
+>  
+>  	kfree(hif_drv);
+>  
+> -	clients_count--;
+> +	vif->wilc->clients_count--;
+>  	terminated_handle = NULL;
+>  	mutex_unlock(&hif_deinit_lock);
+>  	return result;
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+> index 8e56a28..8cccbbc 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+> +++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+> @@ -171,6 +171,7 @@ struct wilc {
+>  
+>  	struct rf_info dummy_statistics;
+>  	bool enable_ps;
+> +	int clients_count;
+>  };
+>  
+>  struct wilc_wfi_mon_priv {
+> 
