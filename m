@@ -1,66 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56184 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726593AbeHULNN (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:33558 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbeHWO5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 07:13:13 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Rakesh Parmar <rakeshp@marvell.com>,
-        Vidya Dharmaraju <vidyad@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 1/2] mwifiex: do no submit URB in suspended state
-Date: Tue, 21 Aug 2018 13:23:01 +0530
-Message-ID: <1534837982-31206-1-git-send-email-gbhat@marvell.com> (sfid-20180821_095412_077232_525AD007)
+        Thu, 23 Aug 2018 10:57:11 -0400
+Date: Thu, 23 Aug 2018 16:57:48 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 23/24] staging: wilc1000: move 'wilc_connecting' static
+ variable to 'wilc_vif' struct
+Message-ID: <20180823165748.0dbc7149@ajaysk-VirtualBox> (sfid-20180823_132757_522282_DE733C87)
+In-Reply-To: <20180823105527.GA1404@kroah.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        <1534229416-13254-24-git-send-email-ajay.kathat@microchip.com>
+        <20180823105527.GA1404@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a possible race between USB suspend and main thread:
+Hi Greg,
 
-1. After processing the command response, main thread will submit
-rx_cmd URB back so as to process next command response, by
-calling mwifiex_usb_submit_rx_urb.
+On Thu, 23 Aug 2018 12:55:27 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-2. During USB suspend, the suspend handler will check if rx_cmd
-URB is pending(submitted) and if true, kill this URB.
+> On Tue, Aug 14, 2018 at 12:20:15PM +0530, Ajay Singh wrote:
+> > --- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+> > +++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+> > @@ -151,6 +151,7 @@ struct wilc_vif {
+> >  	struct timer_list periodic_rssi;
+> >  	struct rf_info periodic_stat;
+> >  	struct tcp_ack_filter ack_filter;
+> > +	int connecting;  
+> 
+> Shouldn't this be a boolean?
+> 
 
-There is a possible race between #1 and #2, where rx_cmd URB will
-be submitted by main thread(#1) after the suspend handler check
-in #2.
+Yes, 'connecting' only have value as 0 or 1. I will change it to
+bool and rename it to 'is_connecting'.
 
-To fix this, check if device is already suspended in
-mwifiex_usb_submit_rx_urb, in which case do not submit the URB.
 
-Signed-off-by: Vidya Dharmaraju <vidyad@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 433c6a16..76d80fd 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -298,6 +298,13 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
- 	struct mwifiex_adapter *adapter = ctx->adapter;
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
- 
-+	if (test_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "%s: card removed/suspended, EP %d rx_cmd URB submit skipped\n",
-+			    __func__, ctx->ep);
-+		return -1;
-+	}
-+
- 	if (card->rx_cmd_ep != ctx->ep) {
- 		ctx->skb = dev_alloc_skb(size);
- 		if (!ctx->skb) {
--- 
-1.9.1
+Regards,
+Ajay
