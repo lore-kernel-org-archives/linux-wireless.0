@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60910 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726860AbeHXOt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:49:57 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 07/17] mt76: add helpers for register access with mt76_dev struct
-Date: Fri, 24 Aug 2018 13:15:11 +0200
-Message-Id: <1535109321-17126-8-git-send-email-sgruszka@redhat.com> (sfid-20180824_131552_417986_F9D4E5A5)
-In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
-References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60056 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729044AbeHWOhB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Aug 2018 10:37:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <nicolas.ferre@microchip.com>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+Subject: Re: feedback on mainlining wilc1000 staging driver
+References: <20180816015243.545cd009@ajaysk-VirtualBox>
+        <87sh3etwoj.fsf@purkki.adurom.net> <87o9e2twe9.fsf@purkki.adurom.net>
+        <20180817100233.7f1c00d9@ajaysk-VirtualBox>
+        <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
+        <5B768574.6060009@broadcom.com>
+        <87y3d5tmod.fsf@kamboji.qca.qualcomm.com>
+        <20180817143911.5f0ee545@ajaysk-VirtualBox>
+Date: Thu, 23 Aug 2018 14:07:45 +0300
+In-Reply-To: <20180817143911.5f0ee545@ajaysk-VirtualBox> (Ajay Singh's message
+        of "Fri, 17 Aug 2018 14:39:11 +0530")
+Message-ID: <87r2ipnxxa.fsf@kamboji.qca.qualcomm.com> (sfid-20180823_130755_773206_C7678743)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add helpers for register access from common code.
+Ajay Singh <ajay.kathat@microchip.com> writes:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h | 5 +++++
- 1 file changed, 5 insertions(+)
+>> >>> We need help to review and identify if there are any pending items
+>> >>> for wilc1000 driver, so we can address those issues and make it
+>> >>> ready to move to the wireless subsystem.  
+>> >>
+>> >> I think the best way to get that forward is to submit a patch (or
+>> >> patchset) to linux-wireless, that's the easiest for reviewers.  
+>> >
+>> > For brcm80211 drivers we used a single patch introducing it under
+>> > the wireless drivers folder. Because it was quite a sizable patch we
+>> > parked it on the wireless wiki page. Had a few iterations doing it
+>> > like that.  
+>> 
+>> Another option is to split it so that there's one patch per file,
+>> should be even pretty easy to automate that. It's just so much easier
+>> to comment on a patch submitted by email compared to the reviewer
+>> manually copying code and then commenting it, yuck.
+>> 
+>
+> Sure. I will prepare a patch per file send for review as its easy to
+> review.
+>
+> As Greg suggested, I will wait for the merge window to close and
+> after completing pending patches to staging, I will start the review.
+>
+> For my understanding, the patches for review will be based on
+> wireless-testing branch.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 79017dbd364d..10959c4669bd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -404,6 +404,11 @@ struct mt76_rx_status {
- 	s8 chain_signal[IEEE80211_MAX_CHAINS];
- };
- 
-+#define __mt76_rr(dev, ...)	(dev)->bus->rr((dev), __VA_ARGS__)
-+#define __mt76_wr(dev, ...)	(dev)->bus->wr((dev), __VA_ARGS__)
-+#define __mt76_rmw(dev, ...)	(dev)->bus->rmw((dev), __VA_ARGS__)
-+#define __mt76_wr_copy(dev, ...)	(dev)->bus->copy((dev), __VA_ARGS__)
-+
- #define mt76_rr(dev, ...)	(dev)->mt76.bus->rr(&((dev)->mt76), __VA_ARGS__)
- #define mt76_wr(dev, ...)	(dev)->mt76.bus->wr(&((dev)->mt76), __VA_ARGS__)
- #define mt76_rmw(dev, ...)	(dev)->mt76.bus->rmw(&((dev)->mt76), __VA_ARGS__)
+In this case I think wireless-drivers-next is the safest choise,
+wireless-testing also has other trees which might cause conflicts etc.
+
+> And the fixes will be submitted to staging tree in parallel. right?
+
+I don't think the fixes matter in the initial review. So yeah, Greg can
+apply fixes as he sees fit for now. At some point we need to do a cut
+off period and freeze the driver for the last review round before it
+will be (hopefully) moved to drivers/net/wireless, but let's coordinate
+with Greg once we are at that stage.
+
 -- 
-1.9.3
+Kalle Valo
