@@ -1,45 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54908 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726120AbeH1Rc5 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:15273 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727406AbeHWLlf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 13:32:57 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 23 Aug 2018 07:41:35 -0400
+Subject: Re: [PATCH 24/24] staging: wilc1000: remove unnecessary static
+ variable 'p2p_listen_state'
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+ <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <f79b44e1-6a4a-6b7a-f0d7-25f1e3c8dc4a@microchip.com> (sfid-20180823_101321_036818_8DD34837)
+Date: Thu, 23 Aug 2018 11:13:04 +0300
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath10k: Skip resetting rx filter for WCN3990
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1533566888-22221-1-git-send-email-pillair@codeaurora.org>
-References: <1533566888-22221-1-git-send-email-pillair@codeaurora.org>
-To: Rakesh Pillai <pillair@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Message-Id: <20180828134114.136B060388@smtp.codeaurora.org> (sfid-20180828_154117_620959_22BB6C9F)
-Date: Tue, 28 Aug 2018 13:41:13 +0000 (UTC)
+In-Reply-To: <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-> WCN3990 has the MAC_PCU_ADDR1 configured properly
-> and hence it will not send spurious ack frames
-> during boot up.
+
+On 14.08.2018 09:50, Ajay Singh wrote:
+> Remove the use of unnecessary static variable 'p2p_listen_state'.
+> Already 'p2p_listen_state' is present in 'wilc_priv' struct. So making
+> use of that variable as its getting set in channel ready and
+> remain on channel expired callback.
 > 
-> Hence the reset_rx_filter workaround is not needed
-> for WCN3990. Add a hw_param to indicate if hardware rx
-> filter reset is needed and skip the reset_rx_filter for
-> WCN3990.
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
 > 
-> Tested HW: WCN3990
-> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index d8cc08b..cf7ead5 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -185,8 +185,6 @@ struct join_bss_param {
+>  	u8 start_time[4];
+>  };
+>  
+> -static u8 p2p_listen_state;
+> -
+>  /* 'msg' should be free by the caller for syc */
+>  static struct host_if_msg*
+>  wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
+> @@ -2351,7 +2349,6 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+>  		netdev_err(vif->ndev, "Failed to set remain on channel\n");
+>  
+>  error:
+> -	p2p_listen_state = 1;
+>  	hif_drv->remain_on_ch_timer_vif = vif;
+>  	mod_timer(&hif_drv->remain_on_ch_timer,
+>  		  jiffies + msecs_to_jiffies(hif_remain_ch->duration));
+> @@ -2407,8 +2404,9 @@ static void handle_listen_state_expired(struct work_struct *work)
+>  	struct wid wid;
+>  	int result;
+>  	struct host_if_drv *hif_drv = vif->hif_drv;
+> +	struct wilc_priv *priv = wdev_priv(vif->ndev->ieee80211_ptr);
+>  
+> -	if (p2p_listen_state) {
+> +	if (priv->p2p_listen_state) {
+>  		remain_on_chan_flag = false;
+>  		wid.id = WID_REMAIN_ON_CHAN;
+>  		wid.type = WID_STR;
+> @@ -2433,7 +2431,6 @@ static void handle_listen_state_expired(struct work_struct *work)
+>  			hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+>  						      hif_remain_ch->id);
+>  		}
+> -		p2p_listen_state = 0;
+
+Is this useless at all?
+
+>  	} else {
+>  		netdev_dbg(vif->ndev, "Not in listen state\n");
+>  	}
 > 
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-58da3b423070 ath10k: skip resetting rx filter for WCN3990
-
--- 
-https://patchwork.kernel.org/patch/10557325/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
