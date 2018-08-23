@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.46.142]:17945 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729708AbeHECHU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Aug 2018 22:07:20 -0400
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id 69DCB123D8
-        for <linux-wireless@vger.kernel.org>; Sat,  4 Aug 2018 19:04:54 -0500 (CDT)
-Date: Sat, 4 Aug 2018 19:04:53 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Michael Buesch <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ssb: driver_gige: use true and false for boolean values
-Message-ID: <20180805000453.GA19115@embeddedor.com> (sfid-20180805_020500_118917_EFE0CCD8)
+Received: from bues.ch ([80.190.117.144]:40422 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726917AbeHWVnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 23 Aug 2018 17:43:14 -0400
+Date: Thu, 23 Aug 2018 20:11:47 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: prabhu <d.praabhu@gmail.com>, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org
+Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
+Message-ID: <20180823201147.393b1d53@wiggum> (sfid-20180823_201224_993297_55C76711)
+In-Reply-To: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
+References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/mUnukoH7V3gXL1iBQIWMKM5"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return statements in functions returning bool should use true or false
-instead of an integer value.
+--Sig_/mUnukoH7V3gXL1iBQIWMKM5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This code was detected with the help of Coccinelle.
+On Thu, 23 Aug 2018 23:00:53 +0530
+prabhu <d.praabhu@gmail.com> wrote:
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/ssb/driver_gige.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The following commits introduce this regression in 4.18
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
+/?id=3D66cffd6daab76caebab26eb803b92182414fc182
 
-diff --git a/drivers/ssb/driver_gige.c b/drivers/ssb/driver_gige.c
-index e973405..ebee6b0 100644
---- a/drivers/ssb/driver_gige.c
-+++ b/drivers/ssb/driver_gige.c
-@@ -242,7 +242,7 @@ static int ssb_gige_probe(struct ssb_device *sdev,
- bool pdev_is_ssb_gige_core(struct pci_dev *pdev)
- {
- 	if (!pdev->resource[0].name)
--		return 0;
-+		return false;
- 	return (strcmp(pdev->resource[0].name, SSB_GIGE_MEM_RES_NAME) == 0);
- }
- EXPORT_SYMBOL(pdev_is_ssb_gige_core);
--- 
-2.7.4
+
+Ok. Kalle, can you please revert the commit
+66cffd6daab76caebab26eb803b92182414fc182
+?
+
+--=20
+Michael
+
+--Sig_/mUnukoH7V3gXL1iBQIWMKM5
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlt++OMACgkQ9TK+HZCN
+iw6ZIxAAsEGcsbY8XzAciHd6Us6Abu63fQ7LrYO1wa5c2HtVFdBqHf5raswdteNK
+oXFGMCuq9nZlGb8N/32wI6eYcIFEXiYemU9m+9PY06RcFu0A7VqYLOsJY864UPV9
+aR3vG1F/ARHkRBe0Q4mHeWXxIkUckwr0IoS4qKSHZ3zcPPu2rZwxXZHiji0mI74h
+DCLF6/dlAgT3RMVfc74o2txWj4RdTMvNDqd1recdW6INxNWrmJ74yYids4esgQ3I
+vcx4oSNugB8bcz4SapwPwypH6xgJ+bHgu2Bt4t6aRVB4w9Y8MEn3Wjt99vT3YlS0
+ff4Z6/3NfiZBTk41gSEXu2eosD0BApx7WfWtlfxmAClNxDYEKEgm78KWu6JIEHjN
+ow1HoRFJD3YNLEjSasLuG1BOe4/nqnUtQ3bLOqb7xUzRZgiNbH1Ow8PG53euIby4
++PvIz4viCQITUiI4mCnqS29RglZLRGgb2YdLf1WjSMF2glwfyfA+eWFLspFK2rVW
+4agBdRqpRZ1UfS6vEJ8xu9i7LYpEEjvW2FyYjpmUPbK41c2HUk1hCRS7Kw9dMPyS
+zN2uMFKC8Q3Qi839OSEHwlfQz/3wj0Xm6+pli+B2e8mIAM4HdyJmYZMLyKx02nwD
+sxiFZw/YM6UECcHbO7eG4h+CFy15oR5GKaAphEEK19DlylUY6N4=
+=v10W
+-----END PGP SIGNATURE-----
+
+--Sig_/mUnukoH7V3gXL1iBQIWMKM5--
