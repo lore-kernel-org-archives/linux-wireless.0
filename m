@@ -1,228 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42200 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726417AbeHRLfW (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:6039 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726246AbeHWPQl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:35:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:48 +0300
-Message-Id: <20180818082750.28717-15-luca@coelho.fi> (sfid-20180818_102835_349623_8099CF8D)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 14/16] iwlwifi: drop packets with bad status in CD
+        Thu, 23 Aug 2018 11:16:41 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 2/9] wil6210: add support for channel 4
+Date: Thu, 23 Aug 2018 14:47:06 +0300
+Message-Id: <1535024833-15178-3-git-send-email-merez@codeaurora.org> (sfid-20180823_134749_448488_C36E6697)
+In-Reply-To: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
+References: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
-We need to drop packets with errors (such as replay,
-MIC, ICV, conversion, duplicate and so on).
+wil6210 supports channels 1-3 of the 60GHz band.
+New FW added support for channel 4. Add support for channel 4 also in
+wil6210 driver.
 
-Drop invalid packets, put the status bits in the metadata and
-move the enum definition to the correct place (FW API header).
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 63 +++++++++++++++++++
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  1 +
- .../wireless/intel/iwlwifi/pcie/internal.h    | 60 ------------------
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  8 ++-
- 4 files changed, 70 insertions(+), 62 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 22 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/main.c     |  2 ++
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  2 ++
+ drivers/net/wireless/ath/wil6210/wmi.h      |  1 +
+ 4 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index 2f599353c885..2ba1401e5c0d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -574,6 +574,69 @@ struct iwl_rx_mpdu_desc {
- 
- #define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
- 
-+#define IWL_CD_STTS_OPTIMIZED_POS	0
-+#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
-+#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
-+#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
-+#define IWL_CD_STTS_WIFI_STATUS_POS	4
-+#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
-+
-+/**
-+ * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
-+ * @IWL_CD_STTS_UNUSED: unused
-+ * @IWL_CD_STTS_UNUSED_2: unused
-+ * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
-+ *	In sniffer mode, when split is used, set in last CD completion. (RX)
-+ * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
-+ *	all CD completion. (RX)
-+ * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
-+ * @IWL_CD_STTS_ERROR: general error (RX)
-+ */
-+enum iwl_completion_desc_transfer_status {
-+	IWL_CD_STTS_UNUSED,
-+	IWL_CD_STTS_UNUSED_2,
-+	IWL_CD_STTS_END_TRANSFER,
-+	IWL_CD_STTS_OVERFLOW,
-+	IWL_CD_STTS_ABORTED,
-+	IWL_CD_STTS_ERROR,
-+};
-+
-+/**
-+ * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
-+ * @IWL_CD_STTS_VALID: the packet is valid (RX)
-+ * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
-+ * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
-+ * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
-+ * @IWL_CD_STTS_DUP: duplicate packet (RX)
-+ * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
-+ * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
-+ * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
-+ * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
-+ * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
-+ * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
-+ * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
-+ * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
-+ * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
-+ * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
-+ */
-+enum iwl_completion_desc_wifi_status {
-+	IWL_CD_STTS_VALID,
-+	IWL_CD_STTS_FCS_ERR,
-+	IWL_CD_STTS_SEC_KEY_ERR,
-+	IWL_CD_STTS_DECRYPTION_ERR,
-+	IWL_CD_STTS_DUP,
-+	IWL_CD_STTS_ICV_MIC_ERR,
-+	IWL_CD_STTS_INTERNAL_SNAP_ERR,
-+	IWL_CD_STTS_SEC_PORT_FAIL,
-+	IWL_CD_STTS_BA_OLD_SN,
-+	IWL_CD_STTS_QOS_NULL,
-+	IWL_CD_STTS_MAC_HDR_ERR,
-+	IWL_CD_STTS_MAX_RETRANS,
-+	IWL_CD_STTS_EX_LIFETIME,
-+	IWL_CD_STTS_NOT_USED,
-+	IWL_CD_STTS_REPLAY_ERR,
-+};
-+
- struct iwl_frame_release {
- 	u8 baid;
- 	u8 reserved;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 279dd7b7a3fb..0b8cf7f3af93 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -269,6 +269,7 @@ struct iwl_rx_cmd_buffer {
- 	bool _page_stolen;
- 	u32 _rx_page_order;
- 	unsigned int truesize;
-+	u8 status;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index f79c337..1bdb026 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -48,9 +48,29 @@
+ 	CHAN60G(1, 0),
+ 	CHAN60G(2, 0),
+ 	CHAN60G(3, 0),
+-/* channel 4 not supported yet */
++	CHAN60G(4, 0),
  };
  
- static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index b63d44b7cd7c..0127386de6c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -102,66 +102,6 @@ struct isr_statistics {
- 	u32 unhandled;
- };
- 
--#define IWL_CD_STTS_OPTIMIZED_POS	0
--#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
--#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
--#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
--#define IWL_CD_STTS_WIFI_STATUS_POS	4
--#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
--
--/**
-- * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
-- * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
-- *	In sniffer mode, when split is used, set in last CD completion. (RX)
-- * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
-- *	all CD completion. (RX)
-- * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
-- */
--enum iwl_completion_desc_transfer_status {
--	IWL_CD_STTS_UNUSED,
--	IWL_CD_STTS_UNUSED_2,
--	IWL_CD_STTS_END_TRANSFER,
--	IWL_CD_STTS_OVERFLOW,
--	IWL_CD_STTS_ABORTED,
--	IWL_CD_STTS_ERROR,
--};
--
--/**
-- * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
-- * @IWL_CD_STTS_VALID: the packet is valid (RX)
-- * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
-- * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
-- * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
-- * @IWL_CD_STTS_DUP: duplicate packet (RX)
-- * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
-- * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
-- * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
-- * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
-- * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
-- * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
-- * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
-- * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
-- * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
-- * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
-- */
--enum iwl_completion_desc_wifi_status {
--	IWL_CD_STTS_VALID,
--	IWL_CD_STTS_FCS_ERR,
--	IWL_CD_STTS_SEC_KEY_ERR,
--	IWL_CD_STTS_DECRYPTION_ERR,
--	IWL_CD_STTS_DUP,
--	IWL_CD_STTS_ICV_MIC_ERR,
--	IWL_CD_STTS_INTERNAL_SNAP_ERR,
--	IWL_CD_STTS_SEC_PORT_FAIL,
--	IWL_CD_STTS_BA_OLD_SN,
--	IWL_CD_STTS_QOS_NULL,
--	IWL_CD_STTS_MAC_HDR_ERR,
--	IWL_CD_STTS_MAX_RETRANS,
--	IWL_CD_STTS_EX_LIFETIME,
--	IWL_CD_STTS_NOT_USED,
--	IWL_CD_STTS_REPLAY_ERR,
--};
--
- #define IWL_RX_TD_TYPE_MSK	0xff000000
- #define IWL_RX_TD_SIZE_MSK	0x00ffffff
- #define IWL_RX_TD_SIZE_2K	BIT(11)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index d017aa2a0a8b..b82f7a0509ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1187,7 +1187,8 @@ static void iwl_pcie_rx_reuse_rbd(struct iwl_trans *trans,
- static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 				struct iwl_rxq *rxq,
- 				struct iwl_rx_mem_buffer *rxb,
--				bool emergency)
-+				bool emergency,
-+				int i)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq = trans_pcie->txq[trans_pcie->cmd_queue];
-@@ -1213,6 +1214,9 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			.truesize = max_len,
- 		};
- 
-+		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+			rxcb.status = rxq->cd[i].status;
++static int wil_num_supported_channels(struct wil6210_priv *wil)
++{
++	int num_channels = ARRAY_SIZE(wil_60ghz_channels);
 +
- 		pkt = rxb_addr(&rxcb);
++	if (!test_bit(WMI_FW_CAPABILITY_CHANNEL_4, wil->fw_capabilities))
++		num_channels--;
++
++	return num_channels;
++}
++
++void update_supported_bands(struct wil6210_priv *wil)
++{
++	struct wiphy *wiphy = wil_to_wiphy(wil);
++
++	wil_dbg_misc(wil, "update supported bands");
++
++	wiphy->bands[NL80211_BAND_60GHZ]->n_channels =
++						wil_num_supported_channels(wil);
++}
++
+ /* Vendor id to be used in vendor specific command and events
+  * to user space.
+  * NOTE: The authoritative place for definition of QCA_NL80211_VENDOR_ID,
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 7debed6..8820cee 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1154,6 +1154,8 @@ void wil_refresh_fw_capabilities(struct wil6210_priv *wil)
+ 		wil->max_agg_wsize = WIL_MAX_AGG_WSIZE;
+ 		wil->max_ampdu_size = WIL_MAX_AMPDU_SIZE;
+ 	}
++
++	update_supported_bands(wil);
+ }
  
- 		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID)) {
-@@ -1406,7 +1410,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 			goto out;
+ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 17c294b..85565de 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1370,4 +1370,6 @@ int wmi_addba_rx_resp_edma(struct wil6210_priv *wil, u8 mid, u8 cid,
+ 			   u8 tid, u8 token, u16 status, bool amsdu,
+ 			   u16 agg_wsize, u16 timeout);
  
- 		IWL_DEBUG_RX(trans, "Q %d: HW = %d, SW = %d\n", rxq->id, r, i);
--		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency);
-+		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency, i);
- 
- 		i = (i + 1) & (rxq->queue_size - 1);
++void update_supported_bands(struct wil6210_priv *wil);
++
+ #endif /* __WIL6210_H__ */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 139acb2..f430e1d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -103,6 +103,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_AMSDU				= 23,
+ 	WMI_FW_CAPABILITY_RAW_MODE			= 24,
+ 	WMI_FW_CAPABILITY_TX_REQ_EXT			= 25,
++	WMI_FW_CAPABILITY_CHANNEL_4			= 26,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
  
 -- 
-2.18.0
+1.9.1
