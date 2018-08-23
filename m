@@ -1,46 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:43462 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726315AbeHUMZx (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41867 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726481AbeHWLh7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 08:25:53 -0400
-Received: by mail-lf1-f65.google.com with SMTP id f135-v6so13013023lfg.10
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Aug 2018 02:06:33 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: remove division by size of sizeof(struct
- ieee80211_wmm_rule)
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20180820073705.9683-1-johannes@sipsolutions.net>
- <20180820102710.GA2760@redhat.com>
- <63f44789-11c3-0549-b8b8-cd3b25c40547@gmail.com>
- <1534842181.25523.1.camel@sipsolutions.net>
-From: =?UTF-8?Q?Grzegorz_Duszy=c5=84ski?= <gfduszynski@gmail.com>
-Message-ID: <fbaa39a3-7937-7ecf-040a-c86433baadc7@gmail.com> (sfid-20180821_110636_508798_6F1A0949)
-Date: Tue, 21 Aug 2018 11:06:29 +0200
+        Thu, 23 Aug 2018 07:37:59 -0400
+Subject: Re: [PATCH 00/24] staging: wilc1000: avoid use of static and global
+ variable
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <3536aa12-233c-3a77-ca7f-1766d6a9bc6c@microchip.com> (sfid-20180823_101016_079857_BBA8231D)
+Date: Thu, 23 Aug 2018 11:09:29 +0300
 MIME-Version: 1.0
-In-Reply-To: <1534842181.25523.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21.08.2018 11:03, Johannes Berg wrote:
-> On Tue, 2018-08-21 at 08:23 +0200, Grzegorz Duszyński wrote:
->> I've applied the patch, but it does not seem to help.
->> Spawning second instance of hostapd causes same error as before.
-> Ok, it was worth a try.
->
->> I don't follow why this issue would not occur with single NIC.
->> It's not like I am an expert in this field, but those rules should be
->> applied to both interfaces, right?
->> Both interfaces use ath10k, that should imply same code path for setting
->> rules.
-> Yeah that's why I thought maybe the copy code was involved ...
->
-> I guess we'll need to try to reproduce. Maybe it can be made to happen
-> with hwsim too?
->
-> johannes
+Hi Ajay,
 
-I can try to recreate the issue with hwsim, it will take me some time 
-probably as I have no prior experience.
+Few comments on this series. See per patch replies.
+
+Thank you,
+Claudiu Beznea
+
+On 14.08.2018 09:49, Ajay Singh wrote:
+> This patch set mainly contains changes to avoid the use of static
+> and global variables. Also contains few patch to avoid the checkpatch
+> warning arise due to code refactor.
+> 
+> Ajay Singh (24):
+>   staging: wilc1000: move 'wilc_enable_ps' global variable into 'wilc'
+>     struct
+>   staging: wilc1000: move 'aging_timer' static variable to wilc_priv
+>     struct
+>   staging: wilc1000: fix to use correct index to free scanned info in
+>     clear_shadow_scan()
+>   staging: wilc1000: remove unnecessary NULL check in
+>     clear_shadow_scan()
+>   staging: wilc1000: moved last_scanned_shadow & last_scanned_cnt to
+>     wilc_priv struct
+>   staging: wilc1000: move during_ip_timer & wilc_optaining_ip to
+>     'wilc_vif' struct
+>   staging: wilc1000: remove unused variable 'op_ifcs'
+>   staging: wilc1000: avoid use of extra 'if' condition in wilc_init()
+>   staging: wilc1000: move static variable clients_count to 'wilc'
+>     structure
+>   staging: wilc1000: move wilc_multicast_mac_addr_list to 'wilc_vif'
+>     struct
+>   staging: wilc1000: move hif specific static variables to 'wilc'
+>     structure
+>   staging: wilc1000: move static variable 'terminated_handle' to
+>     wilc_vif struct
+>   staging: wilc1000: move 'periodic_rssi' as part of 'wilc_vif' struct
+>   staging: wilc1000: rename 'dummy_statistics' variable to
+>     'periodic_stat'
+>   staging: wilc1000: move 'rcv_assoc_resp' as part of hif_drv
+>   staging: wilc1000: refactor tcp_process() to avoid extra leading tabs
+>   staging: wilc1000: use lowercase for get_BSSID() and HIL variable
+>   staging: wilc1000: move tcp_ack_filter algo related variables to
+>     'wilc_vif' struct
+>   staging: wilc1000: avoid line over 80 chars in
+>     wilc_wlan_txq_filter_dup_tcp_ack()
+>   staging: wilc1000: avoid line over 80 chars in tcp_process()
+>   staging: wilc1000: remove unused code to set and get IP address
+>   staging: wilc1000: move 'chip_ps_state' static variable as part of
+>     'wilc' struct
+>   staging: wilc1000: move 'wilc_connecting' static variable to
+>     'wilc_vif' struct
+>   staging: wilc1000: remove unnecessary static variable
+>     'p2p_listen_state'
+> 
+>  drivers/staging/wilc1000/coreconfigurator.c       |   4 +-
+>  drivers/staging/wilc1000/host_interface.c         | 227 +++++-----------------
+>  drivers/staging/wilc1000/host_interface.h         |   9 +-
+>  drivers/staging/wilc1000/linux_wlan.c             |  29 ++-
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 191 +++++++++---------
+>  drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  47 ++++-
+>  drivers/staging/wilc1000/wilc_wlan.c              | 167 ++++++++--------
+>  drivers/staging/wilc1000/wilc_wlan.h              |   3 +-
+>  8 files changed, 284 insertions(+), 393 deletions(-)
+> 
