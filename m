@@ -1,42 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48574 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730419AbeHISML (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:48964 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730175AbeHWPhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 14:12:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        b43-dev <b43-dev@lists.infradead.org>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Joe Perches <joe@perches.com>
-Subject: Re: ssb: Remove home-grown printk wrappers
-References: <20180731215638.381f0370@wiggum>
-Date: Thu, 09 Aug 2018 18:46:38 +0300
-In-Reply-To: <20180731215638.381f0370@wiggum> ("Michael \=\?utf-8\?Q\?B\=C3\=BCs\?\=
- \=\?utf-8\?Q\?ch\=22's\?\= message of
-        "Tue, 31 Jul 2018 21:56:38 +0200")
-Message-ID: <877ekz1r1d.fsf@kamboji.qca.qualcomm.com> (sfid-20180809_174645_354109_64656470)
+        Thu, 23 Aug 2018 11:37:09 -0400
+Date: Thu, 23 Aug 2018 17:37:36 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: Re: [PATCH 24/24] staging: wilc1000: remove unnecessary static
+ variable 'p2p_listen_state'
+Message-ID: <20180823173736.5c54a432@ajaysk-VirtualBox> (sfid-20180823_140745_845900_3E20FBB0)
+In-Reply-To: <f79b44e1-6a4a-6b7a-f0d7-25f1e3c8dc4a@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        <1534229416-13254-25-git-send-email-ajay.kathat@microchip.com>
+        <f79b44e1-6a4a-6b7a-f0d7-25f1e3c8dc4a@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael B=C3=BCsch <m@bues.ch> writes:
+On Thu, 23 Aug 2018 11:13:04 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
 
-> Replace the ssb printk wrappers by standard print helpers.
-> Also remove SSB_SILENT. Nobody should use it anyway.
->
-> Originally submitted by Joe Perches <joe@perches.com>.
-> Modified to add dev_... based printks.
->
-> Signed-off-by: Michael Buesch <m@bues.ch>
-> Tested-by: Michael Buesch <m@bues.ch>
-> Cc: Joe Perches <joe@perches.com>
+> 
+> 
+> On 14.08.2018 09:50, Ajay Singh wrote:
+> > Remove the use of unnecessary static variable 'p2p_listen_state'.
+> > Already 'p2p_listen_state' is present in 'wilc_priv' struct. So
+> > making use of that variable as its getting set in channel ready and
+> > remain on channel expired callback.
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/host_interface.c | 7 ++-----
+> >  1 file changed, 2 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/host_interface.c
+> > b/drivers/staging/wilc1000/host_interface.c index d8cc08b..cf7ead5
+> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
+> > +++ b/drivers/staging/wilc1000/host_interface.c
+> > @@ -185,8 +185,6 @@ struct join_bss_param {
+> >  	u8 start_time[4];
+> >  };
+> >  
+> > -static u8 p2p_listen_state;
+> > -
+> >  /* 'msg' should be free by the caller for syc */
+> >  static struct host_if_msg*
+> >  wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct
+> > work_struct *), @@ -2351,7 +2349,6 @@ static int
+> > handle_remain_on_chan(struct wilc_vif *vif, netdev_err(vif->ndev,
+> > "Failed to set remain on channel\n"); 
+> >  error:
+> > -	p2p_listen_state = 1;
+> >  	hif_drv->remain_on_ch_timer_vif = vif;
+> >  	mod_timer(&hif_drv->remain_on_ch_timer,
+> >  		  jiffies +
+> > msecs_to_jiffies(hif_remain_ch->duration)); @@ -2407,8 +2404,9 @@
+> > static void handle_listen_state_expired(struct work_struct *work)
+> > struct wid wid; int result;
+> >  	struct host_if_drv *hif_drv = vif->hif_drv;
+> > +	struct wilc_priv *priv =
+> > wdev_priv(vif->ndev->ieee80211_ptr); 
+> > -	if (p2p_listen_state) {
+> > +	if (priv->p2p_listen_state) {
+> >  		remain_on_chan_flag = false;
+> >  		wid.id = WID_REMAIN_ON_CHAN;
+> >  		wid.type = WID_STR;
+> > @@ -2433,7 +2431,6 @@ static void
+> > handle_listen_state_expired(struct work_struct *work)
+> > hif_drv->remain_on_ch.expired(hif_drv->remain_on_ch.arg,
+> > hif_remain_ch->id); }
+> > -		p2p_listen_state = 0;
+> 
+> Is this useless at all?
 
-Applied manually:
+Instead of using the static variable now making use of
+'p2p_listen_state' variable already maintained in priv data.
+'p2p_listen_state' variable is already getting set in the
+wilc_wfi_remain_on_channel_ready() and
+wilc_wfi_remain_on_channel_expired(). So I think setting it explicitly
+not required as the callbacks will take care to set the flag.
 
-4d77a89e3924 b43legacy/leds: Ensure NUL-termination of LED name string
-
---=20
-Kalle Valo
+> 
+> >  	} else {
+> >  		netdev_dbg(vif->ndev, "Not in listen state\n");
+> >  	}
+> > 
