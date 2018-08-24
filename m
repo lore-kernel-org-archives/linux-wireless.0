@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 19.mo5.mail-out.ovh.net ([46.105.35.78]:46011 "EHLO
-        19.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727245AbeH2Ujs (ORCPT
+Received: from mail-wr1-f53.google.com ([209.85.221.53]:33634 "EHLO
+        mail-wr1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726264AbeHXSvG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 16:39:48 -0400
-Received: from player756.ha.ovh.net (unknown [10.109.146.106])
-        by mo5.mail-out.ovh.net (Postfix) with ESMTP id ACD8B1E0CA5
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 18:35:31 +0200 (CEST)
-From: Alexander Wetzel <alexander@wetzel-home.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, denkenz@gmail.com,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH v7 1/2] nl80211: Add CAN_REPLACE_PTK0 API
-Date: Wed, 29 Aug 2018 18:34:51 +0200
-Message-Id: <20180829163452.32666-2-alexander@wetzel-home.de> (sfid-20180829_184206_037266_667A4B8E)
-In-Reply-To: <20180829163452.32666-1-alexander@wetzel-home.de>
-References: <20180829163452.32666-1-alexander@wetzel-home.de>
+        Fri, 24 Aug 2018 14:51:06 -0400
+Received: by mail-wr1-f53.google.com with SMTP id v90-v6so7804358wrc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 08:16:01 -0700 (PDT)
+Date: Fri, 24 Aug 2018 17:15:57 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/17] mt76 patches 2018-08-24
+Message-ID: <20180824151556.GA32048@localhost.localdomain> (sfid-20180824_171604_374091_A4760A72)
+References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers able to correctly replace a in-use key should set
-@NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 to allow the user space (e.g.
-hostapd or wpa_supplicant) to rekey PTK keys.
+> This is the begin work of integration between mt76x0 and mt76x2.
+> 
+> Further development can be seen here:
+> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
+> 
+> Stanislaw Gruszka (17):
+>   mt76: unify wait_for_mac
+>   mt76: rename mt76x2_regs.h
+>   mt76: merge mt76x0/regs.h into mt76xx_regs.h
+>   mt76: create new mt76xx-lib module for common mt76x{0,2} code
+>   mt76: fix mt76xx-lib module license
+>   mt76: unify mac_get_key_info
+>   mt76: add helpers for register access with mt76_dev struct
+>   mt76: unify mac_shared_key_setup
+>   mt76: unify mt76xx_mac_wcid_set_key
+>   mt76: unify mac_wcid_setup
+>   mt76: use mac_wcid_set_drop in mt76x0
+>   mt76x0: use mt76_wcid_free in mt76x0
+>   mt76: unify mt76xx_vif struct
+>   mt76: unify sta stucture part 1
+>   mt76: unify sta structure part 2
+>   mt76x0: initalize custom tx queues
+>   mt76x0: use mt76xx_sta and mt76xx_tx_status
 
-The user space must detect a PTK rekey attempt and only go ahead with it
-when the driver has set this flag. If the driver is not supporting the
-feature the user space either must not replace the PTK key or perform a
-full re-association instead.
-
-Ignoring this flag and continuing to rekey the connection can still work
-but has to be considered insecure and broken. Depending on the driver it
-can leak clear text packets or freeze the connection and is only
-supported to allow the user space to be updated.
-
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
-Reviewed-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7acc16f34942..cf238064d8ab 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
-  *	except for supported rates from the probe request content if requested
-  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
-  *
-+ * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
-+ *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
-+ *      if this flag is not set. Ignoring this can leak clear text packets and/or
-+ *      freeze the connection.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -5259,6 +5264,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_TXQS,
- 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
- 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
-+	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
--- 
-2.18.0
+Tested-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
