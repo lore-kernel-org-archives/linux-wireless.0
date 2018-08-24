@@ -1,171 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:24403 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726772AbeH0JMm (ORCPT
+Received: from mail-yw1-f66.google.com ([209.85.161.66]:46854 "EHLO
+        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726459AbeHXGca (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 05:12:42 -0400
-Date: Mon, 27 Aug 2018 10:57:31 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH 12/24] staging: wilc1000: move static variable
- 'terminated_handle' to wilc_vif struct
-Message-ID: <20180827105731.19919c22@ajaysk-VirtualBox> (sfid-20180827_072740_671455_0C027BA8)
-In-Reply-To: <e21007c8-c043-54aa-433e-e7a2467fbda8@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-        <1534229416-13254-13-git-send-email-ajay.kathat@microchip.com>
-        <8e7928a5-1d9f-d36e-f7b2-dbbbddff94ae@microchip.com>
-        <20180823200600.47e1b418@ajaysk-VirtualBox>
-        <e21007c8-c043-54aa-433e-e7a2467fbda8@microchip.com>
+        Fri, 24 Aug 2018 02:32:30 -0400
+Received: by mail-yw1-f66.google.com with SMTP id j131-v6so2588223ywc.13
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2018 19:59:54 -0700 (PDT)
+Received: from mail-yb0-f175.google.com (mail-yb0-f175.google.com. [209.85.213.175])
+        by smtp.gmail.com with ESMTPSA id m3-v6sm2090187ywe.50.2018.08.23.19.59.52
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 23 Aug 2018 19:59:53 -0700 (PDT)
+Received: by mail-yb0-f175.google.com with SMTP id c1-v6so2992236ybq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2018 19:59:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20180824011247.GA25648@embeddedor.com>
+References: <20180824011247.GA25648@embeddedor.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Thu, 23 Aug 2018 19:59:51 -0700
+Message-ID: <CAGXu5j+TkaLoXaGi0mc4-xZSnDdM=z=J9n-h5GOaoOTM5MgBLQ@mail.gmail.com> (sfid-20180824_050001_402682_03436A1D)
+Subject: Re: [PATCH] ath10k: use struct_size() in kzalloc()
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 24 Aug 2018 11:46:39 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+On Thu, Aug 23, 2018 at 6:12 PM, Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+>
+> struct foo {
+>         int stuff;
+>         void *entry[];
+> };
+>
+> instance = kzalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
+>
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+>
+> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL);
+>
+> This issue was detected with the help of Coccinelle.
+>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-> On 23.08.2018 17:36, Ajay Singh wrote:
-> > On Thu, 23 Aug 2018 11:11:18 +0300
-> > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> >   
-> >> On 14.08.2018 09:50, Ajay Singh wrote:  
-> >>> Remove the use of static variable 'terminated_handle' and instead
-> >>> move in wilc_vif struct.
-> >>> After moving this variable to wilc_vif struct its not required to
-> >>> keep 'terminated_handle', so changed it to boolean type.    
-> >>
-> >> You can remove it at all and use wilc->hif_deinit_lock mutex also
-> >> in wilc_scan_complete_received() and wilc_network_info_received()
-> >> it is used in wilc_gnrl_async_info_received().  
-> > 
-> > In my understanding, 'terminated_handle' is used to know the
-> > status when interface is getting deinit(). During deinitialization
-> > of an interface if any async event received for the interface(from
-> > firmware) should be ignored.  
-> 
-> 'terminated_handle' true only inside mutex. So, outside of it it will
-> be false, so *mostly* it will tell you when mutex is locked for
-> deinit. *Mostly*, because context switches may happen while a mutex
-> is locked.
-> 
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-Yes, outside the mutex 'terminated_handle' would be false. 
-I already agreed that while fixing the bug using 'terminated_handle'
-all the scenarios are not handled but as you suggested before
-to remove 'terminated_handle' and only use 'mutex' will also not
-help to address all corner scenarios.  So, I suggest to keep the
-current status by making use of this flag and handle all scenario in
-later patch to de-initialization graceful.
+-Kees
 
-> With the current approach you have this code:
-> 
-> int wilc_deinit(struct wilc_vif *vif)
-> {
-> 	// ...
-> 	mutex_lock(&vif->wilc->hif_deinit_lock);
-> 
-> 	// (A)
-> 
-> 	vif->is_termination_progress = true;
-> 	// ...
-> 	vif->is_termination_progress = false;
-> 
-> 	mutex_unlokc(&vif->wilc->hif_deinit_lock);
-> }
-> 
-> And:
-> 
-> void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32
-> length) {
-> 	// ...
-> 	if (!hif_drv || vif->is_termination_progress) {
-> 		netdev_err(vif->ndev, "driver not init[%p]\n",
-> hif_drv); return;
-> 	}
-> 
-> 	// ...
-> 	
-> 	// (B)
-> 	result = wilc_enqueue_work(msg);	
-> 	// ...
-> }
-> 
-> And:
-> 
-> static int wilc_enqueue_work(struct host_if_msg *msg)
-> 
-> {
-> 
->         INIT_WORK(&msg->work, msg->fn);
-> 
-> 
-> 
->         if (!msg->vif || !msg->vif->wilc
-> || !msg->vif->wilc->hif_workqueue)
-> 
->                 return -EINVAL;
-> 
-> 
-> 	// (C)
->         if (!queue_work(msg->vif->wilc->hif_workqueue, &msg->work))
-> 
->                 return -EINVAL;
-> 
-> 
-> 
->         return 0;
-> 
-> }
-> 
-> 
-> You may have the following scenario:
-> 1. context switch in wilc_deinit() just after the mutex is taken
-> (point A above). vif->is_termination_progress = false at this point.
-> 
-> 2. a new packet is received and wilc_network_info_received() gets
-> executed and execution reaches point B, goes to wilc_enqueue_work()
-> and suspend at point C then context switch.
-> 
+> ---
+>  drivers/net/wireless/ath/ath10k/ce.c | 24 ++++++++----------------
+>  1 file changed, 8 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+> index 18c709c..d0381aa 100644
+> --- a/drivers/net/wireless/ath/ath10k/ce.c
+> +++ b/drivers/net/wireless/ath/ath10k/ce.c
+> @@ -1416,10 +1416,8 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
+>
+>         nentries = roundup_pow_of_two(nentries);
+>
+> -       src_ring = kzalloc(sizeof(*src_ring) +
+> -                          (nentries *
+> -                           sizeof(*src_ring->per_transfer_context)),
+> -                          GFP_KERNEL);
+> +       src_ring = kzalloc(struct_size(src_ring, per_transfer_context,
+> +                                      nentries), GFP_KERNEL);
+>         if (src_ring == NULL)
+>                 return ERR_PTR(-ENOMEM);
+>
+> @@ -1476,10 +1474,8 @@ ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
+>
+>         nentries = roundup_pow_of_two(nentries);
+>
+> -       src_ring = kzalloc(sizeof(*src_ring) +
+> -                          (nentries *
+> -                           sizeof(*src_ring->per_transfer_context)),
+> -                          GFP_KERNEL);
+> +       src_ring = kzalloc(struct_size(src_ring, per_transfer_context,
+> +                                      nentries), GFP_KERNEL);
+>         if (!src_ring)
+>                 return ERR_PTR(-ENOMEM);
+>
+> @@ -1534,10 +1530,8 @@ ath10k_ce_alloc_dest_ring(struct ath10k *ar, unsigned int ce_id,
+>
+>         nentries = roundup_pow_of_two(attr->dest_nentries);
+>
+> -       dest_ring = kzalloc(sizeof(*dest_ring) +
+> -                           (nentries *
+> -                            sizeof(*dest_ring->per_transfer_context)),
+> -                           GFP_KERNEL);
+> +       dest_ring = kzalloc(struct_size(dest_ring, per_transfer_context,
+> +                                       nentries), GFP_KERNEL);
+>         if (dest_ring == NULL)
+>                 return ERR_PTR(-ENOMEM);
+>
+> @@ -1580,10 +1574,8 @@ ath10k_ce_alloc_dest_ring_64(struct ath10k *ar, unsigned int ce_id,
+>
+>         nentries = roundup_pow_of_two(attr->dest_nentries);
+>
+> -       dest_ring = kzalloc(sizeof(*dest_ring) +
+> -                           (nentries *
+> -                            sizeof(*dest_ring->per_transfer_context)),
+> -                           GFP_KERNEL);
+> +       dest_ring = kzalloc(struct_size(dest_ring, per_transfer_context,
+> +                                       nentries), GFP_KERNEL);
+>         if (!dest_ring)
+>                 return ERR_PTR(-ENOMEM);
+>
+> --
+> 2.7.4
+>
 
-Thanks for explaining the scenario with an example.
 
-For the given scenario, I think not only here it can even suspend
-after posting the work queue and start the execution of handler
-function eg. handle_recvd_gnrl_async_info()(there is no protection in
-handle function)
 
-There are some combination of these scenario, I will relook into these
-cases and check how to handle them separately.
-
-> 3. wilc_deinit() resumes and finish its execution.
-> 
-> 4. wilc_enqueue_work() resumes and queue_work() is executed but you
-> already freed the hif_workqueue. You will have a crash here.
-> 
-> Notice that hif_drv is not set to NULL on wilc_deinit() after it is
-> kfree().
-> 
-> > 
-> > In my opinion its not right to only wait for the mutex in any of
-> > callback e.g wilc_scan_complete_received() because it will delay the
-> > handling of callback and try to process the event once lock is
-> > available for the interface which is already de-initialized.  
-> 
-> But this is already done for wilc_gnrl_async_info_received().
-> 
-> > 
-> > Based on my understand 'mutex' alone is not enough to
-> > handle this and we some extra check to know if interface is down.  
-> 
-> terminated_handle will *mostly* tell you when the mutex is locked,
-> nothing more.
-> 
-> I will
-> > check more about this patch how to handle the extra scenario for
-> > this case.
-> > Please suggest if someone has better idea on how to handle this. 
-> >   
+-- 
+Kees Cook
+Pixel Security
