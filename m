@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:50668 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726975AbeH1MhR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43834 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726969AbeHXOE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 08:37:17 -0400
-Message-ID: <1535445990.5895.4.camel@sipsolutions.net> (sfid-20180828_104644_447780_E63A01C2)
-Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Wetzel <alexander@wetzel-home.de>,
-        Denis Kenzior <denkenz@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 28 Aug 2018 10:46:30 +0200
-In-Reply-To: <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de>
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
-         <20180814104255.4183-2-alexander@wetzel-home.de>
-         <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
-         <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 24 Aug 2018 10:04:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:05 +0300
+Message-Id: <20180824103018.15011-4-luca@coelho.fi> (sfid-20180824_123034_484873_85FEB08B)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 03/16] iwlwifi: mvm: properly decode HE GI duration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-08-18 at 22:53 +0200, Alexander Wetzel wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > This looks good to me from a userspace perspective.  I will try to
-> > implement support for this in iwd soon to give you a prototype to play
-> > with.
-> 
-> Sounds promising, thank you!
-> 
-> I'm still unsure if we really need the API changes to fix that issue:
-> "Tagging" the new requirements to current set_key calls would also work.
-> With the downside that there would be no way to detect "broken"
-> drivers... replace_key is basically only there to differentiate between
-> audited/fixed drivers and those not.
-> 
-> But since my current impression is, that ptk rekeys are mostly broken
-> independent of mac80211 or even linux a driver flag signaling support
-> for it sounds like a good idea regardless how we want to fix the issue
-> in mac80211. Just wondering if we should name it differently for that
-> and I'm considering renaming it to NL80211_EXT_FEATURE_CAN_REKEY_PTK0 in
-> the next patch.
+The GI duration depends on the frame type in some cases,
+take that into account when decoding for radiotap.
 
-And then keep set_key() for both, rather than adding replace_key()?
-Seems reasonable to me, I guess.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 22 ++++++++++++++-----
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-> As for mac80211 driver status:
-> The only known "really broken" driver at the moment is ath9k. With
-> iwlwifi, - and less thorough tested - ath10k to be ok from a driver
-> point of view. (ath9k needs just a driver flush as minimal fix.)
-
-iwlwifi is also broken for CCMP-256/GCMP keys, so the situation is
-slightly more complex.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index f644bcf7e048..314012ed7a29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1150,25 +1150,35 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	switch ((rate_n_flags & RATE_MCS_HE_GI_LTF_MSK) >>
+ 		RATE_MCS_HE_GI_LTF_POS) {
+ 	case 0:
+-		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
++		if (he_type == RATE_MCS_HE_TYPE_TRIG)
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
++		else
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
+ 		if (he_type == RATE_MCS_HE_TYPE_MU)
+ 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
+ 		else
+ 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_1X;
+ 		break;
+ 	case 1:
+-		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
++		if (he_type == RATE_MCS_HE_TYPE_TRIG)
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
++		else
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
+ 		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
+ 		break;
+ 	case 2:
+-		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
+-		if (he_type == RATE_MCS_HE_TYPE_TRIG)
++		if (he_type == RATE_MCS_HE_TYPE_TRIG) {
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
+ 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
+-		else
++		} else {
++			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
+ 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
++		}
+ 		break;
+ 	case 3:
+-		if (rate_n_flags & RATE_MCS_SGI_MSK)
++		if ((he_type == RATE_MCS_HE_TYPE_SU ||
++		     he_type == RATE_MCS_HE_TYPE_EXT_SU) &&
++		    rate_n_flags & RATE_MCS_SGI_MSK)
+ 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
+ 		else
+ 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
+-- 
+2.18.0
