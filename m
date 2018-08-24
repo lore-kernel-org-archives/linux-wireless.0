@@ -1,95 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42642 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727288AbeH3KfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 06:35:15 -0400
-Date: Thu, 30 Aug 2018 14:34:32 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com
-Subject: Re: Intel Wireless 8265/8275 (rev 78) issue
-Message-ID: <20180830063432.GA5201@dhcp-128-65.nay.redhat.com> (sfid-20180830_083506_897043_827F646E)
-References: <20180829065442.GA3488@dhcp-128-65.nay.redhat.com>
- <6bb91f750e8d37d45da3c2cf1e7e5fc5d453ee8c.camel@coelho.fi>
- <20180830050632.GB2307@dhcp-128-65.nay.redhat.com>
- <fa12a23813cf096e217eac27835ed416ca0d1632.camel@coelho.fi>
+Received: from mail-ed1-f42.google.com ([209.85.208.42]:33684 "EHLO
+        mail-ed1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726969AbeHXL2B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 07:28:01 -0400
+Received: by mail-ed1-f42.google.com with SMTP id h9-v6so5258440edr.0
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 00:54:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fa12a23813cf096e217eac27835ed416ca0d1632.camel@coelho.fi>
+References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
+ <0605251e-9a16-ef45-86d2-60c905351cc5@lwfinger.net>
+In-Reply-To: <0605251e-9a16-ef45-86d2-60c905351cc5@lwfinger.net>
+From: prabhu <d.praabhu@gmail.com>
+Date: Fri, 24 Aug 2018 13:24:19 +0530
+Message-ID: <CAHnrWRp9M1xKMVuBATA+z8qquDXtOBQphVeFZGTw7axQAAL-PA@mail.gmail.com> (sfid-20180824_095436_801117_2226D7FB)
+Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/18 at 08:55am, Luca Coelho wrote:
-> On Thu, 2018-08-30 at 13:06 +0800, Dave Young wrote:
-> > On 08/30/18 at 07:15am, Luca Coelho wrote:
-> > > On Wed, 2018-08-29 at 14:54 +0800, Dave Young wrote:
-> > > > [   74.123114] wlp61s0: authenticate with 00:1f:c6:82:0a:57
-> > > > [   74.126099] wlp61s0: send auth to 00:1f:c6:82:0a:57 (try 1/3)
-> > > > [   74.139740] wlp61s0: authenticated
-> > > > [   74.140142] iwlwifi 0000:3d:00.0 wlp61s0: disabling HE/HT/VHT due to WEP/TKIP use
-> > > > [   74.140146] iwlwifi 0000:3d:00.0 wlp61s0: disabling HT as WMM/QoS is not supported by the AP
-> > > > [   74.140149] iwlwifi 0000:3d:00.0 wlp61s0: disabling VHT as WMM/QoS is not supported by the AP
-> > > 
-> > > Your AP seems to be configured to use WEP or TKIP, which is not allowed
-> > > by IEEE802.11n, so we disable all the higher rates, as you can see
-> > > here.  It should still work, but you will only get very basic rates
-> > > (i.e. slow).
-> > 
-> > Luka, thanks for the suggestion,  moved AP to use WPA2-personal + AES.
-> > seems I got only two features disabled this time:
-> > [   20.949347] iwlwifi 0000:3d:00.0 wlp61s0: disabling HT as WMM/QoS is not supported by the AP
-> > [   20.949351] iwlwifi 0000:3d:00.0 wlp61s0: disabling VHT as WMM/QoS is not supported by the AP
-> > [   20.949622] wlp61s0: associate with 00:1f:c6:82:0a:57 (try 1/3)
-> 
-> There are many interoperability problems with old 11n APs that either
-> support a draft version of the specs or simply have bugs in their
-> implementations of the 11n specs.  When we detect these problems, we
-> disable 11n rates, so connectivity will be slower, but it will at least
-> remain connected.  This seems to be the case with your AP. :(
+Larry,
 
-This seems not cause much slower connection.
-But WMM indeed cause a very slow connection, thus I just leave WMM
-disabled as before.
+I am using archlinux and in their wiki they specifically mentioned to
+not update firmware for BCM4312.
+https://wiki.archlinux.org/index.php/broadcom_wireless
 
-> 
-> 
-> > > > [ 2521.068469] wlp61s0: deauthenticating from 00:1f:c6:82:0a:57 by local choice (Reason: 3=DEAUTH_LEAVING)
-> > > 
-> > > Other than that I can't really see what is going on, except that
-> > > something is deciding to disconnect here...
-> > > 
-> > > So, first thing I'd suggest would be to try to reconfigure your AP to
-> > > use something else than WEP or TKIP, just to see if it improves in any
-> > > way.
-> > 
-> > Will observe if it works or not. BTW, my old laptop Thinkpad T440s works
-> > well with the same AP.
-> 
-> I hope it improves.  If not, we should debug it further.  It's a good
-> thing not to use WEP and TKIP anyway, because they're not very secure
-> anyway.
+>From the build script I can see that I am using version
+"broadcom-wl-5.100.138.tar.bz2."
+And I guess, you ask me to update to version
+"broadcom-wl-6.30.163.46.tar.bz2", which they suggest not to do.
 
-Ok, will provide feedback later, thanks!
+This is the reason I stick with older FW version.
 
-> 
-> 
-> > > And BTW, is this a regression in recent kernels or has this always
-> > > happened to you with this laptop/AP combination?
-> > 
-> > From my observation it just always happen, but hmm not 100% sure..
-> 
-> Okay, so we don't have enough information on this.  It doesn't matter. 
-> What is the NIC on your old T440s?
-
-It is Intel wireless 7260, but since the laptop is not at hand I can not
-get lspci details.
-
-> 
-> --
-> Cheers,
-> Luca.
-> 
-
-Thanks
-Dave
+So my question is,
+do you still want me to update the firmware or try with the attached patch?
+On Fri, Aug 24, 2018 at 12:50 AM Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+> On 08/23/2018 12:30 PM, prabhu wrote:
+> > Hi,
+> >
+> > BCM 4312 wifi card stopped working from kernel version 4.18
+> > After boot up it tries to reconnect for few times and after that it
+> > disconnected completely.
+> >
+> > Here is the snippet from dmesg:
+> > [ 70.826051] [drm:radeon_cs_parser_relocs [radeon]] *ERROR* gem object
+> > lookup failed 0xd
+> > [ 70.826090] [drm:radeon_cs_ioctl [radeon]] *ERROR* Failed to parse
+> > relocation -2!
+> > [ 238.066341] b43-phy0: Controller RESET (Out of order TX) ...
+> > [ 238.306116] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 245.443095] b43-phy0: Controller restarted
+> > [ 285.552662] wlan0: deauthenticated from 98:de:d0:4b:e6:f6 (Reason:
+> > 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+> > [ 285.639719] wlan0: authenticate with 98:de:d0:4b:e6:f6
+> > [ 285.656291] wlan0: send auth to 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 285.658957] wlan0: authenticated
+> > [ 285.662386] wlan0: associate with 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 285.665581] wlan0: RX AssocResp from 98:de:d0:4b:e6:f6 (capab=0x431
+> > status=0 aid=2)
+> > [ 285.666396] wlan0: associated
+> > [ 309.348063] b43-phy0: Controller RESET (Out of order TX) ...
+> > [ 309.592485] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 316.742829] b43-phy0: Controller restarted
+> > [ 329.268570] perf: interrupt took too long (2513 > 2500), lowering
+> > kernel.perf_event_max_sample_rate to 79500
+> > [ 400.542426] wlan0: deauthenticated from 98:de:d0:4b:e6:f6 (Reason:
+> > 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+> > [ 400.636523] wlan0: authenticate with 98:de:d0:4b:e6:f6
+> > [ 400.652666] wlan0: send auth to 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 400.655070] wlan0: authenticated
+> > [ 400.655447] wlan0: associate with 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 400.658583] wlan0: RX AssocResp from 98:de:d0:4b:e6:f6 (capab=0x431
+> > status=0 aid=2)
+> > [ 400.659276] wlan0: associated
+> > [ 412.256359] perf: interrupt took too long (3246 > 3141), lowering
+> > kernel.perf_event_max_sample_rate to 61500
+> > [ 555.832079] b43-phy0: Controller RESET (Out of order TX) ...
+> > [ 556.082050] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 563.172269] b43-phy0: Controller restarted
+> > [ 619.628212] perf: interrupt took too long (4066 > 4057), lowering
+> > kernel.perf_event_max_sample_rate to 48900
+> > [ 766.268349] wlan0: deauthenticated from 98:de:d0:4b:e6:f6 (Reason:
+> > 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+> > [ 766.317708] wlan0: authenticate with 98:de:d0:4b:e6:f6
+> > [ 766.338515] wlan0: send auth to 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 766.345731] wlan0: authenticated
+> > [ 766.347959] wlan0: associate with 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 766.352674] wlan0: RX AssocResp from 98:de:d0:4b:e6:f6 (capab=0x431
+> > status=0 aid=2)
+> > [ 766.353351] wlan0: associated
+> > [ 801.234010] perf: interrupt took too long (5097 > 5082), lowering
+> > kernel.perf_event_max_sample_rate to 39000
+> > [ 1780.122837] perf: interrupt took too long (6979 > 6371), lowering
+> > kernel.perf_event_max_sample_rate to 28500
+> > [ 2347.465072] b43-phy0: Controller RESET (Out of order TX) ...
+> > [ 2347.705572] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 2354.735641] b43-phy0: Controller restarted
+> > [ 2388.784785] wlan0: deauthenticated from 98:de:d0:4b:e6:f6 (Reason:
+> > 6=CLASS2_FRAME_FROM_NONAUTH_STA)
+> > [ 2388.901388] wlan0: authenticate with 98:de:d0:4b:e6:f6
+> > [ 2388.918575] wlan0: send auth to 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 2388.920893] wlan0: authenticated
+> > [ 2388.921243] wlan0: associate with 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 2388.924310] wlan0: RX AssocResp from 98:de:d0:4b:e6:f6 (capab=0x431
+> > status=0 aid=2)
+> > [ 2388.925336] wlan0: associated
+> > [ 2973.297286] b43-phy0: Controller RESET (Out of order TX) ...
+> > [ 2973.532792] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 2980.496495] b43-phy0: Controller restarted
+> > [ 5306.648339] wlan0: deauthenticating from 98:de:d0:4b:e6:f6 by local
+> > choice (Reason: 3=DEAUTH_LEAVING)
+> > [ 5306.909377] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 5313.899248] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > [ 5320.225907] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+> > [ 5327.189103] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > [ 5328.567334] wlan0: authenticate with 98:de:d0:4b:e6:f6
+> > [ 5328.599382] wlan0: send auth to 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 5328.601751] wlan0: authenticated
+> > [ 5328.602238] wlan0: associate with 98:de:d0:4b:e6:f6 (try 1/3)
+> > [ 5328.605468] wlan0: RX AssocResp from 98:de:d0:4b:e6:f6 (capab=0x431
+> > status=0 aid=2)
+> > [ 5328.606369] wlan0: associated
+> > [ 5328.615757] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> > [ 5348.732714] b43-phy0: Controller RESET (Out of order TX) ...
+> >
+> > The following commits introduce this regression in 4.18
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=66cffd6daab76caebab26eb803b92182414fc182
+> >
+> > I verified that in two ways:
+> > 1. Downgrade the kernel to 4.17.14 - Fixes the Issue
+> > 2. Revert that commit in 4.18.4 - Fixes the Issue
+>
+> Prabhu,
+>
+> Thanks for your diagnosis of the problem.
+>
+> Unfortunately, I was not able to reproduce your problem with my BCM4312 using
+> kernel 4.18. The only difference  I could see is that I am using firmware
+> version 784.2 rather than 666.2, which you are using. I do not think there was
+> any difference for LP cores, thus I doubt that the differing versions makes any
+> difference, but I would like you to see if you can update the firmware. If your
+> distro does not support newer firmware, let me know and I can send you a couple
+> of files needed to do an update.
+>
+> If updating the firmware does not help, then please try the attached patch for
+> mainline 4.18. It uses the controller reset from the offending patch, but limits
+> the resets to once every 40 out-of-order reports.
+>
+> Larry
+>
