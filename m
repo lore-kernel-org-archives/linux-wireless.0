@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42874 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727142AbeHUJz5 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:4931 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbeHXMVY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:55:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:50 +0300
-Message-Id: <20180821063657.30071-9-luca@coelho.fi> (sfid-20180821_083714_794410_ECC526F3)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 08/15] iwlwifi: don't WARN on trying to dump dead firmware
+        Fri, 24 Aug 2018 08:21:24 -0400
+Subject: Re: [PATCH 06/24] staging: wilc1000: move during_ip_timer &
+ wilc_optaining_ip to 'wilc_vif' struct
+To: Ajay Singh <ajay.kathat@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+ <1534229416-13254-7-git-send-email-ajay.kathat@microchip.com>
+ <3b84cdbf-8f56-17a0-d6f5-75e6d6cd8295@microchip.com>
+ <20180823151333.448c6606@ajaysk-VirtualBox>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <eafee1d0-980b-5094-b57d-1ad9c5e1f79e@microchip.com> (sfid-20180824_104754_368838_15D4E600)
+Date: Fri, 24 Aug 2018 11:47:20 +0300
+MIME-Version: 1.0
+In-Reply-To: <20180823151333.448c6606@ajaysk-VirtualBox>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-There's no point in warning here, the user will just get an
-error back to the debugfs file write, and warning just makes
-it seem like there's an internal consistency problem when in
-reality the user just happened to hit this at a bad time.
-Remove the warning.
 
-Fixes: f45f979dc208 ("iwlwifi: mvm: disable dbg data collect when fw isn't alive")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+On 23.08.2018 12:43, Ajay Singh wrote:
+> The idea was to keep private data related to 'wiphy priv'
+> in 'wilc_priv' struct and 'netdev priv' related data in 'wilc_vif'
+> struct.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 70173ad11050..9c1d13e6bad3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1041,7 +1041,7 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 	 * If the loading of the FW completed successfully, the next step is to
- 	 * get the SMEM config data. Thus, if fwrt->smem_cfg.num_lmacs is non
- 	 * zero, the FW was already loaded successully. If the state is "NO_FW"
--	 * in such a case - WARN and exit, since FW may be dead. Otherwise, we
-+	 * in such a case - exit, since FW may be dead. Otherwise, we
- 	 * can try to collect the data, since FW might just not be fully
- 	 * loaded (no "ALIVE" yet), and the debug data is accessible.
- 	 *
-@@ -1049,9 +1049,8 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 	 *	config. In such a case, due to HW access problems, we might
- 	 *	collect garbage.
- 	 */
--	if (WARN((fwrt->trans->state == IWL_TRANS_NO_FW) &&
--		 fwrt->smem_cfg.num_lmacs,
--		 "Can't collect dbg data when FW isn't alive\n"))
-+	if (fwrt->trans->state == IWL_TRANS_NO_FW &&
-+	    fwrt->smem_cfg.num_lmacs)
- 		return -EIO;
- 
- 	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
--- 
-2.18.0
+OK, I see, agree!
