@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:42975 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726902AbeHHBHS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43844 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726330AbeHXOE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 21:07:18 -0400
-Received: by mail-pg1-f194.google.com with SMTP id y4-v6so117104pgp.9
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Aug 2018 15:50:42 -0700 (PDT)
-Date: Tue, 7 Aug 2018 15:50:40 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-drivers] mt76x0: Remove VLA usage
-Message-ID: <20180807225040.GA2164@beast> (sfid-20180808_005046_014859_55335E60)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 24 Aug 2018 10:04:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:06 +0300
+Message-Id: <20180824103018.15011-5-luca@coelho.fi> (sfid-20180824_123038_192955_901E38E5)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 04/16] iwlwifi: mvm: report # of LTF symbols for extended range SU PPDUs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even with "const" variables, the compiler will generate warnings about
-VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
-a #define instead of a const to do the array sizing.
+From: Johannes Berg <johannes.berg@intel.com>
 
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+This is the same as for SU PPDUs, so it's easy to do.
 
-Fixes: e87b5039511a ("mt76x0: eeprom files")
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-Please include this for the v4.19 merge window. The VLA was introduced
-with the new source file (which I also note is missing a SPDX line), so
-I'd like to avoid the kernel ever getting released with a VLA here.
----
- drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-index 1ecd018f12b8..af2fd6a1bb44 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-@@ -81,15 +81,15 @@ mt76x0_efuse_read(struct mt76x0_dev *dev, u16 addr, u8 *data,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 314012ed7a29..05ce253b8c30 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1189,7 +1189,8 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	he->data5 |= le16_encode_bits(ltf, IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
  
-+#define MT_MAP_READS	DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16)
- static int
- mt76x0_efuse_physical_size_check(struct mt76x0_dev *dev)
- {
--	const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
--	u8 data[map_reads * 16];
-+	u8 data[MT_MAP_READS * 16];
- 	int ret, i;
- 	u32 start = 0, end = 0, cnt_free;
+ 	switch (he_type) {
+-	case RATE_MCS_HE_TYPE_SU: {
++	case RATE_MCS_HE_TYPE_SU:
++	case RATE_MCS_HE_TYPE_EXT_SU: {
+ 		u16 val;
  
--	for (i = 0; i < map_reads; i++) {
-+	for (i = 0; i < MT_MAP_READS; i++) {
- 		ret = mt76x0_efuse_read(dev, MT_EE_USAGE_MAP_START + i * 16,
- 					 data + i * 16, MT_EE_PHYSICAL_READ);
- 		if (ret)
+ 		/* LTF syms correspond to streams */
+@@ -1241,7 +1242,6 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				val));
+ 		}
+ 		break;
+-	case RATE_MCS_HE_TYPE_EXT_SU:
+ 	case RATE_MCS_HE_TYPE_TRIG:
+ 		/* not supported */
+ 		break;
 -- 
-2.17.1
-
-
--- 
-Kees Cook
-Pixel Security
+2.18.0
