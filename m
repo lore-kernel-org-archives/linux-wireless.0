@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:41031 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729891AbeHMVYx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 17:24:53 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH] mac80211: Run TXQ teardown code before de-registering interfaces
-In-Reply-To: <5B71CD33.7020700@broadcom.com>
-References: <20180813121625.18367-1-toke@toke.dk> <5B71CD33.7020700@broadcom.com>
-Date: Mon, 13 Aug 2018 20:41:27 +0200
-Message-ID: <87tvnycdns.fsf@toke.dk> (sfid-20180813_204154_319916_035FFEF8)
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:5913 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726562AbeHXMU4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 08:20:56 -0400
+Subject: Re: [PATCH 10/24] staging: wilc1000: move
+ wilc_multicast_mac_addr_list to 'wilc_vif' struct
+To: Ajay Singh <ajay.kathat@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+ <1534229416-13254-11-git-send-email-ajay.kathat@microchip.com>
+ <92faa952-6722-cc9f-cccf-2275c4158a37@microchip.com>
+ <20180823153021.3ad58351@ajaysk-VirtualBox>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <eb7b4aa5-613e-9efc-4b5e-a926f8b23fb1@microchip.com> (sfid-20180824_104720_870867_CEBD9DC7)
+Date: Fri, 24 Aug 2018 11:47:14 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180823153021.3ad58351@ajaysk-VirtualBox>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> On 8/13/2018 2:16 PM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> The TXQ teardown code can reference the vif data structures that are
->> stored in the netdev private memory area if there are still packets on
->> the queue when it is being freed. Since the TXQ teardown code is run
->> after the netdevs are freed, this can lead to a use-after-free. Fix this
->> by moving the TXQ teardown code to earlier in ieee80211_unregister_hw().
->
-> Just off the bat, but from reading the above I am wondering whether
-> the use-after-free could also happen upon removing an interface?
 
-Hmm, there doesn't appear to be *any* teardown of TXQs when an interface
-is removed...? So I guess that if an interface is removed while it still
-has frames on the multicast TXQ, that those packets would be left
-hanging there? I don't think there would be an explicit use-after-free,
-because they will never get dequeued, so they would just constitute a
-memory leak?
+On 23.08.2018 13:00, Ajay Singh wrote:
+> Unless ndo_set_rx_mode() gets called quickly I don't think there is any
+> issue here. 
 
-Am I missing some automatic mechanism that always empties out queues
-before an interface is brought down?
-
--Toke
+I don't agree with this.
