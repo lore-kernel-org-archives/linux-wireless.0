@@ -1,184 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43888 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:43974 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726572AbeHXOEc (ORCPT
+        with ESMTP id S1727495AbeHXOFG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:32 -0400
+        Fri, 24 Aug 2018 10:05:06 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:11 +0300
-Message-Id: <20180824103018.15011-10-luca@coelho.fi> (sfid-20180824_123037_639522_7BE288F7)
+Date: Fri, 24 Aug 2018 13:30:15 +0300
+Message-Id: <20180824103018.15011-14-luca@coelho.fi> (sfid-20180824_123108_108668_4BE70914)
 In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
 References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 09/16] iwlwifi: change monitor DMA to be coherent
+Subject: [PATCH 13/16] iwlwifi: mvm: decode HE TB PPDU data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Allow access to the memory by the host and the device simultaneously.
-This will be needed in some future patches.
+Decode the HE TB PPDU data that we get in sniffer mode
+and use it to populate the HE radiotap information.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/pcie/internal.h    |  4 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 62 ++++++-------------
- 2 files changed, 21 insertions(+), 45 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 21 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 38 ++++++++++---------
+ 2 files changed, 34 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index a7896fcc44cf..98d8da03ccfc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -464,7 +464,7 @@ struct iwl_self_init_dram {
-  * @mutex: to protect stop_device / start_fw / start_hw
-  * @cmd_in_flight: true when we have a host command in flight
-  * @fw_mon_phys: physical address of the buffer for the firmware monitor
-- * @fw_mon_page: points to the first page of the buffer for the firmware monitor
-+ * @fw_mon_cpu_addr: address of the buffer for the firmware monitor
-  * @fw_mon_size: size of the buffer for the firmware monitor
-  * @msix_entries: array of MSI-X entries
-  * @msix_enabled: true if managed to enable MSI-X
-@@ -554,7 +554,7 @@ struct iwl_trans_pcie {
- 	bool ref_cmd_in_flight;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index e966679a964e..2078ef425f8c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -362,22 +362,27 @@ enum iwl_rx_he_phy {
+ 	/* 6 bits reserved */
+ 	IWL_RX_HE_PHY_DELIM_EOF			= BIT(31),
  
- 	dma_addr_t fw_mon_phys;
--	struct page *fw_mon_page;
-+	void *fw_mon_cpu_addr;
- 	u32 fw_mon_size;
+-	/* second dword - MU data */
+-	IWL_RX_HE_PHY_SIGB_COMPRESSION		= BIT_ULL(32 + 0),
+-	IWL_RX_HE_PHY_SIBG_SYM_OR_USER_NUM_MASK	= 0x1e00000000ULL,
++	/* second dword - common data */
+ 	IWL_RX_HE_PHY_HE_LTF_NUM_MASK		= 0xe000000000ULL,
+ 	IWL_RX_HE_PHY_RU_ALLOC_SEC80		= BIT_ULL(32 + 8),
+ 	/* trigger encoded */
+ 	IWL_RX_HE_PHY_RU_ALLOC_MASK		= 0xfe0000000000ULL,
+-	IWL_RX_HE_PHY_SIGB_MCS_MASK		= 0xf000000000000ULL,
+-	/* 1 bit reserved */
+-	IWL_RX_HE_PHY_SIGB_DCM			= BIT_ULL(32 + 21),
+-	IWL_RX_HE_PHY_PREAMBLE_PUNC_TYPE_MASK	= 0xc0000000000000ULL,
+-	/* 4 bits reserved */
+ 	IWL_RX_HE_PHY_INFO_TYPE_MASK		= 0xf000000000000000ULL,
+ 	IWL_RX_HE_PHY_INFO_TYPE_SU		= 0x0,
+ 	IWL_RX_HE_PHY_INFO_TYPE_MU		= 0x1,
+ 	IWL_RX_HE_PHY_INFO_TYPE_MU_EXT_INFO	= 0x2,
++	IWL_RX_HE_PHY_INFO_TYPE_TB_EXT_INFO	= 0x3,
++
++	/* second dword - MU data */
++	IWL_RX_HE_PHY_MU_SIGB_COMPRESSION		= BIT_ULL(32 + 0),
++	IWL_RX_HE_PHY_MU_SIBG_SYM_OR_USER_NUM_MASK	= 0x1e00000000ULL,
++	IWL_RX_HE_PHY_MU_SIGB_MCS_MASK			= 0xf000000000000ULL,
++	IWL_RX_HE_PHY_MU_SIGB_DCM			= BIT_ULL(32 + 21),
++	IWL_RX_HE_PHY_MU_PREAMBLE_PUNC_TYPE_MASK	= 0xc0000000000000ULL,
++
++	/* second dword - TB data */
++	IWL_RX_HE_PHY_TB_PILOT_TYPE			= BIT_ULL(32 + 0),
++	IWL_RX_HE_PHY_TB_LOW_SS_MASK			= 0xe00000000ULL
+ };
  
- 	struct msix_entry msix_entries[IWL_MAX_RX_HW_QUEUES];
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 8925b10217d7..d8aca7291614 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -187,14 +187,13 @@ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ enum iwl_rx_he_sigb_common0 {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 2eae657b16b6..f415c72394ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -988,23 +988,23 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		}
+ 	} else if (overload && he_mu && he_phy_data != HE_PHY_DATA_INVAL) {
+ 		he_mu->flags1 |=
+-			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIBG_SYM_OR_USER_NUM_MASK,
+-						  he_phy_data),
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_MU_SIBG_SYM_OR_USER_NUM_MASK,
++						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS);
+ 		he_mu->flags1 |=
+-			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_DCM,
+-						  he_phy_data),
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_MU_SIGB_DCM,
++						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM);
+ 		he_mu->flags1 |=
+-			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_MCS_MASK,
+-						  he_phy_data),
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_MU_SIGB_MCS_MASK,
++						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS);
+ 		he_mu->flags2 |=
+-			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_COMPRESSION,
+-						  he_phy_data),
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_MU_SIGB_COMPRESSION,
++						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP);
+ 		he_mu->flags2 |=
+-			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_PREAMBLE_PUNC_TYPE_MASK,
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_MU_PREAMBLE_PUNC_TYPE_MASK,
+ 						   he_phy_data),
+ 					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW);
  
--	if (!trans_pcie->fw_mon_page)
-+	if (!trans_pcie->fw_mon_cpu_addr)
- 		return;
- 
--	dma_unmap_page(trans->dev, trans_pcie->fw_mon_phys,
--		       trans_pcie->fw_mon_size, DMA_FROM_DEVICE);
--	__free_pages(trans_pcie->fw_mon_page,
--		     get_order(trans_pcie->fw_mon_size));
--	trans_pcie->fw_mon_page = NULL;
-+	dma_free_coherent(trans->dev, trans_pcie->fw_mon_size,
-+			  trans_pcie->fw_mon_cpu_addr,
-+			  trans_pcie->fw_mon_phys);
-+	trans_pcie->fw_mon_cpu_addr = NULL;
- 	trans_pcie->fw_mon_phys = 0;
- 	trans_pcie->fw_mon_size = 0;
- }
-@@ -202,7 +201,7 @@ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
- void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct page *page = NULL;
-+	void *cpu_addr = NULL;
- 	dma_addr_t phys;
- 	u32 size = 0;
- 	u8 power;
-@@ -219,38 +218,25 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- 		 max_power))
- 		return;
- 
--	if (trans_pcie->fw_mon_page) {
--		dma_sync_single_for_device(trans->dev, trans_pcie->fw_mon_phys,
--					   trans_pcie->fw_mon_size,
--					   DMA_FROM_DEVICE);
-+	if (trans_pcie->fw_mon_cpu_addr)
- 		return;
--	}
- 
- 	phys = 0;
- 	for (power = max_power; power >= 11; power--) {
--		int order;
--
- 		size = BIT(power);
--		order = get_order(size);
--		page = alloc_pages(__GFP_COMP | __GFP_NOWARN | __GFP_ZERO,
--				   order);
--		if (!page)
-+		cpu_addr = dma_alloc_coherent(trans->dev, size, &phys,
-+					      GFP_KERNEL | __GFP_NOWARN |
-+					      __GFP_ZERO | __GFP_COMP);
-+		if (!cpu_addr)
- 			continue;
- 
--		phys = dma_map_page(trans->dev, page, 0, PAGE_SIZE << order,
--				    DMA_FROM_DEVICE);
--		if (dma_mapping_error(trans->dev, phys)) {
--			__free_pages(page, order);
--			page = NULL;
--			continue;
--		}
- 		IWL_INFO(trans,
--			 "Allocated 0x%08x bytes (order %d) for firmware monitor.\n",
--			 size, order);
-+			 "Allocated 0x%08x bytes for firmware monitor.\n",
-+			 size);
- 		break;
+@@ -1049,15 +1049,18 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		rx_status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
  	}
  
--	if (WARN_ON_ONCE(!page))
-+	if (WARN_ON_ONCE(!cpu_addr))
- 		return;
+-	if (he_mu) {
++	if (he_phy_data != HE_PHY_DATA_INVAL &&
++	    (FIELD_GET(IWL_RX_HE_PHY_INFO_TYPE_MASK, he_phy_data) ==
++			IWL_RX_HE_PHY_INFO_TYPE_MU_EXT_INFO ||
++	     FIELD_GET(IWL_RX_HE_PHY_INFO_TYPE_MASK, he_phy_data) ==
++			IWL_RX_HE_PHY_INFO_TYPE_TB_EXT_INFO)) {
+ 		/*
+ 		 * Unfortunately, we have to leave the mac80211 data
+ 		 * incorrect for the case that we receive an HE-MU
+-		 * transmission and *don't* have the he_mu pointer,
+-		 * i.e. we don't have the phy data (due to the bits
+-		 * being used for TSF). This shouldn't happen though
+-		 * as management frames where we need the TSF/timers
+-		 * are not be transmitted in HE-MU, I think.
++		 * transmission and *don't* have the HE phy data (due
++		 * to the bits being used for TSF). This shouldn't
++		 * happen though as management frames where we need
++		 * the TSF/timers are not be transmitted in HE-MU.
+ 		 */
+ 		u8 ru = FIELD_GET(IWL_RX_HE_PHY_RU_ALLOC_MASK, he_phy_data);
+ 		u8 offs = 0;
+@@ -1100,10 +1103,11 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 					 IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
+ 		he->data2 |=
+ 			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN);
+-		if (he_phy_data & IWL_RX_HE_PHY_RU_ALLOC_SEC80) {
++		if (he_phy_data & IWL_RX_HE_PHY_RU_ALLOC_SEC80)
+ 			he->data2 |=
+ 				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC);
  
- 	if (power != max_power)
-@@ -259,7 +245,7 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- 			(unsigned long)BIT(power - 10),
- 			(unsigned long)BIT(max_power - 10));
- 
--	trans_pcie->fw_mon_page = page;
-+	trans_pcie->fw_mon_cpu_addr = cpu_addr;
- 	trans_pcie->fw_mon_phys = phys;
- 	trans_pcie->fw_mon_size = size;
- }
-@@ -2863,7 +2849,7 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 len = 0;
- 
--	if ((trans_pcie->fw_mon_page &&
-+	if ((trans_pcie->fw_mon_cpu_addr &&
- 	     trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) ||
- 	    trans->dbg_dest_tlv) {
- 		struct iwl_fw_error_dump_fw_mon *fw_mon_data;
-@@ -2891,19 +2877,9 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 			cpu_to_le32(iwl_read_prph(trans, base));
- 
- 		len += sizeof(**data) + sizeof(*fw_mon_data);
--		if (trans_pcie->fw_mon_page) {
--			/*
--			 * The firmware is now asserted, it won't write anything
--			 * to the buffer. CPU can take ownership to fetch the
--			 * data. The buffer will be handed back to the device
--			 * before the firmware will be restarted.
--			 */
--			dma_sync_single_for_cpu(trans->dev,
--						trans_pcie->fw_mon_phys,
--						trans_pcie->fw_mon_size,
--						DMA_FROM_DEVICE);
-+		if (trans_pcie->fw_mon_cpu_addr) {
- 			memcpy(fw_mon_data->data,
--			       page_address(trans_pcie->fw_mon_page),
-+			       trans_pcie->fw_mon_cpu_addr,
- 			       trans_pcie->fw_mon_size);
- 
- 			monitor_len = trans_pcie->fw_mon_size;
-@@ -2966,7 +2942,7 @@ static struct iwl_trans_dump_data
- 		cmdq->n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
- 
- 	/* FW monitor */
--	if (trans_pcie->fw_mon_page) {
-+	if (trans_pcie->fw_mon_cpu_addr) {
- 		len += sizeof(*data) + sizeof(struct iwl_fw_error_dump_fw_mon) +
- 		       trans_pcie->fw_mon_size;
- 		monitor_len = trans_pcie->fw_mon_size;
++		if (he_mu) {
+ #define CHECK_BW(bw) \
+ 	BUILD_BUG_ON(IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_ ## bw ## MHZ != \
+ 		     RATE_MCS_CHAN_WIDTH_##bw >> RATE_MCS_CHAN_WIDTH_POS)
+@@ -1111,7 +1115,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			CHECK_BW(40);
+ 			CHECK_BW(80);
+ 			CHECK_BW(160);
+-			he_mu->flags2 |=
++			he->data2 |=
+ 				le16_encode_bits(FIELD_GET(RATE_MCS_CHAN_WIDTH_MSK,
+ 							   rate_n_flags),
+ 						 IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW);
 -- 
 2.18.0
