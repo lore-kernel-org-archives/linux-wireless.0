@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42082 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728122AbeHCLF0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 07:05:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Wireless <linux-wireless@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47098 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726860AbeHXOtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 10:49:55 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org,
         Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
-References: <20180803182942.4de98df2@canb.auug.org.au>
-Date: Fri, 03 Aug 2018 12:09:59 +0300
-In-Reply-To: <20180803182942.4de98df2@canb.auug.org.au> (Stephen Rothwell's
-        message of "Fri, 3 Aug 2018 18:29:42 +1000")
-Message-ID: <874lgb7r4o.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_111017_819130_E47136C7)
-MIME-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH 05/17] mt76: fix mt76xx-lib module license
+Date: Fri, 24 Aug 2018 13:15:09 +0200
+Message-Id: <1535109321-17126-6-git-send-email-sgruszka@redhat.com> (sfid-20180824_131550_231264_841EAC89)
+In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+Add module license.
 
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (powerpc allyesconfig) failed like this:
->
-> ld: drivers/net/wireless/mediatek/mt76/mt76x0/trace.o:(__tracepoints+0x0): multiple definition of `__tracepoint_set_shared_key'; drivers/net/wireless/mediatek/mt7601u/trace.o:(__tracepoints+0x0): first defined here
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76xx_util.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-[...]
-
-> Caused by commit
->
->   7b4859026ccd ("mt76x0: core files")
->
-> and following ones.
->
-> I have just marked that driver broken for now:
-
-Thanks Stephen for the report. Odd that kbuild bot didn't catch this, I
-did have these patches in my pending branch for several days.
-
-Stanislaw, could you please send a fix for this ASAP? I can't submit a
-pull request to Dave until this is fixed.
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76xx_util.c b/drivers/net/wireless/mediatek/mt76/mt76xx_util.c
+index 3b0f9006eaa2..82a647d8398b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76xx_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76xx_util.c
+@@ -51,3 +51,5 @@ void mt76xx_configure_filter(struct ieee80211_hw *hw,
+ 	mutex_unlock(&dev->mutex);
+ }
+ EXPORT_SYMBOL_GPL(mt76xx_configure_filter);
++
++MODULE_LICENSE("Dual BSD/GPL");
 -- 
-Kalle Valo
+1.9.3
