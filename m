@@ -1,62 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:53528 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726383AbeH2Bet (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43814 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726330AbeHXOEZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 21:34:49 -0400
-Received: by mail-it0-f54.google.com with SMTP id p79-v6so4815014itp.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 14:41:14 -0700 (PDT)
-MIME-Version: 1.0
-References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
- <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
- <1535490861.20033.8.camel@sipsolutions.net>
-In-Reply-To: <1535490861.20033.8.camel@sipsolutions.net>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Tue, 28 Aug 2018 23:41:02 +0200
-Message-ID: <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com> (sfid-20180828_234117_573058_1EEAEA03)
-Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set to one
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, sara.sharon@intel.com
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 24 Aug 2018 10:04:25 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:02 +0300
+Message-Id: <20180824103018.15011-1-luca@coelho.fi> (sfid-20180824_123028_265657_F2FF4C61)
+Subject: [PATCH 00/16]  iwlwifi: updates intended for v4.20 2018-08-24
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> On Tue, 2018-08-28 at 23:07 +0200, Lorenzo Bianconi wrote:
-> > Do not try to aggregate packets in a A-MSDU frame if max_tx_fragments
-> > or max_amsdu_subframes is set to 1.
->
-> Yeah that seems valid.
->
-> > Moreover take into account
-> > tail padding added on the first frame into flow backlog if
-> > ieee80211_amsdu_realloc_pad routine on the second frame fails.
->
-> That's not really right - the padding shouldn't have been added to the
-> first subframe in the first place as the last one shouldn't have padding
-> at all. There's also a separate bug in that the A-MSDU subframe length
-> should NOT include the padding.
->
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Assuming the A-MSDU subframe is composed by two packets, the last one
-must not contain padding, is my understanding correct?
 
-> My colleague Sara (CC'ed now) has a patch to fix all of this (we just
-> did that this morning). I'll send it out tomorrow morning. Can I bother
-> you to try that?
->
+Hi,
 
-Sure, no worries :)
+Here's the third set of patches intended for v4.20.  It's the usual
+development, with some small new feauters, cleanups and bugfixes.
 
-> We'd have to fix the first point independently though, or I guess we can
-> roll that into our bugfix too, which would you prefer?
->
-> johannes
->
+The changes are:
 
-If the patch is already done I can add the fix for the first point on
-top of it, does it sound good?
+* Enable a new scanning feature;
+* Continued work on HE (mostly radiotap);
+* Some fixes in the FW rate-scaling implementation;
+* General small fixes;
+* Other clean-ups and small improvements;
 
-Regards,
-Lorenzo
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+I have a lot of pending patches in our internal tree, so I'll probably
+send another patchset before sending the pull-request.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Ayala Beker (1):
+  iwlwifi: mvm: activate fragmented EBS in case of fragmented scan
+
+Emmanuel Grumbach (1):
+  iwlwifi: mvm: send BCAST management frames to the right station
+
+Golan Ben Ami (1):
+  iwlwifi: refactor txq_alloc for supporting more command type
+
+Ido Yariv (1):
+  iwlwifi: Add missing 11n disable module parameter check
+
+Johannes Berg (7):
+  iwlwifi: mvm: implement extended HE-MU sniffer API
+  iwlwifi: mvm: put LTF symbol size into HE radiotap
+  iwlwifi: mvm: properly decode HE GI duration
+  iwlwifi: mvm: report # of LTF symbols for extended range SU PPDUs
+  iwlwifi: mvm: remove channel 2 from HE radiotap if not applicable
+  iwlwifi: mvm: decode HE TB PPDU data
+  Revert "iwlwifi: allow memory debug TLV to specify the memory type"
+
+Naftali Goldstein (3):
+  iwlwifi: mvm: always init rs_fw with 20MHz bandwidth rates
+  iwlwifi: rs-fw: enable STBC in he correctly
+  iwlwifi: rs-fw: support dcm
+
+Shahar S Matityahu (2):
+  iwlwifi: change monitor DMA to be coherent
+  iwlwifi: avoid code duplication in stopping fw debug data recording
+
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  18 +-
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 136 +++++++++---
+ .../net/wireless/intel/iwlwifi/fw/api/scan.h  |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  59 ++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  10 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  15 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  15 --
+ .../wireless/intel/iwlwifi/iwl-eeprom-parse.c |   4 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |  35 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 210 ++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c |  12 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  14 +-
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  14 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   5 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  70 ++----
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  91 +++++---
+ 21 files changed, 455 insertions(+), 269 deletions(-)
+
+-- 
+2.18.0
