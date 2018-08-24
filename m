@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:37320 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387566AbeHAJ6V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 05:58:21 -0400
-Received: by mail-wr1-f67.google.com with SMTP id u12-v6so838025wrr.4
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Aug 2018 01:13:51 -0700 (PDT)
-Date: Wed, 1 Aug 2018 10:13:47 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
-Message-ID: <20180801081346.GA4794@localhost.localdomain> (sfid-20180801_102122_902025_2FB55E8C)
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
- <87y3dqzga9.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y3dqzga9.fsf@purkki.adurom.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47136 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726513AbeHXOuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 10:50:09 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 12/17] mt76x0: use mt76_wcid_free in mt76x0
+Date: Fri, 24 Aug 2018 13:15:16 +0200
+Message-Id: <1535109321-17126-13-git-send-email-sgruszka@redhat.com> (sfid-20180824_131601_272787_EE0BCC93)
+In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Aug 01, Kalle Valo wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> 
-> > Add mt76x0 driver for MT7610U based USB dongles. Currently driver
-> > support only STA mode.
-> >
-> > mt76x0 is based on Jakub's mt7601u driver already included
-> > in the kernel. I would like the driver be integrated as part
-> > of mt76 (instead of separate driver in mediatek dir like mt7601u)
-> > to utilize mt76 code for adding support for MT76x0 PCIe devices
-> > in further development.
-> 
-> So what's the future for mt7601u, are we going to delete it? What's
-> Jakub's opinion about all this? And what's the delta featurewise between
-> mt7601u and this driver? Which one will be loaded by default?
+Use helper from util instead of custom code.
 
-I think we can integrate mt7601u in mt76 as soon as mt76x0 is merged since the
-code path is pretty similar. Jakub what do you think? (That was actually on my
-ToDo list :))
-For the moment I guess both drivers can coexist since the usb_device_id lists
-seem different
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Lorenzo
-
-> 
-> Also I noticed that mt76 is missing an entry in MAINTAINERS file? Could
-> someone send a separate patch to add that, please?
-> 
-> -- 
-> Kalle Valo
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 29784f2f3797..79e236d814c1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -197,7 +197,7 @@ static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&dev->mt76.mutex);
+ 	rcu_assign_pointer(dev->wcid[idx], NULL);
+ 	mt76xx_mac_wcid_set_drop(&dev->mt76, idx, true);
+-	dev->wcid_mask[idx / BITS_PER_LONG] &= ~BIT(idx % BITS_PER_LONG);
++	mt76_wcid_free(dev->wcid_mask, idx);
+ 	mt76xx_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
+ 	mt76x0_mac_set_ampdu_factor(dev);
+ 	mutex_unlock(&dev->mt76.mutex);
+-- 
+1.9.3
