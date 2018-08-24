@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:34395 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727554AbeH2XLG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:43826 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726330AbeHXOE0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 19:11:06 -0400
-Received: by mail-it0-f66.google.com with SMTP id x79-v6so42656ita.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 12:12:49 -0700 (PDT)
-MIME-Version: 1.0
-References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
- <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
- <1535569548.5215.33.camel@sipsolutions.net>
-In-Reply-To: <1535569548.5215.33.camel@sipsolutions.net>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Wed, 29 Aug 2018 21:12:38 +0200
-Message-ID: <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com> (sfid-20180829_211315_617690_DE11A7F1)
-Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
- to one
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Sara Sharon <sara.sharon@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 24 Aug 2018 10:04:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:04 +0300
+Message-Id: <20180824103018.15011-3-luca@coelho.fi> (sfid-20180824_123028_898172_2AED4728)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 02/16] iwlwifi: mvm: put LTF symbol size into HE radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> On Wed, 2018-08-29 at 21:03 +0200, Lorenzo Bianconi wrote:
-> > Do not try to aggregate packets in a A-MSDU frame and add A-MSDU header
-> > on the first packet if max_tx_fragments or max_amsdu_subframes are
-> > set to one
-> >
-> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> > ---
-> > Changes since v1:
-> > - rebased on top of mac80211 master branch
-> > - removed ieee80211_amsdu_realloc_pad chunk
-> >
-> Don't you still have to account for the changed header length if the
-> second one fails or something?
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-That has been fixed by Sara's patch since now we add the pad directly
-on the head of the
-subsequent subframes (not to the tail of the first one). Am I missing something?
+I evidently completely confused "number of LTF symbols" and "LTF size".
+Radiotap was reporting the former, while I thought it was the latter,
+and we really need both.
 
-Regards,
-Lorenzo
+Add the LTF symbol size into the newly defined field in radiotap.
 
-> You said you wanted to account for the pad bytes - which now aren't
-> there - but didn't that also take the changed header of the first
-> subframe into account?
->
-> johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index fd66ea7c4b66..f644bcf7e048 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -925,7 +925,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	struct ieee80211_radiotap_he *he = NULL;
+ 	struct ieee80211_radiotap_he_mu *he_mu = NULL;
+ 	u32 he_type = 0xffffffff;
+-	u8 stbc;
++	u8 stbc, ltf;
+ 
+ 	static const struct ieee80211_radiotap_he known = {
+ 		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
+@@ -1151,21 +1151,33 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		RATE_MCS_HE_GI_LTF_POS) {
+ 	case 0:
+ 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
++		if (he_type == RATE_MCS_HE_TYPE_MU)
++			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
++		else
++			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_1X;
+ 		break;
+ 	case 1:
+ 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
++		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
+ 		break;
+ 	case 2:
+ 		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
++		if (he_type == RATE_MCS_HE_TYPE_TRIG)
++			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
++		else
++			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
+ 		break;
+ 	case 3:
+ 		if (rate_n_flags & RATE_MCS_SGI_MSK)
+ 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
+ 		else
+ 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
++		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
+ 		break;
+ 	}
+ 
++	he->data5 |= le16_encode_bits(ltf, IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
++
+ 	switch (he_type) {
+ 	case RATE_MCS_HE_TYPE_SU: {
+ 		u16 val;
+-- 
+2.18.0
