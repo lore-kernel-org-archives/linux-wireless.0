@@ -1,70 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0132.outbound.protection.outlook.com ([104.47.32.132]:18608
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732639AbeHGP6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 11:58:20 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer
- dereference
-To: Kalle Valo <kvalo@codeaurora.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:43888 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726572AbeHXOEc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 10:04:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Winnie Chang <winnie.chang@cypress.com>
-References: <1533622686-145733-1-git-send-email-chi-hsien.lin@cypress.com>
- <87a7py4dqz.fsf@kamboji.qca.qualcomm.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <d336b996-9762-2c58-0b51-297b4e2c291b@cypress.com> (sfid-20180807_154359_240709_3499F461)
-Date: Tue, 7 Aug 2018 21:40:44 +0800
-MIME-Version: 1.0
-In-Reply-To: <87a7py4dqz.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:11 +0300
+Message-Id: <20180824103018.15011-10-luca@coelho.fi> (sfid-20180824_123037_639522_7BE288F7)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 09/16] iwlwifi: change monitor DMA to be coherent
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
+Allow access to the memory by the host and the device simultaneously.
+This will be needed in some future patches.
 
-On 08/07/2018 7:28, Kalle Valo wrote:
-> Chi-Hsien Lin <chi-hsien.lin@cypress.com> writes:
-> 
->> From: Winnie Chang <winnie.chang@cypress.com>
->>
->> The kernel BUG happens when wowl is enabled from firmware. In
->> brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
->> drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
->> yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
->> calls brcmf_wiphy_wowl_params().
->>
->> The kernel panic is introduced in below commit:
->> commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
->> brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
->>
->> Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
->> Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-> 
-> Chi-Hsien, you need to include your own s-o-b as well when you are
-> submitting the patch:
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#signed-off-by_missing
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  4 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 62 ++++++-------------
+ 2 files changed, 21 insertions(+), 45 deletions(-)
 
-Hi Kalle,
-
-Thanks a lot for the notes. I've added proper s-o-b in V2.
-
-Chi-hsien Lin
-
-> 
-> --
-> Kalle Valo
-> 
-> 
-> ----------
-> 
-> You're receiving this message because you're a member of the brcm80211-dev-list group.
-> .
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index a7896fcc44cf..98d8da03ccfc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -464,7 +464,7 @@ struct iwl_self_init_dram {
+  * @mutex: to protect stop_device / start_fw / start_hw
+  * @cmd_in_flight: true when we have a host command in flight
+  * @fw_mon_phys: physical address of the buffer for the firmware monitor
+- * @fw_mon_page: points to the first page of the buffer for the firmware monitor
++ * @fw_mon_cpu_addr: address of the buffer for the firmware monitor
+  * @fw_mon_size: size of the buffer for the firmware monitor
+  * @msix_entries: array of MSI-X entries
+  * @msix_enabled: true if managed to enable MSI-X
+@@ -554,7 +554,7 @@ struct iwl_trans_pcie {
+ 	bool ref_cmd_in_flight;
+ 
+ 	dma_addr_t fw_mon_phys;
+-	struct page *fw_mon_page;
++	void *fw_mon_cpu_addr;
+ 	u32 fw_mon_size;
+ 
+ 	struct msix_entry msix_entries[IWL_MAX_RX_HW_QUEUES];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 8925b10217d7..d8aca7291614 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -187,14 +187,13 @@ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (!trans_pcie->fw_mon_page)
++	if (!trans_pcie->fw_mon_cpu_addr)
+ 		return;
+ 
+-	dma_unmap_page(trans->dev, trans_pcie->fw_mon_phys,
+-		       trans_pcie->fw_mon_size, DMA_FROM_DEVICE);
+-	__free_pages(trans_pcie->fw_mon_page,
+-		     get_order(trans_pcie->fw_mon_size));
+-	trans_pcie->fw_mon_page = NULL;
++	dma_free_coherent(trans->dev, trans_pcie->fw_mon_size,
++			  trans_pcie->fw_mon_cpu_addr,
++			  trans_pcie->fw_mon_phys);
++	trans_pcie->fw_mon_cpu_addr = NULL;
+ 	trans_pcie->fw_mon_phys = 0;
+ 	trans_pcie->fw_mon_size = 0;
+ }
+@@ -202,7 +201,7 @@ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
+ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct page *page = NULL;
++	void *cpu_addr = NULL;
+ 	dma_addr_t phys;
+ 	u32 size = 0;
+ 	u8 power;
+@@ -219,38 +218,25 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
+ 		 max_power))
+ 		return;
+ 
+-	if (trans_pcie->fw_mon_page) {
+-		dma_sync_single_for_device(trans->dev, trans_pcie->fw_mon_phys,
+-					   trans_pcie->fw_mon_size,
+-					   DMA_FROM_DEVICE);
++	if (trans_pcie->fw_mon_cpu_addr)
+ 		return;
+-	}
+ 
+ 	phys = 0;
+ 	for (power = max_power; power >= 11; power--) {
+-		int order;
+-
+ 		size = BIT(power);
+-		order = get_order(size);
+-		page = alloc_pages(__GFP_COMP | __GFP_NOWARN | __GFP_ZERO,
+-				   order);
+-		if (!page)
++		cpu_addr = dma_alloc_coherent(trans->dev, size, &phys,
++					      GFP_KERNEL | __GFP_NOWARN |
++					      __GFP_ZERO | __GFP_COMP);
++		if (!cpu_addr)
+ 			continue;
+ 
+-		phys = dma_map_page(trans->dev, page, 0, PAGE_SIZE << order,
+-				    DMA_FROM_DEVICE);
+-		if (dma_mapping_error(trans->dev, phys)) {
+-			__free_pages(page, order);
+-			page = NULL;
+-			continue;
+-		}
+ 		IWL_INFO(trans,
+-			 "Allocated 0x%08x bytes (order %d) for firmware monitor.\n",
+-			 size, order);
++			 "Allocated 0x%08x bytes for firmware monitor.\n",
++			 size);
+ 		break;
+ 	}
+ 
+-	if (WARN_ON_ONCE(!page))
++	if (WARN_ON_ONCE(!cpu_addr))
+ 		return;
+ 
+ 	if (power != max_power)
+@@ -259,7 +245,7 @@ void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
+ 			(unsigned long)BIT(power - 10),
+ 			(unsigned long)BIT(max_power - 10));
+ 
+-	trans_pcie->fw_mon_page = page;
++	trans_pcie->fw_mon_cpu_addr = cpu_addr;
+ 	trans_pcie->fw_mon_phys = phys;
+ 	trans_pcie->fw_mon_size = size;
+ }
+@@ -2863,7 +2849,7 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 len = 0;
+ 
+-	if ((trans_pcie->fw_mon_page &&
++	if ((trans_pcie->fw_mon_cpu_addr &&
+ 	     trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) ||
+ 	    trans->dbg_dest_tlv) {
+ 		struct iwl_fw_error_dump_fw_mon *fw_mon_data;
+@@ -2891,19 +2877,9 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
+ 			cpu_to_le32(iwl_read_prph(trans, base));
+ 
+ 		len += sizeof(**data) + sizeof(*fw_mon_data);
+-		if (trans_pcie->fw_mon_page) {
+-			/*
+-			 * The firmware is now asserted, it won't write anything
+-			 * to the buffer. CPU can take ownership to fetch the
+-			 * data. The buffer will be handed back to the device
+-			 * before the firmware will be restarted.
+-			 */
+-			dma_sync_single_for_cpu(trans->dev,
+-						trans_pcie->fw_mon_phys,
+-						trans_pcie->fw_mon_size,
+-						DMA_FROM_DEVICE);
++		if (trans_pcie->fw_mon_cpu_addr) {
+ 			memcpy(fw_mon_data->data,
+-			       page_address(trans_pcie->fw_mon_page),
++			       trans_pcie->fw_mon_cpu_addr,
+ 			       trans_pcie->fw_mon_size);
+ 
+ 			monitor_len = trans_pcie->fw_mon_size;
+@@ -2966,7 +2942,7 @@ static struct iwl_trans_dump_data
+ 		cmdq->n_window * (sizeof(*txcmd) + TFD_MAX_PAYLOAD_SIZE);
+ 
+ 	/* FW monitor */
+-	if (trans_pcie->fw_mon_page) {
++	if (trans_pcie->fw_mon_cpu_addr) {
+ 		len += sizeof(*data) + sizeof(struct iwl_fw_error_dump_fw_mon) +
+ 		       trans_pcie->fw_mon_size;
+ 		monitor_len = trans_pcie->fw_mon_size;
+-- 
+2.18.0
