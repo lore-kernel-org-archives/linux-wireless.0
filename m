@@ -1,73 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45736 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726990AbeHaOFW (ORCPT
+Received: from gateway31.websitewelcome.com ([192.185.143.5]:37353 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726268AbeHXQRo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 10:05:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 12:56:09 +0300
-Message-Id: <20180831095614.14099-12-luca@coelho.fi> (sfid-20180831_115842_864464_502856D4)
-In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
-References: <20180831095614.14099-1-luca@coelho.fi>
-Subject: [PATCH 11/16] iwlwifi: mvm: cleanup dead code on resume flow for non unified image.
+        Fri, 24 Aug 2018 12:17:44 -0400
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id 3C62C19852
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 06:58:08 -0500 (CDT)
+To: Joe Perches <joe@perches.com>, Kees Cook <keescook@chromium.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20180824011540.GA25716@embeddedor.com>
+ <CAGXu5jJxbFzKsV1=xHiKtcx+61QBsK0LYMrwo1vGNWgALzqakw@mail.gmail.com>
+ <d0ee04ea40bfc2aecd71b3ed1e1d388911b7d6cb.camel@perches.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH] iwlwifi: d3: use struct_size() in kzalloc()
+Message-ID: <f6818e31-d2da-82b4-b862-1ffb322f9365@embeddedor.com> (sfid-20180824_144320_049346_A0B1D7B7)
+Date: Fri, 24 Aug 2018 06:58:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <d0ee04ea40bfc2aecd71b3ed1e1d388911b7d6cb.camel@perches.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
+Hi Joe,
 
-CDB support has nothing to do with non unified image.
+On 8/23/18 11:33 PM, Joe Perches wrote:
+> On Thu, 2018-08-23 at 20:03 -0700, Kees Cook wrote:
+>> On Thu, Aug 23, 2018 at 6:15 PM, Gustavo A. R. Silva
+>> <gustavo@embeddedor.com> wrote:
+>>> One of the more common cases of allocation size calculations is finding
+>>> the size of a structure that has a zero-sized array at the end, along
+>>> with memory for some number of elements for that array. For example:
+>>>
+>>> struct foo {
+>>>         int stuff;
+>>>         void *entry[];
+>>> };
+> 
+> Question for Gustavo.
+> 
+> Did you find any existing instances that are miscalculated?
+> 
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 21 ++++++---------------
- 1 file changed, 6 insertions(+), 15 deletions(-)
+I found the following bug:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index b09446697c46..210be26aadaa 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -434,23 +434,13 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	u8 chains_static, chains_dynamic;
- 	struct cfg80211_chan_def chandef;
- 	int ret, i;
--	struct iwl_binding_cmd binding_cmd = {};
-+	struct iwl_binding_cmd_v1 binding_cmd = {};
- 	struct iwl_time_quota_cmd quota_cmd = {};
- 	struct iwl_time_quota_data *quota;
- 	u32 status;
--	int size;
--
--	if (fw_has_capa(&mvm->fw->ucode_capa,
--			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT)) {
--		size = sizeof(binding_cmd);
--		if (mvmvif->phy_ctxt->channel->band == NL80211_BAND_2GHZ ||
--		    !iwl_mvm_is_cdb_supported(mvm))
--			binding_cmd.lmac_id = cpu_to_le32(IWL_LMAC_24G_INDEX);
--		else
--			binding_cmd.lmac_id = cpu_to_le32(IWL_LMAC_5G_INDEX);
--	} else {
--		size = IWL_BINDING_CMD_SIZE_V1;
--	}
-+
-+	if (WARN_ON_ONCE(iwl_mvm_is_cdb_supported(mvm)))
-+		return -EINVAL;
- 
- 	/* add back the PHY */
- 	if (WARN_ON(!mvmvif->phy_ctxt))
-@@ -497,7 +487,8 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	status = 0;
- 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
--					  size, &binding_cmd, &status);
-+					  IWL_BINDING_CMD_SIZE_V1, &binding_cmd,
-+					  &status);
- 	if (ret) {
- 		IWL_ERR(mvm, "Failed to add binding: %d\n", ret);
- 		return ret;
--- 
-2.18.0
+https://lore.kernel.org/patchwork/patch/977357/
+
+
+> I believe there are some cases like:
+> 
+> 	size = sizeof(struct foo) + count * sizeof(something);
+> 	ptr = kmalloc(size);
+> 	memset(ptr + sizeof(struct foo), 0, size - sizeof(struct foo));
+> 
+> where something could go wrong and not be detected.
+> 
+
+It might be worth it to write a Coccinelle script for this.
+
+--
+Gustavo
