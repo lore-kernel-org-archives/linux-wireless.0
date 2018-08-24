@@ -1,87 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41874 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726041AbeHQKv2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Aug 2018 06:51:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <nicolas.ferre@microchip.com>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: feedback on mainlining wilc1000 staging driver
-References: <20180816015243.545cd009@ajaysk-VirtualBox>
-        <87sh3etwoj.fsf@purkki.adurom.net> <87o9e2twe9.fsf@purkki.adurom.net>
-        <20180817100233.7f1c00d9@ajaysk-VirtualBox>
-Date: Fri, 17 Aug 2018 10:49:02 +0300
-In-Reply-To: <20180817100233.7f1c00d9@ajaysk-VirtualBox> (Ajay Singh's message
-        of "Fri, 17 Aug 2018 10:02:33 +0530")
-Message-ID: <8736vdv3f5.fsf@kamboji.qca.qualcomm.com> (sfid-20180817_094910_789979_9B02FB34)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55360 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726462AbeHXOto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 10:49:44 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 00/17] mt76 patches 2018-08-24
+Date: Fri, 24 Aug 2018 13:15:04 +0200
+Message-Id: <1535109321-17126-1-git-send-email-sgruszka@redhat.com> (sfid-20180824_131536_197822_51DDD3DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ajay Singh <ajay.kathat@microchip.com> writes:
+This is the begin work of integration between mt76x0 and mt76x2.
 
-> On Thu, 16 Aug 2018 13:53:50 +0300
-> Kalle Valo <kvalo@codeaurora.org> wrote:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>=20
->> > Ajay Singh <ajay.kathat@microchip.com> writes:
->> >=20=20
->> >> Hi Greg,
->> >>
->> >> We all are working on submitting and reviewing patches for
->> >> wilc1000 in staging driver for quite some time.=20
->> >>
->> >> We would like to have feedback on the next steps to bring wilc1000
->> >> driver closer to move into the wireless subsystem tree.=20
->> >>
->> >> In summary, the following major things from TODO have been
->> >> addressed in staging:
->> >> -remove the defined feature as kernel versions
->> >> -remove OS wrapper functions
->> >> -remove custom debug and tracing functions
->> >> -rework comments and function headers(also coding style)
->> >> -remove build warnings
->> >> -replace all semaphores with mutexes or completions
->> >> -make spi and sdio components coexist in one build
->> >> -turn compile-time platform configuration (BEAGLE_BOARD,
->> >> PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
->> >> into run-time options that are read from DT
->> >> -replace SIOCDEVPRIVATE commands with generic API functions
->> >> -use wext-core handling instead of private SIOCSIWPRIV
->> >> implementation=20=20
->> >
->> > From wireless point of view: if I see wext mentioned anywhere in the
->> > driver I stop right there. cfg80211 is a hard requirement for us
->> > nowadays.=20=20
->>=20
->> Clarification: Depending on the hardware design either cfg80211 or
->> mac80211 is a hard requirement. I haven't checked wilc1000 at all so I
->> don't know what design it has but if it's a "softmac" design then it
->> has to use mac80211, we do not want to support multiple 802.11 UMAC
->> stacks.
->>=20
->
-> The TODO item to make use of wext-core is obsolete. Previously wilc1000
-> driver also had few wext ioctl use but now it=E2=80=99s completely remove=
-d and
-> cfg80211 operation callbacks are used.
->
-> wilc1000 driver make use of cfg80211 and isn=E2=80=99t a "softmac".
+Further development can be seen here:
+https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
 
-Good.
+Stanislaw Gruszka (17):
+  mt76: unify wait_for_mac
+  mt76: rename mt76x2_regs.h
+  mt76: merge mt76x0/regs.h into mt76xx_regs.h
+  mt76: create new mt76xx-lib module for common mt76x{0,2} code
+  mt76: fix mt76xx-lib module license
+  mt76: unify mac_get_key_info
+  mt76: add helpers for register access with mt76_dev struct
+  mt76: unify mac_shared_key_setup
+  mt76: unify mt76xx_mac_wcid_set_key
+  mt76: unify mac_wcid_setup
+  mt76: use mac_wcid_set_drop in mt76x0
+  mt76x0: use mt76_wcid_free in mt76x0
+  mt76: unify mt76xx_vif struct
+  mt76: unify sta stucture part 1
+  mt76: unify sta structure part 2
+  mt76x0: initalize custom tx queues
+  mt76x0: use mt76xx_sta and mt76xx_tx_status
 
-> We need help to review and identify if there are any pending items
-> for wilc1000 driver, so we can address those issues and make it ready
-> to move to the wireless subsystem.
+ drivers/net/wireless/mediatek/mt76/Kconfig         |   6 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |   3 +
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  13 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  37 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 126 +---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 127 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  35 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/regs.h   | 651 --------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  50 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  99 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  15 +-
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  21 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 130 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  47 +-
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 619 -------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   8 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  29 +-
+ drivers/net/wireless/mediatek/mt76/mt76xx_mac.c    | 157 +++++
+ drivers/net/wireless/mediatek/mt76/mt76xx_mac.h    |  85 +++
+ drivers/net/wireless/mediatek/mt76/mt76xx_regs.h   | 685 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76xx_util.c   |  55 ++
+ drivers/net/wireless/mediatek/mt76/mt76xx_util.h   |  25 +
+ 36 files changed, 1226 insertions(+), 1861 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/regs.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76xx_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76xx_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76xx_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76xx_util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76xx_util.h
 
-I think the best way to get that forward is to submit a patch (or
-patchset) to linux-wireless, that's the easiest for reviewers.
-
---=20
-Kalle Valo
+-- 
+1.9.3
