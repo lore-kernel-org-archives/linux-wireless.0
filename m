@@ -1,92 +1,452 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43694 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727011AbeH0Sng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:43:36 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 00/17] mt76 patches 2018-08-24 v2
-Date: Mon, 27 Aug 2018 16:56:14 +0200
-Message-Id: <1535381791-14908-1-git-send-email-sgruszka@redhat.com> (sfid-20180827_165641_321885_BEB02F60)
+Received: from smtp.codeaurora.org ([198.145.29.96]:45990 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726182AbeHXRru (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 13:47:50 -0400
+From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Sathishkumar Muruganandam <murugana@codeaurora.org>
+Subject: [PATCH 1/2] ath10k: Support extended board data download for dual-band QCA9984
+Date: Fri, 24 Aug 2018 19:42:20 +0530
+Message-Id: <20180824141221.3661-1-murugana@codeaurora.org> (sfid-20180824_161315_919692_E38FBE57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the begin work of integration between mt76x0 and mt76x2.
+Just moving functions down in the file, no functional changes.
 
-Further development can be seen here:
-https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
+Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 402 ++++++++++++-------------
+ 1 file changed, 201 insertions(+), 201 deletions(-)
 
-v1 -> v2:
-- rename mt76xx to mt76x02 to reflect that common code is for mt76x0
-  and mt76x2 only, not for new chips.
-- fixup 'stucture typo' in one patch
-
-Stanislaw Gruszka (17):
-  mt76: unify wait_for_mac
-  mt76: rename mt76x2_regs.h
-  mt76: merge mt76x0/regs.h into mt76x02_regs.h
-  mt76: create new mt76x02-lib module for common mt76x{0,2} code
-  mt76: fix mt76x02-lib module license
-  mt76: unify mac_get_key_info
-  mt76: add helpers for register access with mt76_dev struct
-  mt76: unify mac_shared_key_setup
-  mt76: unify mt76x02_mac_wcid_set_key
-  mt76: unify mac_wcid_setup
-  mt76: use mac_wcid_set_drop in mt76x0
-  mt76x0: use mt76_wcid_free in mt76x0
-  mt76: unify mt76x02_vif struct
-  mt76: unify sta structure part 1
-  mt76: unify sta structure part 2
-  mt76x0: initalize custom tx queues
-  mt76x0: use mt76x02_sta and mt76x02_tx_status
-
- drivers/net/wireless/mediatek/mt76/Kconfig         |   6 +
- drivers/net/wireless/mediatek/mt76/Makefile        |   3 +
- drivers/net/wireless/mediatek/mt76/mac80211.c      |   1 +
- drivers/net/wireless/mediatek/mt76/mt76.h          |  13 +
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  37 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 126 +---
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |   8 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 127 ++--
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  35 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/regs.h   | 651 --------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |   8 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |   5 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 157 +++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  85 +++
- drivers/net/wireless/mediatek/mt76/mt76x02_regs.h  | 685 +++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  55 ++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  25 +
- drivers/net/wireless/mediatek/mt76/mt76x2.h        |  50 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  99 +--
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  15 +-
- .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  21 +-
- .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 130 +---
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  47 +-
- .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 619 -------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   8 +-
- .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |   8 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |   8 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  29 +-
- 36 files changed, 1226 insertions(+), 1861 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.h
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c40cd129afe7..28c2fecc0a56 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -762,149 +762,6 @@ static int ath10k_push_board_ext_data(struct ath10k *ar, const void *data,
+ 	return 0;
+ }
+ 
+-static int ath10k_download_board_data(struct ath10k *ar, const void *data,
+-				      size_t data_len)
+-{
+-	u32 board_data_size = ar->hw_params.fw.board_size;
+-	u32 address;
+-	int ret;
+-
+-	ret = ath10k_push_board_ext_data(ar, data, data_len);
+-	if (ret) {
+-		ath10k_err(ar, "could not push board ext data (%d)\n", ret);
+-		goto exit;
+-	}
+-
+-	ret = ath10k_bmi_read32(ar, hi_board_data, &address);
+-	if (ret) {
+-		ath10k_err(ar, "could not read board data addr (%d)\n", ret);
+-		goto exit;
+-	}
+-
+-	ret = ath10k_bmi_write_memory(ar, address, data,
+-				      min_t(u32, board_data_size,
+-					    data_len));
+-	if (ret) {
+-		ath10k_err(ar, "could not write board data (%d)\n", ret);
+-		goto exit;
+-	}
+-
+-	ret = ath10k_bmi_write32(ar, hi_board_data_initialized, 1);
+-	if (ret) {
+-		ath10k_err(ar, "could not write board data bit (%d)\n", ret);
+-		goto exit;
+-	}
+-
+-exit:
+-	return ret;
+-}
+-
+-static int ath10k_download_cal_file(struct ath10k *ar,
+-				    const struct firmware *file)
+-{
+-	int ret;
+-
+-	if (!file)
+-		return -ENOENT;
+-
+-	if (IS_ERR(file))
+-		return PTR_ERR(file);
+-
+-	ret = ath10k_download_board_data(ar, file->data, file->size);
+-	if (ret) {
+-		ath10k_err(ar, "failed to download cal_file data: %d\n", ret);
+-		return ret;
+-	}
+-
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cal file downloaded\n");
+-
+-	return 0;
+-}
+-
+-static int ath10k_download_cal_dt(struct ath10k *ar, const char *dt_name)
+-{
+-	struct device_node *node;
+-	int data_len;
+-	void *data;
+-	int ret;
+-
+-	node = ar->dev->of_node;
+-	if (!node)
+-		/* Device Tree is optional, don't print any warnings if
+-		 * there's no node for ath10k.
+-		 */
+-		return -ENOENT;
+-
+-	if (!of_get_property(node, dt_name, &data_len)) {
+-		/* The calibration data node is optional */
+-		return -ENOENT;
+-	}
+-
+-	if (data_len != ar->hw_params.cal_data_len) {
+-		ath10k_warn(ar, "invalid calibration data length in DT: %d\n",
+-			    data_len);
+-		ret = -EMSGSIZE;
+-		goto out;
+-	}
+-
+-	data = kmalloc(data_len, GFP_KERNEL);
+-	if (!data) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	ret = of_property_read_u8_array(node, dt_name, data, data_len);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
+-			    ret);
+-		goto out_free;
+-	}
+-
+-	ret = ath10k_download_board_data(ar, data, data_len);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to download calibration data from Device Tree: %d\n",
+-			    ret);
+-		goto out_free;
+-	}
+-
+-	ret = 0;
+-
+-out_free:
+-	kfree(data);
+-
+-out:
+-	return ret;
+-}
+-
+-static int ath10k_download_cal_eeprom(struct ath10k *ar)
+-{
+-	size_t data_len;
+-	void *data = NULL;
+-	int ret;
+-
+-	ret = ath10k_hif_fetch_cal_eeprom(ar, &data, &data_len);
+-	if (ret) {
+-		if (ret != -EOPNOTSUPP)
+-			ath10k_warn(ar, "failed to read calibration data from EEPROM: %d\n",
+-				    ret);
+-		goto out_free;
+-	}
+-
+-	ret = ath10k_download_board_data(ar, data, data_len);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to download calibration data from EEPROM: %d\n",
+-			    ret);
+-		goto out_free;
+-	}
+-
+-	ret = 0;
+-
+-out_free:
+-	kfree(data);
+-
+-	return ret;
+-}
+-
+ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
+ {
+ 	u32 result, address;
+@@ -1055,64 +912,6 @@ static int ath10k_core_check_dt(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_download_and_run_otp(struct ath10k *ar)
+-{
+-	u32 result, address = ar->hw_params.patch_load_addr;
+-	u32 bmi_otp_exe_param = ar->hw_params.otp_exe_param;
+-	int ret;
+-
+-	ret = ath10k_download_board_data(ar,
+-					 ar->running_fw->board_data,
+-					 ar->running_fw->board_len);
+-	if (ret) {
+-		ath10k_err(ar, "failed to download board data: %d\n", ret);
+-		return ret;
+-	}
+-
+-	/* OTP is optional */
+-
+-	if (!ar->running_fw->fw_file.otp_data ||
+-	    !ar->running_fw->fw_file.otp_len) {
+-		ath10k_warn(ar, "Not running otp, calibration will be incorrect (otp-data %pK otp_len %zd)!\n",
+-			    ar->running_fw->fw_file.otp_data,
+-			    ar->running_fw->fw_file.otp_len);
+-		return 0;
+-	}
+-
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot upload otp to 0x%x len %zd\n",
+-		   address, ar->running_fw->fw_file.otp_len);
+-
+-	ret = ath10k_bmi_fast_download(ar, address,
+-				       ar->running_fw->fw_file.otp_data,
+-				       ar->running_fw->fw_file.otp_len);
+-	if (ret) {
+-		ath10k_err(ar, "could not write otp (%d)\n", ret);
+-		return ret;
+-	}
+-
+-	/* As of now pre-cal is valid for 10_4 variants */
+-	if (ar->cal_mode == ATH10K_PRE_CAL_MODE_DT ||
+-	    ar->cal_mode == ATH10K_PRE_CAL_MODE_FILE)
+-		bmi_otp_exe_param = BMI_PARAM_FLASH_SECTION_ALL;
+-
+-	ret = ath10k_bmi_execute(ar, address, bmi_otp_exe_param, &result);
+-	if (ret) {
+-		ath10k_err(ar, "could not execute otp (%d)\n", ret);
+-		return ret;
+-	}
+-
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
+-
+-	if (!(skip_otp || test_bit(ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
+-				   ar->running_fw->fw_file.fw_features)) &&
+-	    result != 0) {
+-		ath10k_err(ar, "otp calibration failed: %d", result);
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static int ath10k_download_fw(struct ath10k *ar)
+ {
+ 	u32 address, data_len;
+@@ -1490,6 +1289,207 @@ static int ath10k_core_fetch_board_file(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static int ath10k_download_board_data(struct ath10k *ar, const void *data,
++				      size_t data_len)
++{
++	u32 board_data_size = ar->hw_params.fw.board_size;
++	u32 address;
++	int ret;
++
++	ret = ath10k_push_board_ext_data(ar, data, data_len);
++	if (ret) {
++		ath10k_err(ar, "could not push board ext data (%d)\n", ret);
++		goto exit;
++	}
++
++	ret = ath10k_bmi_read32(ar, hi_board_data, &address);
++	if (ret) {
++		ath10k_err(ar, "could not read board data addr (%d)\n", ret);
++		goto exit;
++	}
++
++	ret = ath10k_bmi_write_memory(ar, address, data,
++				      min_t(u32, board_data_size,
++					    data_len));
++	if (ret) {
++		ath10k_err(ar, "could not write board data (%d)\n", ret);
++		goto exit;
++	}
++
++	ret = ath10k_bmi_write32(ar, hi_board_data_initialized, 1);
++	if (ret) {
++		ath10k_err(ar, "could not write board data bit (%d)\n", ret);
++		goto exit;
++	}
++
++exit:
++	return ret;
++}
++
++static int ath10k_download_and_run_otp(struct ath10k *ar)
++{
++	u32 result, address = ar->hw_params.patch_load_addr;
++	u32 bmi_otp_exe_param = ar->hw_params.otp_exe_param;
++	int ret;
++
++	ret = ath10k_download_board_data(ar,
++					 ar->running_fw->board_data,
++					 ar->running_fw->board_len);
++	if (ret) {
++		ath10k_err(ar, "failed to download board data: %d\n", ret);
++		return ret;
++	}
++
++	/* OTP is optional */
++
++	if (!ar->running_fw->fw_file.otp_data ||
++	    !ar->running_fw->fw_file.otp_len) {
++		ath10k_warn(ar, "Not running otp, calibration will be incorrect (otp-data %pK otp_len %zd)!\n",
++			    ar->running_fw->fw_file.otp_data,
++			    ar->running_fw->fw_file.otp_len);
++		return 0;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot upload otp to 0x%x len %zd\n",
++		   address, ar->running_fw->fw_file.otp_len);
++
++	ret = ath10k_bmi_fast_download(ar, address,
++				       ar->running_fw->fw_file.otp_data,
++				       ar->running_fw->fw_file.otp_len);
++	if (ret) {
++		ath10k_err(ar, "could not write otp (%d)\n", ret);
++		return ret;
++	}
++
++	/* As of now pre-cal is valid for 10_4 variants */
++	if (ar->cal_mode == ATH10K_PRE_CAL_MODE_DT ||
++	    ar->cal_mode == ATH10K_PRE_CAL_MODE_FILE)
++		bmi_otp_exe_param = BMI_PARAM_FLASH_SECTION_ALL;
++
++	ret = ath10k_bmi_execute(ar, address, bmi_otp_exe_param, &result);
++	if (ret) {
++		ath10k_err(ar, "could not execute otp (%d)\n", ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot otp execute result %d\n", result);
++
++	if (!(skip_otp || test_bit(ATH10K_FW_FEATURE_IGNORE_OTP_RESULT,
++				   ar->running_fw->fw_file.fw_features)) &&
++	    result != 0) {
++		ath10k_err(ar, "otp calibration failed: %d", result);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int ath10k_download_cal_file(struct ath10k *ar,
++				    const struct firmware *file)
++{
++	int ret;
++
++	if (!file)
++		return -ENOENT;
++
++	if (IS_ERR(file))
++		return PTR_ERR(file);
++
++	ret = ath10k_download_board_data(ar, file->data, file->size);
++	if (ret) {
++		ath10k_err(ar, "failed to download cal_file data: %d\n", ret);
++		return ret;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot cal file downloaded\n");
++
++	return 0;
++}
++
++static int ath10k_download_cal_dt(struct ath10k *ar, const char *dt_name)
++{
++	struct device_node *node;
++	int data_len;
++	void *data;
++	int ret;
++
++	node = ar->dev->of_node;
++	if (!node)
++		/* Device Tree is optional, don't print any warnings if
++		 * there's no node for ath10k.
++		 */
++		return -ENOENT;
++
++	if (!of_get_property(node, dt_name, &data_len)) {
++		/* The calibration data node is optional */
++		return -ENOENT;
++	}
++
++	if (data_len != ar->hw_params.cal_data_len) {
++		ath10k_warn(ar, "invalid calibration data length in DT: %d\n",
++			    data_len);
++		ret = -EMSGSIZE;
++		goto out;
++	}
++
++	data = kmalloc(data_len, GFP_KERNEL);
++	if (!data) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = of_property_read_u8_array(node, dt_name, data, data_len);
++	if (ret) {
++		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
++			    ret);
++		goto out_free;
++	}
++
++	ret = ath10k_download_board_data(ar, data, data_len);
++	if (ret) {
++		ath10k_warn(ar, "failed to download calibration data from Device Tree: %d\n",
++			    ret);
++		goto out_free;
++	}
++
++	ret = 0;
++
++out_free:
++	kfree(data);
++
++out:
++	return ret;
++}
++
++static int ath10k_download_cal_eeprom(struct ath10k *ar)
++{
++	size_t data_len;
++	void *data = NULL;
++	int ret;
++
++	ret = ath10k_hif_fetch_cal_eeprom(ar, &data, &data_len);
++	if (ret) {
++		if (ret != -EOPNOTSUPP)
++			ath10k_warn(ar, "failed to read calibration data from EEPROM: %d\n",
++				    ret);
++		goto out_free;
++	}
++
++	ret = ath10k_download_board_data(ar, data, data_len);
++	if (ret) {
++		ath10k_warn(ar, "failed to download calibration data from EEPROM: %d\n",
++			    ret);
++		goto out_free;
++	}
++
++	ret = 0;
++
++out_free:
++	kfree(data);
++
++	return ret;
++}
++
+ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 				     struct ath10k_fw_file *fw_file)
+ {
 -- 
-2.7.5
+2.17.1
