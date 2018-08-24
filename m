@@ -1,136 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45174 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726068AbeHWKV2 (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33953 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbeHXOQK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 06:21:28 -0400
-Subject: Re: FTM/measurement APIs
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <1534766611.6287.20.camel@sipsolutions.net>
-From: Lior David <liord@codeaurora.org>
-Message-ID: <eea4129b-b994-ff31-2397-a1630b8a8e9a@codeaurora.org> (sfid-20180823_085336_048126_0609232A)
-Date: Thu, 23 Aug 2018 09:53:13 +0300
-MIME-Version: 1.0
-In-Reply-To: <1534766611.6287.20.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Fri, 24 Aug 2018 10:16:10 -0400
+Received: by mail-wr1-f67.google.com with SMTP id g33-v6so7095818wrd.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Aug 2018 03:42:06 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: verify evt type in usb mcu response
+Date: Fri, 24 Aug 2018 12:41:44 +0200
+Message-Id: <56664707fd600dc2ff49c6e845b0d573a9cf9c89.1535106415.git.lorenzo.bianconi@redhat.com> (sfid-20180824_124209_848368_F33DBE44)
+In-Reply-To: <cover.1535106415.git.lorenzo.bianconi@redhat.com>
+References: <cover.1535106415.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Verify if evt field is set to EVT_CMD_DONE in usb mcu
+response messages
 
-On 8/20/2018 3:03 PM, Johannes Berg wrote:
-> Hi all,
-> 
-> After much delay on our side (don't ask), I'm contemplating upstream
-> APIs for FTM again.
-> 
-I appreciate the effort. I had a discussion with Luca on the previous API a long
-time ago and gave some comments, mainly to ensure it fits 11ad use cases, but
-sadly I also moved to other tasks...
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.h     | 10 ++++++++++
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c |  3 ++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-> Luca tells me that there are also other things to take into
-> consideration, notably angle of arrival. Or CIR/CFR but I have no idea
-> what those are, unless they're "Channel Impulse/Frequency Response" and
-> then perhaps that's what's used for angle measurement?
-> 
-Yes AOA (angle of arrival) is based on CIR(channel impulse response) or CFR
-(channel frequency response). Our 11ad chip can do CIR but most other chips do
-CFR (I think). AOA finds azimuth and elevation from CIR by running some
-algorithm in user space and using a database. Not sure how easy it is to offload
-to FW. Anyhow I suggest calling the measurement CIR or CFR and not mentioning
-AOA, since the CIR/CFR can be useful for other stuff.
-
-> Anyway, I'll use the angle measurement as an example here.
-> 
-> In building the APIs for this, I'm wondering how much "generics" make
-> sense. We could build an API that's structured like this:
-> 
-> Measure(
->  - [timeout]
->  - [MAC randomization]
->  - FTM
->    - <FTM settings like TSF request?>
->    - targets
->      0: - MAC address
->         - channel
->         - ...
->      1: - MAC address
->         - channel
->         - ...
->  - Angle
->    - <common settings>
->    - targets
->      0: - MAC address
->         - channel
->         - ...
-> )
-> 
-> This is very generic, so you could add something like
-> 
->   - my_other_measurement
->     - param1
->     - param2
-> 
-> that's in no way connected to the target list.
-> 
-> However, note the duplication of MAC/channel.
-> 
-> You could also have only partially overlapping (or entirely disjoint)
-> target lists, in which case the concurrency no longer makes much sense.
-> The driver would have to build a combined target list, and then execute
-> the measurements. This implies more logic is needed.
-> 
-> 
-> The other option is to restrict this new API to doing "peer-related"
-> measurements, and build the list like this:
-> 
-> Peer-Measurement(
->   - [timeout]
->   - [MAC randomization]
->   - global FTM options
->     - ...
->   - global angle options
->     - ...
->   - peers
->     0: - MAC address
->        - channel
->        - FTM
->          - ... [FTM settings]
->        - Angle
->          - ... [Angle settings]
->     1: - MAC address
->        - channel
->        - ...
-> )
-> 
-> This is less generic, since it's restricted to a list of MAC/channel
-> pairs as the list of targets, and you can't add any other non-target
-> measurements to do simultaneously, at least not directly in this
-> structure. We could possibly still add it, but it would be more complex.
-> 
-> (And maybe the global options aren't really needed, for FTM the only one
-> I can think of is "request associated AP TSF" but that could be a per-
-> peer setting too.)
-> 
-> 
-> In a way, I prefer the second option. It's far simpler to start out
-> with, technically could be extended to non-peer measurements (though not
-> as cleanly perhaps), and matches the various location use cases far
-> better.
-> 
-I also prefer the second option. It is both simpler and allows the driver to
-better organize the measurements (for example, in our implementation we always
-do CIR at the beginning or end of FTM burst).
-
-> 
-> Any thoughts? Is anyone aware of any other measurements that are coming
-> up to be used in products that we'd want to cover here?
-> 
-We had some "exotic" measurements that we wanted to support but none are
-critical as far as I remember...
-I can provide more detailed comments when you send actual nl80211 API (I think I
-gave most comments to Luca but can find them again).
-
-Thanks,
-Lior
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
+index 27248e24a19b..828e52ae70e8 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.h
++++ b/drivers/net/wireless/mediatek/mt76/dma.h
+@@ -75,6 +75,16 @@ enum dma_msg_port {
+ 	DISCARD,
+ };
+ 
++enum mt76_mcu_evt_type {
++	EVT_CMD_DONE,
++	EVT_CMD_ERROR,
++	EVT_CMD_RETRY,
++	EVT_EVENT_PWR_RSP,
++	EVT_EVENT_WOW_RSP,
++	EVT_EVENT_CARRIER_DETECT_RSP,
++	EVT_EVENT_DFS_DETECT_RSP,
++};
++
+ int mt76_dma_attach(struct mt76_dev *dev);
+ void mt76_dma_cleanup(struct mt76_dev *dev);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+index 070be803d463..ebf3e7ffb26b 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+@@ -73,7 +73,8 @@ static int mt76u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
+ 		if (ret)
+ 			return ret;
+ 
+-		if (seq == FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce))
++		if (seq == FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, rxfce) &&
++		    FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, rxfce) == EVT_CMD_DONE)
+ 			return 0;
+ 
+ 		dev_err(dev->dev, "error: MCU resp evt:%lx seq:%hhx-%lx\n",
+-- 
+2.17.1
