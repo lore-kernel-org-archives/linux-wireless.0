@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40013 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728872AbeHaTpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:45:00 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Peter Oh <peter.oh@bowerswilkins.com>,
-        Wen Gong <wgong@qti.qualcomm.com>,
-        Wen Gong <wgong@codeaurora.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "johannes\@sipsolutions.net" <johannes@sipsolutions.net>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-In-Reply-To: <ae8d9891-b827-7ca5-1375-0280d8f5c194@bowerswilkins.com>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <87600eecr7.fsf@toke.dk> <68d91488f58f4a449908fc7eeebb8b34@aptaiexm02f.ap.qualcomm.com> <87tvntb53x.fsf@toke.dk> <ae8d9891-b827-7ca5-1375-0280d8f5c194@bowerswilkins.com>
-Date: Fri, 31 Aug 2018 17:36:55 +0200
-Message-ID: <87wos61rag.fsf@toke.dk> (sfid-20180831_173701_669059_5CA01C51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:43852 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726572AbeHXOE3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 10:04:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:07 +0300
+Message-Id: <20180824103018.15011-6-luca@coelho.fi> (sfid-20180824_123035_124785_D37FF7F0)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 05/16] iwlwifi: mvm: remove channel 2 from HE radiotap if not applicable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <peter.oh@bowerswilkins.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Hi Toke,
->
->
-> On 08/17/2018 04:32 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>
->>>>> Shift 6:
->>>>> wgong@wgong-Latitude-E5440-1:~/flent$ flent -H 192.168.1.7 -t
->>>>> "sk_pacing_shift6" tcp_nup --test-parameter upload_streams=3D1
->>>>
-> Does flent have options to set TOS or QoS queue for TCP or UDP test?
-> If I add "--test-paramete burst_tos=3D0xe0", will it use corresponding=20
-> mac80211 QoS queue?
+If the bandwidth is only 20 MHz, then the second channel doesn't
+exist, but the hardware reports the CRC was OK. Suppress the data
+of the second channel in the HE radiotap in this case, by marking
+it as not known.
 
-Yes, for some tests:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-- The RRUL test will run four TCP flows in each direction, one marked for
-  each 802.11 QoS queue.
-
-- For the rtt_fair* tests you can set them with a test parameter:
---test-parameter markings=3DBE,CS1 to set flows 1 and 2 to BE and CS1
-respectively. You can use the rtt_fair_var* tests to get a variable
-number of flows (the same host can be specified multiple times by having
-different hostnames resolve to the same IP).
-
--Toke
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 05ce253b8c30..2eae657b16b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -858,6 +858,7 @@ static void iwl_mvm_flip_address(u8 *addr)
+ 
+ static void iwl_mvm_decode_he_sigb(struct iwl_mvm *mvm,
+ 				   struct iwl_rx_mpdu_desc *desc,
++				   u32 rate_n_flags,
+ 				   struct ieee80211_radiotap_he_mu *he_mu)
+ {
+ 	u32 sigb0, sigb1;
+@@ -893,7 +894,8 @@ static void iwl_mvm_decode_he_sigb(struct iwl_mvm *mvm,
+ 					     sigb1);
+ 	}
+ 
+-	if (FIELD_GET(IWL_RX_HE_SIGB_COMMON2_CH2_CRC_OK, sigb2)) {
++	if (FIELD_GET(IWL_RX_HE_SIGB_COMMON2_CH2_CRC_OK, sigb2) &&
++	    (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) != RATE_MCS_CHAN_WIDTH_20) {
+ 		he_mu->flags1 |=
+ 			cpu_to_le16(IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN |
+ 				    IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN);
+@@ -1010,7 +1012,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				      he_phy_data) ==
+ 				IWL_RX_HE_PHY_INFO_TYPE_MU_EXT_INFO;
+ 		if (sigb_data)
+-			iwl_mvm_decode_he_sigb(mvm, desc, he_mu);
++			iwl_mvm_decode_he_sigb(mvm, desc, rate_n_flags, he_mu);
+ 	}
+ 	if (he_phy_data != HE_PHY_DATA_INVAL &&
+ 	    (he_type == RATE_MCS_HE_TYPE_SU ||
+-- 
+2.18.0
