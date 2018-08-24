@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45156 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:43926 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725904AbeH3Jzz (ORCPT
+        with ESMTP id S1726572AbeHXOEo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 05:55:55 -0400
-Message-ID: <fa12a23813cf096e217eac27835ed416ca0d1632.camel@coelho.fi> (sfid-20180830_075538_848657_B9AC71B1)
+        Fri, 24 Aug 2018 10:04:44 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: Dave Young <dyoung@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com
-Date: Thu, 30 Aug 2018 08:55:24 +0300
-In-Reply-To: <20180830050632.GB2307@dhcp-128-65.nay.redhat.com>
-References: <20180829065442.GA3488@dhcp-128-65.nay.redhat.com>
-         <6bb91f750e8d37d45da3c2cf1e7e5fc5d453ee8c.camel@coelho.fi>
-         <20180830050632.GB2307@dhcp-128-65.nay.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Intel Wireless 8265/8275 (rev 78) issue
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Ayala Beker <ayala.beker@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 24 Aug 2018 13:30:17 +0300
+Message-Id: <20180824103018.15011-16-luca@coelho.fi> (sfid-20180824_123104_533086_344B8D33)
+In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
+References: <20180824103018.15011-1-luca@coelho.fi>
+Subject: [PATCH 15/16] iwlwifi: mvm: activate fragmented EBS in case of fragmented scan
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-08-30 at 13:06 +0800, Dave Young wrote:
-> On 08/30/18 at 07:15am, Luca Coelho wrote:
-> > On Wed, 2018-08-29 at 14:54 +0800, Dave Young wrote:
-> > > [   74.123114] wlp61s0: authenticate with 00:1f:c6:82:0a:57
-> > > [   74.126099] wlp61s0: send auth to 00:1f:c6:82:0a:57 (try 1/3)
-> > > [   74.139740] wlp61s0: authenticated
-> > > [   74.140142] iwlwifi 0000:3d:00.0 wlp61s0: disabling HE/HT/VHT due to WEP/TKIP use
-> > > [   74.140146] iwlwifi 0000:3d:00.0 wlp61s0: disabling HT as WMM/QoS is not supported by the AP
-> > > [   74.140149] iwlwifi 0000:3d:00.0 wlp61s0: disabling VHT as WMM/QoS is not supported by the AP
-> > 
-> > Your AP seems to be configured to use WEP or TKIP, which is not allowed
-> > by IEEE802.11n, so we disable all the higher rates, as you can see
-> > here.  It should still work, but you will only get very basic rates
-> > (i.e. slow).
-> 
-> Luka, thanks for the suggestion,  moved AP to use WPA2-personal + AES.
-> seems I got only two features disabled this time:
-> [   20.949347] iwlwifi 0000:3d:00.0 wlp61s0: disabling HT as WMM/QoS is not supported by the AP
-> [   20.949351] iwlwifi 0000:3d:00.0 wlp61s0: disabling VHT as WMM/QoS is not supported by the AP
-> [   20.949622] wlp61s0: associate with 00:1f:c6:82:0a:57 (try 1/3)
+From: Ayala Beker <ayala.beker@intel.com>
 
-There are many interoperability problems with old 11n APs that either
-support a draft version of the specs or simply have bugs in their
-implementations of the 11n specs.  When we detect these problems, we
-disable 11n rates, so connectivity will be slower, but it will at least
-remain connected.  This seems to be the case with your AP. :(
+In case of fragmented scan on the HB channels, configure EBS to be
+fragmented as well.
 
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c    | 12 +++++++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-> > > [ 2521.068469] wlp61s0: deauthenticating from 00:1f:c6:82:0a:57 by local choice (Reason: 3=DEAUTH_LEAVING)
-> > 
-> > Other than that I can't really see what is going on, except that
-> > something is deciding to disconnect here...
-> > 
-> > So, first thing I'd suggest would be to try to reconfigure your AP to
-> > use something else than WEP or TKIP, just to see if it improves in any
-> > way.
-> 
-> Will observe if it works or not. BTW, my old laptop Thinkpad T440s works
-> well with the same AP.
-
-I hope it improves.  If not, we should debug it further.  It's a good
-thing not to use WEP and TKIP anyway, because they're not very secure
-anyway.
-
-
-> > And BTW, is this a regression in recent kernels or has this always
-> > happened to you with this laptop/AP combination?
-> 
-> From my observation it just always happen, but hmm not 100% sure..
-
-Okay, so we don't have enough information on this.  It doesn't matter. 
-What is the NIC on your old T440s?
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index a17c4a79b8d4..310b01e3cce1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -262,6 +262,7 @@ enum iwl_scan_channel_flags {
+ 	IWL_SCAN_CHANNEL_FLAG_EBS		= BIT(0),
+ 	IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE	= BIT(1),
+ 	IWL_SCAN_CHANNEL_FLAG_CACHE_ADD		= BIT(2),
++	IWL_SCAN_CHANNEL_FLAG_EBS_FRAG		= BIT(3),
+ };
+ 
+ /* struct iwl_scan_channel_opt - CHANNEL_OPTIMIZATION_API_S
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 003bf0848386..e9048a98e793 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1455,11 +1455,21 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (type == IWL_MVM_SCAN_SCHED || type == IWL_MVM_SCAN_NETDETECT)
+ 		cmd->flags = cpu_to_le32(IWL_UMAC_SCAN_FLAG_PREEMPTIVE);
+ 
+-	if (iwl_mvm_scan_use_ebs(mvm, vif))
++	if (iwl_mvm_scan_use_ebs(mvm, vif)) {
+ 		channel_flags = IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
+ 
++		/* set fragmented ebs for fragmented scan on HB channels */
++		if (iwl_mvm_is_frag_ebs_supported(mvm)) {
++			if (gen_flags &
++			    IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED ||
++			    (!iwl_mvm_is_cdb_supported(mvm) &&
++			     gen_flags & IWL_UMAC_SCAN_GEN_FLAGS_FRAGMENTED))
++				channel_flags |= IWL_SCAN_CHANNEL_FLAG_EBS_FRAG;
++		}
++	}
++
+ 	chan_param->flags = channel_flags;
+ 	chan_param->count = params->n_channels;
+ 
+-- 
+2.18.0
