@@ -1,81 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:33858 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726081AbeHEKSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Aug 2018 06:18:55 -0400
-Date: Sun, 5 Aug 2018 10:14:18 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ssb: driver_gige: use true and false for boolean values
-Message-ID: <20180805101418.456f6ff7@wiggum> (sfid-20180805_101523_558894_6DE47CBF)
-In-Reply-To: <20180805000453.GA19115@embeddedor.com>
-References: <20180805000453.GA19115@embeddedor.com>
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:33287 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726244AbeHXGgC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Aug 2018 02:36:02 -0400
+Received: by mail-yw1-f65.google.com with SMTP id x67-v6so2611599ywg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2018 20:03:25 -0700 (PDT)
+Received: from mail-yw1-f49.google.com (mail-yw1-f49.google.com. [209.85.161.49])
+        by smtp.gmail.com with ESMTPSA id m16-v6sm1982878ywd.32.2018.08.23.20.03.23
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 23 Aug 2018 20:03:23 -0700 (PDT)
+Received: by mail-yw1-f49.google.com with SMTP id m62-v6so1104476ywd.6
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Aug 2018 20:03:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/qyHcmaUW7GZnipGeSTQWz._"; protocol="application/pgp-signature"
+In-Reply-To: <20180824011540.GA25716@embeddedor.com>
+References: <20180824011540.GA25716@embeddedor.com>
+From: Kees Cook <keescook@chromium.org>
+Date: Thu, 23 Aug 2018 20:03:22 -0700
+Message-ID: <CAGXu5jJxbFzKsV1=xHiKtcx+61QBsK0LYMrwo1vGNWgALzqakw@mail.gmail.com> (sfid-20180824_050335_051950_B7AB9609)
+Subject: Re: [PATCH] iwlwifi: d3: use struct_size() in kzalloc()
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/qyHcmaUW7GZnipGeSTQWz._
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 4 Aug 2018 19:04:53 -0500
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
-
-> Return statements in functions returning bool should use true or false
-> instead of an integer value.
->=20
-> This code was detected with the help of Coccinelle.
->=20
+On Thu, Aug 23, 2018 at 6:15 PM, Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+>
+> struct foo {
+>         int stuff;
+>         void *entry[];
+> };
+>
+> instance = kzalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
+>
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+>
+> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL);
+>
+> This issue was detected with the help of Coccinelle.
+>
 > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-Kees
+
 > ---
->  drivers/ssb/driver_gige.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/ssb/driver_gige.c b/drivers/ssb/driver_gige.c
-> index e973405..ebee6b0 100644
-> --- a/drivers/ssb/driver_gige.c
-> +++ b/drivers/ssb/driver_gige.c
-> @@ -242,7 +242,7 @@ static int ssb_gige_probe(struct ssb_device *sdev,
->  bool pdev_is_ssb_gige_core(struct pci_dev *pdev)
->  {
->  	if (!pdev->resource[0].name)
-> -		return 0;
-> +		return false;
->  	return (strcmp(pdev->resource[0].name, SSB_GIGE_MEM_RES_NAME) =3D=3D 0);
->  }
->  EXPORT_SYMBOL(pdev_is_ssb_gige_core);
+>  drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> index 79bdae9..6960318 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> @@ -1769,8 +1769,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+>                 n_matches = 0;
+>         }
+>
+> -       net_detect = kzalloc(sizeof(*net_detect) +
+> -                            (n_matches * sizeof(net_detect->matches[0])),
+> +       net_detect = kzalloc(struct_size(net_detect, matches, n_matches),
+>                              GFP_KERNEL);
+>         if (!net_detect || !n_matches)
+>                 goto out_report_nd;
+> @@ -1785,8 +1784,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+>                 for (j = 0; j < SCAN_OFFLOAD_MATCHING_CHANNELS_LEN; j++)
+>                         n_channels += hweight8(fw_match->matching_channels[j]);
+>
+> -               match = kzalloc(sizeof(*match) +
+> -                               (n_channels * sizeof(*match->channels)),
+> +               match = kzalloc(struct_size(match, channels, n_channels),
+>                                 GFP_KERNEL);
+>                 if (!match)
+>                         goto out_report_nd;
+> --
+> 2.7.4
+>
 
-Looks good. Thanks.
-
-Reviewed-by: Michael Buesch <m@bues.ch>
 
 
---=20
-Michael
-
---Sig_/qyHcmaUW7GZnipGeSTQWz._
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAltmsdoACgkQ9TK+HZCN
-iw52Zg/+IW67CT8Vmim2BJjO257qCYYOVo9GtZdFDzHt4XrXFwJL2h6XvSPMOmq+
-bmB9xsNj3G48oJS3+x3v1fxmwSTYjE0ok8fba8VcYFEbgYXYfF68G6JBdYwk0R9m
-QB02t97iqV9gpyUM4EN/UgIZNFUIiiKdN5X5maP0s67El6df+zUSy4ZZfwT52uQO
-/jbpuPkPaRKe5FAsC8NTRvg0yEo5czokYnfEd2sG+9Q3CLEOIMAln1hjY5DSYilZ
-8qrqla0eUmmrcgrhn6B8mVi6Dcv/J7/OJ8Ji9GQJUvFJuOVTfBgLkRnq066IxEEl
-2V9TKIO6EI6l/apkagD/GGFE+6Gc7N6tnS5dh47McVvZ8fUJmLXL8C1b+G/hSvPD
-BTxIQ49nEWsR97QZBUKAZtz2Uruop9IbmKZpLVrWwkrq19tgG+8ajofUt7UtDiv/
-2ON4HH7bzn6E7hJx25S48mm63Q4s3CYM/HrpwjjGiPCdTHbmT54mRLCHVV0qeMqR
-08/b3MyZdOL7m+PQ1ZwPcR1cwS1mdh7ku+Xg3LYAbwsJyn4urlNHgoXgXYqZCpB2
-5GeNENjQqRplgZN3/NiVtp6lnTTiLDSzbkcaFxWeoWeQwojgJDWaC7vwffkCsfSE
-0iN38rao+cEPZR9AJ2bcgV2+XiVpIStZ7WvtgZYajfrpxCH4/64=
-=xr6s
------END PGP SIGNATURE-----
-
---Sig_/qyHcmaUW7GZnipGeSTQWz._--
+-- 
+Kees Cook
+Pixel Security
