@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55354 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726120AbeH1ReH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 13:34:07 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:57880 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725815AbeHYMjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Aug 2018 08:39:01 -0400
+Subject: Re: [PATCH 02/17] mt76: rename mt76x2_regs.h
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-mediatek@lists.infradead.org
+References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+ <1535109321-17126-3-git-send-email-sgruszka@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <2172355a-0703-e432-96cb-fba2383c3890@nbd.name> (sfid-20180825_110045_727297_D3340A6C)
+Date: Sat, 25 Aug 2018 11:00:39 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath10k: schedule hardware restart if WMI command times out
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180822073952.30922-1-martin@strongswan.org>
-References: <20180822073952.30922-1-martin@strongswan.org>
-To: Martin Willi <martin@strongswan.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180828134224.849BB60452@smtp.codeaurora.org> (sfid-20180828_154227_423098_5395A15E)
-Date: Tue, 28 Aug 2018 13:42:24 +0000 (UTC)
+In-Reply-To: <1535109321-17126-3-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Willi <martin@strongswan.org> wrote:
-
-> When running in AP mode, ath10k sometimes suffers from TX credit
-> starvation. The issue is hard to reproduce and shows up once in a
-> few days, but has been repeatedly seen with QCA9882 and a large
-> range of firmwares, including 10.2.4.70.67.
+On 2018-08-24 13:15, Stanislaw Gruszka wrote:
+> MAC registers are the same for mt76x0 and mt76x2. Rename mt76x2_regs.h
+> file to reflect that.
 > 
-> Once the module is in this state, TX credits are never replenished,
-> which results in "SWBA overrun" errors, as no beacons can be sent.
-> Even worse, WMI commands run in a timeout while holding the conf
-> mutex for three seconds each, making any further operations slow
-> and the whole system unresponsive.
-> 
-> The firmware/driver never recovers from that state automatically,
-> and triggering TX flush or warm restarts won't work over WMI. So
-> issue a hardware restart if a WMI command times out due to missing
-> TX credits. This implies a connectivity outage of about 1.4s in AP
-> mode, but brings back the interface and the whole system to a usable
-> state. WMI command timeouts have not been seen in absent of this
-> specific issue, so taking such drastic actions seems legitimate.
-> 
-> Signed-off-by: Martin Willi <martin@strongswan.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76x2.h      |   2 +-
+>  drivers/net/wireless/mediatek/mt76/mt76x2_regs.h | 619 -----------------------
+>  drivers/net/wireless/mediatek/mt76/mt76xx_regs.h | 619 +++++++++++++++++++++++
+I think mt76xx_regs.h is named too generic. MT7603, MT7628, MT7615 and
+all newer chips use a completely different register layout.
+I'd prefer to stick with mt76x2_regs for now and use it for x0 as well.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-a9911937e7d3 ath10k: schedule hardware restart if WMI command times out
-
--- 
-https://patchwork.kernel.org/patch/10572645/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+- Felix
