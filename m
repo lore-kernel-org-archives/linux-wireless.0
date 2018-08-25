@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:33176 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726825AbeH0PQw (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:39367 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726537AbeHYOTh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 11:16:52 -0400
-Received: by mail-ed1-f67.google.com with SMTP id h9-v6so10202814edr.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 04:30:35 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
- <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
- <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net> <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
- <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net>
-In-Reply-To: <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net>
-From: prabhu <d.praabhu@gmail.com>
-Date: Mon, 27 Aug 2018 17:00:23 +0530
-Message-ID: <CAHnrWRo-Edm+bSJ_1EKNYkPR2zKVnvfoTpaLK+uY1bw4JS7ZjQ@mail.gmail.com> (sfid-20180827_133038_759250_9C9F1145)
-Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
-To: Larry.Finger@lwfinger.net
-Cc: kabe@sra-tohoku.co.jp, kvalo@codeaurora.org, m@bues.ch,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 25 Aug 2018 10:19:37 -0400
+Received: by mail-wm0-f41.google.com with SMTP id q8-v6so3853417wmq.4
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:02 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 00/16] unify usb mcu layer between mt76x2u and mt76x0u drivers
+Date: Sat, 25 Aug 2018 12:40:40 +0200
+Message-Id: <20180825104056.9130-1-lorenzo.bianconi@redhat.com> (sfid-20180825_124110_390911_472177AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
+Use shared mt76u mcu routines available in mt76-usb module and
+unify usb mcu layer between mt76x2u and mt76x0u drivers.
+Remove unused mt76x0 routines.
+This patchset is based on top of Stanislaw's patchset (not applied yet):
+https://marc.info/?l=linux-wireless&m=153510933510810&w=2
 
-Applied on a clean 4.18.4 source and tested.
-It works for me.
-On Sun, Aug 26, 2018 at 9:44 PM Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
-> On 08/26/2018 02:23 AM, prabhu wrote:
-> > Larry,
-> >
-> > Upgrading the firmware didn't fix the issue.
-> >
-> > The patch fixes it. My system has been running without any issues
-> > since yesterday.
->
-> I did not think the new firmware would help, but it had to be tried. Thanks for
-> the testing.
->
-> @Pradhu & @Taketo: Attached is a new (improved?) patch for you to try. You need
-> to start from an unmodified 4.18 source. This patch should allow both of your
-> systems to work and avoid needing to revert Taketo's fix for his setup.
->
-> Thanks,
->
-> Larry
->
->
+Lorenzo Bianconi (16):
+  mt76: move mt76_reg_pair definition in mt76.h
+  mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
+  mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
+  mt76: add multiple regs read support to usb_mcu layer
+  mt76x0: use mt76u_init for bus initialization
+  mt76x0: remove mt76x0_vendor_reset routine
+  mt76x0: remove mt76x0_vendor_single_wr routine
+  mt76x0: remove mt76x0_mcu_msg_alloc routine
+  mt76x0: use shared mt76 usb mcu completion
+  mt76x0: remove mt76x0_complete_urb routine
+  mt76x0: remove mt76x0_vendor_request routine
+  mt76x0: remove unused mt76x0_wait_asic_ready routine
+  mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
+  mt76x0: remove unused mt76x0_mcu structure
+  mt76x0: use mt76u_mcu_fw_send_data for fw uploading
+  mt76x0: remove unused routines for usb_buff alloc/free
+
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  14 +
+ .../wireless/mediatek/mt76/mt76x0/Makefile    |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x0/core.c  |  34 --
+ .../net/wireless/mediatek/mt76/mt76x0/dma.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  |   7 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mcu.c   | 343 +++---------------
+ .../net/wireless/mediatek/mt76/mt76x0/mcu.h   |   1 -
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  21 --
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 213 +----------
+ .../net/wireless/mediatek/mt76/mt76x0/usb.h   |  15 -
+ .../mediatek/mt76/mt76x2_init_common.c        |  11 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h  |   1 -
+ .../net/wireless/mediatek/mt76/mt76x2u_init.c |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x2u_mcu.c  |   8 -
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c  |  75 +++-
+ 15 files changed, 134 insertions(+), 619 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/core.c
+
+-- 
+2.18.0
