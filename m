@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40250 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726998AbeHHMFy (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36973 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726537AbeHYOTj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 08:05:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-drivers] mt76x0: Remove VLA usage
-References: <20180807225040.GA2164@beast> <20180808092450.GA25772@redhat.com>
-Date: Wed, 08 Aug 2018 12:46:54 +0300
-In-Reply-To: <20180808092450.GA25772@redhat.com> (Stanislaw Gruszka's message
-        of "Wed, 8 Aug 2018 11:24:52 +0200")
-Message-ID: <871sb942cx.fsf@kamboji.qca.qualcomm.com> (sfid-20180808_114708_043657_573C3E69)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 25 Aug 2018 10:19:39 -0400
+Received: by mail-wm0-f65.google.com with SMTP id n11-v6so3849615wmc.2
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:04 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 02/16] mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
+Date: Sat, 25 Aug 2018 12:40:42 +0200
+Message-Id: <20180825104056.9130-3-lorenzo.bianconi@redhat.com> (sfid-20180825_124111_630140_780FD5A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Split __mt76u_mcu_send_msg and mt76u_mcu_send_msg in order to be reused
+by mt76x0 driver in usb mcu layer unification between mt76x0 and
+mt76x2u drivers
 
-> On Tue, Aug 07, 2018 at 03:50:40PM -0700, Kees Cook wrote:
->> Even with "const" variables, the compiler will generate warnings about
->> VLA usage. In the quest to remove all VLAs from the kernel[1], this uses
->> a #define instead of a const to do the array sizing.
->> 
->> [1]
->> https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
->> 
->> Fixes: e87b5039511a ("mt76x0: eeprom files")
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> ---
->> Please include this for the v4.19 merge window. The VLA was introduced
->> with the new source file (which I also note is missing a SPDX line), so
->
-> I thought SPDX line is needed only if file has no license and eeprom.c
-> file and other mt76x0 files have specified the license. Is SPDX still
-> needed in that case ?
->  
->> +#define MT_MAP_READS	DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16)
->>  static int
->>  mt76x0_efuse_physical_size_check(struct mt76x0_dev *dev)
->>  {
->> -	const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
->> -	u8 data[map_reads * 16];
->
-> Why this is variable length array? DIV_ROUND_UP can not be calculated
-> at compile time? But if so, macro do not change the situation either.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h    |  2 ++
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c | 27 +++++++++++++-------
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
-The commit log mentioned:
-
-  "Even with "const" variables, the compiler will generate warnings about
-   VLA usage."
-
-So I guess the compiler (gcc?) is just not smart enough in this case?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index fc27260080af..5579b90afee9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -623,6 +623,8 @@ int mt76u_mcu_fw_send_data(struct mt76_dev *dev, const void *data,
+ 			   int data_len, u32 max_payload, u32 offset);
+ void mt76u_mcu_complete_urb(struct urb *urb);
+ struct sk_buff *mt76u_mcu_msg_alloc(const void *data, int len);
++int __mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
++			 int cmd, bool wait_resp);
+ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 		       int cmd, bool wait_resp);
+ void mt76u_mcu_fw_reset(struct mt76_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+index ebf3e7ffb26b..4039b0b709a0 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+@@ -86,8 +86,8 @@ static int mt76u_mcu_wait_resp(struct mt76_dev *dev, u8 seq)
+ 	return -ETIMEDOUT;
+ }
+ 
+-int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
+-		       int cmd, bool wait_resp)
++int __mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
++			 int cmd, bool wait_resp)
+ {
+ 	struct usb_interface *intf = to_usb_interface(dev->dev);
+ 	struct usb_device *udev = interface_to_usbdev(intf);
+@@ -100,8 +100,6 @@ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 	if (test_bit(MT76_REMOVED, &dev->state))
+ 		return 0;
+ 
+-	mutex_lock(&usb->mcu.mutex);
+-
+ 	pipe = usb_sndbulkpipe(udev, usb->out_ep[MT_EP_OUT_INBAND_CMD]);
+ 	if (wait_resp) {
+ 		seq = ++usb->mcu.msg_seq & 0xf;
+@@ -114,22 +112,33 @@ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 	       MT_MCU_MSG_TYPE_CMD;
+ 	ret = mt76u_skb_dma_info(skb, CPU_TX_PORT, info);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	ret = usb_bulk_msg(udev, pipe, skb->data, skb->len, &sent, 500);
+ 	if (ret)
+-		goto out;
++		return ret;
+ 
+ 	if (wait_resp)
+ 		ret = mt76u_mcu_wait_resp(dev, seq);
+ 
+-out:
+-	mutex_unlock(&usb->mcu.mutex);
+-
+ 	consume_skb(skb);
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(__mt76u_mcu_send_msg);
++
++int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
++		       int cmd, bool wait_resp)
++{
++	struct mt76_usb *usb = &dev->usb;
++	int err;
++
++	mutex_lock(&usb->mcu.mutex);
++	err = __mt76u_mcu_send_msg(dev, skb, cmd, wait_resp);
++	mutex_unlock(&usb->mcu.mutex);
++
++	return err;
++}
+ EXPORT_SYMBOL_GPL(mt76u_mcu_send_msg);
+ 
+ void mt76u_mcu_fw_reset(struct mt76_dev *dev)
 -- 
-Kalle Valo
+2.18.0
