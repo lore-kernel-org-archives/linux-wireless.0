@@ -1,102 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42828 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726809AbeHUJzy (ORCPT
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:40668 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726624AbeHYOTk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 05:55:54 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 09:36:45 +0300
-Message-Id: <20180821063657.30071-4-luca@coelho.fi> (sfid-20180821_083711_920233_01A609F5)
-In-Reply-To: <20180821063657.30071-1-luca@coelho.fi>
-References: <20180821063657.30071-1-luca@coelho.fi>
-Subject: [PATCH 03/15] iwlwifi: mvm: skip EBS in low latency mode while fragmented scan isn't supported
+        Sat, 25 Aug 2018 10:19:40 -0400
+Received: by mail-wr1-f68.google.com with SMTP id n2-v6so9429073wrw.7
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:05 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 03/16] mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
+Date: Sat, 25 Aug 2018 12:40:43 +0200
+Message-Id: <20180825104056.9130-4-lorenzo.bianconi@redhat.com> (sfid-20180825_124112_216819_37E2D693)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+Move mt76x2u_mcu_deinit routine in usb_mcu layer in order to
+be reused by mt76x0 driver in usb mcu layer unification between
+mt76x0 and mt76x2u drivers
 
-While associated in low latency mode, or when traffic load is high,
-don't enable EBS in scan request if fragmented EBS is not supported
-by the FW.
-
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  5 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 11 ++++++++++-
- 3 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h         | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h      | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c  | 8 --------
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c      | 9 +++++++++
+ 5 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index c116dc3fbffe..c7e296a5dda9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -258,6 +258,7 @@ typedef unsigned int __bitwise iwl_ucode_tlv_api_t;
-  *	deprecated.
-  * @IWL_UCODE_TLV_API_ADAPTIVE_DWELL_V2: This ucode supports version 8
-  *	of scan request: SCAN_REQUEST_CMD_UMAC_API_S_VER_8
-+ * @IWL_UCODE_TLV_API_FRAG_EBS: This ucode supports fragmented EBS
-  *
-  * @NUM_IWL_UCODE_TLV_API: number of bits used
-  */
-@@ -280,6 +281,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
- 	IWL_UCODE_TLV_API_DEPRECATE_TTAK	= (__force iwl_ucode_tlv_api_t)41,
- 	IWL_UCODE_TLV_API_ADAPTIVE_DWELL_V2	= (__force iwl_ucode_tlv_api_t)42,
-+	IWL_UCODE_TLV_API_FRAG_EBS		= (__force iwl_ucode_tlv_api_t)44,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 5579b90afee9..f84f35c2e37a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -629,5 +629,6 @@ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 		       int cmd, bool wait_resp);
+ void mt76u_mcu_fw_reset(struct mt76_dev *dev);
+ int mt76u_mcu_init_rx(struct mt76_dev *dev);
++void mt76u_mcu_deinit(struct mt76_dev *dev);
  
- 	NUM_IWL_UCODE_TLV_API
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 09d94aaa7d1e..762abfc42b62 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1245,6 +1245,11 @@ static inline bool iwl_mvm_is_oce_supported(struct iwl_mvm *mvm)
- 	return fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_OCE);
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+index 008092f0cd8a..a83c17cb6be5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+@@ -65,7 +65,6 @@ int mt76x2u_mcu_load_cr(struct mt76x2_dev *dev, u8 type,
+ 			u8 temp_level, u8 channel);
+ int mt76x2u_mcu_init(struct mt76x2_dev *dev);
+ int mt76x2u_mcu_fw_init(struct mt76x2_dev *dev);
+-void mt76x2u_mcu_deinit(struct mt76x2_dev *dev);
+ 
+ int mt76x2u_alloc_queues(struct mt76x2_dev *dev);
+ void mt76x2u_queues_deinit(struct mt76x2_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+index 4986f5388222..48b0b941c0fe 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+@@ -312,5 +312,5 @@ void mt76x2u_cleanup(struct mt76x2_dev *dev)
+ 	mt76x2u_mcu_set_radio_state(dev, false);
+ 	mt76x2u_stop_hw(dev);
+ 	mt76u_queues_deinit(&dev->mt76);
+-	mt76x2u_mcu_deinit(dev);
++	mt76u_mcu_deinit(&dev->mt76);
  }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
+index 22c16d638baa..31677e898427 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
+@@ -453,11 +453,3 @@ int mt76x2u_mcu_init(struct mt76x2_dev *dev)
  
-+static inline bool iwl_mvm_is_frag_ebs_supported(struct iwl_mvm *mvm)
+ 	return mt76x2u_mcu_set_radio_state(dev, true);
+ }
+-
+-void mt76x2u_mcu_deinit(struct mt76x2_dev *dev)
+-{
+-	struct mt76_usb *usb = &dev->mt76.usb;
+-
+-	usb_kill_urb(usb->mcu.res.urb);
+-	mt76u_buf_free(&usb->mcu.res);
+-}
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+index 4039b0b709a0..1edc5c3d637b 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
+@@ -250,3 +250,12 @@ int mt76u_mcu_init_rx(struct mt76_dev *dev)
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(mt76u_mcu_init_rx);
++
++void mt76u_mcu_deinit(struct mt76_dev *dev)
 +{
-+	return fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_FRAG_EBS);
++	struct mt76_usb *usb = &dev->usb;
++
++	usb_kill_urb(usb->mcu.res.urb);
++	mt76u_buf_free(&usb->mcu.res);
 +}
-+
- static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
- {
- 	/* For now we only use this mode to differentiate between
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 11ecdf63b732..8a89989f59fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -836,16 +836,25 @@ static inline bool iwl_mvm_scan_use_ebs(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif)
- {
- 	const struct iwl_ucode_capabilities *capa = &mvm->fw->ucode_capa;
-+	bool low_latency;
-+
-+	if (iwl_mvm_is_cdb_supported(mvm))
-+		low_latency = iwl_mvm_low_latency_band(mvm, NL80211_BAND_5GHZ);
-+	else
-+		low_latency = iwl_mvm_low_latency(mvm);
- 
- 	/* We can only use EBS if:
- 	 *	1. the feature is supported;
- 	 *	2. the last EBS was successful;
- 	 *	3. if only single scan, the single scan EBS API is supported;
- 	 *	4. it's not a p2p find operation.
-+	 *	5. we are not in low latency mode,
-+	 *	   or if fragmented ebs is supported by the FW
- 	 */
- 	return ((capa->flags & IWL_UCODE_TLV_FLAGS_EBS_SUPPORT) &&
- 		mvm->last_ebs_successful && IWL_MVM_ENABLE_EBS &&
--		vif->type != NL80211_IFTYPE_P2P_DEVICE);
-+		vif->type != NL80211_IFTYPE_P2P_DEVICE &&
-+		(!low_latency || iwl_mvm_is_frag_ebs_supported(mvm)));
- }
- 
- static inline bool iwl_mvm_is_regular_scan(struct iwl_mvm_scan_params *params)
++EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
 -- 
 2.18.0
