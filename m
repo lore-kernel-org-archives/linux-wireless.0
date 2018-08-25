@@ -1,136 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43660 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726177AbeHWSVg (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:38508 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726842AbeHYOTr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 14:21:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 23 Aug 2018 17:51:28 +0300
-Message-Id: <20180823145128.28803-1-luca@coelho.fi> (sfid-20180823_165138_468029_F2D0B9A8)
-In-Reply-To: <201808221759.dCS26eHv%fengguang.wu@intel.com>
-References: <201808221759.dCS26eHv%fengguang.wu@intel.com>
-Subject: [PATCH v3 07/17] iwlwifi: mvm: protect D0i3 code behind CONFIG_PM
+        Sat, 25 Aug 2018 10:19:47 -0400
+Received: by mail-wm0-f68.google.com with SMTP id t25-v6so3834039wmi.3
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:12 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 09/16] mt76x0: use shared mt76 usb mcu completion
+Date: Sat, 25 Aug 2018 12:40:49 +0200
+Message-Id: <20180825104056.9130-10-lorenzo.bianconi@redhat.com> (sfid-20180825_124115_900417_0081CECA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Use mt76 usb shared completion data structure in
+mt76x0_mcu_wait_resp routine and remove mt76x0
+private one
 
-Runtime PM can only be used if CONFIG_PM is set.  Move all the d0i3
-code (which is essentially runtime PM) behind the CONFIG_PM flag.
-
-This prevents undefined usage of some functions when CONFIG_PM is not
-defined.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    | 11 ++++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  1 -
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-In v3, fixed linkage, as reported by kbuildbot.
-
-drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 15 +++++++++++++--
- 3 files changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b15b0d84bb7e..0426cc614bfe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1124,7 +1124,9 @@ int __iwl_mvm_mac_start(struct iwl_mvm *mvm)
- 		 * would do.
- 		 */
- 		clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
-+#ifdef CONFIG_PM
- 		iwl_mvm_d0i3_enable_tx(mvm, NULL);
-+#endif
- 	}
- 
- 	return ret;
-@@ -1162,7 +1164,9 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
- 	mutex_lock(&mvm->mutex);
- 
- 	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
-+#ifdef CONFIG_PM
- 	iwl_mvm_d0i3_enable_tx(mvm, NULL);
-+#endif
- 	ret = iwl_mvm_update_quotas(mvm, true, NULL);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to update quotas after restart (%d)\n",
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index b3987a0a7018..d73fb0ab9960 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1776,10 +1776,13 @@ void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
- void iwl_mvm_unref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
- int iwl_mvm_ref_sync(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type);
- bool iwl_mvm_ref_taken(struct iwl_mvm *mvm);
-+
-+#ifdef CONFIG_PM
- void iwl_mvm_d0i3_enable_tx(struct iwl_mvm *mvm, __le16 *qos_seq);
- int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode);
- int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode);
- int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm);
-+#endif CONFIG_PM
- 
- /* BT Coex */
- int iwl_mvm_send_bt_init_conf(struct iwl_mvm *mvm);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index bce5d150eb58..421509c63f23 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -495,7 +495,9 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
- 
- /* this forward declaration can avoid to export the function */
- static void iwl_mvm_async_handlers_wk(struct work_struct *wk);
-+#ifdef CONFIG_PM
- static void iwl_mvm_d0i3_exit_work(struct work_struct *wk);
-+#endif
- 
- static u32 iwl_mvm_min_backoff(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+index 8a258fa33c2a..bfaabe018216 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+@@ -93,11 +93,12 @@ static void mt76x0_read_resp_regs(struct mt76x0_dev *dev, int len)
+ static int mt76x0_mcu_wait_resp(struct mt76x0_dev *dev, u8 seq)
  {
-@@ -665,7 +667,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	struct urb *urb = dev->mcu.resp.urb;
++	struct mt76_usb *usb = &dev->mt76.usb;
+ 	u32 rxfce;
+ 	int urb_status, ret, try = 5;
  
- 	INIT_WORK(&mvm->async_handlers_wk, iwl_mvm_async_handlers_wk);
- 	INIT_WORK(&mvm->roc_done_wk, iwl_mvm_roc_done_wk);
-+#ifdef CONFIG_PM
- 	INIT_WORK(&mvm->d0i3_exit_work, iwl_mvm_d0i3_exit_work);
-+#endif
- 	INIT_DELAYED_WORK(&mvm->tdls_cs.dwork, iwl_mvm_tdls_ch_switch_work);
- 	INIT_DELAYED_WORK(&mvm->scan_timeout_dwork, iwl_mvm_scan_timeout_wk);
- 	INIT_WORK(&mvm->add_stream_wk, iwl_mvm_add_new_dqa_stream_wk);
-@@ -1278,6 +1282,7 @@ static void iwl_mvm_cmd_queue_full(struct iwl_op_mode *op_mode)
- 	iwl_mvm_nic_restart(mvm, true);
- }
+ 	while (try--) {
+-		if (!wait_for_completion_timeout(&dev->mcu.resp_cmpl,
++		if (!wait_for_completion_timeout(&usb->mcu.cmpl,
+ 						 msecs_to_jiffies(300))) {
+ 			dev_warn(dev->mt76.dev, "Warning: %s retrying\n", __func__);
+ 			continue;
+@@ -113,7 +114,7 @@ static int mt76x0_mcu_wait_resp(struct mt76x0_dev *dev, u8 seq)
+ 		ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
+ 					     &dev->mcu.resp, GFP_KERNEL,
+ 					     mt76x0_complete_urb,
+-					     &dev->mcu.resp_cmpl);
++					     &usb->mcu.cmpl);
+ 		if (ret)
+ 			return ret;
  
-+#ifdef CONFIG_PM
- struct iwl_d0i3_iter_data {
- 	struct iwl_mvm *mvm;
- 	struct ieee80211_vif *connected_vif;
-@@ -1689,6 +1694,13 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
- 	return _iwl_mvm_exit_d0i3(mvm);
- }
+@@ -151,7 +152,7 @@ __mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
  
-+#define IWL_MVM_D0I3_OPS					\
-+	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
-+	.exit_d0i3 = iwl_mvm_exit_d0i3,
-+#else /* CONFIG_PM */
-+#define IWL_MVM_D0I3_OPS
-+#endif /* CONFIG_PM */
-+
- #define IWL_MVM_COMMON_OPS					\
- 	/* these could be differentiated */			\
- 	.async_cb = iwl_mvm_async_cb,				\
-@@ -1699,8 +1711,7 @@ int iwl_mvm_exit_d0i3(struct iwl_op_mode *op_mode)
- 	.nic_error = iwl_mvm_nic_error,				\
- 	.cmd_queue_full = iwl_mvm_cmd_queue_full,		\
- 	.nic_config = iwl_mvm_nic_config,			\
--	.enter_d0i3 = iwl_mvm_enter_d0i3,			\
--	.exit_d0i3 = iwl_mvm_exit_d0i3,				\
-+	IWL_MVM_D0I3_OPS					\
- 	/* as we only register one, these MUST be common! */	\
- 	.start = iwl_op_mode_mvm_start,				\
- 	.stop = iwl_op_mode_mvm_stop
+ 	mt76x0_dma_skb_wrap_cmd(skb, seq, cmd);
+ 
+-	if (dev->mcu.resp_cmpl.done)
++	if (&usb->mcu.cmpl.done)
+ 		dev_err(dev->mt76.dev, "Error: MCU response pre-completed!\n");
+ 
+ 	trace_mt76x0_mcu_msg_send_cs(&dev->mt76, skb, wait_resp);
+@@ -609,13 +610,13 @@ int mt76x0_mcu_init(struct mt76x0_dev *dev)
+ 
+ int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
+ {
++	struct mt76_usb *usb = &dev->mt76.usb;
+ 	int ret;
+ 
+ 	ret = mt76x0_mcu_function_select(dev, Q_SELECT, 1);
+ 	if (ret)
+ 		return ret;
+ 
+-	init_completion(&dev->mcu.resp_cmpl);
+ 	if (mt76x0_usb_alloc_buf(dev, MCU_RESP_URB_SIZE, &dev->mcu.resp)) {
+ 		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
+ 		return -ENOMEM;
+@@ -623,7 +624,7 @@ int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
+ 
+ 	ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
+ 				     &dev->mcu.resp, GFP_KERNEL,
+-				     mt76x0_complete_urb, &dev->mcu.resp_cmpl);
++				     mt76x0_complete_urb, &usb->mcu.cmpl);
+ 	if (ret) {
+ 		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
+ 		return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index a694cc46fac8..298b7af31911 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -55,7 +55,6 @@ struct mt76x0_mcu {
+ 	u8 msg_seq;
+ 
+ 	struct mt76x0_dma_buf resp;
+-	struct completion resp_cmpl;
+ 
+ 	struct mt76_reg_pair *reg_pairs;
+ 	unsigned int reg_pairs_len;
 -- 
 2.18.0
