@@ -1,105 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41341 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgu (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:40420 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726624AbeHYOTw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:50 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 12/24] staging: wilc1000: move static variable 'terminated_handle' to wilc_vif struct
-Date: Tue, 14 Aug 2018 12:20:04 +0530
-Message-ID: <1534229416-13254-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085104_491860_AEAF9162)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 25 Aug 2018 10:19:52 -0400
+Received: by mail-wm0-f66.google.com with SMTP id 207-v6so3837979wme.5
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:17 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 14/16] mt76x0: remove unused mt76x0_mcu structure
+Date: Sat, 25 Aug 2018 12:40:54 +0200
+Message-Id: <20180825104056.9130-15-lorenzo.bianconi@redhat.com> (sfid-20180825_124129_318382_BB4EBD8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the use of static variable 'terminated_handle' and instead move
-in wilc_vif struct.
-After moving this variable to wilc_vif struct its not required to keep
-'terminated_handle', so changed it to boolean type.
+Remove no longer used mt76x0_mcu data structure
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/staging/wilc1000/host_interface.c     | 11 +++++------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c   |  2 --
+ .../net/wireless/mediatek/mt76/mt76x0/mt76x0.h    | 15 ---------------
+ 2 files changed, 17 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d5d81843..f71f451f 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -185,7 +185,6 @@ struct join_bss_param {
- 	u8 start_time[4];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+index 39b2ec0c1ee0..d49557834658 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+@@ -452,8 +452,6 @@ int mt76x0_mcu_init(struct mt76x0_dev *dev)
+ {
+ 	int ret;
+ 
+-	mutex_init(&dev->mcu.mutex);
+-
+ 	ret = mt76x0_load_firmware(dev);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 298b7af31911..cdace0565d51 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -49,19 +49,6 @@ struct mt76x0_dma_buf {
+ 	size_t len;
  };
  
--static struct host_if_drv *terminated_handle;
- static u8 p2p_listen_state;
- static struct timer_list periodic_rssi;
- static struct wilc_vif *periodic_rssi_vif;
-@@ -3505,7 +3504,7 @@ int wilc_deinit(struct wilc_vif *vif)
+-struct mt76x0_mcu {
+-	struct mutex mutex;
+-
+-	u8 msg_seq;
+-
+-	struct mt76x0_dma_buf resp;
+-
+-	struct mt76_reg_pair *reg_pairs;
+-	unsigned int reg_pairs_len;
+-	u32 reg_base;
+-	bool burst_read;
+-};
+-
+ struct mac_stats {
+ 	u64 rx_stat[6];
+ 	u64 tx_stat[6];
+@@ -160,8 +147,6 @@ struct mt76x0_dev {
+ 	unsigned long wcid_mask[DIV_ROUND_UP(N_WCIDS, BITS_PER_LONG)];
+ 	unsigned long vif_mask;
  
- 	mutex_lock(&vif->wilc->hif_deinit_lock);
+-	struct mt76x0_mcu mcu;
+-
+ 	struct delayed_work cal_work;
+ 	struct delayed_work mac_work;
  
--	terminated_handle = hif_drv;
-+	vif->is_termination_progress = true;
- 
- 	del_timer_sync(&hif_drv->scan_timer);
- 	del_timer_sync(&hif_drv->connect_timer);
-@@ -3543,7 +3542,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 	kfree(hif_drv);
- 
- 	vif->wilc->clients_count--;
--	terminated_handle = NULL;
-+	vif->is_termination_progress = false;
- 	mutex_unlock(&vif->wilc->hif_deinit_lock);
- 	return result;
- }
-@@ -3565,7 +3564,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 		return;
- 	hif_drv = vif->hif_drv;
- 
--	if (!hif_drv || hif_drv == terminated_handle) {
-+	if (!hif_drv || vif->is_termination_progress) {
- 		netdev_err(vif->ndev, "driver not init[%p]\n", hif_drv);
- 		return;
- 	}
-@@ -3611,7 +3610,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 
- 	hif_drv = vif->hif_drv;
- 
--	if (!hif_drv || hif_drv == terminated_handle) {
-+	if (!hif_drv || vif->is_termination_progress) {
- 		mutex_unlock(&wilc->hif_deinit_lock);
- 		return;
- 	}
-@@ -3662,7 +3661,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length)
- 		return;
- 	hif_drv = vif->hif_drv;
- 
--	if (!hif_drv || hif_drv == terminated_handle)
-+	if (!hif_drv || vif->is_termination_progress)
- 		return;
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index eb00e42..ba606d0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -121,6 +121,7 @@ struct wilc_vif {
- 	struct timer_list during_ip_timer;
- 	bool obtaining_ip;
- 	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-+	bool is_termination_progress;
- };
- 
- struct wilc {
 -- 
-2.7.4
+2.18.0
