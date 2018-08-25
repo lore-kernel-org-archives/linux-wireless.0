@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42062 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726072AbeHRLet (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:34:49 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:35 +0300
-Message-Id: <20180818082750.28717-2-luca@coelho.fi> (sfid-20180818_102811_866347_B4BCEB18)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 01/16] iwlwifi: turn timestamp marker cmd off by default
+Received: from nbd.name ([46.4.11.11]:57932 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725815AbeHYMkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Aug 2018 08:40:25 -0400
+Subject: Re: [PATCH 04/17] mt76: create new mt76xx-lib module for common
+ mt76x{0,2} code
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-mediatek@lists.infradead.org
+References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+ <1535109321-17126-5-git-send-email-sgruszka@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <13595ea4-e052-5448-7e24-9b6c0d59cb81@nbd.name> (sfid-20180825_110209_106200_2200288F)
+Date: Sat, 25 Aug 2018 11:02:04 +0200
+MIME-Version: 1.0
+In-Reply-To: <1535109321-17126-5-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+On 2018-08-24 13:15, Stanislaw Gruszka wrote:
+> Move rxfilter and mutex to common structure. Create mt76xx-lib.ko
+> for mt76x0 and mt76x2 common functions and create new unified
+> mt76xx_configure_filter() function there.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+My previous comment about mt76x2_regs.h applies here as well.
 
-Don't enable debugging timestamps by default, so we save power by not
-waking up the FW with timestamp commands.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index a31a42e673c4..bab54c9889af 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1133,9 +1133,6 @@ int iwl_fw_start_dbg_conf(struct iwl_fw_runtime *fwrt, u8 conf_id)
- 		IWL_WARN(fwrt, "FW already configured (%d) - re-configuring\n",
- 			 fwrt->dump.conf);
- 
--	/* start default config marker cmd for syncing logs */
--	iwl_fw_trigger_timestamp(fwrt, 1);
--
- 	/* Send all HCMDs for configuring the FW debug */
- 	ptr = (void *)&fwrt->fw->dbg_conf_tlv[conf_id]->hcmd;
- 	for (i = 0; i < fwrt->fw->dbg_conf_tlv[conf_id]->num_of_hcmds; i++) {
--- 
-2.18.0
+- Felix
