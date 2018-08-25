@@ -1,72 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43926 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726572AbeHXOEo (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34217 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726842AbeHYOTp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:17 +0300
-Message-Id: <20180824103018.15011-16-luca@coelho.fi> (sfid-20180824_123104_533086_344B8D33)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 15/16] iwlwifi: mvm: activate fragmented EBS in case of fragmented scan
+        Sat, 25 Aug 2018 10:19:45 -0400
+Received: by mail-wm0-f67.google.com with SMTP id m199-v6so6025417wma.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:10 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 07/16] mt76x0: remove mt76x0_vendor_single_wr routine
+Date: Sat, 25 Aug 2018 12:40:47 +0200
+Message-Id: <20180825104056.9130-8-lorenzo.bianconi@redhat.com> (sfid-20180825_124114_690984_FE98D145)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+Remove mt76x0_vendor_single_wr routine and use mt76u_single_wr
+utility function for mcu firmware loading
 
-In case of fragmented scan on the HB channels, configure EBS to be
-fragmented as well.
-
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c    | 12 +++++++++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ .../net/wireless/mediatek/mt76/mt76x0/mcu.c   | 13 +++++--------
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 19 -------------------
+ .../net/wireless/mediatek/mt76/mt76x0/usb.h   |  2 --
+ 3 files changed, 5 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index a17c4a79b8d4..310b01e3cce1 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -262,6 +262,7 @@ enum iwl_scan_channel_flags {
- 	IWL_SCAN_CHANNEL_FLAG_EBS		= BIT(0),
- 	IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE	= BIT(1),
- 	IWL_SCAN_CHANNEL_FLAG_CACHE_ADD		= BIT(2),
-+	IWL_SCAN_CHANNEL_FLAG_EBS_FRAG		= BIT(3),
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+index c8ea3126e7dc..cf3acee12dc3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+@@ -416,15 +416,12 @@ static int __mt76x0_dma_fw(struct mt76x0_dev *dev,
+ 	memcpy(buf.buf + sizeof(reg), data, len);
+ 	memset(buf.buf + sizeof(reg) + len, 0, 8);
  
- /* struct iwl_scan_channel_opt - CHANNEL_OPTIMIZATION_API_S
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 003bf0848386..e9048a98e793 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1455,11 +1455,21 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (type == IWL_MVM_SCAN_SCHED || type == IWL_MVM_SCAN_NETDETECT)
- 		cmd->flags = cpu_to_le32(IWL_UMAC_SCAN_FLAG_PREEMPTIVE);
- 
--	if (iwl_mvm_scan_use_ebs(mvm, vif))
-+	if (iwl_mvm_scan_use_ebs(mvm, vif)) {
- 		channel_flags = IWL_SCAN_CHANNEL_FLAG_EBS |
- 				IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
- 				IWL_SCAN_CHANNEL_FLAG_CACHE_ADD;
- 
-+		/* set fragmented ebs for fragmented scan on HB channels */
-+		if (iwl_mvm_is_frag_ebs_supported(mvm)) {
-+			if (gen_flags &
-+			    IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED ||
-+			    (!iwl_mvm_is_cdb_supported(mvm) &&
-+			     gen_flags & IWL_UMAC_SCAN_GEN_FLAGS_FRAGMENTED))
-+				channel_flags |= IWL_SCAN_CHANNEL_FLAG_EBS_FRAG;
-+		}
-+	}
+-	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
+-				       MT_FCE_DMA_ADDR, dst_addr);
+-	if (ret)
+-		return ret;
++	mt76u_single_wr(&dev->mt76, MT_VEND_WRITE_FCE, MT_FCE_DMA_ADDR,
++			dst_addr);
 +
- 	chan_param->flags = channel_flags;
- 	chan_param->count = params->n_channels;
+ 	len = roundup(len, 4);
+-	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
+-				       MT_FCE_DMA_LEN, len << 16);
+-	if (ret)
+-		return ret;
++	mt76u_single_wr(&dev->mt76, MT_VEND_WRITE_FCE, MT_FCE_DMA_LEN,
++			len << 16);
  
+ 	buf.len = MT_DMA_HDR_LEN + len + 4;
+ 	ret = mt76x0_usb_submit_buf(dev, USB_DIR_OUT, MT_EP_OUT_INBAND_CMD,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index fdb71b907419..a9835bb7b921 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -131,25 +131,6 @@ int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
+ 	return ret;
+ }
+ 
+-int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
+-			     const u16 offset, const u32 val)
+-{
+-	struct mt76x0_dev *mdev = dev;
+-	int ret;
+-
+-	mutex_lock(&mdev->usb_ctrl_mtx);
+-
+-	ret = mt76x0_vendor_request(dev, req, USB_DIR_OUT,
+-				    val & 0xffff, offset, NULL, 0);
+-	if (!ret)
+-		ret = mt76x0_vendor_request(dev, req, USB_DIR_OUT,
+-					    val >> 16, offset + 2, NULL, 0);
+-
+-	mutex_unlock(&mdev->usb_ctrl_mtx);
+-
+-	return ret;
+-}
+-
+ void mt76x0_addr_wr(struct mt76x0_dev *dev, const u32 offset, const u8 *addr)
+ {
+ 	mt76_wr(dev, offset, get_unaligned_le32(addr));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
+index d23ca45a294e..931c36554ff4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
+@@ -54,7 +54,5 @@ void mt76x0_complete_urb(struct urb *urb);
+ int mt76x0_vendor_request(struct mt76x0_dev *dev, const u8 req,
+ 			   const u8 direction, const u16 val, const u16 offset,
+ 			   void *buf, const size_t buflen);
+-int mt76x0_vendor_single_wr(struct mt76x0_dev *dev, const u8 req,
+-			     const u16 offset, const u32 val);
+ 
+ #endif
 -- 
 2.18.0
