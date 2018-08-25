@@ -1,57 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f178.google.com ([209.85.213.178]:37184 "EHLO
-        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726807AbeH1UCI (ORCPT
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:39667 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726624AbeHYOTi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 16:02:08 -0400
-Received: by mail-yb0-f178.google.com with SMTP id f145-v6so806459ybg.4
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 09:09:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180816110247.GC2797@redhat.com>
-References: <CAAemcoMYY7utGrrR+8JLPPzQ-YTKsrD=6DZigJ+o9A+72s7CxQ@mail.gmail.com>
- <20180809111049.GC1955@redhat.com> <CAAemcoOkA4y7zDMCKzD+nKJAQFoWCGPVHdbEV0j9ZOeaCe144g@mail.gmail.com>
- <20180810111425.GA16269@redhat.com> <CAAemcoOK6pxENmX8By=WJR3PVE7u2HwbE50LD3v0+Cif6bS5Lg@mail.gmail.com>
- <20180815080747.GA26839@redhat.com> <CAAemcoMUm=O3yviObt3+u-Cf+ySrVD2HXOzUHHOU0L4wBm=e9w@mail.gmail.com>
- <20180816103107.GA2797@redhat.com> <20180816110247.GC2797@redhat.com>
-From: Randy Oostdyk <linux-kernel@oostdyk.com>
-Date: Tue, 28 Aug 2018 10:09:44 -0600
-Message-ID: <CAAemcoPvPs5-xsvGdbXw9_PiDnb3QhkZ=vz_HO3b-VWQRoci0Q@mail.gmail.com> (sfid-20180828_180953_051848_03450DB3)
-Subject: Re: wireless dongle causing entire machine to hang
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 25 Aug 2018 10:19:38 -0400
+Received: by mail-wr1-f65.google.com with SMTP id o37-v6so9448039wrf.6
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:03 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 01/16] mt76: move mt76_reg_pair definition in mt76.h
+Date: Sat, 25 Aug 2018 12:40:41 +0200
+Message-Id: <20180825104056.9130-2-lorenzo.bianconi@redhat.com> (sfid-20180825_124111_037388_00F153A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Move common definition of mt76_reg_pair in mt76.h
+and remove duplicated code in mt76x2_init_common.c
 
-I had considerable difficulty getting the module compiled and
-installed. I had ignored your first patch, and only applied the second
-patch (that you said compiles), but it turns out to be missing the
-variable declarations portion of the first patch. After taking that
-portion of the first patch, I managed to get the module to compile and
-installed.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h             |  5 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h    |  5 -----
+ .../net/wireless/mediatek/mt76/mt76x2_init_common.c   | 11 +++--------
+ 3 files changed, 8 insertions(+), 13 deletions(-)
 
-After one week of testing, I'm not able to cause the USB protocol
-error (-71) to happen, except by disconnecting the device from the USB
-bus. So I'm not able to fully ascertain if your patch really solved
-the issue or not. Sorry... At least I can say that it doesn't break
-anything!
-
-I will try to continue testing, and report the results if I can manage
-to get the error to surface again.
-
-Cheers,
-Randy
-
-On Thu, Aug 16, 2018 at 5:02 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Thu, Aug 16, 2018 at 12:31:07PM +0200, Stanislaw Gruszka wrote:
->> I prepared a patch that count EPROTO errors and if it's bigger
->> than 10 mark device as gone. It should not make a problem
->> when we will get one time random error.  I'm attaching it,
->> please test.
->
-> Forgot to compile the patch, here is one that compiles.
->
-> Cheers
-> Stanislaw
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index b02b4191ef37..fc27260080af 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -53,6 +53,11 @@ enum mt76_txq_id {
+ 	__MT_TXQ_MAX
+ };
+ 
++struct mt76_reg_pair {
++	u32 reg;
++	u32 value;
++};
++
+ enum mt76_rxq_id {
+ 	MT_RXQ_MAIN,
+ 	MT_RXQ_MCU,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 12f3dd1cc405..a694cc46fac8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -219,11 +219,6 @@ struct mt76x0_wcid {
+ 	u8 tx_rate_nss;
+ };
+ 
+-struct mt76_reg_pair {
+-	u32 reg;
+-	u32 value;
+-};
+-
+ struct mt76x0_rxwi;
+ 
+ extern const struct ieee80211_ops mt76x0_ops;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+index 953effec8c1a..6af26350c177 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+@@ -47,11 +47,6 @@ struct ieee80211_rate mt76x2_rates[] = {
+ };
+ EXPORT_SYMBOL_GPL(mt76x2_rates);
+ 
+-struct mt76x2_reg_pair {
+-	u32 reg;
+-	u32 value;
+-};
+-
+ static void
+ mt76x2_set_wlan_state(struct mt76x2_dev *dev, bool enable)
+ {
+@@ -93,7 +88,7 @@ EXPORT_SYMBOL_GPL(mt76x2_reset_wlan);
+ 
+ static void
+ mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
+-		       const struct mt76x2_reg_pair *data, int len)
++		       const struct mt76_reg_pair *data, int len)
+ {
+ 	while (len > 0) {
+ 		mt76_wr(dev, data->reg, data->value);
+@@ -128,7 +123,7 @@ void mt76_write_mac_initvals(struct mt76x2_dev *dev)
+ 	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
+ 	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f))
+ 
+-	static const struct mt76x2_reg_pair vals[] = {
++	static const struct mt76_reg_pair vals[] = {
+ 		/* Copied from MediaTek reference source */
+ 		{ MT_PBF_SYS_CTRL,		0x00080c00 },
+ 		{ MT_PBF_CFG,			0x1efebcff },
+@@ -184,7 +179,7 @@ void mt76_write_mac_initvals(struct mt76x2_dev *dev)
+ 		{ MT_PROT_AUTO_TX_CFG,		0x00830083 },
+ 		{ MT_HT_CTRL_CFG,		0x000001ff },
+ 	};
+-	struct mt76x2_reg_pair prot_vals[] = {
++	struct mt76_reg_pair prot_vals[] = {
+ 		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG_CCK },
+ 		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG_OFDM },
+ 		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
+-- 
+2.18.0
