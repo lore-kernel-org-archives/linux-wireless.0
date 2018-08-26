@@ -1,234 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47126 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726860AbeHXOuC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:50:02 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 10/17] mt76: unify mac_wcid_setup
-Date: Fri, 24 Aug 2018 13:15:14 +0200
-Message-Id: <1535109321-17126-11-git-send-email-sgruszka@redhat.com> (sfid-20180824_131554_623598_558D9F56)
-In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
-References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:47024 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726579AbeHZT5k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Aug 2018 15:57:40 -0400
+Received: by mail-oi0-f66.google.com with SMTP id y207-v6so23226599oie.13
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Aug 2018 09:14:41 -0700 (PDT)
+Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
+To: prabhu <d.praabhu@gmail.com>, Taketo Kabe <kabe@sra-tohoku.co.jp>
+Cc: kvalo@codeaurora.org, m@bues.ch, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org
+References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
+ <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
+ <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net>
+ <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net> (sfid-20180826_181529_761184_9652D9E1)
+Date: Sun, 26 Aug 2018 11:14:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------2089F2158891A7E781A0BA33"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Merge mt76x{0,2}_mac_wcid_setup into common code.
+This is a multi-part message in MIME format.
+--------------2089F2158891A7E781A0BA33
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 08/26/2018 02:23 AM, prabhu wrote:
+> Larry,
+> 
+> Upgrading the firmware didn't fix the issue.
+> 
+> The patch fixes it. My system has been running without any issues
+> since yesterday.
+
+I did not think the new firmware would help, but it had to be tried. Thanks for 
+the testing.
+
+@Pradhu & @Taketo: Attached is a new (improved?) patch for you to try. You need 
+to start from an unmodified 4.18 source. This patch should allow both of your 
+systems to work and avoid needing to revert Taketo's fix for his setup.
+
+Thanks,
+
+Larry
+
+
+
+--------------2089F2158891A7E781A0BA33
+Content-Type: text/x-patch;
+ name="0001-b43-Fix-regression-in-kernel-4.18.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-b43-Fix-regression-in-kernel-4.18.patch"
+
+>From 4805a08715de42d49587975979425031307218b6 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sun, 26 Aug 2018 10:47:52 -0500
+Subject: [PATCH] b43: Fix regression in kernel 4.18
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org
+
+In commit 66cffd6daab7 ("b43: fix transmit failure when VT is switched"),
+a condition is noted where the network controller needs to be reset. Note
+that this situation happens when running the open-source firmware
+(http://netweb.ing.unibs.it/~openfwwf/), plus a number of other special
+conditions.
+
+for a different card model, it is reported that this change breaks
+operation running the proprietary firmware
+(https://marc.info/?l=linux-wireless&m=153504546924558&w=2). Rather
+than reverting the previous patch, the code is tweaked to avoid the
+reset unless the open-source firmware is being used.
+
+Fixes: 66cffd6daab7 ("b43: fix transmit failure when VT is switched")
+Cc: Stable <stable@vger.kernel.org> # 4.18+
+Cc: Taketo Kabe <kabe@sra-tohoku.co.jp>
+Cc: D. Prabhu <d.praabhu@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 17 ----------------
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  2 --
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  1 -
- .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 23 ----------------------
- drivers/net/wireless/mediatek/mt76/mt76xx_mac.c    | 23 ++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76xx_mac.h    |  1 +
- 9 files changed, 31 insertions(+), 50 deletions(-)
+ drivers/net/wireless/broadcom/b43/dma.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-index 2fcdedd0cadc..2bf5c81ecf10 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
-@@ -399,23 +399,6 @@ void mt76x0_mac_work(struct work_struct *work)
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work, 10 * HZ);
- }
- 
--void
--mt76x0_mac_wcid_setup(struct mt76x0_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
--{
--	u8 zmac[ETH_ALEN] = {};
--	u32 attr;
--
--	attr = FIELD_PREP(MT_WCID_ATTR_BSS_IDX, vif_idx & 7) |
--	       FIELD_PREP(MT_WCID_ATTR_BSS_IDX_EXT, !!(vif_idx & 8));
--
--	mt76_wr(dev, MT_WCID_ATTR(idx), attr);
--
--	if (mac)
--		memcpy(zmac, mac, sizeof(zmac));
--
--	mt76x0_addr_wr(dev, MT_WCID_ADDR(idx), zmac);
--}
--
- void mt76x0_mac_set_ampdu_factor(struct mt76x0_dev *dev)
- {
- 	struct ieee80211_sta *sta;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index a074e877f839..2dda70b3fea4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -156,7 +156,7 @@ static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
- 
- static int
- mt76x0_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		struct ieee80211_sta *sta)
-+	       struct ieee80211_sta *sta)
- {
- 	struct mt76x0_dev *dev = hw->priv;
- 	struct mt76_sta *msta = (struct mt76_sta *) sta->drv_priv;
-@@ -174,7 +174,7 @@ static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	msta->wcid.idx = idx;
- 	msta->wcid.hw_key_idx = -1;
--	mt76x0_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
-+	mt76xx_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
- 	mt76_clear(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
- 	rcu_assign_pointer(dev->wcid[idx], &msta->wcid);
- 	mt76x0_mac_set_ampdu_factor(dev);
-@@ -197,7 +197,7 @@ static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
- 	rcu_assign_pointer(dev->wcid[idx], NULL);
- 	mt76_set(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
- 	dev->wcid_mask[idx / BITS_PER_LONG] &= ~BIT(idx % BITS_PER_LONG);
--	mt76x0_mac_wcid_setup(dev, idx, 0, NULL);
-+	mt76xx_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
- 	mt76x0_mac_set_ampdu_factor(dev);
- 	mutex_unlock(&dev->mt76.mutex);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 1b5ab8f2a5c8..68f1d5535e5e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -301,8 +301,6 @@ void mt76x0_mac_set_protection(struct mt76x0_dev *dev, bool legacy_prot,
- 				int ht_mode);
- void mt76x0_mac_set_short_preamble(struct mt76x0_dev *dev, bool short_preamb);
- void mt76x0_mac_config_tsf(struct mt76x0_dev *dev, bool enable, int interval);
--void
--mt76x0_mac_wcid_setup(struct mt76x0_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
- void mt76x0_mac_set_ampdu_factor(struct mt76x0_dev *dev);
- 
- /* TX */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-index 17bdbe5b48a9..b67a227bfde3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-@@ -115,7 +115,7 @@ int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	msta->wcid.sta = 1;
- 	msta->wcid.idx = idx;
- 	msta->wcid.hw_key_idx = -1;
--	mt76x2_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
-+	mt76xx_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
- 	mt76x2_mac_wcid_set_drop(dev, idx, false);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		mt76x2_txq_init(dev, sta->txq[i]);
-@@ -148,7 +148,7 @@ int mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		mt76_txq_remove(&dev->mt76, sta->txq[i]);
- 	mt76x2_mac_wcid_set_drop(dev, idx, true);
- 	mt76_wcid_free(dev->wcid_mask, idx);
--	mt76x2_mac_wcid_setup(dev, idx, 0, NULL);
-+	mt76xx_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
- 	mutex_unlock(&dev->mt76.mutex);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 61377213257c..de7f0fb64de9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -160,10 +160,10 @@ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
- 		mt76_wr(dev, MT_WCID_DROP_BASE + i * 4, 0);
- 
- 	for (i = 0; i < 256; i++)
--		mt76x2_mac_wcid_setup(dev, i, 0, NULL);
-+		mt76xx_mac_wcid_setup(&dev->mt76, i, 0, NULL);
- 
- 	for (i = 0; i < MT_MAX_VIFS; i++)
--		mt76x2_mac_wcid_setup(dev, MT_VIF_WCID(i), i, NULL);
-+		mt76xx_mac_wcid_setup(&dev->mt76, MT_VIF_WCID(i), i, NULL);
- 
- 	for (i = 0; i < 16; i++)
- 		for (k = 0; k < 4; k++)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index 2aa885f71df4..98451c6cf698 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -168,7 +168,6 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
- void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
- 			   struct ieee80211_sta *sta, int len);
--void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
- void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
- 			      const struct ieee80211_tx_rate *rate);
- void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-index c218434af347..f4e72a280132 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
-@@ -394,29 +394,6 @@ void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop)
- }
- EXPORT_SYMBOL_GPL(mt76x2_mac_wcid_set_drop);
- 
--void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
--{
--	struct mt76_wcid_addr addr = {};
--	u32 attr;
--
--	attr = FIELD_PREP(MT_WCID_ATTR_BSS_IDX, vif_idx & 7) |
--	       FIELD_PREP(MT_WCID_ATTR_BSS_IDX_EXT, !!(vif_idx & 8));
--
--	mt76_wr(dev, MT_WCID_ATTR(idx), attr);
--
--	mt76_wr(dev, MT_WCID_TX_RATE(idx), 0);
--	mt76_wr(dev, MT_WCID_TX_RATE(idx) + 4, 0);
--
--	if (idx >= 128)
--		return;
--
--	if (mac)
--		memcpy(addr.macaddr, mac, ETH_ALEN);
--
--	mt76_wr_copy(dev, MT_WCID_ADDR(idx), &addr, sizeof(addr));
--}
--EXPORT_SYMBOL_GPL(mt76x2_mac_wcid_setup);
--
- static int
- mt76x2_mac_process_rate(struct mt76_rx_status *status, u16 rate)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76xx_mac.c b/drivers/net/wireless/mediatek/mt76/mt76xx_mac.c
-index 4e1f491d48d9..3895a175045f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76xx_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76xx_mac.c
-@@ -96,3 +96,26 @@ int mt76xx_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76xx_mac_wcid_set_key);
-+
-+void mt76xx_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
-+{
-+	struct mt76_wcid_addr addr = {};
-+	u32 attr;
-+
-+	attr = FIELD_PREP(MT_WCID_ATTR_BSS_IDX, vif_idx & 7) |
-+	       FIELD_PREP(MT_WCID_ATTR_BSS_IDX_EXT, !!(vif_idx & 8));
-+
-+	__mt76_wr(dev, MT_WCID_ATTR(idx), attr);
-+
-+	__mt76_wr(dev, MT_WCID_TX_RATE(idx), 0);
-+	__mt76_wr(dev, MT_WCID_TX_RATE(idx) + 4, 0);
-+
-+	if (idx >= 128)
-+		return;
-+
-+	if (mac)
-+		memcpy(addr.macaddr, mac, ETH_ALEN);
-+
-+	__mt76_wr_copy(dev, MT_WCID_ADDR(idx), &addr, sizeof(addr));
-+}
-+EXPORT_SYMBOL_GPL(mt76xx_mac_wcid_setup);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76xx_mac.h b/drivers/net/wireless/mediatek/mt76/mt76xx_mac.h
-index 3570cb6ddd93..8ef0bef7b8d7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76xx_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76xx_mac.h
-@@ -46,4 +46,5 @@ int mt76xx_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
- 				struct ieee80211_key_conf *key);
- int mt76xx_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
- 			    struct ieee80211_key_conf *key);
-+void mt76xx_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
- #endif
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index 6b0e1ec346cb..d46d57b989ae 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -1518,13 +1518,15 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 			}
+ 		} else {
+ 			/* More than a single header/data pair were missed.
+-			 * Report this error, and reset the controller to
++			 * Report this error. If running with open-source
++			 * firmware, then reset the controller to
+ 			 * revive operation.
+ 			 */
+ 			b43dbg(dev->wl,
+ 			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
+ 			       ring->index, firstused, slot);
+-			b43_controller_restart(dev, "Out of order TX");
++			if (dev->fw.opensource)
++				b43_controller_restart(dev, "Out of order TX");
+ 			return;
+ 		}
+ 	}
 -- 
-1.9.3
+2.18.0
+
+
+--------------2089F2158891A7E781A0BA33--
