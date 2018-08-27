@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:6039 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727247AbeHWPQk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60158 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727421AbeH0WVy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 11:16:40 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 0/9] wil6210 patches
-Date: Thu, 23 Aug 2018 14:47:04 +0300
-Message-Id: <1535024833-15178-1-git-send-email-merez@codeaurora.org> (sfid-20180823_134721_962276_2DEE22F5)
+        Mon, 27 Aug 2018 18:21:54 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 27 Aug 2018 11:34:09 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
+In-Reply-To: <87a7pe8xn5.fsf@toke.dk>
+References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
+ <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
+ <87a7pfaovy.fsf@toke.dk> <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org>
+ <87a7pe8xn5.fsf@toke.dk>
+Message-ID: <5a697a77c65745cdabb0e8a3ab0931ef@codeaurora.org> (sfid-20180827_203414_349932_BF447DBC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The followings et of patches include:
-- Various wil6210 fixes
-- Add FT roam support for AP and station
-- Add support for channel 4
+On 2018-08-22 04:10, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> On 2018-08-21 05:24, Toke Høiland-Jørgensen wrote:
+>>> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+>>> 
+[...]
 
-Ahmad Masri (1):
-  wil6210: add FT roam support for AP and station
+> Yeah, but the fairness comes from all TXQs being given the *same 
+> amount*
+> of deficit increase. I.e., with reorder_txq() there needs to be a
+> guarantee that it is called the same number of times for all active
+> TXQs. Which is what the round-robin scheduling ensures in next_txq().
+> 
+Understood.
 
-Alexei Avshalom Lazar (1):
-  wil6210: add support for channel 4
+>> As mentioned earlier, next_txq() can not be used for fetching txq
+>> directly. So reorder_txq() needs to take care of refilling txq after
+>> serving them.
+> 
+> Yeah, I got that; but see above. Unless there's a guarantee that the
+> push/pull mechanism will be round-robin scheduled (which as I'm reading
+> the code there isn't), just increasing the deficit on every call to
+> reorder_txq() is not going to ensure fairness (it'll probably help 
+> some,
+> but it won't be completely fair).
+> 
+> However, if we add the check to reorder_txq() so the deficit increase +
+> rotation is only done if the TXQ is at the head of the list, we'll get
+> round-robin-equivalent behaviour since a TXQ will only get to continue
+> when it happens to have rotated to the head of the queue. As I 
+> mentioned
+> previously it will break MIMO, but I we could fix that later once we've
+> verified that the basic mechanism works.
+> 
+Hmm... The pull mechanism operates in round-robin fashion. Agree that
+accessing only head node is right way of ensuring fairness. Will fix it
+and rename as ieee80211_txq_can_transmit().
 
-Dedy Lansky (2):
-  wil6210: drop Rx multicast packets that are looped-back to STA
-  wil6210: fix invalid memory access for rx_buff_mgmt debugfs
+Thanks Toke for your feedback.
 
-Karthick Gopalasubramanian (1):
-  wil6210: remove reset file from debugfs
-
-Maya Erez (4):
-  wil6210: set edma variables only for Talyn-MB devices
-  wil6210: allocate rx reorder buffer only if rx reorder is enabled
-  wil6210: prevent usage of tx ring 0 for eDMA
-  wil6210: fix RX buffers release and unmap
-
- drivers/net/wireless/ath/wil6210/cfg80211.c   | 333 ++++++++++++++++++++----
- drivers/net/wireless/ath/wil6210/debugfs.c    |  47 ++--
- drivers/net/wireless/ath/wil6210/main.c       |  13 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |   1 +
- drivers/net/wireless/ath/wil6210/rx_reorder.c |  12 +-
- drivers/net/wireless/ath/wil6210/txrx.c       |  98 +++++++-
- drivers/net/wireless/ath/wil6210/txrx_edma.c  |  26 +-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  19 ++
- drivers/net/wireless/ath/wil6210/wmi.c        | 350 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h        |   2 +
- 10 files changed, 799 insertions(+), 102 deletions(-)
-
--- 
-1.9.1
+-Rajkumar
