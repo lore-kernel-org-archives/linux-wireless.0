@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:42159 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727337AbeH1NOX (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:43609 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727005AbeH0TVY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 09:14:23 -0400
-Received: by mail-lj1-f194.google.com with SMTP id f1-v6so796861ljc.9
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 02:23:37 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: fix to follow standard
-To: Yuan-Chi Pang <fu3mo6goo@gmail.com>, johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1535423074-130862-1-git-send-email-fu3mo6goo@gmail.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <9cedcd76-2a05-00dd-2651-3b42d98a3692@cogentembedded.com> (sfid-20180828_112340_693875_0BC374CC)
-Date: Tue, 28 Aug 2018 12:23:35 +0300
-MIME-Version: 1.0
-In-Reply-To: <1535423074-130862-1-git-send-email-fu3mo6goo@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 27 Aug 2018 15:21:24 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stable <stable@vger.kernel.org>,
+        Taketo Kabe <kabe@sra-tohoku.co.jp>
+Subject: [PATCH] b43: Fix regression in kernel 4.18
+Date: Mon, 27 Aug 2018 10:34:07 -0500
+Message-Id: <20180827153407.5612-1-Larry.Finger@lwfinger.net> (sfid-20180827_173427_211643_5850C325)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+In commit 66cffd6daab7 ("b43: fix transmit failure when VT is switched"),
+a condition is noted where the network controller needs to be reset. Note
+that this situation happens when running the open-source firmware
+(http://netweb.ing.unibs.it/~openfwwf/), plus a number of other special
+conditions.
 
-On 8/28/2018 5:24 AM, Yuan-Chi Pang wrote:
+for a different card model, it is reported that this change breaks
+operation running the proprietary firmware
+(https://marc.info/?l=linux-wireless&m=153504546924558&w=2). Rather
+than reverting the previous patch, the code is tweaked to avoid the
+reset unless the open-source firmware is being used.
 
-> IEEE 802.11-2016 14.10.8.3 HWMP sequence numbering says:
-> If it is a target mesh STA, it shall update its own HWMP SN to
-> maximum (current HWMP SN, target HWMP SN in the PREQ element) + 1
-> immediately before it generates a PREP element in response to a
-> PREQ element.
-> 
-> Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
-> ---
->   net/mac80211/mesh_hwmp.c | 5 +++++
->   1 file changed, 5 insertions(+)
-> 
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index 35ad398..6c21a26 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -572,6 +572,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
->   		forward = false;
->   		reply = true;
->   		target_metric = 0;
-> +
-> +		if (SN_GT(target_sn, ifmsh->sn)) {
-> +			ifmsh->sn = target_sn;
-> +		}
+Fixes: 66cffd6daab7 ("b43: fix transmit failure when VT is switched")
+Cc: Stable <stable@vger.kernel.org> # 4.18+
+Cc: Taketo Kabe <kabe@sra-tohoku.co.jp>
+Reported-and-tested-by: D. Prabhu <d.praabhu@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/broadcom/b43/dma.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-    No need for {} enclosing a single statement.
-
-[...]
-
-MBR, Sergei
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index 6b0e1ec346cb..d46d57b989ae 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -1518,13 +1518,15 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 			}
+ 		} else {
+ 			/* More than a single header/data pair were missed.
+-			 * Report this error, and reset the controller to
++			 * Report this error. If running with open-source
++			 * firmware, then reset the controller to
+ 			 * revive operation.
+ 			 */
+ 			b43dbg(dev->wl,
+ 			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
+ 			       ring->index, firstused, slot);
+-			b43_controller_restart(dev, "Out of order TX");
++			if (dev->fw.opensource)
++				b43_controller_restart(dev, "Out of order TX");
+ 			return;
+ 		}
+ 	}
+-- 
+2.18.0
