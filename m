@@ -1,49 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42400 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbeHPP6O (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 11:58:14 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] orinoco: remove unused array encaps_hdr and macro ENCAPS_OVERHEAD
-Date: Thu, 16 Aug 2018 13:59:44 +0100
-Message-Id: <20180816125944.7804-1-colin.king@canonical.com> (sfid-20180816_150001_140571_B13A629B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43694 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727011AbeH0Sng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Aug 2018 14:43:36 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v2 00/17] mt76 patches 2018-08-24 v2
+Date: Mon, 27 Aug 2018 16:56:14 +0200
+Message-Id: <1535381791-14908-1-git-send-email-sgruszka@redhat.com> (sfid-20180827_165641_321885_BEB02F60)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+This is the begin work of integration between mt76x0 and mt76x2.
 
-Array encaps_hdr and macro ENCAPS_OVERHEAD are declared but are
-not being used, hence they are redundant and can be removed.
+Further development can be seen here:
+https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
 
-Cleans up clang warning:
-warning: 'encaps_hdr' defined but not used [-Wunused-const-variable=]
+v1 -> v2:
+- rename mt76xx to mt76x02 to reflect that common code is for mt76x0
+  and mt76x2 only, not for new chips.
+- fixup 'stucture typo' in one patch
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 4 ----
- 1 file changed, 4 deletions(-)
+Stanislaw Gruszka (17):
+  mt76: unify wait_for_mac
+  mt76: rename mt76x2_regs.h
+  mt76: merge mt76x0/regs.h into mt76x02_regs.h
+  mt76: create new mt76x02-lib module for common mt76x{0,2} code
+  mt76: fix mt76x02-lib module license
+  mt76: unify mac_get_key_info
+  mt76: add helpers for register access with mt76_dev struct
+  mt76: unify mac_shared_key_setup
+  mt76: unify mt76x02_mac_wcid_set_key
+  mt76: unify mac_wcid_setup
+  mt76: use mac_wcid_set_drop in mt76x0
+  mt76x0: use mt76_wcid_free in mt76x0
+  mt76: unify mt76x02_vif struct
+  mt76: unify sta structure part 1
+  mt76: unify sta structure part 2
+  mt76x0: initalize custom tx queues
+  mt76x0: use mt76x02_sta and mt76x02_tx_status
 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-index 94ad6fe29e69..d8c27203bc57 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -73,10 +73,6 @@
- #define URB_ASYNC_UNLINK 0
- #endif
- 
--/* 802.2 LLC/SNAP header used for Ethernet encapsulation over 802.11 */
--static const u8 encaps_hdr[] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
--#define ENCAPS_OVERHEAD		(sizeof(encaps_hdr) + 2)
--
- struct header_struct {
- 	/* 802.3 */
- 	u8 dest[ETH_ALEN];
+ drivers/net/wireless/mediatek/mt76/Kconfig         |   6 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |   3 +
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  13 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  37 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 126 +---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 127 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  35 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/regs.h   | 651 --------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 157 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  85 +++
+ drivers/net/wireless/mediatek/mt76/mt76x02_regs.h  | 685 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  55 ++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  25 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  50 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  99 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  15 +-
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  21 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 130 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  47 +-
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 619 -------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   8 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  29 +-
+ 36 files changed, 1226 insertions(+), 1861 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
+
 -- 
-2.17.1
+2.7.5
