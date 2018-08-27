@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13226 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387566AbeHAJz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 05:55:57 -0400
-Message-ID: <a3d8f0dcd43467c412ffcb72e2b4361f210a1cc6.camel@intel.com> (sfid-20180801_102122_313834_E59E96C7)
-Subject: Re: [PATCH 00/16] iwlwifi: updates intended for v4.19 2018-07-27
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 01 Aug 2018 11:11:25 +0300
-In-Reply-To: <87wota8qr2.fsf@kamboji.qca.qualcomm.com>
-References: <20180727124838.25910-1-luca@coelho.fi>
-         <87wota8qr2.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:42045 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727026AbeH0Tta (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Aug 2018 15:49:30 -0400
+Received: by mail-qt0-f177.google.com with SMTP id z8-v6so18591647qto.9
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 09:02:18 -0700 (PDT)
+Received: from [10.200.205.208] (users.ccs.neu.edu. [129.10.110.12])
+        by smtp.gmail.com with ESMTPSA id o18-v6sm8380704qtm.84.2018.08.27.09.02.15
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 27 Aug 2018 09:02:16 -0700 (PDT)
+From: Milan Stute <milan.stute@seemoo.tu-darmstadt.de>
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
+Subject: Neighbor Awareness Networking status inquiry
+Message-Id: <7C58C7E1-923F-4911-BBAA-A5C51BAAB345@seemoo.tu-darmstadt.de> (sfid-20180827_180222_286810_F87D7371)
+Date: Mon, 27 Aug 2018 12:02:14 -0400
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-01 at 10:56 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Luca Coelho <luciano.coelho@intel.com>
-> > 
-> > Hi,
-> > 
-> > Here's one more set of patches intended for v4.19.  It contains
-> > some
-> > bugfixes, cleanups and more work on supporting the 22560 family of
-> > devices.
-> > 
-> > The changes are:
-> > 
-> > * New PCI IDs for 22000 and 22560;
-> > * Some fixes and an improvement in debug dumps and recording;
-> > * Remove some old dead code;
-> > * Fix compilation when only IPv6 is not enabled;
-> 
-> -EPARSE, "when only ... not"?
+Hi all,
 
-That's perfectly fine grammar. :) "If only IPv6 is not enabled,
-compilation fails.  Fix that."
+Can you tell me what is the status of bringing Neighbor Awareness =
+Networking (NAN) to the Linux WLAN stack? The last entry in the mailing =
+list I found dates back to 2016-10-04. Google introduced NAN support in =
+Android 8.0 but requires a manufacturer-depended firmware =
+implementation. Are there similar plans for Linux?
 
-Though not exactly what I meant, I meant "when IPv6 is not enabled".
+Best regards,
+Milan
+
+[1] https://source.android.com/devices/tech/connect/wifi-aware
 
 --
-Cheers,
-Luca.
+Milan Stute
+Secure Mobile Networking Lab =E2=80=93 SEEMOO
+Technische Universit=C3=A4t Darmstadt
