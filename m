@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43834 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726969AbeHXOE2 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:8855 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726771AbeH0JJs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:05 +0300
-Message-Id: <20180824103018.15011-4-luca@coelho.fi> (sfid-20180824_123034_484873_85FEB08B)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 03/16] iwlwifi: mvm: properly decode HE GI duration
+        Mon, 27 Aug 2018 05:09:48 -0400
+Date: Mon, 27 Aug 2018 10:54:38 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: Re: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in
+ tcp_process()
+Message-ID: <20180827105438.5443cdfa@ajaysk-VirtualBox> (sfid-20180827_072448_979522_56AA487A)
+In-Reply-To: <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com>
+        <c8362c8b-acb3-d5c3-8d47-be18424b8a1e@microchip.com>
+        <20180823160315.168c49e5@ajaysk-VirtualBox>
+        <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Claudiu,
 
-The GI duration depends on the frame type in some cases,
-take that into account when decoding for radiotap.
+On Fri, 24 Aug 2018 12:31:28 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 22 ++++++++++++++-----
- 1 file changed, 16 insertions(+), 6 deletions(-)
+> On 23.08.2018 13:33, Ajay Singh wrote:
+> > On Thu, 23 Aug 2018 11:12:08 +0300
+> > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> >   
+> >> On 14.08.2018 09:50, Ajay Singh wrote:  
+> >>> Cleanup patch to avoid line over 80 chars issue reported by
+> >>> checkpatch.pl script.
+> >>>
+> >>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> >>> ---
+> >>>  drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
+> >>>  1 file changed, 6 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c
+> >>> b/drivers/staging/wilc1000/wilc_wlan.c index 041c9dd..f0743d9
+> >>> 100644 --- a/drivers/staging/wilc1000/wilc_wlan.c
+> >>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> >>> @@ -137,6 +137,11 @@ static inline int add_tcp_pending_ack(struct
+> >>> wilc_vif *vif, u32 ack, return 0;
+> >>>  }
+> >>>  
+> >>> +static inline void clear_tcp_session_txq(struct wilc_vif *vif,
+> >>> int index) +{
+> >>> +	vif->ack_filter.pending_acks_info[index].txqe = NULL;
+> >>> +}
+> >>> +    
+> >>
+> >> This seems useless to me...  
+> > 
+> > Sorry, this point is not fully clear to me.
+> > 
+> > Did you mean setting of 'NULL' to 'pending_acks_info[index].txqe' is
+> > not required?
+> >   
+> 
+> No, having a new function that sets a variable just to avoid line
+> over 80 warning.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index f644bcf7e048..314012ed7a29 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1150,25 +1150,35 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	switch ((rate_n_flags & RATE_MCS_HE_GI_LTF_MSK) >>
- 		RATE_MCS_HE_GI_LTF_POS) {
- 	case 0:
--		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
-+		if (he_type == RATE_MCS_HE_TYPE_TRIG)
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
-+		else
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
- 		if (he_type == RATE_MCS_HE_TYPE_MU)
- 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
- 		else
- 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_1X;
- 		break;
- 	case 1:
--		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
-+		if (he_type == RATE_MCS_HE_TYPE_TRIG)
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
-+		else
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
- 		ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
- 		break;
- 	case 2:
--		rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
--		if (he_type == RATE_MCS_HE_TYPE_TRIG)
-+		if (he_type == RATE_MCS_HE_TYPE_TRIG) {
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
- 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_4X;
--		else
-+		} else {
-+			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_1_6;
- 			ltf = IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE_2X;
-+		}
- 		break;
- 	case 3:
--		if (rate_n_flags & RATE_MCS_SGI_MSK)
-+		if ((he_type == RATE_MCS_HE_TYPE_SU ||
-+		     he_type == RATE_MCS_HE_TYPE_EXT_SU) &&
-+		    rate_n_flags & RATE_MCS_SGI_MSK)
- 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_0_8;
- 		else
- 			rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
--- 
-2.18.0
+Okay got it.
+How about using a temp variable to hold the value of
+'tqe->tcp_pending_ack_idx'. It can also help to overcome the
+checkpatch warning.
+
+
+Regards,
+Ajay
