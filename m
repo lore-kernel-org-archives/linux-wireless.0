@@ -1,85 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:37101 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725751AbeHHEFv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 00:05:51 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "yuehaibing@huawei.com" <yuehaibing@huawei.com>,
-        "valdis.kletnieks@vt.edu" <valdis.kletnieks@vt.edu>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [PATCH] rtlwifi: btcoex: Fix if == else warnings in halbtc8723b2ant.c
-Date: Wed, 8 Aug 2018 01:48:14 +0000
-Message-ID: <1533692892.2513.16.camel@realtek.com> (sfid-20180808_034857_751836_7B4FCEE9)
-References: <20180806045440.11920-1-yuehaibing@huawei.com>
-         <63216.1533591775@turing-police.cc.vt.edu>
-         <577a831f-45c3-a687-ca04-edc977ddb925@lwfinger.net>
-In-Reply-To: <577a831f-45c3-a687-ca04-edc977ddb925@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40648 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726972AbeH0SoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Aug 2018 14:44:08 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v2 11/17] mt76: use mac_wcid_set_drop in mt76x0
+Date: Mon, 27 Aug 2018 16:56:25 +0200
+Message-Id: <1535381791-14908-12-git-send-email-sgruszka@redhat.com> (sfid-20180827_165713_782178_B78E2326)
+In-Reply-To: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE4LTA4LTA3IGF0IDA5OjIzIC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDA4LzA2LzIwMTggMDQ6NDIgUE0sIHZhbGRpcy5rbGV0bmlla3NAdnQuZWR1IHdyb3RlOg0K
-PiA+IE9uIE1vbiwgMDYgQXVnIDIwMTggMTI6NTQ6NDAgKzA4MDAsIFl1ZUhhaWJpbmcgc2FpZDoN
-Cj4gPj4gRml4IGZvbGxvd2luZyBjb2NjaW5lbGxlIHdhcm5pbmc6DQo+ID4+DQo+ID4+IC4vZHJp
-dmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4NzIzYjJh
-bnQuYzoyOTUyOjItNDogV0FSTklORzogcG9zc2libGUNCj4gY29uZGl0aW9uIHdpdGggbm8gZWZm
-ZWN0IChpZiA9PSBlbHNlKQ0KPiA+wqANCj4gPj7CoMKgwqAJLyogc3cgbWVjaGFuaXNtICovDQo+
-ID4+wqDCoMKgCWlmIChCVENfV0lGSV9CV19IVDQwID09IHdpZmlfYncpIHsNCj4gPj4gLQkJaWYg
-KCh3aWZpX3Jzc2lfc3RhdGUgPT0gQlRDX1JTU0lfU1RBVEVfSElHSCkgfHwNCj4gPj4gLQkJwqDC
-oMKgwqAod2lmaV9yc3NpX3N0YXRlID09IEJUQ19SU1NJX1NUQVRFX1NUQVlfSElHSCkpIHsNCj4g
-Pj4gLQkJCWJ0Yzg3MjNiMmFudF9zd19tZWNoYW5pc20oYnRjb2V4aXN0LCB0cnVlLCB0cnVlLA0K
-PiA+PiAtCQkJCQkJwqDCoGZhbHNlLCBmYWxzZSk7DQo+ID4+IC0JCX0gZWxzZSB7DQo+ID4+IC0J
-CQlidGM4NzIzYjJhbnRfc3dfbWVjaGFuaXNtKGJ0Y29leGlzdCwgdHJ1ZSwgdHJ1ZSwNCj4gPj4g
-LQkJCQkJCcKgwqBmYWxzZSwgZmFsc2UpOw0KPiA+PiAtCQl9DQo+ID4+ICsJCWJ0Yzg3MjNiMmFu
-dF9zd19tZWNoYW5pc20oYnRjb2V4aXN0LCB0cnVlLCB0cnVlLA0KPiA+PiArCQkJCQnCoMKgZmFs
-c2UsIGZhbHNlKTsNCj4gPj7CoMKgwqAJfSBlbHNlIHsNCj4gPsKgDQo+ID4gUmF0aGVyIHRoYW4g
-YmxpbmRseSBmaXhpbmcgdGhpcywgcGVyaGFwcyBhIGJpdCBvZiB0aG91Z2h0IG5lZWRzIHRvIGJl
-DQo+ID4gYXBwbGllZCB0byB3aHkgdGhpcyBjb2RlIGxvb2tzIGxpa2UgdGhpcyBpbiB0aGUgZmly
-c3QgcGxhY2UuDQo+ID7CoA0KPiA+IFNlZSBjb21taXQgYzY4MjE2MTNlNjUzYcKgwqAod2hpY2gg
-bG9va3MgbGlrZSB0aGUgYmxldGNoZXJvdXMgImRvIHRvbyBtYW55DQo+ID4gdGhpbmdzIGF0IG9u
-Y2UiIGNvbW1pdCBpbmRlZWQpLCBhbHRob3VnaCB0aGUgYWN0dWFsIGRpZmYgYXBwZWFycyB0byBi
-ZSBhDQo+ID4gIm5vIGhhcm0sIG5vIGZvdWwiIGFnYWluc3QgdGhpcyBjb21taXQsIHdoZXJlIHRo
-ZSBpc3N1ZSBhbHJlYWR5IGV4aXN0ZWQuDQo+ID7CoA0KPiA+IGNvbW1pdCBhYTQ1YTY3M2IyOTFm
-ZDc2MTI3NTQ5M2JjMTUzMTZkNzk1NTVlZDU1DQo+ID4gQXV0aG9yOiBMYXJyeSBGaW5nZXIgPExh
-cnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+ID4gRGF0ZTrCoMKgwqBGcmkgRmViIDI4IDE1OjE2
-OjQzIDIwMTQgLTA2MDANCj4gPsKgDQo+ID7CoMKgwqDCoMKgwqBydGx3aWZpOiBidGNvZXhpc3Q6
-IEFkZCBuZXcgbWluaSBkcml2ZXINCj4gPsKgDQo+ID4gTGFycnk/IENhbiB5b3UgcmVhY2ggYmFj
-ayB0byAyMDE0IGFuZCByZW1lbWJlciB3aHkgdGhpcyBjb2RlDQo+ID4gbG9va2VkIGxpa2UgdGhp
-cyBpbiB0aGUgZmlyc3QgcGxhY2U/DQo+IA0KPiBUaGUgYmFzZSBjb2RlIGNhbWUgZnJvbSBSZWFs
-dGVrLiBNeSBvbmx5IHBhcnQgaW4gZ2V0dGluZyBpdCBpbnRvIHRoZSBrZXJuZWwgd2FzwqANCj4g
-dG8gY2xlYW4gdXAgdGhlIGNoZWNrcGF0Y2ggYW5kIFNwYXJzZSBlcnJvcnMgYW5kIHdhcm5pbmdz
-LCBhbmQgc3VibWl0IGl0LiBJIHdhc8KgDQo+IGEgInNjcmlwdCBraWRkeSIganVzdCBsaWtlIHRo
-ZSBhdXRob3JzIG9mIHRoZSBjdXJyZW50IHBhdGNoZXMuIFRoZSBvbmx5wqANCj4gZGlmZmVyZW5j
-ZSBpcyB0aGF0IEkgd2FzIGdldHRpbmcgZHJpdmVycyBpbnRvIHRoZSBrZXJuZWwgc28gdGhhdCB1
-c2VycyBoYXJkd2FyZcKgDQo+IHdvdWxkIHdvcmsuDQo+IA0KPiBBbnkgcmVjb3JkIG9mIHdoZXRo
-ZXIgdGhlc2UgZHVwbGljYXRlIGJyYW5jaGVzIGFyZSB0aGUgcmVzdWx0IG9mIGluY29ycmVjdCBj
-b3B5wqANCj4gYW5kIHBhc3RlLCBvciBqdXN0IGV4dHJhbmVvdXMgY29kZSwgd291bGQgYmUgYXQg
-UmVhbHRlayBpbiB0aGVpciB2ZXJzaW9uIGNvbnRyb2zCoA0KPiBoaXN0b3J5LiBJIGhhdmUgbmV2
-ZXIgaGFkIGFjY2VzcyB0byBzdWNoIGFyY2hpdmVzLCBub3IgaGF2ZSBJIGV2ZXIgaGFkIGFuwqAN
-Cj4gbm9uLWRpc2Nsb3N1cmUgYWdyZWVtZW50IHdpdGggUmVhbHRlay4NCj4gDQo+IFBpbmctS2Ug
-U2hpaCwgd2hvIGlzIENjJ2Qgb24gdGhlc2UgbWVzc2FnZXMsIG1pZ2h0IGJlIGFibGUgdG8gYW5z
-d2VyIHRoZXNlwqANCj4gcXVlc3Rpb25zLg0KDQpUaGVzZSBicmFuY2hlcyBpcyB1c2VkIHRvIGlt
-cHJvdmUgdXNlciBleHBlcmllbmNlIGFjY29yZGluZyB0byBSU1NJIHN0cmVuZ3RoLCBidXQNCml0
-IGhhcyBub3Qgc2lnbmlmaWNhbnQgaW1wcm92ZW1lbnQgc28gdGhlIHNhbWUgYXJndW1lbnRzIGJl
-Y29tZSBkdXBsaWNhdGUgYnJhbmNoZXMuDQpJIGNoZWNrIHRoZSBsYXRlc3QgY29kZSBvZsKgaGFs
-YnRjODcyM2IyYW50LmMsIHRoZXJlIGFyZSBtb3JlIHRoYW4gb25lIHN0YXRlbWVudHMNCndpdGhp
-biBpZi1lbHNlIGJyYW5jaCB0byBpbXByb3ZlIHBlcmZvcm1hbmNlLCBidXQgdGhlIHN0YXRlbWVu
-dHMgbWVudGlvbmVkIGJ5wqANCnRoaXMgcGF0Y2ggYXJlIHN0aWxsIHRoZSBzYW1lLiBTbywgdGhl
-c2UgZHVwbGljYXRlIGJyYW5jaGVzIGNhbiBiZSBzYWZlbHkgcmVtb3ZlZC4NCg0KPiANCj4gRm9y
-IHRoZSBtb21lbnQsIHRoZXNlIHNpbXBsaWZpY2F0aW9ucyBjb3VsZCBiZSBhcHBsaWVkIGFzIGxv
-bmcgYXMgdGhleSBhcmXCoA0KPiBjb3JyZWN0bHkgZG9uZS4gQWZ0ZXIgYWxsLCB0aGV5IGFyZSBu
-b3QgY2hhbmdpbmcgd2hhdCBpcyBhbHJlYWR5IHRoZXJlIGFuZCB0aGF0wqANCj4gc3RvcHMgYW55
-IG90aGVyIHBlcnNvbiB0aGF0IGtub3dzIGhvdyB0byBydW4gY29jY2luZWxsZSBmcm9tIHN1Ym1p
-dHRpbmcgdGhlIHNhbWXCoA0KPiBwYXRjaCBpbiB0aGUgZnV0dXJlLiBXaHkgImtpY2sgdGhlIGNh
-biBkb3duIHRoZSByb2FkIj8gSWYgUEsgY2FuIGZpbmQgdGhhdCB0aGVyZcKgDQo+IHdhcyBhbiBl
-cnJvciBpbiB0aGUgb3JpZ2luYWwgY29kZSwgaGUgY2FuIHN1Ym1pdCBhICJGaXhlcyIgcGF0Y2gu
-DQo+IA0KPiANCg0K
+Move mt76x02_mac_wcid_set_drop to common code and use it in mt76x0.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c       |  3 ++-
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c       | 11 +++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h       |  1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c     |  4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h        |  1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c | 11 -----------
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c       |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c         |  2 +-
+ 8 files changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 2c15c7ae12ef..a5bdd324f6ec 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -175,6 +175,7 @@ mt76x0_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	msta->wcid.idx = idx;
+ 	msta->wcid.hw_key_idx = -1;
+ 	mt76x02_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
++	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, false);
+ 	mt76_clear(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
+ 	rcu_assign_pointer(dev->wcid[idx], &msta->wcid);
+ 	mt76x0_mac_set_ampdu_factor(dev);
+@@ -195,7 +196,7 @@ mt76x0_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+ 	rcu_assign_pointer(dev->wcid[idx], NULL);
+-	mt76_set(dev, MT_WCID_DROP(idx), MT_WCID_DROP_MASK(idx));
++	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, true);
+ 	dev->wcid_mask[idx / BITS_PER_LONG] &= ~BIT(idx % BITS_PER_LONG);
+ 	mt76x02_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
+ 	mt76x0_mac_set_ampdu_factor(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+index 119229b2dd71..2242c0d7e200 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+@@ -119,3 +119,14 @@ void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
+ 	__mt76_wr_copy(dev, MT_WCID_ADDR(idx), &addr, sizeof(addr));
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_setup);
++
++void mt76x02_mac_wcid_set_drop(struct mt76_dev *dev, u8 idx, bool drop)
++{
++	u32 val = __mt76_rr(dev, MT_WCID_DROP(idx));
++	u32 bit = MT_WCID_DROP_MASK(idx);
++
++	/* prevent unnecessary writes */
++	if ((val & bit) != (bit * drop))
++		__mt76_wr(dev, MT_WCID_DROP(idx), (val & ~bit) | (bit * drop));
++}
++EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_drop);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+index 2fb8b581bf4c..7dc11cf70f7e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+@@ -47,4 +47,5 @@ int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
+ int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
+ 			    struct ieee80211_key_conf *key);
+ void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
++void mt76x02_mac_wcid_set_drop(struct mt76_dev *dev, u8 idx, bool drop);
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+index 706dedee8674..9ef692930d89 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+@@ -116,7 +116,7 @@ int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	msta->wcid.idx = idx;
+ 	msta->wcid.hw_key_idx = -1;
+ 	mt76x02_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
+-	mt76x2_mac_wcid_set_drop(dev, idx, false);
++	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, false);
+ 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
+ 		mt76x2_txq_init(dev, sta->txq[i]);
+ 
+@@ -146,7 +146,7 @@ int mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	rcu_assign_pointer(dev->wcid[idx], NULL);
+ 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
+ 		mt76_txq_remove(&dev->mt76, sta->txq[i]);
+-	mt76x2_mac_wcid_set_drop(dev, idx, true);
++	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, true);
+ 	mt76_wcid_free(dev->wcid_mask, idx);
+ 	mt76x02_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
+ 	mutex_unlock(&dev->mt76.mutex);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+index 1b156a04fb7f..ad22d375c847 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+@@ -170,7 +170,6 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ 			   struct ieee80211_sta *sta, int len);
+ void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
+ 			      const struct ieee80211_tx_rate *rate);
+-void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop);
+ 
+ int mt76x2_mac_set_beacon(struct mt76x2_dev *dev, u8 vif_idx,
+ 			  struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
+index f4e72a280132..f4ae0f157aaa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
+@@ -383,17 +383,6 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
+ }
+ EXPORT_SYMBOL_GPL(mt76x2_mac_write_txwi);
+ 
+-void mt76x2_mac_wcid_set_drop(struct mt76x2_dev *dev, u8 idx, bool drop)
+-{
+-	u32 val = mt76_rr(dev, MT_WCID_DROP(idx));
+-	u32 bit = MT_WCID_DROP_MASK(idx);
+-
+-	/* prevent unnecessary writes */
+-	if ((val & bit) != (bit * drop))
+-		mt76_wr(dev, MT_WCID_DROP(idx), (val & ~bit) | (bit * drop));
+-}
+-EXPORT_SYMBOL_GPL(mt76x2_mac_wcid_set_drop);
+-
+ static int
+ mt76x2_mac_process_rate(struct mt76_rx_status *status, u16 rate)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 577c6ee39fb8..7d2b4a419566 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -207,7 +207,7 @@ mt76x2_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
+ 	int idx = msta->wcid.idx;
+ 
+ 	mt76_stop_tx_queues(&dev->mt76, sta, true);
+-	mt76x2_mac_wcid_set_drop(dev, idx, ps);
++	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, ps);
+ }
+ 
+ static void
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 4c907882e8b0..6874db52b846 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -34,7 +34,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 	int ret;
+ 
+ 	if (q == &dev->mt76.q_tx[MT_TXQ_PSD] && wcid && wcid->idx < 128)
+-		mt76x2_mac_wcid_set_drop(dev, wcid->idx, false);
++		mt76x02_mac_wcid_set_drop(&dev->mt76, wcid->idx, false);
+ 
+ 	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta, skb->len);
+ 
+-- 
+2.7.5
