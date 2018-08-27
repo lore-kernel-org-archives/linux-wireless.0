@@ -1,68 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0118.outbound.protection.outlook.com ([104.47.41.118]:1880
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1733061AbeHGIbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Aug 2018 04:31:16 -0400
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Winnie Chang <winnie.chang@cypress.com>
-Subject: [PATCH] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
-Date: Tue,  7 Aug 2018 01:18:06 -0500
-Message-Id: <1533622686-145733-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180807_081930_809181_28361BE3)
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35133 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726920AbeH0TPz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 27 Aug 2018 15:15:55 -0400
+Received: by mail-oi0-f45.google.com with SMTP id m11-v6so28015733oic.2
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 08:28:50 -0700 (PDT)
+Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
+To: prabhu <d.praabhu@gmail.com>
+Cc: kabe@sra-tohoku.co.jp, kvalo@codeaurora.org, m@bues.ch,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
+ <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
+ <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net>
+ <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
+ <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net>
+ <CAHnrWRo-Edm+bSJ_1EKNYkPR2zKVnvfoTpaLK+uY1bw4JS7ZjQ@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <0ce95ac6-1271-c9d5-b48a-4612ad04f51d@lwfinger.net> (sfid-20180827_172853_615395_ECDB9F7B)
+Date: Mon, 27 Aug 2018 10:28:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAHnrWRo-Edm+bSJ_1EKNYkPR2zKVnvfoTpaLK+uY1bw4JS7ZjQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winnie Chang <winnie.chang@cypress.com>
+On 08/27/2018 06:30 AM, prabhu wrote:
+> Larry,
+> 
+> Applied on a clean 4.18.4 source and tested.
+> It works for me.
 
-The kernel BUG happens when wowl is enabled from firmware. In
-brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
-drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
-yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
-calls brcmf_wiphy_wowl_params().
+Thanks for testing. I will push the patch upstream.
 
-The kernel panic is introduced in below commit:
-commit id: 856d5a011c86b59f6564be4508912fb1d866adfc
-brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
-
-Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
-Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 24c4e18..5444e62 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6926,15 +6926,15 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 	cfg->d11inf.io_type = (u8)io_type;
- 	brcmu_d11_attach(&cfg->d11inf);
- 
--	err = brcmf_setup_wiphy(wiphy, ifp);
--	if (err < 0)
--		goto priv_out;
--
- 	/* regulatory notifer below needs access to cfg so
- 	 * assign it now.
- 	 */
- 	drvr->config = cfg;
- 
-+	err = brcmf_setup_wiphy(wiphy, ifp);
-+	if (err < 0)
-+		goto priv_out;
-+
- 	brcmf_dbg(INFO, "Registering custom regulatory\n");
- 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
- 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
--- 
-2.1.0
+Larry
