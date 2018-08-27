@@ -1,89 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:36837 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727233AbeHaLTX (ORCPT
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:39700 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726825AbeH0PRl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 07:19:23 -0400
-From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yuan-Chi Pang <fu3mo6goo@gmail.com>
-Subject: [PATCH] mac80211: fix TX status reporting for ieee80211s
-Date: Fri, 31 Aug 2018 15:12:55 +0800
-Message-Id: <1535699575-5672-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180831_091357_852455_691F5D42)
+        Mon, 27 Aug 2018 11:17:41 -0400
+Received: by mail-pf1-f196.google.com with SMTP id j8-v6so7616345pff.6
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 04:31:25 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Sasidhar Mudigonda <sasidhar.mudigonda@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sanjay Konduri <sanjay.konduri@redpinesignals.com>
+Subject: [PATCH 1/2] rsi: fix memory alignment issue in ARM32 platforms
+Date: Mon, 27 Aug 2018 17:05:14 +0530
+Message-Id: <1535369715-14254-1-git-send-email-siva8118@gmail.com> (sfid-20180827_133128_052551_8BCF9A3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211s_update_metric works only if wireless
-driver passes tx_status of data frame to mac80211
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-Make API and caller of ieee80211s_update_metric to be
-similar to rate_control_tx_status
+During testing in ARM32 platforms, observed below kernel panic, as driver
+accessing data beyond the allocated memory while submitting URB to USB.
 
-Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+Fix: Resolved this by specifying correct length by considering 64 bit
+alignment. so that, USB bus driver will access only allocated memory.
+
+Unit-test: Tested and confirm that driver bring up and scanning,
+connection and data transfer works fine with this fix.
+
+...skipping...
+[   25.389450] Unable to handle kernel paging request at virtual
+	       address 5aa11422
+[   25.403078] Internal error: Oops: 5 [#1] SMP ARM
+[   25.407703] Modules linked in: rsi_usb
+[   25.411473] CPU: 1 PID: 317 Comm: RX-Thread Not tainted 4.18.0-rc7 #1
+[   25.419221] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+[   25.425764] PC is at skb_release_data+0x90/0x168
+[   25.430393] LR is at skb_release_all+0x28/0x2c
+[   25.434842] pc : [<807435b0>] lr : [<80742ba0>] psr: 200e0013 5aa1141e
+[   25.464633] Flags: nzCv  IRQs on  FIQs on  Mode SVC_32 ISA ARM Segment none
+[   25.477524] Process RX-Thread (pid: 317, stack limit = 0x(ptrval))
+[   25.483709] Stack: (0xedf69ed8 to 0xedf6a000)
+[   25.569907] Backtrace:
+[   25.572368] [<80743520>] (skb_release_data) from [<80742ba0>]
+	       (skb_release_all+0x28/0x2c)
+[   25.580555] r9:7f00258c r8:00000001 r7:ee355000 r6:eddab0d0
+	       r5:eddab000 r4:eddbb840
+[   25.588308] [<80742b78>] (skb_release_all) from [<807432cc>]
+	       (consume_skb+0x30/0x50)
+[   25.596055] r5:eddab000 r4:eddbb840
+[   25.599648] [<8074329c>] (consume_skb) from [<7f00117c>]
+	       (rsi_usb_rx_thread+0x64/0x12c [rsi_usb])
+[   25.608524] r5:eddab000 r4:eddbb840
+[   25.612116] [<7f001118>] (rsi_usb_rx_thread [rsi_usb]) from
+	       [<80142750>] (kthread+0x11c/0x15c)
+[   25.620735] r10:ee9ff9e0 r9:edcde3b8 r8:ee355000 r7:edf68000
+	       r6:edd3a780 r5:00000000
+[   25.628567] r4:edcde380
+[   25.631110] [<80142634>] (kthread) from [<801010e8>]
+	       (ret_from_fork+0x14/0x2c)
+[   25.638336] Exception stack(0xedf69fb0 to 0xedf69ff8)
+[   25.682929] ---[ end trace 8236a5496f5b5d3b ]---
+
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 ---
- net/mac80211/mesh.h      | 2 +-
- net/mac80211/mesh_hwmp.c | 8 ++------
- net/mac80211/status.c    | 4 +++-
- 3 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index ee56f18..3c6095a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -217,7 +217,7 @@ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
- void ieee80211s_update_metric(struct ieee80211_local *local,
--			      struct sta_info *sta, struct sk_buff *skb);
-+			struct sta_info *sta, struct ieee80211_tx_status *st);
- void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_teardown_sdata(struct ieee80211_sub_if_data *sdata);
- int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index daf9db3..4286673 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -295,15 +295,11 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
- }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index c0a163e..f360690 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -266,15 +266,17 @@ static void rsi_rx_done_handler(struct urb *urb)
+ 	if (urb->status)
+ 		goto out;
  
- void ieee80211s_update_metric(struct ieee80211_local *local,
--		struct sta_info *sta, struct sk_buff *skb)
-+		struct sta_info *sta, struct ieee80211_tx_status *st)
- {
--	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *txinfo = st->info;
- 	int failed;
- 
--	if (!ieee80211_is_data(hdr->frame_control))
--		return;
--
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
- 
- 	/* moving average, scaled to 100.
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9a6d720..dfcd419 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -811,7 +811,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 
- 		rate_control_tx_status(local, sband, status);
- 		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
--			ieee80211s_update_metric(local, sta, skb);
-+			ieee80211s_update_metric(local, sta, status);
- 
- 		if (!(info->flags & IEEE80211_TX_CTL_INJECTED) && acked)
- 			ieee80211_frame_acked(sta, skb);
-@@ -972,6 +972,8 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 		}
- 
- 		rate_control_tx_status(local, sband, status);
-+		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
-+			ieee80211s_update_metric(local, sta, status);
+-	if (urb->actual_length <= 0) {
+-		rsi_dbg(INFO_ZONE, "%s: Zero length packet\n", __func__);
++	if (urb->actual_length <= 0 ||
++	    urb->actual_length > rx_cb->rx_skb->len) {
++		rsi_dbg(INFO_ZONE, "%s: Invalid packet length = %d\n",
++			__func__, urb->actual_length);
+ 		goto out;
  	}
+ 	if (skb_queue_len(&dev->rx_q) >= RSI_MAX_RX_PKTS) {
+ 		rsi_dbg(INFO_ZONE, "Max RX packets reached\n");
+ 		goto out;
+ 	}
+-	skb_put(rx_cb->rx_skb, urb->actual_length);
++	skb_trim(rx_cb->rx_skb, urb->actual_length);
+ 	skb_queue_tail(&dev->rx_q, rx_cb->rx_skb);
  
- 	if (acked || noack_success) {
+ 	rsi_set_event(&dev->rx_thread.event);
+@@ -308,6 +310,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 	if (!skb)
+ 		return -ENOMEM;
+ 	skb_reserve(skb, MAX_DWORD_ALIGN_BYTES);
++	skb_put(skb, RSI_MAX_RX_USB_PKT_SIZE - MAX_DWORD_ALIGN_BYTES);
+ 	dword_align_bytes = (unsigned long)skb->data & 0x3f;
+ 	if (dword_align_bytes > 0)
+ 		skb_push(skb, dword_align_bytes);
+@@ -319,7 +322,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
+ 			  usb_rcvbulkpipe(dev->usbdev,
+ 			  dev->bulkin_endpoint_addr[ep_num - 1]),
+ 			  urb->transfer_buffer,
+-			  RSI_MAX_RX_USB_PKT_SIZE,
++			  skb->len,
+ 			  rsi_rx_done_handler,
+ 			  rx_cb);
+ 
 -- 
-2.7.4
+2.5.5
