@@ -1,211 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:61887 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730243AbeHINyW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44350 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1I0q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 09:54:22 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2] staging: wilc1000: fix undefined reference to `__this_module' compilation error
-Date: Thu, 9 Aug 2018 16:59:39 +0530
-Message-ID: <1533814179-21436-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180809_132959_789637_1C6E3098)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 28 Aug 2018 04:26:46 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 2/2] ath10k: Enable pktlog for WCN3990 target
+Date: Tue, 28 Aug 2018 10:06:42 +0530
+Message-Id: <20180828043642.14890-3-govinds@codeaurora.org> (sfid-20180828_063707_636213_402D2E08)
+In-Reply-To: <20180828043642.14890-1-govinds@codeaurora.org>
+References: <20180828043642.14890-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_debug.o object file is included for both SDIO and SPI module. When
-anyone(either SDIO or SPI) module is compiled as loaded module and another
-as buildin module then below compilation error occurs.
+WCN3990 target uses separate htc service for pktlog.
+Add pktlog service request and support for pktlog
+rx path handling.
 
-"drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
-reference to `__this_module'"
+Testing:
+    Tested on WCN3990 and QCA6174 HW.
+    Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1,
+               WLAN.RM.4.4.1-00109-QCARMSWPZ-1
 
-Moved the declaration of file_operation variable in SDIO/SPI files and
-pass this as parameter to wilc_debugfs_init().
-Refactor wilc_debugfs_init() as its not required to maintain
-'wilc_debugfs_info_t' in debugfs_info[] array. Also modified file
-permission from 0666 to 0600 & use 'data' field as 'NULL' in
-debugfs_create_file() call.
-
-Fixes: 9abc44ba4e2f ("staging: wilc1000: fix TODO to compile spi and sdio components in single module")
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
-changes since v1:
- 1. Correct the Fixes tag format.
- 2. Remove blank line between Fixes and Reported-by tag.
- 3. Modified debug print and use only NULL check in wilc_debugfs_init().
+ drivers/net/wireless/ath/ath10k/htc.c  | 63 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/pci.c  |  2 +-
+ drivers/net/wireless/ath/ath10k/snoc.c | 13 +++++-
+ 3 files changed, 74 insertions(+), 4 deletions(-)
 
- drivers/staging/wilc1000/linux_wlan.c   |  1 -
- drivers/staging/wilc1000/wilc_debugfs.c | 51 +++++++--------------------------
- drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++
- drivers/staging/wilc1000/wilc_spi.c     |  7 +++++
- drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++-
- 5 files changed, 30 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 01cf4bd..37885ad 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1062,7 +1062,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	if (!wl)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 8902720b4e49..ff91061cb3a9 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -803,8 +803,11 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 						ep->service_id,
+ 						&ep->ul_pipe_id,
+ 						&ep->dl_pipe_id);
+-	if (status)
++	if (status) {
++		ath10k_warn(ar, "unsupported HTC service id: %d\n",
++			    ep->service_id);
+ 		return status;
++	}
  
--	wilc_debugfs_init();
- 	*wilc = wl;
- 	wl->io_type = io_type;
- 	wl->hif_func = ops;
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index edc7287..9787b3a 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -20,8 +20,8 @@ static struct dentry *wilc_dir;
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- 
--static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
--				     size_t count, loff_t *ppos)
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos)
- {
- 	char buf[128];
- 	int res = 0;
-@@ -36,9 +36,8 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT,
+ 		   "boot htc service '%s' ul pipe %d dl pipe %d eid %d ready\n",
+@@ -838,6 +841,56 @@ struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size)
+ 	return skb;
  }
  
--static ssize_t wilc_debug_level_write(struct file *filp,
--				      const char __user *buf, size_t count,
--				      loff_t *ppos)
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos)
++static void ath10k_htc_pktlog_process_rx(struct ath10k *ar, struct sk_buff *skb)
++{
++	trace_ath10k_htt_pktlog(ar, skb->data, skb->len);
++	dev_kfree_skb_any(skb);
++}
++
++static int ath10k_htc_pktlog_connect(struct ath10k *ar)
++{
++	struct ath10k_htc_svc_conn_resp conn_resp;
++	struct ath10k_htc_svc_conn_req conn_req;
++	int status;
++
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++
++	conn_req.ep_ops.ep_tx_complete = NULL;
++	conn_req.ep_ops.ep_rx_complete = ath10k_htc_pktlog_process_rx;
++	conn_req.ep_ops.ep_tx_credits = NULL;
++
++	/* connect to control service */
++	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_LOG_MSG;
++	status = ath10k_htc_connect_service(&ar->htc, &conn_req, &conn_resp);
++	if (status) {
++		ath10k_warn(ar, "failed to connect to PKTLOG service: %d\n",
++			    status);
++		return status;
++	}
++
++	return 0;
++}
++
++bool ath10k_htc_pktlog_svc_supported(struct ath10k *ar)
++{
++	u8 ul_pipe_id;
++	u8 dl_pipe_id;
++	int status;
++
++	status = ath10k_hif_map_service_to_pipe(ar, ATH10K_HTC_SVC_ID_HTT_LOG_MSG,
++						&ul_pipe_id,
++						&dl_pipe_id);
++	if (status) {
++		ath10k_warn(ar, "unsupported HTC service id: %d\n",
++			    ATH10K_HTC_SVC_ID_HTT_LOG_MSG);
++
++		return false;
++	}
++
++	return true;
++}
++
+ int ath10k_htc_start(struct ath10k_htc *htc)
  {
- 	int flag = 0;
- 	int ret;
-@@ -63,45 +62,15 @@ static ssize_t wilc_debug_level_write(struct file *filp,
- 	return count;
- }
- 
--#define FOPS(_open, _read, _write, _poll) { \
--		.owner	= THIS_MODULE, \
--		.open	= (_open), \
--		.read	= (_read), \
--		.write	= (_write), \
--		.poll		= (_poll), \
--}
--
--struct wilc_debugfs_info_t {
--	const char *name;
--	int perm;
--	unsigned int data;
--	const struct file_operations fops;
--};
--
--static struct wilc_debugfs_info_t debugfs_info[] = {
--	{
--		"wilc_debug_level",
--		0666,
--		(DEBUG | ERR),
--		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
--	},
--};
--
--int wilc_debugfs_init(void)
-+void wilc_debugfs_init(const struct file_operations *fops)
- {
--	int i;
--	struct wilc_debugfs_info_t *info;
--
- 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
--	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
--		info = &debugfs_info[i];
--		debugfs_create_file(info->name,
--				    info->perm,
--				    wilc_dir,
--				    &info->data,
--				    &info->fops);
-+	if (!wilc_dir) {
-+		pr_err("Error creating debugfs/wilc_wifi/\n");
-+		return;
+ 	struct ath10k *ar = htc->ar;
+@@ -871,6 +924,14 @@ int ath10k_htc_start(struct ath10k_htc *htc)
+ 		return status;
  	}
--	return 0;
+ 
++	if (ath10k_htc_pktlog_svc_supported(ar)) {
++		status = ath10k_htc_pktlog_connect(ar);
++		if (status) {
++			ath10k_err(ar, "failed to connect to pktlog: %d\n", status);
++			return status;
++		}
++	}
 +
-+	debugfs_create_file("wilc_debug_level", 0600, wilc_dir, NULL, fops);
+ 	return 0;
  }
  
- void wilc_debugfs_remove(void)
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index b2080d8..c1573f5 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -103,6 +103,12 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
- 	return ret;
- }
- 
-+static const struct file_operations sdio_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
-+
- static int linux_sdio_probe(struct sdio_func *func,
- 			    const struct sdio_device_id *id)
- {
-@@ -126,6 +132,7 @@ static int linux_sdio_probe(struct sdio_func *func,
- 		dev_err(&func->dev, "Couldn't initialize netdev\n");
- 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 62fb16a4fa63..8816bcbaebad 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1839,7 +1839,7 @@ int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar, u16 service_id,
+ 		}
  	}
-+	wilc_debugfs_init(&sdio_debug_fops);
- 	sdio_set_drvdata(func, wilc);
- 	wilc->dev = &func->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 5517477..0376649 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -102,6 +102,12 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
  
- #define USE_SPI_DMA				0
+-	if (WARN_ON(!ul_set || !dl_set))
++	if (!ul_set || !dl_set)
+ 		return -ENOENT;
  
-+static const struct file_operations spi_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index e9a6b3dc0c11..5a9c8faaed0e 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -62,6 +62,7 @@ static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_snoc_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+@@ -237,7 +238,7 @@ static struct ce_attr host_ce_config_wlan[] = {
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
++		.recv_cb = ath10k_snoc_pktlog_rx_cb,
+ 	},
+ };
+ 
+@@ -624,6 +625,14 @@ static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
+ 	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
+ }
+ 
++/* Called by lower (CE) layer when data is received from the Target.
++ * WCN3990 firmware uses separate CE(CE11) to transfer pktlog data.
++ */
++static void ath10k_snoc_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
 +
- static int wilc_bus_probe(struct spi_device *spi)
+ static void ath10k_snoc_htt_rx_deliver(struct ath10k *ar, struct sk_buff *skb)
  {
- 	int ret;
-@@ -120,6 +126,7 @@ static int wilc_bus_probe(struct spi_device *spi)
- 	if (ret)
- 		return ret;
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+@@ -804,7 +813,7 @@ static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
+ 		}
+ 	}
  
-+	wilc_debugfs_init(&spi_debug_fops);
- 	spi_set_drvdata(spi, wilc);
- 	wilc->dev = &spi->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 00d13b1..21f72a8 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -831,6 +831,11 @@ struct wilc;
- int wilc_wlan_init(struct net_device *dev);
- u32 wilc_get_chipid(struct wilc *wilc, bool update);
+-	if (WARN_ON(!ul_set || !dl_set))
++	if (!ul_set || !dl_set)
+ 		return -ENOENT;
  
--int wilc_debugfs_init(void);
-+void wilc_debugfs_init(const struct file_operations *fops);
- void wilc_debugfs_remove(void);
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos);
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos);
-+
- #endif
+ 	return 0;
 -- 
-2.7.4
+2.17.0
