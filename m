@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36474 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388666AbeHAKNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 06:13:23 -0400
-Date: Wed, 1 Aug 2018 10:28:45 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v3 12/14] mt76: Kconfig and Makefile for mt76x0 driver
-Message-ID: <20180801082844.GB4526@redhat.com> (sfid-20180801_103306_868383_BAB2655E)
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
- <1533040864-9026-13-git-send-email-sgruszka@redhat.com>
- <8736vy1r0j.fsf@purkki.adurom.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49012 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727094AbeH2Dsq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Aug 2018 23:48:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8736vy1r0j.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 28 Aug 2018 16:54:43 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
+In-Reply-To: <87d0u24wsw.fsf@toke.dk>
+References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
+ <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org>
+ <87a7pfaovy.fsf@toke.dk> <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org>
+ <87a7pe8xn5.fsf@toke.dk> <5a697a77c65745cdabb0e8a3ab0931ef@codeaurora.org>
+ <87d0u24wsw.fsf@toke.dk>
+Message-ID: <a0fa5a1bb754b56b6d076afa71d14c57@codeaurora.org> (sfid-20180829_015446_791687_14A7A4C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 10:32:12AM +0300, Kalle Valo wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+On 2018-08-28 03:20, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 > 
-> > Add Kconfig and Makefiles for mt76x0 driver. Now the driver
-> > can be build.
-> >
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> >  drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
-> >  drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
-> >  drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
-> >  3 files changed, 15 insertions(+)
-> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-> >
-> > diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-> > index 69906c733a1c..850611ad347a 100644
-> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
-> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-> > @@ -9,6 +9,13 @@ config MT76x2_COMMON
-> >  	tristate
-> >  	depends on MT76_CORE
-> >  
-> > +config MT76x0U
-> > +	tristate "MediaTek MT76x0U (USB) support"
-> > +	depends on MAC80211
-> > +	depends on USB
-> > +	help
-> > +	  This adds support for MT7610U-based wireless USB dongles.
+> Ah, excellent; then it should be no problem to enforce the head node
+> access; worst case the pull mechanism will be at a different point in
+> the round-robin, which will sync up quickly.
 > 
-> Does it make sense to add a Kconfig option for every mt76 device? I'm
-> worried that soon we have over a dozen of them. I can understand having
-> separate options to enable PCI or USB devices, but I don't see the
-> benefit for anything more finegrained than that.
+>> Will fix it and rename as ieee80211_txq_can_transmit().
+> 
+> Cool. If you send an updated patchset I can fold it into an updated
+> version of my RFC and send it as a proper patch once I've verified
+> everything works with ath9k :)
+> 
+Sure. Found an issue in txq pause change. The drivers assume that
+ieee80211_tx_dequeue() returns NULL only when txq is empty. Adding a
+IEEE80211_TXQ_PAUSE check in tx_dequeue() breaks this assumption. 
+Moreover
+once txq is paused, it should be queued to tail not at head.
 
-I think it does make sense for AP/home routers and other embedded
-devices.
+Will send updated version ASAP.
 
-Stanislaw
+-Rajkumar
