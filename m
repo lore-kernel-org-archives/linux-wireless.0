@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50378 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732189AbeHNPkN (ORCPT
+Received: from mail-it0-f54.google.com ([209.85.214.54]:53528 "EHLO
+        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726383AbeH2Bet (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 11:40:13 -0400
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
- <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
- <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
- <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
- <1526637270.3805.15.camel@sipsolutions.net>
- <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
- <1527069018.3759.15.camel@sipsolutions.net>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org> (sfid-20180814_145312_801551_BAF166AA)
-Date: Tue, 14 Aug 2018 18:23:05 +0530
+        Tue, 28 Aug 2018 21:34:49 -0400
+Received: by mail-it0-f54.google.com with SMTP id p79-v6so4815014itp.3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 14:41:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1527069018.3759.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
+ <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
+ <1535490861.20033.8.camel@sipsolutions.net>
+In-Reply-To: <1535490861.20033.8.camel@sipsolutions.net>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Tue, 28 Aug 2018 23:41:02 +0200
+Message-ID: <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com> (sfid-20180828_234117_573058_1EEAEA03)
+Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set to one
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, sara.sharon@intel.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 5/23/2018 3:20 PM, Johannes Berg wrote:
-> On Mon, 2018-05-21 at 12:12 +0530, Manikanta Pubbisetty wrote:
->>> Do you know why it actually broke it? I mean, we should've turned off
->>> the strict requirement for sw crypto control only for the GTK, and that
->>> shouldn't matter so much?
->> With the change db3bdcb9c3ff, AP/VLAN support is advertised by the
->> driver conditionally; the primary reason for doing this is to support
->> VLAN operations on sw crypto controlled devices.
-> Right, or, well *not* supporting it.
 >
->> AP also creates AP/VLAN devices for supporting 4-addr clients and since
->> the driver now advertises AP/VLAN support conditionally, the 4-addr
->> operation which has no relation to the VLANs(Per VLAN GTKs) was broken
->> on some ath10k devices.
-> Right. Like I said, splitting those two capabilities somehow would be
-> best.
+> On Tue, 2018-08-28 at 23:07 +0200, Lorenzo Bianconi wrote:
+> > Do not try to aggregate packets in a A-MSDU frame if max_tx_fragments
+> > or max_amsdu_subframes is set to 1.
 >
->>>> + * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
->>>> + *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
->>>> + *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
->>>> + *     operations in the BSS.
->>> Based on the name and initial description, this sounds equivalent to
->>> just turning off SW_CRYPTO_CONTROL. I think that's not the intent, but
->>> would need some renaming.
->> I can rename it to something which is very specific to VLAN support on
->> sw crypto controlled devices if that is okay.
-> I don't think that makes sense. If we split the capability of AP_VLAN
-> and AP_VLAN_FOR_4ADDR at the "root", then we don't need to play with all
-> these things. Yes, this is slightly awkward for userspace, and perhaps
-> with the interface combination checks, but I'd like you to look at that.
+> Yeah that seems valid.
+>
+> > Moreover take into account
+> > tail padding added on the first frame into flow backlog if
+> > ieee80211_amsdu_realloc_pad routine on the second frame fails.
+>
+> That's not really right - the padding shouldn't have been added to the
+> first subframe in the first place as the last one shouldn't have padding
+> at all. There's also a separate bug in that the A-MSDU subframe length
+> should NOT include the padding.
+>
 
-Hi Johannes,
+Assuming the A-MSDU subframe is composed by two packets, the last one
+must not contain padding, is my understanding correct?
 
-I was working on splitting the 4-addr functionality from AP/VLAN iftype; 
-I have introduced a new iftype NL80211_IFTYPE_AP_4ADDR and moved the 
-4-addr handling from AP/VLAN to this new iftype. But this approach 
-breaks the backward compatibility with older userspace applications. 
-Since I am completely moving the 4-addr handling to the new type, older 
-applications which do not understand this new type will simply fail and 
-4-addr mode will be completely broken.
+> My colleague Sara (CC'ed now) has a patch to fix all of this (we just
+> did that this morning). I'll send it out tomorrow morning. Can I bother
+> you to try that?
+>
 
-Currently, whenever a 4-addr client attempts a connection, hostapd just 
-creates a AP/VLAN interface and moves the 4-addr client to the AP/VLAN 
-iface; there are no other checks. I had no other option other than going 
-with a new iftype for 4-addr handling.
+Sure, no worries :)
 
-Is there a way we can maintain backward compatibility with this 
-approach? Retaining the 4-addr handling in AP/VLAN and duplicating the 
-same functionality to the new iftype seems will work but I am not sure 
-if this is the right approach.
+> We'd have to fix the first point independently though, or I guess we can
+> roll that into our bugfix too, which would you prefer?
+>
+> johannes
+>
 
-Thanks,
-Manikanta
+If the patch is already done I can add the fix for the first point on
+top of it, does it sound good?
+
+Regards,
+Lorenzo
