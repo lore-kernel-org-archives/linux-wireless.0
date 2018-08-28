@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39554 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39180 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732570AbeHIRci (ORCPT
+        with ESMTP id S1727877AbeH1Rmt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 13:32:38 -0400
+        Tue, 28 Aug 2018 13:42:49 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer
- dereference
+Subject: Re: [PATCH] ath10k: Limit available channels via DT
+ ieee80211-freq-limit
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1533694781-176974-1-git-send-email-chi-hsien.lin@cypress.com>
-References: <1533694781-176974-1-git-send-email-chi-hsien.lin@cypress.com>
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Winnie Chang <winnie.chang@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-Id: <20180809150718.B7FB260B77@smtp.codeaurora.org> (sfid-20180809_170722_161274_411673D1)
-Date: Thu,  9 Aug 2018 15:07:18 +0000 (UTC)
+In-Reply-To: <20180730153933.3771-1-sven.eckelmann@openmesh.com>
+References: <20180730153933.3771-1-sven.eckelmann@openmesh.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Message-Id: <20180828135102.EF2336044E@smtp.codeaurora.org> (sfid-20180828_155138_735220_19F1E274)
+Date: Tue, 28 Aug 2018 13:51:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chi-Hsien Lin <chi-hsien.lin@cypress.com> wrote:
+Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
 
-> From: Winnie Chang <winnie.chang@cypress.com>
+> Tri-band devices (1x 2.4GHz + 2x 5GHz) often incorporate special filters in
+> the RX and TX path. These filtered channel can in theory still be used by
+> the hardware but the signal strength is reduced so much that it makes no
+> sense.
 > 
-> The kernel BUG happens when wowl is enabled from firmware. In
-> brcmf_wiphy_wowl_params(), cfg is a NULL pointer because it is
-> drvr->config returned from wiphy_to_cfg(), and drvr->config is not set
-> yet. To fix it, set drvr->config before brcmf_setup_wiphy() which
-> calls brcmf_wiphy_wowl_params().
+> There is already a DT property to limit the available channels but ath10k
+> has to manually call this functionality to limit the currrently set wiphy
+> channels further.
 > 
-> Fixes: 856d5a011c86 ("brcmfmac: allocate struct brcmf_pub instance using wiphy_new()")
-> Signed-off-by: Winnie Chang <winnie.chang@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-27a8aea13053 brcmfmac: fix brcmf_wiphy_wowl_params() NULL pointer dereference
+34d5629d2ca8 ath10k: limit available channels via DT ieee80211-freq-limit
 
 -- 
-https://patchwork.kernel.org/patch/10559407/
+https://patchwork.kernel.org/patch/10549245/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
