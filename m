@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f46.google.com ([209.85.208.46]:32791 "EHLO
-        mail-ed1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728067AbeHDVVN (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:55621 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1IZ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Aug 2018 17:21:13 -0400
-Received: by mail-ed1-f46.google.com with SMTP id x5-v6so3332635edr.0
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Aug 2018 12:19:33 -0700 (PDT)
-Subject: Re: iw scanning broken?
-To: Dan Kosek <daniel.kosek@gmail.com>, linux-wireless@vger.kernel.org
-References: <C17ECAF6-E13C-40DB-A582-C9945D9BE7D7@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B65FC42.3010604@broadcom.com> (sfid-20180804_212003_881838_71B1595A)
-Date: Sat, 4 Aug 2018 21:19:30 +0200
+        Tue, 28 Aug 2018 04:25:27 -0400
+Date: Tue, 28 Aug 2018 10:05:32 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 00/24] staging: wilc1000: avoid use of static and global
+ variable
+Message-ID: <20180828100532.03df5e26@ajaysk-VirtualBox> (sfid-20180828_063640_808354_E62FC3E4)
+In-Reply-To: <20180827171047.GA5058@kroah.com>
+References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        <20180827171047.GA5058@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <C17ECAF6-E13C-40DB-A582-C9945D9BE7D7@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/4/2018 3:08 PM, Dan Kosek wrote:
-> If you enter the following command, you should get a single channel scan:
->
-> sudo iw wlan0 scan freq 2412
->
-> You do not.  Instead you get a full (all) channels scan, which takes 3-5 seconds.
+Hi Greg,
 
-Do you have any logs to support that claim. Please note that the command 
-returns all BSS-es that are listed in wireless subsystem, ie. in 
-cfg80211. That includes BSS-es found in previous scans unless their 
-lifetime expired. What happens if you do...
+On Mon, 27 Aug 2018 19:10:47 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-$ sudo iw wlan0 scan freq 2412 flush
+> On Tue, Aug 14, 2018 at 12:19:52PM +0530, Ajay Singh wrote:
+> > This patch set mainly contains changes to avoid the use of static
+> > and global variables. Also contains few patch to avoid the
+> > checkpatch warning arise due to code refactor.  
+> 
+> I'm dropping this whole series from my review queue as I have no idea
+> what is going on with it anymore :)
 
-> This has been tested on Raspberry Pi Raspian 9 and Peppermint OS 7 ( Linux 4.4.0-53-generic #74-Ubuntu) with the same results.
->
-> i believe iw is broken or some command knowledge is missing.
+Sorry for the trouble.
+Please ignore this patch set. I am working on v2 for this patch series
+to include the review comments. 
+I will send the updated patch set soon.
 
-So what drivers are involved. Please include kernel logs.
 
 Regards,
-Arend
+Ajay
