@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lorien.comfychair.org ([173.8.144.98]:65145 "EHLO
-        lorien.comfychair.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728772AbeHMX25 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 19:28:57 -0400
-Date: Mon, 13 Aug 2018 13:41:32 -0700
-From: Danek Duvall <duvall@comfychair.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: help understanding HT capabilities bits
-Message-ID: <20180813204131.GA10207@lorien.comfychair.org> (sfid-20180813_224511_544271_9A01FBD4)
-References: <20180726234329.GA28336@lorien.comfychair.org>
- <1534155955.3093.4.camel@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:43254 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727069AbeH1PpF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Aug 2018 11:45:05 -0400
+Subject: Re: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Sathishkumar Muruganandam <murugana@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>
+ <1535450281.5895.34.camel@sipsolutions.net>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <4156a91b-cea4-8942-23ad-6377ac50a804@nbd.name> (sfid-20180828_135350_104520_931A7A29)
+Date: Tue, 28 Aug 2018 13:53:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534155955.3093.4.camel@sipsolutions.net>
+In-Reply-To: <1535450281.5895.34.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2018 at 12:25:55PM +0200, Johannes Berg wrote:
-
-> On Thu, 2018-07-26 at 16:43 -0700, Danek Duvall wrote:
-> > I'm writing a library using the nl80211 family to, well, do basically what
-> > iw does (I want a reusable Golang-native implementation, which saves me
-> > from parsing iw's output).  I have most of the bits that I need, but I'd
-> > like to fill out more of the library and make it useful to others.
+On 2018-08-28 11:58, Johannes Berg wrote:
+>> ---
+>>  net/mac80211/rx.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> index a16ba568e2a3..686e5586e1f4 100644
+>> --- a/net/mac80211/rx.c
+>> +++ b/net/mac80211/rx.c
+>> @@ -2313,7 +2313,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
+>>  
+>>  		if (!sdata->u.mgd.use_4addr)
+>>  			return -1;
+>> -		else
+>> +		else if (!ether_addr_equal(hdr->addr1, sdata->vif.addr))
+>>  			check_port_control = true;
 > 
-> Yes please, don't parse iw output :-)
+> I guess I have no objection to this. Felix?
+No objection from me.
 
-Believe me, I'm trying to get away from that as fast as possible.  :)
-
-> [ ... ]
-> > Otherwise, how should I interpret this?  I could simply leave it as a 0-3
-> > value and let consumers handle the interpretation, but I'd like to be a bit
-> > friendlier than that, if I can.
-> 
-> They're just the (default) state - disabled, static, dynamic (and
-> reserved).
-> 
-> However, it really is just the default - the (non-AP) device may change
-> it on the fly using action frames.
-> 
-> It's not going to be very useful to userspace consumers, I think, since
-> it doesn't reflect the *current* state.
-
-Okay, I think I see: it reflects neither the current state of the device,
-nor the capabilities of the device, but the initial, default state of the
-device (at power-on, presumably?).  Presumably if it doesn't represent the
-current state, then it also never changes.  I don't understand in what
-circumstances that's useful.
-
-I also think I now see that the current SMPS state comes from the SMPS_MODE
-attribute, and the device capability comes from the FEATURE_STATIC_SMPS and
-FEATURE_DYNAMIC_SMPS bits of the FEATURE_FLAGS attribute.  Is that correct?
-
-Do any of the other fields in HT_CAPA (or VHT_CAPA) have the same kind of
-meaning as the SMPS bits?  For instance, if the HT20/40 bit is off, then
-can we say anything about whether the device supports 40MHz channels (as
-I've been interpreting it)?  Or is it also some sort of default value (and
-if so, where would I go looking for that particular device capability)?  Is
-the answer to that question related to HT_CAPABILITY_MASK?  Basically I'm
-wondering if I should ignore HT_CAPA for my purposes (which are to choose a
-suitable radio on which to build an AP stack) and pull the data from some
-other attributes.
-
-Thanks,
-Danek
+- Felix
