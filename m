@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:37499 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727859AbeHPTaW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54908 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1Rc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Aug 2018 15:30:22 -0400
-Received: by mail-oi0-f65.google.com with SMTP id j205-v6so9103356oib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Aug 2018 09:30:51 -0700 (PDT)
-Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
-To: Alexander Wetzel <alexander@wetzel-home.de>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
- <20180814104255.4183-2-alexander@wetzel-home.de>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com> (sfid-20180816_183059_796669_E5FB5C4D)
-Date: Thu, 16 Aug 2018 11:30:49 -0500
+        Tue, 28 Aug 2018 13:32:57 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180814104255.4183-2-alexander@wetzel-home.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH] ath10k: Skip resetting rx filter for WCN3990
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1533566888-22221-1-git-send-email-pillair@codeaurora.org>
+References: <1533566888-22221-1-git-send-email-pillair@codeaurora.org>
+To: Rakesh Pillai <pillair@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Message-Id: <20180828134114.136B060388@smtp.codeaurora.org> (sfid-20180828_154117_620959_22BB6C9F)
+Date: Tue, 28 Aug 2018 13:41:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexander,
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-On 08/14/2018 05:42 AM, Alexander Wetzel wrote:
-> Drivers able to correctly replace a in-use key should set
-> NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
-> hostapd or wpa_supplicant) to rekey PTK keys.
+> WCN3990 has the MAC_PCU_ADDR1 configured properly
+> and hence it will not send spurious ack frames
+> during boot up.
 > 
-> The userspace must detect a PTK rekey attempt and only go ahead with the
-> rekey when the driver has set this flag. If the driver is not supporting
-> the feature the userspace either must not replace the PTK key or perform
-> a full re-association.
+> Hence the reset_rx_filter workaround is not needed
+> for WCN3990. Add a hw_param to indicate if hardware rx
+> filter reset is needed and skip the reset_rx_filter for
+> WCN3990.
 > 
-> Ignoring this flag and continuing to rekey the connection can still
-> work but has to be considered insecure and broken. It can leak cleartext
-> packets or freeze the connection and is only supported to allow the
-> userspace to be updated.
+> Tested HW: WCN3990
+> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
 > 
-> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
-> ---
->   include/uapi/linux/nl80211.h | 6 ++++++
->   1 file changed, 6 insertions(+)
-> 
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-This looks good to me from a userspace perspective.  I will try to 
-implement support for this in iwd soon to give you a prototype to play with.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Reviewed-by: Denis Kenzior <denkenz@gmail.com>
+58da3b423070 ath10k: skip resetting rx filter for WCN3990
 
-Regards,
--Denis
+-- 
+https://patchwork.kernel.org/patch/10557325/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
