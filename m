@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53926 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729048AbeHOPCK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46910 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727104AbeH1Orz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 11:02:10 -0400
-Message-ID: <1534334948.3547.39.camel@sipsolutions.net> (sfid-20180815_141018_271023_F3029EDD)
-Subject: Re: [PATCH 1/3] nl80211: add support to configure FTM responder
- functionality
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Aug 2018 14:09:08 +0200
-In-Reply-To: <1534293018-4930-2-git-send-email-pradeepc@codeaurora.org>
-References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
-         <1534293018-4930-2-git-send-email-pradeepc@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 28 Aug 2018 10:47:55 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wen Gong <wgong@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Add waiting htt tx complete before wow enable
+References: <1535442443-22152-1-git-send-email-wgong@codeaurora.org>
+Date: Tue, 28 Aug 2018 13:56:45 +0300
+In-Reply-To: <1535442443-22152-1-git-send-email-wgong@codeaurora.org> (Wen
+        Gong's message of "Tue, 28 Aug 2018 15:47:23 +0800")
+Message-ID: <87lg8qg3o2.fsf@kamboji.qca.qualcomm.com> (sfid-20180828_125803_345457_A21F5111)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-14 at 17:30 -0700, Pradeep Kumar Chitrapu wrote:
-> 
-> +	int ftm_responder;
+Wen Gong <wgong@codeaurora.org> writes:
 
-bool
+> If there have some tx packets pending in firmware, and then system
 
-> + * @NL80211_ATTR_FTM_RESPONDER: attribute which user-space can include in
-> + *	%NL80211_CMD_START_AP to enable(1) or disable(0) fine timing measurement
-> + *	(FTM) responder functionality.  If not set, it means don't care and
-> + *	the device will decide what to use.
+s/have/are/ but I can fix that.
 
-Why 0/1 instead of a flag attribute?
+> enter suspend, firmware will fail for wow enable. This will trigger
+> mac80211 to stop ath10k and download firmware again, then it is
+> non-wow suspend.
+>
+> After add the waiting htt tx complete, then firmware will have some
+> time window to send or flush the pending tx packets.
+>
+> Tested with QCA6174 PCI with firmware
+> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
+> It's not a regression with new firmware releases.
+>
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
 
-Also, I think you need the attributes (LCI/Civic location)?
-
-johannes
+-- 
+Kalle Valo
