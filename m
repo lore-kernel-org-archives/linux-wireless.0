@@ -1,78 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48367 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726204AbeHWFBR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:53022 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727162AbeH1QLV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 01:01:17 -0400
-Received: from mail-pf1-f199.google.com ([209.85.210.199])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1fseVe-0001mu-Do
-        for linux-wireless@vger.kernel.org; Thu, 23 Aug 2018 01:34:02 +0000
-Received: by mail-pf1-f199.google.com with SMTP id p5-v6so2229265pfh.11
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Aug 2018 18:34:02 -0700 (PDT)
-Content-Type: text/plain;
-        charset=utf-8;
-        delsp=yes;
-        format=flowed
-Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
-Subject: Re: [PATCH] ath9k: turn on btcoex_enable as default
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <6A0F65EF-A7C4-469F-8FAF-CBE314676237@canonical.com>
-Date: Thu, 23 Aug 2018 09:33:56 +0800
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <9AF82E83-2EBE-4076-BAFA-EEA44B1DB423@canonical.com> (sfid-20180823_033422_069373_1FB316E2)
-References: <20180208052801.15670-1-kai.heng.feng@canonical.com>
- <56d650e6-d26f-087c-4e86-2e5d4e859414@nbd.name>
- <A5972CE9-8325-404A-A63D-ED29E44FB67B@canonical.com>
- <87k1vmeip8.fsf@kamboji.qca.qualcomm.com>
- <E500FA42-23F1-433F-9BFB-78A2FD1946AF@canonical.com>
- <7170e2d5-a59d-8260-fa8e-f02f583b773f@nbd.name>
- <6A0F65EF-A7C4-469F-8FAF-CBE314676237@canonical.com>
-To: Felix Fietkau <nbd@nbd.name>
+        Tue, 28 Aug 2018 12:11:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+        Peng Xu <pxu@qti.qualcomm.com>,
+        Sara Sharon <sara.sharon@intel.com>
+Subject: [RFC 4/6] cfg80211: properly track relation of transmitting and non-transmitting BSS
+Date: Tue, 28 Aug 2018 14:13:51 +0200
+Message-Id: <20180828121353.11193-5-johannes@sipsolutions.net> (sfid-20180828_141959_829344_E0519364)
+In-Reply-To: <20180828121353.11193-1-johannes@sipsolutions.net>
+References: <20180828121353.11193-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-at 12:15, Kai Heng Feng <kai.heng.feng@canonical.com> wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
->
->
->> On 10 Feb 2018, at 10:05 PM, Felix Fietkau <nbd@nbd.name> wrote:
->>
->> On 2018-02-10 14:56, Kai Heng Feng wrote:
->>>> On 9 Feb 2018, at 3:16 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>> Sure, but we have to make sure that we don't create regressions on
->>>> existing systems. For example, did you test this with any system which
->>>> don't support btcoex? (just asking, haven't tested this myself)
->>>
->>> No not really, but I will definitely test it.
->>> The only module I have that uses ath9k is Dell’s DW1707.
->>> How do I check if it support btcoex or not?
->> I just reviewed the code again, and I am sure that we cannot merge this
->> patch. Enabling the btcoex parameter makes the driver enable a whole
->> bunch of code starting timers, listening to some GPIOs, etc.
->>
->> On non-btcoex systems, some of those GPIOs might be floating or even
->> connected to different things, which could cause a lot of undefined
->> behavior.
->>
->> This is simply too big a risk, so there absolutely needs to be a
->> whitelist for systems that need this, otherwise it has to remain
->> disabled by default.
->
-> So what information can we use to whitelist btcoex chips?
-> Can we get btcoex support status at ath9k probing?
+When holding data of the non-transmitting BSS, we need to keep
+the transmitting BSS data on.
+Otherwise it will be released, and release the non-transmitting
+BSS with it.
 
-Sorry for bringing this up again.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.h |  9 +++++++++
+ net/wireless/scan.c | 36 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
 
-Is DMI based match an acceptable approach for ath9k?
-
-Kai-Heng
-
->
-> Kai-Heng
->
->> - Felix
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 625c59653ed6..f9f0b9cdac6c 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -145,6 +145,7 @@ struct cfg80211_internal_bss {
+ 	struct list_head list;
+ 	struct list_head hidden_list;
+ 	struct list_head nontrans_list;
++	struct cfg80211_bss *transmitted_bss;
+ 	struct rb_node rbn;
+ 	u64 ts_boottime;
+ 	unsigned long ts;
+@@ -175,12 +176,20 @@ static inline struct cfg80211_internal_bss *bss_from_pub(struct cfg80211_bss *pu
+ static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	atomic_inc(&bss->hold);
++	if (bss->transmitted_bss)
++		cfg80211_hold_bss(container_of(bss->transmitted_bss,
++					       struct cfg80211_internal_bss,
++					       pub));
+ }
+ 
+ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	int r = atomic_dec_return(&bss->hold);
+ 	WARN_ON(r < 0);
++	if (bss->transmitted_bss)
++		cfg80211_unhold_bss(container_of(bss->transmitted_bss,
++						 struct cfg80211_internal_bss,
++						 pub));
+ }
+ 
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index c08b39a622b7..87526940178b 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -108,6 +108,12 @@ static inline void bss_ref_get(struct cfg80211_registered_device *rdev,
+ 				   pub);
+ 		bss->refcount++;
+ 	}
++	if (bss->transmitted_bss) {
++		bss = container_of(bss->transmitted_bss,
++				   struct cfg80211_internal_bss,
++				   pub);
++		bss->refcount++;
++	}
+ }
+ 
+ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+@@ -124,6 +130,18 @@ static inline void bss_ref_put(struct cfg80211_registered_device *rdev,
+ 		if (hbss->refcount == 0)
+ 			bss_free(hbss);
+ 	}
++
++	if (bss->transmitted_bss) {
++		struct cfg80211_internal_bss *tbss;
++
++		tbss = container_of(bss->transmitted_bss,
++				    struct cfg80211_internal_bss,
++				    pub);
++		tbss->refcount--;
++		if (tbss->refcount == 0)
++			bss_free(tbss);
++	}
++
+ 	bss->refcount--;
+ 	if (bss->refcount == 0)
+ 		bss_free(bss);
+@@ -886,6 +904,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ static struct cfg80211_internal_bss *
+ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 		    struct cfg80211_internal_bss *tmp,
++		    struct cfg80211_bss *trans_bss,
+ 		    bool signal_valid)
+ {
+ 	struct cfg80211_internal_bss *found = NULL;
+@@ -1040,6 +1059,17 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 			goto drop;
+ 		}
+ 
++		/* This must be before the call to bss_ref_get */
++		if (trans_bss) {
++			struct cfg80211_internal_bss *pbss =
++				container_of(trans_bss,
++					     struct cfg80211_internal_bss,
++					     pub);
++
++			new->transmitted_bss = trans_bss;
++			bss_ref_get(rdev, pbss);
++		}
++
+ 		list_add_tail(&new->list, &rdev->bss_list);
+ 		rdev->bss_entries++;
+ 		rb_insert_bss(rdev, new);
+@@ -1294,7 +1324,8 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
+@@ -1609,7 +1640,8 @@ cfg80211_inform_single_bss_frame_data(struct wiphy *wiphy,
+ 
+ 	signal_valid = abs(data->chan->center_freq - channel->center_freq) <=
+ 		wiphy->max_adj_channel_rssi_comp;
+-	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, signal_valid);
++	res = cfg80211_bss_update(wiphy_to_rdev(wiphy), &tmp, trans_bss,
++				  signal_valid);
+ 	if (!res)
+ 		return NULL;
+ 
+-- 
+2.14.4
