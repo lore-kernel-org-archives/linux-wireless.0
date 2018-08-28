@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41256 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727858AbeHNNnS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56680 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727218AbeH1QQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 09:43:18 -0400
-Date: Tue, 14 Aug 2018 13:56:21 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, linux-wireless@vger.kernel.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 2/5] staging: wilc1000: fixes for undefined reference to
- `__this_module' error
-Message-ID: <20180814105621.hu3kpbxwz4kjc2o3@mwanda> (sfid-20180814_125653_891113_9FE8232A)
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
- <1534049265-5600-3-git-send-email-ajay.kathat@microchip.com>
- <20180812113555.GC25209@kroah.com>
- <20180812174852.2eecf7da@ajaysk-VirtualBox>
+        Tue, 28 Aug 2018 12:16:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180812174852.2eecf7da@ajaysk-VirtualBox>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 28 Aug 2018 17:54:58 +0530
+From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, 'Felix Fietkau' <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
+In-Reply-To: <1535457328.5895.35.camel@sipsolutions.net>
+References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>
+ (sfid-20180816_144745_205490_C47B9321)
+ <1535450281.5895.34.camel@sipsolutions.net>
+ <003d01d43ec5$ab42fb00$01c8f100$@codeaurora.org>
+ <1535457328.5895.35.camel@sipsolutions.net>
+Message-ID: <f5415f760940d70872c907c64f1042fc@codeaurora.org> (sfid-20180828_142502_295002_73ACE87C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 12, 2018 at 05:48:52PM +0530, Ajay Singh wrote:
-> Yes, currently only code to read and writing for "wilc_debug_level"
-> exists.
-> 
-> The main purpose for this file was to configure(enable/disable)
-> specific level debug logs to print.
->
+On 2018-08-28 17:25, Johannes Berg wrote:
+> On Tue, 2018-08-28 at 17:22 +0530, murugana@codeaurora.org wrote:
+>> Hi Johannes,
+>> 
+>> > Hmm. The subject/patch title isn't very clear - does it *implement* this
+>> > requirement? Or do something else with it? Please clarify.
+>> >
+>> 
+>> Yes, this patch implements the missing Rx requirement (ii) for 
+>> backhaul STA
+>> below.
+>> 
+> Right. Can you clean up the commit log a bit and in particular clarify
+> the subject please?
 
-The kernel's dev_dbg() macros are really very clever.  You can enable
-them for one file or for a specific line or for a function.
+Sure, Johannes. Please check my patch v2, mac80211: add missing WFA 
+Multi-AP
+backhaul STA Rx requirement.
 
-regards,
-dan carpenter
+-- 
+Thanks,
+Sathishkumar
