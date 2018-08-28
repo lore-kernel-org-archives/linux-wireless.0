@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41327 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJgd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:50668 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726975AbeH1MhR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:36:33 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 07/24] staging: wilc1000: remove unused variable 'op_ifcs'
-Date: Tue, 14 Aug 2018 12:19:59 +0530
-Message-ID: <1534229416-13254-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085047_542406_BE22AA8F)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 28 Aug 2018 08:37:17 -0400
+Message-ID: <1535445990.5895.4.camel@sipsolutions.net> (sfid-20180828_104644_447780_E63A01C2)
+Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander@wetzel-home.de>,
+        Denis Kenzior <denkenz@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 28 Aug 2018 10:46:30 +0200
+In-Reply-To: <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de>
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+         <20180814104255.4183-2-alexander@wetzel-home.de>
+         <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
+         <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After code refactor in previous commit now 'op_ifcs' is not require any
-more, so remove it.
+On Sat, 2018-08-18 at 22:53 +0200, Alexander Wetzel wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 -----
- 1 file changed, 5 deletions(-)
+> > This looks good to me from a userspace perspective.  I will try to
+> > implement support for this in iwd soon to give you a prototype to play
+> > with.
+> 
+> Sounds promising, thank you!
+> 
+> I'm still unsure if we really need the API changes to fix that issue:
+> "Tagging" the new requirements to current set_key calls would also work.
+> With the downside that there would be no way to detect "broken"
+> drivers... replace_key is basically only there to differentiate between
+> audited/fixed drivers and those not.
+> 
+> But since my current impression is, that ptk rekeys are mostly broken
+> independent of mac80211 or even linux a driver flag signaling support
+> for it sounds like a good idea regardless how we want to fix the issue
+> in mac80211. Just wondering if we should name it differently for that
+> and I'm considering renaming it to NL80211_EXT_FEATURE_CAN_REKEY_PTK0 in
+> the next patch.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1690890..3418d2d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -82,8 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
- 	.flags = WIPHY_WOWLAN_ANY
- };
- 
--static u8 op_ifcs;
--
- #define CHAN2G(_channel, _freq, _flags) {	 \
- 		.band             = NL80211_BAND_2GHZ, \
- 		.center_freq      = (_freq),		 \
-@@ -2164,7 +2162,6 @@ int wilc_init_host_int(struct net_device *net)
- 
- 	timer_setup(&priv->aging_timer, remove_network_from_shadow, 0);
- 	timer_setup(&vif->during_ip_timer, clear_during_ip, 0);
--	op_ifcs++;
- 
- 	priv->p2p_listen_state = false;
- 
-@@ -2184,8 +2181,6 @@ int wilc_deinit_host_int(struct net_device *net)
- 
- 	priv->p2p_listen_state = false;
- 
--	op_ifcs--;
--
- 	mutex_destroy(&priv->scan_req_lock);
- 	ret = wilc_deinit(vif);
- 
--- 
-2.7.4
+And then keep set_key() for both, rather than adding replace_key()?
+Seems reasonable to me, I guess.
+
+> As for mac80211 driver status:
+> The only known "really broken" driver at the moment is ath9k. With
+> iwlwifi, - and less thorough tested - ath10k to be ok from a driver
+> point of view. (ath9k needs just a driver flush as minimal fix.)
+
+iwlwifi is also broken for CCMP-256/GCMP keys, so the situation is
+slightly more complex.
+
+johannes
