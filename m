@@ -1,126 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51424 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbeH2Ekv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:55522 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727039AbeH1T4R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 00:40:51 -0400
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [RFC v2 1/2] mac80211: make airtime txq list per ac
-Date: Tue, 28 Aug 2018 17:46:33 -0700
-Message-Id: <1535503594-32051-1-git-send-email-rmanohar@codeaurora.org> (sfid-20180829_024641_614747_6049BA08)
+        Tue, 28 Aug 2018 15:56:17 -0400
+Message-ID: <1535472226.5895.58.camel@sipsolutions.net> (sfid-20180828_180400_521972_81B4944A)
+Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander@wetzel-home.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 28 Aug 2018 18:03:46 +0200
+In-Reply-To: <4cc30aa2-6235-f76c-485f-48fac8af3c1a@wetzel-home.de>
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+         <20180814104255.4183-2-alexander@wetzel-home.de>
+         <1535446026.5895.5.camel@sipsolutions.net>
+         <4cc30aa2-6235-f76c-485f-48fac8af3c1a@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-txqs of all access categories are maintained in single list
-and in uneven order. To fetch a specific AC's txq from the list,
-lookup might have to traverse the entire list in worst case.
-To speedup txq lookup, txq list are maintained per each AC.
+On Tue, 2018-08-28 at 18:00 +0200, Alexander Wetzel wrote:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
----
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/main.c        |  3 ++-
- net/mac80211/tx.c          | 32 ++++++++++++++++++++++----------
- 3 files changed, 25 insertions(+), 12 deletions(-)
+> > If you have a flag here, why say "userspace must not" rather than just
+> > outright prevent userspace from doing it?
+> 
+> The userspace must not but currently of course is doing exactly that.
+> Enforcing the new requirement would therefore cause user visible
+> regressions till all drivers have been updated or the updated userspace
+> software is deployed on all systems... Both will take years.
+> 
+> So the current approach is keep backward compatibility to not break
+> rekeys for users it's currently working for.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c1f8b9f6128d..2fc7a86b75a5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1130,7 +1130,7 @@ struct ieee80211_local {
- 
- 	/* protects active_txqs and txqi->schedule_order */
- 	spinlock_t active_txq_lock;
--	struct list_head active_txqs;
-+	struct list_head active_txqs[IEEE80211_NUM_ACS];
- 	u16 schedule_seqno;
- 
- 	u16 airtime_flags;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e65c2abb2a54..43e097c0042b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -634,7 +634,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	spin_lock_init(&local->rx_path_lock);
- 	spin_lock_init(&local->queue_stop_reason_lock);
- 
--	INIT_LIST_HEAD(&local->active_txqs);
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+		INIT_LIST_HEAD(&local->active_txqs[i]);
- 	spin_lock_init(&local->active_txq_lock);
- 	local->airtime_flags = AIRTIME_USE_TX | AIRTIME_USE_RX;
- 	local->airtime_quantum = IEEE80211_DEFAULT_AIRTIME_QUANTUM;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index bc24905fbd50..d41aa62ba332 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3600,10 +3600,11 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
- 		if (wiphy_ext_feature_isset(local->hw.wiphy,
- 					    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS)
- 		    && txqi->txq.sta)
--			list_add(&txqi->schedule_order, &local->active_txqs);
-+			list_add(&txqi->schedule_order,
-+				 &local->active_txqs[txq->ac]);
- 		else
- 			list_add_tail(&txqi->schedule_order,
--				      &local->active_txqs);
-+				      &local->active_txqs[txq->ac]);
- 
- 		if (reset_seqno)
- 			txqi->schedule_seqno = local->schedule_seqno - 1;
-@@ -3616,15 +3617,26 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_schedule_txq);
- 
--static inline struct txq_info *find_txqi(struct list_head *head, s8 ac)
-+static inline struct txq_info *find_txqi(struct ieee80211_local *local, s8 ac)
- {
--	struct txq_info *txqi;
-+	struct txq_info *txqi = NULL;
-+	int i;
- 
--	list_for_each_entry(txqi, head, schedule_order) {
--		if (ac < 0 || txqi->txq.ac == ac)
--			return txqi;
-+	if (ac >= 0 && ac < IEEE80211_NUM_ACS) {
-+		txqi = list_first_entry_or_null(&local->active_txqs[ac],
-+						struct txq_info,
-+						schedule_order);
-+	} else {
-+		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+			if (list_empty(&local->active_txqs[i]))
-+				continue;
-+			txqi = list_first_entry(&local->active_txqs[i],
-+						struct txq_info,
-+						schedule_order);
-+		}
- 	}
--	return NULL;
-+
-+	return txqi;
- }
- 
- struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
-@@ -3639,7 +3651,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
- 		local->schedule_seqno++;
- 
- begin:
--	txqi = find_txqi(&local->active_txqs, ac);
-+	txqi = find_txqi(local, ac);
- 	if (!txqi)
- 		goto out;
- 
-@@ -3651,7 +3663,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
- 			sta->airtime.deficit[txqi->txq.ac] +=
- 				local->airtime_quantum * sta->airtime.weight;
- 			list_move_tail(&txqi->schedule_order,
--				       &local->active_txqs);
-+				       &local->active_txqs[txqi->txq.ac]);
- 			goto begin;
- 		}
- 	}
--- 
-1.9.1
+Yeah but is it really working for them? They might have it "working",
+but leak some frames in clear, like we said? So it might work for all
+they notice, but leak frames once a while? I don't see how that's better
+really.
+
+johannes
