@@ -1,55 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59462 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725836AbeHLFUf (ORCPT
+Received: from mail-it0-f51.google.com ([209.85.214.51]:35676 "EHLO
+        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727054AbeH1UKY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Aug 2018 01:20:35 -0400
+        Tue, 28 Aug 2018 16:10:24 -0400
+Received: by mail-it0-f51.google.com with SMTP id 139-v6so3300873itf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 09:18:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sun, 12 Aug 2018 08:14:17 +0530
-From: Sriram R <srirrama@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFCv2 2/2] mac80211: Add support for per-rate rx statistics
-In-Reply-To: <1529065504.10037.18.camel@sipsolutions.net>
-References: <1527514479-6696-1-git-send-email-srirrama@codeaurora.org>
- <1527514479-6696-3-git-send-email-srirrama@codeaurora.org>
- <1529065504.10037.18.camel@sipsolutions.net>
-Message-ID: <655af9bf3136aefda93b137f80b9e726@codeaurora.org> (sfid-20180812_044915_214232_034AE3FB)
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 28 Aug 2018 21:47:48 +0530
+Message-ID: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com> (sfid-20180828_181803_373188_C3BC883F)
+Subject: ath10k: adding wlan to bridge causes WPA2-PSK to fail
+To: "Hostap@lists.infradead.org" <hostap@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-15 17:55, Johannes Berg wrote:
-> Why did you change to rhashtable?
-Hi Johannes,
-I wanted to give a try with rhashtable and get your thoughts, since it 
-gave below flexibility to original patch,
-1. avoids creating static memory when userspace starts accumulating 
-stats. 36 rate entries were used in original patch based on 10 (MCS 
-count) * 3 (entries per mcs)+ 6 escape entries, which would also 
-increase with HE supported now.
-2. avoids restricting to only 3 entries per MCS in the table. Using 
-hashtable gave flexibility to add/read the table dynamically based on 
-encoded rate key.
-> 
-> That seems very strange, since we explicitly want to limit the number 
-> of
-> entries, but rhashtable will grow/shrink as required.
-Yes you're right ,it might grow but, as per this patch when Packet count 
-is greater
-than 65000 in an exntry or when the number of rate table/hashtable 
-entries exceed a count of MAX_RATE_TABLE_ELEMS (10 was used in this 
-patch), the complete table is dumped to userspace and new stats starts 
-getting collected in a new table after we flush the old one.
-Hence with this approach also the memory consumption is limited similar 
-to the original patch.
-> 
-> I think I liked my approach better since it allowed us to clearly limit
-> the memory consumption for this.
-Sure Johannes, Could you please let me know if i can rebase your patch 
-and send it(with corresponding additional entries for HE MCS). Also as 
-mentioned above this patch also limits the memory consumption when the 
-rate table size exceeds MAX_RATE_TABLE_ELEMS.
-> 
-> johannes
+Hi,
+
+I am trying to connect ath10k interface to Linux bridge after enabling
+of 4addr mode in WPA2-PSK mode, but EAPOL handshake fails, M1 is
+not received by the wpa_supplicant.
+
+ath10k_pci: QCA6174
+=================
+pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+qca6174 hw3.2 target 0x05030000 chip_id 0x00340aff sub 1028:0310
+kconfig debug 0 debugfs 1 tracing 1 dfs 0 testmode 0
+firmware ver WLAN.RM.4.4.1-00079-QCARMSWPZ-1 api 6 features
+wowlan,ignore-otp crc32 fd869beb
+board_file api 2 bmi_id N/A crc32 20d869c3
+Unknown eventid: 118809
+Unknown eventid: 90118
+htt-ver 3.47 wmi-op 4 htt-op 3 cal otp max-sta 32 raw 0 hwcrypto 1
+============
+Kernel: 4.18.0-rc8: wireless-drivers-next:
+209b43759d65b2cc99ce7757249aacc82b03c4e2
+============
+wpa_supp: b3f24b06e30411e1d4af06945b43eb4db0ac3394
+  .config has #CONFIG_NO_LINUX_PACKET_SOCKET_WAR=y
+and default L2 packet (linux packet socket)
+
+wpa_supplicant verbose logs:
+
+wlp3s0: State: ASSOCIATING -> ASSOCIATED
+nl80211: Set wlp3s0 operstate 0->0 (DORMANT)
+netlink: Operstate: ifindex=3 linkmode=-1 (no change), operstate=5
+(IF_OPER_DORMANT)
+<<Snip..............>>
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+EAPOL: External notification - EAP success=0
+EAPOL: External notification - portEnabled=1
+EAPOL: SUPP_PAE entering state CONNECTING
+EAPOL: enable timer tick
+EAPOL: SUPP_BE entering state IDLE
+wlp3s0: Setting authentication timeout: 10 sec 0 usec
+wlp3s0: Cancelling scan request
+<<Snip..............>>
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 wext ifi_family=0
+ifi_flags=0x11003 ([UP][LOWER_UP])
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 wext ifi_family=0
+ifi_flags=0x11003 ([UP][LOWER_UP])
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 master=12 operstate=5
+ifi_family=7 ifi_flags=0x11003 ([UP][LOWER_UP])
+nl80211: Add ifindex 12 for bridge br0
+nl80211: Add own interface ifindex 12 (ifidx_reason 3)
+nl80211: ifindex 12 already in the list
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 operstate=5 linkmode=1
+master=12 ifi_family=0 ifi_flags=0x11003 ([UP][LOWER_UP])
+<<Snip..............>>
+EAPOL: SUPP_PAE entering state CONNECTING
+EAPOL: enable timer tick
+EAPOL: txStart
+WPA: drop TX EAPOL in non-IEEE 802.1X mode (type=1 len=0)
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 master=12 operstate=2
+ifi_family=7 ifi_flags=0x1003 ([UP])
+nl80211: Add ifindex 12 for bridge br0
+nl80211: Add own interface ifindex 12 (ifidx_reason 3)
+nl80211: ifindex 12 already in the list
+RTM_NEWLINK: ifi_index=3 ifname=wlp3s0 operstate=2 linkmode=1
+master=12 ifi_family=0 ifi_flags=0x1003 ([UP])
+nl80211: Event message available
+nl80211: Ignored event (cmd=20) for foreign interface (ifindex 3 wdev 0x0)
+nl80211: Drv Event 20 (NL80211_CMD_DEL_STATION) received for wlp3s0
+nl80211: Delete station 08:02:8e:8c:9c:50
+nl80211: Event message available
+nl80211: Ignored event (cmd=40) for foreign interface (ifindex 3 wdev 0x0)
+nl80211: Drv Event 40 (NL80211_CMD_DISASSOCIATE) received for wlp3s0
+nl80211: MLME event 40 (NL80211_CMD_DISASSOCIATE) on
+wlp3s0(9c:30:5b:7b:18:65) A1=9c:30:5b:7b:18:65 A2=08:02:8e:8c:9c:50
+nl80211: MLME event frame - hexdump(len=26): a0 00 3c 00 9c 30 5b 7b
+18 65 08 02 8e 8c 9c 50 08 02 8e 8c 9c 50 00 00 02 00
+nl80211: Disassociate event
+wlp3s0: Event DISASSOC (1) received
+wlp3s0: Disassociation notification
+wlp3s0:  * reason 2
+wlp3s0:  * address 08:02:8e:8c:9c:50
+Disassociation frame IE(s) - hexdump(len=0): [NULL]
