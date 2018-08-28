@@ -1,91 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53346 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726413AbeHULFP (ORCPT
+Received: from 6.mo5.mail-out.ovh.net ([178.32.119.138]:55366 "EHLO
+        6.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726807AbeH1U3g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 07:05:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Anilkumar Kolli <akolli@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
-        <87zi1tav6h.fsf@kamboji.qca.qualcomm.com>
-        <6b57525f3edc2b7d06b7662efc5d7e5f@codeaurora.org>
-        <87y3hb8jtp.fsf@kamboji.qca.qualcomm.com>
-        <dbab2233f2fe01136ef827328deac61f@codeaurora.org>
-Date: Tue, 21 Aug 2018 10:46:07 +0300
-In-Reply-To: <dbab2233f2fe01136ef827328deac61f@codeaurora.org> (Anilkumar
-        Kolli's message of "Tue, 21 Aug 2018 11:34:52 +0530")
-Message-ID: <87k1okqi0w.fsf@kamboji.qca.qualcomm.com> (sfid-20180821_094614_238086_7143755E)
+        Tue, 28 Aug 2018 16:29:36 -0400
+Received: from player755.ha.ovh.net (unknown [10.109.146.20])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id 91C621DF6F7
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 18:00:31 +0200 (CEST)
+Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+ <20180814104255.4183-2-alexander@wetzel-home.de>
+ <1535446026.5895.5.camel@sipsolutions.net>
+From: Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <4cc30aa2-6235-f76c-485f-48fac8af3c1a@wetzel-home.de> (sfid-20180828_183710_846724_5B268CDF)
+Date: Tue, 28 Aug 2018 18:00:22 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1535446026.5895.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anilkumar Kolli <akolli@codeaurora.org> writes:
 
-> On 2018-04-25 19:33, Kalle Valo wrote:
->> Anilkumar Kolli <akolli@codeaurora.org> writes:
+Am 28.08.18 um 10:47 schrieb Johannes Berg:
+> On Tue, 2018-08-14 at 12:42 +0200, Alexander Wetzel wrote:
+>> Drivers able to correctly replace a in-use key should set
+>> NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
+>> hostapd or wpa_supplicant) to rekey PTK keys.
 >>
->>> On 2018-04-24 13:32, Kalle Valo wrote:
->>>> Anilkumar Kolli <akolli@codeaurora.org> writes:
->>>>
->>>>> Mesh path metric needs txrate information from ieee80211_tx_status()
->>>>> call but in ath10k there is no mechanism to report tx rate
->>>>> information
->>>>> via ieee80211_tx_status(), the rate is only accessible via
->>>>> sta_statiscs() op.
->>>>>
->>>>> Per peer stats has tx rate info available, this patch stores per
->>>>> peer
->>>>> last tx rate and updates the tx rate info structures in tx
->>>>> completition.
->>>>> The rate updated in ieee80211_tx_status() is not exactly for the
->>>>> last
->>>>> transmitted frame instead the rate is from one of the previous
->>>>> frames.
->>>>>
->>>>> Per peer txrate information is updated through per peer statistics
->>>>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->>>>>
->>>>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
->>>>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->>>>>
->>>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
->>>>
->>>> BTW, your name in patchwork is "akolli@codeaurora.org" but it
->>>> should be
->>>> "Anilkumar Kolli" and that's why my script uses the wrong name.
->>>> Please
->>>> fix it by registering to patchwork as it's possible to change your
->>>> name
->>>> during registration, but only one time. If that doesn't work then
->>>> send a
->>>> request to helpdesk@kernel.org and the admins will fix it.
->>>
->>> I registered and updated name in the patchwork website.
+>> The userspace must detect a PTK rekey attempt and only go ahead with the
+>> rekey when the driver has set this flag. If the driver is not supporting
+>> the feature the userspace either must not replace the PTK key or perform
+>> a full re-association.
 >>
->> It seems that your name still is "akolli@codeaurora.org" in the
->> Submitter field:
+>> Ignoring this flag and continuing to rekey the connection can still
+>> work but has to be considered insecure and broken. It can leak cleartext
+>> packets or freeze the connection and is only supported to allow the
+>> userspace to be updated.
 >>
->> https://patchwork.kernel.org/patch/10353959/
+>> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+>> ---
+>>  include/uapi/linux/nl80211.h | 6 ++++++
+>>  1 file changed, 6 insertions(+)
 >>
->> An example how it should look like:
->>
->> https://patchwork.kernel.org/patch/10359823/
->>
->> I think you need to contact helpdesk now and ask them to fix it.
->>
->>> Do I need to resend the patch ?
->>
->> No need to resend because of this.
->
-> Hi Kalle,
->
-> Do you have any comments on this RFC. Shall I submit as a patch ?
+>> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+>> index 7acc16f34942..b41b9ade0449 100644
+>> --- a/include/uapi/linux/nl80211.h
+>> +++ b/include/uapi/linux/nl80211.h
+>> @@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
+>>   *	except for supported rates from the probe request content if requested
+>>   *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
+>>   *
+>> + * @NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE: Driver/device confirm that they are
+>> + *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
+>> + *      if this flag is not set. Ignoring this can leak clear text packets and/or
+>> + *      freeze the connection.
+> 
+> 
+> If you have a flag here, why say "userspace must not" rather than just
+> outright prevent userspace from doing it?
 
-I have some questions about it but I haven't had a chance to look at in
-detail yet, hopefully later this week.
+The userspace must not but currently of course is doing exactly that.
+Enforcing the new requirement would therefore cause user visible
+regressions till all drivers have been updated or the updated userspace
+software is deployed on all systems... Both will take years.
 
--- 
-Kalle Valo
+So the current approach is keep backward compatibility to not break
+rekeys for users it's currently working for.
+
+Alexander
