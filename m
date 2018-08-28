@@ -1,228 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42724 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726253AbeHUI3H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55354 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1ReH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:29:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:50 +0300
-Message-Id: <20180821050952.31603-16-luca@coelho.fi> (sfid-20180821_071036_883837_5D5515E8)
-In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
-References: <20180821050952.31603-1-luca@coelho.fi>
-Subject: [PATCH v2 15/17] iwlwifi: drop packets with bad status in CD
+        Tue, 28 Aug 2018 13:34:07 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCH] ath10k: schedule hardware restart if WMI command times out
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180822073952.30922-1-martin@strongswan.org>
+References: <20180822073952.30922-1-martin@strongswan.org>
+To: Martin Willi <martin@strongswan.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20180828134224.849BB60452@smtp.codeaurora.org> (sfid-20180828_154227_423098_5395A15E)
+Date: Tue, 28 Aug 2018 13:42:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Martin Willi <martin@strongswan.org> wrote:
 
-We need to drop packets with errors (such as replay,
-MIC, ICV, conversion, duplicate and so on).
+> When running in AP mode, ath10k sometimes suffers from TX credit
+> starvation. The issue is hard to reproduce and shows up once in a
+> few days, but has been repeatedly seen with QCA9882 and a large
+> range of firmwares, including 10.2.4.70.67.
+> 
+> Once the module is in this state, TX credits are never replenished,
+> which results in "SWBA overrun" errors, as no beacons can be sent.
+> Even worse, WMI commands run in a timeout while holding the conf
+> mutex for three seconds each, making any further operations slow
+> and the whole system unresponsive.
+> 
+> The firmware/driver never recovers from that state automatically,
+> and triggering TX flush or warm restarts won't work over WMI. So
+> issue a hardware restart if a WMI command times out due to missing
+> TX credits. This implies a connectivity outage of about 1.4s in AP
+> mode, but brings back the interface and the whole system to a usable
+> state. WMI command timeouts have not been seen in absent of this
+> specific issue, so taking such drastic actions seems legitimate.
+> 
+> Signed-off-by: Martin Willi <martin@strongswan.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Drop invalid packets, put the status bits in the metadata and
-move the enum definition to the correct place (FW API header).
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 63 +++++++++++++++++++
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  1 +
- .../wireless/intel/iwlwifi/pcie/internal.h    | 60 ------------------
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  8 ++-
- 4 files changed, 70 insertions(+), 62 deletions(-)
+a9911937e7d3 ath10k: schedule hardware restart if WMI command times out
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index 2f599353c885..2ba1401e5c0d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -574,6 +574,69 @@ struct iwl_rx_mpdu_desc {
- 
- #define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
- 
-+#define IWL_CD_STTS_OPTIMIZED_POS	0
-+#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
-+#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
-+#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
-+#define IWL_CD_STTS_WIFI_STATUS_POS	4
-+#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
-+
-+/**
-+ * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
-+ * @IWL_CD_STTS_UNUSED: unused
-+ * @IWL_CD_STTS_UNUSED_2: unused
-+ * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
-+ *	In sniffer mode, when split is used, set in last CD completion. (RX)
-+ * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
-+ *	all CD completion. (RX)
-+ * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
-+ * @IWL_CD_STTS_ERROR: general error (RX)
-+ */
-+enum iwl_completion_desc_transfer_status {
-+	IWL_CD_STTS_UNUSED,
-+	IWL_CD_STTS_UNUSED_2,
-+	IWL_CD_STTS_END_TRANSFER,
-+	IWL_CD_STTS_OVERFLOW,
-+	IWL_CD_STTS_ABORTED,
-+	IWL_CD_STTS_ERROR,
-+};
-+
-+/**
-+ * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
-+ * @IWL_CD_STTS_VALID: the packet is valid (RX)
-+ * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
-+ * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
-+ * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
-+ * @IWL_CD_STTS_DUP: duplicate packet (RX)
-+ * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
-+ * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
-+ * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
-+ * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
-+ * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
-+ * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
-+ * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
-+ * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
-+ * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
-+ * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
-+ */
-+enum iwl_completion_desc_wifi_status {
-+	IWL_CD_STTS_VALID,
-+	IWL_CD_STTS_FCS_ERR,
-+	IWL_CD_STTS_SEC_KEY_ERR,
-+	IWL_CD_STTS_DECRYPTION_ERR,
-+	IWL_CD_STTS_DUP,
-+	IWL_CD_STTS_ICV_MIC_ERR,
-+	IWL_CD_STTS_INTERNAL_SNAP_ERR,
-+	IWL_CD_STTS_SEC_PORT_FAIL,
-+	IWL_CD_STTS_BA_OLD_SN,
-+	IWL_CD_STTS_QOS_NULL,
-+	IWL_CD_STTS_MAC_HDR_ERR,
-+	IWL_CD_STTS_MAX_RETRANS,
-+	IWL_CD_STTS_EX_LIFETIME,
-+	IWL_CD_STTS_NOT_USED,
-+	IWL_CD_STTS_REPLAY_ERR,
-+};
-+
- struct iwl_frame_release {
- 	u8 baid;
- 	u8 reserved;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 279dd7b7a3fb..0b8cf7f3af93 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -269,6 +269,7 @@ struct iwl_rx_cmd_buffer {
- 	bool _page_stolen;
- 	u32 _rx_page_order;
- 	unsigned int truesize;
-+	u8 status;
- };
- 
- static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index b63d44b7cd7c..0127386de6c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -102,66 +102,6 @@ struct isr_statistics {
- 	u32 unhandled;
- };
- 
--#define IWL_CD_STTS_OPTIMIZED_POS	0
--#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
--#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
--#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
--#define IWL_CD_STTS_WIFI_STATUS_POS	4
--#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
--
--/**
-- * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
-- * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
-- *	In sniffer mode, when split is used, set in last CD completion. (RX)
-- * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
-- *	all CD completion. (RX)
-- * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
-- */
--enum iwl_completion_desc_transfer_status {
--	IWL_CD_STTS_UNUSED,
--	IWL_CD_STTS_UNUSED_2,
--	IWL_CD_STTS_END_TRANSFER,
--	IWL_CD_STTS_OVERFLOW,
--	IWL_CD_STTS_ABORTED,
--	IWL_CD_STTS_ERROR,
--};
--
--/**
-- * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
-- * @IWL_CD_STTS_VALID: the packet is valid (RX)
-- * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
-- * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
-- * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
-- * @IWL_CD_STTS_DUP: duplicate packet (RX)
-- * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
-- * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
-- * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
-- * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
-- * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
-- * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
-- * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
-- * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
-- * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
-- * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
-- */
--enum iwl_completion_desc_wifi_status {
--	IWL_CD_STTS_VALID,
--	IWL_CD_STTS_FCS_ERR,
--	IWL_CD_STTS_SEC_KEY_ERR,
--	IWL_CD_STTS_DECRYPTION_ERR,
--	IWL_CD_STTS_DUP,
--	IWL_CD_STTS_ICV_MIC_ERR,
--	IWL_CD_STTS_INTERNAL_SNAP_ERR,
--	IWL_CD_STTS_SEC_PORT_FAIL,
--	IWL_CD_STTS_BA_OLD_SN,
--	IWL_CD_STTS_QOS_NULL,
--	IWL_CD_STTS_MAC_HDR_ERR,
--	IWL_CD_STTS_MAX_RETRANS,
--	IWL_CD_STTS_EX_LIFETIME,
--	IWL_CD_STTS_NOT_USED,
--	IWL_CD_STTS_REPLAY_ERR,
--};
--
- #define IWL_RX_TD_TYPE_MSK	0xff000000
- #define IWL_RX_TD_SIZE_MSK	0x00ffffff
- #define IWL_RX_TD_SIZE_2K	BIT(11)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index d017aa2a0a8b..b82f7a0509ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1187,7 +1187,8 @@ static void iwl_pcie_rx_reuse_rbd(struct iwl_trans *trans,
- static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 				struct iwl_rxq *rxq,
- 				struct iwl_rx_mem_buffer *rxb,
--				bool emergency)
-+				bool emergency,
-+				int i)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_txq *txq = trans_pcie->txq[trans_pcie->cmd_queue];
-@@ -1213,6 +1214,9 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			.truesize = max_len,
- 		};
- 
-+		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+			rxcb.status = rxq->cd[i].status;
-+
- 		pkt = rxb_addr(&rxcb);
- 
- 		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID)) {
-@@ -1406,7 +1410,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 			goto out;
- 
- 		IWL_DEBUG_RX(trans, "Q %d: HW = %d, SW = %d\n", rxq->id, r, i);
--		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency);
-+		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency, i);
- 
- 		i = (i + 1) & (rxq->queue_size - 1);
- 
 -- 
-2.18.0
+https://patchwork.kernel.org/patch/10572645/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
