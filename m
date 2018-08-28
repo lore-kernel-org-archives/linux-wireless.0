@@ -1,98 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45350 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727599AbeHaMiE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44258 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1I0p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:38:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+        Tue, 28 Aug 2018 04:26:45 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:11 +0300
-Message-Id: <20180831083130.15525-10-luca@coelho.fi> (sfid-20180831_103155_573128_7D703B85)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 09/28] mac80211: pass the TWT support bits in extended caps to the driver
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 1/2] ath10k: Introduce CE_ATTR_POLL attribute for polling pipe
+Date: Tue, 28 Aug 2018 10:06:41 +0530
+Message-Id: <20180828043642.14890-2-govinds@codeaurora.org> (sfid-20180828_063707_046771_3048A67D)
+In-Reply-To: <20180828043642.14890-1-govinds@codeaurora.org>
+References: <20180828043642.14890-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Existing copy engine interrupt enable logic assumes that last
+CE is using polling mode and due to this interrupt for last copy engine
+are always disabled. WCN3990 uses last CE for pktlog and
+interrupt remains disabled with existing logic.
 
-The Target Wake Time is a feature define in 11ah but has
-been enhanced in 802.11ax. 802.11ax D3.0 defines in 9.4.2.27
-two bits in the Extended Capabilities IE that the low level
-driver needs to be aware of: bits 77 and 78.
+To mitigate this issue, introduce CE_ATTR_POLL flag and control
+the interrupt based on the flag which can be set in ce_attr.
 
-Through those bits, the AP can advertise if it supports the
-feature. Since those bits are present in the HE Cap as well,
-we can set the capability bits in the Extended
-Capabilities IE based on what is advertised in the HE Cap IE.
+Testing:
+    Tested on WCN3990 and QCA6174 HW.
+    Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1,
+               WLAN.RM.4.4.1-00109-QCARMSWPZ-1
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- include/linux/ieee80211.h | 4 ++++
- include/net/mac80211.h    | 6 ++++++
- net/mac80211/cfg.c        | 7 +++++++
- 3 files changed, 17 insertions(+)
+ drivers/net/wireless/ath/ath10k/ce.c  | 18 ++++++++++++++----
+ drivers/net/wireless/ath/ath10k/ce.h  | 11 +++++++----
+ drivers/net/wireless/ath/ath10k/pci.c |  2 +-
+ 3 files changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 17ea51d088ae..0c9d6d0a9d47 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2633,6 +2633,10 @@ enum ieee80211_tdls_actioncode {
-  */
- #define WLAN_EXT_CAPA9_FTM_INITIATOR	BIT(7)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 18c709c484e7..77bff557ef0d 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1280,10 +1280,17 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state)
  
-+/* Defines support for TWT Requester and TWT Responder */
-+#define WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT	BIT(5)
-+#define WLAN_EXT_CAPA10_TWT_RESPONDER_SUPPORT	BIT(6)
+ int ath10k_ce_disable_interrupts(struct ath10k *ar)
+ {
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_ce_pipe *ce_state;
++	u32 ctrl_addr;
+ 	int ce_id;
+ 
+ 	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
+-		u32 ctrl_addr = ath10k_ce_base_address(ar, ce_id);
++		ce_state  = &ce->ce_states[ce_id];
++		if (ce_state->attr_flags & CE_ATTR_POLL)
++			continue;
 +
- /* TDLS specific payload type in the LLC/SNAP header */
- #define WLAN_TDLS_SNAP_RFTYPE	0x2
++		ctrl_addr = ath10k_ce_base_address(ar, ce_id);
  
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 03e1dfd311f7..06e596215abc 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1844,6 +1844,10 @@ struct ieee80211_sta_rates {
-  *	unlimited.
-  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
-  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
-+ * @twt_req_support: indicates whether the STA advertised support for TWT
-+ *	requester in the Extended Capabilities element.
-+ * @twt_resp_support: indicates whether the STA advertised support for TWT
-+ *	responder in the Extended Capabilities element.
-  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction); note that
-  *	the last entry (%IEEE80211_NUM_TIDS) is used for non-data frames
-  */
-@@ -1885,6 +1889,8 @@ struct ieee80211_sta {
- 	u16 max_amsdu_len;
- 	bool support_p2p_ps;
- 	u16 max_rc_amsdu_len;
-+	bool twt_req_support;
-+	bool twt_resp_support;
+ 		ath10k_ce_copy_complete_intr_disable(ar, ctrl_addr);
+ 		ath10k_ce_error_intr_disable(ar, ctrl_addr);
+@@ -1300,11 +1307,14 @@ void ath10k_ce_enable_interrupts(struct ath10k *ar)
+ 	int ce_id;
+ 	struct ath10k_ce_pipe *ce_state;
  
- 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1813c6f148bb..884b2b29d2a2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1332,6 +1332,13 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		}
+-	/* Skip the last copy engine, CE7 the diagnostic window, as that
+-	 * uses polling and isn't initialized for interrupts.
++	/* Enable interrupts for copy engine that
++	 * are not using polling mode.
+ 	 */
+-	for (ce_id = 0; ce_id < CE_COUNT - 1; ce_id++) {
++	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
+ 		ce_state  = &ce->ce_states[ce_id];
++		if (ce_state->attr_flags & CE_ATTR_POLL)
++			continue;
++
+ 		ath10k_ce_per_engine_handler_adjust(ce_state);
  	}
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index b8fb5382dede..ead9987c3259 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -275,16 +275,19 @@ void ath10k_ce_free_rri(struct ath10k *ar);
  
-+	if (params->ext_capab_len >= 10) {
-+		sta->sta.twt_req_support = params->ext_capab[9] &
-+			WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT;
-+		sta->sta.twt_resp_support = params->ext_capab[9] &
-+			WLAN_EXT_CAPA10_TWT_RESPONDER_SUPPORT;
-+	}
+ /* ce_attr.flags values */
+ /* Use NonSnooping PCIe accesses? */
+-#define CE_ATTR_NO_SNOOP		1
++#define CE_ATTR_NO_SNOOP		BIT(0)
+ 
+ /* Byte swap data words */
+-#define CE_ATTR_BYTE_SWAP_DATA		2
++#define CE_ATTR_BYTE_SWAP_DATA		BIT(1)
+ 
+ /* Swizzle descriptors? */
+-#define CE_ATTR_SWIZZLE_DESCRIPTORS	4
++#define CE_ATTR_SWIZZLE_DESCRIPTORS	BIT(2)
+ 
+ /* no interrupt on copy completion */
+-#define CE_ATTR_DIS_INTR		8
++#define CE_ATTR_DIS_INTR		BIT(3)
 +
- 	/*
- 	 * cfg80211 validates this (1-2007) and allows setting the AID
- 	 * only when creating a new station entry
++/* no interrupt, only polling */
++#define CE_ATTR_POLL			BIT(4)
+ 
+ /* Attributes of an instance of a Copy Engine */
+ struct ce_attr {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index af2cf55c4c1e..62fb16a4fa63 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -192,7 +192,7 @@ static struct ce_attr host_ce_config_wlan[] = {
+ 
+ 	/* CE7: ce_diag, the Diagnostic Window */
+ 	{
+-		.flags = CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS | CE_ATTR_POLL,
+ 		.src_nentries = 2,
+ 		.src_sz_max = DIAG_TRANSFER_LIMIT,
+ 		.dest_nentries = 2,
 -- 
-2.18.0
+2.17.0
