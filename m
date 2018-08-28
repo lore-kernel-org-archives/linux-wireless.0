@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47104 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727144AbeHCSPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 14:15:33 -0400
-Date: Fri, 3 Aug 2018 18:18:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 1/2] mt76x0: raname mt76_* functions
-Message-ID: <20180803161828.GA2389@redhat.com> (sfid-20180803_181837_744965_0E2EF4CA)
-References: <1533296680-7236-1-git-send-email-sgruszka@redhat.com>
- <87r2jf5t6w.fsf@kamboji.qca.qualcomm.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59558 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727615AbeH1Rht (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Aug 2018 13:37:49 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r2jf5t6w.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: fix tx99 with monitor mode interface
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180820093751.63406-1-nbd@nbd.name>
+References: <20180820093751.63406-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20180828134604.C5CEB6053D@smtp.codeaurora.org> (sfid-20180828_154618_303326_6443192C)
+Date: Tue, 28 Aug 2018 13:46:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 03, 2018 at 07:08:23PM +0300, Kalle Valo wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> 
-> > mt76_* functions conflicts with mt7601u driver what prevents to build
-> > those drivers in the kernel or use both drivers modules at once.
-> >
-> > Patch fixes build errors like this:
-> > ld: drivers/net/wireless/mediatek/mt76/mt76x0/mac.o:(.opd+0x30): multiple definition of `mt76_mac_tx_rate_val'; drivers/net/wireless/mediatek/mt7601u/mac.o:(.opd+0x30): first defined here
-> >
-> > Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> Thanks. I'll add this to both patches:
-> 
-> Fixes: 7b4859026ccd ("mt76x0: core files")
+Felix Fietkau <nbd@nbd.name> wrote:
 
-Please also fix typo in the topic raname -> rename
+> Tx99 is typically configured via a monitor mode interface, which does
+> not get added to the driver as a vif. Since the code currently expects
+> a configured virtual interface for tx99, enabling tx99 via debugfs fails.
+> Since the vif is not needed anyway, remove all checks for it.
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> [kvalo@codeaurora.org: s/CPTCFG/CONFIG/]
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Thanks
-Stanisalw
+Patch applied to ath-next branch of ath.git, thanks.
+
+d9c52fd17cb4 ath9k: fix tx99 with monitor mode interface
+
+-- 
+https://patchwork.kernel.org/patch/10570041/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
