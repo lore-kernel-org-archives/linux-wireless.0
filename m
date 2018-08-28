@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:36965 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728540AbeHMVMk (ORCPT
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42087 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725796AbeH1GOd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 17:12:40 -0400
-Received: by mail-wr1-f67.google.com with SMTP id u12-v6so15097262wrr.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Aug 2018 11:29:17 -0700 (PDT)
-Subject: Re: [PATCH] ath10k: retrieve MAC address from firmware if provided
-To: Brian Norris <briannorris@chromium.org>
-References: <20180810233948.144792-1-briannorris@chromium.org>
- <5B6F2A47.7070502@broadcom.com>
- <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, govinds@codeaurora.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B71CDFB.60408@broadcom.com> (sfid-20180813_203030_235574_24B660E6)
-Date: Mon, 13 Aug 2018 20:29:15 +0200
-MIME-Version: 1.0
-In-Reply-To: <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 28 Aug 2018 02:14:33 -0400
+From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        fu3mo6goo@gmail.com
+Subject: [PATCH] mac80211: fix to follow standard
+Date: Tue, 28 Aug 2018 10:24:34 +0800
+Message-Id: <1535423074-130862-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180828_042528_741119_C56CF38E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/13/2018 7:14 PM, Brian Norris wrote:
-> On Sat, Aug 11, 2018 at 11:26 AM Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>
->> On 8/11/2018 1:39 AM, Brian Norris wrote:
->>> Devices may provide their own MAC address via system firmware (e.g.,
->>
->> You got me confused by using just "firmware" in the subject.
->
-> Yeah...I started by writing this patch with device tree specifically
-> (of_get_mac_address()), and then later found that there were generic
-> "device" helpers for this, which can assist with other sorts of
-> firmware nodes. It was easier to put a name on a device tree patch
-> than on a "device" patch. I suppose "system firmware" might be a
-> better description?
->
->>> device tree), especially in the case where the device doesn't have a
->>> useful EEPROM on which to store its MAC address (e.g., for integrated
->>> Wifi).
->>>
->>> Use the generic device helper to retrieve the MAC address, and (if
->>> present) honor it above the MAC address advertised by the card.
->>
->> But this put me back on track ;-)
->
-> Let me know if you have a better way to clarify. I can resend with a
-> slightly modified subject (s/firmware/system firmware/), or let Kalle
-> do it, if that's the only thing to change.
+IEEE 802.11-2016 14.10.8.3 HWMP sequence numbering says:
+If it is a target mesh STA, it shall update its own HWMP SN to
+maximum (current HWMP SN, target HWMP SN in the PREQ element) + 1
+immediately before it generates a PREP element in response to a
+PREQ element.
 
-"system firmware" substitution works for me.
+Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Regards,
-Arend
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 35ad398..6c21a26 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -572,6 +572,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		forward = false;
+ 		reply = true;
+ 		target_metric = 0;
++
++		if (SN_GT(target_sn, ifmsh->sn)) {
++			ifmsh->sn = target_sn;
++		}
++
+ 		if (time_after(jiffies, ifmsh->last_sn_update +
+ 					net_traversal_jiffies(sdata)) ||
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
+-- 
+2.7.4
