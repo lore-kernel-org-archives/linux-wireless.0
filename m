@@ -1,207 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:64300 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727237AbeHIJHH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:51552 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727094AbeH1NtF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 05:07:07 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: fix undefined reference to `__this_module' compilation error
-Date: Thu, 9 Aug 2018 12:13:06 +0530
-Message-ID: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180809_084354_681829_6A38E910)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 28 Aug 2018 09:49:05 -0400
+Message-ID: <1535450281.5895.34.camel@sipsolutions.net> (sfid-20180828_115815_595163_8686DF9E)
+Subject: Re: [PATCH] mac80211: WFA Multi-AP backhaul STA Rx requirement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sathishkumar Muruganandam <murugana@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Date: Tue, 28 Aug 2018 11:58:01 +0200
+In-Reply-To: <1534423635-28222-1-git-send-email-murugana@codeaurora.org> (sfid-20180816_144745_205490_C47B9321)
+References: <1534423635-28222-1-git-send-email-murugana@codeaurora.org>
+         (sfid-20180816_144745_205490_C47B9321)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_debug.o object file is included for both SDIO and SPI module. When
-anyone(either SDIO or SPI) module is compiled as loaded module and another
-as buildin module then below compilation error occurs.
+Hmm. The subject/patch title isn't very clear - does it *implement* this
+requirement? Or do something else with it? Please clarify.
 
-"drivers/staging/wilc1000/wilc_debugfs.o:(.data+0x10): undefined
-reference to `__this_module'"
+On Thu, 2018-08-16 at 18:17 +0530, Sathishkumar Muruganandam wrote:
+> The current mac80211 WDS (4-address mode) can be used to cover most of the 
+> Multi-AP requirements for Data frames per the WFA Multi-AP Specification v1.0.
 
-Moved the declaration of file_operation variable in SDIO/SPI files and
-pass this as parameter to wilc_debugfs_init().
-Refactor wilc_debugfs_init() as its not required to maintain
-'wilc_debugfs_info_t' in debugfs_info[] array. Also modified file
-permission from 0666 to 0600 & use 'data' field as 'NULL' in
-debugfs_create_file() call.
+Be more clear here please - I think you don't mean WDS
+(NL80211_IF_TYPE_WDS) but the - currently for all I know Linux-specific
+- 4-addr mode of AP/client interfaces?
 
-Fixes: 9abc44ba4e2f("staging: wilc1000: fix TODO to compile spi and sdio
-components in single module")
+> When configuring AP/STA interfaces in 4-address mode, they are able to function 
+> as fronthaul AP/backhaul STA of Multi-AP device complying below 
+> Tx, Rx requirements except one STA Rx requirement.
+> 
+> Multi-AP specification section 14.1 describes the following requirements:
+> 
+> Transmitter requirements
+> ------------------------
+> 1. Fronthaul AP
+>         i) When DA!=RA of backhaul STA, must use 4-address format
+>         ii) When DA==RA of backhaul STA, shall use either 3-address
+>             or 4-address format with RA updated with STA MAC
+> 
+>             (mac80211 support 4-address format via AP/VLAN interface)
+> 
+> 2. Backhaul STA
+>         i) When SA!=TA of backhaul STA, must use 4-address format
+>         ii) When SA==TA of backhaul STA, shall use either 3-address
+>             or 4-address format with RA updated with AP MAC
+> 
+>             (mac80211 support 4-address format via use_4addr)
+> 
+> Receiver requirements
+> ---------------------
+> 1. Fronthaul AP
+>         i) When SA!=TA of backhaul STA, must support receiving 4-address
+>            format frames
+>         ii) When SA==TA of backhaul STA, must support receiving both
+>             3-address and 4-address format frames
+> 
+>             (mac80211 support both 3-addr & 4-addr via AP/VLAN interface)
+> 
+> 2. Backhaul STA
+>         i) When DA!=RA of backhaul STA, must support receiving 4-address
+>            format frames
+>         ii) When DA==RA of backhaul STA,  must support receiving both
+>             3-address and 4-address format frames
+> 
+>             (mac80211 support only receiving 4-address format via
+>              use_4addr)
+> 
+> This patch addresses the above Rx requirement (ii) for backhaul STA.
+> 
+> The current design doesn't accept 3-address frames when configured in 4-address
+> mode (use_4addr). Hence add a check to allow 3-address frames when DA==RA of
+> backhaul STA (adhering to Table 9-26 of IEEE Std 802.11™-2016).
+> 
+> This case was tested with a bridged station interface when associated with
+> a non-mac80211 based vendor AP implementation using 3-address frames for WDS.
+> 
+> STA was able to support the Multi-AP Rx requirement when DA==RA. No issues,
+> no loops seen when tested with mac80211 based AP as well.
+> 
+> Verified and confirmed all other Tx and Rx requirements of AP and STA for 
+> Multi-AP respectively. They all work using the current mac80211-WDS design.
 
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c   |  1 -
- drivers/staging/wilc1000/wilc_debugfs.c | 50 +++++++--------------------------
- drivers/staging/wilc1000/wilc_sdio.c    |  7 +++++
- drivers/staging/wilc1000/wilc_spi.c     |  7 +++++
- drivers/staging/wilc1000/wilc_wlan_if.h |  7 ++++-
- 5 files changed, 30 insertions(+), 42 deletions(-)
+Ok.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 01cf4bd..37885ad 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1062,7 +1062,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	if (!wl)
- 		return -ENOMEM;
- 
--	wilc_debugfs_init();
- 	*wilc = wl;
- 	wl->io_type = io_type;
- 	wl->hif_func = ops;
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index edc7287..cb02859 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -20,8 +20,8 @@ static struct dentry *wilc_dir;
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- 
--static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
--				     size_t count, loff_t *ppos)
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos)
- {
- 	char buf[128];
- 	int res = 0;
-@@ -36,9 +36,8 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
--static ssize_t wilc_debug_level_write(struct file *filp,
--				      const char __user *buf, size_t count,
--				      loff_t *ppos)
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos)
- {
- 	int flag = 0;
- 	int ret;
-@@ -63,44 +62,15 @@ static ssize_t wilc_debug_level_write(struct file *filp,
- 	return count;
- }
- 
--#define FOPS(_open, _read, _write, _poll) { \
--		.owner	= THIS_MODULE, \
--		.open	= (_open), \
--		.read	= (_read), \
--		.write	= (_write), \
--		.poll		= (_poll), \
--}
--
--struct wilc_debugfs_info_t {
--	const char *name;
--	int perm;
--	unsigned int data;
--	const struct file_operations fops;
--};
--
--static struct wilc_debugfs_info_t debugfs_info[] = {
--	{
--		"wilc_debug_level",
--		0666,
--		(DEBUG | ERR),
--		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
--	},
--};
--
--int wilc_debugfs_init(void)
-+int wilc_debugfs_init(const struct file_operations *fops)
- {
--	int i;
--	struct wilc_debugfs_info_t *info;
--
- 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
--	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
--		info = &debugfs_info[i];
--		debugfs_create_file(info->name,
--				    info->perm,
--				    wilc_dir,
--				    &info->data,
--				    &info->fops);
-+	if (IS_ERR_OR_NULL(wilc_dir)) {
-+		pr_err("Error creating debugfs\n");
-+		return -EFAULT;
- 	}
-+	debugfs_create_file("wilc_debug_level", 0600, wilc_dir, NULL, fops);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index b2080d8..c1573f5 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -103,6 +103,12 @@ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
- 	return ret;
- }
- 
-+static const struct file_operations sdio_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
-+
- static int linux_sdio_probe(struct sdio_func *func,
- 			    const struct sdio_device_id *id)
- {
-@@ -126,6 +132,7 @@ static int linux_sdio_probe(struct sdio_func *func,
- 		dev_err(&func->dev, "Couldn't initialize netdev\n");
- 		return ret;
- 	}
-+	wilc_debugfs_init(&sdio_debug_fops);
- 	sdio_set_drvdata(func, wilc);
- 	wilc->dev = &func->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 5517477..0376649 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -102,6 +102,12 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- 
- #define USE_SPI_DMA				0
- 
-+static const struct file_operations spi_debug_fops = {
-+	.owner		= THIS_MODULE,
-+	.read		= wilc_debug_level_read,
-+	.write		= wilc_debug_level_write,
-+};
-+
- static int wilc_bus_probe(struct spi_device *spi)
- {
- 	int ret;
-@@ -120,6 +126,7 @@ static int wilc_bus_probe(struct spi_device *spi)
- 	if (ret)
- 		return ret;
- 
-+	wilc_debugfs_init(&spi_debug_fops);
- 	spi_set_drvdata(spi, wilc);
- 	wilc->dev = &spi->dev;
- 	wilc->gpio_irq = gpio;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 00d13b1..47b4020 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -831,6 +831,11 @@ struct wilc;
- int wilc_wlan_init(struct net_device *dev);
- u32 wilc_get_chipid(struct wilc *wilc, bool update);
- 
--int wilc_debugfs_init(void);
-+int wilc_debugfs_init(const struct file_operations *fops);
- void wilc_debugfs_remove(void);
-+ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
-+			      size_t count, loff_t *ppos);
-+ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
-+			       size_t count, loff_t *ppos);
-+
- #endif
--- 
-2.7.4
+> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+> ---
+>  net/mac80211/rx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a16ba568e2a3..686e5586e1f4 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -2313,7 +2313,7 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
+>  
+>  		if (!sdata->u.mgd.use_4addr)
+>  			return -1;
+> -		else
+> +		else if (!ether_addr_equal(hdr->addr1, sdata->vif.addr))
+>  			check_port_control = true;
+
+I guess I have no objection to this. Felix?
+
+johannes
