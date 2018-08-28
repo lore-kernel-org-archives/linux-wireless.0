@@ -1,108 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:41351 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJhD (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2292 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbeH1ISx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:37:03 -0400
+        Tue, 28 Aug 2018 04:18:53 -0400
+Date: Tue, 28 Aug 2018 09:59:00 +0530
 From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 16/24] staging: wilc1000: refactor tcp_process() to avoid extra leading tabs
-Date: Tue, 14 Aug 2018 12:20:08 +0530
-Message-ID: <1534229416-13254-17-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_085117_626291_95FFB6E9)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
+        <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 20/24] staging: wilc1000: avoid line over 80 chars in
+ tcp_process()
+Message-ID: <20180828095900.0b90724a@ajaysk-VirtualBox> (sfid-20180828_063246_621121_08EC2DF6)
+In-Reply-To: <20180827120050.mrzhtrstrg7or2to@mwanda>
 References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        <1534229416-13254-21-git-send-email-ajay.kathat@microchip.com>
+        <c8362c8b-acb3-d5c3-8d47-be18424b8a1e@microchip.com>
+        <20180823160315.168c49e5@ajaysk-VirtualBox>
+        <5e649eea-db3a-a8fd-a15b-ad253d1de118@microchip.com>
+        <20180827105438.5443cdfa@ajaysk-VirtualBox>
+        <20180827120050.mrzhtrstrg7or2to@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor tcp_process() to avoid unnecessary leading tabs in the
-function.
+Hi Dan,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 52 +++++++++++++++++++-----------------
- 1 file changed, 28 insertions(+), 24 deletions(-)
+On Mon, 27 Aug 2018 15:00:50 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 6787b6e..bf45b4c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -162,42 +162,46 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 	unsigned long flags;
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wilc = vif->wilc;
-+	const struct iphdr *ip_hdr_ptr;
-+	const struct tcphdr *tcp_hdr_ptr;
-+	u32 IHL, total_length, data_offset;
- 
- 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 
--	if (eth_hdr_ptr->h_proto == htons(ETH_P_IP)) {
--		const struct iphdr *ip_hdr_ptr = buffer + ETH_HLEN;
-+	if (eth_hdr_ptr->h_proto != htons(ETH_P_IP))
-+		goto out;
- 
--		if (ip_hdr_ptr->protocol == IPPROTO_TCP) {
--			const struct tcphdr *tcp_hdr_ptr;
--			u32 IHL, total_length, data_offset;
-+	ip_hdr_ptr = buffer + ETH_HLEN;
- 
--			IHL = ip_hdr_ptr->ihl << 2;
--			tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
--			total_length = ntohs(ip_hdr_ptr->tot_len);
-+	if (ip_hdr_ptr->protocol != IPPROTO_TCP)
-+		goto out;
- 
--			data_offset = tcp_hdr_ptr->doff << 2;
--			if (total_length == (IHL + data_offset)) {
--				u32 seq_no, ack_no;
-+	IHL = ip_hdr_ptr->ihl << 2;
-+	tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
-+	total_length = ntohs(ip_hdr_ptr->tot_len);
- 
--				seq_no = ntohl(tcp_hdr_ptr->seq);
--				ack_no = ntohl(tcp_hdr_ptr->ack_seq);
--				for (i = 0; i < tcp_session; i++) {
--					u32 j = ack_session_info[i].seq_num;
-+	data_offset = tcp_hdr_ptr->doff << 2;
-+	if (total_length == (IHL + data_offset)) {
-+		u32 seq_no, ack_no;
- 
--					if (i < 2 * MAX_TCP_SESSION &&
--					    j == seq_no) {
--						update_tcp_session(i, ack_no);
--						break;
--					}
--				}
--				if (i == tcp_session)
--					add_tcp_session(0, 0, seq_no);
-+		seq_no = ntohl(tcp_hdr_ptr->seq);
-+		ack_no = ntohl(tcp_hdr_ptr->ack_seq);
-+		for (i = 0; i < tcp_session; i++) {
-+			u32 j = ack_session_info[i].seq_num;
- 
--				add_tcp_pending_ack(ack_no, i, tqe);
-+			if (i < 2 * MAX_TCP_SESSION &&
-+			    j == seq_no) {
-+				update_tcp_session(i, ack_no);
-+				break;
- 			}
- 		}
-+		if (i == tcp_session)
-+			add_tcp_session(0, 0, seq_no);
-+
-+		add_tcp_pending_ack(ack_no, i, tqe);
- 	}
-+
-+out:
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- }
- 
--- 
-2.7.4
+> On Mon, Aug 27, 2018 at 10:54:38AM +0530, Ajay Singh wrote:
+> > Hi Claudiu,
+> > 
+> > On Fri, 24 Aug 2018 12:31:28 +0300
+> > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> >   
+> > > On 23.08.2018 13:33, Ajay Singh wrote:  
+> > > > On Thu, 23 Aug 2018 11:12:08 +0300
+> > > > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> > > >     
+> > > >> On 14.08.2018 09:50, Ajay Singh wrote:    
+> > > >>> Cleanup patch to avoid line over 80 chars issue reported by
+> > > >>> checkpatch.pl script.
+> > > >>>
+> > > >>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > > >>> ---
+> > > >>>  drivers/staging/wilc1000/wilc_wlan.c | 7 ++++++-
+> > > >>>  1 file changed, 6 insertions(+), 1 deletion(-)
+> > > >>>
+> > > >>> diff --git a/drivers/staging/wilc1000/wilc_wlan.c
+> > > >>> b/drivers/staging/wilc1000/wilc_wlan.c index 041c9dd..f0743d9
+> > > >>> 100644 --- a/drivers/staging/wilc1000/wilc_wlan.c
+> > > >>> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> > > >>> @@ -137,6 +137,11 @@ static inline int
+> > > >>> add_tcp_pending_ack(struct wilc_vif *vif, u32 ack, return 0;
+> > > >>>  }
+> > > >>>  
+> > > >>> +static inline void clear_tcp_session_txq(struct wilc_vif
+> > > >>> *vif, int index) +{
+> > > >>> +	vif->ack_filter.pending_acks_info[index].txqe = NULL;
+> > > >>> +}
+> > > >>> +      
+> > > >>
+> > > >> This seems useless to me...    
+> > > > 
+> > > > Sorry, this point is not fully clear to me.
+> > > > 
+> > > > Did you mean setting of 'NULL' to
+> > > > 'pending_acks_info[index].txqe' is not required?
+> > > >     
+> > > 
+> > > No, having a new function that sets a variable just to avoid line
+> > > over 80 warning.  
+> > 
+> > Okay got it.
+> > How about using a temp variable to hold the value of
+> > 'tqe->tcp_pending_ack_idx'. It can also help to overcome the
+> > checkpatch warning.  
+> 
+> Just ignore the checkpatch warning...  Don't add a temporary variable
+> just to please checkpatch...  It's good to fix checkpatch warnings if
+> it makes the code cleaner, but I hate when people do:
+> 
+> 	tmp = some_long_variable_name;
+> 	some_other_long_variable = tmp;
+> 
+> The tmp variable is only used one time and a simple statement becomes
+> two statements and it breaks grep.
+> 
+> You could consider renaming some of the variables.  I think the
+> "_info" doesn't add anything, because obviously it's information.
+> Maybe "tcp_pending_ack_index" could just become "->ack_idx".
+
+Thanks for providing the inputs. 
+I will include the changes by using shorter name for
+'tcp_pending_ack_index' in next version.
+
+Regards,
+Ajay
