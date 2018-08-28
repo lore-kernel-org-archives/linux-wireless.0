@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43860 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726969AbeHXOE3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:51206 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727516AbeH1NQI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <idox.yariv@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:08 +0300
-Message-Id: <20180824103018.15011-7-luca@coelho.fi> (sfid-20180824_123035_801609_9AA5F329)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 06/16] iwlwifi: Add missing 11n disable module parameter check
+        Tue, 28 Aug 2018 09:16:08 -0400
+Message-ID: <1535448313.5895.22.camel@sipsolutions.net> (sfid-20180828_112525_971701_CD3E42EE)
+Subject: Re: [PATCH 1/3] cfg80211: Add support for 60GHz band channels 5 and
+ 6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Date: Tue, 28 Aug 2018 11:25:13 +0200
+In-Reply-To: <1534163582-9983-2-git-send-email-ailizaro@codeaurora.org>
+References: <1534163582-9983-1-git-send-email-ailizaro@codeaurora.org>
+         <1534163582-9983-2-git-send-email-ailizaro@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <idox.yariv@intel.com>
+On Mon, 2018-08-13 at 15:33 +0300, Alexei Avshalom Lazar wrote:
+> The current support in the 60GHz band is for channels 1-4.
+> Add support for channels 5 and 6.
+> This requires enlarging ieee80211_channel.center_freq from u16 to u32.
 
-In the new method of parsing the NVM the disable_11n module parameter
-isn't consulted when setting up HT capabilities. Fix this.
+Applied.
 
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-index 2fee4392be7f..4e3422a1c7bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-@@ -742,7 +742,9 @@ void iwl_init_ht_hw_capab(const struct iwl_cfg *cfg,
- 	else
- 		rx_chains = hweight8(rx_chains);
- 
--	if (!(data->sku_cap_11n_enable) || !cfg->ht_params) {
-+	if (!(data->sku_cap_11n_enable) ||
-+	    (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL) ||
-+	    !cfg->ht_params) {
- 		ht_info->ht_supported = false;
- 		return;
- 	}
--- 
-2.18.0
+johannes
