@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36849 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727444AbeH2SNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 14:13:36 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [RFC v2 2/4] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <1535539202.5215.32.camel@sipsolutions.net>
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1> <153115422499.7447.2570671473822724496.stgit@alrua-x1> <1535528658.5215.19.camel@sipsolutions.net> <877ek94j66.fsf@toke.dk> <1535537670.5215.26.camel@sipsolutions.net> <87y3cp31ik.fsf@toke.dk> <1535539202.5215.32.camel@sipsolutions.net>
-Date: Wed, 29 Aug 2018 16:16:25 +0200
-Message-ID: <87va7t2r7q.fsf@toke.dk> (sfid-20180829_161633_561596_0E4CE060)
+Received: from smtp.codeaurora.org ([198.145.29.96]:56980 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727716AbeH1RfE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Aug 2018 13:35:04 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [PATCH] ath10k: use struct_size() in kzalloc()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180824011247.GA25648@embeddedor.com>
+References: <20180824011247.GA25648@embeddedor.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-Id: <20180828134320.5E6726044E@smtp.codeaurora.org> (sfid-20180828_154333_168442_77D9AA45)
+Date: Tue, 28 Aug 2018 13:43:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
->> > Perhaps then it should just be fractional? i.e. 8.8 bits or so?, so
->> > the default would be 1.0 (0x0100) and then you could scale down to 0.5
->> > (0x0080) etc?
->> 
->> Hmm, that's an interesting idea. I'll have to run some numbers to see
->> how the precision holds up on various examples; but that would allow us
->> to get rid of the quantum in the userspace API entirely, which is a good
->> thing as far as I'm concerned!
->
-> :-)
->
-> We can always go to 32 bits and then we have lots to play with? It's 16
-> bits right now so I picked 8.8 for no real reason - in fact that seems
-> quite pointless since dividing 300us by 256 gives you only just over 1us
-> which is really short.
->
-> So perhaps 12.4 (minimum 18 usec) is more appropriate?
->
-> But perhaps I'm just completely mistaken and you don't really want to be
-> able to scale the quantum down further at all, and so you have to play
-> with all the stations anyway?
->
-> No idea, really, how you'd use this.
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+> 
+> struct foo {
+> 	int stuff;
+>         void *entry[];
+> };
+> 
+> instance = kzalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
+> 
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+> 
+> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL);
+> 
+> This issue was detected with the help of Coccinelle.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I have a patch set for hostapd that will allow a user to configure
-priorities (I can send you the paper if you want details). The obvious
-thing is just to prioritise a specific station by mac address ("give my
-TV twice the airtime so it can stream even though it's too far away from
-AP"). But the more interesting thing is the dynamic prioritisation
-(e.g., "these two SSIDs should share equally no matter how many clients
-they have"). For that, group weights need to be calculated and turned
-into station weights by dividing with the number of active stations per
-group. I've been using integer weights and scaling in userspace, but if
-we just express it as fractions in the netlink API that need would go
-away.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Hmm, I'll think about which mode is easier :)
->
->> > > For the drivers that get airtime as part of TX completion, sure; but as
->> > > I understand it, at least ath10k gets airtime information in out of band
->> > > status reports, so there would need to be a callback for that in any
->> > > case...
->> > 
->> > Hmm, ok, but perhaps then we should also tie those to the existing
->> > airtime things?
->> 
->> Eh? Tie what to which existing airtime things?
->
-> At least WMM-AC: ieee80211_sta_tx_wmm_ac_notify().
+06ae8dc00433 ath10k: use struct_size() in kzalloc()
 
-Gotcha; will look at that as well.
+-- 
+https://patchwork.kernel.org/patch/10574741/
 
--Toke
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
