@@ -1,75 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43326 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728143AbeHVPFS (ORCPT
+Received: from 6.mo179.mail-out.ovh.net ([46.105.56.76]:49933 "EHLO
+        6.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727039AbeH1Two (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 11:05:18 -0400
-Message-ID: <a7b02075b60c20377f5892f1c2d2a04c98e62f80.camel@coelho.fi> (sfid-20180822_134047_689402_DB2A2F3E)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Date: Wed, 22 Aug 2018 14:40:41 +0300
-In-Reply-To: <87bm9ur5sg.fsf@kamboji.qca.qualcomm.com>
-References: <20180821050952.31603-1-luca@coelho.fi>
-         <20180821050952.31603-6-luca@coelho.fi>
-         <87bm9ur5sg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2 05/17] iwlwifi: add d3 debug data support
+        Tue, 28 Aug 2018 15:52:44 -0400
+Received: from player718.ha.ovh.net (unknown [10.109.159.7])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id A7909ECCE3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Aug 2018 18:00:23 +0200 (CEST)
+Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Denis Kenzior <denkenz@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+ <20180814104255.4183-2-alexander@wetzel-home.de>
+ <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
+ <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de>
+ <1535445990.5895.4.camel@sipsolutions.net>
+From: Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <96e1cc76-26c7-3550-4717-e80984bcb92b@wetzel-home.de> (sfid-20180828_180027_773415_6C54F488)
+Date: Tue, 28 Aug 2018 18:00:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <1535445990.5895.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-08-22 at 14:37 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-> > 
-> > During d3, the firmware records debug data into internal buffer
-> > if debug data collection occurs, collect the data that was written
-> > to the
-> > buffer
-> > 
-> > Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> [...]
-> 
-> > --- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-> > +++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-> > @@ -8,6 +8,7 @@
-> >   * Copyright(c) 2014 Intel Corporation. All rights reserved.
-> >   * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
-> >   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-> > + * Copyright (C) 2018 Intel Corporation
-> >   *
-> >   * This program is free software; you can redistribute it and/or
-> > modify
-> >   * it under the terms of version 2 of the GNU General Public
-> > License as
-> > @@ -18,11 +19,6 @@
-> >   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > GNU
-> >   * General Public License for more details.
-> >   *
-> > - * You should have received a copy of the GNU General Public
-> > License
-> > - * along with this program; if not, write to the Free Software
-> > - * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-> > 02110,
-> > - * USA
-> > - *
-> >   * The full GNU General Public License is included in this
-> > distribution
-> >   * in the file called COPYING.
-> >   *
-> 
-> Is this removal intentional? Just curious.
 
-Yeah, it's intentional.  Checkpatch complains about that, so we're
-removing whenever we hit the warning (i.e. when we have a change,
-usually in the copyright lines, that include this paragraph in the
-context).
+Am 28.08.18 um 10:46 schrieb Johannes Berg:
+> On Sat, 2018-08-18 at 22:53 +0200, Alexander Wetzel wrote:
+> 
+>>> This looks good to me from a userspace perspective.  I will try to
+>>> implement support for this in iwd soon to give you a prototype to play
+>>> with.
+>>
+>> Sounds promising, thank you!
+>>
+>> I'm still unsure if we really need the API changes to fix that issue:
+>> "Tagging" the new requirements to current set_key calls would also work.
+>> With the downside that there would be no way to detect "broken"
+>> drivers... replace_key is basically only there to differentiate between
+>> audited/fixed drivers and those not.
+>>
+>> But since my current impression is, that ptk rekeys are mostly broken
+>> independent of mac80211 or even linux a driver flag signaling support
+>> for it sounds like a good idea regardless how we want to fix the issue
+>> in mac80211. Just wondering if we should name it differently for that
+>> and I'm considering renaming it to NL80211_EXT_FEATURE_CAN_REKEY_PTK0 in
+>> the next patch.
+> 
+> And then keep set_key() for both, rather than adding replace_key()?
+> Seems reasonable to me, I guess.
 
---
-Luca.
+Exactly. The complete replace_key patch will be dropped. I've the
+patches for that nearly ready, only working on the commit messages and
+docu updates. (To code changes were trivial.)
+
+> 
+>> As for mac80211 driver status:
+>> The only known "really broken" driver at the moment is ath9k. With
+>> iwlwifi, - and less thorough tested - ath10k to be ok from a driver
+>> point of view. (ath9k needs just a driver flush as minimal fix.)
+> 
+> iwlwifi is also broken for CCMP-256/GCMP keys, so the situation is
+> slightly more complex.
+
+I was suspecting something like that, thanks for confirming.
+
+Alexander
