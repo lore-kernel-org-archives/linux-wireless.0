@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55156 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733074AbeHFSVL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:50624 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726975AbeH1MeU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Aug 2018 14:21:11 -0400
-Subject: Re: ath10k SWBA overrun / tx credit starvation
-To: Martin Willi <martin@strongswan.org>
-References: <6f044fff274867c90038e673c9291279ae1a1121.camel@strongswan.org>
- <8b65a418-04ba-620d-8139-ac62d6715b24@candelatech.com>
- <1c41320da3c241aed1281576eace6021ccb3adb0.camel@strongswan.org>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <9ce7eaed-d842-45e7-4a2a-ae2bc0f72fe5@candelatech.com> (sfid-20180806_181128_077874_98AB3F47)
-Date: Mon, 6 Aug 2018 09:11:22 -0700
-MIME-Version: 1.0
-In-Reply-To: <1c41320da3c241aed1281576eace6021ccb3adb0.camel@strongswan.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 28 Aug 2018 08:34:20 -0400
+Message-ID: <1535445814.5895.1.camel@sipsolutions.net> (sfid-20180828_104347_070939_68A2B6D5)
+Subject: Re: [PATCH 1/2] cfg80211: let's wmm_rule be part of reg_rule
+ structure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Grzegorz =?UTF-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>
+Date: Tue, 28 Aug 2018 10:43:34 +0200
+In-Reply-To: <20180822115854.GA2747@redhat.com>
+References: <1534938742-9998-1-git-send-email-sgruszka@redhat.com>
+         <1534938867.25523.92.camel@sipsolutions.net>
+         <20180822115854.GA2747@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/06/2018 05:15 AM, Martin Willi wrote:
-> Hi Ben,
->
-> Thanks for your help.
->
->> If you use the -ct firmware and the -ct driver, you can configure
->> more than 2 tx-credits.
->
-> Unfortunately, this didn't help, either. I hit these issues even sooner
-> with any 10.1-based firmware (including CT), which implies that at
-> least some of them have been addressed with 10.2/10.2.4.
+On Wed, 2018-08-22 at 13:58 +0200, Stanislaw Gruszka wrote:
+> On Wed, Aug 22, 2018 at 01:54:27PM +0200, Johannes Berg wrote:
+> > On Wed, 2018-08-22 at 13:52 +0200, Stanislaw Gruszka wrote:
+> > > Make wmm_rule be part of reg_rule structure. This simplify code
+> > > a lot at cost of having bigger memory usage. However in most cases
+> > > we have only few reg_rule's and when we have many like in iwlwifi
+> > > we do not save memory as we allocate wmm_rule for each channel.
+> > 
+> > So I think this is fine, but should we "sell" this to stable as well? I
+> > guess we don't really have any other fix?
+> 
+> I wanted to delegate that decision to you :-)
+> 
+> It's not one-liner, but from other hand patch just remove bunch
+> of code, so should be safe for -stable.
 
-Out of curiosity, how soon could you hit it with -ct firmware?  We often
-see these around once per day in some of our test cases, rarely more often
-than that.
+Yeah, I guess I'll try :)
 
->> I am not sure it resolves everything and a buggy firmware would still
->> cause issues no matter.
->
-> As a work-around, I'm experimenting with handling timeout conditions in
-> ath10k_wmi_cmd_send() caused by missing credits. Given that we can't do
-> any TX-flush or warm-restart over WMI under these conditions, I just
-> issue a hardware restart (patch below).
->
-> Some initial tests show that this in fact recovers the module from its
-> bad state with just a small connectivity gap; certainly much better
-> than that unpredictable behavior we've seen previously.
-
-Yes, I have been using a similar patch for years with good results.
-
-Thanks,
-Ben
-
->
-> I'll do some more testing with this approach before considering to
-> upstream it.
->
-> Regards
-> Martin
->
-> ---
->
-> From fd9e90d0294450c093d243ee4f1eb1e07b1cd73a Mon Sep 17 00:00:00 2001
-> From: Martin Willi <martin@strongswan.org>
-> Date: Fri, 3 Aug 2018 14:23:30 +0200
-> Subject: [PATCH] ath10k: Schedule hardware restart if WMI command times out
->
-> If the TX queue gets stuck for some reason, we run out of tx credits and
-> are unable to send any commands over WMI. To recover from this situation,
-> issue a hard hardware restart. This implies a connectivity outage of about
-> 1.4s in AP mode, but brings back the interface to a usable state.
->
-> Signed-off-by: Martin Willi <martin@strongswan.org>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++++
->  1 file changed, 6 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 38a97086708b..d39a983f4a1f 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -1852,6 +1852,12 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
->  	if (ret)
->  		dev_kfree_skb_any(skb);
->
-> +	if (ret == -EAGAIN) {
-> +		ath10k_warn(ar, "wmi command %d timeout, restarting hardware\n",
-> +			    cmd_id);
-> +		queue_work(ar->workqueue, &ar->restart_work);
-> +	}
-> +
->  	return ret;
->  }
->
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
