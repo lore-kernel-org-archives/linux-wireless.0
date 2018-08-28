@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:3195 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727176AbeH1SqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 14:46:19 -0400
-Date: Tue, 28 Aug 2018 22:53:27 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [RFC PATCH] ath10k: ath10k_htc_pktlog_svc_supported() can be static
-Message-ID: <20180828145327.GA104938@lkp-ib04.lkp.intel.com> (sfid-20180828_165420_402020_FAC480EB)
-References: <20180828043642.14890-3-govinds@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180828043642.14890-3-govinds@codeaurora.org>
+Received: from s3.sipsolutions.net ([144.76.43.62]:59432 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727098AbeH2BIB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Aug 2018 21:08:01 -0400
+Message-ID: <1535490861.20033.8.camel@sipsolutions.net> (sfid-20180828_231435_221776_ED35095A)
+Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set
+ to one
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, sara.sharon@intel.com
+Date: Tue, 28 Aug 2018 23:14:21 +0200
+In-Reply-To: <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com> (sfid-20180828_230714_540221_B42ABCED)
+References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
+         <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
+         (sfid-20180828_230714_540221_B42ABCED)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2018-08-28 at 23:07 +0200, Lorenzo Bianconi wrote:
+> Do not try to aggregate packets in a A-MSDU frame if max_tx_fragments
+> or max_amsdu_subframes is set to 1. 
 
-Fixes: c4ce46304e1f ("ath10k: Enable pktlog for WCN3990 target")
-Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
----
- htc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah that seems valid.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 1727823..4e70ff2 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -872,7 +872,7 @@ static int ath10k_htc_pktlog_connect(struct ath10k *ar)
- 	return 0;
- }
- 
--bool ath10k_htc_pktlog_svc_supported(struct ath10k *ar)
-+static bool ath10k_htc_pktlog_svc_supported(struct ath10k *ar)
- {
- 	u8 ul_pipe_id;
- 	u8 dl_pipe_id;
+> Moreover take into account
+> tail padding added on the first frame into flow backlog if
+> ieee80211_amsdu_realloc_pad routine on the second frame fails.
+
+That's not really right - the padding shouldn't have been added to the
+first subframe in the first place as the last one shouldn't have padding
+at all. There's also a separate bug in that the A-MSDU subframe length
+should NOT include the padding.
+
+My colleague Sara (CC'ed now) has a patch to fix all of this (we just
+did that this morning). I'll send it out tomorrow morning. Can I bother
+you to try that?
+
+We'd have to fix the first point independently though, or I guess we can
+roll that into our bugfix too, which would you prefer?
+
+johannes
