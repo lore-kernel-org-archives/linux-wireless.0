@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:43844 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726330AbeHXOE2 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:50712 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726975AbeH1Mj0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 10:04:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 24 Aug 2018 13:30:06 +0300
-Message-Id: <20180824103018.15011-5-luca@coelho.fi> (sfid-20180824_123038_192955_901E38E5)
-In-Reply-To: <20180824103018.15011-1-luca@coelho.fi>
-References: <20180824103018.15011-1-luca@coelho.fi>
-Subject: [PATCH 04/16] iwlwifi: mvm: report # of LTF symbols for extended range SU PPDUs
+        Tue, 28 Aug 2018 08:39:26 -0400
+Message-ID: <1535446120.5895.6.camel@sipsolutions.net> (sfid-20180828_104852_770265_6B1E6683)
+Subject: Re: [PATCH v6 3/3] mac80211: Fix PTK rekey freezes and cleartext
+ leaks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander@wetzel-home.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 28 Aug 2018 10:48:40 +0200
+In-Reply-To: <20180814104255.4183-4-alexander@wetzel-home.de>
+References: <20180814104255.4183-1-alexander@wetzel-home.de>
+         <20180814104255.4183-4-alexander@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2018-08-14 at 12:42 +0200, Alexander Wetzel wrote:
+> 
+> +	/* PTK only using key ID 0 needs special handling on rekey */
+> +	if (new_key && sta && ptk0rekey) {
+> +		local = old_key->local;
+> +		sdata = old_key->sdata;
+> +
+> +		/* Stop TX till we are on the new key */
+> +		old_key->flags |= KEY_FLAG_TAINTED;
+> +		ieee80211_clear_fast_xmit(sta);
+> +
+> +		/* Aggregation sessions during rekey are complicated due to
+> +		 * the reorder buffer. Side step that by blocking aggregation
+> +		 * and tear down running connections.
+> +		 */
+> +		if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
+> +			set_sta_flag(sta, WLAN_STA_BLOCK_BA);
+> +			ieee80211_sta_tear_down_BA_sessions(sta,
+> +							    AGG_STOP_LOCAL_REQUEST);
+> +		}
+> +
+> +		if (new_key->local->ops->replace_key) {
+> +			ret = drv_replace_key(old_key->local, sdata,
+> +					      &sta->sta, &old_key->conf,
+> +					      &new_key->conf);
+> +			if (!ret)
+> +				new_key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+> +			else
+> +				sdata_err(sdata,
+> +					  "failed to replace key (%d) for " \
+> +					  "STA (%pM) in hardware: ret=(%d)\n",
+> +					  old_key->conf.keyidx,
+> +					  sta->sta.addr,
+> +					  ret);
+> +
+> +			old_key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+> +		} else {
+> +			sdata_info(sdata,
+> +				   "Userspace requested a PTK rekey for STA " \
+> +				   "%pM while feature not supported! " \
+> +				   "This may leak clear text packets or " \
+> +				   "freeze the connection.",
+> +				   sta->sta.addr);
 
-This is the same as for SU PPDUs, so it's easy to do.
+This seems a bit weird - we know a likely dangerous thing is happening
+and only print an info message? Why not just prevent this in the first
+place?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 314012ed7a29..05ce253b8c30 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1189,7 +1189,8 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	he->data5 |= le16_encode_bits(ltf, IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
- 
- 	switch (he_type) {
--	case RATE_MCS_HE_TYPE_SU: {
-+	case RATE_MCS_HE_TYPE_SU:
-+	case RATE_MCS_HE_TYPE_EXT_SU: {
- 		u16 val;
- 
- 		/* LTF syms correspond to streams */
-@@ -1241,7 +1242,6 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
- 				val));
- 		}
- 		break;
--	case RATE_MCS_HE_TYPE_EXT_SU:
- 	case RATE_MCS_HE_TYPE_TRIG:
- 		/* not supported */
- 		break;
--- 
-2.18.0
+johannes
