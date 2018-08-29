@@ -1,25 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33152 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726513AbeHXPAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 11:00:39 -0400
-Date: Fri, 24 Aug 2018 13:26:18 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 00/17] mt76 patches 2018-08-24
-Message-ID: <20180824112618.GB17185@redhat.com> (sfid-20180824_132648_035996_64C7B959)
-References: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535109321-17126-1-git-send-email-sgruszka@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.43.62]:36016 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726656AbeH2LTt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 07:19:49 -0400
+Message-ID: <1535527450.5215.8.camel@sipsolutions.net> (sfid-20180829_092422_378089_1CC440C3)
+Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: sanjay <sanjay.konduri@redpinesignals.com>,
+        Sushant Kumar Mishra <sushant2k1513@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
+        siva8118@gmail.com
+Date: Wed, 29 Aug 2018 09:24:10 +0200
+In-Reply-To: <5B83C2FE.90000@redpinesignals.com>
+References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
+                 (sfid-20180802_055141_811857_426FAC5B) <1534246392.3547.26.camel@sipsolutions.net>
+         <5B83C2FE.90000@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 24, 2018 at 01:15:04PM +0200, Stanislaw Gruszka wrote:
-> This is the begin work of integration between mt76x0 and mt76x2.
+Huh, why did you send this like 10 times? Also, HTML is dropped by the
+list ...
 
-Forgot to mention this is on top of not yet applied  Geert patch:
-https://marc.info/?l=linux-kernel&m=153506589931390&w=2
+> > I'm not convinced - why would you set that? It seems to me that drivers
+> > might, for example, still do one band in hardware and the other in
+> > software, or something like that? You might also run into the WARN_ON
+> > here?
+> 
+> If we don't set this bit, observed "scan aborted" when "iw dev wlan0
+> scan" command
+> is given in redpine dual band modules(Didn't see any issue with single
+> band module).
+> sh# iw dev wlan0 scan
+> scan aborted!
+
+What happened underneath here? I'm having a hard time understanding -
+perhaps you can at least capture some mac80211 event tracing for this?
+perhaps with function graph tracing too, so we see where exactly the
+abort happens.
+
+Unless you already know why this happens, and that's why you set the
+cancel bit?
+
+So I think the clearer thing to do would be to have a separate bit for
+this and check it in the right place.
+
+johannes
