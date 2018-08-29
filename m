@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727973AbeHaTyk (ORCPT
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:33348 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725882AbeH2FYm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:54:40 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] rtl8187: Fix warning generated when strncpy() destination
- length matches the sixe argument
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180820184831.24206-1-Larry.Finger@lwfinger.net>
-References: <20180820184831.24206-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20180831154635.000326049C@smtp.codeaurora.org> (sfid-20180831_174654_769958_179FB97D)
-Date: Fri, 31 Aug 2018 15:46:34 +0000 (UTC)
+        Wed, 29 Aug 2018 01:24:42 -0400
+From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yuan-Chi Pang <fu3mo6goo@gmail.com>
+Subject: [PATCH] mac80211: fix HWMP sequence numbering to follow standard
+Date: Wed, 29 Aug 2018 09:30:08 +0800
+Message-Id: <1535506208-17680-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180829_033031_622336_682F54F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+IEEE 802.11-2016 14.10.8.3 HWMP sequence numbering says:
+If it is a target mesh STA, it shall update its own HWMP SN to
+maximum (current HWMP SN, target HWMP SN in the PREQ element) + 1
+immediately before it generates a PREP element in response to a
+PREQ element.
 
-> In gcc8, when the 3rd argument (size) of a call to strncpy() matches the
-> length of the first argument, the compiler warns of the possibility of an
-> unterminated string. Using strlcpy() forces a null at the end.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-199ba9faca90 rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 35ad398..daf9db3 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -572,6 +572,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		forward = false;
+ 		reply = true;
+ 		target_metric = 0;
++
++		if (SN_GT(target_sn, ifmsh->sn))
++			ifmsh->sn = target_sn;
++
+ 		if (time_after(jiffies, ifmsh->last_sn_update +
+ 					net_traversal_jiffies(sdata)) ||
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
 -- 
-https://patchwork.kernel.org/patch/10570639/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
