@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35657 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727444AbeH3AWH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 20:22:07 -0400
-Received: by mail-wm0-f66.google.com with SMTP id o18-v6so6802712wmc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 13:23:34 -0700 (PDT)
-MIME-Version: 1.0
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
- <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com> <5B30A85C.5080105@broadcom.com>
-In-Reply-To: <5B30A85C.5080105@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 29 Aug 2018 22:17:30 +0200
-Message-ID: <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com> (sfid-20180829_222351_030978_68971753)
-Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34308 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727172AbeH2PNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 11:13:18 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v3 00/16] mt76 patches 2018-08-24 v3
+Date: Wed, 29 Aug 2018 13:16:31 +0200
+Message-Id: <1535541407-27149-1-git-send-email-sgruszka@redhat.com> (sfid-20180829_131657_016296_B53B642E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This is the begin work of integration between mt76x0 and mt76x2.
 
-On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 6/25/2018 6:40 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > On Sun, 24 Jun 2018 at 13:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
-> wrote:
-> >> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
-> >> <arend.vanspriel@broadcom.com> wrote:
-> >>> Here a couple of patches in preparation of monitor mode support. It
-> >>> is mostly about querying firmware for support. While at it I stumbled
-> >>> upon the fact that 160MHz was not completely implemented in the drive=
-r
-> >>> so there is a patch for that as well.
-> >>>
-> >>> The first two patches are actually some changes to the patches that
-> >>> Rafal submitted. So this series depend on:
-> >>>
-> >>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
-> >>>
-> >>> These apply to the master branch of the wireless-drivers-next reposit=
-ory.
-> >>>
-> >>> [1] https://patchwork.kernel.org/patch/10474799/
-> >>
-> >> I find it pointless to submit fixes for patches that weren't accepted
-> >> yet. Let's work on improving original patches while they are still
-> >> pending.
-> >
-> > I sent V4 with changes pointed our by Arend. That obsoletes all (?)
-> > monitor patches from this patchset. I believe it was cleaner to
-> > improve original patchset (not pushed yet).
-> >
-> > My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
-> > related) and drop the others.
->
-> Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit
-> the series addressing the issues you found.
+Further development can be seen here:
+https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
 
-Would you have a moment to resubmit these 2 patches or do you mind if I do =
-that?
+v2 -> v3:
+- merge module licence fix patch to patch that add new module
+v1 -> v2:
+- rename mt76xx to mt76x02 to reflect that common code is for mt76x0
+  and mt76x2 only, not for new chips.
+- fixup 'stucture typo' in one patch
 
---=20
-Rafa=C5=82
+Stanislaw Gruszka (17):
+  mt76: unify wait_for_mac
+  mt76: rename mt76x2_regs.h
+  mt76: merge mt76x0/regs.h into mt76x02_regs.h
+  mt76: create new mt76x02-lib module for common mt76x{0,2} code
+  mt76: fix mt76x02-lib module license
+  mt76: unify mac_get_key_info
+  mt76: add helpers for register access with mt76_dev struct
+  mt76: unify mac_shared_key_setup
+  mt76: unify mt76x02_mac_wcid_set_key
+  mt76: unify mac_wcid_setup
+  mt76: use mac_wcid_set_drop in mt76x0
+  mt76x0: use mt76_wcid_free in mt76x0
+  mt76: unify mt76x02_vif struct
+  mt76: unify sta structure part 1
+  mt76: unify sta structure part 2
+  mt76x0: initalize custom tx queues
+  mt76x0: use mt76x02_sta and mt76x02_tx_status
+
+ drivers/net/wireless/mediatek/mt76/Kconfig         |   6 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |   3 +
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  13 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  37 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 126 +---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 127 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  35 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/regs.h   | 651 --------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 157 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  85 +++
+ drivers/net/wireless/mediatek/mt76/mt76x02_regs.h  | 685 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  55 ++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  25 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  50 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  99 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  15 +-
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  21 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 130 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  47 +-
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 619 -------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   8 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |   8 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  29 +-
+ 36 files changed, 1226 insertions(+), 1861 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
+
+-- 
+2.7.5
