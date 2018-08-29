@@ -1,78 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60980 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727371AbeHII6n (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:39014 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727204AbeH2Pup (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 04:58:43 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 09 Aug 2018 12:05:23 +0530
-From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-To: Jasmine Strong <jas@eero.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCHv2] ath10k : Fix channel survey dump
-Message-ID: <d586156d3861a6cf0f479ff12ddd6544@codeaurora.org> (sfid-20180809_083526_556306_2863BB55)
+        Wed, 29 Aug 2018 11:50:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2018-08-29
+Date: Wed, 29 Aug 2018 13:53:52 +0200
+Message-Id: <20180829115353.31679-1-johannes@sipsolutions.net> (sfid-20180829_135414_524022_8D07555C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-01 00:03, Jasmine Strong wrote:
-> On Tue, Jul 31, 2018 at 10:38 AM Ben Greear <greearb@candelatech.com>
-> wrote:
-> 
->> On 07/31/2018 05:11 AM, Venkateswara Naralasetty wrote:
->>> Channel active/busy time are showing incorrect(less than previous
->> or
->>> sometimes zero) for successive survey dump command.
->>> 
->>> example:
->>> Survey data from wlan0
->>> frequency:                      5180 MHz [in use]
->>> channel active time:            54995 ms
->>> channel busy time:              432 ms
->>> channel receive time:           0 ms
->>> channel transmit time:          59 ms
->>> Survey data from wlan0
->>> frequency:                      5180 MHz [in use]
->>> channel active time:            32592 ms
->>> channel busy time:              254 ms
->>> channel receive time:           0 ms
->>> channel transmit time:          0 ms
->>> 
->>> This patch fix this issue by assigning 'wmi_bss_survey_req_type'
->>> as 'WMI_BSS_SURVEY_REQ_TYPE_READ' which accumulate survey data in
->>> FW and send survey data to driver upon the driver request. Wrap
->> around
->>> is taken care by FW.
->>> 
->>> hardware used : QCA9984
->>> firmware ver  : ver 10.4-3.5.3-00057
->> 
->> Have you tested this on other firmwares?  I am pretty sure that at
->> least
->> some of them, probably 10.2, will have issues.
->> 
->> Maybe you could make this change specific to certain firmware that
->> is known to work with the change?
-> 
-> There are bigger problems with it than that;  even with firmwares that
-> behave correctly,
-> this changes the behavior that a lot of upper-layer software depends
-> upon, and will likely
-> make anything that actually uses the channel survey data misbehave.
-> 
-> It is therefore a breaking change for any device that actually
-> implements ACS.
-> 
-> -J.
+Hi Dave,
 
-In ath9k driver also survey data being accumulated in driver and send 
-survey data to user space is accumulated one. same thing we are 
-implementing in FW(with WMI request type WMI_BSS_SURVEY_REQ_TYPE_READ) 
-instead of doing it in driver.
+Here's a small update for net-next, there's not much but since we
+still don't have a shared tree, the ieee80211_send_layer2_update()
+should go to Kalle through your tree :)
+
+Please pull and let me know if there's any problem.
 
 Thanks,
-Venkatesh.
+johannes
+
+
+
+The following changes since commit 050cdc6c9501abcd64720b8cc3e7941efee9547d:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-08-27 11:59:39 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-08-29
+
+for you to fetch changes up to 9c06602b1b920ed6b546632bdbbc1f400eea5242:
+
+  cfg80211: clarify frames covered by average ACK signal report (2018-08-29 11:01:51 +0200)
+
+----------------------------------------------------------------
+Only a few changes at this point:
+ * new channels in 60 GHz
+ * clarify (average) ACK signal reporting API
+ * expose ieee80211_send_layer2_update() for all drivers
+ * start/stop mac80211's TXQs properly when required
+ * avoid regulatory restore with IE ignoring
+ * spelling: contidion -> condition
+ * fully implement WFA Multi-AP backhaul
+
+----------------------------------------------------------------
+Alexei Avshalom Lazar (1):
+      cfg80211: Add support for 60GHz band channels 5 and 6
+
+Balaji Pothunoori (1):
+      cfg80211: clarify frames covered by average ACK signal report
+
+Dedy Lansky (1):
+      cfg80211/mac80211: make ieee80211_send_layer2_update a public function
+
+Manikanta Pubbisetty (1):
+      mac80211: add stop/start logic for software TXQs
+
+Rajeev Kumar Sirasanagandla (1):
+      cfg80211: Avoid regulatory restore when COUNTRY_IE_IGNORE is set
+
+Richard Guy Briggs (1):
+      rfkill: fix spelling mistake contidion to condition
+
+Sathishkumar Muruganandam (1):
+      mac80211: add missing WFA Multi-AP backhaul STA Rx requirement
+
+ drivers/net/wireless/ath/wil6210/debugfs.c |   2 +-
+ include/net/cfg80211.h                     |  13 +++-
+ include/net/mac80211.h                     |   4 ++
+ include/uapi/linux/nl80211.h               |  20 +++---
+ net/mac80211/cfg.c                         |  48 +------------
+ net/mac80211/ieee80211_i.h                 |   3 +
+ net/mac80211/main.c                        |   4 ++
+ net/mac80211/rx.c                          |   2 +-
+ net/mac80211/sta_info.c                    |   6 +-
+ net/mac80211/tx.c                          |  11 ++-
+ net/mac80211/util.c                        | 110 +++++++++++++++++++++++++++--
+ net/rfkill/core.c                          |   4 +-
+ net/wireless/nl80211.c                     |   7 +-
+ net/wireless/reg.c                         |  48 ++++++++++++-
+ net/wireless/trace.h                       |   2 +-
+ net/wireless/util.c                        |  51 ++++++++++++-
+ 16 files changed, 258 insertions(+), 77 deletions(-)
