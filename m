@@ -1,421 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60670 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59636 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728312AbeHVPRB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 11:17:01 -0400
+        id S1728237AbeH2OXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 10:23:55 -0400
+Date: Wed, 29 Aug 2018 12:27:38 +0200
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Grzegorz=20Duszy=C5=84ski?= <gfduszynski@gmail.com>
-Subject: [PATCH 1/2] cfg80211: let's wmm_rule be part of reg_rule structure
-Date: Wed, 22 Aug 2018 13:52:21 +0200
-Message-Id: <1534938742-9998-1-git-send-email-sgruszka@redhat.com> (sfid-20180822_135229_531697_E38C19DC)
+To: Sid Hayn <sidhayn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        lorenzo.bianconi@redhat.com, nbd@nbd.name,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v2 00/17] mt76 patches 2018-08-24 v2
+Message-ID: <20180829102737.GA20763@redhat.com> (sfid-20180829_122753_889597_87F1D09B)
+References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+ <CAM0KTbB5k54BvA2UOmoss-PuGtgHE_SGy2cG4n4ROxPH7kxYXA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAM0KTbB5k54BvA2UOmoss-PuGtgHE_SGy2cG4n4ROxPH7kxYXA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make wmm_rule be part of reg_rule structure. This simplify code
-a lot at cost of having bigger memory usage. However in most cases
-we have only few reg_rule's and when we have many like in iwlwifi
-we do not save memory as we allocate wmm_rule for each channel.
+Hi Sid
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 50 ++----------
- include/net/cfg80211.h                             |  4 +-
- include/net/regulatory.h                           |  4 +-
- net/mac80211/util.c                                |  8 +-
- net/wireless/nl80211.c                             | 10 +--
- net/wireless/reg.c                                 | 91 ++++------------------
- 6 files changed, 31 insertions(+), 136 deletions(-)
+On Wed, Aug 29, 2018 at 02:26:44AM +0000, Sid Hayn wrote:
+> Thanks for working on this, I have a small stack of different devices
+> covered by this driver which I'm excited to test with.
+> 
+> I'm running wireless-testing which may or may not be fully up to date
+> on the patches you have sent (head is at
+> c9cd161770dd1866207b70d41ec03c9a26eea94f from Aug 13th), so please
+> tell me if this has already been fixed.  I have a script that attempts
+> to connect to 16 differently configured SSIDs using 33 different (yet
+> compatible) wpa_supplicant.conf files and reports failures to me.
+> It's hardly perfect, but it gives me an idea if something is obviously
+> broken and needs a deeper dive.  When I run this script against a
+> device supported by mt76x2 or mt76x0 I get an unusual error.
+> Everything goes fine, connect, dhcp, disconnect, connect, dhcp,
+> disconnect, but after about 5 or 6 connections I start getting errors
+> like this during wpa_supplicant:
+> 
+> Could not set interface t2uh flags (UP): No space left on device
+> nl80211: Could not set interface 't2uh' UP
+> nl80211: deinit ifname=t2uh disabled_11b_rates=0
+> t2uh: Failed to initialize driver interface
+> 
+> and then this with dhcpcd:
+> 
+> dhcpcd_prestartinterface: t2uh: No space left on device
+> t2uh: waiting for carrier
+> 
+> the same happens with just ifconfig up:
+> 
+> SIOCSIFFLAGS: No space left on device
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index b4c3a957c102..73969dbeb5c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -985,15 +985,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
- 			     iwl_ext_nvm_channels : iwl_nvm_channels;
- 	struct ieee80211_regdomain *regd, *copy_rd;
--	int size_of_regd, regd_to_copy, wmms_to_copy;
--	int size_of_wmms = 0;
-+	int size_of_regd, regd_to_copy;
- 	struct ieee80211_reg_rule *rule;
--	struct ieee80211_wmm_rule *wmm_rule, *d_wmm, *s_wmm;
- 	struct regdb_ptrs *regdb_ptrs;
- 	enum nl80211_band band;
- 	int center_freq, prev_center_freq = 0;
--	int valid_rules = 0, n_wmms = 0;
--	int i;
-+	int valid_rules = 0;
- 	bool new_rule;
- 	int max_num_ch = cfg->nvm_type == IWL_NVM_EXT ?
- 			 IWL_NVM_NUM_CHANNELS_EXT : IWL_NVM_NUM_CHANNELS;
-@@ -1012,11 +1009,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		sizeof(struct ieee80211_regdomain) +
- 		num_of_ch * sizeof(struct ieee80211_reg_rule);
- 
--	if (geo_info & GEO_WMM_ETSI_5GHZ_INFO)
--		size_of_wmms =
--			num_of_ch * sizeof(struct ieee80211_wmm_rule);
--
--	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
-+	regd = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -1030,8 +1023,6 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	regd->alpha2[0] = fw_mcc >> 8;
- 	regd->alpha2[1] = fw_mcc & 0xff;
- 
--	wmm_rule = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
--
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
- 		ch_flags = (u16)__le32_to_cpup(channels + ch_idx);
- 		band = (ch_idx < NUM_2GHZ_CHANNELS) ?
-@@ -1085,26 +1076,10 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		    band == NL80211_BAND_2GHZ)
- 			continue;
- 
--		if (!reg_query_regdb_wmm(regd->alpha2, center_freq,
--					 &regdb_ptrs[n_wmms].token, wmm_rule)) {
--			/* Add only new rules */
--			for (i = 0; i < n_wmms; i++) {
--				if (regdb_ptrs[i].token ==
--				    regdb_ptrs[n_wmms].token) {
--					rule->wmm_rule = regdb_ptrs[i].rule;
--					break;
--				}
--			}
--			if (i == n_wmms) {
--				rule->wmm_rule = wmm_rule;
--				regdb_ptrs[n_wmms++].rule = wmm_rule;
--				wmm_rule++;
--			}
--		}
-+		reg_query_regdb_wmm(regd->alpha2, center_freq, rule);
- 	}
- 
- 	regd->n_reg_rules = valid_rules;
--	regd->n_wmm_rules = n_wmms;
- 
- 	/*
- 	 * Narrow down regdom for unused regulatory rules to prevent hole
-@@ -1113,28 +1088,13 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	regd_to_copy = sizeof(struct ieee80211_regdomain) +
- 		valid_rules * sizeof(struct ieee80211_reg_rule);
- 
--	wmms_to_copy = sizeof(struct ieee80211_wmm_rule) * n_wmms;
--
--	copy_rd = kzalloc(regd_to_copy + wmms_to_copy, GFP_KERNEL);
-+	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
- 	if (!copy_rd) {
- 		copy_rd = ERR_PTR(-ENOMEM);
- 		goto out;
- 	}
- 
- 	memcpy(copy_rd, regd, regd_to_copy);
--	memcpy((u8 *)copy_rd + regd_to_copy, (u8 *)regd + size_of_regd,
--	       wmms_to_copy);
--
--	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)copy_rd + regd_to_copy);
--	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
--
--	for (i = 0; i < regd->n_reg_rules; i++) {
--		if (!regd->reg_rules[i].wmm_rule)
--			continue;
--
--		copy_rd->reg_rules[i].wmm_rule = d_wmm +
--			(regd->reg_rules[i].wmm_rule - s_wmm);
--	}
- 
- out:
- 	kfree(regdb_ptrs);
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9a850973e09a..8ebabc9873d1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4865,8 +4865,8 @@ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
-  *
-  * Return: 0 on success. -ENODATA.
-  */
--int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
--			struct ieee80211_wmm_rule *rule);
-+int reg_query_regdb_wmm(char *alpha2, int freq,
-+			struct ieee80211_reg_rule *rule);
- 
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 60f8cc86a447..3469750df0f4 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -217,15 +217,15 @@ struct ieee80211_wmm_rule {
- struct ieee80211_reg_rule {
- 	struct ieee80211_freq_range freq_range;
- 	struct ieee80211_power_rule power_rule;
--	struct ieee80211_wmm_rule *wmm_rule;
-+	struct ieee80211_wmm_rule wmm_rule;
- 	u32 flags;
- 	u32 dfs_cac_ms;
-+	bool has_wmm;
- };
- 
- struct ieee80211_regdomain {
- 	struct rcu_head rcu_head;
- 	u32 n_reg_rules;
--	u32 n_wmm_rules;
- 	char alpha2[3];
- 	enum nl80211_dfs_regions dfs_region;
- 	struct ieee80211_reg_rule reg_rules[];
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 88efda7c9f8a..7ad12c380861 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1135,7 +1135,7 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	const struct ieee80211_reg_rule *rrule;
--	struct ieee80211_wmm_ac *wmm_ac;
-+	const struct ieee80211_wmm_ac *wmm_ac;
- 	u16 center_freq = 0;
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_AP &&
-@@ -1154,15 +1154,15 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
- 
- 	rrule = freq_reg_info(sdata->wdev.wiphy, MHZ_TO_KHZ(center_freq));
- 
--	if (IS_ERR_OR_NULL(rrule) || !rrule->wmm_rule) {
-+	if (IS_ERR_OR_NULL(rrule) || !rrule->has_wmm) {
- 		rcu_read_unlock();
- 		return;
- 	}
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP)
--		wmm_ac = &rrule->wmm_rule->ap[ac];
-+		wmm_ac = &rrule->wmm_rule.ap[ac];
- 	else
--		wmm_ac = &rrule->wmm_rule->client[ac];
-+		wmm_ac = &rrule->wmm_rule.client[ac];
- 	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
- 	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
- 	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5fb9b7dd9831..6fce50e34882 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -669,13 +669,13 @@ static int nl80211_msg_put_wmm_rules(struct sk_buff *msg,
- 			goto nla_put_failure;
- 
- 		if (nla_put_u16(msg, NL80211_WMMR_CW_MIN,
--				rule->wmm_rule->client[j].cw_min) ||
-+				rule->wmm_rule.client[j].cw_min) ||
- 		    nla_put_u16(msg, NL80211_WMMR_CW_MAX,
--				rule->wmm_rule->client[j].cw_max) ||
-+				rule->wmm_rule.client[j].cw_max) ||
- 		    nla_put_u8(msg, NL80211_WMMR_AIFSN,
--			       rule->wmm_rule->client[j].aifsn) ||
-+			       rule->wmm_rule.client[j].aifsn) ||
- 		    nla_put_u8(msg, NL80211_WMMR_TXOP,
--			       rule->wmm_rule->client[j].cot))
-+			       rule->wmm_rule.client[j].cot))
- 			goto nla_put_failure;
- 
- 		nla_nest_end(msg, nl_wmm_rule);
-@@ -768,7 +768,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 		const struct ieee80211_reg_rule *rule =
- 			freq_reg_info(wiphy, chan->center_freq);
- 
--		if (!IS_ERR(rule) && rule->wmm_rule) {
-+		if (!IS_ERR_OR_NULL(rule) && rule->has_wmm) {
- 			if (nl80211_msg_put_wmm_rules(msg, rule))
- 				goto nla_put_failure;
- 		}
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4fc66a117b7d..2f702adf2912 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -425,36 +425,23 @@ static const struct ieee80211_regdomain *
- reg_copy_regd(const struct ieee80211_regdomain *src_regd)
- {
- 	struct ieee80211_regdomain *regd;
--	int size_of_regd, size_of_wmms;
-+	int size_of_regd;
- 	unsigned int i;
--	struct ieee80211_wmm_rule *d_wmm, *s_wmm;
- 
- 	size_of_regd =
- 		sizeof(struct ieee80211_regdomain) +
- 		src_regd->n_reg_rules * sizeof(struct ieee80211_reg_rule);
--	size_of_wmms = src_regd->n_wmm_rules *
--		sizeof(struct ieee80211_wmm_rule);
- 
--	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
-+	regd = kzalloc(size_of_regd, GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
- 	memcpy(regd, src_regd, sizeof(struct ieee80211_regdomain));
- 
--	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
--	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)src_regd + size_of_regd);
--	memcpy(d_wmm, s_wmm, size_of_wmms);
--
--	for (i = 0; i < src_regd->n_reg_rules; i++) {
-+	for (i = 0; i < src_regd->n_reg_rules; i++)
- 		memcpy(&regd->reg_rules[i], &src_regd->reg_rules[i],
- 		       sizeof(struct ieee80211_reg_rule));
--		if (!src_regd->reg_rules[i].wmm_rule)
--			continue;
- 
--		regd->reg_rules[i].wmm_rule = d_wmm +
--			(src_regd->reg_rules[i].wmm_rule - s_wmm) /
--			sizeof(struct ieee80211_wmm_rule);
--	}
- 	return regd;
- }
- 
-@@ -860,9 +847,10 @@ static bool valid_regdb(const u8 *data, unsigned int size)
- 	return true;
- }
- 
--static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
-+static void set_wmm_rule(struct ieee80211_reg_rule *rrule,
- 			 struct fwdb_wmm_rule *wmm)
- {
-+	struct ieee80211_wmm_rule *rule = &rrule->wmm_rule;
- 	unsigned int i;
- 
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-@@ -876,11 +864,13 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
- 		rule->ap[i].aifsn = wmm->ap[i].aifsn;
- 		rule->ap[i].cot = 1000 * be16_to_cpu(wmm->ap[i].cot);
- 	}
-+
-+	rrule->has_wmm = true;
- }
- 
- static int __regdb_query_wmm(const struct fwdb_header *db,
- 			     const struct fwdb_country *country, int freq,
--			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
-+			     struct ieee80211_reg_rule *rule)
- {
- 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
- 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
-@@ -901,8 +891,6 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
- 			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
- 			wmm = (void *)((u8 *)db + wmm_ptr);
- 			set_wmm_rule(rule, wmm);
--			if (dbptr)
--				*dbptr = wmm_ptr;
- 			return 0;
- 		}
- 	}
-@@ -910,8 +898,7 @@ static int __regdb_query_wmm(const struct fwdb_header *db,
- 	return -ENODATA;
- }
- 
--int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
--			struct ieee80211_wmm_rule *rule)
-+int reg_query_regdb_wmm(char *alpha2, int freq, struct ieee80211_reg_rule *rule)
- {
- 	const struct fwdb_header *hdr = regdb;
- 	const struct fwdb_country *country;
-@@ -925,8 +912,7 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
- 	country = &hdr->country[0];
- 	while (country->coll_ptr) {
- 		if (alpha2_equal(alpha2, country->alpha2))
--			return __regdb_query_wmm(regdb, country, freq, dbptr,
--						 rule);
-+			return __regdb_query_wmm(regdb, country, freq, rule);
- 
- 		country++;
- 	}
-@@ -935,32 +921,13 @@ int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
- }
- EXPORT_SYMBOL(reg_query_regdb_wmm);
- 
--struct wmm_ptrs {
--	struct ieee80211_wmm_rule *rule;
--	u32 ptr;
--};
--
--static struct ieee80211_wmm_rule *find_wmm_ptr(struct wmm_ptrs *wmm_ptrs,
--					       u32 wmm_ptr, int n_wmms)
--{
--	int i;
--
--	for (i = 0; i < n_wmms; i++) {
--		if (wmm_ptrs[i].ptr == wmm_ptr)
--			return wmm_ptrs[i].rule;
--	}
--	return NULL;
--}
--
- static int regdb_query_country(const struct fwdb_header *db,
- 			       const struct fwdb_country *country)
- {
- 	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
- 	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
- 	struct ieee80211_regdomain *regdom;
--	struct ieee80211_regdomain *tmp_rd;
--	unsigned int size_of_regd, i, n_wmms = 0;
--	struct wmm_ptrs *wmm_ptrs;
-+	unsigned int size_of_regd, i;
- 
- 	size_of_regd = sizeof(struct ieee80211_regdomain) +
- 		coll->n_rules * sizeof(struct ieee80211_reg_rule);
-@@ -969,12 +936,6 @@ static int regdb_query_country(const struct fwdb_header *db,
- 	if (!regdom)
- 		return -ENOMEM;
- 
--	wmm_ptrs = kcalloc(coll->n_rules, sizeof(*wmm_ptrs), GFP_KERNEL);
--	if (!wmm_ptrs) {
--		kfree(regdom);
--		return -ENOMEM;
--	}
--
- 	regdom->n_reg_rules = coll->n_rules;
- 	regdom->alpha2[0] = country->alpha2[0];
- 	regdom->alpha2[1] = country->alpha2[1];
-@@ -1013,37 +974,11 @@ static int regdb_query_country(const struct fwdb_header *db,
- 				1000 * be16_to_cpu(rule->cac_timeout);
- 		if (rule->len >= offsetofend(struct fwdb_rule, wmm_ptr)) {
- 			u32 wmm_ptr = be16_to_cpu(rule->wmm_ptr) << 2;
--			struct ieee80211_wmm_rule *wmm_pos =
--				find_wmm_ptr(wmm_ptrs, wmm_ptr, n_wmms);
--			struct fwdb_wmm_rule *wmm;
--			struct ieee80211_wmm_rule *wmm_rule;
--
--			if (wmm_pos) {
--				rrule->wmm_rule = wmm_pos;
--				continue;
--			}
--			wmm = (void *)((u8 *)db + wmm_ptr);
--			tmp_rd = krealloc(regdom, size_of_regd + (n_wmms + 1) *
--					  sizeof(struct ieee80211_wmm_rule),
--					  GFP_KERNEL);
--
--			if (!tmp_rd) {
--				kfree(regdom);
--				kfree(wmm_ptrs);
--				return -ENOMEM;
--			}
--			regdom = tmp_rd;
--
--			wmm_rule = (struct ieee80211_wmm_rule *)
--				((u8 *)regdom + size_of_regd + n_wmms *
--				sizeof(struct ieee80211_wmm_rule));
-+			struct fwdb_wmm_rule *wmm = (void *)((u8 *)db + wmm_ptr);
- 
--			set_wmm_rule(wmm_rule, wmm);
--			wmm_ptrs[n_wmms].ptr = wmm_ptr;
--			wmm_ptrs[n_wmms++].rule = wmm_rule;
-+			set_wmm_rule(rrule, wmm);
- 		}
- 	}
--	kfree(wmm_ptrs);
- 
- 	return reg_schedule_apply(regdom);
- }
--- 
-2.7.5
+This looks like some memory leak, not sure where, but it quite probable
+that is in the m76x{0,2} driver. You can check periodically using 'free'
+command (or in more details by 'cat /proc/meminfo') if memory is
+leaking. Then compile kernel with CONFIG_DEBUG_KMEMLEAK to see where
+the leak happen.
+
+Regards
+Stanislaw
