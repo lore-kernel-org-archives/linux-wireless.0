@@ -1,147 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51690 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730203AbeHNB6N (ORCPT
+Received: from alexa-out-blr-01.qualcomm.com ([103.229.18.197]:18155 "EHLO
+        alexa-out-blr-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727054AbeH2K4Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 21:58:13 -0400
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: johannes@sipsolutions.net
+        Wed, 29 Aug 2018 06:56:16 -0400
+From: Rakesh Pillai <pillair@codeaurora.org>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [RFC 3/3] mac80211: add ieee80211_reorder_txq
-Date: Mon, 13 Aug 2018 16:13:31 -0700
-Message-Id: <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org> (sfid-20180814_011423_630910_2806B67D)
-In-Reply-To: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
-References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org>
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] ath10k: Enable Factory Test Mode for WCN3990
+Date: Wed, 29 Aug 2018 12:30:38 +0530
+Message-Id: <1535526038-4299-1-git-send-email-pillair@codeaurora.org> (sfid-20180829_090056_601899_07C795FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows the driver to refill airtime fairness deficit
-where the driver will not access txqs by ieee80211_next_txq.
-In tx push mode data path, high priority txqs will be scheduled
-for data transmission by ieee80211_next_txq and driver will not
-prioritize txqs whereas in push-pull mode, the drivers can
-prioritize txqs and access them directly. In such mode, airtime
-deficit can not filled by ieee80211_next_txq.
+The support to put WCN3990 firmware into Factory
+test mode is not present currently. The WCN3990
+firmware can operate in Factory test mode based
+on the mode it receives in the wlan enable message
+from the host driver.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+When the host driver is started in testmode send
+the operating mode as UTF mode, to the WCN3990
+firmware, in the wlan enable message to start the
+firmware in Factory test mode.
+
+Tested on: WCN3990
+Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1.
+
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- include/net/mac80211.h | 15 +++++++++++++
- net/mac80211/tx.c      | 59 +++++++++++++++++++++++++++++++++++---------------
- 2 files changed, 57 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath10k/ahb.c      |  3 ++-
+ drivers/net/wireless/ath/ath10k/core.c     |  2 +-
+ drivers/net/wireless/ath/ath10k/hif.h      |  7 ++++---
+ drivers/net/wireless/ath/ath10k/mac.c      |  2 +-
+ drivers/net/wireless/ath/ath10k/pci.c      |  3 ++-
+ drivers/net/wireless/ath/ath10k/sdio.c     |  3 ++-
+ drivers/net/wireless/ath/ath10k/snoc.c     | 20 ++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/testmode.c |  2 +-
+ drivers/net/wireless/ath/ath10k/usb.c      |  3 ++-
+ 9 files changed, 31 insertions(+), 14 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cc16847bd52d..a2f0b6800100 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6033,6 +6033,21 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
- struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac);
- 
- /**
-+ * ieee80211_reorder_txq - change txq position in scheduling loop
-+ *
-+ * This function is used to reorder txq's position in scheduling loop.
-+ * The txq fairness deficit will be refilled. The drivers calling this
-+ * function should ensure the txq won't be accessed by ieee80211_next_txq
-+ * in the same path.
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @txq: pointer obtained from station or virtual interface
-+ *
-+ */
-+void ieee80211_reorder_txq(struct ieee80211_hw *hw,
-+			   struct ieee80211_txq *txq);
-+
-+/**
-  * ieee80211_txq_get_depth - get pending frame/byte count of given txq
-  *
-  * The values are not guaranteed to be coherent with regard to each other, i.e.
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0af35c08e0d9..b7b2f93152f8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3634,10 +3634,38 @@ static inline struct txq_info *find_txqi(struct ieee80211_local *local, s8 ac)
- 	return txqi;
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index c9bd0e2..8c0e605 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -661,7 +661,8 @@ static void ath10k_ahb_hif_stop(struct ath10k *ar)
+ 	napi_disable(&ar->napi);
  }
  
-+static bool ieee80211_txq_refill_deficit(struct ieee80211_local *local,
-+					 struct txq_info *txqi)
-+{
-+	struct fq *fq = &local->fq;
-+	struct sta_info *sta;
-+
-+	lockdep_assert_held(&local->active_txq_lock);
-+
-+	if (!txqi->txq.sta)
-+		return false;
-+
-+	sta = container_of(txqi->txq.sta, struct sta_info, sta);
-+
-+	if (sta->airtime.deficit[txqi->txq.ac] > 0)
-+		return false;
-+
-+	sta->airtime.deficit[txqi->txq.ac] +=
-+		IEEE80211_AIRTIME_QUANTUM * sta->airtime.weight;
-+	list_move_tail(&txqi->schedule_order,
-+		       &local->active_txqs[txqi->txq.ac]);
-+
-+	if (sta->airtime.deficit[txqi->txq.ac] > 0) {
-+		spin_lock_bh(&fq->lock);
-+		clear_bit(IEEE80211_TXQ_PAUSE, &txqi->flags);
-+		spin_unlock_bh(&fq->lock);
-+	}
-+	return true;
-+}
-+
- struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac)
+-static int ath10k_ahb_hif_power_up(struct ath10k *ar)
++static int ath10k_ahb_hif_power_up(struct ath10k *ar,
++				   enum ath10k_firmware_mode fw_mode)
  {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct fq *fq = &local->fq;
- 	struct txq_info *txqi = NULL;
+ 	int ret;
  
- 	spin_lock_bh(&local->active_txq_lock);
-@@ -3647,22 +3675,8 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac)
- 	if (!txqi)
- 		goto out;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7ff70a6..fe6169d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2515,7 +2515,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 	struct bmi_target_info target_info;
+ 	int ret = 0;
  
--	if (txqi->txq.sta) {
--		struct sta_info *sta = container_of(txqi->txq.sta,
--						struct sta_info, sta);
--
--		if (sta->airtime.deficit[txqi->txq.ac] < 0) {
--			sta->airtime.deficit[txqi->txq.ac] += IEEE80211_AIRTIME_QUANTUM * sta->airtime.weight;
--			list_move_tail(&txqi->schedule_order,
--				       &local->active_txqs[txqi->txq.ac]);
--			if (sta->airtime.deficit[txqi->txq.ac] > 0) {
--				spin_lock_bh(&fq->lock);
--				clear_bit(IEEE80211_TXQ_PAUSE, &txqi->flags);
--				spin_unlock_bh(&fq->lock);
--			}
--			goto begin;
--		}
--	}
-+	if (ieee80211_txq_refill_deficit(local, txqi))
-+		goto begin;
+-	ret = ath10k_hif_power_up(ar);
++	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_NORMAL);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not power on hif bus (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index 1a59ea0..171fdd0 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -81,7 +81,7 @@ struct ath10k_hif_ops {
+ 	void (*write32)(struct ath10k *ar, u32 address, u32 value);
  
- 	list_del_init(&txqi->schedule_order);
+ 	/* Power up the device and enter BMI transfer mode for FW download */
+-	int (*power_up)(struct ath10k *ar);
++	int (*power_up)(struct ath10k *ar, enum ath10k_firmware_mode fw_mode);
  
-@@ -3676,6 +3690,17 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac)
+ 	/* Power down the device and free up resources. stop() must be called
+ 	 * before this if start() was called earlier
+@@ -165,9 +165,10 @@ static inline u16 ath10k_hif_get_free_queue_number(struct ath10k *ar,
+ 	return ar->hif.ops->get_free_queue_number(ar, pipe_id);
  }
- EXPORT_SYMBOL(ieee80211_next_txq);
  
-+void ieee80211_reorder_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct txq_info *txqi = to_txq_info(txq);
-+
-+	spin_lock_bh(&local->active_txq_lock);
-+	ieee80211_txq_refill_deficit(local, txqi);
-+	spin_unlock_bh(&local->active_txq_lock);
-+}
-+EXPORT_SYMBOL(ieee80211_reorder_txq);
-+
- void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				  struct net_device *dev,
- 				  u32 info_flags)
+-static inline int ath10k_hif_power_up(struct ath10k *ar)
++static inline int ath10k_hif_power_up(struct ath10k *ar,
++				      enum ath10k_firmware_mode fw_mode)
+ {
+-	return ar->hif.ops->power_up(ar);
++	return ar->hif.ops->power_up(ar, fw_mode);
+ }
+ 
+ static inline void ath10k_hif_power_down(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 90f9372..155b720 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4654,7 +4654,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		goto err;
+ 	}
+ 
+-	ret = ath10k_hif_power_up(ar);
++	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_NORMAL);
+ 	if (ret) {
+ 		ath10k_err(ar, "Could not init hif: %d\n", ret);
+ 		goto err_off;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index af2cf55..b867171 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2789,7 +2789,8 @@ static int ath10k_pci_chip_reset(struct ath10k *ar)
+ 	return ar_pci->pci_hard_reset(ar);
+ }
+ 
+-static int ath10k_pci_hif_power_up(struct ath10k *ar)
++static int ath10k_pci_hif_power_up(struct ath10k *ar,
++				   enum ath10k_firmware_mode fw_mode)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 7f61591..90abfc6 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1381,7 +1381,8 @@ static int ath10k_sdio_hif_disable_intrs(struct ath10k *ar)
+ 	return ret;
+ }
+ 
+-static int ath10k_sdio_hif_power_up(struct ath10k *ar)
++static int ath10k_sdio_hif_power_up(struct ath10k *ar,
++				    enum ath10k_firmware_mode fw_mode)
+ {
+ 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+ 	struct sdio_func *func = ar_sdio->func;
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index e9a6b3d..c79cca1 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -942,7 +942,8 @@ static int ath10k_snoc_init_pipes(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_snoc_wlan_enable(struct ath10k *ar)
++static int ath10k_snoc_wlan_enable(struct ath10k *ar,
++				   enum ath10k_firmware_mode fw_mode)
+ {
+ 	struct ath10k_tgt_pipe_cfg tgt_cfg[CE_COUNT_MAX];
+ 	struct ath10k_qmi_wlan_enable_cfg cfg;
+@@ -976,7 +977,17 @@ static int ath10k_snoc_wlan_enable(struct ath10k *ar)
+ 	cfg.shadow_reg_cfg = (struct ath10k_shadow_reg_cfg *)
+ 		&target_shadow_reg_cfg_map;
+ 
+-	mode = QMI_WLFW_MISSION_V01;
++	switch (fw_mode) {
++	case ATH10K_FIRMWARE_MODE_NORMAL:
++		mode = QMI_WLFW_MISSION_V01;
++		break;
++	case ATH10K_FIRMWARE_MODE_UTF:
++		mode = QMI_WLFW_FTM_V01;
++		break;
++	default:
++		ath10k_err(ar, "invalid firmware mode %d\n", fw_mode);
++		return -EINVAL;
++	}
+ 
+ 	return ath10k_qmi_wlan_enable(ar, &cfg, mode,
+ 				       NULL);
+@@ -995,14 +1006,15 @@ static void ath10k_snoc_hif_power_down(struct ath10k *ar)
+ 	ath10k_ce_free_rri(ar);
+ }
+ 
+-static int ath10k_snoc_hif_power_up(struct ath10k *ar)
++static int ath10k_snoc_hif_power_up(struct ath10k *ar,
++				    enum ath10k_firmware_mode fw_mode)
+ {
+ 	int ret;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "%s:WCN3990 driver state = %d\n",
+ 		   __func__, ar->state);
+ 
+-	ret = ath10k_snoc_wlan_enable(ar);
++	ret = ath10k_snoc_wlan_enable(ar, fw_mode);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to enable wcn3990: %d\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index c24ee61..67faafe 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -270,7 +270,7 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode wmi version %d\n",
+ 		   ar->testmode.utf_mode_fw.fw_file.wmi_op_version);
+ 
+-	ret = ath10k_hif_power_up(ar);
++	ret = ath10k_hif_power_up(ar, ATH10K_FIRMWARE_MODE_UTF);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to power up hif (testmode): %d\n", ret);
+ 		ar->state = ATH10K_STATE_OFF;
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+index d4803ff..a91524f5 100644
+--- a/drivers/net/wireless/ath/ath10k/usb.c
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -706,7 +706,8 @@ static void ath10k_usb_hif_send_complete_check(struct ath10k *ar,
+ {
+ }
+ 
+-static int ath10k_usb_hif_power_up(struct ath10k *ar)
++static int ath10k_usb_hif_power_up(struct ath10k *ar,
++				   enum ath10k_firmware_mode fw_mode)
+ {
+ 	return 0;
+ }
 -- 
-1.9.1
+2.7.4
