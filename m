@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 6.mo3.mail-out.ovh.net ([188.165.43.173]:36799 "EHLO
-        6.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726488AbeHSCdI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 22:33:08 -0400
-Received: from player718.ha.ovh.net (unknown [10.109.160.143])
-        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 7293E1CA0DC
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Aug 2018 22:54:20 +0200 (CEST)
-Subject: Re: [PATCH v6 1/3] nl80211: Add ATOMIC_KEY_REPLACE API
-To: Denis Kenzior <denkenz@gmail.com>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
- <20180814104255.4183-2-alexander@wetzel-home.de>
- <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
-From: Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <90d88655-0b0a-0b0f-9c4f-2535a0eaf75b@wetzel-home.de> (sfid-20180819_012444_247762_FA3A40E7)
-Date: Sat, 18 Aug 2018 22:53:56 +0200
+Received: from nbd.name ([46.4.11.11]:40852 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727312AbeH2QYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 12:24:41 -0400
+Subject: Re: [PATCH v3 00/16] mt76 patches 2018-08-24 v3
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-mediatek@lists.infradead.org
+References: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <52aac72b-f1d3-d1d5-dc19-308003a26a72@nbd.name> (sfid-20180829_142804_139252_AF5B1867)
+Date: Wed, 29 Aug 2018 14:27:58 +0200
 MIME-Version: 1.0
-In-Reply-To: <6ccc3055-02c4-8756-3926-ed8e247ba751@gmail.com>
+In-Reply-To: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Denis
-
-Am 16.08.18 um 18:30 schrieb Denis Kenzior:
-> Hi Alexander,
+On 2018-08-29 13:16, Stanislaw Gruszka wrote:
+> This is the begin work of integration between mt76x0 and mt76x2.
 > 
-> On 08/14/2018 05:42 AM, Alexander Wetzel wrote:
->> Drivers able to correctly replace a in-use key should set
->> NL80211_EXT_FEATURE_ATOMIC_KEY_REPLACE to allow the userspace (e.g.
->> hostapd or wpa_supplicant) to rekey PTK keys.
->>
->> The userspace must detect a PTK rekey attempt and only go ahead with the
->> rekey when the driver has set this flag. If the driver is not supporting
->> the feature the userspace either must not replace the PTK key or perform
->> a full re-association.
->>
->> Ignoring this flag and continuing to rekey the connection can still
->> work but has to be considered insecure and broken. It can leak cleartext
->> packets or freeze the connection and is only supported to allow the
->> userspace to be updated.
->>
->> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
->> ---
->>   include/uapi/linux/nl80211.h | 6 ++++++
->>   1 file changed, 6 insertions(+)
->>
+> Further development can be seen here:
+> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v2
 > 
-> This looks good to me from a userspace perspective.  I will try to
-> implement support for this in iwd soon to give you a prototype to play
-> with.
+> v2 -> v3:
+> - merge module licence fix patch to patch that add new module
+> v1 -> v2:
+> - rename mt76xx to mt76x02 to reflect that common code is for mt76x0
+>   and mt76x2 only, not for new chips.
+> - fixup 'stucture typo' in one patch
+> 
+> Stanislaw Gruszka (17):
+>   mt76: unify wait_for_mac
+>   mt76: rename mt76x2_regs.h
+>   mt76: merge mt76x0/regs.h into mt76x02_regs.h
+>   mt76: create new mt76x02-lib module for common mt76x{0,2} code
+>   mt76: fix mt76x02-lib module license
+>   mt76: unify mac_get_key_info
+>   mt76: add helpers for register access with mt76_dev struct
+>   mt76: unify mac_shared_key_setup
+>   mt76: unify mt76x02_mac_wcid_set_key
+>   mt76: unify mac_wcid_setup
+>   mt76: use mac_wcid_set_drop in mt76x0
+>   mt76x0: use mt76_wcid_free in mt76x0
+>   mt76: unify mt76x02_vif struct
+>   mt76: unify sta structure part 1
+>   mt76: unify sta structure part 2
+>   mt76x0: initalize custom tx queues
+>   mt76x0: use mt76x02_sta and mt76x02_tx_status
+For the series:
 
-Sounds promising, thank you!
+Acked-by: Felix Fietkau <nbd@nbd.name>
 
-I'm still unsure if we really need the API changes to fix that issue:
-"Tagging" the new requirements to current set_key calls would also work.
-With the downside that there would be no way to detect "broken"
-drivers... replace_key is basically only there to differentiate between
-audited/fixed drivers and those not.
-
-But since my current impression is, that ptk rekeys are mostly broken
-independent of mac80211 or even linux a driver flag signaling support
-for it sounds like a good idea regardless how we want to fix the issue
-in mac80211. Just wondering if we should name it differently for that
-and I'm considering renaming it to NL80211_EXT_FEATURE_CAN_REKEY_PTK0 in
-the next patch.
-
-As for mac80211 driver status:
-The only known "really broken" driver at the moment is ath9k. With
-iwlwifi, - and less thorough tested - ath10k to be ok from a driver
-point of view. (ath9k needs just a driver flush as minimal fix.)
-rt2800usb is also working fine with this patch series, but I have not
-looked into the driver to figure out if this is due to the additional
-flush or not.
-
-> Reviewed-by: Denis Kenzior <denkenz@gmail.com>
-Again thanks. I've added that to my git tree and it will be in next
-patch version.
-I'll just wait some  days for more feedback to hopefully accumulate more
-changes in the next series.
-
-Alexander
+- Felix
