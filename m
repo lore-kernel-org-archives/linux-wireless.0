@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45930 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725768AbeH3E2m (ORCPT
+Received: from 19.mo5.mail-out.ovh.net ([46.105.35.78]:46011 "EHLO
+        19.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727245AbeH2Ujs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 00:28:42 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 29 Aug 2018 17:29:16 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2 2/2] mac80211: manage txq transmission based on airtime
- deficit
-In-Reply-To: <874lfd4idu.fsf@toke.dk>
-References: <1535503594-32051-1-git-send-email-rmanohar@codeaurora.org>
- <1535503594-32051-2-git-send-email-rmanohar@codeaurora.org>
- <874lfd4idu.fsf@toke.dk>
-Message-ID: <1eab13f53cc86e6b1315f2670811a6bd@codeaurora.org> (sfid-20180830_022927_258513_49E19EFD)
+        Wed, 29 Aug 2018 16:39:48 -0400
+Received: from player756.ha.ovh.net (unknown [10.109.146.106])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id ACD8B1E0CA5
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 18:35:31 +0200 (CEST)
+From: Alexander Wetzel <alexander@wetzel-home.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, denkenz@gmail.com,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH v7 1/2] nl80211: Add CAN_REPLACE_PTK0 API
+Date: Wed, 29 Aug 2018 18:34:51 +0200
+Message-Id: <20180829163452.32666-2-alexander@wetzel-home.de> (sfid-20180829_184206_037266_667A4B8E)
+In-Reply-To: <20180829163452.32666-1-alexander@wetzel-home.de>
+References: <20180829163452.32666-1-alexander@wetzel-home.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-29 02:44, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->> +bool ieee80211_txq_can_transmit(struct ieee80211_hw *hw,
->> +				struct ieee80211_txq *txq)
->> +{
->> +	struct ieee80211_local *local = hw_to_local(hw);
->> +	struct txq_info *txqi, *f_txqi;
->> +	bool can_tx;
->> +
->> +	txqi = to_txq_info(txq);
->> +	/* Check whether txq is paused or not */
->> +	if (test_bit(IEEE80211_TXQ_PAUSE, &txqi->flags))
->> +		return false;
->> +
->> +	can_tx = false;
->> +	spin_lock_bh(&local->active_txq_lock);
->> +	f_txqi = find_txqi(local, txq->ac);
->> +	if (!f_txqi)
->> +		goto out;
->> +
->> +	/* Allow only head node to ensure fairness */
->> +	if (f_txqi != txqi)
->> +		goto out;
->> +
->> +	/* Check if txq is in negative deficit */
->> +	if (!ieee80211_txq_requeued(local, txqi))
->> +		can_tx = true;
->> +
-My bad... The above check should be as below
+Drivers able to correctly replace a in-use key should set
+@NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 to allow the user space (e.g.
+hostapd or wpa_supplicant) to rekey PTK keys.
 
--       if (!ieee80211_txq_requeued(local, txqi))
--               can_tx = true;
-+       if (ieee80211_txq_requeued(local, txqi))
-+               goto out;
+The user space must detect a PTK rekey attempt and only go ahead with it
+when the driver has set this flag. If the driver is not supporting the
+feature the user space either must not replace the PTK key or perform a
+full re-association instead.
 
-+       can_tx = true;
+Ignoring this flag and continuing to rekey the connection can still work
+but has to be considered insecure and broken. Depending on the driver it
+can leak clear text packets or freeze the connection and is only
+supported to allow the user space to be updated.
 
->> +	list_del_init(&txqi->schedule_order);
-> 
-> Why are you removing the txq from the list here, and how do you expect
-> it to get added back?
-> 
-Otherwise driver has to call next_txq() to dequeue the node before
-processing it. If head node is not removed from list, driver can not 
-process
-remaining txqs from same pull request (fetch_ind()).
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+Reviewed-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/uapi/linux/nl80211.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-The node is added back in tail when txq is paused in 
-ieee80211_sta_register_airtime()
-
--Rajkumar
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7acc16f34942..cf238064d8ab 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
+  *	except for supported rates from the probe request content if requested
+  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
+  *
++ * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
++ *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
++ *      if this flag is not set. Ignoring this can leak clear text packets and/or
++ *      freeze the connection.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5259,6 +5264,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_TXQS,
+ 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
++	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+-- 
+2.18.0
