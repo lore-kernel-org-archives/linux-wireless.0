@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40392 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387411AbeHAJYX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 05:24:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53350 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727172AbeH2PNb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 11:13:31 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
         linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v3 00/14] Add mt76x0 driver
-References: <1533040864-9026-1-git-send-email-sgruszka@redhat.com>
-Date: Wed, 01 Aug 2018 10:39:58 +0300
-In-Reply-To: <1533040864-9026-1-git-send-email-sgruszka@redhat.com> (Stanislaw
-        Gruszka's message of "Tue, 31 Jul 2018 14:40:50 +0200")
-Message-ID: <87y3dqzga9.fsf@purkki.adurom.net> (sfid-20180801_094238_379913_FF1AEF08)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH v3 06/16] mt76: add helpers for register access with mt76_dev struct
+Date: Wed, 29 Aug 2018 13:16:37 +0200
+Message-Id: <1535541407-27149-7-git-send-email-sgruszka@redhat.com> (sfid-20180829_131710_680670_76F5B916)
+In-Reply-To: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
+References: <1535541407-27149-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Add helpers for register access from common code.
 
-> Add mt76x0 driver for MT7610U based USB dongles. Currently driver
-> support only STA mode.
->
-> mt76x0 is based on Jakub's mt7601u driver already included
-> in the kernel. I would like the driver be integrated as part
-> of mt76 (instead of separate driver in mediatek dir like mt7601u)
-> to utilize mt76 code for adding support for MT76x0 PCIe devices
-> in further development.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-So what's the future for mt7601u, are we going to delete it? What's
-Jakub's opinion about all this? And what's the delta featurewise between
-mt7601u and this driver? Which one will be loaded by default?
-
-Also I noticed that mt76 is missing an entry in MAINTAINERS file? Could
-someone send a separate patch to add that, please?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 79017dbd364d..10959c4669bd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -404,6 +404,11 @@ struct mt76_rx_status {
+ 	s8 chain_signal[IEEE80211_MAX_CHAINS];
+ };
+ 
++#define __mt76_rr(dev, ...)	(dev)->bus->rr((dev), __VA_ARGS__)
++#define __mt76_wr(dev, ...)	(dev)->bus->wr((dev), __VA_ARGS__)
++#define __mt76_rmw(dev, ...)	(dev)->bus->rmw((dev), __VA_ARGS__)
++#define __mt76_wr_copy(dev, ...)	(dev)->bus->copy((dev), __VA_ARGS__)
++
+ #define mt76_rr(dev, ...)	(dev)->mt76.bus->rr(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_wr(dev, ...)	(dev)->mt76.bus->wr(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_rmw(dev, ...)	(dev)->mt76.bus->rmw(&((dev)->mt76), __VA_ARGS__)
 -- 
-Kalle Valo
+2.7.5
