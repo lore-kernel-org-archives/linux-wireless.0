@@ -1,207 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57937 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727670AbeHNJhU (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:51761 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727204AbeH2WIY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 05:37:20 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 21/24] staging: wilc1000: remove unused code to set and get IP address
-Date: Tue, 14 Aug 2018 12:20:13 +0530
-Message-ID: <1534229416-13254-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180814_091108_416837_773F43E4)
-In-Reply-To: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 29 Aug 2018 18:08:24 -0400
+Received: by mail-it0-f67.google.com with SMTP id e14-v6so8995781itf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Aug 2018 11:10:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+ <CAM0KTbB5k54BvA2UOmoss-PuGtgHE_SGy2cG4n4ROxPH7kxYXA@mail.gmail.com> <20180829102737.GA20763@redhat.com>
+In-Reply-To: <20180829102737.GA20763@redhat.com>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Wed, 29 Aug 2018 18:10:01 +0000
+Message-ID: <CAM0KTbALSzvxagKTtDV7X0G9wtnSEogxNbch046LCsN_rUz4eA@mail.gmail.com> (sfid-20180829_201024_464248_CFB13D1C)
+Subject: Re: [PATCH v2 00/17] mt76 patches 2018-08-24 v2
+To: sgruszka@redhat.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        lorenzo.bianconi@redhat.com, nbd@nbd.name,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup code to remove the variables related to setting and getting IP
-address as this case was not handled from firmware side.
+I rebuilt wireless-testing (which updated today)  with
+CONFIG_DEBUG_KMEMLEAK=y.  I am still able to replicate the issue, and
+presently have 4 devices in the "No space left on device" state.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 105 ------------------------------
- drivers/staging/wilc1000/host_interface.h |   3 -
- drivers/staging/wilc1000/linux_wlan.c     |   3 -
- 3 files changed, 111 deletions(-)
+This is from /sys/kernel/debug/kmemleak:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bffe0c8..f37ba64 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -187,11 +187,6 @@ struct join_bss_param {
- 
- static u8 p2p_listen_state;
- 
--static u8 set_ip[2][4];
--static u8 get_ip[2][4];
--
--static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
--
- /* 'msg' should be free by the caller for syc */
- static struct host_if_msg*
- wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
-@@ -344,64 +339,6 @@ static void handle_set_operation_mode(struct work_struct *work)
- 	kfree(msg);
- }
- 
--static void handle_set_ip_address(struct work_struct *work)
--{
--	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
--	struct wilc_vif *vif = msg->vif;
--	u8 *ip_addr = msg->body.ip_info.ip_addr;
--	u8 idx = msg->body.ip_info.idx;
--	int ret;
--	struct wid wid;
--	char firmware_ip_addr[4] = {0};
--
--	if (ip_addr[0] < 192)
--		ip_addr[0] = 0;
--
--	memcpy(set_ip[idx], ip_addr, IP_ALEN);
--
--	wid.id = WID_IP_ADDRESS;
--	wid.type = WID_STR;
--	wid.val = ip_addr;
--	wid.size = IP_ALEN;
--
--	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
--				   wilc_get_vif_idx(vif));
--
--	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
--
--	if (ret)
--		netdev_err(vif->ndev, "Failed to set IP address\n");
--	kfree(msg);
--}
--
--static void handle_get_ip_address(struct work_struct *work)
--{
--	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
--	struct wilc_vif *vif = msg->vif;
--	u8 idx = msg->body.ip_info.idx;
--	int ret;
--	struct wid wid;
--
--	wid.id = WID_IP_ADDRESS;
--	wid.type = WID_STR;
--	wid.val = kmalloc(IP_ALEN, GFP_KERNEL);
--	wid.size = IP_ALEN;
--
--	ret = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
--				   wilc_get_vif_idx(vif));
--
--	memcpy(get_ip[idx], wid.val, IP_ALEN);
--
--	kfree(wid.val);
--
--	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
--		wilc_setup_ipaddress(vif, set_ip[idx], idx);
--
--	if (ret)
--		netdev_err(vif->ndev, "Failed to get IP address\n");
--	kfree(msg);
--}
--
- static void handle_get_mac_address(struct work_struct *work)
- {
- 	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
-@@ -4002,48 +3939,6 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 	return result;
- }
- 
--int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
--{
--	int result;
--	struct host_if_msg *msg;
--
--	msg = wilc_alloc_work(vif, handle_set_ip_address, false);
--	if (IS_ERR(msg))
--		return PTR_ERR(msg);
--
--	msg->body.ip_info.ip_addr = ip_addr;
--	msg->body.ip_info.idx = idx;
--
--	result = wilc_enqueue_work(msg);
--	if (result) {
--		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
--		kfree(msg);
--	}
--
--	return result;
--}
--
--static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
--{
--	int result;
--	struct host_if_msg *msg;
--
--	msg = wilc_alloc_work(vif, handle_get_ip_address, false);
--	if (IS_ERR(msg))
--		return PTR_ERR(msg);
--
--	msg->body.ip_info.ip_addr = ip_addr;
--	msg->body.ip_info.idx = idx;
--
--	result = wilc_enqueue_work(msg);
--	if (result) {
--		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
--		kfree(msg);
--	}
--
--	return result;
--}
--
- int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power)
- {
- 	int ret;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 80cb298..0f0d509 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -9,8 +9,6 @@
- #include <linux/ieee80211.h>
- #include "coreconfigurator.h"
- 
--#define IP_ALEN  4
--
- #define IDLE_MODE	0x00
- #define AP_MODE		0x01
- #define STATION_MODE	0x02
-@@ -344,7 +342,6 @@ int wilc_edit_station(struct wilc_vif *vif,
- int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
- int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 				u32 count);
--int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
- int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
- 			   wilc_remain_on_chan_expired expired,
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index bbaa653..74f8166 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -61,7 +61,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 		netdev_dbg(dev, "IP add=%d:%d:%d:%d\n",
- 			   ip_addr_buf[0], ip_addr_buf[1],
- 			   ip_addr_buf[2], ip_addr_buf[3]);
--		wilc_setup_ipaddress(vif, ip_addr_buf, vif->idx);
- 
- 		break;
- 
-@@ -83,8 +82,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 			   ip_addr_buf[0], ip_addr_buf[1],
- 			   ip_addr_buf[2], ip_addr_buf[3]);
- 
--		wilc_setup_ipaddress(vif, ip_addr_buf, vif->idx);
--
- 		break;
- 
- 	default:
--- 
-2.7.4
+unreferenced object 0xffff9183f9a4d000 (size 2048):
+  comm "iwconfig", pid 14872, jiffies 4295540797 (age 1233.338s)
+  hex dump (first 32 bytes):
+    46 00 00 00 00 00 00 00 05 00 00 00 00 00 00 00  F...............
+    12 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<000000003ec4c8c4>] sta_set_sinfo+0x5d2/0x890 [mac80211]
+    [<000000008bbf0699>] ieee80211_get_station+0x4b/0x70 [mac80211]
+    [<0000000030cbddbc>] cfg80211_wext_giwrate+0xdb/0x140 [cfg80211]
+    [<000000001e9277be>] ioctl_standard_call+0x49/0xd0
+    [<00000000a0eeae49>] wext_handle_ioctl+0xbe/0x120
+    [<00000000832bf9a4>] sock_ioctl+0x164/0x360
+    [<00000000d3578d89>] do_vfs_ioctl+0xa3/0x6c0
+    [<0000000036a4185e>] ksys_ioctl+0x6b/0x80
+    [<00000000e8443423>] __x64_sys_ioctl+0x11/0x20
+    [<00000000e2ddce89>] do_syscall_64+0x50/0xf0
+    [<000000005d6a8051>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+    [<00000000e724c32b>] 0xffffffffffffffff
+
+None of my scripts directly use iwconfig, but it is possible that
+wpa_supplicant or dhcpcd invoke it (although a grep of their source
+code indicates they do not). In case it matters, this is what my
+wpa_supplicant invokation looks like:
+
+wpa_supplicant -Dnl80211 -i ${interface} -c test_config/${conffile}
+
+I am leaving the system in this state for now, I can resume from
+broken or reboot to working for whatever testing you suggest next.
+This is a test rig, so it takes a few but I'm happy to rebuild
+whatever you want however you want it to debug this.
+
+Thanks,
+Zero
+On Wed, Aug 29, 2018 at 10:27 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>
+> Hi Sid
+>
+> On Wed, Aug 29, 2018 at 02:26:44AM +0000, Sid Hayn wrote:
+> > Thanks for working on this, I have a small stack of different devices
+> > covered by this driver which I'm excited to test with.
+> >
+> > I'm running wireless-testing which may or may not be fully up to date
+> > on the patches you have sent (head is at
+> > c9cd161770dd1866207b70d41ec03c9a26eea94f from Aug 13th), so please
+> > tell me if this has already been fixed.  I have a script that attempts
+> > to connect to 16 differently configured SSIDs using 33 different (yet
+> > compatible) wpa_supplicant.conf files and reports failures to me.
+> > It's hardly perfect, but it gives me an idea if something is obviously
+> > broken and needs a deeper dive.  When I run this script against a
+> > device supported by mt76x2 or mt76x0 I get an unusual error.
+> > Everything goes fine, connect, dhcp, disconnect, connect, dhcp,
+> > disconnect, but after about 5 or 6 connections I start getting errors
+> > like this during wpa_supplicant:
+> >
+> > Could not set interface t2uh flags (UP): No space left on device
+> > nl80211: Could not set interface 't2uh' UP
+> > nl80211: deinit ifname=t2uh disabled_11b_rates=0
+> > t2uh: Failed to initialize driver interface
+> >
+> > and then this with dhcpcd:
+> >
+> > dhcpcd_prestartinterface: t2uh: No space left on device
+> > t2uh: waiting for carrier
+> >
+> > the same happens with just ifconfig up:
+> >
+> > SIOCSIFFLAGS: No space left on device
+>
+> This looks like some memory leak, not sure where, but it quite probable
+> that is in the m76x{0,2} driver. You can check periodically using 'free'
+> command (or in more details by 'cat /proc/meminfo') if memory is
+> leaking. Then compile kernel with CONFIG_DEBUG_KMEMLEAK to see where
+> the leak happen.
+>
+> Regards
+> Stanislaw
+>
