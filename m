@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48126 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:35700 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728502AbeHMNIf (ORCPT
+        with ESMTP id S1727544AbeH2Kwh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 09:08:35 -0400
-Message-ID: <1534155955.3093.4.camel@sipsolutions.net> (sfid-20180813_122701_373872_C1480C3D)
-Subject: Re: help understanding HT capabilities bits
+        Wed, 29 Aug 2018 06:52:37 -0400
+Message-ID: <1535525825.5215.1.camel@sipsolutions.net> (sfid-20180829_085720_148158_0E458EE3)
+Subject: Re: [PATCH] mac80211: do not aggregate frames if max_frags is set
+ to one
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Danek Duvall <duvall@comfychair.org>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 13 Aug 2018 12:25:55 +0200
-In-Reply-To: <20180726234329.GA28336@lorien.comfychair.org> (sfid-20180727_015016_083628_F55431C9)
-References: <20180726234329.GA28336@lorien.comfychair.org>
-         (sfid-20180727_015016_083628_F55431C9)
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, sara.sharon@intel.com
+Date: Wed, 29 Aug 2018 08:57:05 +0200
+In-Reply-To: <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com> (sfid-20180828_234116_503513_760A1610)
+References: <cover.1535489707.git.lorenzo.bianconi@redhat.com>
+         <d67c1a6772d46f449dbb74d61ddf4d80dee7a350.1535489707.git.lorenzo.bianconi@redhat.com>
+         <1535490861.20033.8.camel@sipsolutions.net>
+         <CAJ0CqmWLw11bmofttBfJQmNkCVhz-N3K9ah2HJkTbjZ6EDf-Xg@mail.gmail.com>
+         (sfid-20180828_234116_503513_760A1610)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-07-26 at 16:43 -0700, Danek Duvall wrote:
-> I'm writing a library using the nl80211 family to, well, do basically what
-> iw does (I want a reusable Golang-native implementation, which saves me
-> from parsing iw's output).  I have most of the bits that I need, but I'd
-> like to fill out more of the library and make it useful to others.
+On Tue, 2018-08-28 at 23:41 +0200, Lorenzo Bianconi wrote:
 
-Yes please, don't parse iw output :-)
+> Assuming the A-MSDU subframe is composed by two packets, the last one
+> must not contain padding, is my understanding correct?
 
-> I'm a bit stuck on properly naming and describing the pieces of the HT
-> capabilities represented by NL80211_BAND_ATTR_HT_CAPA.  While being
-> generally impressed with the amount of documentation in nl80211.h and other
-> places, I've been unable to find any documentation on this particular
-> field, other than what iw prints for each bit or bit combination.
+Yes. More generally, assuming the A-MSDU subframe is composed of *any
+number of* packets, the last one must not contain padding :)
 
-This comes straight from the 802.11 spec, and we usually have less info
-on fields like that.
+> > My colleague Sara (CC'ed now) has a patch to fix all of this (we just
+> > did that this morning). I'll send it out tomorrow morning. Can I bother
+> > you to try that?
+> > 
+> 
+> Sure, no worries :)
 
-> My first thought was that it was the set of per-band capabilities for the
-> device (as defined by either the hardware or the driver, but either way
-> below me enough that I don't think I care), and for the most part I still
-> think that's right.  
+Thanks, patch coming up in a second.
 
-Yes.
+> > We'd have to fix the first point independently though, or I guess we can
+> > roll that into our bugfix too, which would you prefer?
+> > 
+> > johannes
+> > 
+> 
+> If the patch is already done I can add the fix for the first point on
+> top of it, does it sound good?
 
-> But when it came to trying to represent the SMPS bits,
-> it occurred to me that perhaps that wasn't right, since one of the
-> supported values gets printed as "disabled", which seems more like a state
-> than a capability.  
-
-Yes, also true to some extent.
-
-> Also, "static" and "dynamic" are not representable
-> separately, and set together, you get "disabled".  But perhaps "disabled"
-> is really "unsupported", and "static" and "dynamic" can't both be supported
-> on the same band?
-
-No, you really have "disabled", "static" and "dynamic" as three states
-represented in the 2 bits.
-
-> Otherwise, how should I interpret this?  I could simply leave it as a 0-3
-> value and let consumers handle the interpretation, but I'd like to be a bit
-> friendlier than that, if I can.
-
-They're just the (default) state - disabled, static, dynamic (and
-reserved).
-
-However, it really is just the default - the (non-AP) device may change
-it on the fly using action frames.
-
-It's not going to be very useful to userspace consumers, I think, since
-it doesn't reflect the *current* state.
+Perfect.
 
 johannes
