@@ -1,228 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40594 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727011AbeH0Snj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:43:39 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 01/17] mt76: unify wait_for_mac
-Date: Mon, 27 Aug 2018 16:56:15 +0200
-Message-Id: <1535381791-14908-2-git-send-email-sgruszka@redhat.com> (sfid-20180827_165643_530551_CB8CE5AB)
-In-Reply-To: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
-References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+Received: from swan.media.mit.edu ([18.85.44.157]:38199 "EHLO swan.laptop.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727168AbeH3B5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Aug 2018 21:57:38 -0400
+Date: Thu, 30 Aug 2018 07:58:37 +1000
+From: James Cameron <quozl@laptop.org>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Mylene JOSSERAND <mylene.josserand@free-electrons.com>,
+        Stefan Pappalardo <stefan.pappalardo@gmx.de>,
+        Carlo Caione <carlo@endlessm.com>
+Subject: Re: rtl8723bu: low signal, fails to associate
+Message-ID: <20180829215837.GD7778@us.netrek.org> (sfid-20180829_235847_813779_F2E01C4F)
+References: <20180824013645.GB761@us.netrek.org>
+ <bd9ef21e-b0f6-f947-b14d-cbb8abf4efdb@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bd9ef21e-b0f6-f947-b14d-cbb8abf4efdb@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create new mt76x02_mac.h for common mac functions of mt76x0 and mt76x2
-and unity wait_for_mac for both drivers.
+On Wed, Aug 29, 2018 at 04:19:01PM -0400, Jes Sorensen wrote:
+> On 08/23/2018 09:36 PM, James Cameron wrote:
+> > G'day Carlo, Mylene, and James,
+> > 
+> > Thanks for your earlier reports about RTL8723bu.  Have you any more
+> > recent experiences you might share?
+> > 
+> > I'm evaluating a sample laptop which worked fine with Windows 10, but
+> > not very well with Ubuntu 18.04, and kernel v4.15 or kernel v4.18.4.
+> > 
+> > The laptop is by Hena, model NT16-PRO-C-E, with a wireless device on
+> > internal USB (0x0bda:0xb720) which loads rtl8xxxu, identifying as
+> > RTL8723BU.
+> > 
+> > http://dev.laptop.org/~quozl/z/1ft0qv.txt (dmesg)
+> > 
+> > Symptoms are low RSSI on scan, very short range, and often a failure
+> > to associate over a distance of two metres in a radio quiet location.
+> > 
+> > Symptoms began after first power off, which suggests that device
+> > registers programmed by the previous operating system Windows 10 had
+> > not been reset by reboot into the Ubuntu 18.04 installer.  The device
+> > worked fine in Ubuntu 18.04 before the first power off.
+> > 
+> > Jes, let me know if there is anything I can do to help.
+> 
+> It's been a while since I had time to look at the 8723bu support, and
+> rtl8xxxu doesn't have BT coexist support. I notice that your laptop does
+> load the bluetooth module for 8723bu which I believe fiddles with the
+> antenna configuration and is likely to take control of the antennas. I
+> suspect this is why you see low signal quality on the WiFi side.
+> 
+> If you blacklist the BT module, does it work better?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   | 11 +++---
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  3 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  5 +--
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   | 42 ++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        | 17 ---------
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |  4 +--
- 8 files changed, 57 insertions(+), 28 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+Thanks.  No, it doesn't work any better, or worse.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 7cdb3e740522..a1883da0543b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -384,9 +384,11 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
- 
- 	mt76x0_chip_onoff(dev, true, true);
- 
--	ret = mt76x0_wait_asic_ready(dev);
--	if (ret)
-+	if (!mt76x02_wait_for_mac(&dev->mt76)) {
-+		ret = -ETIMEDOUT;
- 		goto err;
-+	}
-+
- 	ret = mt76x0_mcu_init(dev);
- 	if (ret)
- 		goto err;
-@@ -399,9 +401,10 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
- 	}
- 
- 	/* Wait for ASIC ready after FW load. */
--	ret = mt76x0_wait_asic_ready(dev);
--	if (ret)
-+	if (!mt76x02_wait_for_mac(&dev->mt76)) {
-+		ret = -ETIMEDOUT;
- 		goto err;
-+	}
- 
- 	mt76x0_reset_csr_bbp(dev);
- 	mt76x0_init_usb_dma(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index fc9857f61771..84d1afc21f57 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -26,6 +26,7 @@
- #include <linux/debugfs.h>
- 
- #include "../mt76.h"
-+#include "../mt76x02_mac.h"
- #include "regs.h"
- 
- #define MT_CALIBRATE_INTERVAL		(4 * HZ)
-@@ -263,8 +264,6 @@ static inline bool is_mt7610e(struct mt76x0_dev *dev)
- 
- void mt76x0_init_debugfs(struct mt76x0_dev *dev);
- 
--int mt76x0_wait_asic_ready(struct mt76x0_dev *dev);
--
- /* Compatibility with mt76 */
- #define mt76_rmw_field(_dev, _reg, _field, _val)	\
- 	mt76_rmw(_dev, _reg, _field, FIELD_PREP(_field, _val))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 54ae1f113be2..670973363c9f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -287,9 +287,10 @@ static int mt76x0_probe(struct usb_interface *usb_intf,
- 	/* Disable the HW, otherwise MCU fail to initalize on hot reboot */
- 	mt76x0_chip_onoff(dev, false, false);
- 
--	ret = mt76x0_wait_asic_ready(dev);
--	if (ret)
-+	if (!mt76x02_wait_for_mac(&dev->mt76)) {
-+		ret = -ETIMEDOUT;
- 		goto err;
-+	}
- 
- 	asic_rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	mac_rev = mt76_rr(dev, MT_MAC_CSR0);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-new file mode 100644
-index 000000000000..4bf14fd8916d
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -0,0 +1,42 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Stanislaw Gruszka <stf_xl@wp.pl>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef __MT76X02_MAC_H
-+#define __MT76X02_MAC_H
-+
-+static inline bool mt76x02_wait_for_mac(struct mt76_dev *dev)
-+{
-+	const u32 MAC_CSR0 = 0x1000;
-+	int i;
-+
-+	for (i = 0; i < 500; i++) {
-+		if (test_bit(MT76_REMOVED, &dev->state))
-+			return -EIO;
-+
-+		switch (dev->bus->rr(dev, MAC_CSR0)) {
-+		case 0:
-+		case ~0:
-+			break;
-+		default:
-+			return true;
-+		}
-+		usleep_range(5000, 10000);
-+	}
-+	return false;
-+}
-+
-+#endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index dca3209bf5f1..4c952b8a777c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -163,23 +163,6 @@ struct mt76x2_sta {
- 	int inactive_count;
- };
- 
--static inline bool mt76x2_wait_for_mac(struct mt76x2_dev *dev)
--{
--	int i;
--
--	for (i = 0; i < 500; i++) {
--		switch (mt76_rr(dev, MT_MAC_CSR0)) {
--		case 0:
--		case ~0:
--			break;
--		default:
--			return true;
--		}
--		usleep_range(5000, 10000);
--	}
--	return false;
--}
--
- static inline bool is_mt7612(struct mt76x2_dev *dev)
- {
- 	return mt76_chip(&dev->mt76) == 0x7612;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index b814391f79ac..75a4e171da6d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -101,7 +101,7 @@ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
- 	u32 val;
- 	int i, k;
- 
--	if (!mt76x2_wait_for_mac(dev))
-+	if (!mt76x02_wait_for_mac(&dev->mt76))
- 		return -ETIMEDOUT;
- 
- 	val = mt76_rr(dev, MT_WPDMA_GLO_CFG);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index 5af0107ba748..0f07fc1a19ab 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -18,6 +18,7 @@
- #define __MT76x2_MAC_H
- 
- #include "mt76.h"
-+#include "mt76x02_mac.h"
- 
- struct mt76x2_dev;
- struct mt76x2_sta;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-index 9b81e7641c06..276e30608cea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-@@ -184,7 +184,7 @@ int mt76x2u_init_hardware(struct mt76x2_dev *dev)
- 	mt76x2_reset_wlan(dev, true);
- 	mt76x2u_power_on(dev);
- 
--	if (!mt76x2_wait_for_mac(dev))
-+	if (!mt76x02_wait_for_mac(&dev->mt76))
- 		return -ETIMEDOUT;
- 
- 	err = mt76x2u_mcu_fw_init(dev);
-@@ -197,7 +197,7 @@ int mt76x2u_init_hardware(struct mt76x2_dev *dev)
- 		return -EIO;
- 
- 	/* wait for asic ready after fw load. */
--	if (!mt76x2_wait_for_mac(dev))
-+	if (!mt76x02_wait_for_mac(&dev->mt76))
- 		return -ETIMEDOUT;
- 
- 	mt76_wr(dev, MT_HEADER_TRANS_CTRL_REG, 0);
+Method: add "blacklist btusb" to /etc/modprobe.d/blacklist.conf,
+regenerate initramfs, and boot.
+
+Also, a difference in symptom between cold and warm boot;
+
+*  on cold boot after 15 seconds of power off, device connects but has
+   short range, with received power at monitor of -76dBm,
+
+   http://dev.laptop.org/~quozl/z/1fv7sW.txt (dmesg, cold boot, no btusb)
+
+*  on warm boot with less than 5 seconds of power off, device does not
+   connect, dmesg "authentication with xx:yy:zz:aa:bb:cc timed out",
+   and probe request, authentication, and association packets are not
+   seen by monitor,
+
+   http://dev.laptop.org/~quozl/z/1fv8IO.txt (dmesg, warm boot, no btusb)
+
+In both cases, scan results are normal, and similar signal level.  An
+active scan for cold boot, and a passive scan for warm boot.
+
+Monitor device is an ath9k about 30cm away; a radio quiet environment
+on a farm.
+
+Speculation; device registers are not being reset.  Would not have
+been a problem for RTL8723BU on removable USB.
+
 -- 
-2.7.5
+James Cameron
+http://quozl.netrek.org/
