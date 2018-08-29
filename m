@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:34768 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726762AbeHUVRE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:37648 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726858AbeH2NUp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 17:17:04 -0400
-Date: Tue, 21 Aug 2018 10:55:50 -0700
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-Message-ID: <20180821175550.GS3978217@devbig004.ftw2.facebook.com> (sfid-20180821_195604_932920_CE902C3A)
-References: <20180821120317.4115-1-johannes@sipsolutions.net>
- <20180821120317.4115-2-johannes@sipsolutions.net>
- <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
- <1534871894.25523.34.camel@sipsolutions.net>
- <20180821172711.GR3978217@devbig004.ftw2.facebook.com>
- <1534872621.25523.39.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534872621.25523.39.camel@sipsolutions.net>
+        Wed, 29 Aug 2018 09:20:45 -0400
+Message-ID: <1535534678.5215.23.camel@sipsolutions.net> (sfid-20180829_112449_391118_A74203F2)
+Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
+Date: Wed, 29 Aug 2018 11:24:38 +0200
+In-Reply-To: <87a7p54jed.fsf@toke.dk>
+References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
+         <153115422491.7447.12479559048433925372.stgit@alrua-x1>
+         <1535528167.5215.15.camel@sipsolutions.net> <87a7p54jed.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 2018-08-29 at 11:22 +0200, Toke Høiland-Jørgensen wrote:
 
-On Tue, Aug 21, 2018 at 07:30:21PM +0200, Johannes Berg wrote:
-> I don't see how? This is only relevant in ordered/single-threaded WQs,
-> but even there it doesn't matter doesn't matter as explained?
+> > We're also working on adding a TXQ for (bufferable) management packets
+> > - I wonder how that should interact here? Always be scheduled first?
 > 
-> I'm actually seeing a false positive report from lockdep, because it
-> *is* flushing, i.e. I'm running into the case of the work actually
-> running, i.e. the "_sync" part of "cancel_work_sync()" is kicking in,
-> but in that case a single-threaded WQ can't have anything executing
-> *before* it, so we don't need to generate a lockdep dependency - and in
-> fact don't *want* to create one to avoid the false positive.
-> 
-> I'm not really sure what you think we might be missing? Am I missing
-> some case where cancel_work_sync() can possibly deadlock? Apart from the
-> issue I addressed in the second patch, obviously.
+> Ah, cool! It may be that it should be given priority, yeah. Presently,
+> the multicast queue just rotates in the RR with the others, but is never
+> throttled as it doesn't have an airtime measure (though perhaps it
+> should)? But that might not be desirable for management frames, as
+> presumable those need to go out as fast as possible?
 
-Ah, that was me being slow.  I thought you were skipping the work's
-lockdep_map.  I can almost swear we had that before (the part you're
-adding on the second patch).  Right, fd1a5b04dfb8 ("workqueue: Remove
-now redundant lock acquisitions wrt. workqueue flushes") removed it
-because it gets propagated through wait_for_completion().  Did we miss
-some cases with that change?
+Good question. I guess the multicast should have an airtime measure, but
+I don't think we want to do accounting on the management. That really
+should be few frames, and we want them out ASAP in most cases.
 
-Thanks.
+> Hmm, I seem to recall thinking about just putting the call to
+> schedule_txq() into drv_wake_tx_queue; don't remember why I ended up
+> dropping that; but will take another look at whether it makes sense to
+> combine things.
 
--- 
-tejun
+I was thinking the other way around - but that doesn't work since you'd
+loop from the driver to itself. This way might work, I guess, hadn't
+considered that.
+
+Might be better anyway though to make a new inline that does both, since
+the drv_() calls usually really don't do much on their own (other than
+checks, and in one case backward compatibility code, but still)
+
+johannes
