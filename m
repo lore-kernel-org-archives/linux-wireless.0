@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:48918 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728129AbeHCKYP (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:36072 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727054AbeH2Lbt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 06:24:15 -0400
-Date: Fri, 3 Aug 2018 13:58:51 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 7/8] staging: wilc1000: replace udelay with usleep_range
-Message-ID: <20180803135851.0b576ef0@ajaysk-VirtualBox> (sfid-20180803_102905_198370_F66DFDB4)
-In-Reply-To: <20180802073415.GB14107@kroah.com>
-References: <1532844417-3192-1-git-send-email-ajay.kathat@microchip.com>
-        <1532844417-3192-8-git-send-email-ajay.kathat@microchip.com>
-        <20180802073415.GB14107@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Wed, 29 Aug 2018 07:31:49 -0400
+Message-ID: <1535528167.5215.15.camel@sipsolutions.net> (sfid-20180829_093620_110114_803A78E3)
+Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
+Date: Wed, 29 Aug 2018 09:36:07 +0200
+In-Reply-To: <153115422491.7447.12479559048433925372.stgit@alrua-x1> (sfid-20180709_183719_768645_CF7DCAEC)
+References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
+         <153115422491.7447.12479559048433925372.stgit@alrua-x1>
+         (sfid-20180709_183719_768645_CF7DCAEC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+Rather belatedly reviewing this too ...
 
-On Thu, 2 Aug 2018 09:34:15 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
+> + * The driver can't access the queue directly. To dequeue a frame from a
+> + * txq, it calls ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a
+> + * queue, it calls the .wake_tx_queue driver op.
+> + *
+> + * Drivers can optionally delegate responsibility for scheduling queues to
+> + * mac80211, to take advantage of airtime fairness accounting. In this case, to
+> + * obtain the next queue to pull frames from, the driver calls
+> + * ieee80211_next_txq(). The driver is then expected to re-schedule the txq
+> + * using ieee80211_schedule_txq() if it is still active after the driver has
+> + * finished pulling packets from it.
 
-> On Sun, Jul 29, 2018 at 11:36:56AM +0530, Ajay Singh wrote:
-> > Cleanup patch to avoid the below checkpatch reported issue.
-> > 
-> > "usleep_range is preferred over udelay; see
-> > Documentation/timers/timers-howto.txt".
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_wlan.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > b/drivers/staging/wilc1000/wilc_wlan.c index 6bac3f7..655952a 100644
-> > --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > @@ -425,7 +425,7 @@ void chip_wakeup(struct wilc *wilc)
-> >  		} while (wilc_get_chipid(wilc, true) == 0);
-> >  	} else if ((wilc->io_type & 0x1) == HIF_SDIO) {
-> >  		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
-> > -		udelay(200);
-> > +		usleep_range(200, 201);  
-> 
-> Hah, that's funny.
-> 
-> No, do it right, don't try to game checkpatch here.
+Maybe you could clarify what "is still active" means here? I'm guessing
+it means "tx_dequeue() would return non-NULL" but I doubt you really
+want such a strong requirement, perhaps "the last tx_dequeue() returned
+non-NULL" is sufficient?
 
-The delay of 200us was added to have a short wait between HW register
-write and read operation. The short delay of 200us was enough for this
-but the duration range is not available. So to replace udelay() of
-200us with usleep_range(), I have used used range from 200, 201.
 
-How should we handle these type of scenarios and is there any suggested
-way to specify these range.
- 
-Should we leave this code as it is and ignore this checkpatch warning.
+We're also working on adding a TXQ for (bufferable) management packets -
+I wonder how that should interact here? Always be scheduled first?
 
-Please provide your suggestion/input.
+> +/**
+> + * ieee80211_schedule_txq - add txq to scheduling loop
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from station or virtual interface
+> + * @reset_seqno: Whether to reset the internal scheduling sequence number,
+> + *               allowing this txq to appear again in the current scheduling
+> + *               round (see doc for ieee80211_next_txq()).
+> + *
+> + * Returns %true if the txq was actually added to the scheduling,
+> + * %false otherwise.
+> + */
+> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+> +			    struct ieee80211_txq *txq,
+> +			    bool reset_seqno);
 
-Thank you.
+I concur with Rajkumar in a way that "seqno" is a really bad name for
+this since it's so loaded in the context of wifi. He didn't say it this
+way, but said it was an "internal to mac80211" concept here, and was
+perhaps also/more referring to the manipulations by drivers.
 
-Regards,
-Ajay
+Perhaps calling it something like scheduling_round or something would be
+better? That's not really what it is, schedule_id? Even schedule_seq[no]
+would be clearer.
+
+> +/**
+> + * ieee80211_next_txq - get next tx queue to pull packets from
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @ac: filter returned txqs with this AC number. Pass -1 for no filtering.
+> + * @inc_seqno: Whether to increase the scheduling sequence number. Setting this
+> + *             to true signifies the start of a new scheduling round. Each TXQ
+> + *             will only be returned exactly once in each round (unless its
+> + *             sequence number is explicitly reset when calling
+> + *             ieee80211_schedule_txq()).
+
+Here you already talk about "scheduling sequence number" after all :)
+
+> +	ieee80211_schedule_txq(&local->hw, &txqi->txq, true);
+>  	drv_wake_tx_queue(local, txqi);
+
+These always seem to come paired - perhaps a helper is useful?
+
+Although it looks like there are sometimes different locking contexts,
+not sure if that's really necessary though.
+
+johannes
