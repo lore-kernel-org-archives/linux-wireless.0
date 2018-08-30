@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:55982 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388530AbeHAPJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 11:09:07 -0400
-From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
-To: Colin Ian King <colin.king@canonical.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] cfg80211: read wmm rules from regulatory database
-Date: Wed, 1 Aug 2018 13:23:06 +0000
-Message-ID: <409B2791E285FD41B488E034D9B4719F2D5D22DA@HASMSX106.ger.corp.intel.com> (sfid-20180801_152337_216915_28918F22)
-References: <9ff30f03-07f1-0abd-8c57-2601af546de0@canonical.com>
-In-Reply-To: <9ff30f03-07f1-0abd-8c57-2601af546de0@canonical.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.62]:51602 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727211AbeH3M5H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Aug 2018 08:57:07 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: always account for A-MSDU header changes
+Date: Thu, 30 Aug 2018 10:55:49 +0200
+Message-Id: <20180830085549.21955-1-johannes@sipsolutions.net> (sfid-20180830_105604_216531_F0625A1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDb2xpbiBJYW4gS2luZyBbbWFp
-bHRvOmNvbGluLmtpbmdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgSnVseSAzMSwg
-MjAxOCAyOjI4IFBNDQo+IFRvOiBEcmV5ZnVzcywgSGFpbSA8aGFpbS5kcmV5ZnVzc0BpbnRlbC5j
-b20+OyBEYXZpZCBTLiBNaWxsZXINCj4gPGRhdmVtQGRhdmVtbG9mdC5uZXQ+OyBKb2hhbm5lcyBC
-ZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsNCj4gbmV0ZGV2QHZnZXIua2VybmVsLm9y
-ZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IENjOiBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IHJlOiBbUEFUQ0hdIGNmZzgwMjExOiByZWFkIHdtbSBy
-dWxlcyBmcm9tIHJlZ3VsYXRvcnkgZGF0YWJhc2UNCj4gDQo+IEhpIEhhaW0sDQo+IA0KPiBJIHRo
-aW5rIHRoZXJlIG1heSBiZSBhbiBpc3N1ZSB3aXRoIHRoZSBjb21taXQ6DQo+IA0KPiBGcm9tIDIz
-MGViYWExODlhZjQ0ZDUwZGNjYjRhMTg0NmUzOWNhNTk0ZTM0N2IgTW9uIFNlcCAxNyAwMDowMDow
-MA0KPiAyMDAxDQo+IEZyb206IEhhaW0gRHJleWZ1c3MgPGhhaW0uZHJleWZ1c3NAaW50ZWwuY29t
-Pg0KPiBEYXRlOiBXZWQsIDI4IE1hciAyMDE4IDEzOjI0OjA5ICswMzAwDQo+IFN1YmplY3Q6IFtQ
-QVRDSF0gY2ZnODAyMTE6IHJlYWQgd21tIHJ1bGVzIGZyb20gcmVndWxhdG9yeSBkYXRhYmFzZQ0K
-PiANCj4gc3BlY2lmaWNhbGx5IGluIGZ1bmN0aW9uOiByZWdfY29weV9yZWdkKCkNCj4gDQo+ICsg
-ICAgICAgZm9yIChpID0gMDsgaSA8IHNyY19yZWdkLT5uX3JlZ19ydWxlczsgaSsrKSB7DQo+ICAg
-ICAgICAgICAgICAgICBtZW1jcHkoJnJlZ2QtPnJlZ19ydWxlc1tpXSwgJnNyY19yZWdkLT5yZWdf
-cnVsZXNbaV0sDQo+ICAgICAgICAgICAgICAgICAgICAgICAgc2l6ZW9mKHN0cnVjdCBpZWVlODAy
-MTFfcmVnX3J1bGUpKTsNCj4gKyAgICAgICAgICAgICAgIGlmICghc3JjX3JlZ2QtPnJlZ19ydWxl
-c1tpXS53bW1fcnVsZSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+IA0K
-PiArICAgICAgICAgICAgICAgcmVnZC0+cmVnX3J1bGVzW2ldLndtbV9ydWxlID0gZF93bW0gKw0K
-PiArICAgICAgICAgICAgICAgICAgICAgICAoc3JjX3JlZ2QtPnJlZ19ydWxlc1tpXS53bW1fcnVs
-ZSAtIHNfd21tKSAvDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHNpemVvZihzdHJ1Y3QgaWVl
-ZTgwMjExX3dtbV9ydWxlKTsNCj4gKyAgICAgICB9DQo+IA0KPiBUaGUgcG9pbnRlciBhcml0aG1l
-dGljIChzcmNfcmVnZC0+cmVnX3J1bGVzW2ldLndtbV9ydWxlIC0gc193bW0pIGlzDQo+IHBlcmZv
-cm1lZCBpbiB0ZXJtcyBvZiB0aGUgc2l6ZSBvZiBzdHJ1Y3QgaWVlZTgwMjExX3dtbV9ydWxlIGFu
-ZCBub3QgaW4NCj4gYnl0ZXMgYW5kIEkgYmVsaWV2ZSB0aGF0IHRoZSBkaXZpc2lvbiBieSBzaXpl
-b2Yoc3RydWN0DQo+IGllZWU4MDIxMV93bW1fcnVsZSkgaXMgbm90IHJlcXVpcmVkLg0KPiANCj4g
-VGhpcyBpc3N1ZSB3YXMgZGV0ZWN0ZWQgYnkgc3RhdGljIGFuYWx5c2lzIHdpdGggQ292ZXJpdHkg
-U2NhbiwNCj4gQ0lEIzE0Njc0NTEgKCJFeHRyYSBzaXplb2YgZXhwcmVzc2lvbiIpLCAnc3VzcGlj
-aW91c19kaXZpc2lvbicNCj4gDQo+IEknbSBub3QgMTAwJSBzdXJlIHRoYXQgaXMgdGhpcyBhIGZh
-bHNlIHBvc2l0aXZlIG9yIG5vdCwgYnV0IEkgdGhpbmsgaXQgbG9va3MNCj4gaW5jb3JyZWN0IHRv
-IG1lLg0KDQpZZWFoIHlvdSdyZSByaWdodCwgdGhpcyBpcyBub3QgZmFsc2UgcG9zaXRpdmUuDQpK
-b2hhbm5lcyBhbHJlYWR5IGZpeGVkIHRoYXQgYW5kIEx1Y2Egd2lsbCBwcm9iYWJseSBzZW5kIGl0
-IGluIHRoZSBjb21pbmcgd2Vlay4NCj4gDQo=
+From: Johannes Berg <johannes.berg@intel.com>
+
+In the error path of changing the SKB headroom of the second
+A-MSDU subframe, we would not account for the already-changed
+length of the first frame that just got converted to be in
+A-MSDU format and thus is a bit longer now.
+
+Fix this by doing the necessary accounting.
+
+It would be possible to reorder the operations, but that would
+make the code more complex (to calculate the necessary pad),
+and the headroom expansion should not fail frequently enough
+to make that worthwhile.
+
+Fixes: 6e0456b54545 ("mac80211: add A-MSDU tx support")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1aac5e3c7eee..6ca0865de945 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3239,7 +3239,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
+ 						     2 + pad))
+-		goto out;
++		goto out_recalc;
+ 
+ 	ret = true;
+ 	data = skb_push(skb, ETH_ALEN + 2);
+@@ -3256,11 +3256,13 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+ 	head->data_len += skb->len;
+ 	*frag_tail = skb;
+ 
+-	flow->backlog += head->len - orig_len;
+-	tin->backlog_bytes += head->len - orig_len;
+-
+-	fq_recalc_backlog(fq, tin, flow);
++out_recalc:
++	if (head->len != orig_len) {
++		flow->backlog += head->len - orig_len;
++		tin->backlog_bytes += head->len - orig_len;
+ 
++		fq_recalc_backlog(fq, tin, flow);
++	}
+ out:
+ 	spin_unlock_bh(&fq->lock);
+ 
+-- 
+2.14.4
