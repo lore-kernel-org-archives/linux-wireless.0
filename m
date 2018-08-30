@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42134 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726452AbeHRLez (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727129AbeH3G3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Aug 2018 07:34:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 18 Aug 2018 11:27:43 +0300
-Message-Id: <20180818082750.28717-10-luca@coelho.fi> (sfid-20180818_102816_763715_86F9BDE7)
-In-Reply-To: <20180818082750.28717-1-luca@coelho.fi>
-References: <20180818082750.28717-1-luca@coelho.fi>
-Subject: [PATCH 09/16] iwlwifi: add required include to iwl-fh.h
+        Thu, 30 Aug 2018 02:29:43 -0400
+From: Carl Huang <cjhuang@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] ath10k: download firmware via diag ce for qca6174 and qca9377
+Date: Thu, 30 Aug 2018 10:29:39 +0800
+Message-Id: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org> (sfid-20180830_042957_154027_0C3E3C35)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Downloading firmware via diag ce can greatly reduce the downloading
+time to ~40ms from ~500ms for a 700k bytes firmware.
 
-Some variables are used in iwl-fh.h, but their type's definition
-isn't included. This may break compilation when using the file
-without including the necessary dependencies first.
+Carl Huang (3):
+  ath10k: optimize pci diag mem read & write operations
+  ath10k: support to access target space below 1M for qca6174 and
+    qca9377
+  ath10k: download firmware via diag Copy Engine for QCA6174 and
+    QCA9377.
 
-Add the required include to iwl-fh.h.
+ drivers/net/wireless/ath/ath10k/bmi.c  |  23 ++++
+ drivers/net/wireless/ath/ath10k/bmi.h  |  31 ++++++
+ drivers/net/wireless/ath/ath10k/core.c |  36 +++++--
+ drivers/net/wireless/ath/ath10k/hw.c   | 185 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  19 ++++
+ drivers/net/wireless/ath/ath10k/pci.c  |  59 +++++++----
+ drivers/net/wireless/ath/ath10k/pci.h  |   3 +-
+ 7 files changed, 329 insertions(+), 27 deletions(-)
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index df0e9ffff706..4f7254303853 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -68,6 +68,8 @@
- #include <linux/types.h>
- #include <linux/bitfield.h>
- 
-+#include "iwl-trans.h"
-+
- /****************************/
- /* Flow Handler Definitions */
- /****************************/
 -- 
-2.18.0
+2.7.4
