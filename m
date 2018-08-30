@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:5913 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726562AbeHXMU4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:51800 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727782AbeH3NJL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Aug 2018 08:20:56 -0400
-Subject: Re: [PATCH 10/24] staging: wilc1000: move
- wilc_multicast_mac_addr_list to 'wilc_vif' struct
-To: Ajay Singh <ajay.kathat@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
- <1534229416-13254-11-git-send-email-ajay.kathat@microchip.com>
- <92faa952-6722-cc9f-cccf-2275c4158a37@microchip.com>
- <20180823153021.3ad58351@ajaysk-VirtualBox>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <eb7b4aa5-613e-9efc-4b5e-a926f8b23fb1@microchip.com> (sfid-20180824_104720_870867_CEBD9DC7)
-Date: Fri, 24 Aug 2018 11:47:14 +0300
-MIME-Version: 1.0
-In-Reply-To: <20180823153021.3ad58351@ajaysk-VirtualBox>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 30 Aug 2018 09:09:11 -0400
+Message-ID: <1535620072.5215.51.camel@sipsolutions.net> (sfid-20180830_110804_549138_E10C7767)
+Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is
+ set to one
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 30 Aug 2018 11:07:52 +0200
+In-Reply-To: <20180830090725.GE9867@localhost.localdomain> (sfid-20180830_110729_327984_B8136566)
+References: <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
+         <1535570007.5215.34.camel@sipsolutions.net>
+         <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
+         <1535616192.5215.37.camel@sipsolutions.net>
+         <20180830083115.GA9867@localhost.localdomain>
+         <1535618382.5215.44.camel@sipsolutions.net>
+         <20180830085054.GB9867@localhost.localdomain>
+         <1535619189.5215.47.camel@sipsolutions.net>
+         <20180830090045.GC9867@localhost.localdomain>
+         <1535619812.5215.49.camel@sipsolutions.net>
+         <20180830090725.GE9867@localhost.localdomain>
+         (sfid-20180830_110729_327984_B8136566)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2018-08-30 at 11:07 +0200, Lorenzo Bianconi wrote:
+> 
+> I do not think so since for nfrags we have:
+> nfrags = 1 + skb_shinfo(skb)->nr_frags;
+> nfrags += 1 + skb_shinfo(head)->nr_frags;
+> 
+> and even if frag_tail is NULL we will have nfrags = 2.
+> 
+> Agree?
 
+Yeah, I misread those two lines.
 
-On 23.08.2018 13:00, Ajay Singh wrote:
-> Unless ndo_set_rx_mode() gets called quickly I don't think there is any
-> issue here. 
-
-I don't agree with this.
+johannes
