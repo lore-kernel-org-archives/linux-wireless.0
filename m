@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42748 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726253AbeHUI3U (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:51690 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727170AbeH3NEv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 04:29:20 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 21 Aug 2018 08:09:45 +0300
-Message-Id: <20180821050952.31603-11-luca@coelho.fi> (sfid-20180821_071049_073543_C3196F05)
-In-Reply-To: <20180821050952.31603-1-luca@coelho.fi>
-References: <20180821050952.31603-1-luca@coelho.fi>
-Subject: [PATCH v2 10/17] iwlwifi: add required include to iwl-fh.h
+        Thu, 30 Aug 2018 09:04:51 -0400
+Message-ID: <1535619812.5215.49.camel@sipsolutions.net> (sfid-20180830_110347_501191_25C9B39D)
+Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is
+ set to one
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 30 Aug 2018 11:03:32 +0200
+In-Reply-To: <20180830090045.GC9867@localhost.localdomain> (sfid-20180830_110049_016172_37F22F11)
+References: <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
+         <1535569548.5215.33.camel@sipsolutions.net>
+         <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
+         <1535570007.5215.34.camel@sipsolutions.net>
+         <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
+         <1535616192.5215.37.camel@sipsolutions.net>
+         <20180830083115.GA9867@localhost.localdomain>
+         <1535618382.5215.44.camel@sipsolutions.net>
+         <20180830085054.GB9867@localhost.localdomain>
+         <1535619189.5215.47.camel@sipsolutions.net>
+         <20180830090045.GC9867@localhost.localdomain>
+         (sfid-20180830_110049_016172_37F22F11)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On Thu, 2018-08-30 at 11:00 +0200, Lorenzo Bianconi wrote:
+> > On Thu, 2018-08-30 at 10:50 +0200, Lorenzo Bianconi wrote:
+> > > 
+> > > ack, I agree. Do you want I send a patch to fix it?
+> > 
+> > I have it written now, I'll just commit & send it out.
+> 
+> Sound good, thx :)
+> 
+> > 
+> > > > Hmm, not sure I follow? "head" is the A-MSDU, containing the A-MSDU
+> > > > header and the first subframe in skb->data (and/or frags), with the
+> > > > subframes 2..N in the fraglist.
+> > > > 
+> > > > So I think this is right?
+> > > 
+> > > yep, correct. But when we are analyzing the second subframe what is the correct value for 'n'?
+> > > 1 or 2? At the moment I guess it is set to 1 if frag_tail is NULL for head.
+> > 
+> > Ah. I guess you're right. So basically setting max_subframes to 1
+> > doesn't avoid A-MSDUs completely, since n will still be 1 when we get
+> > here ... good point, care to send a patch?
+> > 
+> 
+> ack, I will send a patch for it
 
-Some variables are used in iwl-fh.h, but their type's definition
-isn't included. This may break compilation when using the file
-without including the necessary dependencies first.
+The same is true for nfrags, btw, no?
 
-Add the required include to iwl-fh.h.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index df0e9ffff706..4f7254303853 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -68,6 +68,8 @@
- #include <linux/types.h>
- #include <linux/bitfield.h>
- 
-+#include "iwl-trans.h"
-+
- /****************************/
- /* Flow Handler Definitions */
- /****************************/
--- 
-2.18.0
+johannes
