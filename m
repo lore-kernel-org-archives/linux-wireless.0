@@ -1,50 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0139.outbound.protection.outlook.com ([104.47.32.139]:58000
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726195AbeHOMMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 08:12:02 -0400
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jia-Shyr Chuang <saint.chuang@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH v2] brcmfmac: add CYW89342 mini-PCIe device
-Date: Wed, 15 Aug 2018 04:20:09 -0500
-Message-Id: <1534324809-57218-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180815_112108_634231_C4DD7108)
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36067 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727089AbeH3MwE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Aug 2018 08:52:04 -0400
+Received: by mail-wm0-f66.google.com with SMTP id j192-v6so1154218wmj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2018 01:50:58 -0700 (PDT)
+Date: Thu, 30 Aug 2018 10:50:55 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
+ to one
+Message-ID: <20180830085054.GB9867@localhost.localdomain> (sfid-20180830_105102_418596_49C177A8)
+References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
+ <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
+ <1535569548.5215.33.camel@sipsolutions.net>
+ <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
+ <1535570007.5215.34.camel@sipsolutions.net>
+ <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
+ <1535616192.5215.37.camel@sipsolutions.net>
+ <20180830083115.GA9867@localhost.localdomain>
+ <1535618382.5215.44.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1535618382.5215.44.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jia-Shyr Chuang <saint.chuang@cypress.com>
+> On Thu, 2018-08-30 at 10:31 +0200, Lorenzo Bianconi wrote:
+> 
+> > Reviewing the code I guess it is not necessary since pskb_expand_head routine
+> > does not modify head->len (or skb->len). 
+> 
+> True.
+> 
+> > Packet len (if we consider padding) is only modified in:
+> > 
+> > memset(skb_push(skb, pad), 0, pad);
+> > 
+> > and if we hit that point, we will account new skb->len in flow backlog. Do you
+> > agree?
+> 
+> Right, but that's the *pad*. I was thinking about the header conversion.
+> 
+> Let's say you decided to add the second frame to the A-MSDU, at which
+> point the first one isn't really an A-MSDU yet. So we get to:
+> 
+>         if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
+> 
+> which changes the header of "head" to be 14 bytes longer:
+> 
+> 	skb_push(skb, sizeof(*amsdu_hdr));
+> 
+> But now let's say we get a failure here when reallocating the second
+> subframe:
+> 
+>         if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
+>                                                      2 + pad))
+>                 goto out;
+> 
+> Now we have changed "head", which is on the FQ, but we haven't changed
+> the FQ accounting. So I *think* we still need this:
+> 
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -3239,7 +3239,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+>  
+>  	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
+>  						     2 + pad))
+> -		goto out;
+> +		goto out_recalc;
+>  
+>  	ret = true;
+>  	data = skb_push(skb, ETH_ALEN + 2);
+> @@ -3256,11 +3256,13 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+>  	head->data_len += skb->len;
+>  	*frag_tail = skb;
+>  
+> -	flow->backlog += head->len - orig_len;
+> -	tin->backlog_bytes += head->len - orig_len;
+> -
+> -	fq_recalc_backlog(fq, tin, flow);
+> +out_recalc:
+> +	if (head->len != orig_len) {
+> +		flow->backlog += head->len - orig_len;
+> +		tin->backlog_bytes += head->len - orig_len;
+>  
+> +		fq_recalc_backlog(fq, tin, flow);
+> +	}
+>  out:
+>  	spin_unlock_bh(&fq->lock);
+>  
 
-CYW89342 is a 2x2 MIMO, 802.11a/b/g/n/ac, SDIO 3.0 and PCIe 3.0 for
-WLAN. It is a member of 4355/4359 family.
+ack, I agree. Do you want I send a patch to fix it?
 
-Signed-off-by: Jia-Shyr Chuang <saint.chuang@cypress.com>
-Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 1 +
- 1 file changed, 1 insertion(+)
+> 
+> 
+> > Looking at the code maybe I spotted another issue, I guess there is an
+> > off-by-one issue in 'n' estimation since it does not take into account
+> > the first frame. We hit the line:
+> > 
+> > while (*frag_tail) {
+> > }
+> > 
+> > starting from the second subframe, but if the head does not have packet in the
+> > fraglist we will end up having n = 1, while it is actually the second frame.
+> 
+> Hmm, not sure I follow? "head" is the A-MSDU, containing the A-MSDU
+> header and the first subframe in skb->data (and/or frags), with the
+> subframes 2..N in the fraglist.
+> 
+> So I think this is right?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 45928b5b8d97..f787ee5a6b6a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -2016,6 +2016,7 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
- 
- static const struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE_SUB(0x4355, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4355),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
--- 
-2.1.0
+yep, correct. But when we are analyzing the second subframe what is the correct value for 'n'?
+1 or 2? At the moment I guess it is set to 1 if frag_tail is NULL for head.
+
+Regards,
+Lorenzo
+
+> 
+> johannes
+> 
