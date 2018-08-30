@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45903 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728261AbeHVOfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Aug 2018 10:35:07 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/3] mac80211: add ieee80211_reorder_txq
-In-Reply-To: <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org>
-References: <1534202011-13101-1-git-send-email-rmanohar@codeaurora.org> <1534202011-13101-4-git-send-email-rmanohar@codeaurora.org> <87a7pfaovy.fsf@toke.dk> <d8775275d843cc7aa65c5005fd4c42af@codeaurora.org>
-Date: Wed, 22 Aug 2018 13:10:38 +0200
-Message-ID: <87a7pe8xn5.fsf@toke.dk> (sfid-20180822_131043_473975_70055007)
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:36712 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727688AbeH3McU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Aug 2018 08:32:20 -0400
+Received: by mail-wm0-f54.google.com with SMTP id j192-v6so1090134wmj.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Aug 2018 01:31:19 -0700 (PDT)
+Date: Thu, 30 Aug 2018 10:31:16 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: do not aggregate frames if max_frags is set
+ to one
+Message-ID: <20180830083115.GA9867@localhost.localdomain> (sfid-20180830_103122_416814_16996C82)
+References: <cover.1535567864.git.lorenzo.bianconi@redhat.com>
+ <d016cad18842b71c6f06710cbc71cb3d55466a2e.1535567864.git.lorenzo.bianconi@redhat.com>
+ <1535569548.5215.33.camel@sipsolutions.net>
+ <CAJ0CqmVv=FYEb1ARMvoUZHbwCUtAxuO6-c6U-nvi+c-s_63C-Q@mail.gmail.com>
+ <1535570007.5215.34.camel@sipsolutions.net>
+ <CAJ0CqmWVi2QiP=V3i+_6Gxz18muyOD2+FiFrx=OJgK2CHcdM3Q@mail.gmail.com>
+ <1535616192.5215.37.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1535616192.5215.37.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> First of all, I applied your patch with now, but changed the commit
+> message. I hope it still makes sense.
 
-> On 2018-08-21 05:24, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
->>=20
->>> This allows the driver to refill airtime fairness deficit
->>> where the driver will not access txqs by ieee80211_next_txq.
->>> In tx push mode data path, high priority txqs will be scheduled
->>> for data transmission by ieee80211_next_txq and driver will not
->>> prioritize txqs whereas in push-pull mode, the drivers can
->>> prioritize txqs and access them directly. In such mode, airtime
->>> deficit can not filled by ieee80211_next_txq.
->>>=20
-> [...]
->>=20
->> This needs to check that the txq is currently at the head of
->> local->active_txqs[txqi->txq.ac]; otherwise fairness enforcement=20
->> doesn't
->> work. And with this check I'm not sure the reorder function is terribly
->> useful for what you want to use it for?
->>=20
-> Hmm.. I tried to keep the same policy of next_txq(). i.e do not allow
-> serving txqs when the deficit is negative. reorder_txq() limits over
-> serving the same txq by driver. So that driver is given chance to
-> serve other txqs.
+Thx, definitely better than mine :)
 
-Yeah, but the fairness comes from all TXQs being given the *same amount*
-of deficit increase. I.e., with reorder_txq() there needs to be a
-guarantee that it is called the same number of times for all active
-TXQs. Which is what the round-robin scheduling ensures in next_txq().
+> 
+> > Ops, maybe I got your point:
+> > ieee80211_amsdu_realloc_pad() in ieee80211_amsdu_prepare_head() can
+> > expand the headroom on the first frame
+> 
+> Right.
+> 
+> > but if ieee80211_amsdu_realloc_pad() on the second one fails, we do
+> > not take into account the extra len added on the
+> > first subframe. Is that what you mean?
+> 
+> Yes, that's what I was thinking of, but you described it much better
+> than me :)
+> 
+> If this needs to be addressed, please send a separate patch.
 
-> As mentioned earlier, next_txq() can not be used for fetching txq
-> directly. So reorder_txq() needs to take care of refilling txq after
-> serving them.
+Reviewing the code I guess it is not necessary since pskb_expand_head routine
+does not modify head->len (or skb->len). Packet len (if we consider padding)
+is only modified in:
 
-Yeah, I got that; but see above. Unless there's a guarantee that the
-push/pull mechanism will be round-robin scheduled (which as I'm reading
-the code there isn't), just increasing the deficit on every call to
-reorder_txq() is not going to ensure fairness (it'll probably help some,
-but it won't be completely fair).
+memset(skb_push(skb, pad), 0, pad);
 
-However, if we add the check to reorder_txq() so the deficit increase +
-rotation is only done if the TXQ is at the head of the list, we'll get
-round-robin-equivalent behaviour since a TXQ will only get to continue
-when it happens to have rotated to the head of the queue. As I mentioned
-previously it will break MIMO, but I we could fix that later once we've
-verified that the basic mechanism works.
+and if we hit that point, we will account new skb->len in flow backlog. Do you
+agree?
 
-Alternatively, if we keep it the way you've written it in this patch, we
-can iterate on the driver API and make sure that airtime reporting
-actually works for ath10k, and then change the scheduler once everything
-else is in place...
+Looking at the code maybe I spotted another issue, I guess there is an
+off-by-one issue in 'n' estimation since it does not take into account
+the first frame. We hit the line:
 
--Toke
+while (*frag_tail) {
+}
+
+starting from the second subframe, but if the head does not have packet in the
+fraglist we will end up having n = 1, while it is actually the second frame.
+Does n count just subsequent frames or also the first one?
+
+Regards,
+Lorenzo
+
+> 
+> johannes
