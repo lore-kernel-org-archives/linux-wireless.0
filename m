@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48214 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728834AbeHIHjR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 03:39:17 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: valdis.kletnieks@vt.edu
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix build for MediaTek MT7610U USB wireless dongle
-References: <145751.1533759414@turing-police.cc.vt.edu>
-Date: Thu, 09 Aug 2018 08:16:12 +0300
-In-Reply-To: <145751.1533759414@turing-police.cc.vt.edu> (valdis kletnieks's
-        message of "Wed, 08 Aug 2018 16:16:54 -0400")
-Message-ID: <87wot02k83.fsf@kamboji.qca.qualcomm.com> (sfid-20180809_071630_919802_D77D0AD5)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45004 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725996AbeH3JDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Aug 2018 05:03:10 -0400
+Date: Thu, 30 Aug 2018 13:02:44 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Intel Wireless 8265/8275 (rev 78) issue
+Message-ID: <20180830050244.GA2307@dhcp-128-65.nay.redhat.com> (sfid-20180830_070306_102597_84EEAFCF)
+References: <20180829065442.GA3488@dhcp-128-65.nay.redhat.com>
+ <87bm9ltd0z.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87bm9ltd0z.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-valdis.kletnieks@vt.edu writes:
+On 08/29/18 at 06:20pm, Kalle Valo wrote:
+> Dave Young <dyoung@redhat.com> writes:
+> 
+> > Not sure if this is a known issue, I'm seeing this with latest mainline
+> > kernel on Fedora rawhide.
+> >
+> > The wireless networking is not stable, I can not access network any more after
+> > downloading some big files or just browsing some web pages about some
+> > time.  I do not see this when I work in office.  So this maybe relate to
+> > wireless router.
+> >
+> > "Can not access network" means ping timeout, can not open web pages etc.
+> > But the wireless connection looks normal at least from the
+> > NetworkManager icon it is still connected.
+> >
+> > The router I used at home is an old ASUS WL520gc.  I can confirm I can
+> > reproduce this with another ASUA router WL-500gP v2 
+> >
+> > My laptop model is Thinkpad T480s.  It is painful I can only use
+> > wireless,  any hints how to make it work will be appreciated!
+> 
+> Not everyone use Fedora so providing info which kernel versions work and
+> which don't would help. Does Fedora usually add their own patches/hacks
+> to kernel or is it a stock release from kernel.org? Also have you
+> verified that this isn't a problem in user space, for example by
+> downgrading the kernel to an older version?
 
-> The mt76x0 driver requires the mt76 core driver to actually function.
-> So add a 'select' to avoid embarrassing 'symbol unknown' errors
-> when attempting to modprobe it in a module tree that doesn't
-> include mt76.ko
->
-> Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+I sometimes use self-built upstream kernel, sometimes use Fedora
+kernels, none of them works well.  Since I got this new laptop about
+less two months, this issue happens from the very beginning, not sure if
+there's any old release works for me.
 
-I'll add "mt76:" prefix to the title and queue this for 4.19.
-
-> Still need to figure out why it totally fails to see the 5gz band,
-> it works find on 2.4 but ends up locked at 72mbits/sec. Works
-> OK otherwise...
-
-Great, thanks for the feedback.
-
--- 
-Kalle Valo
+Thanks
+Dave
