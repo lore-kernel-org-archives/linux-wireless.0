@@ -1,76 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57486 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728668AbeHOOcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Aug 2018 10:32:24 -0400
-Date: Wed, 15 Aug 2018 13:40:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kofi Agor <nenekofi@gmail.com>,
-        Daniel Golle <daniel@makrotopia.org>
-Cc: Enrico Mioso <mrkiko.rs@gmail.com>,
-        Craig Matsuura <cmatsuura@vivint.com>,
-        Mathias Kresin <dev@kresin.me>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
-        Jamie Stuart <jamie@onebillion.org>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180815114029.GA1862@redhat.com> (sfid-20180815_134037_716568_993777F6)
-References: <20180327174302.GB1206@makrotopia.org>
- <alpine.LNX.2.21.99.1803280605580.2911@mStation.localdomain>
- <CAOt++SeSQ2j1KuVkbqt77LfznXN7JV0Lx5O8d7-m2VBrz8=85g@mail.gmail.com>
- <alpine.LNX.2.21.99.1803301642110.31428@mStation.localdomain>
- <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com>
- <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
- <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
- <20180417194255.GA17067@redhat.com>
- <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
- <20180528125039.GA22122@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180528125039.GA22122@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:45280 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727191AbeHaMh6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 08:37:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:02 +0300
+Message-Id: <20180831083130.15525-1-luca@coelho.fi> (sfid-20180831_103149_730121_01876D5D)
+Subject: [PATCH 00/28] cfg80211/mac80211 patches from our internal tree 2018-08-31
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 28, 2018 at 02:50:39PM +0200, Stanislaw Gruszka wrote:
-> I have some updates here.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-And now more updates. I have 5 patches to test here:
-https://github.com/sgruszka/wireless-drivers-next/commits/rt2800-draft-v2
+Hi,
 
-as reported by T-Bone here:
-https://bugzilla.kernel.org/show_bug.cgi?id=82751
-first 3 patches made Netgear WN3000RPv3 router workable.
-Another 2 should be further improvement, but were not tested broadly
-and can have some bugs.
+Some patches with mac80211 and cfg80211 changes from our internal
+tree.
 
-Daniel, could you apply this on your staging tree for testing?
-Please also remove:
-600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
-991-rt2800_change_rx_ampdu_factor.patch
-992-rt2800_change_ba_size.patch
-993-rt2800_change_rx_ampdu_density.patch
-Those are not needed and can be harmful with the test patches,
-(especially spurious interrupt one, patches will not apply cleanly 
-with it).
+Please review, though you have already reviewed most if not all of
+them ;)
 
-Patches should make "Dropping frame due to full tx queue" and
-"Queue 2 failed to flush" errors gone. However if device is somewhat
-wrongly configured by driver at low level (i.e. wrong MAC/BBP/RF
-registers programing) there still will be troubles to have stable
-and fast wireless connection.
+Cheers,
+Luca.
 
-On TODO site, the proper watchdog should be added, but I'm not sure
-how to exactly detect device/firmware hung and how exactly device should
-be rested (by some HW reset by register or by doing full reinitialization).
 
-Another thing is fixing RATE_PROBE frames which are aggregated with
-other frames and not sent at requested rate. I implemented qsel queue patch
-similar to mt76, but this not work as expected on older Ralink chips.  
-https://github.com/sgruszka/wireless-drivers-next/commit/846d205edd8c36d1b7828fee54bf4cf40bf8cb1a
+Andrei Otcheretianski (3):
+  cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
+  mac80211: Always report TX status
+  mac80211: Don't wake up from PS for offchannel TX
 
-Any help with those 2 problems are welcome.
- 
-Thanks
-Stanislaw
+Dreyfuss, Haim (1):
+  mac80211: fix WMM TXOP calculation
+
+Emmanuel Grumbach (4):
+  mac80211: fix a race between restart and CSA flows
+  mac80211: pass the TWT support bits in extended caps to the driver
+  mac80211: don't Tx a deauth frame if the AP forbade Tx
+  mac80211: shorten the IBSS debug messages
+
+Ido Yariv (1):
+  mac80211: Add he_capa debugfs entry
+
+Ilan Peer (1):
+  mac80211: Fix station bandwidth setting after channel switch
+
+Johannes Berg (7):
+  mac80211: remove pointless 'params' NULL checks
+  mac80211: use le16_encode_bits() instead of open-coding
+  mac80211: add an optional TXQ for other PS-buffered frames
+  ieee80211: add new VHT capability fields/parsing
+  mac80211: introduce capability flags for VHT EXT NSS support
+  mac80211: add ability to parse CCFS2
+  mac80211: copy VHT EXT NSS BW Support/Capable data to station
+
+Naftali Goldstein (1):
+  mac80211: fix saving a few HE values
+
+Sara Sharon (5):
+  ieee80211: remove redundant leading zeroes
+  mac80211: avoid kernel panic when building AMSDU from non-linear SKB
+  mac80211: add an option for station management TXQ
+  mac80211: allow AMSDU size limitation per-TID
+  mac80211: add an option for drivers to check if packets can be
+    aggregated
+
+Shaul Triebitz (5):
+  cfg80211: add he_capabilities (ext) IE to AP settings
+  mac80211: in AP mode, set bss_conf::he_supported
+  mac80211: support radiotap L-SIG data
+  mac80211: support reporting 0-length PSDU in radiotap
+  wireless: align to draft 11ax D3.0
+
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  51 ++-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   4 -
+ drivers/net/wireless/mac80211_hwsim.c         |  18 +-
+ include/linux/ieee80211.h                     | 115 ++++--
+ include/net/cfg80211.h                        |   2 +
+ include/net/ieee80211_radiotap.h              |  21 +
+ include/net/mac80211.h                        |  67 +++-
+ net/mac80211/cfg.c                            |  16 +-
+ net/mac80211/debugfs.c                        |   4 +
+ net/mac80211/debugfs_sta.c                    | 364 +++++++++++++++++-
+ net/mac80211/driver-ops.h                     |  10 +
+ net/mac80211/ibss.c                           |  26 +-
+ net/mac80211/ieee80211_i.h                    |   7 +-
+ net/mac80211/main.c                           |  74 +++-
+ net/mac80211/mesh.c                           |   5 +-
+ net/mac80211/mlme.c                           |  80 +++-
+ net/mac80211/rx.c                             |  37 +-
+ net/mac80211/spectmgmt.c                      |   5 +-
+ net/mac80211/sta_info.c                       |  21 +-
+ net/mac80211/status.c                         |   7 +-
+ net/mac80211/tx.c                             |  94 +++--
+ net/mac80211/util.c                           |  51 ++-
+ net/mac80211/vht.c                            |  20 +
+ net/wireless/nl80211.c                        |   3 +
+ net/wireless/reg.c                            |   1 +
+ net/wireless/util.c                           | 109 ++++++
+ 26 files changed, 1060 insertions(+), 152 deletions(-)
+
+-- 
+2.18.0
