@@ -1,121 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:35694 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727054AbeH2Kwh (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:38147 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727268AbeHaR1m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 06:52:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Sara Sharon <sara.sharon@intel.com>
-Subject: [PATCH] mac80211: avoid kernel panic when building AMSDU from non-linear SKB
-Date: Wed, 29 Aug 2018 08:57:02 +0200
-Message-Id: <20180829065702.7316-1-johannes@sipsolutions.net> (sfid-20180829_085719_540125_C0A892E2)
+        Fri, 31 Aug 2018 13:27:42 -0400
+MIME-Version: 1.0
+References: <20180812145207.11395-1-kristian.evensen@gmail.com>
+ <871sb3zc3v.fsf@kamboji.qca.qualcomm.com> <5B708025.4090906@broadcom.com>
+ <CAJ0CqmVZNAnHwnU4YqRRv7R8DyHi2MiFJr1bvQDPVszUU5Ez3g@mail.gmail.com>
+ <CAKfDRXia3zwW9Q=7RZGqK_DWCsyQzG4KEZHsyHzGcNb70Ge1kA@mail.gmail.com>
+ <CAKfDRXjSLpGU6cOBHDdLxoNzaXWmgpYO7E4vjGg-J8AxOZiTyw@mail.gmail.com> <20180831131520.GC6236@localhost.localdomain>
+In-Reply-To: <20180831131520.GC6236@localhost.localdomain>
+From: Kristian Evensen <kristian.evensen@gmail.com>
+Date: Fri, 31 Aug 2018 15:20:03 +0200
+Message-ID: <CAKfDRXgVf5F2=gjGTvDK4N9zV=QcKvtDPobvdSkwPsDcjhT6pg@mail.gmail.com> (sfid-20180831_152023_995303_1012BA97)
+Subject: Re: [PATCH] mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+To: lorenzo.bianconi@redhat.com
+Cc: arend.vanspriel@broadcom.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi,
+On Fri, Aug 31, 2018 at 3:15 PM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+> I have not tested your patch yet sorry but there are no differences
+> between pcie and usb devices regarding rx RSSI management (both of them use
+> shared code for it) so I guess the feature will work on usb devices if
+> it works on pcie ones.
 
-When building building AMSDU from non-linear SKB, we hit a
-kernel panic when trying to push the padding to the tail.
-Instead, put the padding at the head of the next subframe.
-This also fixes the A-MSDU subframes to not have the padding
-accounted in the length field and not have pad at all for
-the last subframe, both required by the spec.
+Thanks for letting me know. I will submit a v2 with an updated and
+more detailed commit message.
 
-Fixes: 6e0456b54545 ("mac80211: add A-MSDU tx support")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index fa1f1e63a264..667a73d6eb5c 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3073,27 +3073,18 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
- }
- 
- static bool ieee80211_amsdu_realloc_pad(struct ieee80211_local *local,
--					struct sk_buff *skb, int headroom,
--					int *subframe_len)
-+					struct sk_buff *skb, int headroom)
- {
--	int amsdu_len = *subframe_len + sizeof(struct ethhdr);
--	int padding = (4 - amsdu_len) & 3;
--
--	if (skb_headroom(skb) < headroom || skb_tailroom(skb) < padding) {
-+	if (skb_headroom(skb) < headroom) {
- 		I802_DEBUG_INC(local->tx_expand_skb_head);
- 
--		if (pskb_expand_head(skb, headroom, padding, GFP_ATOMIC)) {
-+		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
- 			wiphy_debug(local->hw.wiphy,
- 				    "failed to reallocate TX buffer\n");
- 			return false;
- 		}
- 	}
- 
--	if (padding) {
--		*subframe_len += padding;
--		skb_put_zero(skb, padding);
--	}
--
- 	return true;
- }
- 
-@@ -3117,8 +3108,7 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
- 	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
- 		return true;
- 
--	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr),
--					 &subframe_len))
-+	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr)))
- 		return false;
- 
- 	data = skb_push(skb, sizeof(*amsdu_hdr));
-@@ -3184,7 +3174,8 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	void *data;
- 	bool ret = false;
- 	unsigned int orig_len;
--	int n = 1, nfrags;
-+	int n = 1, nfrags, pad = 0;
-+	u16 hdrlen;
- 
- 	if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
- 		return false;
-@@ -3235,8 +3226,19 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	if (max_frags && nfrags > max_frags)
- 		goto out;
- 
--	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) + 2,
--					 &subframe_len))
-+	/*
-+	 * Pad out the previous subframe to a multiple of 4 by adding the
-+	 * padding to the next one, that's being added. Note that head->len
-+	 * is the length of the full A-MSDU, but that works since each time
-+	 * we add a new subframe we pad out the previous one to a multiple
-+	 * of 4 and thus it no longer matters in the next round.
-+	 */
-+	hdrlen = fast_tx->hdr_len - sizeof(rfc1042_header);
-+	if ((head->len - hdrlen) & 3)
-+		pad = 4 - ((head->len - hdrlen) & 3);
-+
-+	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
-+						     2 + pad))
- 		goto out;
- 
- 	ret = true;
-@@ -3248,6 +3250,8 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	memcpy(data, &len, 2);
- 	memcpy(data + 2, rfc1042_header, sizeof(rfc1042_header));
- 
-+	memset(skb_push(skb, pad), 0, pad);
-+
- 	head->len += skb->len;
- 	head->data_len += skb->len;
- 	*frag_tail = skb;
--- 
-2.14.4
+BR,
+Kristian
