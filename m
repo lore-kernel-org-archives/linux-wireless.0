@@ -1,120 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:23295 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726345AbeHMHRN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60578 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727824AbeHaTxK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 03:17:13 -0400
-Date: Mon, 13 Aug 2018 10:06:35 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
-        <linux-wireless@vger.kernel.org>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 1/5] staging: wilc1000: avoid arrray of
- 'wilc_debugfs_info_t' type
-Message-ID: <20180813100635.356583ae@ajaysk-VirtualBox> (sfid-20180813_063649_009239_1BD4D393)
-In-Reply-To: <20180812152421.GB30273@kroah.com>
-References: <1534049265-5600-1-git-send-email-ajay.kathat@microchip.com>
-        <1534049265-5600-2-git-send-email-ajay.kathat@microchip.com>
-        <20180812112930.GB25209@kroah.com>
-        <20180812171829.1187a0cd@ajaysk-VirtualBox>
-        <20180812152421.GB30273@kroah.com>
+        Fri, 31 Aug 2018 15:53:10 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Subject: Re: [PATCH 1/2] brcmfmac: add FT-based AKMs in brcmf_set_key_mgmt()
+ for FT support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1534329160-131774-2-git-send-email-chi-hsien.lin@cypress.com>
+References: <1534329160-131774-2-git-send-email-chi-hsien.lin@cypress.com>
+To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Message-Id: <20180831154505.4A5A06049C@smtp.codeaurora.org> (sfid-20180831_174509_425111_F430AA73)
+Date: Fri, 31 Aug 2018 15:45:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+Chi-Hsien Lin <chi-hsien.lin@cypress.com> wrote:
 
-On Sun, 12 Aug 2018 17:24:21 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
-
-> On Sun, Aug 12, 2018 at 05:18:29PM +0530, Ajay Singh wrote:
-> > Hi Greg,
-> > 
-> > On Sun, 12 Aug 2018 13:29:30 +0200
-> > Greg KH <gregkh@linuxfoundation.org> wrote:
-> > 
-> > > On Sun, Aug 12, 2018 at 10:17:41AM +0530, Ajay Singh wrote:
-> > > > Refactor code by removing array of 'wilc_debugfs_info_t' type
-> > > > and use single variable to store 'wilc_debugfs_info_t' struct
-> > > > value.
-> > > > 
-> > > > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > > > ---
-> > > >  drivers/staging/wilc1000/wilc_debugfs.c | 26
-> > > > +++++++++----------------- 1 file changed, 9 insertions(+), 17
-> > > > deletions(-)
-> > > > 
-> > > > diff --git a/drivers/staging/wilc1000/wilc_debugfs.c
-> > > > b/drivers/staging/wilc1000/wilc_debugfs.c index edc7287..c5f67c9
-> > > > 100644 --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> > > > +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> > > > @@ -78,29 +78,21 @@ struct wilc_debugfs_info_t {
-> > > >  	const struct file_operations fops;
-> > > >  };
-> > > >  
-> > > > -static struct wilc_debugfs_info_t debugfs_info[] = {
-> > > > -	{
-> > > > -		"wilc_debug_level",
-> > > > -		0666,
-> > > > -		(DEBUG | ERR),
-> > > > -		FOPS(NULL, wilc_debug_level_read,
-> > > > wilc_debug_level_write, NULL),
-> > > > -	},
-> > > > +static struct wilc_debugfs_info_t debugfs_info = {
-> > > > +	"wilc_debug_level",
-> > > > +	0666,
-> > > > +	(DEBUG | ERR),
-> > > > +	FOPS(NULL, wilc_debug_level_read,
-> > > > wilc_debug_level_write, NULL), };
-> > > >  
-> > > >  int wilc_debugfs_init(void)
-> > > >  {
-> > > > -	int i;
-> > > > -	struct wilc_debugfs_info_t *info;
-> > > > +	struct wilc_debugfs_info_t *info = &debugfs_info;
-> > > >  
-> > > >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> > > > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-> > > > -		info = &debugfs_info[i];
-> > > > -		debugfs_create_file(info->name,
-> > > > -				    info->perm,
-> > > > -				    wilc_dir,
-> > > > -				    &info->data,
-> > > > -				    &info->fops);
-> > > > -	}
-> > > > +	debugfs_create_file(info->name, info->perm, wilc_dir,
-> > > > &info->data,
-> > > > +			    &info->fops);
-> > > > +
-> > > 
-> > > Why go through the extra step here in changing this variable from
-> > > an array to a single value and not just make the call to
-> > > debugfs_create_file() directly with the individual values like
-> > > you do in patch 3?  It feels like this step isn't needed at all
-> > > here, right?
-> > > 
-> > > What am I missing?
-> > 
-> > Actually, while calling debugfs_create_file() it also passed the
-> > "info->data", "info->perm" which was maintained in a static
-> > variable. So to have the changes in multiple patches, I first tried
-> > by removing the dependency of array and later changed the
-> > individual parameters for this debugfs_create_file().
+> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
 > 
-> But you don't need/want that here anyway, it would have been simpler
-> to just do it correct in one patch.  That would have also been easier
-> to review :)
+> Add WLAN_AKM_SUITE_FT_8021X and WLAN_AKM_SUITE_FT_PSK in
+> brcmf_set_key_mgmt() for FT support.
 > 
-> But for now, just delete this file as it is not used at all.  Want me
-> to do it for you?
-> 
+> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 
-Thanks for giving your time and support.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-I will make the changes and submit the patch to delete wilc_debugfs.c
-file. 
+4ad298da9392 brcmfmac: add FT-based AKMs in brcmf_set_key_mgmt() for FT support
+a858376cdbb3 brcmfmac: add 4-way handshake offload detection for FT-802.1X
 
-Regards,
-Ajay
+-- 
+https://patchwork.kernel.org/patch/10566487/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
