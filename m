@@ -1,71 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:35740 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727054AbeH2KzF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45524 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727997AbeHaM65 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 06:55:05 -0400
-Message-ID: <1535525969.5215.3.camel@sipsolutions.net> (sfid-20180829_085943_680629_EC6C6D87)
-Subject: Re: [PATCH v6 3/3] mac80211: Fix PTK rekey freezes and cleartext
- leaks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Wetzel <alexander@wetzel-home.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 29 Aug 2018 08:59:29 +0200
-In-Reply-To: <0ed63254-cdb3-cefb-6074-d6a501809e8f@wetzel-home.de>
-References: <20180814104255.4183-1-alexander@wetzel-home.de>
-         <20180814104255.4183-4-alexander@wetzel-home.de>
-         <1535446120.5895.6.camel@sipsolutions.net>
-         <0ed63254-cdb3-cefb-6074-d6a501809e8f@wetzel-home.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 31 Aug 2018 08:58:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:20 +0300
+Message-Id: <20180831083130.15525-19-luca@coelho.fi> (sfid-20180831_105448_154522_5A94ED10)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 18/28] mac80211: support radiotap L-SIG data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-28 at 18:27 +0200, Alexander Wetzel wrote:
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-> > This seems a bit weird - we know a likely dangerous thing is happening
-> > and only print an info message? Why not just prevent this in the first
-> > place?
-> 
-> The next version will upgrade that to a warning.
+As before with HE, the data needs to be provided by the
+driver in the skb head, since there's not enough space
+in the skb CB.
 
-Maybe make it rate limited, and certainly not a WARN_ON() though.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/ieee80211_radiotap.h | 15 +++++++++++++++
+ include/net/mac80211.h           |  2 ++
+ net/mac80211/rx.c                | 21 +++++++++++++++++++++
+ 3 files changed, 38 insertions(+)
 
-> Rejecting it outright will break things for users with card/drivers
-> where rekey currently is working. There is no error error message for
-> "please re-associate as quick as you can" and tricking userspace to do
-> that across versions and implementations would need code at I do not see
-> belonging into the kernel. Here what I wrote in the cover letter of the
-> v4 version of the patch about this decision:
-> 
-> > I do not see an acceptable way from the kernel to trigger a fast
-> > reconnect. wpa_supplicant e.g. has some special code handling errors
-> > during a 4-way-handshake differently. I assume we would have to add
-> > code detecting if we are running as AP, Station Infrastructure, Ad-Hoc
-> > or Mesh and then find and spoof an error which allows the userspace to
-> > reconnect fast. For multiple different userspace implementations and
-> > the different versions of them.
-> > And we'll have that mess in the kernel for basically forever...
-> > Seems to be a clear no go, correct?
-> > 
-> > So this patch (series) is giving up on a quick fix and will allow
-> > broken rekeys to continue. It is instead providing an updated API for
-> > both the userspace and the drivers to also do it correctly. Users
-> > running a userspace not aware of the new API will get some
-> > improvements but may
-> > still leak cleartext packets and have connection freezes till we get
-> > an updated userspace rolled out. On the plus side users running
-> > updated userspace won't be able to rekey connections any longer,
-> > avoiding the issues even with unpatched kernels.
-> 
-> Of course I may miss something and there may be a good way to get that
-> working anyhow. But for me it looks like we either have to accept
-> something which looks like a regression to users or accept that some
-> drivers may not be fixed with this patch alone and will need either an
-> updated userspace or drivers.
-
-Ok, fair enough. I may be willing to accept something as a regression,
-but at the same time perhaps it doesn't really belong into this patch
-anyway, so we can always do it as a later one.
-
-johannes
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index feef706e1158..80d543902b8b 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -75,6 +75,7 @@ enum ieee80211_radiotap_presence {
+ 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
+ 	IEEE80211_RADIOTAP_HE = 23,
+ 	IEEE80211_RADIOTAP_HE_MU = 24,
++	IEEE80211_RADIOTAP_LSIG = 27,
+ 
+ 	/* valid in every it_present bitmap, even vendor namespaces */
+ 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
+@@ -325,6 +326,20 @@ enum ieee80211_radiotap_he_mu_bits {
+ 	IEEE80211_RADIOTAP_HE_MU_FLAGS2_CH2_CTR_26T_RU		= 0x0800,
+ };
+ 
++enum ieee80211_radiotap_lsig_data1 {
++	IEEE80211_RADIOTAP_LSIG_DATA1_RATE_KNOWN		= 0x0001,
++	IEEE80211_RADIOTAP_LSIG_DATA1_LENGTH_KNOWN		= 0x0002,
++};
++
++enum ieee80211_radiotap_lsig_data2 {
++	IEEE80211_RADIOTAP_LSIG_DATA2_RATE			= 0x000f,
++	IEEE80211_RADIOTAP_LSIG_DATA2_LENGTH			= 0xfff0,
++};
++
++struct ieee80211_radiotap_lsig {
++	__le16 data1, data2;
++};
++
+ /**
+  * ieee80211_get_radiotap_len - get radiotap header length
+  */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 02d251ea0126..b061131b2198 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1141,6 +1141,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	from the RX info data, so leave those zeroed when building this data)
+  * @RX_FLAG_RADIOTAP_HE_MU: HE MU radiotap data is present
+  *	(&struct ieee80211_radiotap_he_mu)
++ * @RX_FLAG_RADIOTAP_LSIG: L-SIG radiotap data is present
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -1171,6 +1172,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_AMPDU_EOF_BIT_KNOWN	= BIT(25),
+ 	RX_FLAG_RADIOTAP_HE		= BIT(26),
+ 	RX_FLAG_RADIOTAP_HE_MU		= BIT(27),
++	RX_FLAG_RADIOTAP_LSIG		= BIT(28),
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 46223b694227..66cc2590e88c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -189,6 +189,12 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 		BUILD_BUG_ON(sizeof(struct ieee80211_radiotap_he_mu) != 12);
+ 	}
+ 
++	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
++		len = ALIGN(len, 2);
++		len += 4;
++		BUILD_BUG_ON(sizeof(struct ieee80211_radiotap_lsig) != 4);
++	}
++
+ 	if (status->chains) {
+ 		/* antenna and antenna signal fields */
+ 		len += 2 * hweight8(status->chains);
+@@ -279,6 +285,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	struct ieee80211_vendor_radiotap rtap = {};
+ 	struct ieee80211_radiotap_he he = {};
+ 	struct ieee80211_radiotap_he_mu he_mu = {};
++	struct ieee80211_radiotap_lsig lsig = {};
+ 
+ 	if (status->flag & RX_FLAG_RADIOTAP_HE) {
+ 		he = *(struct ieee80211_radiotap_he *)skb->data;
+@@ -291,6 +298,11 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 		skb_pull(skb, sizeof(he_mu));
+ 	}
+ 
++	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
++		lsig = *(struct ieee80211_radiotap_lsig *)skb->data;
++		skb_pull(skb, sizeof(lsig));
++	}
++
+ 	if (status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA) {
+ 		rtap = *(struct ieee80211_vendor_radiotap *)skb->data;
+ 		/* rtap.len and rtap.pad are undone immediately */
+@@ -630,6 +642,15 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 		pos += sizeof(he_mu);
+ 	}
+ 
++	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
++		/* ensure 2 byte alignment */
++		while ((pos - (u8 *)rthdr) & 1)
++			pos++;
++		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_LSIG);
++		memcpy(pos, &lsig, sizeof(lsig));
++		pos += sizeof(lsig);
++	}
++
+ 	for_each_set_bit(chain, &chains, IEEE80211_MAX_CHAINS) {
+ 		*pos++ = status->chain_signal[chain];
+ 		*pos++ = chain;
+-- 
+2.18.0
