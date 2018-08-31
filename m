@@ -1,132 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:56965 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730040AbeHWSGD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55948 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726990AbeHaQHB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 14:06:03 -0400
-Date: Thu, 23 Aug 2018 20:06:00 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH 12/24] staging: wilc1000: move static variable
- 'terminated_handle' to wilc_vif struct
-Message-ID: <20180823200600.47e1b418@ajaysk-VirtualBox> (sfid-20180823_163609_327673_C59E275C)
-In-Reply-To: <8e7928a5-1d9f-d36e-f7b2-dbbbddff94ae@microchip.com>
-References: <1534229416-13254-1-git-send-email-ajay.kathat@microchip.com>
-        <1534229416-13254-13-git-send-email-ajay.kathat@microchip.com>
-        <8e7928a5-1d9f-d36e-f7b2-dbbbddff94ae@microchip.com>
+        Fri, 31 Aug 2018 12:07:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Anilkumar Kolli <akolli@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] ath10k: add extended per sta tx statistics support
+References: <1533561223-342-1-git-send-email-akolli@codeaurora.org>
+        <1533561223-342-4-git-send-email-akolli@codeaurora.org>
+Date: Fri, 31 Aug 2018 14:59:48 +0300
+In-Reply-To: <1533561223-342-4-git-send-email-akolli@codeaurora.org>
+        (Anilkumar Kolli's message of "Mon, 6 Aug 2018 18:43:42 +0530")
+Message-ID: <87r2ied9vv.fsf@kamboji.qca.qualcomm.com> (sfid-20180831_135955_808925_F6E5CF55)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 23 Aug 2018 11:11:18 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+Anilkumar Kolli <akolli@codeaurora.org> writes:
 
-> On 14.08.2018 09:50, Ajay Singh wrote:
-> > Remove the use of static variable 'terminated_handle' and instead
-> > move in wilc_vif struct.
-> > After moving this variable to wilc_vif struct its not required to
-> > keep 'terminated_handle', so changed it to boolean type.  
-> 
-> You can remove it at all and use wilc->hif_deinit_lock mutex also in
-> wilc_scan_complete_received() and wilc_network_info_received() it is
-> used in wilc_gnrl_async_info_received().
+> This patch adds per station tx statistics support.
+>
+> Per station tx stats include
+>  - pkts/bytes transmitted at all possible rates(mcs/nss/bw/gi).
+>  - ACK fails count
+>  - ampdu bytes/pkts transmitted at all possible rates(mcs/nss/bw/gi).
+>  - BA fails count
+>
+> Tested on QCA9984/QCA4019/QCA988x
+> Firmware: 10.4-3.5.3-00057
+> 	  10.2.4-1.0-00037
+>
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 
-In my understanding, 'terminated_handle' is used to know the
-status when interface is getting deinit(). During deinitialization
-of an interface if any async event received for the interface(from
-firmware) should be ignored.
+[...]
 
-In my opinion its not right to only wait for the mutex in any of
-callback e.g wilc_scan_complete_received() because it will delay the
-handling of callback and try to process the event once lock is
-available for the interface which is already de-initialized.
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -4958,10 +4958,15 @@ enum wmi_rate_preamble {
+>  #define ATH10K_HW_GI(flags)		(((flags) >> 5) & 0x1)
+>  #define ATH10K_HW_RATECODE(rate, nss, preamble) \
+>  	(((preamble) << 6) | ((nss) << 4) | (rate))
+> -
+> -#define VHT_MCS_NUM     10
+> -#define VHT_BW_NUM      4
+> -#define VHT_NSS_NUM     4
+> +#define ATH10K_HW_AMPDU(flags)		(flags & 0x1)
+> +#define ATH10K_HW_BA_FAIL(flags)	(((flags) >> 1) & 0x3)
+> +
+> +#define NUM_VHT_MCS	10
+> +#define NUM_BW		4
+> +#define NUM_NSS	4
+> +#define NUM_LEGACY	12
+> +#define NUM_GI		2
+> +#define NUM_HT_MCS	32
 
-Based on my understand 'mutex' alone is not enough to
-handle this and we some extra check to know if interface is down.I will
-check more about this patch how to handle the extra scenario for this
-case.
-Please suggest if someone has better idea on how to handle this. 
+Why are you renaming these to use NUM_ prefix? That looks odd to me,
+usually the "NUM" is the last.
 
-> 
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c     | 11 +++++------
-> >  drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
-> >  2 files changed, 6 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index
-> > d5d81843..f71f451f 100644 ---
-> > a/drivers/staging/wilc1000/host_interface.c +++
-> > b/drivers/staging/wilc1000/host_interface.c @@ -185,7 +185,6 @@
-> > struct join_bss_param { u8 start_time[4];
-> >  };
-> >  
-> > -static struct host_if_drv *terminated_handle;
-> >  static u8 p2p_listen_state;
-> >  static struct timer_list periodic_rssi;
-> >  static struct wilc_vif *periodic_rssi_vif;
-> > @@ -3505,7 +3504,7 @@ int wilc_deinit(struct wilc_vif *vif)
-> >  
-> >  	mutex_lock(&vif->wilc->hif_deinit_lock);
-> >  
-> > -	terminated_handle = hif_drv;
-> > +	vif->is_termination_progress = true;
-> >  
-> >  	del_timer_sync(&hif_drv->scan_timer);
-> >  	del_timer_sync(&hif_drv->connect_timer);
-> > @@ -3543,7 +3542,7 @@ int wilc_deinit(struct wilc_vif *vif)
-> >  	kfree(hif_drv);
-> >  
-> >  	vif->wilc->clients_count--;
-> > -	terminated_handle = NULL;
-> > +	vif->is_termination_progress = false;
-> >  	mutex_unlock(&vif->wilc->hif_deinit_lock);
-> >  	return result;
-> >  }
-> > @@ -3565,7 +3564,7 @@ void wilc_network_info_received(struct wilc
-> > *wilc, u8 *buffer, u32 length) return;
-> >  	hif_drv = vif->hif_drv;
-> >  
-> > -	if (!hif_drv || hif_drv == terminated_handle) {
-> > +	if (!hif_drv || vif->is_termination_progress) {
-> >  		netdev_err(vif->ndev, "driver not init[%p]\n",
-> > hif_drv); return;
-> >  	}
-> > @@ -3611,7 +3610,7 @@ void wilc_gnrl_async_info_received(struct
-> > wilc *wilc, u8 *buffer, u32 length) 
-> >  	hif_drv = vif->hif_drv;
-> >  
-> > -	if (!hif_drv || hif_drv == terminated_handle) {
-> > +	if (!hif_drv || vif->is_termination_progress) {
-> >  		mutex_unlock(&wilc->hif_deinit_lock);
-> >  		return;
-> >  	}
-> > @@ -3662,7 +3661,7 @@ void wilc_scan_complete_received(struct wilc
-> > *wilc, u8 *buffer, u32 length) return;
-> >  	hif_drv = vif->hif_drv;
-> >  
-> > -	if (!hif_drv || hif_drv == terminated_handle)
-> > +	if (!hif_drv || vif->is_termination_progress)
-> >  		return;
-> >  
-> >  	if (hif_drv->usr_scan_req.scan_result) {
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h index
-> > eb00e42..ba606d0 100644 ---
-> > a/drivers/staging/wilc1000/wilc_wfi_netdevice.h +++
-> > b/drivers/staging/wilc1000/wilc_wfi_netdevice.h @@ -121,6 +121,7 @@
-> > struct wilc_vif { struct timer_list during_ip_timer;
-> >  	bool obtaining_ip;
-> >  	u8 mc_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-> > +	bool is_termination_progress;
-> >  };
-> >  
-> >  struct wilc {
-> >   
+If changing something, you should add ATH10K_ prefix to missing defines.
+
+-- 
+Kalle Valo
