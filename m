@@ -1,63 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50686 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726762AbeHUVx6 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45306 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727495AbeHaMiB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 17:53:58 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 21 Aug 2018 11:32:42 -0700
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] Add support for ftm responder configuration
-In-Reply-To: <1534757602.6287.4.camel@sipsolutions.net>
-References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
- <1534323867.3547.30.camel@sipsolutions.net>
- <4aaa3a6185dbd116ba5c1a2ce76b691f@codeaurora.org>
- <1534407150.3547.58.camel@sipsolutions.net>
- <cd1e8ef5693b81c6b5d25eae36a44fd3@codeaurora.org>
- (sfid-20180818_095014_905997_2F2749FC)
- <1534757602.6287.4.camel@sipsolutions.net>
-Message-ID: <dbd347a3434c05f48931559818dac8a1@codeaurora.org> (sfid-20180821_203246_210319_88EFB283)
+        Fri, 31 Aug 2018 08:38:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:06 +0300
+Message-Id: <20180831083130.15525-5-luca@coelho.fi> (sfid-20180831_103153_023082_845C663C)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 04/28] mac80211: fix a race between restart and CSA flows
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-20 02:33, Johannes Berg wrote:
-> On Sat, 2018-08-18 at 00:50 -0700, Pradeep Kumar Chitrapu wrote:
->> >
->> I will change the attribute to FLAG type, also add support for 
->> LCI/CIVIC
->> params and repost the patch.
-> 
-> Looking at Android (for unrelated reasons), I see that they have a
-> separate "enable FTM responder" command:
-> 
-> https://android.googlesource.com/platform/hardware/interfaces/+/master/wifi/1.0/IWifiRttController.hal#158
-> 
-> Is that something you've seen/worked with? If so, how does it match 
-> your
-> current approach where FTM responder has to be enabled from the start?
-> 
-> Or perhaps this API is independent of AP and starts its own AP? But it
-> doesn't have any setup for the SSID etc., only the channel, so not 
-> clear
-> how that'd work?
-> 
-> johannes
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I wasn't aware of this android api. However, looking at the api, the 
-assumption is that bss is started by a different
-api and the 'enableResponder' api is used for enabling rtt for a given 
-duration.
+We hit a problem with iwlwifi that was caused by a bug in
+mac80211. A bug in iwlwifi caused the firwmare to crash in
+certain cases in channel switch. Because of that bug,
+drv_pre_channel_switch would fail and trigger the restart
+flow.
+Now we had the hw restart worker which runs on the system's
+workqueue and the csa_connection_drop_work worker that runs
+on mac80211's workqueue that can run together. This is
+obviously problematic since the restart work wants to
+reconfigure the connection, while the csa_connection_drop_work
+worker does the exact opposite: it tries to disconnect.
 
-The reason we have added enabling ftm responder through start ap is that 
-this can reflect beacon IE change in the
-configuration in the same place. In case of the separate command, 
-enabling responder will not update the beacon,
-however, the application must issue the new command, whenever its 
-updating beacon template.
-Please let me know your thoughts/suggestions.
+Fix this by cancelling the csa_connection_drop_work worker
+in the restart worker.
 
-Pradeep
+Note that this can sound racy: we could have:
+
+driver   iface_work   CSA_work   restart_work
++++++++++++++++++++++++++++++++++++++++++++++
+              |
+ <--drv_cs ---|
+<FW CRASH!>
+-CS FAILED-->
+              |                       |
+              |                 cancel_work(CSA)
+           schedule                   |
+           CSA work                   |
+                         |            |
+                        Race between those 2
+
+But this is not possible because we flush the workqueue
+in the restart worker before we cancel the CSA worker.
+That would be bullet proof if we could guarantee that
+we schedule the CSA worker only from the iface_work
+which runs on the workqueue (and not on the system's
+workqueue), but unfortunately we do have an instance
+in which we schedule the CSA work outside the context
+of the workqueue (ieee80211_chswitch_done).
+
+Note also that we should probably cancel other workers
+like beacon_connection_loss_work and possibly others
+for different types of interfaces, at the very least,
+IBSS should suffer from the exact same problem, but for
+now, do the minimum to fix the actual bug that was actually
+experienced and reproduced.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/main.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index e1215416a207..d4bcd4da2ba8 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -256,8 +256,27 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 
+ 	flush_work(&local->radar_detected_work);
+ 	rtnl_lock();
+-	list_for_each_entry(sdata, &local->interfaces, list)
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		/*
++		 * XXX: there may be more work for other vif types and even
++		 * for station mode: a good thing would be to run most of
++		 * the iface type's dependent _stop (ieee80211_mg_stop,
++		 * ieee80211_ibss_stop) etc...
++		 * For now, fix only the specific bug that was seen: race
++		 * between csa_connection_drop_work and us.
++		 */
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			/*
++			 * This worker is scheduled from the iface worker that
++			 * runs on mac80211's workqueue, so we can't be
++			 * scheduling this worker after the cancel right here.
++			 * The exception is ieee80211_chswitch_done.
++			 * Then we can have a race...
++			 */
++			cancel_work_sync(&sdata->u.mgd.csa_connection_drop_work);
++		}
+ 		flush_delayed_work(&sdata->dec_tailroom_needed_wk);
++	}
+ 	ieee80211_scan_cancel(local);
+ 
+ 	/* make sure any new ROC will consider local->in_reconfig */
+-- 
+2.18.0
