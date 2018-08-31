@@ -1,114 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:39700 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726825AbeH0PRl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34578 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727345AbeHaT4Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 11:17:41 -0400
-Received: by mail-pf1-f196.google.com with SMTP id j8-v6so7616345pff.6
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 04:31:25 -0700 (PDT)
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Sasidhar Mudigonda <sasidhar.mudigonda@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Konduri <sanjay.konduri@redpinesignals.com>
-Subject: [PATCH 1/2] rsi: fix memory alignment issue in ARM32 platforms
-Date: Mon, 27 Aug 2018 17:05:14 +0530
-Message-Id: <1535369715-14254-1-git-send-email-siva8118@gmail.com> (sfid-20180827_133128_052551_8BCF9A3E)
+        Fri, 31 Aug 2018 15:56:25 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCH] brcmfmac: fix wrong strnchr usage
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180822132215.27669-1-linux@rasmusvillemoes.dk>
+References: <20180822132215.27669-1-linux@rasmusvillemoes.dk>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Message-Id: <20180831154818.9D0E96038E@smtp.codeaurora.org> (sfid-20180831_174917_633677_8E1B0B35)
+Date: Fri, 31 Aug 2018 15:48:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
 
-During testing in ARM32 platforms, observed below kernel panic, as driver
-accessing data beyond the allocated memory while submitting URB to USB.
+> strnchr takes arguments in the order of its name: string, max bytes to
+> read, character to search for. Here we're passing '\n' aka 10 as the
+> buffer size, and searching for sizeof(buf) aka BRCMF_DCMD_SMLEN aka
+> 256 (aka '\0', since it's implicitly converted to char) within those 10
+> bytes.
+> 
+> Just interchanging the last two arguments would still leave a bug,
+> because if we've been successful once, there are not sizeof(buf)
+> characters left after the new value of p.
+> 
+> Since clmver is immediately afterwards passed as a %s argument, I assume
+> that it is actually a properly nul-terminated string. For that case, we
+> have strreplace().
+> 
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 
-Fix: Resolved this by specifying correct length by considering 64 bit
-alignment. so that, USB bus driver will access only allocated memory.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Unit-test: Tested and confirm that driver bring up and scanning,
-connection and data transfer works fine with this fix.
+cb18e2e9ec71 brcmfmac: fix wrong strnchr usage
 
-...skipping...
-[   25.389450] Unable to handle kernel paging request at virtual
-	       address 5aa11422
-[   25.403078] Internal error: Oops: 5 [#1] SMP ARM
-[   25.407703] Modules linked in: rsi_usb
-[   25.411473] CPU: 1 PID: 317 Comm: RX-Thread Not tainted 4.18.0-rc7 #1
-[   25.419221] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-[   25.425764] PC is at skb_release_data+0x90/0x168
-[   25.430393] LR is at skb_release_all+0x28/0x2c
-[   25.434842] pc : [<807435b0>] lr : [<80742ba0>] psr: 200e0013 5aa1141e
-[   25.464633] Flags: nzCv  IRQs on  FIQs on  Mode SVC_32 ISA ARM Segment none
-[   25.477524] Process RX-Thread (pid: 317, stack limit = 0x(ptrval))
-[   25.483709] Stack: (0xedf69ed8 to 0xedf6a000)
-[   25.569907] Backtrace:
-[   25.572368] [<80743520>] (skb_release_data) from [<80742ba0>]
-	       (skb_release_all+0x28/0x2c)
-[   25.580555] r9:7f00258c r8:00000001 r7:ee355000 r6:eddab0d0
-	       r5:eddab000 r4:eddbb840
-[   25.588308] [<80742b78>] (skb_release_all) from [<807432cc>]
-	       (consume_skb+0x30/0x50)
-[   25.596055] r5:eddab000 r4:eddbb840
-[   25.599648] [<8074329c>] (consume_skb) from [<7f00117c>]
-	       (rsi_usb_rx_thread+0x64/0x12c [rsi_usb])
-[   25.608524] r5:eddab000 r4:eddbb840
-[   25.612116] [<7f001118>] (rsi_usb_rx_thread [rsi_usb]) from
-	       [<80142750>] (kthread+0x11c/0x15c)
-[   25.620735] r10:ee9ff9e0 r9:edcde3b8 r8:ee355000 r7:edf68000
-	       r6:edd3a780 r5:00000000
-[   25.628567] r4:edcde380
-[   25.631110] [<80142634>] (kthread) from [<801010e8>]
-	       (ret_from_fork+0x14/0x2c)
-[   25.638336] Exception stack(0xedf69fb0 to 0xedf69ff8)
-[   25.682929] ---[ end trace 8236a5496f5b5d3b ]---
-
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index c0a163e..f360690 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -266,15 +266,17 @@ static void rsi_rx_done_handler(struct urb *urb)
- 	if (urb->status)
- 		goto out;
- 
--	if (urb->actual_length <= 0) {
--		rsi_dbg(INFO_ZONE, "%s: Zero length packet\n", __func__);
-+	if (urb->actual_length <= 0 ||
-+	    urb->actual_length > rx_cb->rx_skb->len) {
-+		rsi_dbg(INFO_ZONE, "%s: Invalid packet length = %d\n",
-+			__func__, urb->actual_length);
- 		goto out;
- 	}
- 	if (skb_queue_len(&dev->rx_q) >= RSI_MAX_RX_PKTS) {
- 		rsi_dbg(INFO_ZONE, "Max RX packets reached\n");
- 		goto out;
- 	}
--	skb_put(rx_cb->rx_skb, urb->actual_length);
-+	skb_trim(rx_cb->rx_skb, urb->actual_length);
- 	skb_queue_tail(&dev->rx_q, rx_cb->rx_skb);
- 
- 	rsi_set_event(&dev->rx_thread.event);
-@@ -308,6 +310,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- 	if (!skb)
- 		return -ENOMEM;
- 	skb_reserve(skb, MAX_DWORD_ALIGN_BYTES);
-+	skb_put(skb, RSI_MAX_RX_USB_PKT_SIZE - MAX_DWORD_ALIGN_BYTES);
- 	dword_align_bytes = (unsigned long)skb->data & 0x3f;
- 	if (dword_align_bytes > 0)
- 		skb_push(skb, dword_align_bytes);
-@@ -319,7 +322,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- 			  usb_rcvbulkpipe(dev->usbdev,
- 			  dev->bulkin_endpoint_addr[ep_num - 1]),
- 			  urb->transfer_buffer,
--			  RSI_MAX_RX_USB_PKT_SIZE,
-+			  skb->len,
- 			  rsi_rx_done_handler,
- 			  rx_cb);
- 
 -- 
-2.5.5
+https://patchwork.kernel.org/patch/10572951/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
