@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:36198 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727556AbeH2LkB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45416 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727238AbeHaMkX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 07:40:01 -0400
-Message-ID: <1535528658.5215.19.camel@sipsolutions.net> (sfid-20180829_094443_235110_C995D58E)
-Subject: Re: [RFC v2 2/4] mac80211: Add airtime accounting and scheduling to
- TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
-Date: Wed, 29 Aug 2018 09:44:18 +0200
-In-Reply-To: <153115422499.7447.2570671473822724496.stgit@alrua-x1> (sfid-20180709_183717_542396_91AD1C0D)
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
-         <153115422499.7447.2570671473822724496.stgit@alrua-x1>
-         (sfid-20180709_183717_542396_91AD1C0D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 31 Aug 2018 08:40:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:22 +0300
+Message-Id: <20180831083130.15525-21-luca@coelho.fi> (sfid-20180831_103408_175125_ADD9DE68)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 20/28] mac80211: fix saving a few HE values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-07-09 at 18:37 +0200, Toke Høiland-Jørgensen wrote:
-> 
-> @@ -427,6 +428,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->  	sta->cparams.interval = MS2TIME(100);
->  	sta->cparams.ecn = true;
->  
-> +	sta->airtime.weight = 1;
+)
 
-Perhaps it might be useful to start with a higher default (even
-something like 1<<8) as that would allow adjusting up/down single
-stations, without having to adjust all stations and listening to new
-additions to adjust them quickly etc?
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-Theoretically this doesn't really matter, but from a practical POV it
-may be easier to leave them all at the default and just adjust the ones
-that need adjustment for some reason.
+After masking the he_oper_params, to get the requested values as
+integers one must rshift and not lshift. Fix that.
 
-> ieee80211_sta_register_airtime
+Fixes: 41cbb0f5a295 ("mac80211: add support for HE")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/mlme.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Do we really need this? We already have at least TX status with airtime,
-for ieee80211_sta_tx_notify() and friends, and the station pointer in
-that context, so couldn't we piggy-back on this? At least WMM-AC already
-requires the driver to provide this.
-
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 764a0f8e1dd1..b2a5ca96412d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3246,11 +3246,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK;
+ 		bss_conf->htc_trig_based_pkt_ext =
+ 			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) <<
++			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) >>
+ 			IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET;
+ 		bss_conf->frame_time_rts_th =
+ 			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) <<
++			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) >>
+ 			IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET;
+ 
+ 		bss_conf->multi_sta_back_32bit =
+-- 
+2.18.0
