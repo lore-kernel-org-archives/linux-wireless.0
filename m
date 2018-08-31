@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41654 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727128AbeHCSFY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 14:05:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 1/2] mt76x0: raname mt76_* functions
-References: <1533296680-7236-1-git-send-email-sgruszka@redhat.com>
-Date: Fri, 03 Aug 2018 19:08:23 +0300
-In-Reply-To: <1533296680-7236-1-git-send-email-sgruszka@redhat.com> (Stanislaw
-        Gruszka's message of "Fri, 3 Aug 2018 13:44:39 +0200")
-Message-ID: <87r2jf5t6w.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_180832_680580_DE062E5C)
+Received: from szxga05-in.huawei.com ([45.249.212.191]:11211 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726990AbeHaPPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 11:15:03 -0400
+Subject: Re: [PATCH] rsi: remove set but not used variable 'header_size'
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
+        Kees Cook <keescook@chromium.org>,
+        Colin Ian King <colin.king@canonical.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+References: <1535707647-191888-1-git-send-email-yuehaibing@huawei.com>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+From: YueHaibing <yuehaibing@huawei.com>
+Message-ID: <9c1571f1-b353-7621-c7e0-20d54cbd59c4@huawei.com> (sfid-20180831_130826_611689_D1004F91)
+Date: Fri, 31 Aug 2018 19:07:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1535707647-191888-1-git-send-email-yuehaibing@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-> mt76_* functions conflicts with mt7601u driver what prevents to build
-> those drivers in the kernel or use both drivers modules at once.
->
-> Patch fixes build errors like this:
-> ld: drivers/net/wireless/mediatek/mt76/mt76x0/mac.o:(.opd+0x30): multiple definition of `mt76_mac_tx_rate_val'; drivers/net/wireless/mediatek/mt7601u/mac.o:(.opd+0x30): first defined here
->
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 2018/8/31 17:27, YueHaibing wrote:
+> Fixes gcc '-Wunused-but-set-variable' warning:
+> 
+> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_send_data_pkt':
+> drivers/net/wireless/rsi/rsi_91x_hal.c:288:5: warning:
+>  variable 'header_size' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/net/wireless/rsi/rsi_91x_hal.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+> index 01edf96..c4fb319 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_hal.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+> @@ -285,7 +285,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+>  	struct skb_info *tx_params;
+>  	struct ieee80211_bss_conf *bss;
+>  	int status = -EINVAL;
+> -	u8 header_size;
+>  
+>  	if (!skb)
+>  		return 0;
+> @@ -298,7 +297,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+>  	vif = info->control.vif;
+>  	bss = &vif->bss_conf;
+>  	tx_params = (struct skb_info *)info->driver_data;
 
-Thanks. I'll add this to both patches:
+tx_params also can be removed.
 
-Fixes: 7b4859026ccd ("mt76x0: core files")
+Will send V2.
 
--- 
-Kalle Valo
+> -	header_size = tx_params->internal_hdr_size;
+>  
+>  	if (((vif->type == NL80211_IFTYPE_STATION) ||
+>  	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
+> 
+> 
+> .
+> 
