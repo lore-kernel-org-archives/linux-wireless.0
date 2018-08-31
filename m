@@ -1,104 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33214 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53442 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730419AbeHIT1u (ORCPT
+        with ESMTP id S1727268AbeHaQhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 15:27:50 -0400
+        Fri, 31 Aug 2018 12:37:09 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: b43/leds: Ensure NUL-termination of LED name string
-References: <20180731211404.2eac1bb0@wiggum>
-        <87lg9f1rw8.fsf@kamboji.qca.qualcomm.com>
-        <CAOiHx=nfndmCd-Vara_6764-muWGA0z-RrYXQGmPGHZ0UuzkSQ@mail.gmail.com>
-        <87mutvzfc5.fsf@kamboji.qca.qualcomm.com>
-        <CAOiHx==2xBajOL1wQmC=9mv-DnCw4PrmumSMEOqoDC69OkAWNQ@mail.gmail.com>
-Date: Thu, 09 Aug 2018 20:01:59 +0300
-In-Reply-To: <CAOiHx==2xBajOL1wQmC=9mv-DnCw4PrmumSMEOqoDC69OkAWNQ@mail.gmail.com>
-        (Jonas Gorski's message of "Thu, 9 Aug 2018 18:41:04 +0200")
-Message-ID: <87in4jzd6g.fsf@kamboji.qca.qualcomm.com> (sfid-20180809_190242_539755_F01DCFA7)
+To: Anilkumar Kolli <akolli@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgen?= =?utf-8?Q?sen?=
+        <toke@toke.dk>
+Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
+References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
+Date: Fri, 31 Aug 2018 15:29:47 +0300
+In-Reply-To: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
+        (Anilkumar Kolli's message of "Sat, 21 Apr 2018 11:53:06 +0530")
+Message-ID: <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com> (sfid-20180831_142955_425344_46F7955C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonas Gorski <jonas.gorski@gmail.com> writes:
+Anilkumar Kolli <akolli@codeaurora.org> writes:
 
-> On 9 August 2018 at 18:15, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Jonas Gorski <jonas.gorski@gmail.com> writes:
->>
->>> On 9 August 2018 at 17:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>>> Michael B=C3=BCsch <m@bues.ch> writes:
->>>>
->>>>> strncpy might not NUL-terminate the string, if the name equals the bu=
-ffer size.
->>>>> Use strlcpy instead.
->>>>>
->>>>> Signed-off-by: Michael Buesch <m@bues.ch>
->>>>> Cc: stable@vger.kernel.org
->>>>
->>>> This is weird, with all the patches you submitted last week I get this
->>>> if I download the patch from patchwork:
->>>>
->>>> $ git am -s 1.mbox
->>>> Patch is empty. Was it split wrong?
->>>>
->>>> But if I download the patch directly from my IMAP folder I have no
->>>> problems:
->>>>
->>>> $ git am -s 1.mbox
->>>> Applying: b43/leds: Ensure NUL-termination of LED name string
->>>>
->>>> This happens even without my custom patchwork script so this has
->>>> something to do with the patchwork server, but it's not obvious to me
->>>> what triggers it. IIRC I have not seen anything like this before. It
->>>> seems that you didn't use git-send-email, I strongly suggest to use th=
-at
->>>> just to avoid problems like this.
->>>
->>> Looks like patchwork mishandles the pgp signature, the patchwork mbox h=
-as
->>>
->>>> Content-Type: multipart/signed; micalg=3Dpgp-sha512;
->>>>  boundary=3D"Sig_/EN90ciRq4eWXDUcnZABQ0Ak"; protocol=3D"application/pg=
-p-signature"
->>>
->>> as the only content-type (and the boundary is nowhere to be found),
->>> while the one in my inbox has
->>>
->>>> Content-Type: multipart/signed; micalg=3Dpgp-sha512;
->>>> boundary=3D"Sig_/EN90ciRq4eWXDUcnZABQ0Ak";
->>>> protocol=3D"application/pgp-signature"
->>>>
->>>> --Sig_/EN90ciRq4eWXDUcnZABQ0Ak
->>>> Content-Type: text/plain; charset=3DUS-ASCII
->>>> Content-Transfer-Encoding: quoted-printable
->>>
->>> When I remove the Content-Type: line(s) from the mbox from patchwork,
->>> git recognises it again as a patch. I guess git am ignores everything
->>> until the boundary, which got dropped by patchwork, so it never finds
->>> the actual patch.
->>
->> Awesome, thanks for debugging this! It would be great if someone could
->> report this to the patchwork maintainers, I don't have the time right
->> now.
+> Mesh path metric needs txrate information from ieee80211_tx_status()
+> call but in ath10k there is no mechanism to report tx rate information
+> via ieee80211_tx_status(), the rate is only accessible via
+> sta_statiscs() op.
 >
-> Silly question, but who *are* the maintainers? I just spend several
-> minutes on https://patchwork.kernel.org/ and google, and failed to
-> find any contact information.
+> Per peer stats has tx rate info available, this patch stores per peer
+> last tx rate and updates the tx rate info structures in tx completition.
+> The rate updated in ieee80211_tx_status() is not exactly for the last
+> transmitted frame instead the rate is from one of the previous frames.
+>
+> Per peer txrate information is updated through per peer statistics
+> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+>
+> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+>
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 
-Not a silly question at all. I'm not sure what's the preferred way to
-report bugs but at least I found this:
+This is a patch from last March, full patch here:
 
-http://jk.ozlabs.org/projects/patchwork/
+https://patchwork.kernel.org/patch/10267693/
 
-I guess they use the github tracker:
+> @@ -119,6 +122,18 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+>  			info->flags &= ~IEEE80211_TX_STAT_ACK;
+>  	}
+>  
+> +	if (sta) {
+> +		spin_lock_bh(&ar->data_lock);
+> +		arsta = (struct ath10k_sta *)sta->drv_priv;
+> +		info->status.rates[0].idx =
+> +			arsta->tx_info.status.rates[0].idx;
+> +		info->status.rates[0].count =
+> +			arsta->tx_info.status.rates[0].count;
+> +		info->status.rates[0].flags =
+<> +			arsta->tx_info.status.rates[0].flags;
+> +		spin_unlock_bh(&ar->data_lock);
+> +	}
+> +
+>  	ieee80211_tx_status(htt->ar->hw, msdu);
+>  	/* we do not own the msdu anymore */
 
-https://github.com/getpatchwork/patchwork/issues/
+"is not exactly" is IMHO an understatement. What it means that with this
+patch ath10k reports the rate information from another frame instead of
+the current skb, because the firmware provides the rate information "out
+of band". A simple example to clarify:
 
---=20
+   Let's say ath10k transmits frames A, B and C. Then ath10k calls
+   ieee80211_tx_status() for frame C the rate information could be for
+   frame A, or it could be the other around for frame A status the rate
+   information is from frame C.
+
+In other words, there's no guarantee from what frame the rate
+information is from.
+
+Too me this feels like a bad idea but I'm not familiar enough with
+mac80211 to really comment on this. What kind of implications does this
+have for Mesh or ATF, for example? Adding Johannes and Toke to hear
+about their opinion about this.
+
+-- 
 Kalle Valo
