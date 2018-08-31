@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42238 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731101AbeHNRby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 13:31:54 -0400
-Received: from mail-qt0-f182.google.com (mail-qt0-f182.google.com [209.85.216.182])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A9D121741
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 14:44:26 +0000 (UTC)
-Received: by mail-qt0-f182.google.com with SMTP id b15-v6so21300769qtp.11
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Aug 2018 07:44:26 -0700 (PDT)
-MIME-Version: 1.0
-References: <1533306095-19946-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1533306095-19946-1-git-send-email-sgruszka@redhat.com>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Tue, 14 Aug 2018 10:44:14 -0400
-Message-ID: <CA+5PVA43=DQBdGE4CvpTki5caSyfQ02TgV=6CRHukGzAuhsytQ@mail.gmail.com> (sfid-20180814_164429_612763_A6EF0AE4)
-Subject: Re: [PATCH] linux-firmware: add firmware for mt76x0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
-        linux-mediatek@lists.infradead.org,
-        Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:36837 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727233AbeHaLTX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 07:19:23 -0400
+From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yuan-Chi Pang <fu3mo6goo@gmail.com>
+Subject: [PATCH] mac80211: fix TX status reporting for ieee80211s
+Date: Fri, 31 Aug 2018 15:12:55 +0800
+Message-Id: <1535699575-5672-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180831_091357_852455_691F5D42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 3, 2018 at 10:21 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> Add binary firmware for MT7610u based devices.
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  WHENCE               |   9 +++++++++
->  mediatek/mt7610u.bin | Bin 0 -> 80288 bytes
->  2 files changed, 9 insertions(+)
->  create mode 100644 mediatek/mt7610u.bin
+ieee80211s_update_metric works only if wireless
+driver passes tx_status of data frame to mac80211
 
-Applied and pushed out.  Thanks.
+Make API and caller of ieee80211s_update_metric to be
+similar to rate_control_tx_status
 
-josh
+Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+---
+ net/mac80211/mesh.h      | 2 +-
+ net/mac80211/mesh_hwmp.c | 8 ++------
+ net/mac80211/status.c    | 4 +++-
+ 3 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index ee56f18..3c6095a 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -217,7 +217,7 @@ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+ void ieee80211s_update_metric(struct ieee80211_local *local,
+-			      struct sta_info *sta, struct sk_buff *skb);
++			struct sta_info *sta, struct ieee80211_tx_status *st);
+ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mesh_teardown_sdata(struct ieee80211_sub_if_data *sdata);
+ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index daf9db3..4286673 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -295,15 +295,11 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ void ieee80211s_update_metric(struct ieee80211_local *local,
+-		struct sta_info *sta, struct sk_buff *skb)
++		struct sta_info *sta, struct ieee80211_tx_status *st)
+ {
+-	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_tx_info *txinfo = st->info;
+ 	int failed;
+ 
+-	if (!ieee80211_is_data(hdr->frame_control))
+-		return;
+-
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 
+ 	/* moving average, scaled to 100.
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 9a6d720..dfcd419 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -811,7 +811,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 
+ 		rate_control_tx_status(local, sband, status);
+ 		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
+-			ieee80211s_update_metric(local, sta, skb);
++			ieee80211s_update_metric(local, sta, status);
+ 
+ 		if (!(info->flags & IEEE80211_TX_CTL_INJECTED) && acked)
+ 			ieee80211_frame_acked(sta, skb);
+@@ -972,6 +972,8 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		rate_control_tx_status(local, sband, status);
++		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
++			ieee80211s_update_metric(local, sta, status);
+ 	}
+ 
+ 	if (acked || noack_success) {
+-- 
+2.7.4
