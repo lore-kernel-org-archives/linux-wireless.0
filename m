@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51974 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729357AbeHCLOy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45736 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726990AbeHaOFW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 07:14:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wireless <linux-wireless@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mt76x0: build driver only as module
-References: <20180803091401.GB10284@redhat.com>
-Date: Fri, 03 Aug 2018 12:19:20 +0300
-In-Reply-To: <20180803091401.GB10284@redhat.com> (Stanislaw Gruszka's message
-        of "Fri, 3 Aug 2018 11:14:01 +0200")
-Message-ID: <87zhy36c4n.fsf@kamboji.qca.qualcomm.com> (sfid-20180803_111940_856729_C50BB531)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 31 Aug 2018 10:05:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:56:09 +0300
+Message-Id: <20180831095614.14099-12-luca@coelho.fi> (sfid-20180831_115842_864464_502856D4)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: mvm: cleanup dead code on resume flow for non unified image.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
 
-> There are various symbols that conflicts with mt7601u.
-> Due to that kernel will not build with allyesconfig.
-> For now limit the driver to be build only as module.
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+CDB support has nothing to do with non unified image.
 
-Thanks for the quick patch!
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 21 ++++++---------------
+ 1 file changed, 6 insertions(+), 15 deletions(-)
 
-> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
-> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-> @@ -11,7 +11,7 @@ config MT76x2_COMMON
->  
->  config MT76x0U
->  	tristate "MediaTek MT76x0U (USB) support"
-> -	depends on MAC80211
-> +	depends on MAC80211 && m
-
-But this feels like an ugly hack to me. Isn't there a better way to fix
-this? (I don't have time to investigate the error in detail right now.)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index b09446697c46..210be26aadaa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -434,23 +434,13 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	u8 chains_static, chains_dynamic;
+ 	struct cfg80211_chan_def chandef;
+ 	int ret, i;
+-	struct iwl_binding_cmd binding_cmd = {};
++	struct iwl_binding_cmd_v1 binding_cmd = {};
+ 	struct iwl_time_quota_cmd quota_cmd = {};
+ 	struct iwl_time_quota_data *quota;
+ 	u32 status;
+-	int size;
+-
+-	if (fw_has_capa(&mvm->fw->ucode_capa,
+-			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT)) {
+-		size = sizeof(binding_cmd);
+-		if (mvmvif->phy_ctxt->channel->band == NL80211_BAND_2GHZ ||
+-		    !iwl_mvm_is_cdb_supported(mvm))
+-			binding_cmd.lmac_id = cpu_to_le32(IWL_LMAC_24G_INDEX);
+-		else
+-			binding_cmd.lmac_id = cpu_to_le32(IWL_LMAC_5G_INDEX);
+-	} else {
+-		size = IWL_BINDING_CMD_SIZE_V1;
+-	}
++
++	if (WARN_ON_ONCE(iwl_mvm_is_cdb_supported(mvm)))
++		return -EINVAL;
+ 
+ 	/* add back the PHY */
+ 	if (WARN_ON(!mvmvif->phy_ctxt))
+@@ -497,7 +487,8 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	status = 0;
+ 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
+-					  size, &binding_cmd, &status);
++					  IWL_BINDING_CMD_SIZE_V1, &binding_cmd,
++					  &status);
+ 	if (ret) {
+ 		IWL_ERR(mvm, "Failed to add binding: %d\n", ret);
+ 		return ret;
 -- 
-Kalle Valo
+2.18.0
