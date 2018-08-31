@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37336 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727858AbeHNN7m (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45290 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727495AbeHaMh6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 09:59:42 -0400
-Message-ID: <1534245118.3547.18.camel@sipsolutions.net> (sfid-20180814_131303_339421_811029D4)
-Subject: Re: [PATCH] mac80211: ignore SA Query Requests with unknown payload
- data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>,
-        linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Date: Tue, 14 Aug 2018 13:11:58 +0200
-In-Reply-To: <20180806224857.14853-1-Mathy.Vanhoef@cs.kuleuven.be>
-References: <20180806224857.14853-1-Mathy.Vanhoef@cs.kuleuven.be>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 31 Aug 2018 08:37:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        "Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:04 +0300
+Message-Id: <20180831083130.15525-3-luca@coelho.fi> (sfid-20180831_103150_317047_1DBCD289)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 02/28] mac80211: fix WMM TXOP calculation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-07 at 00:48 +0200, Mathy Vanhoef wrote:
-> When operating in station mode, ignore SA Query Request frames that
-> contain extra payload data. The kernel doesn't know how to handle these
-> frames. Instead, give userspace a chance to handle these frames.
-> 
-> For example, with Operating Channel Validation, SA Query Requests may
-> now contain an extra Operating Channel Information (OCI) element as
-> payload data. The kernel should ignore these frames, since it does not
-> know how to properly handle them. Instead, let userspace process these
-> frames.
-> 
-> Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>
-> ---
-> For background on Operating Channel Validation, see:
-> https://mentor.ieee.org/802.11/dcn/17/11-17-1807-12-000m-defense-against-multi-channel-mitm-attacks-via-operating-channel-validation.docx
-> 
-> A corresponding patchset was also recently submitted to Hostap, see "Add
-> support for Operating Channel Validation (OCV)".
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
 
-In a perfect world, this seems fine. However, what if wpa_s doesn't
-implement this (yet)? In that case, wouldn't it be better (or really
-required) to still respond to the SA query request in the kernel?
+In commit 9236c4523e5b ("mac80211: limit wmm params to comply
+with ETSI requirements"), we have limited the WMM parameters to
+comply with 802.11 and ETSI standard.  Mistakenly the TXOP value
+was caluclated wrong.  Fix it by taking the minimum between
+802.11 to ETSI to make sure we are not violating both.
 
-Since you change wpa_s to subscribe to the relevant action frame:
+Fixes: e552af058148 ("mac80211: limit wmm params to comply with ETSI requirements")
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/util.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> +       /* SA Query Request */
-> +       if (nl80211_register_action_frame(bss, (u8 *) "\x08\x00", 2) < 0)
-> +               ret = -1;
-
-we could change the logic to be
-
-if (!frame_includes_OCV || !cfg80211_rx_mgmt(...))
-	respond_in_kernel();
-
-I also think we shouldn't necessarily punt too short or otherwise
-malformed frames to userspace, what's the point? We currently
-drop/ignore those, and can continue to do so afaict?
-
-johannes
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d886789ff59e..c03362f34bf4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1266,8 +1266,7 @@ void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
+ 	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
+ 	qparam->aifs = max_t(u8, qparam->aifs, wmm_ac->aifsn);
+-	qparam->txop = !qparam->txop ? wmm_ac->cot / 32 :
+-		min_t(u16, qparam->txop, wmm_ac->cot / 32);
++	qparam->txop = min_t(u16, qparam->txop, wmm_ac->cot / 32);
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+2.18.0
