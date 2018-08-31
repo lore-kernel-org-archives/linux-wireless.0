@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:47952 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728055AbeHMMvs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Aug 2018 08:51:48 -0400
-Message-ID: <1534154953.3093.1.camel@sipsolutions.net> (sfid-20180813_121016_773495_E743241E)
-Subject: Re: [PATCH] cfg80211: allow to build without
- CFG80211_REQUIRE_SIGNED_REGDB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 13 Aug 2018 12:09:13 +0200
-In-Reply-To: <1533898547-14449-1-git-send-email-sgruszka@redhat.com> (sfid-20180810_125902_042211_A5A70028)
-References: <1533898547-14449-1-git-send-email-sgruszka@redhat.com>
-         (sfid-20180810_125902_042211_A5A70028)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42652 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727292AbeHaNTO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 09:19:14 -0400
+Date: Fri, 31 Aug 2018 11:12:38 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/16] unify usb mcu layer between mt76x2u and mt76x0u
+ drivers
+Message-ID: <20180831091237.GA7261@redhat.com> (sfid-20180831_111249_188218_3918D015)
+References: <20180825104056.9130-1-lorenzo.bianconi@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180825104056.9130-1-lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-08-10 at 12:55 +0200, Stanislaw Gruszka wrote:
-> According to kconfig-language.txt conditional dependency should be
-> expressed 2 times:
+On Sat, Aug 25, 2018 at 12:40:40PM +0200, Lorenzo Bianconi wrote:
+> Use shared mt76u mcu routines available in mt76-usb module and
+> unify usb mcu layer between mt76x2u and mt76x0u drivers.
+> Remove unused mt76x0 routines.
+> This patchset is based on top of Stanislaw's patchset (not applied yet):
+> https://marc.info/?l=linux-wireless&m=153510933510810&w=2
 > 
->         bool "foo" if BAR
->         default y if BAR
-> 
-> Indeed, without additional if expression we always build with
-> CFG80211_REQUIRE_SIGNED_REGDB even when CFG80211_CERTIFICATION_ONUS
-> is not set.
+> Lorenzo Bianconi (16):
+>   mt76: move mt76_reg_pair definition in mt76.h
+>   mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
+>   mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
+>   mt76: add multiple regs read support to usb_mcu layer
+>   mt76x0: use mt76u_init for bus initialization
+>   mt76x0: remove mt76x0_vendor_reset routine
+>   mt76x0: remove mt76x0_vendor_single_wr routine
+>   mt76x0: remove mt76x0_mcu_msg_alloc routine
+>   mt76x0: use shared mt76 usb mcu completion
+>   mt76x0: remove mt76x0_complete_urb routine
+>   mt76x0: remove mt76x0_vendor_request routine
+>   mt76x0: remove unused mt76x0_wait_asic_ready routine
+>   mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
+>   mt76x0: remove unused mt76x0_mcu structure
+>   mt76x0: use mt76u_mcu_fw_send_data for fw uploading
+>   mt76x0: remove unused routines for usb_buff alloc/free
 
-That's the intent. If you do set CERTIFICATION_ONUS, then you can
-disable this (presumably because you have external OS image verification
-mechanisms, or similar).
+For the series:
 
-If you don't set CERTIFICATION_ONUS, this should always be set.
-
-Perhaps it should be renamed to CFG80211_REQUIRE_REGDB_SIGNATURE or so,
-which might be clearer? And a case has been made before for adding
-CFG80211_FIRMWARE_REGDB_SUPPORT that controls the whole feature, but
-this patch is clearly wrong.
-
-johannes
+Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
