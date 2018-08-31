@@ -1,112 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:41041 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727154AbeHEXkL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45674 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728088AbeHaODO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Aug 2018 19:40:11 -0400
-Received: by mail-ed1-f65.google.com with SMTP id s24-v6so4176977edr.8
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Aug 2018 14:34:10 -0700 (PDT)
-Subject: Re: [PATCH 5/6] qtnfmac: add support for PTA configuration
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
- <20180531091102.28666-6-sergey.matyukevich.os@quantenna.com>
- <87d0v4stqm.fsf@codeaurora.org> <5B604B14.8080607@broadcom.com>
- <20180801082300.sev7ag5wh4wj7fbb@bars> <5B66268B.3010205@broadcom.com>
- <20180805152226.4t67jriayk4nkfw2@bars>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B676D52.4000104@broadcom.com> (sfid-20180805_233414_149481_C29F8F7B)
-Date: Sun, 5 Aug 2018 23:34:10 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180805152226.4t67jriayk4nkfw2@bars>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Fri, 31 Aug 2018 10:03:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:56:06 +0300
+Message-Id: <20180831095614.14099-9-luca@coelho.fi> (sfid-20180831_115639_139752_5F820E7B)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 08/16] iwlwifi: remove ucode error tracepoint
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/5/2018 5:22 PM, Sergey Matyukevich wrote:
->>>>>> Implement support for PTA (Packet Traffic Arbitration) configuration.
->>>>>> The PTA mechanism is used to coordinate sharing of the medium between
->>>>>> WiFi and other 2.4 wireless networks, e.g. Bluetooth or ZigBee.
->>>>>>
->>>>>> This patch implements core infrastructure and vendor specific commands
->>>>>> to control PTA functionality in firmware.
->>>>>
->>>>> And no description of the actual interface which would have helped with
->>>>> the review.
->>>>>
->>>>> Anyway, the vendor commands are pain and they just make me grumpy. The
->>>>> original idea was that upstream drivers should not support them at all,
->>>>> later we flexed the rules so that low level hardware specific interfaces
->>>>> might be ok, for example we added one in wil6210.
->>>>>
->>>>> If I would even consider applying a patch which adds a vendor command it
->>>>> needs a really good commit log with a proper description of the actual
->>>>> interface and good justifications why a generic nl80211 command won't
->>>>> work. I don't see anything even remotely close here.
->>>>>
->>>>> Sorry for being grumpy, I just hate these vendor commands. Especially
->>>>> when I see that a generic nl80211 command has not even be consired at
->>>>> all.
->>>>
->>>> For what it is worth, looking at part of the patch:
->>>>
->>>> +/**
->>>> + * enum qlink_pta_mode - Packet Traffic Arbiter operating modes
->>>> + *
->>>> + * @QLINK_PTA_MODE_DISABLED: PTA is disabled
->>>> + * @QLINK_PTA_MODE_2_WIRE: enable PTA 2-wire mode
->>>> + */
->>>> +enum qlink_pta_mode {
->>>> +       QLINK_PTA_MODE_DISABLED = 0,
->>>> +       QLINK_PTA_MODE_2_WIRE = 2
->>>> +};
->>>> +
->>>>
->>>> it smells very much like low-level btcoex. The question is whether this
->>>> needs to be conveyed from user-space or should these be device
->>>> configuration, eg. like DT properties.
->>>
->>> Hello Arend,
->>>
->>> Yes, this is some kind of low-level BT coexistence mechanism, when WiFi and
->>> BT cards coordinate access to wireless media in 2.4G using gpio lines.
->>> Those lines connect WiFi and BT cards directly w/o host mediation.
->>
->> Right.
->>
->>> As for DT properties, the qustion still remains the same: how to propagate
->>> those settings to WiFi card. AFAIK there is no 'standard' interface for
->>> this kind of things. So using vendor commands looked like the only option.
->>
->> So DT properties are available to the kernel so it is just between
->> device driver and wifi card. There is no involvement with user-space needed.
->
-> Ok, makes sense. But IIUC this approach with DT
-> does not cover PCIe/USB wireless cards.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It can cover any device in the system regardless type of host interface. 
-For example in the ath10k bindings document [1] you see:
+Alexei's patch, assumed that all versions of "struct iwl_error_event_table"
+are the same, but there are really different versions in different files.
 
-pci {
-	pcie@0 {
-		reg = <0 0 0 0 0>;
-		#interrupt-cells = <1>;
-		#size-cells = <2>;
-		#address-cells = <3>;
-		device_type = "pci";
+Rather than trying to fix this, or splitting the tracepoint, or anything of
+the sort, just remove it entirely - turns out that nobody really uses it.
 
-		ath10k@0,0 {
-			reg = <0 0 0 0 0>;
-			device_type = "pci";
-			qcom,ath10k-calibration-data = [ 01 02 03 ... ];
-		};
-	};
-};
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c |  2 +-
+ .../intel/iwlwifi/iwl-devtrace-iwlwifi.h      | 55 -------------------
+ .../net/wireless/intel/iwlwifi/iwl-devtrace.c |  3 +-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  1 -
+ 4 files changed, 2 insertions(+), 59 deletions(-)
 
-Regards,
-Arend
-
-[1] 
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt?h=linux-4.17.y
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index 1ef072071b0b..1088ff036e13 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -1647,7 +1648,6 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 			priv->status, table.valid);
+ 	}
+ 
+-	trace_iwlwifi_dev_ucode_error(trans->dev, &table, 0, table.brd_ver);
+ 	IWL_ERR(priv, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+ 	IWL_ERR(priv, "0x%08X | uPc\n", table.pc);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
+index 82cfbfa0795d..8e87186682e7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
+@@ -128,61 +128,6 @@ TRACE_EVENT(iwlwifi_dev_tx,
+ 		  __entry->framelen, __entry->skbaddr)
+ );
+ 
+-struct iwl_error_event_table;
+-TRACE_EVENT(iwlwifi_dev_ucode_error,
+-	TP_PROTO(const struct device *dev, const struct iwl_error_event_table *table,
+-		 u32 hw_ver, u32 brd_ver),
+-	TP_ARGS(dev, table, hw_ver, brd_ver),
+-	TP_STRUCT__entry(
+-		DEV_ENTRY
+-		__field(u32, desc)
+-		__field(u32, tsf_low)
+-		__field(u32, data1)
+-		__field(u32, data2)
+-		__field(u32, line)
+-		__field(u32, blink2)
+-		__field(u32, ilink1)
+-		__field(u32, ilink2)
+-		__field(u32, bcon_time)
+-		__field(u32, gp1)
+-		__field(u32, gp2)
+-		__field(u32, rev_type)
+-		__field(u32, major)
+-		__field(u32, minor)
+-		__field(u32, hw_ver)
+-		__field(u32, brd_ver)
+-	),
+-	TP_fast_assign(
+-		DEV_ASSIGN;
+-		__entry->desc = table->error_id;
+-		__entry->tsf_low = table->tsf_low;
+-		__entry->data1 = table->data1;
+-		__entry->data2 = table->data2;
+-		__entry->line = table->line;
+-		__entry->blink2 = table->blink2;
+-		__entry->ilink1 = table->ilink1;
+-		__entry->ilink2 = table->ilink2;
+-		__entry->bcon_time = table->bcon_time;
+-		__entry->gp1 = table->gp1;
+-		__entry->gp2 = table->gp2;
+-		__entry->rev_type = table->gp3;
+-		__entry->major = table->ucode_ver;
+-		__entry->minor = table->hw_ver;
+-		__entry->hw_ver = hw_ver;
+-		__entry->brd_ver = brd_ver;
+-	),
+-	TP_printk("[%s] #%02d %010u data 0x%08X 0x%08X line %u, "
+-		  "blink2 0x%05X ilink 0x%05X 0x%05X "
+-		  "bcon_tm %010u gp 0x%08X 0x%08X rev_type 0x%08X major 0x%08X "
+-		  "minor 0x%08X hw 0x%08X brd 0x%08X",
+-		  __get_str(dev), __entry->desc, __entry->tsf_low,
+-		  __entry->data1, __entry->data2, __entry->line,
+-		  __entry->blink2, __entry->ilink1, __entry->ilink2,
+-		  __entry->bcon_time, __entry->gp1, __entry->gp2,
+-		  __entry->rev_type, __entry->major, __entry->minor,
+-		  __entry->hw_ver, __entry->brd_ver)
+-);
+-
+ TRACE_EVENT(iwlwifi_dev_ucode_event,
+ 	TP_PROTO(const struct device *dev, u32 time, u32 data, u32 ev),
+ 	TP_ARGS(dev, time, data, ev),
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+index 27b4dd409a0e..9805432f124f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -26,12 +27,10 @@
+ #ifndef __CHECKER__
+ #include "iwl-trans.h"
+ 
+-#include "dvm/commands.h"
+ #define CREATE_TRACE_POINTS
+ #include "iwl-devtrace.h"
+ 
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_event);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_error);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_cont_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_wrap_event);
+ #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 99a872769e90..dcacc4d11abc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -546,7 +546,6 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+ 
+ 	IWL_ERR(mvm, "Loaded firmware version: %s\n", mvm->fw->fw_version);
+ 
+-	trace_iwlwifi_dev_ucode_error(trans->dev, &table, table.hw_ver, table.brd_ver);
+ 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+ 	IWL_ERR(mvm, "0x%08X | trm_hw_status0\n", table.trm_hw_status0);
+-- 
+2.18.0
