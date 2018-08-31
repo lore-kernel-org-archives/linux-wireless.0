@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:39367 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726537AbeHYOTh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33492 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727973AbeHaTyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Aug 2018 10:19:37 -0400
-Received: by mail-wm0-f41.google.com with SMTP id q8-v6so3853417wmq.4
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Aug 2018 03:41:02 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 00/16] unify usb mcu layer between mt76x2u and mt76x0u drivers
-Date: Sat, 25 Aug 2018 12:40:40 +0200
-Message-Id: <20180825104056.9130-1-lorenzo.bianconi@redhat.com> (sfid-20180825_124110_390911_472177AE)
+        Fri, 31 Aug 2018 15:54:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCH] rtl8187: Fix warning generated when strncpy() destination
+ length matches the sixe argument
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180820184831.24206-1-Larry.Finger@lwfinger.net>
+References: <20180820184831.24206-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Message-Id: <20180831154635.000326049C@smtp.codeaurora.org> (sfid-20180831_174654_769958_179FB97D)
+Date: Fri, 31 Aug 2018 15:46:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use shared mt76u mcu routines available in mt76-usb module and
-unify usb mcu layer between mt76x2u and mt76x0u drivers.
-Remove unused mt76x0 routines.
-This patchset is based on top of Stanislaw's patchset (not applied yet):
-https://marc.info/?l=linux-wireless&m=153510933510810&w=2
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Lorenzo Bianconi (16):
-  mt76: move mt76_reg_pair definition in mt76.h
-  mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
-  mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
-  mt76: add multiple regs read support to usb_mcu layer
-  mt76x0: use mt76u_init for bus initialization
-  mt76x0: remove mt76x0_vendor_reset routine
-  mt76x0: remove mt76x0_vendor_single_wr routine
-  mt76x0: remove mt76x0_mcu_msg_alloc routine
-  mt76x0: use shared mt76 usb mcu completion
-  mt76x0: remove mt76x0_complete_urb routine
-  mt76x0: remove mt76x0_vendor_request routine
-  mt76x0: remove unused mt76x0_wait_asic_ready routine
-  mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
-  mt76x0: remove unused mt76x0_mcu structure
-  mt76x0: use mt76u_mcu_fw_send_data for fw uploading
-  mt76x0: remove unused routines for usb_buff alloc/free
+> In gcc8, when the 3rd argument (size) of a call to strncpy() matches the
+> length of the first argument, the compiler warns of the possibility of an
+> unterminated string. Using strlcpy() forces a null at the end.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
- drivers/net/wireless/mediatek/mt76/mt76.h     |  14 +
- .../wireless/mediatek/mt76/mt76x0/Makefile    |   2 +-
- .../net/wireless/mediatek/mt76/mt76x0/core.c  |  34 --
- .../net/wireless/mediatek/mt76/mt76x0/dma.c   |   6 +-
- .../net/wireless/mediatek/mt76/mt76x0/init.c  |   7 +-
- .../net/wireless/mediatek/mt76/mt76x0/mcu.c   | 343 +++---------------
- .../net/wireless/mediatek/mt76/mt76x0/mcu.h   |   1 -
- .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  21 --
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 213 +----------
- .../net/wireless/mediatek/mt76/mt76x0/usb.h   |  15 -
- .../mediatek/mt76/mt76x2_init_common.c        |  11 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u.h  |   1 -
- .../net/wireless/mediatek/mt76/mt76x2u_init.c |   2 +-
- .../net/wireless/mediatek/mt76/mt76x2u_mcu.c  |   8 -
- drivers/net/wireless/mediatek/mt76/usb_mcu.c  |  75 +++-
- 15 files changed, 134 insertions(+), 619 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/core.c
+Patch applied to wireless-drivers-next.git, thanks.
+
+199ba9faca90 rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
 
 -- 
-2.18.0
+https://patchwork.kernel.org/patch/10570639/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
