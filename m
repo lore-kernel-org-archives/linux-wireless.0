@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28880 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726960AbeHAGpF (ORCPT
+Received: from 5.mo3.mail-out.ovh.net ([87.98.178.36]:46731 "EHLO
+        5.mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727258AbeHaROR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 02:45:05 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: refactor wilc_wlan_handle_isr_ext to avoid goto statement
-Date: Wed, 1 Aug 2018 10:33:41 +0530
-Message-ID: <1533099821-3769-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180801_070134_568122_9CB58E87)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 31 Aug 2018 13:14:17 -0400
+Received: from player778.ha.ovh.net (unknown [10.109.160.40])
+        by mo3.mail-out.ovh.net (Postfix) with ESMTP id 1CA781CF304
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Aug 2018 15:00:56 +0200 (CEST)
+From: Alexander Wetzel <alexander@wetzel-home.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, denkenz@gmail.com,
+        Alexander Wetzel <alexander@wetzel-home.de>
+Subject: [PATCH v8 1/2] nl80211: Add CAN_REPLACE_PTK0 API
+Date: Fri, 31 Aug 2018 15:00:37 +0200
+Message-Id: <20180831130038.7908-2-alexander@wetzel-home.de> (sfid-20180831_150706_426512_16AC1DA1)
+In-Reply-To: <20180831130038.7908-1-alexander@wetzel-home.de>
+References: <20180831130038.7908-1-alexander@wetzel-home.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor wilc_wlan_handle_isr_ext() to avoid the use of the goto label.
-Also avoid the unnecessary NULL check for 'wilc->rx_buffer' and
-calling wilc_wlan_handle_rxq() only after wilc_wlan_rxq_add() call.
-The link [1] contains details for discussion related to this changes.
+Drivers able to correctly replace a in-use key should set
+@NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 to allow the user space (e.g.
+hostapd or wpa_supplicant) to rekey PTK keys.
 
-[1]. https://patchwork.kernel.org/patch/10533601/
+The user space must detect a PTK rekey attempt and only go ahead with it
+when the driver has set this flag. If the driver is not supporting the
+feature the user space either must not replace the PTK key or perform a
+full re-association instead.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
+Ignoring this flag and continuing to rekey the connection can still work
+but has to be considered insecure and broken. Depending on the driver it
+can leak clear text packets or freeze the connection and is only
+supported to allow the user space to be updated.
+
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+Reviewed-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 45 +++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 24 deletions(-)
+ include/uapi/linux/nl80211.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index ea2e77f..cad6cec 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -820,31 +820,28 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
- 		retries++;
- 	}
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7acc16f34942..cf238064d8ab 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5224,6 +5224,11 @@ enum nl80211_feature_flags {
+  *	except for supported rates from the probe request content if requested
+  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
+  *
++ * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
++ *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
++ *      if this flag is not set. Ignoring this can leak clear text packets and/or
++ *      freeze the connection.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5259,6 +5264,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_TXQS,
+ 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
++	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
  
--	if (size > 0) {
--		if (LINUX_RX_SIZE - offset < size)
--			offset = 0;
-+	if (size <= 0)
-+		return;
- 
--		if (wilc->rx_buffer)
--			buffer = &wilc->rx_buffer[offset];
--		else
--			goto end;
--
--		wilc->hif_func->hif_clear_int_ext(wilc,
--					      DATA_INT_CLR | ENABLE_RX_VMM);
--		ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
--
--end:
--		if (ret) {
--			offset += size;
--			wilc->rx_buffer_offset = offset;
--			rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
--			if (rqe) {
--				rqe->buffer = buffer;
--				rqe->buffer_size = size;
--				wilc_wlan_rxq_add(wilc, rqe);
--			}
--		}
--	}
-+	if (LINUX_RX_SIZE - offset < size)
-+		offset = 0;
-+
-+	buffer = &wilc->rx_buffer[offset];
-+
-+	wilc->hif_func->hif_clear_int_ext(wilc, DATA_INT_CLR | ENABLE_RX_VMM);
-+	ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
-+	if (!ret)
-+		return;
-+
-+	offset += size;
-+	wilc->rx_buffer_offset = offset;
-+	rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
-+	if (!rqe)
-+		return;
-+
-+	rqe->buffer = buffer;
-+	rqe->buffer_size = size;
-+	wilc_wlan_rxq_add(wilc, rqe);
- 	wilc_wlan_handle_rxq(wilc);
- }
- 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 -- 
-2.7.4
+2.18.0
