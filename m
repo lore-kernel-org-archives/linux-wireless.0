@@ -1,71 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:34862 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727204AbeH2Muh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45616 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727611AbeHaODI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Aug 2018 08:50:37 -0400
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Sasidhar Mudigonda <sasidhar.mudigonda@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
-Subject: [PATCH] Bluetooth: btrsi: fix bt tx timeout issue
-Date: Wed, 29 Aug 2018 14:28:31 +0530
-Message-Id: <1535533111-18301-1-git-send-email-siva8118@gmail.com> (sfid-20180829_105457_213053_27EE03CD)
+        Fri, 31 Aug 2018 10:03:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:55:58 +0300
+Message-Id: <20180831095614.14099-1-luca@coelho.fi> (sfid-20180831_115633_347969_83DAC94A)
+Subject: [PATCH 00/16] iwlwifi: updates intended for v4.20 2018-08-
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-observed sometimes data is coming with unaligned address from kernel
-BT stack. If unaligned address is passed, some data in payload is
-stripped when packet is loading to firmware and this results, BT
-connection timeout is happening.
+Hi,
 
-sh# hciconfig hci0 up
-Can't init device hci0: hci0 command 0x0c03 tx timeout
+Here's the fourth set of patches intended for v4.20.  It's the usual
+development, with some small new features, cleanups and bugfixes.
 
-Fixed this by moving the data to aligned address.
+The changes are:
 
-Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
----
- drivers/bluetooth/btrsi.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+* TKIP implementation in new devices;
+* Fix for the shared antenna setting in 22000 series;
+* Report that we set the RU offset in HE code;
+* Fix some register addresses in 22000 series;
+* Some debugging and other general fixes;
+* A bunch of cleanups;
 
-diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
-index 60d1419..3951f7b 100644
---- a/drivers/bluetooth/btrsi.c
-+++ b/drivers/bluetooth/btrsi.c
-@@ -21,8 +21,9 @@
- #include <net/rsi_91x.h>
- #include <net/genetlink.h>
- 
--#define RSI_HEADROOM_FOR_BT_HAL	16
-+#define RSI_DMA_ALIGN	8
- #define RSI_FRAME_DESC_SIZE	16
-+#define RSI_HEADROOM_FOR_BT_HAL	(RSI_FRAME_DESC_SIZE + RSI_DMA_ALIGN)
- 
- struct rsi_hci_adapter {
- 	void *priv;
-@@ -70,6 +71,16 @@ static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
- 		bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
- 		kfree_skb(skb);
- 		skb = new_skb;
-+		if (!IS_ALIGNED((unsigned long)skb->data, RSI_DMA_ALIGN)) {
-+			u8 *skb_data = skb->data;
-+			int skb_len = skb->len;
-+
-+			skb_push(skb, RSI_DMA_ALIGN);
-+			skb_pull(skb, PTR_ALIGN(skb->data,
-+						RSI_DMA_ALIGN) - skb->data);
-+			memmove(skb->data, skb_data, skb_len);
-+			skb_trim(skb, skb_len);
-+		}
- 	}
- 
- 	return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+I have a lot of pending patches in our internal tree, so I'll probably
+send one or two more patchsets before sending the pull-request.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+David Spinadel (1):
+  iwlwifi: mvm: Support TKIP on gen2 data path
+
+Dreyfuss, Haim (1):
+  iwlwifi: mvm: cleanup dead code on resume flow for non unified image.
+
+Emmanuel Grumbach (2):
+  iwlwifi: mvm: fix a comment about the SP length
+  iwlwifi: dbg: don't crash if the firmware crashes in the middle of a
+    debug dump
+
+Erel Geron (1):
+  iwlwifi: fix non_shared_ant for 22000 devices
+
+Johannes Berg (5):
+  iwlwifi: RX API: remove unnecessary anonymous struct
+  iwlwifi: mvm: report RU offset is known
+  iwlwifi: remove ucode error tracepoint
+  iwlwifi: api: annotate compressed BA notif array sizes
+  iwlwifi: pcie: gen2: pull adding frags to helper routine
+
+Sara Sharon (3):
+  iwlwifi: fw: add a restart FW debug function
+  iwlwifi: fw: stop and start debugging using host command
+  iwlwifi: pcie: read correct prph address for newer devices
+
+Shahar S Matityahu (1):
+  iwlwifi: debug flow cleanup
+
+Shaul Triebitz (2):
+  iwlwifi: iwlmvm: fix typo when checking for TX Beamforming
+  iwlwifi: mvm: enable sending HE_AIR_SNIFFER command via debugfs
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c |   2 +-
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  |   5 +
+ .../net/wireless/intel/iwlwifi/fw/api/debug.h |  32 +++
+ .../net/wireless/intel/iwlwifi/fw/api/mac.h   |  14 +
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  28 +-
+ .../net/wireless/intel/iwlwifi/fw/api/sta.h   |   4 +-
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   6 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 251 +++++++++---------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  80 +++++-
+ .../intel/iwlwifi/iwl-devtrace-iwlwifi.h      |  55 ----
+ .../net/wireless/intel/iwlwifi/iwl-devtrace.c |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  23 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  53 ++++
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  11 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  14 +-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |   1 -
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   2 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  85 +++---
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  51 ++--
+ 20 files changed, 438 insertions(+), 284 deletions(-)
+
 -- 
-2.7.4
+2.18.0
