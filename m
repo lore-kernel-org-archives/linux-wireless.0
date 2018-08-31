@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32844 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726053AbeHNIAd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Aug 2018 04:00:33 -0400
-Date: Tue, 14 Aug 2018 07:14:48 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Grzegorz =?utf-8?Q?Duszy=C5=84ski?= <gfduszynski@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>
-Subject: Re: Cpu stall caused by hostapd running two interfaces
-Message-ID: <20180814051448.GA2400@redhat.com> (sfid-20180814_071606_908224_0DB526F6)
-References: <CAD7cUuBrMscCMzLHCdxaAf+m9XHLr6XWD+FmZqNSdAuYnKCZfw@mail.gmail.com>
- <20180813084123.GA18180@redhat.com>
- <87tvnycw2b.fsf@purkki.adurom.net>
- <CAD7cUuD8b_b3riHPTEXROW64HCF8S0F2_XHgikz1J_seq-QxXQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAD7cUuD8b_b3riHPTEXROW64HCF8S0F2_XHgikz1J_seq-QxXQ@mail.gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:45656 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728084AbeHaODM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 10:03:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:56:04 +0300
+Message-Id: <20180831095614.14099-7-luca@coelho.fi> (sfid-20180831_115637_300776_16386AAA)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 06/16] iwlwifi: iwlmvm: fix typo when checking for TX Beamforming
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 13, 2018 at 08:48:17PM +0200, Grzegorz Duszyński wrote:
-> Can I help you somehow with this ?
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Enable CONFIG_DEBUG_INFO=y in .config if not done already.
-Then do:
+Check the actual bit (mask) in Rx notification rate_n_flags.
 
-make net/mac80211/util.o
-gdb net/mac80211/util.o
-l *(ieee80211_regulatory_limit_wmm_params+0x6e)
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-and provide output of gdb l command, this should show code
-line number where oops occurs.
-
-Thanks
-Stanislaw
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index f415c72394ee..4400e69a39b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1150,7 +1150,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	he->data1 |= cpu_to_le16(he_type >> RATE_MCS_HE_TYPE_POS);
+ 
+-	if (rate_n_flags & RATE_MCS_BF_POS)
++	if (rate_n_flags & RATE_MCS_BF_MSK)
+ 		he->data5 |= cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA5_TXBF);
+ 
+ 	switch ((rate_n_flags & RATE_MCS_HE_GI_LTF_MSK) >>
+-- 
+2.18.0
