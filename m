@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60578 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727824AbeHaTxK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45768 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726990AbeHaOFi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:53:10 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] brcmfmac: add FT-based AKMs in brcmf_set_key_mgmt()
- for FT support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1534329160-131774-2-git-send-email-chi-hsien.lin@cypress.com>
-References: <1534329160-131774-2-git-send-email-chi-hsien.lin@cypress.com>
-To: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+        Fri, 31 Aug 2018 10:05:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-Id: <20180831154505.4A5A06049C@smtp.codeaurora.org> (sfid-20180831_174509_425111_F430AA73)
-Date: Fri, 31 Aug 2018 15:45:05 +0000 (UTC)
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:56:11 +0300
+Message-Id: <20180831095614.14099-14-luca@coelho.fi> (sfid-20180831_115859_574147_A9C26F22)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 13/16] iwlwifi: pcie: read correct prph address for newer devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chi-Hsien Lin <chi-hsien.lin@cypress.com> wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> 
-> Add WLAN_AKM_SUITE_FT_8021X and WLAN_AKM_SUITE_FT_PSK in
-> brcmf_set_key_mgmt() for FT support.
-> 
-> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+For newer devices we have higher range of periphery
+addresses. Currently it is masked out, so we end up
+reading another address.
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-4ad298da9392 brcmfmac: add FT-based AKMs in brcmf_set_key_mgmt() for FT support
-a858376cdbb3 brcmfmac: add 4-way handshake offload detection for FT-802.1X
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 93c336ebfa40..ab0a5a663a6d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1805,18 +1805,30 @@ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
+ 	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
++static u32 iwl_trans_pcie_prph_msk(struct iwl_trans *trans)
++{
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++		return 0x00FFFFFF;
++	else
++		return 0x000FFFFF;
++}
++
+ static u32 iwl_trans_pcie_read_prph(struct iwl_trans *trans, u32 reg)
+ {
++	u32 mask = iwl_trans_pcie_prph_msk(trans);
++
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_RADDR,
+-			       ((reg & 0x000FFFFF) | (3 << 24)));
++			       ((reg & mask) | (3 << 24)));
+ 	return iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
+ }
+ 
+ static void iwl_trans_pcie_write_prph(struct iwl_trans *trans, u32 addr,
+ 				      u32 val)
+ {
++	u32 mask = iwl_trans_pcie_prph_msk(trans);
++
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WADDR,
+-			       ((addr & 0x000FFFFF) | (3 << 24)));
++			       ((addr & mask) | (3 << 24)));
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WDAT, val);
+ }
+ 
 -- 
-https://patchwork.kernel.org/patch/10566487/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.18.0
