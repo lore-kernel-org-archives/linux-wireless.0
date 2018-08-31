@@ -1,97 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:43950 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727614AbeHaTL0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45686 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728084AbeHaODO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:11:26 -0400
-From: Igor Stoppa <igor.stoppa@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: igor.stoppa@gmail.com, Igor Stoppa <igor.stoppa@huawei.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless: remove unnecessary unlikely()
-Date: Fri, 31 Aug 2018 18:03:00 +0300
-Message-Id: <20180831150300.2702-1-igor.stoppa@huawei.com> (sfid-20180831_170450_059364_05E9C7DB)
+        Fri, 31 Aug 2018 10:03:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:56:07 +0300
+Message-Id: <20180831095614.14099-10-luca@coelho.fi> (sfid-20180831_115637_952613_AF175401)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 09/16] iwlwifi: dbg: don't crash if the firmware crashes in the middle of a debug dump
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both WARN_ON() and WARN_ON_ONCE() already contain unlikely().
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Igor Stoppa <igor.stoppa@huawei.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+We can dump data from the firmware either when it crashes,
+or when the firmware is alive.
+Not all the data is available if the firmware is running
+(like the Tx / Rx FIFOs which are available only when the
+firmware is halted), so we first check that the firmware
+is alive to compute the required size for the dump and then
+fill the buffer with the data.
+
+When we allocate the buffer, we test the STATUS_FW_ERROR
+bit to check if the firmware is alive or not. This bit
+can be changed during the course of the dump since it is
+modified in the interrupt handler.
+
+We hit a case where we allocate the buffer while the
+firmware is sill working, and while we start to fill the
+buffer, the firmware crashes. Then we test STATUS_FW_ERROR
+again and decide to fill the buffer with data like the
+FIFOs even if no room was allocated for this data in the
+buffer. This means that we overflow the buffer that was
+allocated leading to memory corruption.
+
+To fix this, test the STATUS_FW_ERROR bit only once and
+rely on local variables to check if we should dump fifos
+or other firmware components.
+
+Fixes: 04fd2c28226f ("iwlwifi: mvm: add rxf and txf to dump data")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c      | 4 ++--
- drivers/net/wireless/ath/carl9170/tx.c        | 4 ++--
- drivers/net/wireless/broadcom/b43/dma.c       | 2 +-
- drivers/net/wireless/broadcom/b43legacy/dma.c | 2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 4d1cd90d6d27..1455007f3eb8 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1176,11 +1176,11 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
- 	 */
- 
- 	/* This probably shouldn't happen but warn just in case */
--	if (unlikely(WARN_ON_ONCE(!is_first)))
-+	if (WARN_ON_ONCE(!is_first))
- 		return;
- 
- 	/* This probably shouldn't happen but warn just in case */
--	if (unlikely(WARN_ON_ONCE(!(is_first && is_last))))
-+	if (WARN_ON_ONCE(!(is_first && is_last)))
- 		return;
- 
- 	skb_trim(msdu, msdu->len - FCS_LEN);
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 0cb5b58925dc..8c75651ede6c 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -246,8 +246,8 @@ static void carl9170_release_dev_space(struct ar9170 *ar, struct sk_buff *skb)
- 	 *    of available memory blocks, so the number can
- 	 *    never execeed the mem_blocks count.
- 	 */
--	if (unlikely(WARN_ON_ONCE(cookie == 0) ||
--	    WARN_ON_ONCE(cookie > ar->fw.mem_blocks)))
-+	if (WARN_ON_ONCE(cookie == 0) ||
-+	    WARN_ON_ONCE(cookie > ar->fw.mem_blocks))
- 		return;
- 
- 	atomic_add(DIV_ROUND_UP(skb->len, ar->fw.mem_block_size),
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
-index 6b0e1ec346cb..d113bd997f4b 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1432,7 +1432,7 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
- 		goto out;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 5029fd91f0bb..0dcf1a673478 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -882,7 +882,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
  	}
  
--	if (unlikely(WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME))) {
-+	if (WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
- 		/* If we get here, we have a real error with the queue
- 		 * full, but queues not stopped. */
- 		b43err(dev->wl, "DMA queue overflow\n");
-diff --git a/drivers/net/wireless/broadcom/b43legacy/dma.c b/drivers/net/wireless/broadcom/b43legacy/dma.c
-index 2f0c64cef65f..1b1da7d83652 100644
---- a/drivers/net/wireless/broadcom/b43legacy/dma.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/dma.c
-@@ -1149,7 +1149,7 @@ int b43legacy_dma_tx(struct b43legacy_wldev *dev,
- 		return -ENOSPC;
- 	}
- 
--	if (unlikely(WARN_ON(free_slots(ring) < SLOTS_PER_PACKET))) {
-+	if (WARN_ON(free_slots(ring) < SLOTS_PER_PACKET)) {
- 		/* If we get here, we have a real error with the queue
- 		 * full, but queues not stopped. */
- 		b43legacyerr(dev->wl, "DMA queue overflow\n");
+ 	/* We only dump the FIFOs if the FW is in error state */
+-	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
++	if (fifo_data_len) {
+ 		iwl_fw_dump_fifos(fwrt, &dump_data);
+ 		if (radio_len)
+ 			iwl_read_radio_regs(fwrt, &dump_data);
 -- 
-2.17.1
+2.18.0
