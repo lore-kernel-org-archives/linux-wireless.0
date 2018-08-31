@@ -1,40 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:43743 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726615AbeHUUsR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45448 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727410AbeHaMp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Aug 2018 16:48:17 -0400
-Date: Tue, 21 Aug 2018 10:27:11 -0700
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] workqueue: skip lockdep wq dependency in
- cancel_work_sync()
-Message-ID: <20180821172711.GR3978217@devbig004.ftw2.facebook.com> (sfid-20180821_192725_761527_55888B0B)
-References: <20180821120317.4115-1-johannes@sipsolutions.net>
- <20180821120317.4115-2-johannes@sipsolutions.net>
- <20180821160814.GP3978217@devbig004.ftw2.facebook.com>
- <1534871894.25523.34.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1534871894.25523.34.camel@sipsolutions.net>
+        Fri, 31 Aug 2018 08:45:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:12 +0300
+Message-Id: <20180831083130.15525-11-luca@coelho.fi> (sfid-20180831_103937_402313_8544B8FF)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 10/28] mac80211: don't Tx a deauth frame if the AP forbade Tx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Johannes.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Tue, Aug 21, 2018 at 07:18:14PM +0200, Johannes Berg wrote:
-> > But this can lead to a deadlock.  I'd much rather err on the side of
-> > discouraging complex lock dancing around ordered workqueues, no?
-> 
-> What can lead to a deadlock?
+If the driver fails to properly prepare for the channel
+switch, mac80211 will disconnect. If the CSA IE had mode
+set to 1, it means that the clients are not allowed to send
+any Tx on the current channel, and that includes the
+deauthentication frame.
 
-Oh not this particular case, but I was wondering whether we'd be
-missing legitimate possible deadlock cases by skipping lockdep for all
-cancel_work_sync()'s as they can actually flush.
+Make sure that we don't send the deauthentication frame in
+this case.
 
-Thanks.
+In iwlwifi, this caused a failure to flush queues since the
+firmware already closed the queues after having parsed the
+CSA IE. Then mac80211 would wait until the deauthentication
+frame would go out (drv_flush(drop=false)) and that would
+never happen.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/mlme.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4b53bbd10a3a..3dbecae4be73 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1365,6 +1365,16 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 					 cbss->beacon_interval));
+ 	return;
+  drop_connection:
++	/*
++	 * This is just so that the disconnect flow will know that
++	 * we were trying to switch channel and failed. In case the
++	 * mode is 1 (we are not allowed to Tx), we will know not to
++	 * send a deauthentication frame. Those two fields will be
++	 * reset when the disconnection worker runs.
++	 */
++	sdata->vif.csa_active = true;
++	sdata->csa_block_tx = csa_ie.mode;
++
+ 	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+@@ -2575,6 +2585,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++	bool tx;
+ 
+ 	sdata_lock(sdata);
+ 	if (!ifmgd->associated) {
+@@ -2582,6 +2593,8 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 		return;
+ 	}
+ 
++	tx = !sdata->csa_block_tx;
++
+ 	/* AP is probably out of range (or not reachable for another reason) so
+ 	 * remove the bss struct for that AP.
+ 	 */
+@@ -2589,7 +2602,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-			       true, frame_buf);
++			       tx, frame_buf);
+ 	mutex_lock(&local->mtx);
+ 	sdata->vif.csa_active = false;
+ 	ifmgd->csa_waiting_bcn = false;
+@@ -2600,7 +2613,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 	mutex_unlock(&local->mtx);
+ 
+-	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
++	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), tx,
+ 				    WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+ 
+ 	sdata_unlock(sdata);
 -- 
-tejun
+2.18.0
