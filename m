@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36276 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728122AbeHCLXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Aug 2018 07:23:53 -0400
-Date: Fri, 3 Aug 2018 11:28:23 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Wireless <linux-wireless@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mt76x0: build driver only as module
-Message-ID: <20180803092822.GD10284@redhat.com> (sfid-20180803_112836_360503_DCDEA989)
-References: <20180803091401.GB10284@redhat.com>
- <87zhy36c4n.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87zhy36c4n.fsf@kamboji.qca.qualcomm.com>
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:52231 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727363AbeHaFPd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 01:15:33 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH 0/3] support ftm responder configuration/statistics
+Date: Thu, 30 Aug 2018 18:10:20 -0700
+Message-Id: <1535677820-32588-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180831_031059_402875_E3268C1A)
+In-Reply-To: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
+References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 03, 2018 at 12:19:20PM +0300, Kalle Valo wrote:
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> 
-> > There are various symbols that conflicts with mt7601u.
-> > Due to that kernel will not build with allyesconfig.
-> > For now limit the driver to be build only as module.
-> >
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> Thanks for the quick patch!
-> 
-> > --- a/drivers/net/wireless/mediatek/mt76/Kconfig
-> > +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-> > @@ -11,7 +11,7 @@ config MT76x2_COMMON
-> >  
-> >  config MT76x0U
-> >  	tristate "MediaTek MT76x0U (USB) support"
-> > -	depends on MAC80211
-> > +	depends on MAC80211 && m
-> 
-> But this feels like an ugly hack to me. Isn't there a better way to fix
-> this? (I don't have time to investigate the error in detail right now.)
+Currently ftm_responder parameter in hostapd.conf is only used for fine
+timing measurement (FTM) capability advertisement and actual control of
+the functionality is with low-level device/driver. This leads to confusion
+to the user when the capability advertisement is different from actual FTM
+responder functionality.
 
-Yes, rename symbols names. And I will do this, just wanted to provide
-quick fix for the problem. 
+For example, FTM responder capability advertisement is set to 'enabled',
+but the functionality is disabled or not supported by the driver.
 
-Moreover seems the same thing should be done for mt7601u to avoid build
-errors and perhaps with mt76 :-( 
+The patch set allows userspace to enable FTM responder functionality
+with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
+with configurable lci/civic ocation parameters. Also extended feature flag
+is added for the drivers to advertise the support. Setting the flag to
+enable FTM responder would imply that AP responds to all FTM requests.
+Default is considered to be disabled.
 
-So I'm going to rename functions.
+Johannes Berg, Pradeep Kumar Chitrapu (1):
+  cfg80211: support FTM responder configuration/statistics
 
-Regards
-Stanislaw 
+David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
+  mac80211: support FTM responder configuration/statistics
+
+Pradeep Kumar Chitrapu (1):
+  ath10k: Add support to configure ftm responder role
+
+ drivers/net/wireless/ath/ath10k/core.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  29 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
+ include/net/cfg80211.h                 |  66 +++++++++++++++++++
+ include/net/mac80211.h                 |  12 ++++
+ include/uapi/linux/nl80211.h           |  71 ++++++++++++++++++++
+ net/mac80211/cfg.c                     |  74 +++++++++++++++++++++
+ net/mac80211/driver-ops.h              |  16 +++++
+ net/mac80211/trace.h                   |  23 +++++++
+ net/mac80211/util.c                    |   3 +
+ net/wireless/nl80211.c                 | 115 +++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h                |  15 +++++
+ net/wireless/trace.h                   |  44 +++++++++++++
+ 14 files changed, 478 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
