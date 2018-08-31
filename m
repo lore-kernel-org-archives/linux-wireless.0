@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34254 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727957AbeHaTzw (ORCPT
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:34872 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727655AbeHaRX5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 15:55:52 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 31 Aug 2018 13:23:57 -0400
 MIME-Version: 1.0
-Subject: Re: [PATCH] rt2x00: use simple_read_from_buffer()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180822104126.2logh4tqxkmiomqy@kili.mountain>
-References: <20180822104126.2logh4tqxkmiomqy@kili.mountain>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20180831154746.482A460242@smtp.codeaurora.org> (sfid-20180831_174755_624372_F5AE70A3)
-Date: Fri, 31 Aug 2018 15:47:46 +0000 (UTC)
+References: <1535533111-18301-1-git-send-email-siva8118@gmail.com>
+In-Reply-To: <1535533111-18301-1-git-send-email-siva8118@gmail.com>
+From: Siva Rebbagondla <siva8118@gmail.com>
+Date: Fri, 31 Aug 2018 18:50:27 +0530
+Message-ID: <CANGSkXTRHFF7VYso5-X16OL=xJMBu2ELd_CLrcBtfoSP0KdSQg@mail.gmail.com> (sfid-20180831_151646_123833_FB333989)
+Subject: Re: [PATCH] Bluetooth: btrsi: fix bt tx timeout issue
+To: Marcel Holtmann <marcel@holtmann.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Sasidhar Mudigonda <sasidhar.mudigonda@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+On Wed, Aug 29, 2018 at 2:24 PM Siva Rebbagondla <siva8118@gmail.com> wrote:
+>
+> From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+>
+> observed sometimes data is coming with unaligned address from kernel
+> BT stack. If unaligned address is passed, some data in payload is
+> stripped when packet is loading to firmware and this results, BT
+> connection timeout is happening.
+>
+> sh# hciconfig hci0 up
+> Can't init device hci0: hci0 command 0x0c03 tx timeout
+>
+> Fixed this by moving the data to aligned address.
+>
+> Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> ---
+>  drivers/bluetooth/btrsi.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/bluetooth/btrsi.c b/drivers/bluetooth/btrsi.c
+> index 60d1419..3951f7b 100644
+> --- a/drivers/bluetooth/btrsi.c
+> +++ b/drivers/bluetooth/btrsi.c
+> @@ -21,8 +21,9 @@
+>  #include <net/rsi_91x.h>
+>  #include <net/genetlink.h>
+>
+> -#define RSI_HEADROOM_FOR_BT_HAL        16
+> +#define RSI_DMA_ALIGN  8
+>  #define RSI_FRAME_DESC_SIZE    16
+> +#define RSI_HEADROOM_FOR_BT_HAL        (RSI_FRAME_DESC_SIZE + RSI_DMA_ALIGN)
+>
+>  struct rsi_hci_adapter {
+>         void *priv;
+> @@ -70,6 +71,16 @@ static int rsi_hci_send_pkt(struct hci_dev *hdev, struct sk_buff *skb)
+>                 bt_cb(new_skb)->pkt_type = hci_skb_pkt_type(skb);
+>                 kfree_skb(skb);
+>                 skb = new_skb;
+> +               if (!IS_ALIGNED((unsigned long)skb->data, RSI_DMA_ALIGN)) {
+> +                       u8 *skb_data = skb->data;
+> +                       int skb_len = skb->len;
+> +
+> +                       skb_push(skb, RSI_DMA_ALIGN);
+> +                       skb_pull(skb, PTR_ALIGN(skb->data,
+> +                                               RSI_DMA_ALIGN) - skb->data);
+> +                       memmove(skb->data, skb_data, skb_len);
+> +                       skb_trim(skb, skb_len);
+> +               }
+>         }
+>
+>         return h_adapter->proto_ops->coex_send_pkt(h_adapter->priv, skb,
+> --
+> 2.7.4
+>
+Kindly ignore this.
+Instead of adding linux-kernel@vger.kernel.org, I have added
+linux-wireless@vger.kernel.org, which results, this
+patch is showing in linux-wireless patch work.
+I will resend this patch by removing, "linux-wireless" from mailing list.
 
-> The problem with this copy_to_user() calls is that they don't ensure
-> that "size" is less than the "length" which the user provided.
-> 
-> Obviously, this is debugfs and "size" is normally going to be very small
-> so it probably doesn't matter, but this is the correct thing to do.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-f483039cf51a rt2x00: use simple_read_from_buffer()
-
--- 
-https://patchwork.kernel.org/patch/10572845/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+Siva Rebbagondla.
