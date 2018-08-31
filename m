@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:42045 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727026AbeH0Tta (ORCPT
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:61270 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727203AbeIAAGD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 15:49:30 -0400
-Received: by mail-qt0-f177.google.com with SMTP id z8-v6so18591647qto.9
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Aug 2018 09:02:18 -0700 (PDT)
-Received: from [10.200.205.208] (users.ccs.neu.edu. [129.10.110.12])
-        by smtp.gmail.com with ESMTPSA id o18-v6sm8380704qtm.84.2018.08.27.09.02.15
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 27 Aug 2018 09:02:16 -0700 (PDT)
-From: Milan Stute <milan.stute@seemoo.tu-darmstadt.de>
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
-Subject: Neighbor Awareness Networking status inquiry
-Message-Id: <7C58C7E1-923F-4911-BBAA-A5C51BAAB345@seemoo.tu-darmstadt.de> (sfid-20180827_180222_286810_F87D7371)
-Date: Mon, 27 Aug 2018 12:02:14 -0400
-To: linux-wireless@vger.kernel.org
+        Fri, 31 Aug 2018 20:06:03 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v2 0/3] support ftm responder configuration/statistics
+Date: Fri, 31 Aug 2018 12:56:55 -0700
+Message-Id: <1535745418-31336-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180831_215707_135456_A3E00913)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Currently ftm_responder parameter in hostapd.conf is only used for fine
+timing measurement (FTM) capability advertisement and actual control of
+the functionality is with low-level device/driver. This leads to confusion
+to the user when the capability advertisement is different from actual FTM
+responder functionality.
 
-Can you tell me what is the status of bringing Neighbor Awareness =
-Networking (NAN) to the Linux WLAN stack? The last entry in the mailing =
-list I found dates back to 2016-10-04. Google introduced NAN support in =
-Android 8.0 but requires a manufacturer-depended firmware =
-implementation. Are there similar plans for Linux?
+For example, FTM responder capability advertisement is set to 'enabled',
+but the functionality is disabled or not supported by the driver.
 
-Best regards,
-Milan
+The patch set allows userspace to enable FTM responder functionality
+with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
+with configurable lci/civic ocation parameters. Also extended feature flag
+is added for the drivers to advertise the support. Setting the flag to
+enable FTM responder would imply that AP responds to all FTM requests.
+Default is considered to be disabled.
 
-[1] https://source.android.com/devices/tech/connect/wifi-aware
+changes in V2:
+- updated version number
+- rebased patches
 
---
-Milan Stute
-Secure Mobile Networking Lab =E2=80=93 SEEMOO
-Technische Universit=C3=A4t Darmstadt
+Johannes Berg, Pradeep Kumar Chitrapu (1):
+  cfg80211: support FTM responder configuration/statistics
+
+David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
+  mac80211: support FTM responder configuration/statistics
+
+Pradeep Kumar Chitrapu (1):
+  ath10k: Add support to configure ftm responder role
+
+ drivers/net/wireless/ath/ath10k/core.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  29 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
+ include/net/cfg80211.h                 |  66 +++++++++++++++++++
+ include/net/mac80211.h                 |  12 ++++
+ include/uapi/linux/nl80211.h           |  71 ++++++++++++++++++++
+ net/mac80211/cfg.c                     |  74 +++++++++++++++++++++
+ net/mac80211/driver-ops.h              |  16 +++++
+ net/mac80211/trace.h                   |  23 +++++++
+ net/mac80211/util.c                    |   3 +
+ net/wireless/nl80211.c                 | 115 +++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h                |  15 +++++
+ net/wireless/trace.h                   |  44 +++++++++++++
+ 14 files changed, 478 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
