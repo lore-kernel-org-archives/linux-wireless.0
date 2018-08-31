@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:50802 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727169AbeH1MxC (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45540 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727222AbeHaNBK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Aug 2018 08:53:02 -0400
-Message-ID: <1535446933.5895.17.camel@sipsolutions.net> (sfid-20180828_110242_445862_03077362)
-Subject: Re: [PATCH 1/7] wireless: Change single cqm_config to rssi config
- list
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 28 Aug 2018 11:02:13 +0200
-In-Reply-To: <b01b72d2d5796c627d060e0d3a517f3f@codeaurora.org>
-References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
-         <1528886747-26342-2-git-send-email-tamizhr@codeaurora.org>
-         <1530264405.3481.31.camel@sipsolutions.net>
-         <32a52d2ea57526cfe8c6311e6e34aaac@codeaurora.org>
-         <1530877576.3197.11.camel@sipsolutions.net>
-         <b01b72d2d5796c627d060e0d3a517f3f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 31 Aug 2018 09:01:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 31 Aug 2018 11:31:19 +0300
+Message-Id: <20180831083130.15525-18-luca@coelho.fi> (sfid-20180831_105449_387424_290EC0E6)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 17/28] mac80211: copy VHT EXT NSS BW Support/Capable data to station
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-07-11 at 12:24 +0530, Tamizh chelvam wrote:
-> 
-> > Again though - see above. I'm not sure it's even correct to link it to
-> > the BSSID since until now, I think the configuration would remain 
-> > across
-> > roaming?
-> > 
-> 
-> As mentioned above storing configuration parameters in mac80211 will 
-> avoid this list implementation here.
-> So, no need of worrying about those roaming scenario know ?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think we should tie it to the station lifetime and have it
-reconfigured on roaming etc., and if that means it's easier by storing
-in mac80211 I have no objection.
+When taking VHT capabilities for a station, copy the new
+fields if we support them as a transmitter. Also adjust
+the maximum bandwidth the station supports appropriately.
 
-johannes
+Also, since it was missing, copy tx_highest and rx_highest.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/vht.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index 259325cbcc31..006d82e4a397 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -3,6 +3,7 @@
+  *
+  * Portions of this file
+  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -231,6 +232,13 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(&vht_cap->vht_mcs, &vht_cap_ie->supp_mcs,
+ 	       sizeof(struct ieee80211_vht_mcs_info));
+ 
++	/* copy EXT_NSS_BW Support value or remove the capability */
++	if (ieee80211_hw_check(&sdata->local->hw, SUPPORTS_VHT_EXT_NSS_BW))
++		vht_cap->cap |= (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
++	else
++		vht_cap->vht_mcs.tx_highest &=
++			~cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
++
+ 	/* but also restrict MCSes */
+ 	for (i = 0; i < 8; i++) {
+ 		u16 own_rx, own_tx, peer_rx, peer_tx;
+@@ -294,6 +302,18 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	default:
+ 		sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_80;
++
++		if (!(vht_cap->vht_mcs.tx_highest &
++				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE)))
++			break;
++
++		/*
++		 * If this is non-zero, then it does support 160 MHz after all,
++		 * in one form or the other. We don't distinguish here (or even
++		 * above) between 160 and 80+80 yet.
++		 */
++		if (cap_info & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK)
++			sta->cur_max_bandwidth = IEEE80211_STA_RX_BW_160;
+ 	}
+ 
+ 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+-- 
+2.18.0
