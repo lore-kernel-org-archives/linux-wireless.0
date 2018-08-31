@@ -1,125 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45496 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:45744 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727462AbeHaMzf (ORCPT
+        with ESMTP id S1726990AbeHaOF0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Aug 2018 08:55:35 -0400
+        Fri, 31 Aug 2018 10:05:26 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 31 Aug 2018 11:31:24 +0300
-Message-Id: <20180831083130.15525-23-luca@coelho.fi> (sfid-20180831_104945_014373_B33D0ED7)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH 22/28] mac80211: avoid kernel panic when building AMSDU from non-linear SKB
+Date: Fri, 31 Aug 2018 12:56:13 +0300
+Message-Id: <20180831095614.14099-16-luca@coelho.fi> (sfid-20180831_115849_494066_8D4D532F)
+In-Reply-To: <20180831095614.14099-1-luca@coelho.fi>
+References: <20180831095614.14099-1-luca@coelho.fi>
+Subject: [PATCH 15/16] iwlwifi: api: annotate compressed BA notif array sizes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Annotate the compressed BA notification array sizes and
+make both of them 0-length since the length of 1 is just
+confusing - it may be different than that and the offset
+to the second one needs to be calculated in the C code
+anyhow.
 
-When building building AMSDU from non-linear SKB, we hit a
-kernel panic when trying to push the padding to the tail.
-Instead, put the padding at the head of the next subframe.
-This also fixes the A-MSDU subframes to not have the padding
-accounted in the length field and not have pad at all for
-the last subframe, both required by the spec.
-
-Fixes: 6e0456b54545 ("mac80211: add A-MSDU tx support")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/tx.c | 38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6eced0626522..dc3e81e59569 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3095,27 +3095,18 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 135135d80d4d..358bdf051e83 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -747,9 +747,9 @@ enum iwl_mvm_ba_resp_flags {
+  * @tfd_cnt: number of TFD-Q elements
+  * @ra_tid_cnt: number of RATID-Q elements
+  * @tfd: array of TFD queue status updates. See &iwl_mvm_compressed_ba_tfd
+- *	for details.
++ *	for details. Length in @tfd_cnt.
+  * @ra_tid: array of RA-TID queue status updates. For debug purposes only. See
+- *	&iwl_mvm_compressed_ba_ratid for more details.
++ *	&iwl_mvm_compressed_ba_ratid for more details. Length in @ra_tid_cnt.
+  */
+ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 flags;
+@@ -766,7 +766,7 @@ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 tx_rate;
+ 	__le16 tfd_cnt;
+ 	__le16 ra_tid_cnt;
+-	struct iwl_mvm_compressed_ba_tfd tfd[1];
++	struct iwl_mvm_compressed_ba_tfd tfd[0];
+ 	struct iwl_mvm_compressed_ba_ratid ra_tid[0];
+ } __packed; /* COMPRESSED_BA_RES_API_S_VER_4 */
  
- static bool ieee80211_amsdu_realloc_pad(struct ieee80211_local *local,
--					struct sk_buff *skb, int headroom,
--					int *subframe_len)
-+					struct sk_buff *skb, int headroom)
- {
--	int amsdu_len = *subframe_len + sizeof(struct ethhdr);
--	int padding = (4 - amsdu_len) & 3;
--
--	if (skb_headroom(skb) < headroom || skb_tailroom(skb) < padding) {
-+	if (skb_headroom(skb) < headroom) {
- 		I802_DEBUG_INC(local->tx_expand_skb_head);
- 
--		if (pskb_expand_head(skb, headroom, padding, GFP_ATOMIC)) {
-+		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
- 			wiphy_debug(local->hw.wiphy,
- 				    "failed to reallocate TX buffer\n");
- 			return false;
- 		}
- 	}
- 
--	if (padding) {
--		*subframe_len += padding;
--		skb_put_zero(skb, padding);
--	}
--
- 	return true;
- }
- 
-@@ -3139,8 +3130,7 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
- 	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
- 		return true;
- 
--	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr),
--					 &subframe_len))
-+	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr)))
- 		return false;
- 
- 	data = skb_push(skb, sizeof(*amsdu_hdr));
-@@ -3206,7 +3196,8 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	void *data;
- 	bool ret = false;
- 	unsigned int orig_len;
--	int n = 1, nfrags;
-+	int n = 1, nfrags, pad = 0;
-+	u16 hdrlen;
- 
- 	if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
- 		return false;
-@@ -3257,8 +3248,19 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	if (max_frags && nfrags > max_frags)
- 		goto out;
- 
--	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) + 2,
--					 &subframe_len))
-+	/*
-+	 * Pad out the previous subframe to a multiple of 4 by adding the
-+	 * padding to the next one, that's being added. Note that head->len
-+	 * is the length of the full A-MSDU, but that works since each time
-+	 * we add a new subframe we pad out the previous one to a multiple
-+	 * of 4 and thus it no longer matters in the next round.
-+	 */
-+	hdrlen = fast_tx->hdr_len - sizeof(rfc1042_header);
-+	if ((head->len - hdrlen) & 3)
-+		pad = 4 - ((head->len - hdrlen) & 3);
-+
-+	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
-+						     2 + pad))
- 		goto out;
- 
- 	ret = true;
-@@ -3270,6 +3272,8 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	memcpy(data, &len, 2);
- 	memcpy(data + 2, rfc1042_header, sizeof(rfc1042_header));
- 
-+	memset(skb_push(skb, pad), 0, pad);
-+
- 	head->len += skb->len;
- 	head->data_len += skb->len;
- 	*frag_tail = skb;
 -- 
 2.18.0
