@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35890 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727768AbeHINIa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45828 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727432AbeHaSGH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Aug 2018 09:08:30 -0400
-Date: Thu, 9 Aug 2018 13:43:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH] staging: wilc1000: fix undefined reference to
- `__this_module' compilation error
-Message-ID: <20180809104358.gg7mwmw57eawyqvd@mwanda> (sfid-20180809_124418_012695_BCCB37C8)
-References: <1533796986-8832-1-git-send-email-ajay.kathat@microchip.com>
- <20180809100838.pduj5s5lvbpjuljn@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180809100838.pduj5s5lvbpjuljn@mwanda>
+        Fri, 31 Aug 2018 14:06:07 -0400
+Message-ID: <bee7acd19d5d340897233b303f50ef40963b2457.camel@coelho.fi> (sfid-20180831_155835_018353_B7FC7936)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>
+Date: Fri, 31 Aug 2018 16:58:24 +0300
+In-Reply-To: <8736uuu6he.fsf@purkki.adurom.net>
+References: <20180831083130.15525-1-luca@coelho.fi>
+         <20180831083130.15525-22-luca@coelho.fi> <877ek6u6mv.fsf@purkki.adurom.net>
+         <8736uuu6he.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 21/28] wireless: align to draft 11ax D3.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 09, 2018 at 01:08:38PM +0300, Dan Carpenter wrote:
-> On Thu, Aug 09, 2018 at 12:13:06PM +0530, Ajay Singh wrote:
-> >  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> > -	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-> > -		info = &debugfs_info[i];
-> > -		debugfs_create_file(info->name,
-> > -				    info->perm,
-> > -				    wilc_dir,
-> > -				    &info->data,
-> > -				    &info->fops);
-> > +	if (IS_ERR_OR_NULL(wilc_dir)) {
-> > +		pr_err("Error creating debugfs\n");
-> > +		return -EFAULT;
-> >  	}
+On Fri, 2018-08-31 at 14:21 +0300, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
 > 
-> Just check for NULL.  If someone builds without debugfs enabled in their
-> .config, that's their choice.  No need to print a warning.
+> > Luca Coelho <luca@coelho.fi> writes:
+> > 
+> > > )
+> > > 
+> > > From: Shaul Triebitz <shaul.triebitz@intel.com>
+> > 
+> > That ')' in the first line doesn't look correct and don't know how
+> > patchwork or git will handle it.
 > 
+> Actually all patches from 20 to 28 seem to have the same problem.
 
-Reading it again, I'm not sure my email was clear...  Just do this:
+Bah, were on Earth did this come from?! If it were in a single patch,
+I'd assume I accidentally typed it when editing or something, but in 9
+consecutive patches?! Very weird.
 
-	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-	if (!wilc_dir)) {
-		pr_err("Error creating debugfs/wilc_wifi/\n");
-		return;
-	}
+I'll resend this stuff.
 
-If debugfs_create_dir() returns an error pointer it means all the other
-debugfs functions are also just no-op stub functions.  Passing an error
-pointer to them is harmless.
-
-regards,
-dan carpenter
+--
+Luca.
