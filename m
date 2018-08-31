@@ -1,69 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51602 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbeH3M5H (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Aug 2018 08:57:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: always account for A-MSDU header changes
-Date: Thu, 30 Aug 2018 10:55:49 +0200
-Message-Id: <20180830085549.21955-1-johannes@sipsolutions.net> (sfid-20180830_105604_216531_F0625A1D)
+Received: from mail.toke.dk ([52.28.52.200]:54065 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728458AbeHaSaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 14:30:20 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
+In-Reply-To: <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com>
+References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org> <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 31 Aug 2018 16:22:35 +0200
+Message-ID: <87zhx21uqc.fsf@toke.dk> (sfid-20180831_162242_180881_B8371801)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-In the error path of changing the SKB headroom of the second
-A-MSDU subframe, we would not account for the already-changed
-length of the first frame that just got converted to be in
-A-MSDU format and thus is a bit longer now.
+> Anilkumar Kolli <akolli@codeaurora.org> writes:
+>
+>> Mesh path metric needs txrate information from ieee80211_tx_status()
+>> call but in ath10k there is no mechanism to report tx rate information
+>> via ieee80211_tx_status(), the rate is only accessible via
+>> sta_statiscs() op.
+>>
+>> Per peer stats has tx rate info available, this patch stores per peer
+>> last tx rate and updates the tx rate info structures in tx completition.
+>> The rate updated in ieee80211_tx_status() is not exactly for the last
+>> transmitted frame instead the rate is from one of the previous frames.
+>>
+>> Per peer txrate information is updated through per peer statistics
+>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+>>
+>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+>>
+>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+>
+> This is a patch from last March, full patch here:
+>
+> https://patchwork.kernel.org/patch/10267693/
+>
+>> @@ -119,6 +122,18 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+>>  			info->flags &= ~IEEE80211_TX_STAT_ACK;
+>>  	}
+>>  
+>> +	if (sta) {
+>> +		spin_lock_bh(&ar->data_lock);
+>> +		arsta = (struct ath10k_sta *)sta->drv_priv;
+>> +		info->status.rates[0].idx =
+>> +			arsta->tx_info.status.rates[0].idx;
+>> +		info->status.rates[0].count =
+>> +			arsta->tx_info.status.rates[0].count;
+>> +		info->status.rates[0].flags =
+> <> +			arsta->tx_info.status.rates[0].flags;
+>> +		spin_unlock_bh(&ar->data_lock);
+>> +	}
+>> +
+>>  	ieee80211_tx_status(htt->ar->hw, msdu);
+>>  	/* we do not own the msdu anymore */
+>
+> "is not exactly" is IMHO an understatement. What it means that with this
+> patch ath10k reports the rate information from another frame instead of
+> the current skb, because the firmware provides the rate information "out
+> of band". A simple example to clarify:
+>
+>    Let's say ath10k transmits frames A, B and C. Then ath10k calls
+>    ieee80211_tx_status() for frame C the rate information could be for
+>    frame A, or it could be the other around for frame A status the rate
+>    information is from frame C.
+>
+> In other words, there's no guarantee from what frame the rate
+> information is from.
+>
+> Too me this feels like a bad idea but I'm not familiar enough with
+> mac80211 to really comment on this. What kind of implications does this
+> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
+> about their opinion about this.
 
-Fix this by doing the necessary accounting.
+I was under the impression that the values gathered (at least for
+airtime) would be cumulative values? If it's just the airtime of a
+single random frame, which is what I understand from your example, it's
+not going to be terribly useful to provide ATF at least...
 
-It would be possible to reorder the operations, but that would
-make the code more complex (to calculate the necessary pad),
-and the headroom expansion should not fail frequently enough
-to make that worthwhile.
-
-Fixes: 6e0456b54545 ("mac80211: add A-MSDU tx support")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1aac5e3c7eee..6ca0865de945 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3239,7 +3239,7 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 
- 	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) +
- 						     2 + pad))
--		goto out;
-+		goto out_recalc;
- 
- 	ret = true;
- 	data = skb_push(skb, ETH_ALEN + 2);
-@@ -3256,11 +3256,13 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 	head->data_len += skb->len;
- 	*frag_tail = skb;
- 
--	flow->backlog += head->len - orig_len;
--	tin->backlog_bytes += head->len - orig_len;
--
--	fq_recalc_backlog(fq, tin, flow);
-+out_recalc:
-+	if (head->len != orig_len) {
-+		flow->backlog += head->len - orig_len;
-+		tin->backlog_bytes += head->len - orig_len;
- 
-+		fq_recalc_backlog(fq, tin, flow);
-+	}
- out:
- 	spin_unlock_bh(&fq->lock);
- 
--- 
-2.14.4
+-Toke
