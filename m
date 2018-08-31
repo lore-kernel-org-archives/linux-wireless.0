@@ -1,40 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:14807 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730915AbeHAMyE (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45434 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727568AbeHaMnq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Aug 2018 08:54:04 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 0/2] staging: wilc1000: fix endianness issues identified by sparse
-Date: Wed, 1 Aug 2018 16:40:58 +0530
-Message-ID: <1533121860-20820-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180801_130851_995771_AEC77869)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 31 Aug 2018 08:43:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 11:31:25 +0300
+Message-Id: <20180831083130.15525-24-luca@coelho.fi> (sfid-20180831_103728_992411_C1C6605A)
+In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+Subject: [PATCH 23/28] mac80211: add an option for station management TXQ
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series has changes to fix the sparse warnings & use correct
-byte-order conversion. It also includes changes to use correct datatype for
-'wid' in cfg struct.
+)
 
-Ajay Singh (2):
-  staging: wilc1000: use 'u16' data type for config id parameter
-  staging: wilc1000: fix endianness warnings reported by sparse
+From: Sara Sharon <sara.sharon@intel.com>
 
- drivers/staging/wilc1000/linux_mon.c              |  1 +
- drivers/staging/wilc1000/wilc_sdio.c              |  4 ++--
- drivers/staging/wilc1000/wilc_spi.c               |  8 ++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 ++++--
- drivers/staging/wilc1000/wilc_wlan.c              | 12 ++++++------
- drivers/staging/wilc1000/wilc_wlan_cfg.c          | 21 ++++++++++-----------
- drivers/staging/wilc1000/wilc_wlan_cfg.h          |  4 ++--
- 7 files changed, 29 insertions(+), 27 deletions(-)
+We have a TXQ abstraction for non-data packets that need
+powersave buffering. Since the AP cannot sleep, in case
+of station we can use this TXQ for all management frames,
+regardless if they are bufferable. Add HW flag to allow
+that.
 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h |  5 +++++
+ net/mac80211/debugfs.c |  1 +
+ net/mac80211/tx.c      | 14 +++++++++++---
+ 3 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ddfa7f325b34..1d1dbd8123a4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2157,6 +2157,10 @@ struct ieee80211_txq {
+  *	but if the rate control is built-in then it must be set by the driver.
+  *	See also the documentation for that flag.
+  *
++ * @IEEE80211_HW_STA_MMPDU_TXQ: use the extra non-TID per-station TXQ for all
++ *	MMPDUs on station interfaces. This of course requires the driver to use
++ *	TXQs to start with.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2204,6 +2208,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP,
+ 	IEEE80211_HW_BUFF_MMPDU_TXQ,
+ 	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
++	IEEE80211_HW_STA_MMPDU_TXQ,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index fb45eb5d1dc4..3fe541e358f3 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -217,6 +217,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(DOESNT_SUPPORT_QOS_NDP),
+ 	FLAG(BUFF_MMPDU_TXQ),
+ 	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
++	FLAG(STA_MMPDU_TXQ),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index dc3e81e59569..b184906611b6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1251,7 +1251,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
+ 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
+-		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
++		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
++		     vif->type == NL80211_IFTYPE_STATION) &&
+ 		    sta && sta->uploaded) {
+ 			/*
+ 			 * This will be NULL if the driver didn't set the
+@@ -1456,9 +1457,16 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (tid == IEEE80211_NUM_TIDS) {
+-		/* Drivers need to opt in to the bufferable MMPDU TXQ */
+-		if (!ieee80211_hw_check(&sdata->local->hw, BUFF_MMPDU_TXQ))
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			/* Drivers need to opt in to the management MPDU TXQ */
++			if (!ieee80211_hw_check(&sdata->local->hw,
++						STA_MMPDU_TXQ))
++				return;
++		} else if (!ieee80211_hw_check(&sdata->local->hw,
++					       BUFF_MMPDU_TXQ)) {
++			/* Drivers need to opt in to the bufferable MMPDU TXQ */
+ 			return;
++		}
+ 		txqi->txq.ac = IEEE80211_AC_VO;
+ 	} else {
+ 		txqi->txq.ac = ieee80211_ac_from_tid(tid);
 -- 
-2.7.4
+2.18.0
