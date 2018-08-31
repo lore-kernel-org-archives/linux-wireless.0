@@ -1,81 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35540 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726793AbeHHM7k (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45596 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726990AbeHaNsT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Aug 2018 08:59:40 -0400
-From: Wen Gong <wgong@codeaurora.org>
-To: ath10k@lists.infradead.org, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/2] mac80211: Change sk_pacing_shift saved to ieee80211_hw
-Date: Wed,  8 Aug 2018 18:40:01 +0800
-Message-Id: <1533724802-30944-2-git-send-email-wgong@codeaurora.org> (sfid-20180808_124035_642380_12F9B437)
-In-Reply-To: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+        Fri, 31 Aug 2018 09:48:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 31 Aug 2018 12:41:33 +0300
+Message-Id: <20180831094133.13858-1-luca@coelho.fi> (sfid-20180831_114144_210056_EA0F49D4)
+In-Reply-To: <ffddd3d6188213b090659d13dc216fe483f6c8ea.camel@coelho.fi>
+References: <ffddd3d6188213b090659d13dc216fe483f6c8ea.camel@coelho.fi>
+Subject: [PATCH] iwlwifi: fix devices with PCI Device ID 0x34F0 and 11ac RF modules
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the skb_pacing_shift adjustment, this change make it
-configurable for other driver. If no other driver set it, then
-mac8011 will use the default value.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+The devices with PCI device ID 0x34F0 are part of the SoC and can be
+combined with some different external RF modules.  The configuration
+for these devices should reflect that, but are currently mixed up.  To
+avoid confusion with discrete devices, add part of the firmware to be
+used and the official name of the device to the cfg structs.
+
+This is least reorganization possible (without messing things even
+more) that could be done as a bugfix for this SoC.  Further
+reorganization of this code will be done separately.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-V2:
--add the description for tx_sk_pacing_shift
- include/net/mac80211.h | 5 +++++
- net/mac80211/main.c    | 2 ++
- net/mac80211/tx.c      | 2 +-
- 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5790f55..9804d65 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2290,6 +2290,10 @@ enum ieee80211_hw_flags {
-  *	supported by HW.
-  * @max_nan_de_entries: maximum number of NAN DE functions supported by the
-  *	device.
-+ *
-+ * @tx_sk_pacing_shift: The TCP stack allow more than a single ms of data
-+ *	to be queued in the stack. The value is a bit-shift of 1 second, e.g. 8
-+ *	is ~4ms of queued data. It only affects local TCP sockets.
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -2325,6 +2329,7 @@ struct ieee80211_hw {
- 	u8 n_cipher_schemes;
- 	const struct ieee80211_cipher_scheme *cipher_schemes;
- 	u8 max_nan_de_entries;
-+	u8 tx_sk_pacing_shift;
- };
+For some reason I had forgotten to send this patch out.  It is also
+included in today's pull-request.
+
+
+.../net/wireless/intel/iwlwifi/cfg/22000.c    | 65 ++++++++++++++++++-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  9 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 55 ++++++++--------
+ 3 files changed, 97 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index c6b738c8fd84..204a51fd6375 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -77,10 +77,13 @@
+ #define IWL_22000_HR_FW_PRE		"iwlwifi-Qu-a0-hr-a0-"
+ #define IWL_22000_HR_CDB_FW_PRE		"iwlwifi-QuIcp-z0-hrcdb-a0-"
+ #define IWL_22000_HR_A_F0_FW_PRE	"iwlwifi-QuQnj-f0-hr-a0-"
+-#define IWL_22000_HR_B_FW_PRE		"iwlwifi-Qu-b0-hr-b0-"
++#define IWL_22000_HR_B_F0_FW_PRE	"iwlwifi-Qu-b0-hr-b0-"
++#define IWL_22000_QU_B_HR_B_FW_PRE	"iwlwifi-Qu-b0-hr-b0-"
++#define IWL_22000_HR_B_FW_PRE		"iwlwifi-QuQnj-b0-hr-b0-"
+ #define IWL_22000_JF_B0_FW_PRE		"iwlwifi-QuQnj-a0-jf-b0-"
+ #define IWL_22000_HR_A0_FW_PRE		"iwlwifi-QuQnj-a0-hr-a0-"
+ #define IWL_22000_SU_Z0_FW_PRE		"iwlwifi-su-z0-"
++#define IWL_QU_B_JF_B_FW_PRE		"iwlwifi-Qu-b0-jf-b0-"
  
- static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4fb2709..23490fa 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -594,6 +594,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	local->ops = ops;
- 	local->use_chanctx = use_chanctx;
+ #define IWL_22000_HR_MODULE_FIRMWARE(api) \
+ 	IWL_22000_HR_FW_PRE __stringify(api) ".ucode"
+@@ -88,7 +91,11 @@
+ 	IWL_22000_JF_FW_PRE __stringify(api) ".ucode"
+ #define IWL_22000_HR_A_F0_QNJ_MODULE_FIRMWARE(api) \
+ 	IWL_22000_HR_A_F0_FW_PRE __stringify(api) ".ucode"
+-#define IWL_22000_HR_B_QNJ_MODULE_FIRMWARE(api) \
++#define IWL_22000_HR_B_F0_QNJ_MODULE_FIRMWARE(api) \
++	IWL_22000_HR_B_F0_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_QU_B_HR_B_MODULE_FIRMWARE(api) \
++	IWL_22000_QU_B_HR_B_FW_PRE __stringify(api) ".ucode"
++#define IWL_22000_HR_B_QNJ_MODULE_FIRMWARE(api)	\
+ 	IWL_22000_HR_B_FW_PRE __stringify(api) ".ucode"
+ #define IWL_22000_JF_B0_QNJ_MODULE_FIRMWARE(api) \
+ 	IWL_22000_JF_B0_FW_PRE __stringify(api) ".ucode"
+@@ -96,6 +103,8 @@
+ 	IWL_22000_HR_A0_FW_PRE __stringify(api) ".ucode"
+ #define IWL_22000_SU_Z0_MODULE_FIRMWARE(api) \
+ 	IWL_22000_SU_Z0_FW_PRE __stringify(api) ".ucode"
++#define IWL_QU_B_JF_B_MODULE_FIRMWARE(api) \
++	IWL_QU_B_JF_B_FW_PRE __stringify(api) ".ucode"
  
-+	local->hw.tx_sk_pacing_shift = 8;
+ #define NVM_HW_SECTION_NUM_FAMILY_22000		10
+ 
+@@ -192,7 +201,54 @@ const struct iwl_cfg iwl22000_2ac_cfg_jf = {
+ 
+ const struct iwl_cfg iwl22000_2ax_cfg_hr = {
+ 	.name = "Intel(R) Dual Band Wireless AX 22000",
+-	.fw_name_pre = IWL_22000_HR_FW_PRE,
++	.fw_name_pre = IWL_22000_QU_B_HR_B_FW_PRE,
++	IWL_DEVICE_22500,
++	/*
++	 * This device doesn't support receiving BlockAck with a large bitmap
++	 * so we need to restrict the size of transmitted aggregation to the
++	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
++	 */
++	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++};
 +
- 	/* set up some defaults */
- 	local->hw.queues = 1;
- 	local->hw.max_rates = 1;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6a79d56..80855a8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3601,7 +3601,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		 * second, so 8 is ~4ms of queued data. Only affects local TCP
- 		 * sockets.
- 		 */
--		sk_pacing_shift_update(skb->sk, 8);
-+		sk_pacing_shift_update(skb->sk, sdata->local->hw.tx_sk_pacing_shift);
++/*
++ * All JF radio modules are part of the 9000 series, but the MAC part
++ * looks more like 22000.  That's why this device is here, but called
++ * 9560 nevertheless.
++ */
++const struct iwl_cfg iwl9461_2ac_cfg_qu_b0_jf_b0 = {
++	.name = "Intel(R) Wireless-AC 9461",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
++	IWL_DEVICE_22500,
++};
++
++const struct iwl_cfg iwl9462_2ac_cfg_qu_b0_jf_b0 = {
++	.name = "Intel(R) Wireless-AC 9462",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
++	IWL_DEVICE_22500,
++};
++
++const struct iwl_cfg iwl9560_2ac_cfg_qu_b0_jf_b0 = {
++	.name = "Intel(R) Wireless-AC 9560",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
++	IWL_DEVICE_22500,
++};
++
++const struct iwl_cfg killer1550i_2ac_cfg_qu_b0_jf_b0 = {
++	.name = "Killer (R) Wireless-AC 1550i Wireless Network Adapter (9560NGW)",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
++	IWL_DEVICE_22500,
++};
++
++const struct iwl_cfg killer1550s_2ac_cfg_qu_b0_jf_b0 = {
++	.name = "Killer (R) Wireless-AC 1550s Wireless Network Adapter (9560NGW)",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
++	IWL_DEVICE_22500,
++};
++
++const struct iwl_cfg iwl22000_2ax_cfg_jf = {
++	.name = "Intel(R) Dual Band Wireless AX 22000",
++	.fw_name_pre = IWL_QU_B_JF_B_FW_PRE,
+ 	IWL_DEVICE_22500,
+ 	/*
+ 	 * This device doesn't support receiving BlockAck with a large bitmap
+@@ -266,7 +322,10 @@ const struct iwl_cfg iwl22560_2ax_cfg_su_cdb = {
+ MODULE_FIRMWARE(IWL_22000_HR_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_JF_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_HR_A_F0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_HR_B_F0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_22000_QU_B_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_HR_B_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_JF_B0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_HR_A0_QNJ_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL_22000_SU_Z0_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL_QU_B_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 5e1280783376..5eb906a0d0d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -573,11 +573,18 @@ extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
+ extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
+ extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_hr;
++extern const struct iwl_cfg iwl9461_2ac_cfg_qu_b0_jf_b0;
++extern const struct iwl_cfg iwl9462_2ac_cfg_qu_b0_jf_b0;
++extern const struct iwl_cfg iwl9560_2ac_cfg_qu_b0_jf_b0;
++extern const struct iwl_cfg killer1550i_2ac_cfg_qu_b0_jf_b0;
++extern const struct iwl_cfg killer1550s_2ac_cfg_qu_b0_jf_b0;
++extern const struct iwl_cfg iwl22000_2ax_cfg_jf;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0_f0;
++extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_b0_f0;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_b0;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0;
+ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0;
+ extern const struct iwl_cfg iwl22560_2ax_cfg_su_cdb;
+-#endif /* CONFIG_IWLMVM */
++#endif /* CPTCFG_IWLMVM || CPTCFG_IWLFMAC */
  
- 		fast_tx = rcu_dereference(sta->fast_tx);
- 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 0d40864ac90f..9e015212c2c0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -641,34 +641,33 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x4234, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x42A4, iwl9462_2ac_cfg_shared_clk)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0038, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x003C, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0060, iwl9461_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0064, iwl9461_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x00A0, iwl9462_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x00A4, iwl9462_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0230, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0234, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0238, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x023C, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0260, iwl9461_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x0264, iwl9461_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x02A0, iwl9462_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x1010, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x1030, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x1210, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x1551, iwl9560_killer_s_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x1552, iwl9560_killer_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x2030, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x2034, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x4030, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x4034, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x40A4, iwl9462_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x4234, iwl9560_2ac_cfg_soc)},
+-	{IWL_PCI_DEVICE(0x34F0, 0x42A4, iwl9462_2ac_cfg_soc)},
++
++	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0038, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x003C, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0060, iwl9461_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0064, iwl9461_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x00A0, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x00A4, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0230, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0234, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0238, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x023C, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0260, iwl9461_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0264, iwl9461_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x02A0, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x1551, killer1550s_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x1552, killer1550i_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x2030, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x2034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4030, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x40A4, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4234, iwl9560_2ac_cfg_qu_b0_jf_b0)},
++	{IWL_PCI_DEVICE(0x34F0, 0x42A4, iwl9462_2ac_cfg_qu_b0_jf_b0)},
++
+ 	{IWL_PCI_DEVICE(0x3DF0, 0x0030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x3DF0, 0x0034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x3DF0, 0x0038, iwl9560_2ac_cfg_soc)},
 -- 
-1.9.1
+2.18.0
