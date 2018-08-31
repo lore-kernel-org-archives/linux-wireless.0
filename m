@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:24234 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728588AbeHWPQo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Aug 2018 11:16:44 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 6/9] wil6210: prevent usage of tx ring 0 for eDMA
-Date: Thu, 23 Aug 2018 14:47:10 +0300
-Message-Id: <1535024833-15178-7-git-send-email-merez@codeaurora.org> (sfid-20180823_134728_708116_EDC33A7D)
-In-Reply-To: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
-References: <1535024833-15178-1-git-send-email-merez@codeaurora.org>
+Received: from mail.toke.dk ([52.28.52.200]:40013 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728872AbeHaTpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Aug 2018 15:45:00 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Peter Oh <peter.oh@bowerswilkins.com>,
+        Wen Gong <wgong@qti.qualcomm.com>,
+        Wen Gong <wgong@codeaurora.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "johannes\@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+In-Reply-To: <ae8d9891-b827-7ca5-1375-0280d8f5c194@bowerswilkins.com>
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <87600eecr7.fsf@toke.dk> <68d91488f58f4a449908fc7eeebb8b34@aptaiexm02f.ap.qualcomm.com> <87tvntb53x.fsf@toke.dk> <ae8d9891-b827-7ca5-1375-0280d8f5c194@bowerswilkins.com>
+Date: Fri, 31 Aug 2018 17:36:55 +0200
+Message-ID: <87wos61rag.fsf@toke.dk> (sfid-20180831_173701_669059_5CA01C51)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In enhanced DMA ring 0 is used for RX ring, hence TX ring 0
-is an unused element in ring_tx and ring2cid_tid arrays.
-Initialize ring2cid_tid CID to WIL6210_MAX_CID to prevent a false
-match of CID 0.
-Go over the ring_tx and ring2cid_tid from wil_get_min_tx_ring_id
-and on to prevent access to index 0 in eDMA.
+Peter Oh <peter.oh@bowerswilkins.com> writes:
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c | 7 +++++--
- drivers/net/wireless/ath/wil6210/txrx.c | 6 ++++--
- 2 files changed, 9 insertions(+), 4 deletions(-)
+> Hi Toke,
+>
+>
+> On 08/17/2018 04:32 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>
+>>>>> Shift 6:
+>>>>> wgong@wgong-Latitude-E5440-1:~/flent$ flent -H 192.168.1.7 -t
+>>>>> "sk_pacing_shift6" tcp_nup --test-parameter upload_streams=3D1
+>>>>
+> Does flent have options to set TOS or QoS queue for TCP or UDP test?
+> If I add "--test-paramete burst_tos=3D0xe0", will it use corresponding=20
+> mac80211 QoS queue?
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 827df1c..3fcf799 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -223,6 +223,7 @@ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
- 	struct net_device *ndev = vif_to_ndev(vif);
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	struct wil_sta_info *sta = &wil->sta[cid];
-+	int min_ring_id = wil_get_min_tx_ring_id(wil);
- 
- 	might_sleep();
- 	wil_dbg_misc(wil, "disconnect_cid: CID %d, MID %d, status %d\n",
-@@ -273,7 +274,7 @@ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
- 	memset(sta->tid_crypto_rx, 0, sizeof(sta->tid_crypto_rx));
- 	memset(&sta->group_crypto_rx, 0, sizeof(sta->group_crypto_rx));
- 	/* release vrings */
--	for (i = 0; i < ARRAY_SIZE(wil->ring_tx); i++) {
-+	for (i = min_ring_id; i < ARRAY_SIZE(wil->ring_tx); i++) {
- 		if (wil->ring2cid_tid[i][0] == cid)
- 			wil_ring_fini_tx(wil, i);
- 	}
-@@ -604,8 +605,10 @@ int wil_priv_init(struct wil6210_priv *wil)
- 		wil->sta[i].mid = U8_MAX;
- 	}
- 
--	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++)
-+	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
- 		spin_lock_init(&wil->ring_tx_data[i].lock);
-+		wil->ring2cid_tid[i][0] = WIL6210_MAX_CID;
-+	}
- 
- 	mutex_init(&wil->mutex);
- 	mutex_init(&wil->vif_mutex);
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index e7b003b38..259e4a8 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -77,8 +77,9 @@ bool wil_is_tx_idle(struct wil6210_priv *wil)
- {
- 	int i;
- 	unsigned long data_comp_to;
-+	int min_ring_id = wil_get_min_tx_ring_id(wil);
- 
--	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
-+	for (i = min_ring_id; i < WIL6210_MAX_TX_RINGS; i++) {
- 		struct wil_ring *vring = &wil->ring_tx[i];
- 		int vring_index = vring - wil->ring_tx;
- 		struct wil_ring_tx_data *txdata =
-@@ -1942,6 +1943,7 @@ static inline void __wil_update_net_queues(struct wil6210_priv *wil,
- 					   bool check_stop)
- {
- 	int i;
-+	int min_ring_id = wil_get_min_tx_ring_id(wil);
- 
- 	if (unlikely(!vif))
- 		return;
-@@ -1974,7 +1976,7 @@ static inline void __wil_update_net_queues(struct wil6210_priv *wil,
- 		return;
- 
- 	/* check wake */
--	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
-+	for (i = min_ring_id; i < WIL6210_MAX_TX_RINGS; i++) {
- 		struct wil_ring *cur_ring = &wil->ring_tx[i];
- 		struct wil_ring_tx_data  *txdata = &wil->ring_tx_data[i];
- 
--- 
-1.9.1
+Yes, for some tests:
+
+- The RRUL test will run four TCP flows in each direction, one marked for
+  each 802.11 QoS queue.
+
+- For the rtt_fair* tests you can set them with a test parameter:
+--test-parameter markings=3DBE,CS1 to set flows 1 and 2 to BE and CS1
+respectively. You can use the rtt_fair_var* tests to get a variable
+number of flows (the same host can be specified multiple times by having
+different hostnames resolve to the same IP).
+
+-Toke
