@@ -1,110 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
-        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726400AbeIXLNu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 07:13:50 -0400
-From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
-        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: [PATCH 02/11] qtnfmac_pcie: move Pearl pcie sources to pcie-specific
- directory
-Date: Mon, 24 Sep 2018 05:13:25 +0000
-Message-ID: <20180924051246.13371-3-igor.mitsyanko.os@quantenna.com> (sfid-20180924_071404_266480_1C0FDD59)
-References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
-In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:41893 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726648AbeIANUZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Sep 2018 09:20:25 -0400
+To: amitkarwar@gmail.com, nishants@marvell.com, gbhat@marvell.com,
+        huxinming820@gmail.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [BUG] net: wireless: mwifiex: A possible sleep-in-atomic-context bug
+ in mwifiex_wait_queue_complete()
+Message-ID: <35980039-f268-2db3-5c7d-19ab0c917d44@gmail.com> (sfid-20180901_110947_422934_A19D0740)
+Date: Sat, 1 Sep 2018 17:08:59 +0800
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to extract common qtnfmac PCIe driver sources into a
-separate file, move existing Pearl-specific pcie driver sources to pcie/
-directory.
+mwifiex_usb_tx_complete() is a completion handler function for the
+USB driver. So it should not sleep, but it is can sleep according to the
+function call paths (from bottom to top) in Linux-4.16:
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/Makefile                       | 2 =
-+-
- .../wireless/quantenna/qtnfmac/{pearl/pcie.c =3D> pcie/pearl_pcie.c}    | =
-2 +-
- .../qtnfmac/{pearl/pcie_bus_priv.h =3D> pcie/pearl_pcie_bus_priv.h}     | =
-4 ++--
- .../quantenna/qtnfmac/{pearl/pcie_ipc.h =3D> pcie/pearl_pcie_ipc.h}     | =
-0
- .../qtnfmac/{pearl/pcie_regs_pearl.h =3D> pcie/pearl_pcie_regs.h}       | =
-0
- 5 files changed, 4 insertions(+), 4 deletions(-)
- rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie.c =3D> pcie/pear=
-l_pcie.c} (99%)
- rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_bus_priv.h =3D> =
-pcie/pearl_pcie_bus_priv.h} (97%)
- rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_ipc.h =3D> pcie/=
-pearl_pcie_ipc.h} (100%)
- rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_regs_pearl.h =3D=
-> pcie/pearl_pcie_regs.h} (100%)
+[FUNC] schedule_timeout
+drivers/net/wireless/marvell/mwifiex/sta_ioctl.c, 63:
+     schedule_timeout in mwifiex_wait_queue_complete
+drivers/net/wireless/marvell/mwifiex/cmdevt.c, 673:
+     mwifiex_wait_queue_complete in mwifiex_send_cmd
+drivers/net/wireless/marvell/mwifiex/main.c, 1046:
+     mwifiex_send_cmd in mwifiex_multi_chan_resync
+drivers/net/wireless/marvell/mwifiex/usb.c, 288:
+     mwifiex_multi_chan_resync in mwifiex_usb_tx_complete
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/Makefile b/drivers/net/=
-wireless/quantenna/qtnfmac/Makefile
-index 97f760a..9eeddea 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/Makefile
-+++ b/drivers/net/wireless/quantenna/qtnfmac/Makefile
-@@ -23,6 +23,6 @@ obj-$(CONFIG_QTNFMAC_PEARL_PCIE) +=3D qtnfmac_pearl_pcie.=
-o
-=20
- qtnfmac_pearl_pcie-objs +=3D \
- 	shm_ipc.o \
--	pearl/pcie.o
-+	pcie/pearl_pcie.o
-=20
- qtnfmac_pearl_pcie-$(CONFIG_DEBUG_FS) +=3D debug.o
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/=
-net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-similarity index 99%
-rename from drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-rename to drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-index 97cc7f2..269a6e4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-@@ -29,7 +29,7 @@
- #include <linux/log2.h>
-=20
- #include "qtn_hw_ids.h"
--#include "pcie_bus_priv.h"
-+#include "pearl_pcie_bus_priv.h"
- #include "core.h"
- #include "bus.h"
- #include "debug.h"
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h b=
-/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h
-similarity index 97%
-rename from drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-rename to drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h
-index 397875a..986b957 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h
-@@ -20,8 +20,8 @@
- #include <linux/dma-mapping.h>
- #include <linux/io.h>
-=20
--#include "pcie_regs_pearl.h"
--#include "pcie_ipc.h"
-+#include "pearl_pcie_regs.h"
-+#include "pearl_pcie_ipc.h"
- #include "shm_ipc.h"
-=20
- struct bus;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h b/driv=
-ers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h
-similarity index 100%
-rename from drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_ipc.h
-rename to drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h=
- b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_regs.h
-similarity index 100%
-rename from drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_regs_pearl.h
-rename to drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_regs.h
---=20
-2.9.5
+I do not find a good way to fix this bug, so I only report it.
+
+This bug is found by my static analysis tool DSAC.
+
+
+Best wishes,
+Jia-Ju Bai
