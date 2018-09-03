@@ -1,35 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:48470 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726081AbeIJMCx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34690 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725856AbeICJ40 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 08:02:53 -0400
-Message-ID: <1536563406.3224.2.camel@sipsolutions.net> (sfid-20180910_091027_333188_88825C63)
-Subject: Re: [PATCH] wireless: remove unnecessary condition check before
- kfree
-From: Johannes Berg <johannes@sipsolutions.net>
-To: zhong jiang <zhongjiang@huawei.com>, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Mon, 10 Sep 2018 09:10:06 +0200
-In-Reply-To: <1536415955-33776-1-git-send-email-zhongjiang@huawei.com>
-References: <1536415955-33776-1-git-send-email-zhongjiang@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 3 Sep 2018 05:56:26 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 03 Sep 2018 11:07:51 +0530
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
+In-Reply-To: <87zhx21uqc.fsf@toke.dk>
+References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
+ <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com> <87zhx21uqc.fsf@toke.dk>
+Message-ID: <ebb12dc92de318b8d88eb607d9182ead@codeaurora.org> (sfid-20180903_073757_259017_5600A130)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-09-08 at 22:12 +0800, zhong jiang wrote:
-> kfree has taken the null pointer into account. Just remove the
-> redundant condition check before kfree.
+On 2018-08-31 19:52, Toke Høiland-Jørgensen wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Anilkumar Kolli <akolli@codeaurora.org> writes:
+>> 
+>>> Mesh path metric needs txrate information from ieee80211_tx_status()
+>>> call but in ath10k there is no mechanism to report tx rate 
+>>> information
+>>> via ieee80211_tx_status(), the rate is only accessible via
+>>> sta_statiscs() op.
+>>> 
+>>> Per peer stats has tx rate info available, this patch stores per peer
+>>> last tx rate and updates the tx rate info structures in tx 
+>>> completition.
+>>> The rate updated in ieee80211_tx_status() is not exactly for the last
+>>> transmitted frame instead the rate is from one of the previous 
+>>> frames.
+>>> 
+>>> Per peer txrate information is updated through per peer statistics
+>>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+>>> 
+>>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+>>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+>>> 
+>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+>> 
+>> This is a patch from last March, full patch here:
+>> 
+>> https://patchwork.kernel.org/patch/10267693/
+>> 
+>>> @@ -119,6 +122,18 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+>>>  			info->flags &= ~IEEE80211_TX_STAT_ACK;
+>>>  	}
+>>> 
+>>> +	if (sta) {
+>>> +		spin_lock_bh(&ar->data_lock);
+>>> +		arsta = (struct ath10k_sta *)sta->drv_priv;
+>>> +		info->status.rates[0].idx =
+>>> +			arsta->tx_info.status.rates[0].idx;
+>>> +		info->status.rates[0].count =
+>>> +			arsta->tx_info.status.rates[0].count;
+>>> +		info->status.rates[0].flags =
+>> <> +			arsta->tx_info.status.rates[0].flags;
+>>> +		spin_unlock_bh(&ar->data_lock);
+>>> +	}
+>>> +
+>>>  	ieee80211_tx_status(htt->ar->hw, msdu);
+>>>  	/* we do not own the msdu anymore */
+>> 
+>> "is not exactly" is IMHO an understatement. What it means that with 
+>> this
+>> patch ath10k reports the rate information from another frame instead 
+>> of
+>> the current skb, because the firmware provides the rate information 
+>> "out
+>> of band". A simple example to clarify:
+>> 
+>>    Let's say ath10k transmits frames A, B and C. Then ath10k calls
+>>    ieee80211_tx_status() for frame C the rate information could be for
+>>    frame A, or it could be the other around for frame A status the 
+>> rate
+>>    information is from frame C.
+>> 
+>> In other words, there's no guarantee from what frame the rate
+>> information is from.
+>> 
+>> Too me this feels like a bad idea but I'm not familiar enough with
+>> mac80211 to really comment on this. What kind of implications does 
+>> this
+>> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
+>> about their opinion about this.
+> 
+> I was under the impression that the values gathered (at least for
+> airtime) would be cumulative values? If it's just the airtime of a
+> single random frame, which is what I understand from your example, it's
+> not going to be terribly useful to provide ATF at least...
+> 
+> -Toke
 
-I'm all for doing that if it actually removes conditionals, but
+The design:
+Whenever radio transmits packet, firmware will record numbers of bytes 
+sent, MSDU’s sent, TX duration, AMPDU information, ACK fail, BA fail, 
+Rate at which packet is sent. This is recorded for 4 frames sent on that 
+peer. Once 4 frames are sent for that peer, TX packet event is sent to 
+ath10k driver with the recorded values. These rate values are updated to 
+mac80211 using ieee80211_tx_status().
 
-> -	if (!IS_ERR_OR_NULL(regdb))
-> +	if (!IS_ERR(regdb))
->  		kfree(regdb);
+Agreed mac80211 is not getting the tx rate value for the last packet 
+sent on the air, but this will be delivered to mac80211 at a later time 
+for each transmitted packet.
 
-this seems rather pointless since there's still a condition. In that
-case, I feel it's easier to understand the original code.
+Example:
+Firmware TX for peer 1 -> pkt1 -> pkt2 -> pkt3 -> pkt4 -> pkt5 -> pkt6 
+-> pkt7 -> pkt8 -> pkt9 -> pkt10
+Driver updates                                         -> 
+ieee80211_tx_status()        ->ieee80211_tx_status()
 
-johannes
+On each 4th packet sent in air, driver will update the tx rate.
+
+
+Thanks
+Anil.
