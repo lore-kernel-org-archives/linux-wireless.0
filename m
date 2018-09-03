@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48152 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbeIDMkV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 08:40:21 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:25276 "EHLO
+        ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725949AbeICTXP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Sep 2018 15:23:15 -0400
+Date: Mon, 3 Sep 2018 22:57:35 +0800
+From: Kevin Lo <kevlo@kevlo.org>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+        John Linville <linville@tuxdriver.com>
+Subject: [PATCH v2] rtlwifi: remove set but unused variables
+Message-ID: <20180903145735.GA64292@ns.kevlo.org> (sfid-20180903_170258_465495_1A1A7694)
 MIME-Version: 1.0
-Subject: Re: [PATCH] rtl8xxxu: Add rtl8188ctv support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180830140541.31964-1-mamlinav@gmail.com>
-References: <20180830140541.31964-1-mamlinav@gmail.com>
-To: Aleksei Mamlin <mamlinav@gmail.com>
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Aleksei Mamlin <mamlinav@gmail.com>
-Message-Id: <20180904081619.8E2F060708@smtp.codeaurora.org> (sfid-20180904_101635_652264_737E0B9D)
-Date: Tue,  4 Sep 2018 08:16:19 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aleksei Mamlin <mamlinav@gmail.com> wrote:
+Remove set but unused variables from _rtl88ee_hw_configure() and
+_rtl8723e_hw_configure().
 
-> The Realtek rtl8188ctv (0x0bda:0x018a) is a highly integrated single-chip
-> WLAN USB2.0 network interface controller.
-> 
-> Currently rtl8188ctv is supported by rtlwifi driver.
-> It is similar to the rtl8188cus(0x0bda:0x818a) and uses the same config.
-> 
-> Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+---
+v2: Correct my email address.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-514502c3a70b rtl8xxxu: Add rtl8188ctv support
-
--- 
-https://patchwork.kernel.org/patch/10581745/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+---
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 988d5ac57d02..cfc8762c55f4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -951,12 +951,8 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
+ static void _rtl88ee_hw_configure(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 reg_bw_opmode;
+-	u32 reg_ratr, reg_prsr;
++	u32 reg_prsr;
+ 
+-	reg_bw_opmode = BW_OPMODE_20MHZ;
+-	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
+-	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
+ 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
+ 
+ 	rtl_write_dword(rtlpriv, REG_RRSR, reg_prsr);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 545115db507e..f783e4a8083d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -799,11 +799,9 @@ static void _rtl8723e_hw_configure(struct ieee80211_hw *hw)
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u8 reg_bw_opmode;
+-	u32 reg_ratr, reg_prsr;
++	u32 reg_prsr;
+ 
+ 	reg_bw_opmode = BW_OPMODE_20MHZ;
+-	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
+-	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
+ 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
+ 
+ 	rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, 0x8);
