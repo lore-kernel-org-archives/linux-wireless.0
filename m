@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48046 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726787AbeIIO0l (ORCPT
+Received: from sesbmg22.ericsson.net ([193.180.251.48]:54319 "EHLO
+        sesbmg22.ericsson.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725866AbeICSlY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Erel Geron <erelx.geron@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:50 +0300
-Message-Id: <20180909093656.10194-11-luca@coelho.fi> (sfid-20180909_113737_692282_9049D32E)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 10/16] iwlwifi: mvm: TLC support for Coex Schema 2
+        Mon, 3 Sep 2018 14:41:24 -0400
+From: Jakov Simunic <jakov.simunic@ericsson.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        Steve deRosier <derosier@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Build iw for 32bit ARM
+Date: Mon, 3 Sep 2018 14:20:55 +0000
+Message-ID: <HE1PR0702MB3804CF0523876027EFB383FE980C0@HE1PR0702MB3804.eurprd07.prod.outlook.com> (sfid-20180903_162105_083271_5B0519AD)
+References: <HE1PR0702MB38043B23810E618B01413959980F0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
+ <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com>
+In-Reply-To: <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erel Geron <erelx.geron@intel.com>
-
-The new coex schema requires setting the non-shared antenna
-for the single_stream_ant_msk field in the TLC command.
-
-Signed-off-by: Erel Geron <erelx.geron@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 9 +++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 5 +++--
- 3 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index ec3b60cdcf18..730e37744dc0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -691,6 +691,15 @@ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
- 	return bt_activity >= BT_LOW_TRAFFIC;
- }
- 
-+u8 iwl_mvm_bt_coex_get_single_ant_msk(struct iwl_mvm *mvm, u8 enabled_ants)
-+{
-+	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_COEX_SCHEMA_2) &&
-+	    (mvm->cfg->non_shared_ant & enabled_ants))
-+		return mvm->cfg->non_shared_ant;
-+
-+	return first_antenna(enabled_ants);
-+}
-+
- u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 			   struct ieee80211_tx_info *info, u8 ac)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 33f8697740a5..8f71eeed50d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1819,6 +1819,7 @@ bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant);
- bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm);
- bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
- 				    enum nl80211_band band);
-+u8 iwl_mvm_bt_coex_get_single_ant_msk(struct iwl_mvm *mvm, u8 enabled_ants);
- u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
- 			   struct ieee80211_tx_info *info, u8 ac);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index c3282f1d77ba..2c75f51a04e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -3213,7 +3213,7 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 
- 	/* These values will be overridden later */
- 	lq_sta->lq.single_stream_ant_msk =
--		first_antenna(iwl_mvm_get_valid_tx_ant(mvm));
-+		iwl_mvm_bt_coex_get_single_ant_msk(mvm, iwl_mvm_get_valid_tx_ant(mvm));
- 	lq_sta->lq.dual_stream_ant_msk = ANT_AB;
- 
- 	/* as default allow aggregation for all tids */
-@@ -3576,7 +3576,8 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
- 
--	if (num_of_ant(initial_rate->ant) == 1)
-+	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_COEX_SCHEMA_2) &&
-+	    num_of_ant(initial_rate->ant) == 1)
- 		lq_cmd->single_stream_ant_msk = initial_rate->ant;
- 
- 	lq_cmd->agg_frame_cnt_limit = mvmsta->max_agg_bufsize;
--- 
-2.18.0
+SGkgU3RldmUsDQpXZSBhcmUgYnVpbGRpbmcgd2l0aCBwdHhkaXN0LCB3ZSBoYXZlIGEgY29tcGls
+ZXIgZm9yIGFybSAoYXJtLWxpbnV4LWdudWVhYmloZi1nY2MpLCBJIGFtIG5vdCBhIHRvdGFsIG5v
+dmljZSBpbiB0aGlzLCBhbmQgaGF2ZSBhbHJlYWR5IHdyaXR0ZW4gc29tZSBwdHhkaXN0IHJ1bGVz
+LCBidXQgaGF2ZW4ndCBkb25lIGl0IHdpdGggbm9uLWF1dG9jb25maXp6ZWQgcGFja2FnZXMsIGJh
+c2ljYWxseSB0aGUgcHJvYmxlbSBpcyB0aGF0IGlmIEkgdXNlIHRoZSBkZWZhdWx0IGl3Lm1ha2Ug
+ZnJvbSB0aGUgcHR4ZGlzdCBtYXN0ZXIgYnJhbmNoLCBpdydzIE1ha2VmaWxlIHRyaWVzIHRvIGNv
+bXBpbGUgd2l0aCB0aGUgbmF0aXZlIGNvbXBpbGVyIGFuZCBuYXRpdmUgbGlibmwsIG5vIG1hdHRl
+ciB3aGF0IG9wdGlvbiBpIHN1cHBseSBpdCB3aXRoLCBJIGFsd2F5cyBnZXQgYSB4ODYtMzIgZXhl
+Y3V0YWJsZS4gV2hlbiBJIG1vZGlmeSB0aGUgaXcubWFrZSBydWxlIHdpdGggdGhlIGNvcnJlY3Qg
+Q0MgKGJ5IG1ha2luZyBhIGN1c3RvbSBjb21waWxlIHN0ZXApLCBpdCB0aGVuIGZhaWxzIHRvIGZp
+bmQgdGhlIGNvcnJlY3QgbGlibmwgdGhyb3VnaCBwa2ctY29uZmlnLiBUaGUgaXcgcGFja2FnZSBp
+cyBub3QgbW9kaWZpZWQgYXQgYWxsLiBDb3VsZCB5b3Ugc3VnZ2VzdCBob3cgdG8gaGFyZCBjb2Rl
+IHRoZSBDQyAob3IgdGhhdCBpdCBnZXRzIGl0IG5vcm1hbGx5IGZyb20gYSBDQyB2YXJpYWJsZSBz
+dXBwbGllZCB0byB0aGUgTWFrZWZpbGUpIG9yIGhvdyB0byBhdm9pZCBwa2ctY29uZmlnIGFuZCBz
+dXBwbHkgdGhlIG9wdGlvbnMgbmVlZGVkIG1hbnVhbGx5LiBJIGtub3cgdGhpcyBpcyBhIHN0ZXAg
+YmFjayBmcm9tIG11bHRpLXBsYXRmb3JtIGJ1aWxkIHByYWN0aWNlcywgYnV0IEkganVzdCBuZWVk
+IGl0IHRoYXQgd2F5Lg0KDQotLQ0KTGlqZXAgcG96ZHJhdiAvIEJlc3QgcmVnYXJkcw0KSmFrb3Yg
+xaBpbXVuacSHDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBTdGV2ZSBkZVJv
+c2llciA8ZGVyb3NpZXJAZ21haWwuY29tPiANClNlbnQ6IEZyaWRheSwgQXVndXN0IDMxLCAyMDE4
+IDU6MzEgUE0NClRvOiBKYWtvdiBTaW11bmljIDxqYWtvdi5zaW11bmljQGVyaWNzc29uLmNvbT4N
+CkNjOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsgbGludXgtd2ly
+ZWxlc3MgPGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6IFJlOiBCdWls
+ZCBpdyBmb3IgMzJiaXQgQVJNDQoNCkhpIEpha292LA0KDQpPbiBGcmksIEF1ZyAzMSwgMjAxOCBh
+dCA1OjU5IEFNIEpha292IFNpbXVuaWMgPGpha292LnNpbXVuaWNAZXJpY3Nzb24uY29tPiB3cm90
+ZToNCj4NCj4gSGVsbG8sDQo+IEkgYW0gd29ya2luZyBvbiBhbiBlbWJlZGRlZCBwcm9qZWN0IHdo
+aWNoIHVzZXMgYW4gYXJtdjdsIGFyY2hpdGVjdHVyZSwgd2hpY2ggaXMgYSAzMmJpdCBwbGF0Zm9y
+bSwgYW5kIEkgYW0gdHJ5aW5nIHRvIGNvbXBpbGUgaXctNC45IGZvciBpdCwgYW5kIEkgZG9uJ3Qg
+a25vdyBob3cgdG8gY29tcGlsZSBpdCBmb3IgMzJiaXQgYXJjaGVzLg0KDQpVbmxlc3MgeW91J3Jl
+IGJ1aWxkaW5nIHlvdXIgTGludXggc3lzdGVtIDEwMCUgZnJvbSBzY3JhdGNoLCB5b3Ugc2hvdWxk
+IGxldmVyYWdlIHRoZSBidWlsZCBzeXN0ZW0gZm9yIHlvdXIgcGxhdGZvcm0uIEl0IHdpbGwgYXV0
+b21hdGljYWxseSBkbyB0aGUgcmlnaHQgdGhpbmcuIFlvdSdyZSBsaWtlbHkgdXNpbmcgQnVpbGRy
+b290LCBPcGVuV1JULCBPcGVuRW1iZWRkZWQsIFlvY3RvIG9yIHNvbWUgb3RoZXIgcGxhdGZvcm0g
+dGhhdCBoYXMgY29tcGlsZXJzLCBidWlsZCBzeXN0ZW1zLCBwYWNrYWdlcyBhbmQgc28gb24uIEZp
+cnN0IG9mZiwgbW9zdCBsaWtlbHkgaXcgaXMgYWxyZWFkeSBpbmNsdWRlZC4gQW5kIGV2ZW4gaWYg
+eW91IHdhbnQgdG8gYnVpbGQgZnJvbSB5b3VyIG93biBtb2RpZmllZCB2ZXJzaW9uLCB0aGVyZXMg
+d2F5cyB0byBidWlsZCB1c2luZyB0aGUgc3lzdGVtcyBhYm92ZSB0byBqdXN0IGJ1aWxkIGl0IGlu
+LXRyZWUuIEFuZCBmaW5hbGx5LCBldmVuIGlmIG5vdCwgeW91IHNob3VsZCB1c2UgdGhlIHRhcmdl
+dCBsaWJyYXJpZXMgYW5kIHRoZSBjcm9zcy1jb21waWxlcnMgdGhhdCBhcmUgdXNlZCBieSB5b3Vy
+IHBsYXRmb3JtLg0KDQpTdGVwIG9uZSwgaWYgeW91IGhhdmVuJ3QgYWxyZWFkeSwgaXMgdG8gZ2V0
+IHRoZSBidWlsZCBzeXN0ZW0gZm9yIHlvdXIgcGxhdGZvcm0gYW5kIGNvbmZpZ3VyZSBhbmQgYnVp
+bGQgaXQuIFRoZW4gdHJ5IGJ1aWxkaW5nIHlvdXIgbW9kaWZpZWQgdmVyc2lvbiBvZiBpdyBpZiB0
+aGUgc3RvY2sgb25lIGlzbid0IGhlbHBmdWwgZm9yIHlvdS4gSSdkIGludGVncmF0ZSBpdCBpbnRv
+IHRoZSBwbGF0Zm9ybSBidWlsZCBzeXN0ZW0sIGJ1dCB5b3UgY291bGQgYnVpbGQgb3V0LW9mLXRy
+ZWUgYnkgc2V0dGluZyB1cCB0aGUgcmlnaHQgZmxhZ3MgYW5kIENST1NTX0NPTVBJTEVSIHRvIHBv
+aW50IHRvIHRoZSB0b29sY2hhaW4gdXNlZCBmb3IgeW91ciBwbGF0Zm9ybS4gSWYgSSB3ZXJlIGRv
+aW5nIHRoYXQsIEknZCBidWlsZCB0aGUgcGxhdGZvcm0gaW4gdmVyYm9zZSBvdXRwdXQgbW9kZSBh
+bmQgZXhhbWluZSB0aGUgY29tcGlsZXIgY29tbWFuZGxpbmVzIGZvciBoaW50cy4NCg0KPiBUcmll
+ZCBhZGRpbmcgLW0zMiB0byB0aGUgQ0ZMQUdTLCBldmVyeXRoaW5nIHBhc3NlcyB0aGUgYnVpbGQg
+ZXhjZXB0IHRoZSBpdyBiaW5hcnksIHdoaWNoIHNheXM6DQo+DQo+IGl3Lm86IGNvdWxkIG5vdCBy
+ZWFkIHN5bWJvbHM6IEZpbGUgaW4gd3JvbmcgZm9ybWF0DQo+IGNvbGxlY3QyOiBsZCByZXR1cm5l
+ZCAxIGV4aXQgc3RhdHVzDQo+IG1ha2U6ICoqKiBbaXddIEVycm9yIDENCj4NCg0KTW9zdCBsaWtl
+bHkgeW91ciBhcmNoaXRlY3R1cmUgZmxhZ3MgdG8gdGhlIGxpbmtlciBkb24ndCBtYXRjaCB3aGF0
+IHlvdSBnYXZlIGluIHRoZSBjb21waWxlciBzdGFnZS4gWW91IGNvdWxkIGFsd2F5cyBhbHNvIGNv
+bmZpcm0gdGhlIGZvcm1hdCBvZiBpdy5vIHdpdGggdGhlIGBmaWxlYCBjb21tYW5kLg0KDQotIFN0
+ZXZlDQo=
