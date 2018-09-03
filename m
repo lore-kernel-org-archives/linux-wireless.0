@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53188 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727490AbeIEJTW (ORCPT
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:38613 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727465AbeICWMD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:19:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc: johannes@sipsolutions.net, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 3/3] ath10k: average ack rssi support for data frames
-References: <1523890122-23952-1-git-send-email-bpothuno@codeaurora.org>
-        <1523890122-23952-4-git-send-email-bpothuno@codeaurora.org>
-Date: Wed, 05 Sep 2018 07:50:25 +0300
-In-Reply-To: <1523890122-23952-4-git-send-email-bpothuno@codeaurora.org>
-        (Balaji Pothunoori's message of "Mon, 16 Apr 2018 20:18:42 +0530")
-Message-ID: <87r2i87dke.fsf@kamboji.qca.qualcomm.com> (sfid-20180905_065154_171799_ACDCF0D6)
+        Mon, 3 Sep 2018 18:12:03 -0400
+Received: by mail-wr1-f65.google.com with SMTP id w11-v6so1434261wrc.5
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 10:50:48 -0700 (PDT)
+From: =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        ath9k_htc_fw@lists.infradead.org
+Subject: [PATCH 3/3] ath9k_htc: increase number of configurable virtual interfaces
+Date: Mon,  3 Sep 2018 19:50:33 +0200
+Message-Id: <1535997033-16330-3-git-send-email-pozega.tomislav@gmail.com> (sfid-20180903_195104_263232_E0602B42)
+In-Reply-To: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
+References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Balaji Pothunoori <bpothuno@codeaurora.org> writes:
+Increase driver limit for various interface combinations.
+I was able to start 8 virtual APs and connect 5 clients to
+these. Frimware support is required too, see:
+https://github.com/qca/open-ath9k-htc-firmware/pull/149
 
-> Average ack rssi value is weighted average of ack rssi for
-> no of msdu's has been sent.
-> This feature is enabled by the host driver if firmware is capable.
-> After receiving event from host, firmware allocates the necessary
-> memory to store the ack_rssi for data packets during the init time.
->
-> After each successful transmission, If tx completion status is OK
-> and 24th bit is set in HTT message header then host will fetch the
-> ack_rssi else host can ignore the ack_rssi field.
->
-> Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |    8 ++++----
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-There were two new warnings:
-
-drivers/net/wireless/ath/ath10k/htt_rx.c:1928: line over 90 characters
-drivers/net/wireless/ath/ath10k/mac.c:8511: Alignment should match open parenthesis
-
-I fixed those in the pending branch. The first one I solved by adding a
-temporary variable 'msdus'. Please review:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=e4ac90b9c915a3b86eeef60509a6d2bb85d3507d
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 5490c5f..b6c577b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -197,8 +197,8 @@ struct ath9k_htc_target_rx_stats {
+ 	__be32 host_done;
+ } __packed;
+ 
+-#define ATH9K_HTC_MAX_VIF 2
+-#define ATH9K_HTC_MAX_BCN_VIF 2
++#define ATH9K_HTC_MAX_VIF 8
++#define ATH9K_HTC_MAX_BCN_VIF 8
+ 
+ #define INC_VIF(_priv, _type) do {		\
+ 		switch (_type) {		\
+@@ -251,8 +251,8 @@ struct ath9k_vif_iter_data {
+ 	u8 mask[ETH_ALEN];
+ };
+ 
+-#define ATH9K_HTC_MAX_STA 8
+-#define ATH9K_HTC_MAX_TID 8
++#define ATH9K_HTC_MAX_STA 128
++#define ATH9K_HTC_MAX_TID 16
+ 
+ enum tid_aggr_state {
+ 	AGGR_STOP = 0,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 214c682..fa13ba9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -697,9 +697,9 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ }
+ 
+ static const struct ieee80211_iface_limit if_limits[] = {
+-	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
++	{ .max = 8,	.types = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
+-	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
++	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) |
+ #ifdef CONFIG_MAC80211_MESH
+ 				 BIT(NL80211_IFTYPE_MESH_POINT) |
+ #endif
+@@ -709,7 +709,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ static const struct ieee80211_iface_combination if_comb = {
+ 	.limits = if_limits,
+ 	.n_limits = ARRAY_SIZE(if_limits),
+-	.max_interfaces = 2,
++	.max_interfaces = 8,
+ 	.num_different_channels = 1,
+ };
+ 
 -- 
-Kalle Valo
+1.7.0.4
