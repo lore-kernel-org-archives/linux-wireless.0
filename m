@@ -1,133 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:42026 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:58476 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726563AbeIKRYx (ORCPT
+        with ESMTP id S1725982AbeICMwp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 13:24:53 -0400
-Message-ID: <1536668735.3224.145.camel@sipsolutions.net> (sfid-20180911_142549_687232_2DFA07C9)
-Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
+        Mon, 3 Sep 2018 08:52:45 -0400
+Message-ID: <1535963610.3437.10.camel@sipsolutions.net> (sfid-20180903_103407_414254_305DBF17)
+Subject: Re: [PATCH] mac80211: fix TX status reporting for ieee80211s
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Siva Rebbagondla <siva8118@gmail.com>
-Cc: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
-        sushant kumar mishra <sushant2k1513@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>
-Date: Tue, 11 Sep 2018 14:25:35 +0200
-In-Reply-To: <CANGSkXR11ZxFoiZ7sbKTu8BnXSpTsiAhH=DOD=e9Zh8bquDC0A@mail.gmail.com>
-References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
-         <1534246392.3547.26.camel@sipsolutions.net>
-         <5B83C2FE.90000@redpinesignals.com>
-         <1535527450.5215.8.camel@sipsolutions.net>
-         <CANGSkXTnEV7efC8nY9MRK1q2Ky-Ao_6rLoLp75oj4cvCkguZGw@mail.gmail.com>
-         <1535970059.3437.39.camel@sipsolutions.net>
-         <CANGSkXTPejV11TVpauXn+t6g+rUQ8cYik8KAz7W1P-2Y-8XebA@mail.gmail.com>
-         <CANGSkXR11ZxFoiZ7sbKTu8BnXSpTsiAhH=DOD=e9Zh8bquDC0A@mail.gmail.com>
+To: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Sep 2018 10:33:30 +0200
+In-Reply-To: <1535699575-5672-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180831_091323_224304_305F21B4)
+References: <1535699575-5672-1-git-send-email-fu3mo6goo@gmail.com>
+         (sfid-20180831_091323_224304_305F21B4)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[re-adding the previous thread]
+On Fri, 2018-08-31 at 15:12 +0800, Yuan-Chi Pang wrote:
 
-> As discussed earlier, please find attached tar ball for driver logs,
-> traces and debug patches.
-> I have added a README for reference in attached folder, go through the
-> steps and let me know your feedback.
+>  void ieee80211s_init(void);
+>  void ieee80211s_update_metric(struct ieee80211_local *local,
+> -			      struct sta_info *sta, struct sk_buff *skb);
+> +			struct sta_info *sta, struct ieee80211_tx_status *st);
 
-Thanks! The tracing doesn't seem to have worked, but the logging helps a
-lot.
+please keep things indented properly
 
-So what happens, to summarize, is that we have hardware that doesn't
-support scanning on both bands at the same time, i.e.
-SINGLE_SCAN_ON_ALL_BANDS isn't set.
+>  void ieee80211s_update_metric(struct ieee80211_local *local,
+> -		struct sta_info *sta, struct sk_buff *skb)
+> +		struct sta_info *sta, struct ieee80211_tx_status *st)
 
-This is with the patch to make -EPERM into "please do software scan" (we
-can debate whether that should be -EPERM or 1 or something, doesn't
-matter for this discussion).
+and maybe fix the indentation here while you're changing it
 
-This logic only happens here:
+>  {
+> -	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+> -	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> +	struct ieee80211_tx_info *txinfo = st->info;
+>  	int failed;
+>  
+> -	if (!ieee80211_is_data(hdr->frame_control))
+> -		return;
 
-        if (local->ops->hw_scan) {
-                WARN_ON(!ieee80211_prep_hw_scan(local));
-                rc = drv_hw_scan(local, sdata, local->hw_scan_req);
-                if (rc == -EPERM) {
-                        set_bit(SCAN_HW_CANCELLED, &local->scanning);
-                        __set_bit(SCAN_SW_SCANNING, &local->scanning);
-                        rc = ieee80211_start_sw_scan(local, sdata);
-                }
-(in __ieee80211_start_scan).
+Why are you removing this condition? You didn't say anything about that.
 
-Next thing is that the software scan completes. This calls
-__ieee80211_scan_completed(), which assumes hardware scan is running,
-since
-	bool hw_scan = local->ops->hw_scan;
+I sort of see why (you no longer even have the skb/hdr), but you should
+indicate why this is OK.
+ 
+>  		rate_control_tx_status(local, sband, status);
+> +		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
+> +			ieee80211s_update_metric(local, sta, status)
 
-This now again runs drv_hw_scan():
+This is the only "real" change I guess, some more description about it
+would be good.
 
-        if (hw_scan && !aborted &&
-            !ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS) &&
-            ieee80211_prep_hw_scan(local)) {
-                int rc;
-
-                rc = drv_hw_scan(local,
-                        rcu_dereference_protected(local->scan_sdata,
-                                                  lockdep_is_held(&local->mtx)),
-                        local->hw_scan_req);
-
-which presumably again returns -EPERM (conditions didn't change), and
-thus we end up with scan abort.
-
-To work around this, you were setting and testing HW_SCAN_CANCELLED in
-two new places (you can see the setting above).
-
-Looking at this in more detail, I think we have multiple issues with the
-way the fallback is implemented.
-
-First of all, this issue at hand. That's worked around, and could be -
-more properly IMHO - worked around by setting a new bit
-(HW_SCAN_SW_FALLBACK or so).
-
-However, note that due to the way you implemented this, the software
-scan requests that happens as a fallback behaves differently from a
-regular software scan. This doesn't matter to you (right now) because
-you only fall back to software if you're not connected, but in the case
-that you _are_ connected, it would behave differently due to all the
-code in __ieee80211_start_scan() that handles a single-channel software
-scan differently if that matches the currently used channel.
-
-
-So ultimately, I think the (combined) problem is that the fallback is
-implemented badly.
-
-My suggestion would be to separate the decision of whether to do
-software or hardware scan from the hw_scan callback. This could be done
-by flags, e.g. hw->scanflags & IEEE80211_SW_SCAN_WHILE_UNASSOC, which
-would be your case IIRC, though TBD what that means for AP mode.
-
-Obviously, you'll have to change all the (four) things that are checking
-for "local->ops->hw_scan" to check something else. The three in
-__ieee80211_start_scan() obviously just check the result of the
-condition, and the one in __ieee80211_scan_completed() can already check
-local->scanning today since that's set by then (and the scanning==0 case
-is only valid with aborted, so not relevant for the hw_scan condition).
-
-Perhaps we can actually do the return value from drv_hw_scan(), but in
-that case I'd say it should look something like this:
-
-https://p.sipsolutions.net/6ca3554b24e09ffb.txt
-
-Yes, that's less efficient (due to the whole idle recalculation), but
-it's much easier to understand what's going on, IMHO.
-
-There's also a question about whether or not capabilities match, e.g. if
-we do software scan we report 4 SSIDs, low prio scan, AP scan, random
-scan, minimal scan content ... these are OK, but if there are ever
-features that mac80211 *doesn't* support, we'll be in trouble if
-somebody tries to use them.
-
-Hope this helps. If my patch actually works (I obviously haven't tested)
-then I can send it to the list with signed-off-by and all.
+I can sort of reverse engineer it from your commit log, but you should
+be more explicit.
 
 johannes
