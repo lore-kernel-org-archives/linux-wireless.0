@@ -1,100 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:44097 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727804AbeITAsO (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59854 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725943AbeICO7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 20:48:14 -0400
-Date: Wed, 19 Sep 2018 16:08:51 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: David Ahern <dsahern@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/7] netlink: prepare validate extack setting for
- recursion
-Message-ID: <20180919190851.GM4590@localhost.localdomain> (sfid-20180919_210902_167221_57EDACA0)
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
- <20180919120900.28708-6-johannes@sipsolutions.net>
- <18ea5293-5a12-7aca-7373-12d1ab3a0821@gmail.com>
- <1537374995.10305.47.camel@sipsolutions.net>
- <50773483-5732-8874-c5bf-99fa09d7e94a@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50773483-5732-8874-c5bf-99fa09d7e94a@gmail.com>
+        Mon, 3 Sep 2018 10:59:05 -0400
+Message-ID: <1535971161.3437.49.camel@sipsolutions.net> (sfid-20180903_123934_458010_D1E8B55D)
+Subject: Re: [PATCH] ath10k: add dynamic vlan support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Date: Mon, 03 Sep 2018 12:39:21 +0200
+In-Reply-To: <80f8e88e5161f2731e67e1c0e1d7225c@codeaurora.org>
+References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
+         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
+         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
+         <1526637270.3805.15.camel@sipsolutions.net>
+         <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
+         <1527069018.3759.15.camel@sipsolutions.net>
+         <eede64cf-ecf3-6697-a338-b7eb4c9bcd27@codeaurora.org>
+         <1534408023.3547.64.camel@sipsolutions.net>
+         <80f8e88e5161f2731e67e1c0e1d7225c@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 09:44:37AM -0700, David Ahern wrote:
-> On 9/19/18 9:36 AM, Johannes Berg wrote:
-> > On Wed, 2018-09-19 at 09:28 -0700, David Ahern wrote:
-> >> On 9/19/18 5:08 AM, Johannes Berg wrote:
-> >>> diff --git a/lib/nlattr.c b/lib/nlattr.c
-> >>> index 966cd3dcf31b..2b015e43b725 100644
-> >>> --- a/lib/nlattr.c
-> >>> +++ b/lib/nlattr.c
-> >>> @@ -69,7 +69,7 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
-> >>>  
-> >>>  static int validate_nla(const struct nlattr *nla, int maxtype,
-> >>>  			const struct nla_policy *policy,
-> >>> -			const char **error_msg)
-> >>> +			struct netlink_ext_ack *extack, bool *extack_set)
-> >>
-> >> extack_set arg is not needed if you handle the "Attribute failed policy
-> >> validation" message and NL_SET_BAD_ATTR here as well.
+Hi,
+
+Sorry ... this got delayed again.
+
+> I had introduced a change db3bdcb9c3ff (" mac80211: allow AP_VLAN 
+> operation on crypto controlled devices ") for supporting VLAN 
+> functionality on ath10k devices; this commit has broken 4 addr support 
+> on ath10k devices as I was advertising the AP/VLAN support 
+> conditionally. Since 4 addr operation is tied to AP/VLAN support, with 
+> this change, only the chips which support VLAN functionality can support 
+> 4 addr operation but other ath10k chips don't.
+
+Right.
+
+>  From what I can understand from our previous discussions, we had to 
+> separate the 4addr support from the AP/VLAN iftype but doing so could 
+> lead to backward compatibility issues. I have the code which separates 
+> the 4addr functionality from AP/VLAN but the bigger problem is the 
+> backward compatibility.
+
+Ok.
+
+> I am hoping that now I have set the context correctly :)
+
+Thanks!
+
+> > I think we have to keep the 4-addr handling in AP_VLAN iftype either
+> > way, to not break existing hostapd. We could introduce a separate
+> > AP_VLAN_NO_4ADDR and then require updating hostapd to get non-4addr
+> > VLAN, but that also seems awkward.
 > > 
-> > I'm not sure that's true, but perhaps you have a better idea than me?
+> > Since hostapd doesn't currently check anything...
 > > 
-> > My thought would be to introduce an "error" label in validate_nla(),
-> > that sets up the extack data.
-> > 
-> > Then we could skip over that if we have a separate message to report,
-> > making the NLA_REJECT case easier.
-> > 
-> > However, if we do nested validation, I'm not sure it really is that much
-> > easier? We still need to figure out if the nested validation was setting
-> > the message (and bad attr), rather than it having been set before we
-> > even get into this function.
-> > 
-> > So let's say we have
-> > 
-> >         case NLA_NESTED:
-> >                 /* a nested attributes is allowed to be empty; if its not,
-> >                  * it must have a size of at least NLA_HDRLEN.
-> >                  */
-> >                 if (attrlen == 0)
-> >                         break;
-> >                 if (attrlen < NLA_HDRLEN)
-> >                         return -ERANGE;
-> >                 if (pt->validation_data) {
-> >                         int err;
-> > 
-> >                         err = nla_validate_parse(nla_data(nla), nla_len(nla),
-> >                                                  pt->len, pt->validation_data,
-> >                                                  extack, extack_set, NULL);
-> >                         if (err < 0)
-> >                                 return err;
-> >                 }
-> >                 break;
-> > 
-> > right now after all the patches.
-> > 
-> > The "return -ERANGE;" would become "{ err = -ERANGE; goto error; }", but
-> > I'm not really sure we can cleanly handle the other case?
-> > 
-> > Hmm. Maybe it works if we ensure that nla_validate_parse() has no other
-> > return points that can fail outside of validate_nla(), or we set up the
-> > extack data there as well, so that once we have a nested
-> > nla_validate_parse() we know that it's been set.
-> > 
-> > Actually, we need to do that anyway so that we can move the setting into
-> > validate_nla(), and then it should work.
-> > 
-> > Mechanics aside - I'll take a look later tonight or tomorrow - do you
-> > think the goal/external interface of this makes sense?
+> > Ok, no, I'm confused now. If we just clear WIPHY_FLAG_4ADDR_AP, don't 
+> > we
+> > get what we want? 4-addr AP_VLAN interfaces would no longer be 
+> > permitted
+> > to be created?
 > 
-> If it fails and returns (nested and all) on the first failure it should
-> be fine. I was thinking something like this (whitespace damaged on paste):
+> As I explained above, the agenda is to provide the driver (in this case, 
+> ath10k) a better control for advertising the device capabilities; only 
+> few ath10k chips can support VLAN functionality but all of them can 
+> support 4 addr operation.
 
-This will avoid the situation that we were discussing in the older
-thread, btw.
+So the problematic part isn't actually the *4-addr* (fake) VLAN, the
+problematic part is the actual AP_VLAN - I suppose because that uses a
+separate GTK.
 
-  Marcelo
+
+So I guess the only, mostly backward compatible way to really separate
+the two would be to
+
+1) move WIPHY_FLAG_4ADDR_{AP,STATION} to be nl80211 ext feature flags,
+   I guess the STATION always should've been since there's nothing that
+   indicates support for it today in the API
+
+along with one of:
+
+2a) Add a new AP_VLAN ext feature flag that indicates the AP_VLAN is not
+    only supported for 4-addr
+
+2b) Allow creating an AP_VLAN interface in 4-addr mode in 
+    nl80211_new_interface() even when AP_VLAN is not in the supported
+    interface combinations, if (and only if) WIPHY_FLAG_4ADDR_AP is set
+    (or rather the new extended feature flag after doing 1). Update the
+    language in the documentation somewhere indicating this.
+
+
+Hostapd clearly deals with both 2a and 2b since it never bothers to
+check the combinations. As a result, I prefer 2b rather than 2a since it
+doesn't add any weird combinations to the API that would be impossible.
+
+johannes
