@@ -1,70 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:45813 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728376AbeIQNKY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:33288 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726023AbeICQfv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 09:10:24 -0400
-Received: by mail-qk1-f196.google.com with SMTP id z125-v6so8495035qkb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 00:44:12 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: seth.forshee@canonical.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-        Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>
-Subject: Re: [PATCH 2/2] wireless-regdb: Sync DE with ETSI EN 301 893 V2.1.1 (2017-05)
-Date: Mon, 17 Sep 2018 09:44:05 +0200
-Message-ID: <1800591.rykpzNG4et@bentobox> (sfid-20180917_094415_321361_B37856A2)
-In-Reply-To: <20180917074212.6739-2-sven.eckelmann@openmesh.com>
-References: <20180917074212.6739-1-sven.eckelmann@openmesh.com> <20180917074212.6739-2-sven.eckelmann@openmesh.com>
+        Mon, 3 Sep 2018 12:35:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-09-03
+Date: Mon,  3 Sep 2018 14:15:45 +0200
+Message-Id: <20180903121546.27673-1-johannes@sipsolutions.net> (sfid-20180903_141604_430542_42638ACE)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart6461430.fRXuHVCLLc"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6461430.fRXuHVCLLc
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Hi Dave,
 
-On Montag, 17. September 2018 09:42:12 CEST Sven Eckelmann wrote:
-[...]
-> diff --git a/db.txt b/db.txt
-> index 7f978e1..f406ac0 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -379,7 +379,7 @@ country CZ: DFS-ETSI
->  country DE: DFS-ETSI
->  	(2400 - 2483.5 @ 40), (100 mW)
->  	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-> -	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
-> +	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
->  	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
->  	# short range devices (ETSI EN 300 440-1)
->  	(5725 - 5875 @ 80), (25 mW)
+This time around for mac80211 I have a larger than usual number of
+fixes, in part because Luca dumped our (Intel's) patches out after
+quite a while - we'll try to make sure this doesn't happen again.
 
-Grml, I had only one task.... still copied it to the wrong line
+Shortlog below, as usual, each fix is pretty self-contained but it
+adds up to quite a bit overall.
 
-Kind regards,
-	Sven
---nextPart6461430.fRXuHVCLLc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Please pull and let me know if there's any problem.
 
------BEGIN PGP SIGNATURE-----
+Thanks,
+johannes
 
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlufW0UACgkQXYcKB8Em
-e0ZB4A//dEdwTK2Jpa+lIuiup4LNIh3yf9inmr+AB5ueTfdiWScjoomuKu6xHaKw
-nFBg4Q1pr1lLYxR+GjZafLTvCdniMUPwnBwjJRKyeTFlK8dCu4tsOq9QPRRsGaQf
-xeroN8IY8l6umyHIOWJ+qEY+rdWWeUB+nQjbjyx9zPTIs+CUROgjn4wB0joRgesL
-BZJmcYVPGJCBGJwSrf2DVj2YnHVuLSuV77PFVhToZ8maAx/vEmYoj3AlNyYbfXwm
-BE0BQq66tCPCnyStSdwY9Xyojy4cm5JoXfYECGphmaSdfaAW/t5LWd2AK82tmtPN
-fSG25gKDIW+d4sJ3CafwL/XnQ2HQDYD+Cgkf+ZBjT7w64GlX/NXQ+omwOVfO9Edb
-ehnrB0W7EUF5VowyAeqk/YWg1qgre16ao2THGU5/KFlap/L1NjPLaqGH+w7yBDe/
-HOWMX3oaSOtgd785p8pN8TDM+vn00kAM7zut76pWZSPmT44W53Q5yMtkJKE2Zho/
-TcIsiwCUJFrWm1J7WrQ2GDcAE5IrWnm+6fbx1xXy7fFsdfAjFw0bUMKsX82lZR7U
-regpS7xhJO4SgjHMQBPAJ/VHEqgGtQAdWsFpsjAH78ZDAo6udfmCduDLBKM/hTkO
-xrYd6Ubgk1K9HXeMFOyJERqtVJfkzsiXngq7yYvmT+bzDadOqIo=
-=5m2m
------END PGP SIGNATURE-----
 
---nextPart6461430.fRXuHVCLLc--
+
+The following changes since commit ec0c96714e7ddeda4eccaa077f5646a0fd6e371f:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-08-11 11:22:44 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-09-03
+
+for you to fetch changes up to c6e57b3896fc76299913b8cfd82d853bee8a2c84:
+
+  mac80211: shorten the IBSS debug messages (2018-09-03 10:41:27 +0200)
+
+----------------------------------------------------------------
+Here are quite a large number of fixes, notably:
+ * various A-MSDU building fixes (currently only affects mt76)
+ * syzkaller & spectre fixes in hwsim
+ * TXQ vs. teardown fix that was causing crashes
+ * embed WMM info in reg rule, bad code here had been causing crashes
+ * one compilation issue with fix from Arnd (rfkill-gpio includes)
+ * fixes for a race and bad data during/after channel switch
+ * nl80211: a validation fix, attribute type & unit fixes
+along with other small fixes.
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      rfkill-gpio: include linux/mod_devicetable.h
+
+Arunk Khandavalli (1):
+      cfg80211: nl80211_update_ft_ies() to validate NL80211_ATTR_IE
+
+Dan Carpenter (1):
+      cfg80211: fix a type issue in ieee80211_chandef_to_operating_class()
+
+Danek Duvall (2):
+      mac80211: correct use of IEEE80211_VHT_CAP_RXSTBC_X
+      mac80211_hwsim: correct use of IEEE80211_VHT_CAP_RXSTBC_X
+
+Dreyfuss, Haim (1):
+      mac80211: fix WMM TXOP calculation
+
+Emmanuel Grumbach (4):
+      mac80211: don't update the PM state of a peer upon a multicast frame
+      mac80211: fix a race between restart and CSA flows
+      mac80211: don't Tx a deauth frame if the AP forbade Tx
+      mac80211: shorten the IBSS debug messages
+
+Haim Dreyfuss (2):
+      nl80211: Fix nla_put_u8 to u16 for NL80211_WMMR_TXOP
+      nl80211: Pass center frequency in kHz instead of MHz
+
+Ilan Peer (1):
+      mac80211: Fix station bandwidth setting after channel switch
+
+Jinbum Park (1):
+      mac80211_hwsim: Fix possible Spectre-v1 for hwsim_world_regdom_custom
+
+Johannes Berg (3):
+      mac80211_hwsim: require at least one channel
+      cfg80211: remove division by size of sizeof(struct ieee80211_wmm_rule)
+      mac80211: always account for A-MSDU header changes
+
+Lorenzo Bianconi (2):
+      mac80211: do not convert to A-MSDU if frag/subframe limited
+      mac80211: fix an off-by-one issue in A-MSDU max_subframe computation
+
+Sara Sharon (1):
+      mac80211: avoid kernel panic when building AMSDU from non-linear SKB
+
+Stanislaw Gruszka (1):
+      cfg80211: make wmm_rule part of the reg_rule structure
+
+Toke Høiland-Jørgensen (1):
+      mac80211: Run TXQ teardown code before de-registering interfaces
+
+Yuan-Chi Pang (1):
+      mac80211: mesh: fix HWMP sequence numbering to follow standard
+
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 50 ++----------
+ drivers/net/wireless/mac80211_hwsim.c              | 12 ++-
+ include/net/cfg80211.h                             |  4 +-
+ include/net/regulatory.h                           |  4 +-
+ net/mac80211/ibss.c                                | 22 +++---
+ net/mac80211/main.c                                | 28 +++++--
+ net/mac80211/mesh_hwmp.c                           |  4 +
+ net/mac80211/mlme.c                                | 70 ++++++++++++++++-
+ net/mac80211/rx.c                                  |  1 +
+ net/mac80211/tx.c                                  | 54 +++++++------
+ net/mac80211/util.c                                | 11 ++-
+ net/rfkill/rfkill-gpio.c                           |  1 +
+ net/wireless/nl80211.c                             | 15 ++--
+ net/wireless/reg.c                                 | 91 ++++------------------
+ net/wireless/util.c                                |  2 +-
+ 15 files changed, 182 insertions(+), 187 deletions(-)
