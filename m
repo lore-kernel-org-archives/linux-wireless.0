@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37178 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732526AbeITRyC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59174 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727617AbeICNxO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:54:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] brcm80211: remove redundant condition check before
- debugfs_remove_recursive
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536414043-32146-1-git-send-email-zhongjiang@huawei.com>
-References: <1536414043-32146-1-git-send-email-zhongjiang@huawei.com>
-To: zhong jiang <zhongjiang@huawei.com>
-Cc: <davem@davemloft.net>, <arend.vanspriel@broadcom.com>,
-        <franky.lin@broadcom.com>, <hante.meuleman@broadcom.com>,
-        <chi-hsien.lin@cypress.com>, <wright.feng@cypress.com>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>, <netdev@vger.kernel.org>
-Message-Id: <20180920121051.0538960BF7@smtp.codeaurora.org> (sfid-20180920_141058_844654_51A8AED0)
-Date: Thu, 20 Sep 2018 12:10:51 +0000 (UTC)
+        Mon, 3 Sep 2018 09:53:14 -0400
+Message-ID: <1535967225.3437.27.camel@sipsolutions.net> (sfid-20180903_113433_878460_E946C76F)
+Subject: Re: [PATCH v2 2/3] mac80211: support FTM responder
+ configuration/statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>
+Date: Mon, 03 Sep 2018 11:33:45 +0200
+In-Reply-To: <1535745418-31336-3-git-send-email-pradeepc@codeaurora.org>
+References: <1535745418-31336-1-git-send-email-pradeepc@codeaurora.org>
+         <1535745418-31336-3-git-send-email-pradeepc@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-zhong jiang <zhongjiang@huawei.com> wrote:
-
-> debugfs_remove_recursive has taken IS_ERR_OR_NULL into account. So just
-> remove the condition check before debugfs_remove_recursive.
+On Fri, 2018-08-31 at 12:56 -0700, Pradeep Kumar Chitrapu wrote:
 > 
-> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+> + * @ftm_responder: whether to enable fine timing measurement FTM functionality
 
-Patch applied to wireless-drivers-next.git, thanks.
+missing "responder" somewhere there :)
 
-761cb7cdef1a brcm80211: remove redundant condition check before debugfs_remove_recursive
+> + * @ftmr_params: configurable lci/civic parameter when enabling FTM responder.
 
--- 
-https://patchwork.kernel.org/patch/10593061/
+Perhaps the *existence* of ftmr_params could indicate that it's enabled?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> @@ -865,6 +899,20 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
+>  	if (err == 0)
+>  		changed |= BSS_CHANGED_AP_PROBE_RESP;
+>  
+> +	if (params->ftm_responder) {
+
+Here you immediately have the problem I talked about in the earlier
+patch ... yes, we don't have drivers that allow disabling it (so should
+probably reject that now), but without it you can *enable* it on the
+fly, but you cannot *disable*, in fact we assume saying "disable" means
+"no change" which is rather confusing.
+
+johannes
