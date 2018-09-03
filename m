@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34434 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725819AbeIFUkx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:33360 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726023AbeICQje (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:40:53 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/1] ath10k: avoid possible memory access violation
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1533292805-9709-1-git-send-email-vijay.bvb@samsung.com>
-References: <1533292805-9709-1-git-send-email-vijay.bvb@samsung.com>
-To: "K.T.VIJAYAKUMAAR" <vijay.bvb@samsung.com>
-Cc: davem@davemloft.net, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, cpgs@samsung.com,
-        vijay.bvb@samsung.com
-Message-Id: <20180906160442.93AA16081A@smtp.codeaurora.org> (sfid-20180906_180453_448706_17BA47F2)
-Date: Thu,  6 Sep 2018 16:04:42 +0000 (UTC)
+        Mon, 3 Sep 2018 12:39:34 -0400
+Message-ID: <1535977170.3437.62.camel@sipsolutions.net> (sfid-20180903_141945_174856_FDD54B6E)
+Subject: Re: pull-request: mac80211 2018-09-03
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 03 Sep 2018 14:19:30 +0200
+In-Reply-To: <20180903121546.27673-1-johannes@sipsolutions.net> (sfid-20180903_141604_430542_42638ACE)
+References: <20180903121546.27673-1-johannes@sipsolutions.net>
+         (sfid-20180903_141604_430542_42638ACE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"K.T.VIJAYAKUMAAR" <vijay.bvb@samsung.com> wrote:
-
-> array "ctl_power_table" access index "pream" is initialized with -1 and
-> is raised as a static analysis tool issue.
-> [drivers\net\wireless\ath\ath10k\wmi.c:4719] ->
-> [drivers\net\wireless\ath\ath10k\wmi.c:4730]: (error) Array index -1 is
-> out of bounds.
+On Mon, 2018-09-03 at 14:15 +0200, Johannes Berg wrote:
+> Hi Dave,
 > 
-> Since the "pream" index for accessing ctl_power_table array is initialized
-> with -1, there is a chance of memory access violation for the cases below.
-> 1) wmi_pdev_tpc_final_table_event change frequency is between 2483 and 5180
-> 2) pream_idx is out of the enumeration ranges of wmi_tpc_pream_2ghz,
-> wmi_tpc_pream_5ghz
+> This time around for mac80211 I have a larger than usual number of
+> fixes, in part because Luca dumped our (Intel's) patches out after
+> quite a while - we'll try to make sure this doesn't happen again.
 > 
-> Signed-off-by: K.T.VIJAYAKUMAAR <vijay.bvb@samsung.com>
-> [kvalo@codeaurora.org: clean up the warning message]
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Shortlog below, as usual, each fix is pretty self-contained but it
+> adds up to quite a bit overall.
+> 
+> Please pull and let me know if there's any problem.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Oh, forgot: if/when you merge this, could you pull it into net-next at
+some point? I have a patch that depends on this but isn't really net
+material - it can wait though, so no hurry.
 
-97c69a70dc2c ath10k: avoid possible memory access violation
-
--- 
-https://patchwork.kernel.org/patch/10554929/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
