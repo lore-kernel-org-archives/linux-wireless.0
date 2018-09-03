@@ -1,166 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:35070 "EHLO aibo.runbox.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727052AbeIRAgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 20:36:11 -0400
-Message-ID: <aef11320d7926492aed8aed4555f9c7244451603.camel@mbuf.com> (sfid-20180917_210734_804053_65C2C6F7)
-Subject: Re: desktop hard lock up (kernel panic) with Alfa AWUSB036ACM and
- wireless-testing 72d1e548defbf
-From: David Poole <davep@mbuf.com>
-Reply-To: davep@mbuf.com
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        dpoole@cradlepoint.com
-Date: Mon, 17 Sep 2018 13:07:14 -0600
-In-Reply-To: <CAA2SeN+ueC55MA8E5g0XcYF=6qZ0W+Dp6zNtpGOUcQBCM31wtA@mail.gmail.com>
-References: <4922c981d88ab8b16d6ebd130829b6c04d8bbc56.camel@mbuf.com>
-         <CAA2SeNKshXx2e9z+iWf=pbM0SN0teT2cvnye4noEjBxtOo4Vvw@mail.gmail.com>
-         <85af1917c8da6179f6455318d9db3132819ac1b4.camel@mbuf.com>
-         <CAA2SeN+ueC55MA8E5g0XcYF=6qZ0W+Dp6zNtpGOUcQBCM31wtA@mail.gmail.com>
-Content-Type: multipart/signed; micalg="sha-256";
-        protocol="application/x-pkcs7-signature";
-        boundary="=-W1HWAAYWeZ9a1jbsVlOH"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:49132 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727447AbeICVLA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Sep 2018 17:11:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        govinds@codeaurora.org, linux-wireless@vger.kernel.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: retrieve MAC address from firmware if provided
+References: <20180810233948.144792-1-briannorris@chromium.org>
+        <5B6F2A47.7070502@broadcom.com>
+        <CA+ASDXOeybJAsWJtVBdLdQ=6xThJja5MaEoa3dERKZ-shkbDkg@mail.gmail.com>
+        <5B71CDFB.60408@broadcom.com>
+        <878t4qftnm.fsf@kamboji.qca.qualcomm.com>
+        <20180829001453.GA173345@ban.mtv.corp.google.com>
+Date: Mon, 03 Sep 2018 19:49:58 +0300
+In-Reply-To: <20180829001453.GA173345@ban.mtv.corp.google.com> (Brian Norris's
+        message of "Tue, 28 Aug 2018 17:14:54 -0700")
+Message-ID: <87ftyq8r0p.fsf@kamboji.qca.qualcomm.com> (sfid-20180903_185023_719573_781C16B9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Brian Norris <briannorris@chromium.org> writes:
 
---=-W1HWAAYWeZ9a1jbsVlOH
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Tue, Aug 28, 2018 at 05:33:01PM +0300, Kalle Valo wrote:
+>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>> 
+>> > On 8/13/2018 7:14 PM, Brian Norris wrote:
+>> >> On Sat, Aug 11, 2018 at 11:26 AM Arend van Spriel
+>> >> <arend.vanspriel@broadcom.com> wrote:
+>> >>>
+>> >>> On 8/11/2018 1:39 AM, Brian Norris wrote:
+>> >>>> Devices may provide their own MAC address via system firmware (e.g.,
+>> >>>
+>> >>> You got me confused by using just "firmware" in the subject.
+>> >>
+>> >> Yeah...I started by writing this patch with device tree specifically
+>> >> (of_get_mac_address()), and then later found that there were generic
+>> >> "device" helpers for this, which can assist with other sorts of
+>> >> firmware nodes. It was easier to put a name on a device tree patch
+>> >> than on a "device" patch. I suppose "system firmware" might be a
+>> >> better description?
+>> >>
+>> >>>> device tree), especially in the case where the device doesn't have a
+>> >>>> useful EEPROM on which to store its MAC address (e.g., for integrated
+>> >>>> Wifi).
+>> >>>>
+>> >>>> Use the generic device helper to retrieve the MAC address, and (if
+>> >>>> present) honor it above the MAC address advertised by the card.
+>> >>>
+>> >>> But this put me back on track ;-)
+>> >>
+>> >> Let me know if you have a better way to clarify. I can resend with a
+>> >> slightly modified subject (s/firmware/system firmware/), or let Kalle
+>> >> do it, if that's the only thing to change.
+>> >
+>> > "system firmware" substitution works for me.
+>> 
+>> What about:
+>> 
+>> ath10k: retrieve MAC address from Device Tree if provided
+>> 
+>> Because from ath10k point of view we use Device Tree functions and don't
+>> care if it's delivered by pidgeons or by system firmware :)
+>
+> I don't care too much, but note that Device Tree is a loaded term,
+> usually referring specifically to a method of describing system hardware
+> via the Flattened Device Tree format. If I were specifically targeting
+> Device Tree, I'd use helpers like of_get_mac_address() instead. (The
+> 'of_*' prefix is a relic of OpenFirmware, an early firmware
+> implementation that used the Device Tree format.)
 
-On Mon, 2018-09-17 at 10:14 +0200, Lorenzo Bianconi wrote:
-> >=20
-> > Hello. Here's the requested info.
-> >=20
-> > ...trillian:wireless-testing% gdb ./net/mac80211/mac80211.ko
-> > [...]
-> > (gdb) info address ieee80211_wake_txqs
-> > Symbol "ieee80211_wake_txqs" is a function at address 0x35890.
-> > [...]
-> > (gdb) l*(0x35890+0x1e3)
-> > 0x35a73 is in ieee80211_wake_txqs (net/mac80211/util.c:269).
-> > 264                     for (i =3D 0; i < ARRAY_SIZE(sta->sta.txq); i++=
-)
-> > {
-> > 265                             struct ieee80211_txq *txq =3D sta-
-> > > sta.txq[i];
-> >=20
-> > 266
-> > 267                             txqi =3D to_txq_info(txq);
-> > 268
-> > 269                             if (ac !=3D txq->ac)
-> > 270                                     continue;
-> > 271
-> > 272                             if
-> > (!test_and_clear_bit(IEEE80211_TXQ_STOP_NETIF_TX,
-> > 273                                                     &txqi->flags))
->=20
-> It should be fixed here:
-> https://marc.info/?l=3Dlinux-kernel&m=3D153694084922438&w=3D2
+My bad, I read your patch hastily and somehow understood you were using
+of_get_mac_address() but you were actually using
+device_get_mac_address(). So I'll change this to "system firmware" as
+originally suggested.
 
-Worked! Continuing to test.
+Sorry for the confusion.
 
-
-
-
---=-W1HWAAYWeZ9a1jbsVlOH
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCED4w
-ggUmMIIEDqADAgECAg9AYUF9DU7tUt/yQOGcC7swDQYJKoZIhvcNAQELBQAwgZcxCzAJBgNVBAYT
-AkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNV
-BAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRoZW50
-aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBMB4XDTE4MDUwMjAwMDAwMFoXDTE5MDUwMjIzNTk1
-OVowHzEdMBsGCSqGSIb3DQEJARYOZGF2ZXBAbWJ1Zi5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IB
-DwAwggEKAoIBAQDG3ZcrTwoSMWU71k/a11C62Kosw0JnN6KiPYVp2K2nmQLVikesNxxQaVzoqg/K
-4Ni+fFHVRXrHXNtdA/qCBk6OIVNM8flrIkKadZc/NkUCDpnCXBMUw++TM7Ep8f3kWzU/ew/TyKph
-ZoXY06BDuwIat+cBaI2fSrhBh9Zf5o2UgD+VUMZ6X6l3LY8VPqX7TPV1EkYaqNGcD4aePmNlaN9V
-rMh+CcgOTBD7WW8FLvBOB+UHXeQMJGuYJ3yhIMUrm2ENb6+G9TvTrMq5IJFL6n8QnFSlZEaVQggg
-qnTrC30m+XcV0SnhlQLbMqUfh92V0lGLP4cr70Ue0T4E7T6FVTJ3AgMBAAGjggHkMIIB4DAfBgNV
-HSMEGDAWgBSCr2yM+MX+lmF86B89K3FIXsSLwDAdBgNVHQ4EFgQUpbFJQCvVskIKNGZjFUWO4lX7
-JJswDgYDVR0PAQH/BAQDAgWgMAwGA1UdEwEB/wQCMAAwIAYDVR0lBBkwFwYIKwYBBQUHAwQGCysG
-AQQBsjEBAwUCMBEGCWCGSAGG+EIBAQQEAwIFIDBGBgNVHSAEPzA9MDsGDCsGAQQBsjEBAgEBATAr
-MCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8ubmV0L0NQUzBaBgNVHR8EUzBRME+g
-TaBLhklodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9DT01PRE9SU0FDbGllbnRBdXRoZW50aWNhdGlv
-bmFuZFNlY3VyZUVtYWlsQ0EuY3JsMIGLBggrBgEFBQcBAQR/MH0wVQYIKwYBBQUHMAKGSWh0dHA6
-Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1JTQUNsaWVudEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJl
-RW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTAZBgNVHREE
-EjAQgQ5kYXZlcEBtYnVmLmNvbTANBgkqhkiG9w0BAQsFAAOCAQEACNNjJh0ziFbSuwM0fdKuBIdN
-TanvFma+sECnDjYh8VSJNzbUGWyXgY5RzjSySaM0lkLgXQQQfW0htwoNBbzsxlfsDkLOwGH6t5nb
-8HepAUwGF3tz4lrG7YMPhDSWh3sdeRtJ1V6/bpHsY5bMK73U260QJBNJqUvbrnhCRw8WRSlauWzd
-hp0eKgwDKXJdktKPq8cy1DQ7PHUUt1JOVCwk39nFPUeQrtUKoat1dLP3/LiwRxvkM3NTYlFd7Utp
-4Oa8PHKMIC8eHfVV7rbZwMfdZDMOHfVbPRGxpsdBt3a7jqJXJYBVUY6+6PDX24mMGeOt/sD/S9AZ
-O9Oy2uFR+KOPsTCCBSYwggQOoAMCAQICD0BhQX0NTu1S3/JA4ZwLuzANBgkqhkiG9w0BAQsFADCB
-lzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2Fs
-Zm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTgwNTAyMDAwMDAwWhcN
-MTkwNTAyMjM1OTU5WjAfMR0wGwYJKoZIhvcNAQkBFg5kYXZlcEBtYnVmLmNvbTCCASIwDQYJKoZI
-hvcNAQEBBQADggEPADCCAQoCggEBAMbdlytPChIxZTvWT9rXULrYqizDQmc3oqI9hWnYraeZAtWK
-R6w3HFBpXOiqD8rg2L58UdVFesdc210D+oIGTo4hU0zx+WsiQpp1lz82RQIOmcJcExTD75MzsSnx
-/eRbNT97D9PIqmFmhdjToEO7Ahq35wFojZ9KuEGH1l/mjZSAP5VQxnpfqXctjxU+pftM9XUSRhqo
-0ZwPhp4+Y2Vo31WsyH4JyA5MEPtZbwUu8E4H5Qdd5Awka5gnfKEgxSubYQ1vr4b1O9OsyrkgkUvq
-fxCcVKVkRpVCCCCqdOsLfSb5dxXRKeGVAtsypR+H3ZXSUYs/hyvvRR7RPgTtPoVVMncCAwEAAaOC
-AeQwggHgMB8GA1UdIwQYMBaAFIKvbIz4xf6WYXzoHz0rcUhexIvAMB0GA1UdDgQWBBSlsUlAK9Wy
-Qgo0ZmMVRY7iVfskmzAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggr
-BgEFBQcDBAYLKwYBBAGyMQEDBQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYB
-BAGyMQECAQEBMCswKQYIKwYBBQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMFoG
-A1UdHwRTMFEwT6BNoEuGSWh0dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1JTQUNsaWVudEF1
-dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcmwwgYsGCCsGAQUFBwEBBH8wfTBVBggrBgEF
-BQcwAoZJaHR0cDovL2NydC5jb21vZG9jYS5jb20vQ09NT0RPUlNBQ2xpZW50QXV0aGVudGljYXRp
-b25hbmRTZWN1cmVFbWFpbENBLmNydDAkBggrBgEFBQcwAYYYaHR0cDovL29jc3AuY29tb2RvY2Eu
-Y29tMBkGA1UdEQQSMBCBDmRhdmVwQG1idWYuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQAI02MmHTOI
-VtK7AzR90q4Eh01Nqe8WZr6wQKcONiHxVIk3NtQZbJeBjlHONLJJozSWQuBdBBB9bSG3Cg0FvOzG
-V+wOQs7AYfq3mdvwd6kBTAYXe3PiWsbtgw+ENJaHex15G0nVXr9ukexjlswrvdTbrRAkE0mpS9uu
-eEJHDxZFKVq5bN2GnR4qDAMpcl2S0o+rxzLUNDs8dRS3Uk5ULCTf2cU9R5Cu1Qqhq3V0s/f8uLBH
-G+Qzc1NiUV3tS2ng5rw8cowgLx4d9VXuttnAx91kMw4d9Vs9EbGmx0G3druOolclgFVRjr7o8Nfb
-iYwZ463+wP9L0Bk707La4VH4o4+xMIIF5jCCA86gAwIBAgIQapvhODv/K2ufAdXZuKdSVjANBgkq
-hkiG9w0BAQwFADCBhTELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQ
-MA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxKzApBgNVBAMTIkNP
-TU9ETyBSU0EgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTMwMTEwMDAwMDAwWhcNMjgwMTA5
-MjM1OTU5WjCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G
-A1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9E
-TyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC+s55XrCh2dUAWxzgDmNPGGHYhUPMleQtMtaDRfTpYPpyn
-MS6n9jR22YRq2tA9NEjk6vW7rN/5sYFLIP1of3l0NKZ6fLWfF2VgJ5cijKYy/qlAckY1wgOkUMgz
-KlWlVJGyK+UlNEQ1/5ErCsHq9x9aU/x1KwTdF/LCrT03Rl/FwFrf1XTCwa2QZYL55AqLPikFlgqO
-tzk06kb2qvGlnHJvijjI03BOrNpo+kZGpcHsgyO1/u1OZTaOo8wvEU17VVeP1cHWse9tGKTDyUGg
-2hJZjrqck39UIm/nKbpDSZ0JsMoIw/JtOOg0JC56VzQgBo7ictReTQE5LFLG3yQK+xS1AgMBAAGj
-ggE8MIIBODAfBgNVHSMEGDAWgBS7r34CPfqm8TyEjq3uOJjs2TIy1DAdBgNVHQ4EFgQUgq9sjPjF
-/pZhfOgfPStxSF7Ei8AwDgYDVR0PAQH/BAQDAgGGMBIGA1UdEwEB/wQIMAYBAf8CAQAwEQYDVR0g
-BAowCDAGBgRVHSAAMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NP
-TU9ET1JTQUNlcnRpZmljYXRpb25BdXRob3JpdHkuY3JsMHEGCCsGAQUFBwEBBGUwYzA7BggrBgEF
-BQcwAoYvaHR0cDovL2NydC5jb21vZG9jYS5jb20vQ09NT0RPUlNBQWRkVHJ1c3RDQS5jcnQwJAYI
-KwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTANBgkqhkiG9w0BAQwFAAOCAgEAeFyy
-gSg0TzzuX1bOn5dW7I+iaxf28/ZJCAbU2C81zd9A/tNx4+jsQgwRGiHjZrAYayZrrm78hOx7aEpk
-fNPQIHGG6Fvq3EzWf/Lvx7/hk6zSPwIal9v5IkDcZoFD7f3iT7PdkHJY9B51csvU50rxpEg1OyOT
-8fk2zvvPBuM4qQNqbGWlnhMpIMwpWZT89RY0wpJO+2V6eXEGGHsROs3njeP9DqqqAJaBa4wBeKOd
-GCWn1/Jp2oY6dyNmNppI4ZNMUH4Tam85S1j6E95u4+1Nuru84OrMIzqvISE2HN/56ebTOWlcrurf
-fade2022O/tUU1gb4jfWCcyvB8czm12FgX/y/lRjmDbEA08QJNB2729Y+io1IYO3ztveBdvUCIYZ
-ojTq/OCR6MvnzS6X72HP0PRLRTiOSEmIDsS5N5w/8IW1Hva5hEFy6fDAfd9yI+O+IMMAj1KcL/Zo
-9jzJ16HO5m60ttl1Enk8MQkz/W3JlHaeI5iKFn4UJu1/cP2YHXYPiWf2JyBzsLBrGk1II+3yL8ao
-rYew6CQvdVifC3HtwlSam9V1niiCfOBe2C12TdKGu05LWIA3ZkFcWJGaNXOZ6Ggyh/TqvXG5v7zm
-EVDNXFnHn9tFpMpOUvxhcsjycBtH0dZ0WrNw6gH+HF8TIhCnH3+zzWuDN0Rk6h9KVkfKehIxggPE
-MIIDwAIBATCBqzCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQ
-MA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENP
-TU9ETyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0ECD0BhQX0N
-Tu1S3/JA4ZwLuzANBglghkgBZQMEAgEFAKCCAekwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAc
-BgkqhkiG9w0BCQUxDxcNMTgwOTE3MTkwNzE0WjAvBgkqhkiG9w0BCQQxIgQgxpjJrZcFQjeC5zd5
-I4dlkw+6O1iGQ4L8VM9l3i4zznowgbwGCSsGAQQBgjcQBDGBrjCBqzCBlzELMAkGA1UEBhMCR0Ix
-GzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMR
-Q09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0
-aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0ECD0BhQX0NTu1S3/JA4ZwLuzCBvgYLKoZIhvcNAQkQAgsx
-ga6ggaswgZcxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNV
-BAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8g
-UlNBIENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBAg9AYUF9DU7tUt/y
-QOGcC7swDQYJKoZIhvcNAQEBBQAEggEAatej8ldlmnaVwy/nwDbnPTEz3yJwxZom9e+A5L1qtFT7
-J3C/fudsqLaL2cxPXBxTmJtHqhDMxDk7TL0Hgj63YZ28nY6lfmM+Ablo53EVqi57tMdDA5CM8b0o
-vYtPfzd+by/isN9dvLr3h3bob9hSaI7mPX0Q69zrGXcgDDterBmlLwjpjx5oZZkIUNh1uLE9BfCI
-Ce09jQDjj8oOAr/z2BmaK+MMN72SHcGboNgaWZkt07OUD5WeXXNM87HyFMOtf4X8VU7tI17UdW8w
-opdifeL8icjCPn5Es0jl/WC85Z/Gcbqk/0//C1Uz+FtYCD5R+wJJ9diwcB/qrKSOKR34tAAAAAAA
-AA==
-
-
---=-W1HWAAYWeZ9a1jbsVlOH--
+-- 
+Kalle Valo
