@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50352 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726342AbeIELwn (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:35050 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727079AbeICT4M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 07:52:43 -0400
+        Mon, 3 Sep 2018 15:56:12 -0400
+Received: by mail-qt0-f175.google.com with SMTP id j7-v6so991475qtp.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 08:35:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 05 Sep 2018 12:53:52 +0530
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: johannes@sipsolutions.net, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 3/3] ath10k: average ack rssi support for data frames
-In-Reply-To: <87r2i87dke.fsf@kamboji.qca.qualcomm.com>
-References: <1523890122-23952-1-git-send-email-bpothuno@codeaurora.org>
- <1523890122-23952-4-git-send-email-bpothuno@codeaurora.org>
- <87r2i87dke.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <65b1a2b72d3c2a73902fe7d65754636a@codeaurora.org> (sfid-20180905_092356_433869_79984BF7)
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
+ <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk>
+ <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
+ <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
+ <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
+ <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
+ <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk> <CAA93jw6MQD70XatAmjG-OwVa_Rn5Ey-5Ni22iTCPARaH+KjnJA@mail.gmail.com>
+In-Reply-To: <CAA93jw6MQD70XatAmjG-OwVa_Rn5Ey-5Ni22iTCPARaH+KjnJA@mail.gmail.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Mon, 3 Sep 2018 08:35:18 -0700
+Message-ID: <CAA93jw6G6-zX7ZcVR_REp9ir-Ns2VjEXWe_1Da1uRvkE+KRYZw@mail.gmail.com> (sfid-20180903_173534_781820_FF78BE34)
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Johannes Berg <johannes@sipsolutions.net>, grundler@google.com,
+        wgong@qti.qualcomm.com, wgong@codeaurora.org,
+        ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-05 10:20, Kalle Valo wrote:
-> Balaji Pothunoori <bpothuno@codeaurora.org> writes:
-> 
->> Average ack rssi value is weighted average of ack rssi for
->> no of msdu's has been sent.
->> This feature is enabled by the host driver if firmware is capable.
->> After receiving event from host, firmware allocates the necessary
->> memory to store the ack_rssi for data packets during the init time.
->> 
->> After each successful transmission, If tx completion status is OK
->> and 24th bit is set in HTT message header then host will fetch the
->> ack_rssi else host can ignore the ack_rssi field.
->> 
->> Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
-> 
-> There were two new warnings:
-> 
-> drivers/net/wireless/ath/ath10k/htt_rx.c:1928: line over 90 characters
-> drivers/net/wireless/ath/ath10k/mac.c:8511: Alignment should match
-> open parenthesis
+While I'm being overly vague and general...
 
-In v3 i have addressed Alignment warning.
+* Doing some form of ack compression (whether in the tcp stack or in
+mac80211) seems useful. It's really
+hard to fill 4Mbytes one way and the needed number of acks the other.
+I'd also pointed out (on some thread on the make-wifi-fast list that I
+can't find right now) that drivers had a tendency to eat an entire
+txop for that first single ack and ping pong between empty and full on
+a one way tcp benchmark.
 
-> 
-> I fixed those in the pending branch. The first one I solved by adding a
-> temporary variable 'msdus'. Please review:
+* Similarly grabbing air during the contention window. If the sender
+is grabbing 3x as much air as the reciever
 
-Thanks kalle for optimizing the code , I am fine with the changes.
+(A1 A2 A3 B1 A4 B2)
 
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=e4ac90b9c915a3b86eeef60509a6d2bb85d3507d
+* I know of one org that upped the codel target value for 802.11ac
+with decent results but I can't talk about it...
+(sort of why I asked for a cap). My problem with decreasing the pacing
+shift is that it makes for less interleaving (I think! have to look),
+where increasing the target compensates for more jittery networks.
+('course my overall theme of my prior post was to reduce jittery
+networks with less buffering and smaller txops overall)
+
+* Is this a two device test? or a test through an AP?
+
+Looking over this thread, I see a suggestion is to expose the pacing
+rate via a sysctl. I don't think there's
+any one answer, either, but I'm not sure this is the right variable to
+expose. Perhaps a tunable for
+latency that might (one day) look at multiple variables and decide?
+
+Getting this more right is really a job for an algorithm of
+minstrel-like complexity.
