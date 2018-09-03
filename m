@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:36402 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbeITOyx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 10:54:53 -0400
-Received: by mail-wr1-f65.google.com with SMTP id e1-v6so8600634wrt.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 02:12:24 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 00/20] unify mt76x2 and mt76x0 eeprom code
-Date: Thu, 20 Sep 2018 11:11:47 +0200
-Message-Id: <cover.1537433365.git.lorenzo.bianconi@redhat.com> (sfid-20180920_111248_508728_A895AD35)
+Received: from mail.toke.dk ([52.28.52.200]:51253 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726034AbeICPbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Sep 2018 11:31:03 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Grant Grundler <grundler@google.com>, wgong@qti.qualcomm.com
+Cc: wgong@codeaurora.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+In-Reply-To: <1535967508.3437.31.camel@sipsolutions.net>
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com> <1535967508.3437.31.camel@sipsolutions.net>
+Date: Mon, 03 Sep 2018 13:11:21 +0200
+Message-ID: <87in3m25uu.fsf@toke.dk> (sfid-20180903_131249_777038_0020D925)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series unify most of eeprom parsing between mt76x2 and
-mt76x0 driver. That patchset will be used to properly support
-mt76x0e chipsets without duplicating the code.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Lorenzo Bianconi (19):
-  mt76: move seq_put_array in mt76-core module
-  mt76: move common eeprom definitions in mt76x02-lib module
-  mt76: move eeprom utility routines in mt76x02_eeprom.h
-  mt76: move mt76x2_eeprom_get in mt76x02_eeprom.h
-  mt76: move mt76x02_mac_setaddr in mt76x02-lib module
-  mt76: move mt76x2_get_efuse_data in mt76x02-lib module
-  mt76: move mt76x2_ext_pa_enabled routine in mt76x02_eeprom.c
-  mt76x0: remove mt76x0_set_country_reg routine
-  mt76: add mt76x02_get_rx_gain and mt76x02_get_lna_gain utility
-    routines
-  mt76x0: unify lna_gain parsing
-  mt76x0: unify rssi_offset parsing
-  mt76x0: unify temperature offset parsing
-  mt76x0: unify freq offset parsing
-  mt76: move mt76x02_eeprom_parse_hw_cap in mt76x02-lib module
-  mt76x0: unify parse hw capabilities
-  mt76: move mt76x2_tssi_enabled in mt76x02_eeprom.h
-  mt76x0: remove eeprom dependency from mt76x0_set_tx_power_per_rate
-  mt76x0: remove eeprom dependency from mt76x0_set_tx_power_per_chan
-  mt76x0: use shared debugfs implementation
+> On Thu, 2018-08-30 at 16:32 -0700, Grant Grundler wrote:
+>> On Sun, Aug 12, 2018 at 10:37 PM Wen Gong <wgong@qti.qualcomm.com> wrote:
+>> ...
+>> > I have tested with your method for shift 6/8/10/7 all twice time in open air environment.
+>> 
+>> I've attached the graphed data which Wen provided me and I made one
+>> "cleanup": the median and average "ICMP" are computed only using
+>> values where flent has an "antagonist" load running.  The first 28 and
+>> last 26 seconds of the test are "idle" - it makes no sense to include
+>> the latency of those. This drops about 1/7th of the data points.
+>> 
+>> My observations:
+>> o the delta between average and median is evidence this is not
+>> particularly reliable data (but expected result for "open air" wifi
+>> testing in a corp environment).
+>> o sk_pacing_shift=8 and/or =7 appears to have suffered from
+>> significant open air interference - I've attached a graph of the raw
+>> data.
+>> o I'm comfortable asserting throughput is higher and latency is lower
+>> for sk_pacing_shift=6 (vs 7) at the cost of additional CPU
+>> utilization.
+>> 
+>> My questions:
+>> 1) Is the current conversation just quibbling about 6 vs 7 for the
+>> ath10k default?
+>
+> 6 vs. 8, I think? But I didn't follow the full discussion.
+>
+> I also think that we shouldn't necessarily restrict this to "for the
+> ath10k". Is there any reason to think that this would be different for
+> different chips?
 
-Felix Fietkau (1):
-  mt76: add stbc entries to mt76_rate_power
+No, I also think it should be possible to select a value that will work
+for all drivers. There's a strong diminishing returns effect here after
+a certain point, and I believe we should strongly push back against just
+adding more buffering to chase (single-flow) throughput numbers; and I'm
+not convinced that having different values for different drivers is
+worth the complexity.
 
- drivers/net/wireless/mediatek/mt76/Makefile   |   3 +-
- drivers/net/wireless/mediatek/mt76/debugfs.c  |  12 +
- drivers/net/wireless/mediatek/mt76/mt76.h     |   5 +-
- .../wireless/mediatek/mt76/mt76x0/debugfs.c   |  92 +---
- .../wireless/mediatek/mt76/mt76x0/eeprom.c    | 513 +++++++-----------
- .../wireless/mediatek/mt76/mt76x0/eeprom.h    | 119 +---
- .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |   5 +-
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   |  68 +--
- .../wireless/mediatek/mt76/mt76x02_eeprom.c   | 156 ++++++
- .../wireless/mediatek/mt76/mt76x02_eeprom.h   | 194 +++++++
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  18 +
- .../net/wireless/mediatek/mt76/mt76x02_mac.h  |   1 +
- .../wireless/mediatek/mt76/mt76x2_debugfs.c   |  33 +-
- .../wireless/mediatek/mt76/mt76x2_eeprom.c    | 239 +++-----
- .../wireless/mediatek/mt76/mt76x2_eeprom.h    | 122 +----
- .../net/wireless/mediatek/mt76/mt76x2_init.c  |   6 +-
- .../net/wireless/mediatek/mt76/mt76x2_mcu.c   |   2 +-
- .../mediatek/mt76/mt76x2_mcu_common.c         |   5 +-
- .../net/wireless/mediatek/mt76/mt76x2_phy.c   |   8 +-
- .../mediatek/mt76/mt76x2_phy_common.c         |  16 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u.h  |   1 -
- .../net/wireless/mediatek/mt76/mt76x2u_init.c |   5 +-
- .../net/wireless/mediatek/mt76/mt76x2u_mac.c  |  24 +-
- .../net/wireless/mediatek/mt76/mt76x2u_main.c |   2 +-
- .../net/wireless/mediatek/mt76/mt76x2u_phy.c  |   6 +-
- 25 files changed, 740 insertions(+), 915 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+As far as I'm concerned, just showing an increase in maximum throughput
+under ideal conditions (as this initial patch submission did) is not
+sufficient argument for adding more buffering. At a minimum, the
+evaluation should also include:
 
--- 
-2.17.1
+- Impact on latency and throughput for competing flows in the same test.
+- Impact on latency for the TCP flow itself.
+- A full evaluation at low rates and in scenarios with more than one
+  client.
+
+As far as the actual value, I *think* it may be that the default shift
+should be 7 (8 ms) rather than 8 (4 ms) as it currently is. Going back
+and looking at my data from when I submitted the original patch, it
+looks like the point of diminishing returns is somewhere between those
+two with ath9k (where I did most of my testing), and it seems reasonable
+that it could be slightly higher (i.e., more buffering) for ath10k.
+
+-Toke
