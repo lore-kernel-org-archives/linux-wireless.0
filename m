@@ -1,66 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51252 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728699AbeIFSEZ (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33783 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727141AbeICWMC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 14:04:25 -0400
+        Mon, 3 Sep 2018 18:12:02 -0400
+Received: by mail-wm0-f67.google.com with SMTP id r1-v6so7257297wmh.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 10:50:47 -0700 (PDT)
+From: =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        ath9k_htc_fw@lists.infradead.org
+Subject: [PATCH 1/3] debug: use common debug for ack timeout output
+Date: Mon,  3 Sep 2018 19:50:31 +0200
+Message-Id: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com> (sfid-20180903_195103_577334_F577E511)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 06 Sep 2018 18:58:52 +0530
-From: Rakesh Pillai <pillair@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Fix tx status flag setting for management frames
-In-Reply-To: <1536240014-10349-1-git-send-email-pillair@codeaurora.org>
-References: <1536240014-10349-1-git-send-email-pillair@codeaurora.org>
-Message-ID: <5432a9bbdf2b9461435d8a8e7cc74542@codeaurora.org> (sfid-20180906_152856_098764_AFEDB58A)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Move ack debug code to common-debug and adjust
+ath9k/ath9k_htc debug for common ack output.
 
-Please ignore this patchset. I have added the Tested HW/FW info and sent 
-the v2 version for this patchset.
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/common-debug.c  |   29 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common-debug.h  |    7 +++++
+ drivers/net/wireless/ath/ath9k/debug.c         |   26 +--------------------
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    4 +++
+ 4 files changed, 41 insertions(+), 25 deletions(-)
 
-Thanks,
-Rakesh Pillai.
-
-On 2018-09-06 18:50, Rakesh Pillai wrote:
-> The tx_status for management frames is being filled
-> incorrectly in the flags of skb_cb. This incorrect
-> flag setting causes the upper layers to consider that
-> the particular frame was not transmitted properly,
-> leading to improper behavior.
-> 
-> Set the IEEE80211_TX_STAT_ACK flag in the info flags
-> of skb_cb, to indicate the successful transmission of
-> the management frame.
-> 
-> Fixes: dc405152bb64d4ae01c9ac669de25b2d1fb6fc2d
-> 
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
-> b/drivers/net/wireless/ath/ath10k/wmi.c
-> index fd612d2..1dced0d 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2336,7 +2336,12 @@ static int wmi_process_mgmt_tx_comp(struct
-> ath10k *ar, u32 desc_id,
->  	dma_unmap_single(ar->dev, pkt_addr->paddr,
->  			 msdu->len, DMA_FROM_DEVICE);
->  	info = IEEE80211_SKB_CB(msdu);
-> -	info->flags |= status;
-> +
-> +	if (status)
-> +		info->flags &= ~IEEE80211_TX_STAT_ACK;
-> +	else
-> +		info->flags |= IEEE80211_TX_STAT_ACK;
-> +
->  	ieee80211_tx_status_irqsafe(ar->hw, msdu);
-> 
->  	ret = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/common-debug.c b/drivers/net/wireless/ath/ath9k/common-debug.c
+index 239429f..230fe55 100644
+--- a/drivers/net/wireless/ath/ath9k/common-debug.c
++++ b/drivers/net/wireless/ath/ath9k/common-debug.c
+@@ -258,3 +258,32 @@ void ath9k_cmn_debug_phy_err(struct dentry *debugfs_phy,
+ 			    &fops_phy_err);
+ }
+ EXPORT_SYMBOL(ath9k_cmn_debug_phy_err);
++
++#ifdef CONFIG_ATH9K_DYNACK
++static ssize_t read_file_ackto(struct file *file, char __user *user_buf,
++                               size_t count, loff_t *ppos)
++{
++        struct ath_hw *ah = file->private_data;
++        char buf[32];
++        unsigned int len;
++
++        len = sprintf(buf, "%u %c\n", ah->dynack.ackto,
++                      (ah->dynack.enabled) ? 'A' : 'S');
++
++        return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_ackto = {
++        .read = read_file_ackto,
++        .open = simple_open,
++        .owner = THIS_MODULE,
++        .llseek = default_llseek,
++};
++
++void ath9k_cmn_debug_ack_to(struct dentry *debugfs_phy,
++			    struct ath_hw *ah)
++{
++	debugfs_create_file("ack_to", 0400, debugfs_phy, ah, &fops_ackto);
++}
++EXPORT_SYMBOL(ath9k_cmn_debug_ack_to);
++#endif
+diff --git a/drivers/net/wireless/ath/ath9k/common-debug.h b/drivers/net/wireless/ath/ath9k/common-debug.h
+index 3376990..a4bc75f 100644
+--- a/drivers/net/wireless/ath/ath9k/common-debug.h
++++ b/drivers/net/wireless/ath/ath9k/common-debug.h
+@@ -71,6 +71,8 @@ void ath9k_cmn_debug_recv(struct dentry *debugfs_phy,
+ 			  struct ath_rx_stats *rxstats);
+ void ath9k_cmn_debug_phy_err(struct dentry *debugfs_phy,
+ 			     struct ath_rx_stats *rxstats);
++void ath9k_cmn_debug_ack_to(struct dentry *debugfs_phy,
++			    struct ath_hw *ah);
+ #else
+ static inline void ath9k_cmn_debug_modal_eeprom(struct dentry *debugfs_phy,
+ 						struct ath_hw *ah)
+@@ -96,4 +98,9 @@ static inline void ath9k_cmn_debug_phy_err(struct dentry *debugfs_phy,
+ 					   struct ath_rx_stats *rxstats)
+ {
+ }
++
++static inline void ath9k_cmn_debug_ack_to(struct dentry *debugfs_phy,
++					  struct ath_hw *ah)
++{
++}
+ #endif /* CONFIG_ATH9K_COMMON_DEBUG */
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 0a6eb8a..d2ea0b1 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1038,29 +1038,6 @@ static ssize_t read_file_btcoex(struct file *file, char __user *user_buf,
+ };
+ #endif
+ 
+-#ifdef CONFIG_ATH9K_DYNACK
+-static ssize_t read_file_ackto(struct file *file, char __user *user_buf,
+-			       size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-	struct ath_hw *ah = sc->sc_ah;
+-	char buf[32];
+-	unsigned int len;
+-
+-	len = sprintf(buf, "%u %c\n", ah->dynack.ackto,
+-		      (ah->dynack.enabled) ? 'A' : 'S');
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_ackto = {
+-	.read = read_file_ackto,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-#endif
+-
+ #ifdef CONFIG_ATH9K_WOW
+ 
+ static ssize_t read_file_wow(struct file *file, char __user *user_buf,
+@@ -1451,8 +1428,7 @@ int ath9k_init_debug(struct ath_hw *ah)
+ #endif
+ 
+ #ifdef CONFIG_ATH9K_DYNACK
+-	debugfs_create_file("ack_to", 0400, sc->debug.debugfs_phy,
+-			    sc, &fops_ackto);
++	ath9k_cmn_dbg_ack_to(sc->debug.debugfs_phy, sc->sc_ah);
+ #endif
+ 	debugfs_create_file("tpc", 0600, sc->debug.debugfs_phy, sc, &fops_tpc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index b3ed65e..a345da8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -520,5 +520,9 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	ath9k_cmn_debug_base_eeprom(priv->debug.debugfs_phy, priv->ah);
+ 	ath9k_cmn_debug_modal_eeprom(priv->debug.debugfs_phy, priv->ah);
+ 
++#ifdef CONFIG_ATH9K_DYNACK
++	ath9k_cmn_debug_ack_to(priv->debug.debugfs_phy, priv->ah);
++#endif
++
+ 	return 0;
+ }
+-- 
+1.7.0.4
