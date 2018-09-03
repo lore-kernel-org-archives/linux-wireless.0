@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33691 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730911AbeISLmb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57102 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727848AbeICVSg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:31 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 12/29] staging: wilc1000: set default value of cfg response type in wilc_wlan_cfg_indicate_rx()
-Date: Wed, 19 Sep 2018 11:35:02 +0530
-Message-ID: <1537337119-14952-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080613_790920_32D938E4)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 3 Sep 2018 17:18:36 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [PATCH] ath10k: Add waiting htt tx complete before wow enable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1535442443-22152-1-git-send-email-wgong@codeaurora.org>
+References: <1535442443-22152-1-git-send-email-wgong@codeaurora.org>
+To: Wen Gong <wgong@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20180903165738.A79FD607B9@smtp.codeaurora.org> (sfid-20180903_185752_797887_8DB712C0)
+Date: Mon,  3 Sep 2018 16:57:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle the setting of default value for 'wilc_cfg_rsp' type for all
-cases in wilc_wlan_cfg_indicate_rx() as the caller make use of this
-value to know the type of the received message.
+Wen Gong <wgong@codeaurora.org> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> If there are some tx packets pending in firmware, and then system
+> enters suspend, firmware will fail for wow enable. This will trigger
+> mac80211 to stop ath10k and download firmware again, then it is
+> non-wow suspend.
+> 
+> After add the waiting htt tx complete, then firmware will have some
+> time window to send or flush the pending tx packets.
+> 
+> Tested with QCA6174 PCI with firmware
+> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
+> It's not a regression with new firmware releases.
+> 
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 2b5471b..2c463a3 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -507,6 +507,7 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 	msg_id = frame[1];      /* seq no */
- 	frame += 4;
- 	size -= 4;
-+	rsp->type = 0;
- 
- 	/*
- 	 * The valid types of response messages are
-@@ -532,7 +533,6 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 
- 	case 'N':
- 		wilc_network_info_received(wilc, frame - 4, size + 4);
--		rsp->type = 0;
- 		break;
- 
- 	case 'S':
-@@ -540,7 +540,6 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 		break;
- 
- 	default:
--		rsp->type = 0;
- 		rsp->seq_no = msg_id;
- 		break;
- 	}
+Patch applied to ath-next branch of ath.git, thanks.
+
+828853ac5826 ath10k: add waiting htt tx complete before wow enable
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10578009/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
