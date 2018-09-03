@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:54962 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:59666 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726471AbeILNYm (ORCPT
+        with ESMTP id S1727478AbeICOiW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 09:24:42 -0400
-Message-ID: <1536740466.3678.6.camel@sipsolutions.net> (sfid-20180912_102121_536760_0FB77929)
-Subject: Re: [RFC] netlink: add NLA_REJECT policy type
+        Mon, 3 Sep 2018 10:38:22 -0400
+Message-ID: <1535969922.3437.37.camel@sipsolutions.net> (sfid-20180903_121855_433464_E123555B)
+Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kubecek <mkubecek@suse.cz>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 12 Sep 2018 10:21:06 +0200
-In-Reply-To: <20180912081621.GC29691@unicorn.suse.cz>
-References: <20180912073245.8047-1-johannes@sipsolutions.net>
-         <20180912081621.GC29691@unicorn.suse.cz>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Date: Mon, 03 Sep 2018 12:18:42 +0200
+In-Reply-To: <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com>
+References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
+         <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-12 at 10:16 +0200, Michal Kubecek wrote:
-> On Wed, Sep 12, 2018 at 09:32:45AM +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > In some situations some netlink attributes may be used for output
-> > only (kernel->userspace) or may be reserved for future use. It's
-> > then helpful to be able to prevent userspace from using them in
-> > messages sent to the kernel, since they'd otherwise be ignored and
-> > any future will become impossible if this happens.
-> > 
-> > Add NLA_REJECT to the policy which does nothing but reject (with
-> > EINVAL) validation of any messages containing this attribute.
-> > 
-> > The specific case I have in mind now is a shared nested attribute
-> > containing request/response data, and it would be pointless and
-> > potentially confusing to have userspace include response data in
-> > the messages that actually contain a request.
-> 
-> I find this feature very useful. Actually, I was a bit surprised when
-> I found I can't mark an attribute "forbidden" using policy.
+On Fri, 2018-08-31 at 15:29 +0300, Kalle Valo wrote:
 
-:-)
+> Too me this feels like a bad idea but I'm not familiar enough with
+> mac80211 to really comment on this. What kind of implications does this
+> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
+> about their opinion about this.
 
-> IMHO it would be even nicer if one could also specify an error message
-> to use in extack if NLA_REJECT is applied; the easiest way would be
-> using .validation_data and passing extack to validate_nla() but I'm not
-> sure if it wouldn't qualify as an abuse.
+The biggest implication is probably radiotap. Beyond that, it's using
+this to report the "last rate" to nl80211, but that's not all super
+useful anyway.
 
-I think it's fine - validation data is by nature validation type
-dependent, so we can document it here. I'll send a v2.
+The retry count is also affected, and since you report "somewhat
+liberally" that would lead to erroneous statistics.
+
+I'd recommend against doing this and disentangling the necessary code in
+mac80211, e.g. with ieee80211_tx_status_ext() or adding similar APIs.
 
 johannes
