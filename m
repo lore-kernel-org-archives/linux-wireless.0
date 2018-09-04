@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37642 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55336 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387481AbeITRzo (ORCPT
+        with ESMTP id S1726093AbeIDJao (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:55:44 -0400
+        Tue, 4 Sep 2018 05:30:44 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [PATCH] qtnfmac: remove set but not used variable 'vif'
+Subject: Re: [PATCH 2/2] ath10k: Enable pktlog for WCN3990 target
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536668904-13110-1-git-send-email-yuehaibing@huawei.com>
-References: <1536668904-13110-1-git-send-email-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        "Andrey Shevchenko" <ashevchenko@quantenna.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Message-Id: <20180920121232.45382602A7@smtp.codeaurora.org> (sfid-20180920_141236_686588_CD409BA1)
-Date: Thu, 20 Sep 2018 12:12:32 +0000 (UTC)
+In-Reply-To: <20180828043642.14890-3-govinds@codeaurora.org>
+References: <20180828043642.14890-3-govinds@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Message-Id: <20180904050720.8DDA3606AC@smtp.codeaurora.org> (sfid-20180904_070725_049472_B6C635F8)
+Date: Tue,  4 Sep 2018 05:07:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Govind Singh <govinds@codeaurora.org> wrote:
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
+> WCN3990 target uses separate htc service for pktlog.
+> Add pktlog service request and support for pktlog
+> rx path handling.
 > 
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function 'qtnf_dump_survey':
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:694:19: warning:
->  variable 'vif' set but not used [-Wunused-but-set-variable]
+> Testing:
+>     Tested on WCN3990 and QCA6174 HW.
+>     Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1,
+>                WLAN.RM.4.4.1-00109-QCARMSWPZ-1
 > 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This introduced a new sparse warning:
 
-93ed990e3a6e qtnfmac: remove set but not used variable 'vif'
+drivers/net/wireless/ath/ath10k/htc.c:875:6: warning: symbol 'ath10k_htc_pktlog_svc_supported' was not declared. Should it be static?
+
+I fixed this in the pending branch.
 
 -- 
-https://patchwork.kernel.org/patch/10595609/
+https://patchwork.kernel.org/patch/10577869/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
