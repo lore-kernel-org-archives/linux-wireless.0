@@ -1,108 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12575 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727061AbeIDLEV (ORCPT
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:45777 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727611AbeIDUCc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:04:21 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 15/26] staging: wilc1000: refactor tcp_process() to avoid extra leading tabs
-Date: Tue, 4 Sep 2018 12:09:31 +0530
-Message-ID: <1536043182-19735-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084103_019370_C55EB714)
-In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
-References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 4 Sep 2018 16:02:32 -0400
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] rtl8xxxu: Add rtl8188ctv support
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Aleksei Mamlin <mamlinav@gmail.com>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180830140541.31964-1-mamlinav@gmail.com>
+ <20180904081619.7353B606AC@smtp.codeaurora.org>
+Message-ID: <53022e37-e9dc-1cf8-ec3c-4df668f3c045@gmail.com> (sfid-20180904_173738_331881_F886DDD6)
+Date: Tue, 4 Sep 2018 11:36:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180904081619.7353B606AC@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor tcp_process() to avoid unnecessary leading tabs in the
-function.
+On 09/04/2018 04:16 AM, Kalle Valo wrote:
+> Aleksei Mamlin <mamlinav@gmail.com> wrote:
+> 
+>> The Realtek rtl8188ctv (0x0bda:0x018a) is a highly integrated single-chip
+>> WLAN USB2.0 network interface controller.
+>>
+>> Currently rtl8188ctv is supported by rtlwifi driver.
+>> It is similar to the rtl8188cus(0x0bda:0x818a) and uses the same config.
+>>
+>> Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
+> 
+> Patch applied to wireless-drivers-next.git, thanks.
+> 
+> 514502c3a70b rtl8xxxu: Add rtl8188ctv support
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 52 +++++++++++++++++++-----------------
- 1 file changed, 28 insertions(+), 24 deletions(-)
+Looks good to me too - assume it's been tested?
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 6787b6e..bf45b4c 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -162,42 +162,46 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 	unsigned long flags;
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wilc = vif->wilc;
-+	const struct iphdr *ip_hdr_ptr;
-+	const struct tcphdr *tcp_hdr_ptr;
-+	u32 IHL, total_length, data_offset;
- 
- 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 
--	if (eth_hdr_ptr->h_proto == htons(ETH_P_IP)) {
--		const struct iphdr *ip_hdr_ptr = buffer + ETH_HLEN;
-+	if (eth_hdr_ptr->h_proto != htons(ETH_P_IP))
-+		goto out;
- 
--		if (ip_hdr_ptr->protocol == IPPROTO_TCP) {
--			const struct tcphdr *tcp_hdr_ptr;
--			u32 IHL, total_length, data_offset;
-+	ip_hdr_ptr = buffer + ETH_HLEN;
- 
--			IHL = ip_hdr_ptr->ihl << 2;
--			tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
--			total_length = ntohs(ip_hdr_ptr->tot_len);
-+	if (ip_hdr_ptr->protocol != IPPROTO_TCP)
-+		goto out;
- 
--			data_offset = tcp_hdr_ptr->doff << 2;
--			if (total_length == (IHL + data_offset)) {
--				u32 seq_no, ack_no;
-+	IHL = ip_hdr_ptr->ihl << 2;
-+	tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
-+	total_length = ntohs(ip_hdr_ptr->tot_len);
- 
--				seq_no = ntohl(tcp_hdr_ptr->seq);
--				ack_no = ntohl(tcp_hdr_ptr->ack_seq);
--				for (i = 0; i < tcp_session; i++) {
--					u32 j = ack_session_info[i].seq_num;
-+	data_offset = tcp_hdr_ptr->doff << 2;
-+	if (total_length == (IHL + data_offset)) {
-+		u32 seq_no, ack_no;
- 
--					if (i < 2 * MAX_TCP_SESSION &&
--					    j == seq_no) {
--						update_tcp_session(i, ack_no);
--						break;
--					}
--				}
--				if (i == tcp_session)
--					add_tcp_session(0, 0, seq_no);
-+		seq_no = ntohl(tcp_hdr_ptr->seq);
-+		ack_no = ntohl(tcp_hdr_ptr->ack_seq);
-+		for (i = 0; i < tcp_session; i++) {
-+			u32 j = ack_session_info[i].seq_num;
- 
--				add_tcp_pending_ack(ack_no, i, tqe);
-+			if (i < 2 * MAX_TCP_SESSION &&
-+			    j == seq_no) {
-+				update_tcp_session(i, ack_no);
-+				break;
- 			}
- 		}
-+		if (i == tcp_session)
-+			add_tcp_session(0, 0, seq_no);
-+
-+		add_tcp_pending_ack(ack_no, i, tqe);
- 	}
-+
-+out:
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- }
- 
--- 
-2.7.4
+Thanks,
+Jes
