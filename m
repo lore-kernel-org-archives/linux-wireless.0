@@ -1,108 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:34465 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725992AbeIVPA3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726170AbeIDIuB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 11:00:29 -0400
-Received: by mail-ed1-f68.google.com with SMTP id e25so4069598edv.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2018 02:07:38 -0700 (PDT)
-Subject: Re: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
-To: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6feec186-5137-8827-8ade-6f8988144f78@broadcom.com> (sfid-20180922_111057_165273_5B61C695)
-Date: Sat, 22 Sep 2018 11:07:36 +0200
+        Tue, 4 Sep 2018 04:50:01 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [PATCH 1/3] debug: use common debug for ack timeout output
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
+References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
+To: =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k_htc_fw@lists.infradead.org
+Message-Id: <20180904042646.48B6E601D3@smtp.codeaurora.org> (sfid-20180904_062651_364483_A8A1AA74)
+Date: Tue,  4 Sep 2018 04:26:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/11/2018 7:26 PM, Ali MJ Al-Nasrawy wrote:
-> Beacons+TIM are created/updated for fw beaconing only when BSS_CHANGED_BEACON.
-> This is not compliant with power-saving stations.
-> Fix it by updating beacon templates on mac80211 set_tim callback.
-> Adresses the issue in:
-> https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
+Tomislav Požega wrote:
 
-A few remarks below but here is my ....
+> Move ack debug code to common-debug and adjust
+> ath9k/ath9k_htc debug for common ack output.
+> 
+> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-> ---
->  .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 23 +++++++++++++++++++
->  .../broadcom/brcm80211/brcmsmac/main.h        |  2 ++
->  2 files changed, 25 insertions(+)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-> index ddfdfe1..ee92bb5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-> @@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
->  	}
->
->  	spin_lock_bh(&wl->lock);
-> +	wl->wlc->vif = vif;
->  	wl->mute_tx = false;
->  	brcms_c_mute(wl->wlc, false);
->  	if (vif->type == NL80211_IFTYPE_STATION)
-> @@ -937,6 +938,27 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
->  	spin_unlock_bh(&wl->lock);
->  }
->
-> +static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
-> +				 struct ieee80211_sta *sta, bool set)
-> +{
-> +	/*FIXME: this may be more efficiently handled by delegating
-> +	 beacon upload to the beacon interrupt handler*/
+Failed to build:
 
-No sure what you mean by this remark. The code below looks ok to me, ie. 
-same as with bss update. So please drop the remark.
+drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_init_debug':
+drivers/net/wireless/ath/ath9k/debug.c:1431:2: error: implicit declaration of function 'ath9k_cmn_dbg_ack_to'; did you mean 'ath9k_cmn_debug_ack_to'? [-Werror=implicit-function-declaration]
+  ath9k_cmn_dbg_ack_to(sc->debug.debugfs_phy, sc->sc_ah);
+  ^~~~~~~~~~~~~~~~~~~~
+  ath9k_cmn_debug_ack_to
+cc1: some warnings being treated as errors
+make[5]: *** [drivers/net/wireless/ath/ath9k/debug.o] Error 1
+make[5]: *** Waiting for unfinished jobs....
+make[5]: *** wait: No child processes.  Stop.
+make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
+make[3]: *** [drivers/net/wireless/ath] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
 
-> +	struct brcms_info *wl = hw->priv;
-> +	struct sk_buff *beacon;
-> +	u16 tim_offset = 0;
-> +	
-> +	beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
-> +					  &tim_offset, NULL);
-> +	if (beacon){
-> +		spin_lock_bh(&wl->lock);
-> +		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
-> +				       wl->wlc->vif->bss_conf.dtim_period);
-> +		spin_unlock_bh(&wl->lock);
-> +	}
-> +	
-> +	return 0;
-> +}
-> +
->  static const struct ieee80211_ops brcms_ops = {
->  	.tx = brcms_ops_tx,
->  	.start = brcms_ops_start,
-> @@ -955,6 +977,7 @@ static const struct ieee80211_ops brcms_ops = {
->  	.flush = brcms_ops_flush,
->  	.get_tsf = brcms_ops_get_tsf,
->  	.set_tsf = brcms_ops_set_tsf,
-> +	.set_tim = brcms_ops_beacon_set_tim,
->  };
->
->  void brcms_dpc(unsigned long data)
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-> index c4d135c..e3939fc 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-> @@ -568,6 +568,8 @@ struct brcms_c_info {
->  	u16 beacon_tim_offset;
->  	u16 beacon_dtim_period;
->  	struct sk_buff *probe_resp;
-> +	
+3 patches set to Changes Requested.
 
-Just get rid of the empty line (+TAB) above. I am not keen on storing 
-the vif, but it seems there is no other way to get that.
+10586273 [1/3] debug: use common debug for ack timeout output
+10586277 [2/3] ath9k_htc: enable ANI debug output
+10586275 [3/3] ath9k_htc: increase number of configurable virtual interfaces
 
-> +	struct ieee80211_vif *vif;
->  };
->
->  /* antsel module specific state */
->
+-- 
+https://patchwork.kernel.org/patch/10586273/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
