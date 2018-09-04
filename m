@@ -1,96 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33713 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731023AbeISLmx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726061AbeIDM3z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:53 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 18/29] staging: wilc1000: rename 'wilc_mac_cfg' struct to 'wilc_cfg_str_vals'
-Date: Wed, 19 Sep 2018 11:35:08 +0530
-Message-ID: <1537337119-14952-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080636_024855_20B69528)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 4 Sep 2018 08:29:55 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [PATCH v3 01/16] mt76: unify wait_for_mac
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1535541407-27149-2-git-send-email-sgruszka@redhat.com>
+References: <1535541407-27149-2-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Message-Id: <20180904080556.161DA60710@smtp.codeaurora.org> (sfid-20180904_100559_138585_FA9C95AD)
+Date: Tue,  4 Sep 2018 08:05:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename 'wilc_mac_cfg' struct to 'wilc_cfg_str_vals' as its more
-appropriate for structure to store the values of string configuration.
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 14 +++++++-------
- drivers/staging/wilc1000/wilc_wlan_cfg.h |  4 ++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
+> Create new mt76x02_mac.h for common mac functions of mt76x0 and mt76x2
+> and unity wait_for_mac for both drivers.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 8f1e962..930a389 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -438,7 +438,7 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 
- int wilc_wlan_cfg_init(struct wilc *wl)
- {
--	struct wilc_mac_cfg *mac_cfg;
-+	struct wilc_cfg_str_vals *str_vals;
- 	int i = 0;
- 
- 	wl->cfg.b = kmemdup(g_cfg_byte, sizeof(g_cfg_byte), GFP_KERNEL);
-@@ -457,20 +457,20 @@ int wilc_wlan_cfg_init(struct wilc *wl)
- 	if (!wl->cfg.s)
- 		goto out_w;
- 
--	mac_cfg = kzalloc(sizeof(mac_cfg), GFP_KERNEL);
--	if (!mac_cfg)
-+	str_vals = kzalloc(sizeof(str_vals), GFP_KERNEL);
-+	if (!str_vals)
- 		goto out_s;
- 
--	wl->cfg.str_vals = mac_cfg;
-+	wl->cfg.str_vals = str_vals;
- 	/* store the string cfg parameters */
- 	wl->cfg.s[i].id = WID_FIRMWARE_VERSION;
--	wl->cfg.s[i].str = mac_cfg->firmware_version;
-+	wl->cfg.s[i].str = str_vals->firmware_version;
- 	i++;
- 	wl->cfg.s[i].id = WID_MAC_ADDR;
--	wl->cfg.s[i].str = mac_cfg->mac_address;
-+	wl->cfg.s[i].str = str_vals->mac_address;
- 	i++;
- 	wl->cfg.s[i].id = WID_ASSOC_RES_INFO;
--	wl->cfg.s[i].str = mac_cfg->assoc_rsp;
-+	wl->cfg.s[i].str = str_vals->assoc_rsp;
- 	i++;
- 	wl->cfg.s[i].id = WID_NIL;
- 	wl->cfg.s[i].str = NULL;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 176eef1..e5ca6ce 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -27,7 +27,7 @@ struct wilc_cfg_str {
- 	u8 *str;
- };
- 
--struct wilc_mac_cfg {
-+struct wilc_cfg_str_vals {
- 	u8 mac_address[7];
- 	u8 firmware_version[129];
- 	u8 assoc_rsp[256];
-@@ -38,7 +38,7 @@ struct wilc_cfg {
- 	struct wilc_cfg_hword *hw;
- 	struct wilc_cfg_word *w;
- 	struct wilc_cfg_str *s;
--	struct wilc_mac_cfg *str_vals;
-+	struct wilc_cfg_str_vals *str_vals;
- };
- 
- struct wilc;
+16 patches applied to wireless-drivers-next.git, thanks.
+
+2735a6dd7df3 mt76: unify wait_for_mac
+89e1b1bc075a mt76: rename mt76x2_regs.h
+797ea2407825 mt76: merge mt76x0/regs.h into mt76x02_regs.h
+108a4861ef19 mt76: create new mt76x02-lib module for common mt76x{0,2} code
+c378f2473466 mt76: unify mac_get_key_info
+d413127359c3 mt76: add helpers for register access with mt76_dev struct
+047aed1c38cf mt76: unify mac_shared_key_setup
+46436b5ef9dd mt76: unify mac_wcid_set_key
+32bb405fe2bc mt76: unify mac_wcid_setup
+516ea2a2a9d4 mt76: use mac_wcid_set_drop in mt76x0
+459e237f14cd mt76x0: use mt76_wcid_free in mt76x0
+98ff26e5e217 mt76: unify mt76x02_vif struct
+f5a7f126e5fe mt76: unify sta structure part 1
+b2d91fb30223 mt76: unify sta structure part 2
+78dae93fd8ff mt76x0: initalize custom tx queues
+16c8a792ea44 mt76x0: use mt76x02_sta and mt76x02_tx_status
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10579835/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
