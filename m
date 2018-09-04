@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf1-f43.google.com ([209.85.167.43]:43494 "EHLO
-        mail-lf1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728421AbeIVGpJ (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:37175 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726206AbeIDTlc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 02:45:09 -0400
-Received: by mail-lf1-f43.google.com with SMTP id x24-v6so12456835lfe.10
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 17:53:43 -0700 (PDT)
+        Tue, 4 Sep 2018 15:41:32 -0400
+Received: by mail-oi0-f51.google.com with SMTP id p84-v6so7414081oic.4
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 08:16:01 -0700 (PDT)
+Subject: Re: [Regression]BCM4312 is broken in kernel 4.18[Root cause found]
+To: prabhu <d.praabhu@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <CAHnrWRruLuuPN+bYc4NqO515W8+wHoCPH16ULsnJV_JrD+9oEw@mail.gmail.com>
+ <20180823201147.393b1d53@wiggum> <87lg8wjhqe.fsf@kamboji.qca.qualcomm.com>
+ <f9553dfe-d89b-0760-29c6-cdad29b54f6f@lwfinger.net>
+ <CAHnrWRp2n7W_Xb5kjT1ykcC0gL3ONc+dmqePAbKEEBHLd1euFA@mail.gmail.com>
+ <25814b23-dcc9-3a20-7276-40818bbba6cb@lwfinger.net>
+ <CAHnrWRo-Edm+bSJ_1EKNYkPR2zKVnvfoTpaLK+uY1bw4JS7ZjQ@mail.gmail.com>
+ <0ce95ac6-1271-c9d5-b48a-4612ad04f51d@lwfinger.net>
+ <CAHnrWRpPzV5BK3BoMrQ1vH=nxu70dVONLdhCnHh0SpBEa2v5LQ@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <32039e0f-a865-ac38-4dcb-89f0ae26d1fb@lwfinger.net> (sfid-20180904_171632_844589_0D906F3A)
+Date: Tue, 4 Sep 2018 10:15:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <ece4e4dcd2776413c8b297731df3c02c@codeaurora.org>
-References: <1537470331-6270-1-git-send-email-rmanohar@codeaurora.org>
- <8d8e3775-4504-7b37-19b0-4a7fae054d12@nbd.name> <ece4e4dcd2776413c8b297731df3c02c@codeaurora.org>
-From: Kan Yan <kyan@google.com>
-Date: Fri, 21 Sep 2018 17:53:42 -0700
-Message-ID: <CA+iem5t7eHgX5EtePvvXFpHSfDNcUwmKefvDoYb-KO050OXJKQ@mail.gmail.com> (sfid-20180922_025558_298135_E9ABEC8D)
-Subject: Re: [RFC v2] mac80211: budget outstanding airtime for transmission
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        linux-wireless-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAHnrWRpPzV5BK3BoMrQ1vH=nxu70dVONLdhCnHh0SpBEa2v5LQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rajkumar,
+On 09/04/2018 09:21 AM, prabhu wrote:
+> Larry,
+> 
+> I didn't find this patch in 4.18.6 stable review mail.
+> forgot to push or any other reason?
 
-It is great to see your patches and thank you for helping bring this
-to upstream.
+The patch is listed as "Under review".
 
-> Why signed? This should never become negative unless something is wrong
-> with the accounting somewhere?
-
-It is signed because the "budget" is allowed to go negative.  In the
-original version,  as long as the budget is > 0, at least one packet
-is released even the budget is less than the airtime required for the
-packet.  One major issue I had when doing airtime based queue limit is
-how to prevent txq with very low data rate (e.g., 6 mbps) from getting
-stalled for too long. My solution is to allow budget to go negative
-for one packet, then reset budget to 0 when all frames from that txq
-has been completed and the inflight packets count reaches to 0.
-
-For the ieee80211_calc_airtime_budget(), although it is sufficient for
-the purpose of enforcing queue limit, the airtime overhead estimation
-in the original patch really crude and could use some improvement.
-Instead of using the last reported tx PHY rate and a guesstimate of
-overhead to calculate airtime,  one possible improvement is to
-calculate the estimated "real" tx rate from a windowed moving average
-of past tx_bytes/tx_airtime, if the firmware is capable of reporting
-tx airtime for each completed PPDU.
+Larry
