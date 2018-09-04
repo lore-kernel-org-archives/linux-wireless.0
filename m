@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:50607 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727649AbeIJPpv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 11:45:51 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kan Yan <kyan@google.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:46494 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726212AbeIDQFy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 12:05:54 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
-In-Reply-To: <CA+iem5te2vFq+aXiVDZ7OhuWkR+cScOKiV8bSb85ycD6WDK1WQ@mail.gmail.com>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <CA+iem5te2vFq+aXiVDZ7OhuWkR+cScOKiV8bSb85ycD6WDK1WQ@mail.gmail.com>
-Date: Mon, 10 Sep 2018 12:52:21 +0200
-Message-ID: <87pnxllj4q.fsf@toke.dk> (sfid-20180910_125238_507033_4B9B7BFD)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  4 Sep 2018 14:40:53 +0300
+Message-Id: <20180904114055.1429-8-luca@coelho.fi> (sfid-20180904_134136_177200_E8E7545A)
+In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180904114055.1429-1-luca@coelho.fi>
+Subject: [PATCH v2 7/9] cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kan Yan <kyan@google.com> writes:
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-> Hi Toke,
->
-> It is great to see finally there will be a general airtime fairness
-> support in mac80211. I feel this patch set could still use some
-> improvements to make it works better with 11ac drivers like ath10k. I
-> did a version of airtime fairness in the ath10k driver that used in
-> Google Wifi and I'd like to share a few things I learned from this
-> experience.
+Core regulatory hints didn't set wiphy_idx to WIPHY_IDX_INVALID. Since
+the regulatory request is zeroed, wiphy_idx was always implicitly set to
+0. This resulted in updating only phy #0.
+Fix that.
 
-Hi Kan
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/wireless/reg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks for weighing in!
-
-> The idea is to use airtime accounting to give firmware just enough
-> frames to keep it busy and form good aggregations, and keeps the rest
-> of frames in mac80211 layer queues so Fq_Codel can work on it to
-> control latency.
-
-I think this is a great approach, that we should definitely adopt in
-mac80211. However, I'm not sure the outstanding airtime limiting should
-be integrated into the fairness scheduling, since there are drivers such
-as ath9k that don't need it.
-
-Rather, I'd propose that we figure out the API for fairness scheduling
-first, and add the BQL-like limiter as a separate layer. They can be
-integrated in the sense that the limiter's estimate of airtime can be
-used for fairness scheduling as well in the case where the
-driver/firmware doesn't have a better source of airtime usage.
-
-Does that make sense?
-
--Toke
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 043d43573ca2..0eb5e44f8a74 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2932,6 +2932,7 @@ static int regulatory_hint_core(const char *alpha2)
+ 	request->alpha2[0] = alpha2[0];
+ 	request->alpha2[1] = alpha2[1];
+ 	request->initiator = NL80211_REGDOM_SET_BY_CORE;
++	request->wiphy_idx = WIPHY_IDX_INVALID;
+ 
+ 	queue_regulatory_request(request);
+ 
+-- 
+2.18.0
