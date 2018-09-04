@@ -1,186 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58990 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727322AbeH0SoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:44:13 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 14/17] mt76: unify sta structure part 1
-Date: Mon, 27 Aug 2018 16:56:28 +0200
-Message-Id: <1535381791-14908-15-git-send-email-sgruszka@redhat.com> (sfid-20180827_165722_479140_6CBA32AD)
-In-Reply-To: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
-References: <1535381791-14908-1-git-send-email-sgruszka@redhat.com>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53863 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727577AbeIDLEm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 07:04:42 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 21/26] staging: wilc1000: move 'chip_ps_state' static variable as part of 'wilc' struct
+Date: Tue, 4 Sep 2018 12:09:37 +0530
+Message-ID: <1536043182-19735-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084107_249274_C876E083)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First part of unifying mt76x02_sta structure between mt76x0 and mt76x2.
+Move the static variable as part of 'wilc' priv struct.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 25 +++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   | 21 +++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c | 26 +---------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  2 +-
- 5 files changed, 49 insertions(+), 27 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         |  1 +
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ drivers/staging/wilc1000/wilc_wlan.c          | 10 ++++------
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 2242c0d7e200..67c53089229e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -17,6 +17,7 @@
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1300318..8c6b63a 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1066,6 +1066,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	wl->io_type = io_type;
+ 	wl->hif_func = ops;
+ 	wl->enable_ps = true;
++	wl->chip_ps_state = CHIP_WAKEDUP;
+ 	INIT_LIST_HEAD(&wl->txq_head.list);
+ 	INIT_LIST_HEAD(&wl->rxq_head.list);
  
- #include "mt76.h"
- #include "mt76x02_regs.h"
-+#include "mt76x02_mac.h"
- 
- enum mt76x02_cipher_type
- mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
-@@ -130,3 +131,27 @@ void mt76x02_mac_wcid_set_drop(struct mt76_dev *dev, u8 idx, bool drop)
- 		__mt76_wr(dev, MT_WCID_DROP(idx), (val & ~bit) | (bit * drop));
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_drop);
-+
-+void mt76x02_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq)
-+{
-+	struct mt76_txq *mtxq;
-+
-+	if (!txq)
-+		return;
-+
-+	mtxq = (struct mt76_txq *) txq->drv_priv;
-+	if (txq->sta) {
-+		struct mt76x02_sta *sta;
-+
-+		sta = (struct mt76x02_sta *) txq->sta->drv_priv;
-+		mtxq->wcid = &sta->wcid;
-+	} else {
-+		struct mt76x02_vif *mvif;
-+
-+		mvif = (struct mt76x02_vif *) txq->vif->drv_priv;
-+		mtxq->wcid = &mvif->group_wcid;
-+	}
-+
-+	mt76_txq_init(dev, txq);
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_txq_init);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index fa9532cdf6b7..461ac61f45dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -18,12 +18,31 @@
- #ifndef __MT76X02_MAC_H
- #define __MT76X02_MAC_H
- 
-+struct mt76x02_tx_status {
-+	u8 valid:1;
-+	u8 success:1;
-+	u8 aggr:1;
-+	u8 ack_req:1;
-+	u8 wcid;
-+	u8 pktid;
-+	u8 retry;
-+	u16 rate;
-+} __packed __aligned(2);
-+
- struct mt76x02_vif {
- 	u8 idx;
- 
- 	struct mt76_wcid group_wcid;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 26b87c4..ede967b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -201,6 +201,7 @@ struct wilc {
+ 	bool enable_ps;
+ 	int clients_count;
+ 	struct workqueue_struct *hif_workqueue;
++	enum chip_ps_states chip_ps_state;
  };
  
-+struct mt76x02_sta {
-+	struct mt76_wcid wcid; /* must be first */
-+
-+	struct mt76x02_vif *vif;
-+	struct mt76x02_tx_status status;
-+	int n_frames;
-+};
-+
- static inline bool mt76x02_wait_for_mac(struct mt76_dev *dev)
+ struct wilc_wfi_mon_priv {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 4c5a69e..6ff3e58 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -9,8 +9,6 @@
+ #include "wilc_wfi_netdevice.h"
+ #include "wilc_wlan_cfg.h"
+ 
+-static enum chip_ps_states chip_ps_state = CHIP_WAKEDUP;
+-
+ static inline bool is_wilc1000(u32 id)
  {
- 	const u32 MAC_CSR0 = 0x1000;
-@@ -45,6 +64,8 @@ static inline bool mt76x02_wait_for_mac(struct mt76_dev *dev)
- 	return false;
+ 	return ((id & 0xfffff000) == 0x100000 ? true : false);
+@@ -444,7 +442,7 @@ void chip_wakeup(struct wilc *wilc)
+ 		} while ((clk_status_reg & 0x1) == 0);
+ 	}
+ 
+-	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
++	if (wilc->chip_ps_state == CHIP_SLEEPING_MANUAL) {
+ 		if (wilc_get_chipid(wilc, false) < 0x1002b0) {
+ 			u32 val32;
+ 
+@@ -457,19 +455,19 @@ void chip_wakeup(struct wilc *wilc)
+ 			wilc->hif_func->hif_write_reg(wilc, 0x1e9c, val32);
+ 		}
+ 	}
+-	chip_ps_state = CHIP_WAKEDUP;
++	wilc->chip_ps_state = CHIP_WAKEDUP;
  }
  
-+void mt76x02_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq);
-+
- enum mt76x02_cipher_type
- mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-index 93e6e57f1ba3..182dd6e24d44 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-@@ -18,30 +18,6 @@
- #include "mt76x2.h"
- #include "mt76x02_mac.h"
- 
--void mt76x2_txq_init(struct mt76x2_dev *dev, struct ieee80211_txq *txq)
--{
--	struct mt76_txq *mtxq;
--
--	if (!txq)
--		return;
--
--	mtxq = (struct mt76_txq *) txq->drv_priv;
--	if (txq->sta) {
--		struct mt76x2_sta *sta;
--
--		sta = (struct mt76x2_sta *) txq->sta->drv_priv;
--		mtxq->wcid = &sta->wcid;
--	} else {
--		struct mt76x02_vif *mvif;
--
--		mvif = (struct mt76x02_vif *) txq->vif->drv_priv;
--		mtxq->wcid = &mvif->group_wcid;
--	}
--
--	mt76_txq_init(&dev->mt76, txq);
--}
--EXPORT_SYMBOL_GPL(mt76x2_txq_init);
--
- int mt76x2_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			struct ieee80211_ampdu_params *params)
+ void wilc_chip_sleep_manually(struct wilc *wilc)
  {
-@@ -118,7 +94,7 @@ int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	mt76x02_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
- 	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, false);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
--		mt76x2_txq_init(dev, sta->txq[i]);
-+		mt76x02_txq_init(&dev->mt76, sta->txq[i]);
+-	if (chip_ps_state != CHIP_WAKEDUP)
++	if (wilc->chip_ps_state != CHIP_WAKEDUP)
+ 		return;
+ 	acquire_bus(wilc, ACQUIRE_ONLY);
  
- 	if (vif->type == NL80211_IFTYPE_AP)
- 		set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index 80d33bca7f90..c445073a1a41 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -83,7 +83,7 @@ mt76x2_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	mvif->idx = idx;
- 	mvif->group_wcid.idx = MT_VIF_WCID(idx);
- 	mvif->group_wcid.hw_key_idx = -1;
--	mt76x2_txq_init(dev, vif->txq);
-+	mt76x02_txq_init(&dev->mt76, vif->txq);
+ 	chip_allow_sleep(wilc);
+ 	wilc->hif_func->hif_write_reg(wilc, 0x10a8, 1);
  
- 	return 0;
+-	chip_ps_state = CHIP_SLEEPING_MANUAL;
++	wilc->chip_ps_state = CHIP_SLEEPING_MANUAL;
+ 	release_bus(wilc, RELEASE_ONLY);
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
-index fde334877bc5..1b6a04d202bb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
-@@ -58,7 +58,7 @@ static int mt76x2u_add_interface(struct ieee80211_hw *hw,
- 	mvif->idx = idx;
- 	mvif->group_wcid.idx = MT_VIF_WCID(idx);
- 	mvif->group_wcid.hw_key_idx = -1;
--	mt76x2_txq_init(dev, vif->txq);
-+	mt76x02_txq_init(&dev->mt76, vif->txq);
  
- 	return 0;
- }
 -- 
-2.7.5
+2.7.4
