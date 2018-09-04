@@ -1,53 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:52860 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727269AbeIJSFC (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53863 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727577AbeIDLEp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 14:05:02 -0400
-Message-ID: <1536585051.3224.72.camel@sipsolutions.net> (sfid-20180910_151104_509273_68D12311)
-Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Date: Mon, 10 Sep 2018 15:10:51 +0200
-In-Reply-To: <87wortjy8n.fsf@toke.dk>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
-         <153635897010.14170.2992498632345986102.stgit@alrua-x1>
-         <1536565717.3224.12.camel@sipsolutions.net> <87musplivy.fsf@toke.dk>
-         <1536577419.3224.50.camel@sipsolutions.net> <87zhwpjzme.fsf@toke.dk>
-         <1536583587.3224.71.camel@sipsolutions.net> <87wortjy8n.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 4 Sep 2018 07:04:45 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 22/26] staging: wilc1000: move 'wilc_connecting' static variable to 'wilc_vif' struct
+Date: Tue, 4 Sep 2018 12:09:38 +0530
+Message-ID: <1536043182-19735-23-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084930_917159_94A3B741)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-09-10 at 15:08 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Mon, 2018-09-10 at 14:39 +0200, Toke Høiland-Jørgensen wrote:
-> > 
-> > > > From then on, right now we basically just try to refill the hardware
-> > > > queue from the TXQ whenever the hardware releases frames from that
-> > > > queue. If there are none, we fall back to putting them on the hardware
-> > > > queue from the wake signal.
-> > > 
-> > > OK. So if the TXQ is ineligible to dequeue packets, but still have them
-> > > queued, there would need to be a signal (such as wake_txq()) when it
-> > > becomes eligible again, right?
-> > 
-> > Right. It wouldn't have to be wake_txq, but that seems as appropriate as
-> > anything else.
-> > 
-> > If we were to use ieee80211_airtime_may_transmit(), we'd have to have
-> > something that tells us "I previously told you it may not transmit, but
-> > now I changed my mind" :-)
-> 
-> Yes, exactly. Hmm, I'll see what I can come up with :)
+Move static variable 'wilc_connecting' as part of 'wilc_vif' private
+struct. Remove "wilc_" prefix from name as its already part of wilc_vif
+struct.
 
-No need to look at this right now - let's get this stuff sorted out
-first :)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c         |  4 ++--
+ drivers/staging/wilc1000/host_interface.h         |  2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 ++++++++----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 +
+ 4 files changed, 11 insertions(+), 14 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 14dfa61..7805ec1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -724,7 +724,7 @@ static void handle_scan(struct work_struct *work)
+ 		goto error;
+ 	}
+ 
+-	if (vif->obtaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || vif->connecting) {
+ 		netdev_err(vif->ndev, "Don't do obss scan\n");
+ 		result = -EBUSY;
+ 		goto error;
+@@ -2330,7 +2330,7 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+ 		goto error;
+ 	}
+ 
+-	if (vif->obtaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || vif->connecting) {
+ 		result = -EBUSY;
+ 		goto error;
+ 	}
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6006769..a48818f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -361,6 +361,4 @@ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+ 
+ extern u8 wilc_connected_ssid[6];
+ 
+-extern int wilc_connecting;
+-
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 35a83d4..d103dce2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -453,8 +453,6 @@ static inline bool wilc_cfg_scan_time_expired(struct wilc_priv *priv, int i)
+ 		return false;
+ }
+ 
+-int wilc_connecting;
+-
+ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 			       struct connect_info *conn_info,
+ 			       u8 mac_status,
+@@ -468,7 +466,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 	struct host_if_drv *wfi_drv = priv->hif_drv;
+ 	u8 null_bssid[ETH_ALEN] = {0};
+ 
+-	wilc_connecting = 0;
++	vif->connecting = false;
+ 
+ 	if (conn_disconn_evt == CONN_DISCONN_EVENT_CONN_RESP) {
+ 		u16 connect_status;
+@@ -666,7 +664,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	enum authtype auth_type = ANY;
+ 	u32 cipher_group;
+ 
+-	wilc_connecting = 1;
++	vif->connecting = true;
+ 
+ 	if (!(strncmp(sme->ssid, "DIRECT-", 7)))
+ 		wfi_drv->p2p_connect = 1;
+@@ -698,7 +696,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		nw_info = &priv->scanned_shadow[sel_bssi_idx];
+ 	} else {
+ 		ret = -ENOENT;
+-		wilc_connecting = 0;
++		vif->connecting = false;
+ 		return ret;
+ 	}
+ 
+@@ -741,7 +739,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 			ret = -ENOTSUPP;
+ 			netdev_err(dev, "%s: Unsupported cipher\n",
+ 				   __func__);
+-			wilc_connecting = 0;
++			vif->connecting = false;
+ 			return ret;
+ 		}
+ 	}
+@@ -792,7 +790,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	if (ret != 0) {
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		ret = -ENOENT;
+-		wilc_connecting = 0;
++		vif->connecting = false;
+ 		return ret;
+ 	}
+ 
+@@ -809,7 +807,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev,
+ 	int ret;
+ 	u8 null_bssid[ETH_ALEN] = {0};
+ 
+-	wilc_connecting = 0;
++	vif->connecting = false;
+ 
+ 	if (!wilc)
+ 		return -EIO;
+@@ -1747,7 +1745,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+-		wilc_connecting = 0;
++		vif->connecting = false;
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+@@ -1762,7 +1760,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		break;
+ 
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-		wilc_connecting = 0;
++		vif->connecting = false;
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index ede967b..1837808 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -149,6 +149,7 @@ struct wilc_vif {
+ 	struct timer_list periodic_rssi;
+ 	struct rf_info periodic_stat;
+ 	struct tcp_ack_filter ack_filter;
++	bool connecting;
+ };
+ 
+ struct wilc {
+-- 
+2.7.4
