@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:42327 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727740AbeIFVnl (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46442 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726208AbeIDQFr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 17:43:41 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v3 0/3] support ftm responder configuration/statistics
-Date: Thu,  6 Sep 2018 10:06:28 -0700
-Message-Id: <1536253591-20463-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180906_190718_911999_769E4380)
+        Tue, 4 Sep 2018 12:05:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  4 Sep 2018 14:40:48 +0300
+Message-Id: <20180904114055.1429-3-luca@coelho.fi> (sfid-20180904_134131_551483_7A7A63F9)
+In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180904114055.1429-1-luca@coelho.fi>
+Subject: [PATCH v2 2/9] mac80211: fix saving a few HE values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+After masking the he_oper_params, to get the requested values as
+integers one must rshift and not lshift.  Fix that by using the
+le32_get_bits() macro.
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
+Fixes: 41cbb0f5a295 ("mac80211: add support for HE")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+[converted to use le32_get_bits()]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/mlme.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-changes in V3:
- - fixed the ambiguous ftm responder disable case to be not supported
-
-changes in V2:
-- updated version number
-- rebased patches
-
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
-
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
-
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 ++++++++++++++++++
- include/net/mac80211.h                 |  13 ++++
- include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
- net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 +++++
- net/mac80211/trace.h                   |  23 ++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 ++++
- net/wireless/trace.h                   |  44 ++++++++++++
- 14 files changed, 508 insertions(+), 5 deletions(-)
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1bd714376635..3b1b7a77fa7d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3173,19 +3173,16 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (bss_conf->he_support) {
+-		u32 he_oper_params =
+-			le32_to_cpu(elems.he_operation->he_oper_params);
++		bss_conf->bss_color =
++			le32_get_bits(elems.he_operation->he_oper_params,
++				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK);
+ 
+-		bss_conf->bss_color = he_oper_params &
+-				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK;
+ 		bss_conf->htc_trig_based_pkt_ext =
+-			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) <<
+-			IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET;
++			le32_get_bits(elems.he_operation->he_oper_params,
++			      IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK);
+ 		bss_conf->frame_time_rts_th =
+-			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) <<
+-			IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET;
++			le32_get_bits(elems.he_operation->he_oper_params,
++			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
+ 
+ 		bss_conf->multi_sta_back_32bit =
+ 			sta->sta.he_cap.he_cap_elem.mac_cap_info[2] &
 -- 
-1.9.1
+2.18.0
