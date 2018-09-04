@@ -1,170 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57456 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727983AbeILCq1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 22:46:27 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v4 3/3] ath10k: Add support to configure ftm responder role
-Date: Tue, 11 Sep 2018 14:44:39 -0700
-Message-Id: <1536702279-7643-4-git-send-email-pradeepc@codeaurora.org> (sfid-20180911_234601_477280_3ECB9A02)
-In-Reply-To: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
-References: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39334 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727595AbeIDTHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 15:07:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 12/22] mt76: unify remove_interface
+Date: Tue,  4 Sep 2018 16:41:05 +0200
+Message-Id: <1536072075-6990-13-git-send-email-sgruszka@redhat.com> (sfid-20180904_164251_502538_3D7A6FEB)
+In-Reply-To: <1536072075-6990-1-git-send-email-sgruszka@redhat.com>
+References: <1536072075-6990-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure fine timing measurement (FTM) responder role from the
-ftm_responder bss param sent by mac80211. With FTM functionality
-offloaded to firmware, adding the interface allows userspace
-to enable FTM responder functionality. ath10k disables it at the
-time of interface creation.
+Use common remove_interface callback in mt76x0 and mt76x2.
 
-Supported FW: 10.4
-
-Tested on QCA9984 with firmware: 10.4-3.6-00144
-
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |  4 ++++
- drivers/net/wireless/ath/ath10k/wmi.h  | 10 ++++++++++
- 4 files changed, 43 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 10 +---------
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  9 +++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  2 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  9 ---------
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  2 +-
+ 6 files changed, 14 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f6e5c29f74e7..ba3a5a7e6309 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -567,6 +567,7 @@ struct ath10k_vif {
- 	bool nohwcrypt;
- 	int num_legacy_stations;
- 	int txpower;
-+	bool ftm_responder;
- 	struct wmi_wmm_params_all_arg wmm_params;
- 	struct work_struct ap_csa_work;
- 	struct delayed_work connection_loss_work;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 97548f96a2f7..d56a3c2dcbb1 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5260,6 +5260,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err_peer_delete;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index a818a47f8e4e..d8efa009126c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -62,14 +62,6 @@ static int mt76x0_add_interface(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
-+	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map)) {
-+		vdev_param = ar->wmi.vdev_param->rtt_responder_role;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+						arvif->ftm_responder);
+-static void mt76x0_remove_interface(struct ieee80211_hw *hw,
+-				     struct ieee80211_vif *vif)
+-{
+-	struct mt76x0_dev *dev = hw->priv;
+-
+-	mt76_txq_remove(&dev->mt76, vif->txq);
+-}
+-
+ static int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct mt76x0_dev *dev = hw->priv;
+@@ -203,7 +195,7 @@ const struct ieee80211_ops mt76x0_ops = {
+ 	.start = mt76x0_start,
+ 	.stop = mt76x0_stop,
+ 	.add_interface = mt76x0_add_interface,
+-	.remove_interface = mt76x0_remove_interface,
++	.remove_interface = mt76x02_remove_interface,
+ 	.config = mt76x0_config,
+ 	.configure_filter = mt76x02_configure_filter,
+ 	.bss_info_changed = mt76x0_bss_info_changed,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 706f522f11d9..69f19ef361a1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -127,6 +127,15 @@ void mt76x02_vif_init(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_vif_init);
+ 
++void mt76x02_remove_interface(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif)
++{
++	struct mt76_dev *dev = hw->priv;
 +
-+		/* It is harmless to not set FTM role. Do not warn */
-+		if (ret && ret != -EOPNOTSUPP)
-+			ath10k_warn(ar, "failed to set vdev %i FTM Responder: %d\n",
-+				    arvif->vdev_id, ret);
-+	}
++	mt76_txq_remove(dev, vif->txq);
++}
++EXPORT_SYMBOL_GPL(mt76x02_remove_interface);
 +
- 	if (vif->type == NL80211_IFTYPE_MONITOR) {
- 		ar->monitor_arvif = arvif;
- 		ret = ath10k_monitor_recalc(ar);
-@@ -5533,6 +5544,20 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BSSID && !is_zero_ether_addr(info->bssid))
- 		ether_addr_copy(arvif->bssid, info->bssid);
+ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			struct ieee80211_ampdu_params *params)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+index 54f895d8cdbe..a61c9f2b9a62 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+@@ -28,6 +28,8 @@ int mt76x02_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  
-+	if (changed & BSS_CHANGED_FTM_RESPONDER &&
-+	    arvif->ftm_responder != info->ftm_responder &&
-+	    test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map)) {
-+		arvif->ftm_responder = info->ftm_responder;
-+
-+		vdev_param = ar->wmi.vdev_param->rtt_responder_role;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+						arvif->ftm_responder);
-+
-+		ath10k_dbg(ar, ATH10K_DBG_MAC,
-+			   "mac vdev %d ftm_responder %d:ret %d\n",
-+			   arvif->vdev_id, arvif->ftm_responder, ret);
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON_ENABLED)
- 		ath10k_control_beaconing(arvif, info);
+ void mt76x02_vif_init(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 		     unsigned int idx);
++void mt76x02_remove_interface(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif);
  
-@@ -8482,6 +8507,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
- 		wiphy_ext_feature_set(ar->hw->wiphy,
- 				      NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
-+	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map))
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER);
+ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			struct ieee80211_ampdu_params *params);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+index 5ce9fbc654a2..be4e00fe7586 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+@@ -18,15 +18,6 @@
+ #include "mt76x2.h"
+ #include "mt76x02_mac.h"
  
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0f9fccc6322b..07e5ea47866f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -825,6 +825,7 @@
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- /* 10.X WMI VDEV param map */
-@@ -900,6 +901,7 @@
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
-@@ -974,6 +976,7 @@
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
-@@ -1051,6 +1054,7 @@
- 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
- 	.inc_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
- 	.dec_tsf = WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
-+	.rtt_responder_role = WMI_10_4_VDEV_PARAM_ENABLE_DISABLE_RTT_RESPONDER_ROLE,
- };
- 
- static struct wmi_pdev_param_map wmi_pdev_param_map = {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 15622943a885..6007e64ee0d3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5048,6 +5048,7 @@ struct wmi_vdev_param_map {
- 	u32 bw_nss_ratemask;
- 	u32 inc_tsf;
- 	u32 dec_tsf;
-+	u32 rtt_responder_role;
- };
- 
- #define WMI_VDEV_PARAM_UNSUPPORTED 0
-@@ -5387,6 +5388,15 @@ enum wmi_10_4_vdev_param {
- 	WMI_10_4_VDEV_PARAM_ATF_SSID_SCHED_POLICY,
- 	WMI_10_4_VDEV_PARAM_DISABLE_DYN_BW_RTS,
- 	WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
-+	WMI_10_4_VDEV_PARAM_SELFGEN_FIXED_RATE,
-+	WMI_10_4_VDEV_PARAM_AMPDU_SUBFRAME_SIZE_PER_AC,
-+	WMI_10_4_VDEV_PARAM_NSS_VHT160,
-+	WMI_10_4_VDEV_PARAM_NSS_VHT80_80,
-+	WMI_10_4_VDEV_PARAM_AMSDU_SUBFRAME_SIZE_PER_AC,
-+	WMI_10_4_VDEV_PARAM_DISABLE_CABQ,
-+	WMI_10_4_VDEV_PARAM_SIFS_TRIGGER_RATE,
-+	WMI_10_4_VDEV_PARAM_TX_POWER,
-+	WMI_10_4_VDEV_PARAM_ENABLE_DISABLE_RTT_RESPONDER_ROLE,
- };
- 
- #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
+-void mt76x2_remove_interface(struct ieee80211_hw *hw,
+-			     struct ieee80211_vif *vif)
+-{
+-	struct mt76x2_dev *dev = hw->priv;
+-
+-	mt76_txq_remove(&dev->mt76, vif->txq);
+-}
+-EXPORT_SYMBOL_GPL(mt76x2_remove_interface);
+-
+ void mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_sta *sta)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 87302845d582..128a1c1c0f64 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -314,7 +314,7 @@ const struct ieee80211_ops mt76x2_ops = {
+ 	.start = mt76x2_start,
+ 	.stop = mt76x2_stop,
+ 	.add_interface = mt76x2_add_interface,
+-	.remove_interface = mt76x2_remove_interface,
++	.remove_interface = mt76x02_remove_interface,
+ 	.config = mt76x2_config,
+ 	.configure_filter = mt76x02_configure_filter,
+ 	.bss_info_changed = mt76x2_bss_info_changed,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
+index 1dcc6ced15a5..66a923a32e51 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
+@@ -164,7 +164,7 @@ const struct ieee80211_ops mt76x2u_ops = {
+ 	.start = mt76x2u_start,
+ 	.stop = mt76x2u_stop,
+ 	.add_interface = mt76x2u_add_interface,
+-	.remove_interface = mt76x2_remove_interface,
++	.remove_interface = mt76x02_remove_interface,
+ 	.sta_add = mt76x02_sta_add,
+ 	.sta_remove = mt76x02_sta_remove,
+ 	.set_key = mt76x02_set_key,
 -- 
-1.9.1
+2.7.5
