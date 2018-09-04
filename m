@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:52708 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728457AbeIFOWn (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:38311 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727136AbeIDSmZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 10:22:43 -0400
-Received: by mail-it0-f66.google.com with SMTP id h3-v6so13905199ita.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 02:48:04 -0700 (PDT)
+        Tue, 4 Sep 2018 14:42:25 -0400
+Received: by mail-io0-f195.google.com with SMTP id y3-v6so3089238ioc.5
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 07:17:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
- <1536225538-16454-40-git-send-email-sgruszka@redhat.com> <91c0c1d5-12a9-7155-c4bf-191a511080ee@nbd.name>
- <CAJ0CqmWrDke=WWPukf09rXYkCV3e4JKgcoBgvytVeyy1j8ZvOA@mail.gmail.com> <786cb12a-a27e-bd82-edfd-9ea5866e5e00@nbd.name>
-In-Reply-To: <786cb12a-a27e-bd82-edfd-9ea5866e5e00@nbd.name>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Thu, 6 Sep 2018 11:47:53 +0200
-Message-ID: <CAJ0CqmUeFaYhC-L8QdL9Q5RPG4zfR5eZUbHP7Savqg4Nr-C+fw@mail.gmail.com> (sfid-20180906_114841_681730_3B51084C)
-Subject: Re: [PATCH 39/42] mt76: move some irq code to common mmio module
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek@lists.infradead.org
+References: <1535970381-5526-1-git-send-email-sgruszka@redhat.com>
+ <87y3cisq5g.fsf@purkki.adurom.net> <CAM0KTbAgj==H9SkoFF7WeSrh=TJHKFtuubf06JKSKoHoa4xV5w@mail.gmail.com>
+ <20180904102352.GA978@redhat.com>
+In-Reply-To: <20180904102352.GA978@redhat.com>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Tue, 4 Sep 2018 14:16:57 +0000
+Message-ID: <CAM0KTbBSC8EZB+40DsaPj-DJhrQCuRGH2=T=XvE+71bPtXFwbg@mail.gmail.com> (sfid-20180904_161711_116271_14F82A0F)
+Subject: Re: [PATCH 4.19] mt76x0: fix remove_interface
+To: sgruszka@redhat.com
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> On 2018-09-06 11:37, Lorenzo Bianconi wrote:
-> >>
-> >> On 2018-09-06 11:18, Stanislaw Gruszka wrote:
-> >> > Move some irq handling code to generic mmio module.
-> >> >
-> >> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> >> Please drop this patch. This won't work on MT7603 and later.
-> >>
-> >> - Felix
-> >
-> > I can move that code in a dedicated module with a separated patch.
-> > I have a pending patchset to fix that kind of issues for usb as well.
-> > Does it sound good?
-> I don't think it's worth having yet another dedicated module for these
-> small things. Just keep it in the common mt76x02 code, even if it
-> doesn't get used by the usb variants.
->
-> - Felix
+confirmed, I didn't intentionally remove the interface, but I do see
+something about the interface being removed in wpa_supplicant output.
 
-Ack, I agree. I guess Stanislaw can fix it sending a v2
-
-Regards,
-Lorenzo
+Thanks,
+Zero
+On Tue, Sep 4, 2018 at 10:23 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>
+> On Mon, Sep 03, 2018 at 09:36:37AM -0400, Sid Hayn wrote:
+> > Best I can say is that it seemed to happen after a failed connection.  It
+> > would connect and disconnect a few times and work fine, but if it failed to
+> > connect for any reason (mostly mismatched settings between AP and
+> > wpa_supplicant.conf) then the bug would occur. So, wpa_supplicant would up
+> > the interface, try to connect, fail, down the interface and exit, then the
+> > next loop of my script (with a different conf file) would start and
+> > wpa_supplicant would be unable to up the interface.
+> <snip>
+> > > For bug fixes please always try to describe the bug and symptoms. I can
+> > > add it this time. From the other thread I saw that 'ifconfig up' failed
+> > > like this:
+> > >
+> > > SIOCSIFFLAGS: No space left on device
+> > >
+> > > But in what cases did that happen? (I assume not always)
+>
+> Problem will happen when we remove interface more than 8 times.
+> I'm not sure at how this can be triggerd execpt by doing:
+>
+> iw dev <devname> interface add <name> type <type>
+> iw dev <name> del
+>
+> but looks somehow this is triggerd by Sid scripts
+> by just by using wpa_supplicant and ifconfig.
+>
+> Regards
+> Stanislaw
