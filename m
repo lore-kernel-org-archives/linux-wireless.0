@@ -1,106 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46938 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727572AbeIEJer (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12568 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727665AbeIDLEL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:34:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Sep 2018 08:06:09 +0300
-Message-Id: <20180905050614.23273-5-luca@coelho.fi> (sfid-20180905_070632_695712_3FCDF4E2)
-In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180905050614.23273-1-luca@coelho.fi>
-Subject: [RESEND PATCH v2 4/9] mac80211: add an option for station management TXQ
+        Tue, 4 Sep 2018 07:04:11 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 12/26] staging: wilc1000: move 'periodic_rssi' as part of 'wilc_vif' struct
+Date: Tue, 4 Sep 2018 12:09:28 +0530
+Message-ID: <1536043182-19735-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084100_226255_5E7A6BBF)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Refactor code to move 'periodic_rssi' as part of wilc_vif struct. Move
+'dummy_statistics' from 'wilc' struct to 'wilc_vif' to maintain for
+each interface separately.
 
-We have a TXQ abstraction for non-data packets that need
-powersave buffering. Since the AP cannot sleep, in case
-of station we can use this TXQ for all management frames,
-regardless if they are bufferable. Add HW flag to allow
-that.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/mac80211.h |  5 +++++
- net/mac80211/debugfs.c |  1 +
- net/mac80211/tx.c      | 14 +++++++++++---
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c     | 19 ++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
+ 2 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 50bf598abdfd..fe71cec8ba42 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2152,6 +2152,10 @@ struct ieee80211_txq {
-  *	but if the rate control is built-in then it must be set by the driver.
-  *	See also the documentation for that flag.
-  *
-+ * @IEEE80211_HW_STA_MMPDU_TXQ: use the extra non-TID per-station TXQ for all
-+ *	MMPDUs on station interfaces. This of course requires the driver to use
-+ *	TXQs to start with.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2199,6 +2203,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP,
- 	IEEE80211_HW_BUFF_MMPDU_TXQ,
- 	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
-+	IEEE80211_HW_STA_MMPDU_TXQ,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6facffc..e79ef6c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -190,8 +190,6 @@ static struct host_if_drv *terminated_handle;
+ static u8 p2p_listen_state;
+ static struct completion hif_driver_comp;
+ static struct mutex hif_deinit_lock;
+-static struct timer_list periodic_rssi;
+-static struct wilc_vif *periodic_rssi_vif;
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index fb45eb5d1dc4..3fe541e358f3 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -217,6 +217,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(DOESNT_SUPPORT_QOS_NDP),
- 	FLAG(BUFF_MMPDU_TXQ),
- 	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
-+	FLAG(STA_MMPDU_TXQ),
- #undef FLAG
- };
+ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b6e06ad35ff..6689492c9713 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1251,7 +1251,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+@@ -3422,9 +3420,9 @@ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 	return result;
+ }
  
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
- 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
--		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
-+		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
-+		     vif->type == NL80211_IFTYPE_STATION) &&
- 		    sta && sta->uploaded) {
- 			/*
- 			 * This will be NULL if the driver didn't set the
-@@ -1456,9 +1457,16 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+-static void get_periodic_rssi(struct timer_list *unused)
++static void get_periodic_rssi(struct timer_list *t)
+ {
+-	struct wilc_vif *vif = periodic_rssi_vif;
++	struct wilc_vif *vif = from_timer(vif, t, periodic_rssi);
+ 
+ 	if (!vif->hif_drv) {
+ 		netdev_err(vif->ndev, "%s: hif driver is NULL", __func__);
+@@ -3432,9 +3430,9 @@ static void get_periodic_rssi(struct timer_list *unused)
  	}
  
- 	if (tid == IEEE80211_NUM_TIDS) {
--		/* Drivers need to opt in to the bufferable MMPDU TXQ */
--		if (!ieee80211_hw_check(&sdata->local->hw, BUFF_MMPDU_TXQ))
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+			/* Drivers need to opt in to the management MPDU TXQ */
-+			if (!ieee80211_hw_check(&sdata->local->hw,
-+						STA_MMPDU_TXQ))
-+				return;
-+		} else if (!ieee80211_hw_check(&sdata->local->hw,
-+					       BUFF_MMPDU_TXQ)) {
-+			/* Drivers need to opt in to the bufferable MMPDU TXQ */
- 			return;
-+		}
- 		txqi->txq.ac = IEEE80211_AC_VO;
- 	} else {
- 		txqi->txq.ac = ieee80211_ac_from_tid(tid);
+ 	if (vif->hif_drv->hif_state == HOST_IF_CONNECTED)
+-		wilc_get_statistics(vif, &vif->wilc->dummy_statistics, false);
++		wilc_get_statistics(vif, &vif->dummy_statistics, false);
+ 
+-	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
++	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ }
+ 
+ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+@@ -3468,12 +3466,11 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 			kfree(hif_drv);
+ 			return -ENOMEM;
+ 		}
+-
+-		periodic_rssi_vif = vif;
+-		timer_setup(&periodic_rssi, get_periodic_rssi, 0);
+-		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+ 	}
+ 
++	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
++	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
++
+ 	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
+ 	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
+ 	timer_setup(&hif_drv->remain_on_ch_timer, listen_timer_cb, 0);
+@@ -3513,7 +3510,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	del_timer_sync(&hif_drv->scan_timer);
+ 	del_timer_sync(&hif_drv->connect_timer);
+-	del_timer_sync(&periodic_rssi);
++	del_timer_sync(&vif->periodic_rssi);
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+ 	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 77641eb..c103a07 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -120,6 +120,8 @@ struct wilc_vif {
+ 	u8 ifc_id;
+ 	struct timer_list during_ip_timer;
+ 	bool obtaining_ip;
++	struct timer_list periodic_rssi;
++	struct rf_info dummy_statistics;
+ };
+ 
+ struct wilc {
+@@ -169,7 +171,6 @@ struct wilc {
+ 	struct device *dev;
+ 	bool suspend_event;
+ 
+-	struct rf_info dummy_statistics;
+ 	bool enable_ps;
+ 	int clients_count;
+ 	struct workqueue_struct *hif_workqueue;
 -- 
-2.18.0
+2.7.4
