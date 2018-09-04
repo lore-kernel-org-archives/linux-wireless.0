@@ -1,200 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:59458 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727844AbeITB2r (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12595 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727061AbeIDLEm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 21:28:47 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: David Ahern <dsahern@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/5] netlink: move extack setting into validate_nla()
-Date: Wed, 19 Sep 2018 21:49:03 +0200
-Message-Id: <20180919194905.16462-4-johannes@sipsolutions.net> (sfid-20180919_214938_218448_122CE2E9)
-In-Reply-To: <20180919194905.16462-1-johannes@sipsolutions.net>
-References: <20180919194905.16462-1-johannes@sipsolutions.net>
+        Tue, 4 Sep 2018 07:04:42 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 20/26] staging: wilc1000: remove unused code to set and get IP address
+Date: Tue, 4 Sep 2018 12:09:36 +0530
+Message-ID: <1536043182-19735-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084108_351609_618D0775)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Cleanup code to remove the variables related to setting and getting IP
+address as this case was not handled from firmware side.
 
-This unifies the code between nla_parse() which sets the bad
-attribute pointer and an error message, and nla_validate()
-which only sets the bad attribute pointer.
-
-It also cleans up the code for NLA_REJECT and paves the way
-for nested policy validation, as it will allow us to easily
-skip setting the "generic" message without any extra args
-like the **error_msg now, just passing the extack through is
-now enough.
-
-While at it, remove the unnecessary label in nla_parse().
-
-Suggested-by: David Ahern <dsahern@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- lib/nlattr.c | 63 ++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 32 insertions(+), 31 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 105 ------------------------------
+ drivers/staging/wilc1000/host_interface.h |   3 -
+ drivers/staging/wilc1000/linux_wlan.c     |   3 -
+ 3 files changed, 111 deletions(-)
 
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index e2e5b38394d5..ff6d48d7c19a 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -69,10 +69,11 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b5d5b8e..14dfa61 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -191,11 +191,6 @@ static u8 p2p_listen_state;
+ static struct completion hif_driver_comp;
+ static struct mutex hif_deinit_lock;
  
- static int validate_nla(const struct nlattr *nla, int maxtype,
- 			const struct nla_policy *policy,
--			const char **error_msg)
-+			struct netlink_ext_ack *extack)
- {
- 	const struct nla_policy *pt;
- 	int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
-+	int err = -ERANGE;
- 
- 	if (type <= 0 || type > maxtype)
- 		return 0;
-@@ -90,24 +91,28 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 	switch (pt->type) {
- 	case NLA_EXACT_LEN:
- 		if (attrlen != pt->len)
--			return -ERANGE;
-+			goto out_err;
- 		break;
- 
- 	case NLA_REJECT:
--		if (pt->validation_data && error_msg)
--			*error_msg = pt->validation_data;
-+		NL_SET_BAD_ATTR(extack, nla);
-+		if (extack && pt->validation_data)
-+			 extack->_msg = pt->validation_data;
- 		return -EINVAL;
- 
- 	case NLA_FLAG:
- 		if (attrlen > 0)
--			return -ERANGE;
-+			goto out_err;
- 		break;
- 
- 	case NLA_BITFIELD32:
- 		if (attrlen != sizeof(struct nla_bitfield32))
--			return -ERANGE;
-+			goto out_err;
- 
--		return validate_nla_bitfield32(nla, pt->validation_data);
-+		err = validate_nla_bitfield32(nla, pt->validation_data);
-+		if (err)
-+			goto out_err;
-+		break;
- 
- 	case NLA_NUL_STRING:
- 		if (pt->len)
-@@ -115,13 +120,15 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 		else
- 			minlen = attrlen;
- 
--		if (!minlen || memchr(nla_data(nla), '\0', minlen) == NULL)
--			return -EINVAL;
-+		if (!minlen || memchr(nla_data(nla), '\0', minlen) == NULL) {
-+			err = -EINVAL;
-+			goto out_err;
-+		}
- 		/* fall through */
- 
- 	case NLA_STRING:
- 		if (attrlen < 1)
--			return -ERANGE;
-+			goto out_err;
- 
- 		if (pt->len) {
- 			char *buf = nla_data(nla);
-@@ -130,13 +137,13 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 				attrlen--;
- 
- 			if (attrlen > pt->len)
--				return -ERANGE;
-+				goto out_err;
- 		}
- 		break;
- 
- 	case NLA_BINARY:
- 		if (pt->len && attrlen > pt->len)
--			return -ERANGE;
-+			goto out_err;
- 		break;
- 
- 	case NLA_NESTED:
-@@ -152,10 +159,13 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			minlen = nla_attr_minlen[pt->type];
- 
- 		if (attrlen < minlen)
--			return -ERANGE;
-+			goto out_err;
- 	}
- 
- 	return 0;
-+out_err:
-+	NL_SET_ERR_MSG_ATTR(extack, nla, "Attribute failed policy validation");
-+	return err;
- }
- 
- /**
-@@ -180,12 +190,10 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
- 	int rem;
- 
- 	nla_for_each_attr(nla, head, len, rem) {
--		int err = validate_nla(nla, maxtype, policy, NULL);
-+		int err = validate_nla(nla, maxtype, policy, extack);
- 
--		if (err < 0) {
--			NL_SET_BAD_ATTR(extack, nla);
-+		if (err < 0)
- 			return err;
--		}
- 	}
- 
- 	return 0;
-@@ -241,7 +249,7 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
- 	      struct netlink_ext_ack *extack)
- {
- 	const struct nlattr *nla;
--	int rem, err;
-+	int rem;
- 
- 	memset(tb, 0, sizeof(struct nlattr *) * (maxtype + 1));
- 
-@@ -249,17 +257,12 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
- 		u16 type = nla_type(nla);
- 
- 		if (type > 0 && type <= maxtype) {
--			static const char _msg[] = "Attribute failed policy validation";
--			const char *msg = _msg;
+-static u8 set_ip[2][4];
+-static u8 get_ip[2][4];
 -
- 			if (policy) {
--				err = validate_nla(nla, maxtype, policy, &msg);
--				if (err < 0) {
--					NL_SET_BAD_ATTR(extack, nla);
--					if (extack)
--						extack->_msg = msg;
--					goto errout;
--				}
-+				int err = validate_nla(nla, maxtype, policy,
-+						       extack);
-+
-+				if (err < 0)
-+					return err;
- 			}
- 
- 			tb[type] = (struct nlattr *)nla;
-@@ -270,9 +273,7 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
- 		pr_warn_ratelimited("netlink: %d bytes leftover after parsing attributes in process `%s'.\n",
- 				    rem, current->comm);
- 
--	err = 0;
--errout:
--	return err;
-+	return 0;
+-static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-
+ /* 'msg' should be free by the caller for syc */
+ static struct host_if_msg*
+ wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
+@@ -348,64 +343,6 @@ static void handle_set_operation_mode(struct work_struct *work)
+ 	kfree(msg);
  }
- EXPORT_SYMBOL(nla_parse);
  
+-static void handle_set_ip_address(struct work_struct *work)
+-{
+-	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
+-	struct wilc_vif *vif = msg->vif;
+-	u8 *ip_addr = msg->body.ip_info.ip_addr;
+-	u8 idx = msg->body.ip_info.idx;
+-	int ret;
+-	struct wid wid;
+-	char firmware_ip_addr[4] = {0};
+-
+-	if (ip_addr[0] < 192)
+-		ip_addr[0] = 0;
+-
+-	memcpy(set_ip[idx], ip_addr, IP_ALEN);
+-
+-	wid.id = WID_IP_ADDRESS;
+-	wid.type = WID_STR;
+-	wid.val = ip_addr;
+-	wid.size = IP_ALEN;
+-
+-	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-				   wilc_get_vif_idx(vif));
+-
+-	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
+-
+-	if (ret)
+-		netdev_err(vif->ndev, "Failed to set IP address\n");
+-	kfree(msg);
+-}
+-
+-static void handle_get_ip_address(struct work_struct *work)
+-{
+-	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
+-	struct wilc_vif *vif = msg->vif;
+-	u8 idx = msg->body.ip_info.idx;
+-	int ret;
+-	struct wid wid;
+-
+-	wid.id = WID_IP_ADDRESS;
+-	wid.type = WID_STR;
+-	wid.val = kmalloc(IP_ALEN, GFP_KERNEL);
+-	wid.size = IP_ALEN;
+-
+-	ret = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
+-				   wilc_get_vif_idx(vif));
+-
+-	memcpy(get_ip[idx], wid.val, IP_ALEN);
+-
+-	kfree(wid.val);
+-
+-	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
+-		wilc_setup_ipaddress(vif, set_ip[idx], idx);
+-
+-	if (ret)
+-		netdev_err(vif->ndev, "Failed to get IP address\n");
+-	kfree(msg);
+-}
+-
+ static void handle_get_mac_address(struct work_struct *work)
+ {
+ 	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
+@@ -4008,48 +3945,6 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled, u32 count,
+ 	return result;
+ }
+ 
+-int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+-{
+-	int result;
+-	struct host_if_msg *msg;
+-
+-	msg = wilc_alloc_work(vif, handle_set_ip_address, false);
+-	if (IS_ERR(msg))
+-		return PTR_ERR(msg);
+-
+-	msg->body.ip_info.ip_addr = ip_addr;
+-	msg->body.ip_info.idx = idx;
+-
+-	result = wilc_enqueue_work(msg);
+-	if (result) {
+-		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
+-		kfree(msg);
+-	}
+-
+-	return result;
+-}
+-
+-static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+-{
+-	int result;
+-	struct host_if_msg *msg;
+-
+-	msg = wilc_alloc_work(vif, handle_get_ip_address, false);
+-	if (IS_ERR(msg))
+-		return PTR_ERR(msg);
+-
+-	msg->body.ip_info.ip_addr = ip_addr;
+-	msg->body.ip_info.idx = idx;
+-
+-	result = wilc_enqueue_work(msg);
+-	if (result) {
+-		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
+-		kfree(msg);
+-	}
+-
+-	return result;
+-}
+-
+ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power)
+ {
+ 	int ret;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 12dec47..6006769 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -9,8 +9,6 @@
+ #include <linux/ieee80211.h>
+ #include "coreconfigurator.h"
+ 
+-#define IP_ALEN  4
+-
+ #define IDLE_MODE	0x00
+ #define AP_MODE		0x01
+ #define STATION_MODE	0x02
+@@ -344,7 +342,6 @@ int wilc_edit_station(struct wilc_vif *vif,
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled, u32 count,
+ 				u8 *mc_list);
+-int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   u32 duration, u16 chan,
+ 			   wilc_remain_on_chan_expired expired,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1cea065..1300318 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -61,7 +61,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 		netdev_dbg(dev, "IP add=%d:%d:%d:%d\n",
+ 			   ip_addr_buf[0], ip_addr_buf[1],
+ 			   ip_addr_buf[2], ip_addr_buf[3]);
+-		wilc_setup_ipaddress(vif, ip_addr_buf, vif->idx);
+ 
+ 		break;
+ 
+@@ -83,8 +82,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 			   ip_addr_buf[0], ip_addr_buf[1],
+ 			   ip_addr_buf[2], ip_addr_buf[3]);
+ 
+-		wilc_setup_ipaddress(vif, ip_addr_buf, vif->idx);
+-
+ 		break;
+ 
+ 	default:
 -- 
-2.14.4
+2.7.4
