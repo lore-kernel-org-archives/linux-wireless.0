@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:56264 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728150AbeISWKC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42088 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727035AbeIDQoU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:10:02 -0400
-Message-ID: <1537374671.10305.41.camel@sipsolutions.net> (sfid-20180919_183128_294861_F71AEB04)
-Subject: Re: [PATCH 3/7] netlink: set extack error message in nla_validate()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Ahern <dsahern@gmail.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date: Wed, 19 Sep 2018 18:31:11 +0200
-In-Reply-To: <3e7aadff-5228-660a-537a-9b54c11fa5cc@gmail.com> (sfid-20180919_182023_809529_1EF8ED3D)
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
-         <20180919120900.28708-4-johannes@sipsolutions.net>
-         <3e7aadff-5228-660a-537a-9b54c11fa5cc@gmail.com>
-         (sfid-20180919_182023_809529_1EF8ED3D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 4 Sep 2018 12:44:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Balaji Pothunoori <bpothuno@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] ath10k: average ack rssi support for data frames
+References: <1536062951-17955-1-git-send-email-bpothuno@codeaurora.org>
+Date: Tue, 04 Sep 2018 15:19:22 +0300
+In-Reply-To: <1536062951-17955-1-git-send-email-bpothuno@codeaurora.org>
+        (Balaji Pothunoori's message of "Tue, 4 Sep 2018 17:39:11 +0530")
+Message-ID: <87va7l78vp.fsf@kamboji.qca.qualcomm.com> (sfid-20180904_141928_921585_18CE625D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-19 at 09:20 -0700, David Ahern wrote:
+Balaji Pothunoori <bpothuno@codeaurora.org> writes:
 
-> >  	nla_for_each_attr(nla, head, len, rem) {
-> > -		int err = validate_nla(nla, maxtype, policy, NULL);
-> > +		static const char _msg[] = "Attribute failed policy validation";
-> > +		const char *msg = _msg;
-> > +		int err = validate_nla(nla, maxtype, policy, &msg);
-> >  
-> >  		if (err < 0) {
-> > +			if (extack)
-> > +				extack->_msg = msg;
-> >  			NL_SET_BAD_ATTR(extack, nla);
-> 
-> msg, NL_SET_BAD_ATTR and extack handling all can be done in validate_nla
-> removing the need for the same message ("Attribute failed policy
-> validation") to be declared twice and simplifying the extack setting.
+> Average ack rssi value is weighted average of ack rssi for
+> no of msdu's has been sent.
+> This feature is enabled by the host driver if firmware is capable.
+> After receiving event from host, firmware allocates the necessary
+> memory to store the ack_rssi for data packets during the init time.
+>
+> After each successful transmission, If tx completion status is OK
+> and 24th bit is set in HTT message header then host will fetch the
+> ack_rssi else host can ignore the ack_rssi field
+>
+> Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+> ---
+> v2:
+>    Addressed ath10k-check warnings
+> v3:
+>    cfg80211/mac80211 changes are already merged hence 
+>    rebased ath10k patch alone.
 
-Yeah, perhaps I should take another look at that. I didn't want to do
-that originally as validate_nla() has so many exit points, but perhaps
-it's better to put a goto label there.
+Heh, we had a collision. Just 2 hours ago I rebased v2, fixed some
+conflicts and it's now in pending branch:
 
-FWIW, in the next patch I'm getting rid of the duplication again - I
-wanted to have the patch that has an effect (this one, setting the
-message) more clearly separated.
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ca376d236d335ccc9475ea1ab49df4643d8246b7
 
-johannes
+So please check that, and if it's good most likely I'll drop this v3.
+
+-- 
+Kalle Valo
