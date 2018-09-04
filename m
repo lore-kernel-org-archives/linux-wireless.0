@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56898 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730278AbeIFUay (ORCPT
+Received: from mail-io0-f181.google.com ([209.85.223.181]:46808 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726090AbeIEBjP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:30:54 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 4 Sep 2018 21:39:15 -0400
+Received: by mail-io0-f181.google.com with SMTP id y12-v6so4201133ioj.13
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 14:12:22 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] ath10k: Support extended board data download for
- dual-band QCA9984
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180824141221.3661-1-murugana@codeaurora.org>
-References: <20180824141221.3661-1-murugana@codeaurora.org>
-To: Sathishkumar Muruganandam <murugana@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-Message-Id: <20180906155446.39424609A5@smtp.codeaurora.org> (sfid-20180906_175449_242250_2FD23A67)
-Date: Thu,  6 Sep 2018 15:54:45 +0000 (UTC)
+References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+In-Reply-To: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Tue, 4 Sep 2018 23:04:29 +0200
+Message-ID: <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com> (sfid-20180904_231226_097997_4393203E)
+Subject: Re: mt76x0 bug report
+To: sidhayn@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sathishkumar Muruganandam <murugana@codeaurora.org> wrote:
+>
+> I have one mt76x2u (Alfa AWUS036ACM) and a few mt76x0.
+>
+> I've noticed two additional issues in my testing.
+>
+> First issue, is that it appears the mt76x0 devices don't work properly
+> in monitor mode.  Sometimes they seem to monitor one channel properly,
+> but nothing else.  The mt76x2u works great, channel control, lots of
+> packets, etc.
 
-> Just moving functions down in the file, no functional changes.
-> 
-> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Could you elaborate a little bit please? how can you reproduce the issue?
+just add an interface in monitor mode and run a scan?
 
-2 patches applied to ath-next branch of ath.git, thanks.
+>
+> Second issue, and frankly a very minor one, is that the TP-Link T1U
+> (which is a 5GHz only device) still thinks it has support for 2.4GHz,
+> both in managed and monitor mode.
 
-5849ed48d226 ath10k: refactoring needed for extended board data download
-31324d17976e ath10k: support extended board data download for dual-band QCA9984
+I guess it depends on eeprom values. Could you please enable debug
+messages a paste
+syslog output?
 
--- 
-https://patchwork.kernel.org/patch/10575359/
+>
+> Lastly, I already mentioned in the other thread, but it would be
+> awesome if firmware version was available to ethtool.
+>
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ack, I will take care of it
+Regards,
+
+Lorenzo
+
+> Thanks for all your hard work on this,
+> Zero
