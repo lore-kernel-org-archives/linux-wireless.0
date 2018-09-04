@@ -1,133 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:41252 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731956AbeISWXY (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12606 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727518AbeIDLE4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 18:23:24 -0400
-Subject: Re: [PATCH 5/7] netlink: prepare validate extack setting for
- recursion
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
- <20180919120900.28708-6-johannes@sipsolutions.net>
- <18ea5293-5a12-7aca-7373-12d1ab3a0821@gmail.com>
- <1537374995.10305.47.camel@sipsolutions.net>
-From: David Ahern <dsahern@gmail.com>
-Message-ID: <50773483-5732-8874-c5bf-99fa09d7e94a@gmail.com> (sfid-20180919_184446_707036_FC1344F3)
-Date: Wed, 19 Sep 2018 09:44:37 -0700
+        Tue, 4 Sep 2018 07:04:56 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 25/26] staging: wilc1000: refactor wilc_netdev_init() to handle memory free in error path
+Date: Tue, 4 Sep 2018 12:09:41 +0530
+Message-ID: <1536043182-19735-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084123_797596_87AEDB6F)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <1537374995.10305.47.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/19/18 9:36 AM, Johannes Berg wrote:
-> On Wed, 2018-09-19 at 09:28 -0700, David Ahern wrote:
->> On 9/19/18 5:08 AM, Johannes Berg wrote:
->>> diff --git a/lib/nlattr.c b/lib/nlattr.c
->>> index 966cd3dcf31b..2b015e43b725 100644
->>> --- a/lib/nlattr.c
->>> +++ b/lib/nlattr.c
->>> @@ -69,7 +69,7 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
->>>  
->>>  static int validate_nla(const struct nlattr *nla, int maxtype,
->>>  			const struct nla_policy *policy,
->>> -			const char **error_msg)
->>> +			struct netlink_ext_ack *extack, bool *extack_set)
->>
->> extack_set arg is not needed if you handle the "Attribute failed policy
->> validation" message and NL_SET_BAD_ATTR here as well.
-> 
-> I'm not sure that's true, but perhaps you have a better idea than me?
-> 
-> My thought would be to introduce an "error" label in validate_nla(),
-> that sets up the extack data.
-> 
-> Then we could skip over that if we have a separate message to report,
-> making the NLA_REJECT case easier.
-> 
-> However, if we do nested validation, I'm not sure it really is that much
-> easier? We still need to figure out if the nested validation was setting
-> the message (and bad attr), rather than it having been set before we
-> even get into this function.
-> 
-> So let's say we have
-> 
->         case NLA_NESTED:
->                 /* a nested attributes is allowed to be empty; if its not,
->                  * it must have a size of at least NLA_HDRLEN.
->                  */
->                 if (attrlen == 0)
->                         break;
->                 if (attrlen < NLA_HDRLEN)
->                         return -ERANGE;
->                 if (pt->validation_data) {
->                         int err;
-> 
->                         err = nla_validate_parse(nla_data(nla), nla_len(nla),
->                                                  pt->len, pt->validation_data,
->                                                  extack, extack_set, NULL);
->                         if (err < 0)
->                                 return err;
->                 }
->                 break;
-> 
-> right now after all the patches.
-> 
-> The "return -ERANGE;" would become "{ err = -ERANGE; goto error; }", but
-> I'm not really sure we can cleanly handle the other case?
-> 
-> Hmm. Maybe it works if we ensure that nla_validate_parse() has no other
-> return points that can fail outside of validate_nla(), or we set up the
-> extack data there as well, so that once we have a nested
-> nla_validate_parse() we know that it's been set.
-> 
-> Actually, we need to do that anyway so that we can move the setting into
-> validate_nla(), and then it should work.
-> 
-> Mechanics aside - I'll take a look later tonight or tomorrow - do you
-> think the goal/external interface of this makes sense?
+Refactor the wilc_netdev_init() to cleanup the memory for error
+scenario and remove unnecessary 'dev' pointer check.
 
-If it fails and returns (nested and all) on the first failure it should
-be fine. I was thinking something like this (whitespace damaged on paste):
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 36 ++++++++++++++++-------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 +++-
+ 2 files changed, 30 insertions(+), 12 deletions(-)
 
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index e335bcafa9e4..f18f0ed3f1cd 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -73,6 +73,7 @@ static int validate_nla(const struct nlattr *nla, int
-maxtype,
- {
-        const struct nla_policy *pt;
-        int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
-+       int err = -ERANGE;
-
-        if (type <= 0 || type > maxtype)
-                return 0;
-@@ -89,7 +90,7 @@ static int validate_nla(const struct nlattr *nla, int
-maxtype,
-        switch (pt->type) {
-        case NLA_FLAG:
-                if (attrlen > 0)
--                       return -ERANGE;
-+                       goto out_err;
-                break;
-
-        case NLA_BITFIELD32:
-
-...
-(similar for other error places. the one EINVAL needs to set err first)
-...
-
-@@ -156,6 +157,10 @@ static int validate_nla(const struct nlattr *nla,
-int maxtype,
-        }
-
-        return 0;
-+out_err:
-+       NL_SET_ERR_MSG_ATTR(extack, nla,
-+                           "Attribute failed policy validation");
-+       return err;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index d7d43fd..91a45a7 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1073,10 +1073,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	INIT_LIST_HEAD(&wl->rxq_head.list);
+ 
+ 	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
+-	if (!wl->hif_workqueue) {
+-		kfree(wl);
+-		return -ENOMEM;
+-	}
++	if (!wl->hif_workqueue)
++		goto free_wl;
+ 
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+@@ -1085,7 +1083,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 
+ 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
+ 		if (!ndev)
+-			return -ENOMEM;
++			goto free_ndev;
+ 
+ 		vif = netdev_priv(ndev);
+ 		memset(vif, 0, sizeof(struct wilc_vif));
+@@ -1106,15 +1104,13 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		wdev = wilc_create_wiphy(ndev, dev);
+-
+-		if (dev)
+-			SET_NETDEV_DEV(ndev, dev);
+-
+ 		if (!wdev) {
+ 			netdev_err(ndev, "Can't register WILC Wiphy\n");
+-			return -1;
++			goto free_ndev;
+ 		}
+ 
++		SET_NETDEV_DEV(ndev, dev);
++
+ 		vif->ndev->ieee80211_ptr = wdev;
+ 		vif->ndev->ml_priv = vif;
+ 		wdev->netdev = vif->ndev;
+@@ -1125,11 +1121,29 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 
+ 		ret = register_netdev(ndev);
+ 		if (ret)
+-			return ret;
++			goto free_ndev;
+ 
+ 		vif->iftype = STATION_MODE;
+ 		vif->mac_opened = 0;
+ 	}
+ 
+ 	return 0;
++
++free_ndev:
++	for (; i >= 0; i--) {
++		if (wl->vif[i]) {
++			if (wl->vif[i]->iftype == STATION_MODE)
++				unregister_netdev(wl->vif[i]->ndev);
++
++			if (wl->vif[i]->ndev) {
++				wilc_free_wiphy(wl->vif[i]->ndev);
++				free_netdev(wl->vif[i]->ndev);
++			}
++		}
++	}
++	unregister_inetaddr_notifier(&g_dev_notifier);
++	destroy_workqueue(wl->hif_workqueue);
++free_wl:
++	kfree(wl);
++	return -ENOMEM;
  }
-
- /**
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d103dce2..37c26d4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2145,8 +2145,12 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net,
+ 	set_wiphy_dev(wdev->wiphy, dev);
+ 
+ 	ret = wiphy_register(wdev->wiphy);
+-	if (ret)
++	if (ret) {
+ 		netdev_err(net, "Cannot register wiphy device\n");
++		wiphy_free(wdev->wiphy);
++		kfree(wdev);
++		return NULL;
++	}
+ 
+ 	priv->dev = net;
+ 	return wdev;
+-- 
+2.7.4
