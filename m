@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33698 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731001AbeISLmi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55264 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726093AbeIDJE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:38 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 14/29] staging: wilc1000: remove unused wid type values
-Date: Wed, 19 Sep 2018 11:35:04 +0530
-Message-ID: <1537337119-14952-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080630_262344_2F42DF15)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 4 Sep 2018 05:04:28 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k_htc_fw@lists.infradead.org
+Subject: Re: [PATCH 1/3] debug: use common debug for ack timeout output
+References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
+        <87tvn5sx6y.fsf@purkki.adurom.net>
+Date: Tue, 04 Sep 2018 07:41:07 +0300
+In-Reply-To: <87tvn5sx6y.fsf@purkki.adurom.net> (Kalle Valo's message of "Tue,
+        04 Sep 2018 07:28:37 +0300")
+Message-ID: <87lg8hswm4.fsf@purkki.adurom.net> (sfid-20180904_064114_726208_CC4E1A8B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the wid type not used in the code.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ----
- 1 file changed, 4 deletions(-)
+> Tomislav Po=C5=BEega <pozega.tomislav@gmail.com> writes:
+>
+>> Move ack debug code to common-debug and adjust
+>> ath9k/ath9k_htc debug for common ack output.
+>
+> Why? I guess to be able to get ack timeout with ath9k_htc, but please
+> write the reason clearly in the commit log.
+>
+> Also the title prefix should be "ath9k:".
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index b81a73b..ce2066b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -204,10 +204,6 @@ enum wid_type {
- 	WID_STR			= 3,
- 	WID_BIN_DATA		= 4,
- 	WID_BIN			= 5,
--	WID_IP			= 6,
--	WID_ADR			= 7,
--	WID_UNDEF		= 8,
--	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
- };
- 
- struct wid {
--- 
-2.7.4
+Also please don't CC ath9k_htc_fw list. They spam with "Your message to
+ath9k_htc_fw awaits moderator approval" which is REALLY annoying. From
+now on I'll drop them automatically.
+
+--=20
+Kalle Valo
