@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:55180 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeIUL02 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 07:26:28 -0400
-Date: Thu, 20 Sep 2018 22:39:11 -0700
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: valdis.kletnieks@vt.edu
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Remove unnecessary pointer check
-Message-ID: <20180921053911.GA5170@flashbox> (sfid-20180921_073941_432404_FE37B28B)
-References: <20180920212648.25181-1-natechancellor@gmail.com>
- <32473.1537507532@turing-police.cc.vt.edu>
+Received: from narfation.org ([79.140.41.39]:35916 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726263AbeIDQct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 12:32:49 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH v2 9/9] mac80211: Don't wake up from PS for offchannel TX
+Date: Tue, 04 Sep 2018 14:07:54 +0200
+Message-ID: <8536772.7SmJXvWjMu@bentobox> (sfid-20180904_140803_195206_132CDBCD)
+In-Reply-To: <20180904114055.1429-10-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi> <20180904114055.1429-1-luca@coelho.fi> <20180904114055.1429-10-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <32473.1537507532@turing-police.cc.vt.edu>
+Content-Type: multipart/signed; boundary="nextPart1858238.n2RApS7eac"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2018 at 01:25:32AM -0400, valdis.kletnieks@vt.edu wrote:
-> On Thu, 20 Sep 2018 14:26:49 -0700, Nathan Chancellor said:
-> > Clang warns that the address of a pointer will always evaluated as true
-> > in a boolean context:
-> >
-> > drivers/staging/wilc1000/linux_wlan.c:267:20: warning: address of
-> > 'vif->ndev->dev' will always evaluate to 'true'
-> > [-Wpointer-bool-conversion]
-> >         if (!(&vif->ndev->dev))
-> >             ~  ~~~~~~~~~~~^~~
-> > 1 warning generated.
-> >
-> > Since this statement always evaluates to false due to the logical not,
-> > remove it.
-> 
-> Often, "just nuke it because it's now dead code" isn't the best answer...
-> 
-> At one time, that was likely intended to be checking whether ->dev was a null
-> pointer, to make sure we don't pass request_firmware() a null pointer and oops
-> the kernel, or other things that go pear-shaped....
-> 
-> So the question becomes:   Is it safe to just remove it, or was it intended to
-> test for something that could  legitimately be null if we've hit an error along
-> the way (which means we should fix the condition to be proper and acceptable
-> to both gcc and clang)?
-> 
-> 
+--nextPart1858238.n2RApS7eac
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-I certainly considered whether or not removing the check versus fixing
-it was the correct answer. Given that this check can be traced back to
-the initial check in of the driver in 2015, I figured it was safe to
-remove it (since a null pointer dereference would most likely have been
-noticed by now).
+On Dienstag, 4. September 2018 14:40:55 CEST Luca Coelho wrote:
+> )
+> Sender: linux-wireless-owner@vger.kernel.org
+> Precedence: bulk
+> List-ID: <linux-wireless.vger.kernel.org>
+> X-Mailing-List: linux-wireless@vger.kernel.org
 
-Most patches addressing this warning just remove the check given that it's
-not actually changing the code, such as commit a7dc662c6a7b ("ASoC: codecs:
-PCM1789: unconditionally flush work"). However, if the driver authors and/or
-maintainers think that this check should be something else (maybe checking
-that the contents of dev is not null versus the address, I'm perfectly
-happy to submit a v2 with this change.
+Looks like the SMTP headers are broken in all your patches. Here the 
+interesting part (as received by me):
 
-Thank you for the response and review!
-Nathan
+    [...]
+    X-SA-Exim-Scanned: Yes (on 
+    
+    )
+    Sender: linux-wireless-owner@vger.kernel.org
+    Precedence: bulk
+    List-ID: <linux-wireless.vger.kernel.org>
+    X-Mailing-List: linux-wireless@vger.kernel.org
+
+Kind regards,
+	Sven
+--nextPart1858238.n2RApS7eac
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAluOdZoACgkQXYcKB8Em
+e0bSAxAArMHJzTMOBEMD7CsCEqwD80QHpQ2cidSOeJugmbqPuwbLxVJmZ0qhOY+m
+bXxUaOrraNIUH+h8uP9jier9JIARg8tXJZtY7qu4OhSdGGs2M1Ox2v5BXloLh1Mk
+WU3MF56wZUrfi6jaUHd/ZeD6zt7IEJ8s2JciTVAR7kiyjZn+HVYxWR9KGh4ToJjU
+LFsAu5iiNP27YBsxKpyfHixJ6tNXAlTqHXybG5mIZ5dFMJNWHlW6ib3ybfGknoxJ
+NlE/LMRKozLL8NCO5IapXQQXFjWvvJ8sEiFLpbm0L/agkWbspoyPT2Vp33UtRvfm
+tg7Tq9J7mpi7S1Wa3LhMVHObLbCqhuvy0dUR63QN7i/CTSFPTtDrz/v/kXpWLCoZ
+2gamO/kVlLkpFXwxNuu3eLJsSa61z2aPJYz8z2OvhNKAkZDRoqZV2TOLNDprqf4e
+hRGpPecJRIb/Fib7Mswo0lT8dNYJ3Q/CythZDtwDZl34aN9cHmse7T5SBfzZs2TI
+BsUJH9UIu6Bun565K2FuBgpLUyi+/+lCaLtli/l8L3S/vfF+e7R/cWHafeY7k/8N
+lmYo1esS1+j/XRy5Ig0Qqw9jkPQgyQ+/6fiIK2Mi3EeLWZQzEfedqKrFXLw9B5ha
++DRMUzxn/tp/3l4TPNraLjaYks8pmzN3S8L7SQi7ouh4EHN9mqs=
+=rjYu
+-----END PGP SIGNATURE-----
+
+--nextPart1858238.n2RApS7eac--
