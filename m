@@ -1,44 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:46041 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726304AbeIDVLn (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53829 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727321AbeIDLEB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 17:11:43 -0400
-Received: by mail-oi0-f53.google.com with SMTP id t68-v6so7949379oie.12
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 09:45:48 -0700 (PDT)
+        Tue, 4 Sep 2018 07:04:01 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 09/26] staging: wilc1000: move static variable clients_count to 'wilc' structure
+Date: Tue, 4 Sep 2018 12:09:25 +0530
+Message-ID: <1536043182-19735-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084028_375830_2578CF8B)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <HE1PR0702MB3804CF0523876027EFB383FE980C0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
-References: <HE1PR0702MB38043B23810E618B01413959980F0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
- <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com> <HE1PR0702MB3804CF0523876027EFB383FE980C0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 4 Sep 2018 13:45:47 -0300
-Message-ID: <CAOMZO5AL36ejhygqYgmzz4=BuchgTjYgdTuFb9Qdich-BU74og@mail.gmail.com> (sfid-20180904_184551_755034_A6FC9070)
-Subject: Re: Build iw for 32bit ARM
-To: Jakov Simunic <jakov.simunic@ericsson.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        Steve deRosier <derosier@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jakov,
+Avoid use of static variable 'clients_count' and move it part of 'wilc'
+structure.
 
-On Mon, Sep 3, 2018 at 11:20 AM, Jakov Simunic
-<jakov.simunic@ericsson.com> wrote:
-> Hi Steve,
-> We are building with ptxdist, we have a compiler for arm (arm-linux-gnuea=
-bihf-gcc), I am not a total novice in this, and have already written some p=
-txdist rules, but haven't done it with non-autoconfizzed packages, basicall=
-y the problem is that if I use the default iw.make from the ptxdist master =
-branch, iw's Makefile tries to compile with the native compiler and native =
-libnl, no matter what option i supply it with, I always get a x86-32 execut=
-able. When I modify the iw.make rule with the correct CC (by making a custo=
-m compile step), it then fails to find the correct libnl through pkg-config=
-. The iw package is not modified at all. Could you suggest how to hard code=
- the CC (or that it gets it normally from a CC variable supplied to the Mak=
-efile) or how to avoid pkg-config and supply the options needed manually. I=
- know this is a step back from multi-platform build practices, but I just n=
-eed it that way.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c     | 9 ++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 +
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Maybe you can try to ask for help in the ptxdist mailing list.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6225e67..d930f06 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -199,7 +199,6 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ 
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+-static u32 clients_count;
+ 
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ 
+@@ -3456,7 +3455,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	vif->obtaining_ip = false;
+ 
+-	if (clients_count == 0) {
++	if (wilc->clients_count == 0) {
+ 		init_completion(&hif_driver_comp);
+ 		mutex_init(&hif_deinit_lock);
+ 
+@@ -3490,7 +3489,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	mutex_unlock(&hif_drv->cfg_values_lock);
+ 
+-	clients_count++;
++	wilc->clients_count++;
+ 
+ 	return 0;
+ }
+@@ -3526,7 +3525,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	hif_drv->hif_state = HOST_IF_IDLE;
+ 
+-	if (clients_count == 1)	{
++	if (vif->wilc->clients_count == 1) {
+ 		struct host_if_msg *msg;
+ 
+ 		msg = wilc_alloc_work(vif, handle_hif_exit_work, true);
+@@ -3544,7 +3543,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	kfree(hif_drv);
+ 
+-	clients_count--;
++	vif->wilc->clients_count--;
+ 	terminated_handle = NULL;
+ 	mutex_unlock(&hif_deinit_lock);
+ 	return result;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8e56a28..8cccbbc 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -171,6 +171,7 @@ struct wilc {
+ 
+ 	struct rf_info dummy_statistics;
+ 	bool enable_ps;
++	int clients_count;
+ };
+ 
+ struct wilc_wfi_mon_priv {
+-- 
+2.7.4
