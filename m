@@ -1,122 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42576 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725840AbeIXMbQ (ORCPT
+Received: from gateway24.websitewelcome.com ([192.185.50.73]:36508 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726281AbeIDSHu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 08:31:16 -0400
+        Tue, 4 Sep 2018 14:07:50 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 6C0624BBF3
+        for <linux-wireless@vger.kernel.org>; Tue,  4 Sep 2018 08:20:38 -0500 (CDT)
+Date: Tue, 4 Sep 2018 08:20:01 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Alexander Wetzel <alexander@wetzel-home.de>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] mac80211: remove unnecessary NULL check
+Message-ID: <20180904132001.GA31932@embeddedor.com> (sfid-20180904_154243_077061_D8AAD236)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 24 Sep 2018 12:00:43 +0530
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFCv3 1/2] mac80211: implement ieee80211_tx_rate_update to
- update rate
-In-Reply-To: <87worfhwgx.fsf@toke.dk>
-References: <1537445116-10780-1-git-send-email-akolli@codeaurora.org>
- <1537445116-10780-2-git-send-email-akolli@codeaurora.org>
- <87va706tfz.fsf@toke.dk> <29efd8dc90c7ea75f6cd0d7e3787b463@codeaurora.org>
- <87worfhwgx.fsf@toke.dk>
-Message-ID: <39746e839c1ad5011f2948540140ee0d@codeaurora.org> (sfid-20180924_083047_326245_A65F0576)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-21 17:51, Toke Høiland-Jørgensen wrote:
-> Anilkumar Kolli <akolli@codeaurora.org> writes:
-> 
->> On 2018-09-20 21:40, Toke Høiland-Jørgensen wrote:
->>> Anilkumar Kolli <akolli@codeaurora.org> writes:
->>> 
->>>> Current mac80211 has provision to update tx status through
->>>> ieee80211_tx_status() and ieee80211_tx_status_ext(). But
->>>> drivers like ath10k updates the tx status from the skb except
->>>> txrate, txrate will be updated from a different path, peer stats.
->>>> 
->>>> Using ieee80211_tx_status_ext() in two different paths
->>>>   - (one for the stats, one for the tx rate) will duplicate the 
->>>> stats.
->>>> 
->>>> To avoid this stats duplication, ieee80211_tx_rate_update() is
->>>> implemented.
->>>> 
->>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
->>>> ---
->>>> V3:
->>>>   - Added new API in mac80211 to update tx rate(Johannes)
->>>> 
->>>>  include/net/mac80211.h |   14 ++++++++++++++
->>>>  net/mac80211/status.c  |   24 ++++++++++++++++++++++++
->>>>  2 files changed, 38 insertions(+)
->>>> 
->>>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->>>> index 8c26d2d36cbe..042186a21770 100644
->>>> --- a/include/net/mac80211.h
->>>> +++ b/include/net/mac80211.h
->>>> @@ -4331,6 +4331,20 @@ void
->>>> ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
->>>>  					   u32 thr);
->>>> 
->>>>  /**
->>>> + * ieee80211_tx_rate_update - transmit rate update callback
->>>> + *
->>>> + * This function can be used in drivers that does not have 
->>>> provision
->>>> + * in updating the tx rate in data path.
->>>> + *
->>>> + * @hw: the hardware the frame was transmitted by
->>>> + * @status: tx status information
->>>> + * @pubsta: the station to update the tx rate for.
->>>> + */
->>>> +void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
->>>> +			      struct ieee80211_sta *pubsta,
->>>> +			      struct ieee80211_tx_info *info);
->>>> +
->>>> +/**
->>>>   * ieee80211_tx_status - transmit status callback
->>>>   *
->>>>   * Call this function for all transmitted frames after they have 
->>>> been
->>>> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
->>>> index 9a6d7208bf4f..232297ddaa02 100644
->>>> --- a/net/mac80211/status.c
->>>> +++ b/net/mac80211/status.c
->>>> @@ -988,6 +988,30 @@ void ieee80211_tx_status_ext(struct 
->>>> ieee80211_hw
->>>> *hw,
->>>>  }
->>>>  EXPORT_SYMBOL(ieee80211_tx_status_ext);
->>>> 
->>>> +void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
->>>> +			      struct ieee80211_sta *pubsta,
->>>> +			      struct ieee80211_tx_info *info)
->>>> +{
->>>> +	struct ieee80211_local *local = hw_to_local(hw);
->>>> +	struct ieee80211_supported_band *sband;
->>>> +	struct sta_info *sta;
->>>> +	struct ieee80211_tx_status status;
->>>> +
->>>> +	sband = hw->wiphy->bands[info->band];
->>>> +
->>>> +	if (pubsta) {
->>> 
->>> The function does nothing if pubsta is NULL; wouldn't it make more
->>> sense
->>> to just mandate that it isn't NULL rather than have this check?
->>> 
->> 
->> ATH10K driver always calls this function with a valid STA [not NULL].
-> 
-> Yeah, so why the check for non-NULL? :)
-> 
+Both old and new cannot be NULL at the same time, hence checking
+new when old is not NULL is unnecessary.
 
-Agreed we can remove this check since ath10k driver calls 
-ieee80211_tx_rate_update()
-with a valid STA. This adds a sanity check to avoid NULL dereference on 
-pubsta.
+Also, notice that new is being dereferenced before it is checked:
+	
+	idx = new->conf.keyidx;
 
-I will update the comments on ieee80211_tx_rate_update() and send RFCv4.
+The above triggers a static code analysis warning.
 
-Thanks
-Anil.
+Address this by removing the NULL check on new and adding a code
+comment based on the following piece of code:
+
+387        /* caller must provide at least one old/new */
+388        if (WARN_ON(!new && !old))
+389                return 0;
+
+Addresses-Coverity-ID: 1473176 ("Dereference before null check")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ net/mac80211/key.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index d6eeace..4700718 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -401,8 +401,9 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 		 * pairwise keys.*/
+ 		ret = ieee80211_hw_key_replace(old, new, pairwise);
+ 	} else {
++		/* new must be provided in case old is not */
+ 		idx = new->conf.keyidx;
+-		if (new && !new->local->wowlan)
++		if (!new->local->wowlan)
+ 			ret = ieee80211_key_enable_hw_accel(new);
+ 		else
+ 			ret = 0;
+-- 
+2.7.4
