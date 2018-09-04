@@ -1,129 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56710 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728039AbeIFNyZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:25 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 20/42] mt76x0: remove unused {tx/rx}_queue definitions
-Date: Thu,  6 Sep 2018 11:18:36 +0200
-Message-Id: <1536225538-16454-21-git-send-email-sgruszka@redhat.com> (sfid-20180906_111959_459370_4042E4E7)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53839 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727321AbeIDLEH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 07:04:07 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 11/26] staging: wilc1000: move hif_workqueue static variables to 'wilc' structure
+Date: Tue, 4 Sep 2018 12:09:27 +0530
+Message-ID: <1536043182-19735-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084030_047480_4D2CD692)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Avoid use of static variable hif_workqueue and move it inside 'wilc'
+structure.
 
-Remove unused tx_queue and rx_queue definitions since
-now mt76x0 driver uses mt76-usb {tx/rx}_queues
-
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  2 -
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h | 50 ----------------------
- 2 files changed, 52 deletions(-)
+ drivers/staging/wilc1000/host_interface.c     | 13 ++++++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 5be4c48936e4..a7d6e747f221 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -505,8 +505,6 @@ struct mt76x0_dev *mt76x0_alloc_device(struct device *pdev)
- 	mutex_init(&dev->usb_ctrl_mtx);
- 	mutex_init(&dev->reg_atomic_mutex);
- 	mutex_init(&dev->hw_atomic_mutex);
--	spin_lock_init(&dev->tx_lock);
--	spin_lock_init(&dev->rx_lock);
- 	spin_lock_init(&dev->mac_lock);
- 	spin_lock_init(&dev->con_mon_lock);
- 	atomic_set(&dev->avg_ampdu_len, 1);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index f63c44999bdd..6ba5e9ba2c7f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -40,13 +40,6 @@
- #define MT_USB_AGGR_SIZE_LIMIT		21 /* * 1024B */
- #define MT_USB_AGGR_TIMEOUT		0x80 /* * 33ns */
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index f5617ac..6facffc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -188,7 +188,6 @@ struct join_bss_param {
  
--struct mt76x0_dma_buf {
--	struct urb *urb;
--	void *buf;
--	dma_addr_t dma;
--	size_t len;
--};
--
- struct mac_stats {
- 	u64 rx_stat[6];
- 	u64 tx_stat[6];
-@@ -55,38 +48,6 @@ struct mac_stats {
- 	u64 zero_len_del[2];
+ static struct host_if_drv *terminated_handle;
+ static u8 p2p_listen_state;
+-static struct workqueue_struct *hif_workqueue;
+ static struct completion hif_driver_comp;
+ static struct mutex hif_deinit_lock;
+ static struct timer_list periodic_rssi;
+@@ -226,7 +225,11 @@ wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct *),
+ static int wilc_enqueue_work(struct host_if_msg *msg)
+ {
+ 	INIT_WORK(&msg->work, msg->fn);
+-	if (!hif_workqueue || !queue_work(hif_workqueue, &msg->work))
++
++	if (!msg->vif || !msg->vif->wilc || !msg->vif->wilc->hif_workqueue)
++		return -EINVAL;
++
++	if (!queue_work(msg->vif->wilc->hif_workqueue, &msg->work))
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -3459,8 +3462,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		init_completion(&hif_driver_comp);
+ 		mutex_init(&hif_deinit_lock);
+ 
+-		hif_workqueue = create_singlethread_workqueue("WILC_wq");
+-		if (!hif_workqueue) {
++		wilc->hif_workqueue = create_singlethread_workqueue("WILC_wq");
++		if (!wilc->hif_workqueue) {
+ 			netdev_err(vif->ndev, "Failed to create workqueue\n");
+ 			kfree(hif_drv);
+ 			return -ENOMEM;
+@@ -3538,7 +3541,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 				wait_for_completion(&msg->work_comp);
+ 			kfree(msg);
+ 		}
+-		destroy_workqueue(hif_workqueue);
++		destroy_workqueue(vif->wilc->hif_workqueue);
+ 	}
+ 
+ 	kfree(hif_drv);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 8cccbbc..77641eb 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -172,6 +172,7 @@ struct wilc {
+ 	struct rf_info dummy_statistics;
+ 	bool enable_ps;
+ 	int clients_count;
++	struct workqueue_struct *hif_workqueue;
  };
  
--#define N_RX_ENTRIES	16
--struct mt76x0_rx_queue {
--	struct mt76x0_dev *dev;
--
--	struct mt76x0_dma_buf_rx {
--		struct urb *urb;
--		struct page *p;
--	} e[N_RX_ENTRIES];
--
--	unsigned int start;
--	unsigned int end;
--	unsigned int entries;
--	unsigned int pending;
--};
--
--#define N_TX_ENTRIES	64
--
--struct mt76x0_tx_queue {
--	struct mt76x0_dev *dev;
--
--	struct mt76x0_dma_buf_tx {
--		struct urb *urb;
--		struct sk_buff *skb;
--	} e[N_TX_ENTRIES];
--
--	unsigned int start;
--	unsigned int end;
--	unsigned int entries;
--	unsigned int used;
--	unsigned int fifo_seq;
--};
--
- struct mt76x0_eeprom_params;
- 
- #define MT_EE_TEMPERATURE_SLOPE		39
-@@ -108,9 +69,6 @@ enum mt_bw {
-  * struct mt76x0_dev - adapter structure
-  * @lock:		protects @wcid->tx_rate.
-  * @mac_lock:		locks out mac80211's tx status and rx paths.
-- * @tx_lock:		protects @tx_q and changes of MT76_STATE_*_STATS
-- *			flags in @state.
-- * @rx_lock:		protects @rx_q.
-  * @con_mon_lock:	protects @ap_bssid, @bcn_*, @avg_rssi.
-  * @mutex:		ensures exclusive access from mac80211 callbacks.
-  * @reg_atomic_mutex:	ensures atomicity of indirect register accesses
-@@ -146,16 +104,8 @@ struct mt76x0_dev {
- 
- 	u32 debugfs_reg;
- 
--	/* TX */
--	spinlock_t tx_lock;
--	struct mt76x0_tx_queue *tx_q;
--
- 	atomic_t avg_ampdu_len;
- 
--	/* RX */
--	spinlock_t rx_lock;
--	struct mt76x0_rx_queue rx_q;
--
- 	/* Connection monitoring things */
- 	spinlock_t con_mon_lock;
- 	u8 ap_bssid[ETH_ALEN];
+ struct wilc_wfi_mon_priv {
 -- 
-2.7.5
+2.7.4
