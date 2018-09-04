@@ -1,83 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:47131 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728216AbeIPXFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 19:05:52 -0400
-Subject: [PATCH RFC v4 0/4] Move TXQ scheduling into mac80211
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Date: Sun, 16 Sep 2018 19:42:11 +0200
-Message-ID: <153711966150.9231.13481453399723518107.stgit@alrua-x1> (sfid-20180916_194317_752625_E6E12A5A)
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53856 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727061AbeIDLEb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 07:04:31 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 18/26] staging: wilc1000: avoid line over 80 chars in wilc_wlan_txq_filter_dup_tcp_ack()
+Date: Tue, 4 Sep 2018 12:09:34 +0530
+Message-ID: <1536043182-19735-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084105_538614_099079EF)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another update, addressing most of the concerns raised in the last round:
+Cleanup patch to avoid line over 80 chars checkpatch issue introduced in
+previous code refactor commit.
 
-- Added schedule_start()/end() functions that adds locking around the
-  whole scheduling operation, which means we can get rid of the 'first'
-  parameter to ieee80211_next_txq().
-
-- Adds a callback in the wake_txqs tasklet which will ensure that any
-  TXQs throttled by ieee80211_txq_may_transmit() will get woken up
-  again. This also makes it possible to ensure all TXQs' deficits are
-  increased in the case where the rotation in may_transmit is not
-  effective because TXQs are not scheduled in round-robin order by the
-  hardware. As part of this, bring back the flag that marks a TXQ as
-  throttled.
-
-- Rename ieee80211_schedule_txq() to ieee80211_return_txq() and add a
-  check of empty TXQs inside it, so the driver can just call it
-  unconditionally.
-
-- Add a call to ieee80211_sta_register_airtime() from the existing
-  tx_status path if tx_time is set in the tx_info status field.
-
-- Reorder the patches to the cfg80211 airtime changes come before the
-  changes to mac80211.
-
-I didn't port over Kan's "airtime queue limits" stuff yet, partly
-because I ran out of time, and partly because I wasn't use if he wanted
-to do it himself :)
-
--Toke
-
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
+ drivers/staging/wilc1000/wilc_wlan.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Toke Høiland-Jørgensen (4):
-      mac80211: Add TXQ scheduling API
-      cfg80211: Add airtime statistics and settings
-      mac80211: Add airtime accounting and scheduling to TXQs
-      ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
-
-
- drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
- drivers/net/wireless/ath/ath9k/debug.c     |    3 
- drivers/net/wireless/ath/ath9k/debug.h     |    8 -
- drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
- drivers/net/wireless/ath/ath9k/init.c      |    3 
- drivers/net/wireless/ath/ath9k/recv.c      |    9 -
- drivers/net/wireless/ath/ath9k/xmit.c      |  244 ++++++++--------------------
- include/net/cfg80211.h                     |   10 +
- include/net/mac80211.h                     |  114 +++++++++++++
- include/uapi/linux/nl80211.h               |   15 ++
- net/mac80211/agg-tx.c                      |    2 
- net/mac80211/cfg.c                         |    3 
- net/mac80211/debugfs.c                     |    3 
- net/mac80211/debugfs_sta.c                 |   51 ++++++
- net/mac80211/driver-ops.h                  |    9 +
- net/mac80211/ieee80211_i.h                 |   12 +
- net/mac80211/main.c                        |    6 +
- net/mac80211/sta_info.c                    |   51 ++++++
- net/mac80211/sta_info.h                    |   13 +
- net/mac80211/status.c                      |    6 +
- net/mac80211/tx.c                          |  134 +++++++++++++++
- net/mac80211/util.c                        |   55 ++++++
- net/wireless/nl80211.c                     |   29 +++
- 23 files changed, 575 insertions(+), 273 deletions(-)
-
-X-Clacks-Overhead: GNU Terry Pratchett
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 52402c3..46db790 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -199,19 +199,20 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+-	for (i = f->pending_base; i < (f->pending_base + f->pending_acks); i++) {
+-		u32 session_index;
++	for (i = f->pending_base;
++	     i < (f->pending_base + f->pending_acks); i++) {
++		u32 index;
+ 		u32 bigger_ack_num;
+ 
+ 		if (i >= MAX_PENDING_ACKS)
+ 			break;
+ 
+-		session_index = f->pending_acks_info[i].session_index;
++		index = f->pending_acks_info[i].session_index;
+ 
+-		if (session_index >= 2 * MAX_TCP_SESSION)
++		if (index >= 2 * MAX_TCP_SESSION)
+ 			break;
+ 
+-		bigger_ack_num = f->ack_session_info[session_index].bigger_ack_num;
++		bigger_ack_num = f->ack_session_info[index].bigger_ack_num;
+ 
+ 		if (f->pending_acks_info[i].ack_num < bigger_ack_num) {
+ 			struct txq_entry_t *tqe;
+-- 
+2.7.4
