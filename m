@@ -1,67 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38201 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727672AbeIRBq2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50572 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726093AbeIDJYZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 21:46:28 -0400
-Date: Mon, 17 Sep 2018 17:17:29 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kubecek <mkubecek@suse.cz>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, jbenc@redhat.com
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-Message-ID: <20180917201729.GH4590@localhost.localdomain> (sfid-20180917_221740_984341_4978017D)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913193004.GF4590@localhost.localdomain>
- <20180913212742.GC3876@unicorn.suse.cz>
- <20180913215839.GI27095@localhost.localdomain>
- <1537177132.2957.6.camel@sipsolutions.net>
+        Tue, 4 Sep 2018 05:24:25 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1537177132.2957.6.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/2] ath10k: Support extended board data download for
+ dual-band QCA9984
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180824141221.3661-2-murugana@codeaurora.org>
+References: <20180824141221.3661-2-murugana@codeaurora.org>
+To: Sathishkumar Muruganandam <murugana@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Sathishkumar Muruganandam <murugana@codeaurora.org>
+Message-Id: <20180904050102.C6C83606AC@smtp.codeaurora.org> (sfid-20180904_070118_531081_0A4FDBBA)
+Date: Tue,  4 Sep 2018 05:01:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 17, 2018 at 11:38:52AM +0200, Johannes Berg wrote:
-> On Thu, 2018-09-13 at 18:58 -0300, Marcelo Ricardo Leitner wrote:
+Sathishkumar Muruganandam <murugana@codeaurora.org> wrote:
+
+> To support dual-band variant of QCA9984, new extended board data (eBDF)
+> is introduced since existing board data ran out of space.
 > 
-> > Then I ask my first question again: why reject these? They are not
-> > hurting anything, are they?  It's different from your example I think.
-> > In there, the extra information which was ignored leads to a
-> > different behavior.
+> Below is the brief implementation & design detail,
+> ----------------------------------------------------
 > 
-> So in one case I was thinking of, there are some fields that simply
-> cannot be used for input, they're only used for output. But it may not
-> always be obvious to somebody using the API. Thus, I think it makes
-> sense to instruct the kernel to reject that, so that whoever gets
-> confused has immediate feedback that their usage is wrong. If we ignore
-> that, they may not realize their error immediately.
+> 1. New OTP changes to inform eBDF support in existing OTP download to
+> fetch board ID and chip ID. This is backward compatible and older
+> card sends 0 by default for eBDF support bit (bit 18 of OTP response) we
+> check in ath10k driver.
 > 
-> I think the ethtool case is similar: you can read and write some fields,
-> and only read others - but if you try to write the read-only fields
-> would you prefer to be told "sorry, this is not possible" vs. it being
-> silently ignored? I'd definitely prefer the former.
-
-See below.
-
+> 2. If eBDF is supported, then we need to fetch eBDF ID which is bundled
+> in downloaded board data. So again OTP is executed for knowing the eBDF ID.
+> This is done once we set 'board_data_initialized' bit. If eBDF ID
+> returned is zero, we continue booting with previous board data downloaded.
 > 
-> > Maybe it would be better to have NLA_IGNORE instead? </idea>
+> 3. Based on the eBDF ID fetched, ath10k driver tries to download the
+> extended board data to a new offset ahead of already downloaded board
+> data address.
 > 
-> I don't think so, it doesn't give any feedback to the application author
-> that they're doing something wrong.
+> 4. A new BD IE type, ATH10K_BD_IE_BOARD_EXT is added to differentiate in
+> bundling eBDF separately in board-2.bin and also to parse through
+> board bundle for eBDF download in ath10k boot.
+> 
+> 5. If eBDF is not present in the board-2.bin bundle or when board ID is
+> zero, we do a fallback boot to "eboard.bin" in the same QCA9984/hw1.0 dir.
+> This is same as done to existing "board.bin" if board ID is not present
+> in board-2.bin bundle.
+> 
+> Current design is that eBDF size will be 2KB and eBDF ID will be
+> byte value.
+> 
+> Tested the above changes with dual-band variant of QCA9984 card. OTP
+> update needed for the test will be part of next FW release 10.4-3.6-xxxx.
+> 
+> Below are the logs with ath10k BOOT debugs enabled.
+> 
+> First OTP response :
+> ---------------------
+> ..
+> boot upload otp to 0x1234 len 9478 for board id
+> boot get otp board id result 0x00040400 board_id 1 chip_id 0 ext_bid_support 1
+> ..
+> 
+> Second OTP response :
+> ---------------------
+> ..
+> boot upload otp to 0x1234 len 9478 for ext board id
+> boot get otp ext board id result 0x00000005 ext_board_id 5
+> boot using eboard name 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
+> ..
+> 
+> Extended board data download:
+> ------------------------------
+> ..
+> board name
+> 00000000: 62 75 73 3d 70 63 69 2c 62 6d 69 2d 63 68 69 70  bus=pci,bmi-chip
+> 00000010: 2d 69 64 3d 30 2c 62 6d 69 2d 65 62 6f 61 72 64  -id=0,bmi-eboard
+> 00000020: 2d 69 64 3d 35                                   -id=5
+> boot found match for name 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
+> boot found eboard data for 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
+> using board api 2
+> boot writing ext board data to addr 0xc3000
+> ..
+> 
+> Fallback Extended board data download from "eboard.bin":
+> ---------------------------------------------------------
+> ..
+> board name
+> 00000000: 62 75 73 3d 70 63 69 2c 62 6d 69 2d 63 68 69 70  bus=pci,bmi-chip
+> 00000010: 2d 69 64 3d 30 2c 62 6d 69 2d 62 6f 61 72 64 2d  -id=0,bmi-board-
+> 00000020: 69 64 3d 31 30                                   id=10
+> failed to fetch board data for bus=pci,bmi-chip-id=0,bmi-eboard-id=5 from ath10k/QCA9984/hw1.0/board-2.bin
+> boot fw request 'ath10k/QCA9984/hw1.0/eboard.bin': 0
+> using board api 1
+> boot writing ext board data to addr 0xc3000
+> ..
+> 
+> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Yes, it would have to have some other ways to signal return values.
+This introduced a new checkpatch warning:
 
-In some cases there may be other ways to tell the application that it
-couldn't be handled at the time. For example, when changing several
-ethtool offloadings at once, we could have a feedback for each of the
-offloading that was request and it could include "ack, nack and
-ignored" and let the application decide if that "ignored" should be an
-error or not. It all boils down to what one is trying to do.
+drivers/net/wireless/ath/ath10k/core.c:1059: line over 90 characters
 
-That said, I'm now liking this patch. Just too bad we cannot flag
-current output-only fields as so, but in the long term I think this
-patch will help us.
+I fixed this in the pending branch.
 
-Thanks,
-  Marcelo
+-- 
+https://patchwork.kernel.org/patch/10575361/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
