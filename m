@@ -1,155 +1,340 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37811 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387433AbeITOzM (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12585 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727061AbeIDLE2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 10:55:12 -0400
-Received: by mail-wm1-f68.google.com with SMTP id n11-v6so10014957wmc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 02:12:42 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 17/20] mt76: move mt76x2_tssi_enabled in mt76x02_eeprom.h
-Date: Thu, 20 Sep 2018 11:12:04 +0200
-Message-Id: <c0f2851cd37842add121a0086dec6c387bf94ba6.1537433365.git.lorenzo.bianconi@redhat.com> (sfid-20180920_112418_806491_30C8E0AF)
-In-Reply-To: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
-References: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
+        Tue, 4 Sep 2018 07:04:28 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 17/26] staging: wilc1000: move tcp_ack_filter algo related variables to 'wilc_vif' struct
+Date: Tue, 4 Sep 2018 12:09:33 +0530
+Message-ID: <1536043182-19735-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084104_379918_6AB1A627)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76x2_tssi_enabled and mt76x02_temp_tx_alc_enabled in
-mt76x02_eeprom.h in order to be reused in mt76x0 driver
+Avoid use of static variables and move them as part of wilc_vif struct.
+Move all the parameters related to tcp_ack_filter algo to wilc_vif
+struct.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../wireless/mediatek/mt76/mt76x02_eeprom.h   | 21 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt76x2_eeprom.c    |  4 ++--
- .../wireless/mediatek/mt76/mt76x2_eeprom.h    | 21 -------------------
- .../net/wireless/mediatek/mt76/mt76x2_phy.c   |  4 ++--
- .../net/wireless/mediatek/mt76/mt76x2u_phy.c  |  2 +-
- 5 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         |   4 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |   4 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  27 ++++++
+ drivers/staging/wilc1000/wilc_wlan.c              | 107 +++++++++-------------
+ drivers/staging/wilc1000/wilc_wlan.h              |   2 +-
+ 5 files changed, 77 insertions(+), 67 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-index 119813960fe7..9339514fb073 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-@@ -162,6 +162,27 @@ mt76x02_eeprom_get(struct mt76_dev *dev,
- 	return get_unaligned_le16(dev->eeprom.data + field);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c3f2fc9..b5d5b8e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2072,9 +2072,9 @@ static void handle_get_statistics(struct work_struct *work)
+ 
+ 	if (stats->link_speed > TCP_ACK_FILTER_LINK_SPEED_THRESH &&
+ 	    stats->link_speed != DEFAULT_LINK_SPEED)
+-		wilc_enable_tcp_ack_filter(true);
++		wilc_enable_tcp_ack_filter(vif, true);
+ 	else if (stats->link_speed != DEFAULT_LINK_SPEED)
+-		wilc_enable_tcp_ack_filter(false);
++		wilc_enable_tcp_ack_filter(vif, false);
+ 
+ 	/* free 'msg' for async command, for sync caller will free it */
+ 	if (msg->is_sync)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3418d2d..35a83d4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1125,9 +1125,9 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		if (stats.link_speed > TCP_ACK_FILTER_LINK_SPEED_THRESH &&
+ 		    stats.link_speed != DEFAULT_LINK_SPEED)
+-			wilc_enable_tcp_ack_filter(true);
++			wilc_enable_tcp_ack_filter(vif, true);
+ 		else if (stats.link_speed != DEFAULT_LINK_SPEED)
+-			wilc_enable_tcp_ack_filter(false);
++			wilc_enable_tcp_ack_filter(vif, false);
+ 	}
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index f20a2e3..09f619b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -104,6 +104,32 @@ struct frame_reg {
+ 	bool reg;
+ };
+ 
++#define MAX_TCP_SESSION                25
++#define MAX_PENDING_ACKS               256
++
++struct ack_session_info {
++	u32 seq_num;
++	u32 bigger_ack_num;
++	u16 src_port;
++	u16 dst_port;
++	u16 status;
++};
++
++struct pending_acks_info {
++	u32 ack_num;
++	u32 session_index;
++	struct txq_entry_t  *txqe;
++};
++
++struct tcp_ack_filter {
++	struct ack_session_info ack_session_info[2 * MAX_TCP_SESSION];
++	struct pending_acks_info pending_acks_info[MAX_PENDING_ACKS];
++	u32 pending_base;
++	u32 tcp_session;
++	u32 pending_acks;
++	bool enabled;
++};
++
+ struct wilc_vif {
+ 	u8 idx;
+ 	u8 iftype;
+@@ -122,6 +148,7 @@ struct wilc_vif {
+ 	bool obtaining_ip;
+ 	struct timer_list periodic_rssi;
+ 	struct rf_info periodic_stat;
++	struct tcp_ack_filter ack_filter;
+ };
+ 
+ struct wilc {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d397c27..52402c3 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -93,63 +93,46 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	return 0;
  }
  
-+static inline bool
-+mt76x02_temp_tx_alc_enabled(struct mt76_dev *dev)
-+{
-+	u16 val;
+-struct ack_session_info;
+-struct ack_session_info {
+-	u32 seq_num;
+-	u32 bigger_ack_num;
+-	u16 src_port;
+-	u16 dst_port;
+-	u16 status;
+-};
+-
+-struct pending_acks_info {
+-	u32 ack_num;
+-	u32 session_index;
+-	struct txq_entry_t  *txqe;
+-};
+-
+ #define NOT_TCP_ACK			(-1)
+ 
+-#define MAX_TCP_SESSION		25
+-#define MAX_PENDING_ACKS		256
+-static struct ack_session_info ack_session_info[2 * MAX_TCP_SESSION];
+-static struct pending_acks_info pending_acks_info[MAX_PENDING_ACKS];
+-
+-static u32 pending_base;
+-static u32 tcp_session;
+-static u32 pending_acks;
+-
+-static inline int add_tcp_session(u32 src_prt, u32 dst_prt, u32 seq)
++static inline int add_tcp_session(struct wilc_vif *vif, u32 src_prt,
++				  u32 dst_prt, u32 seq)
+ {
+-	if (tcp_session < 2 * MAX_TCP_SESSION) {
+-		ack_session_info[tcp_session].seq_num = seq;
+-		ack_session_info[tcp_session].bigger_ack_num = 0;
+-		ack_session_info[tcp_session].src_port = src_prt;
+-		ack_session_info[tcp_session].dst_port = dst_prt;
+-		tcp_session++;
++	struct tcp_ack_filter *f = &vif->ack_filter;
 +
-+	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_EXT_PA_5G);
-+	if (!(val & BIT(15)))
-+		return false;
++	if (f->tcp_session < 2 * MAX_TCP_SESSION) {
++		f->ack_session_info[f->tcp_session].seq_num = seq;
++		f->ack_session_info[f->tcp_session].bigger_ack_num = 0;
++		f->ack_session_info[f->tcp_session].src_port = src_prt;
++		f->ack_session_info[f->tcp_session].dst_port = dst_prt;
++		f->tcp_session++;
+ 	}
+ 	return 0;
+ }
+ 
+-static inline int update_tcp_session(u32 index, u32 ack)
++static inline int update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
+ {
++	struct tcp_ack_filter *f = &vif->ack_filter;
 +
-+	return mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1) &
-+	       MT_EE_NIC_CONF_1_TEMP_TX_ALC;
-+}
-+
-+static inline bool
-+mt76x02_tssi_enabled(struct mt76_dev *dev)
-+{
-+	return !mt76x02_temp_tx_alc_enabled(dev) &&
-+	       (mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1) &
-+		MT_EE_NIC_CONF_1_TX_ALC_EN);
-+}
-+
- bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band);
- int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
- 			   int len, enum mt76x02_eeprom_modes mode);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index d295851cf2f9..21b8fb2e0e28 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -490,7 +490,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- 					 MT_EE_TX_POWER_1_START_2G);
+ 	if (index < 2 * MAX_TCP_SESSION &&
+-	    ack > ack_session_info[index].bigger_ack_num)
+-		ack_session_info[index].bigger_ack_num = ack;
++	    ack > f->ack_session_info[index].bigger_ack_num)
++		f->ack_session_info[index].bigger_ack_num = ack;
+ 	return 0;
+ }
+ 
+-static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
++static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
++				      u32 session_index,
+ 				      struct txq_entry_t *txqe)
+ {
+-	u32 i = pending_base + pending_acks;
++	struct tcp_ack_filter *f = &vif->ack_filter;
++	u32 i = f->pending_base + f->pending_acks;
+ 
+ 	if (i < MAX_PENDING_ACKS) {
+-		pending_acks_info[i].ack_num = ack;
+-		pending_acks_info[i].txqe = txqe;
+-		pending_acks_info[i].session_index = session_index;
++		f->pending_acks_info[i].ack_num = ack;
++		f->pending_acks_info[i].txqe = txqe;
++		f->pending_acks_info[i].session_index = session_index;
+ 		txqe->tcp_pending_ack_idx = i;
+-		pending_acks++;
++		f->pending_acks++;
+ 	}
+ 	return 0;
+ }
+@@ -162,6 +145,7 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	unsigned long flags;
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	struct wilc *wilc = vif->wilc;
++	struct tcp_ack_filter *f = &vif->ack_filter;
+ 	const struct iphdr *ip_hdr_ptr;
+ 	const struct tcphdr *tcp_hdr_ptr;
+ 	u32 ihl, total_length, data_offset;
+@@ -186,19 +170,19 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 
+ 		seq_no = ntohl(tcp_hdr_ptr->seq);
+ 		ack_no = ntohl(tcp_hdr_ptr->ack_seq);
+-		for (i = 0; i < tcp_session; i++) {
+-			u32 j = ack_session_info[i].seq_num;
++		for (i = 0; i < f->tcp_session; i++) {
++			u32 j = f->ack_session_info[i].seq_num;
+ 
+ 			if (i < 2 * MAX_TCP_SESSION &&
+ 			    j == seq_no) {
+-				update_tcp_session(i, ack_no);
++				update_tcp_session(vif, i, ack_no);
+ 				break;
+ 			}
+ 		}
+-		if (i == tcp_session)
+-			add_tcp_session(0, 0, seq_no);
++		if (i == f->tcp_session)
++			add_tcp_session(vif, 0, 0, seq_no);
+ 
+-		add_tcp_pending_ack(ack_no, i, tqe);
++		add_tcp_pending_ack(vif, ack_no, i, tqe);
  	}
  
--	if (mt76x2_tssi_enabled(dev) ||
-+	if (mt76x02_tssi_enabled(&dev->mt76) ||
- 	    !mt76x02_field_valid(t->target_power))
- 		t->target_power = t->chain[0].target_power;
- 
-@@ -507,7 +507,7 @@ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
- 
- 	memset(t, 0, sizeof(*t));
- 
--	if (!mt76x2_temp_tx_alc_enabled(dev))
-+	if (!mt76x02_temp_tx_alc_enabled(&dev->mt76))
- 		return -EINVAL;
- 
- 	if (!mt76x02_ext_pa_enabled(&dev->mt76, band))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-index ad98a52ec69f..650f9564f0f4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-@@ -60,27 +60,6 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t);
- void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
- 
--static inline bool
--mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
--{
--	u16 val;
--
--	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_EXT_PA_5G);
--	if (!(val & BIT(15)))
--		return false;
--
--	return mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_1) &
--	       MT_EE_NIC_CONF_1_TEMP_TX_ALC;
--}
--
--static inline bool
--mt76x2_tssi_enabled(struct mt76x2_dev *dev)
--{
--	return !mt76x2_temp_tx_alc_enabled(dev) &&
--	       (mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_1) &
--		MT_EE_NIC_CONF_1_TX_ALC_EN);
--}
--
- static inline bool
- mt76x2_has_ext_lna(struct mt76x2_dev *dev)
+ out:
+@@ -209,29 +193,30 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
  {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 3f786596e586..22e66006a5f8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -25,7 +25,7 @@ mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
- 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
- 	u32 flag = 0;
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	struct wilc *wilc = vif->wilc;
++	struct tcp_ack_filter *f = &vif->ack_filter;
+ 	u32 i = 0;
+ 	u32 dropped = 0;
+ 	unsigned long flags;
  
--	if (!mt76x2_tssi_enabled(dev))
-+	if (!mt76x02_tssi_enabled(&dev->mt76))
- 		return false;
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+-	for (i = pending_base; i < (pending_base + pending_acks); i++) {
++	for (i = f->pending_base; i < (f->pending_base + f->pending_acks); i++) {
+ 		u32 session_index;
+ 		u32 bigger_ack_num;
  
- 	if (mt76x2_channel_silent(dev))
-@@ -390,7 +390,7 @@ int mt76x2_phy_set_channel(struct mt76x2_dev *dev,
- 	       sizeof(dev->cal.agc_gain_cur));
+ 		if (i >= MAX_PENDING_ACKS)
+ 			break;
  
- 	/* init default values for temp compensation */
--	if (mt76x2_tssi_enabled(dev)) {
-+	if (mt76x02_tssi_enabled(&dev->mt76)) {
- 		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
- 			       0x38);
- 		mt76_rmw_field(dev, MT_TX_ALC_CFG_2, MT_TX_ALC_CFG_2_TEMP_COMP,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c
-index 1cd9b2468ef0..b3ec56d35e7f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c
-@@ -235,7 +235,7 @@ int mt76x2u_phy_set_channel(struct mt76x2_dev *dev,
- 	if (scan)
- 		return 0;
+-		session_index = pending_acks_info[i].session_index;
++		session_index = f->pending_acks_info[i].session_index;
  
--	if (mt76x2_tssi_enabled(dev)) {
-+	if (mt76x02_tssi_enabled(&dev->mt76)) {
- 		/* init default values for temp compensation */
- 		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
- 			       0x38);
+ 		if (session_index >= 2 * MAX_TCP_SESSION)
+ 			break;
+ 
+-		bigger_ack_num = ack_session_info[session_index].bigger_ack_num;
++		bigger_ack_num = f->ack_session_info[session_index].bigger_ack_num;
+ 
+-		if (pending_acks_info[i].ack_num < bigger_ack_num) {
++		if (f->pending_acks_info[i].ack_num < bigger_ack_num) {
+ 			struct txq_entry_t *tqe;
+ 
+-			tqe = pending_acks_info[i].txqe;
++			tqe = f->pending_acks_info[i].txqe;
+ 			if (tqe) {
+ 				wilc_wlan_txq_remove(wilc, tqe);
+ 				tqe->status = 1;
+@@ -243,13 +228,13 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 			}
+ 		}
+ 	}
+-	pending_acks = 0;
+-	tcp_session = 0;
++	f->pending_acks = 0;
++	f->tcp_session = 0;
+ 
+-	if (pending_base == 0)
+-		pending_base = MAX_TCP_SESSION;
++	if (f->pending_base == 0)
++		f->pending_base = MAX_TCP_SESSION;
+ 	else
+-		pending_base = 0;
++		f->pending_base = 0;
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+@@ -262,11 +247,9 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	return 1;
+ }
+ 
+-static bool enabled;
+-
+-void wilc_enable_tcp_ack_filter(bool value)
++void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
+ {
+-	enabled = value;
++	vif->ack_filter.enabled = value;
+ }
+ 
+ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
+@@ -324,7 +307,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->priv = priv;
+ 
+ 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+-	if (enabled)
++	if (vif->ack_filter.enabled)
+ 		tcp_process(dev, tqe);
+ 	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	return wilc->txq_entries;
+@@ -686,7 +669,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 			tqe->tx_complete_func(tqe->priv, tqe->status);
+ 		if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK &&
+ 		    tqe->tcp_pending_ack_idx < MAX_PENDING_ACKS)
+-			pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
++			vif->ack_filter.pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
+ 		kfree(tqe);
+ 	} while (--entries);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 1f874d1..0fdffdd 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -282,7 +282,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 			       u32 buffer_size, wilc_tx_complete_func_t func);
+ void wilc_chip_sleep_manually(struct wilc *wilc);
+ 
+-void wilc_enable_tcp_ack_filter(bool value);
++void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value);
+ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc);
+ netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ 
 -- 
-2.17.1
+2.7.4
