@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43194 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727392AbeIUTB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 15:01:28 -0400
-Date: Fri, 21 Sep 2018 15:12:36 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: yhchuang@realtek.com
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        tehuang@realtek.com
-Subject: Re: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Message-ID: <20180921131235.GA10556@redhat.com> (sfid-20180921_151247_578658_D38AF673)
-References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35004 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726093AbeIDJhm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 05:37:42 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+Subject: Re: [PATCH v2] ath10k:  fix vdev-start timeout on error
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1531512596-31355-1-git-send-email-greearb@candelatech.com>
+References: <1531512596-31355-1-git-send-email-greearb@candelatech.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Ben Greear <greearb@candelatech.com>
+Message-Id: <20180904051416.C1C6460708@smtp.codeaurora.org> (sfid-20180904_071419_869741_7B2C959B)
+Date: Tue,  4 Sep 2018 05:14:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 21, 2018 at 02:03:55PM +0800, yhchuang@realtek.com wrote:
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> 
-> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-> rtwlan supports 8822BE and 8822CE chips, and will be able to support
-> multi-vif combinations in run-time.
-> 
-> For now, only PCI bus is supported, but rtwlan was originally designed
-> to optionally support three buses includes USB & SDIO. USB & SDIO modules
-> will soon be supported by rtwlan, with configurable core module to fit
-> with different bus modules in the same time.
-> 
-> For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
-> be selected, built, loaded into kernel. This is one of the major
-> difference from rtlwifi, which can only support specific combinations.
-> 
-> Another difference from rtlwifi is that rtwlan is designed to support
-> the latest Realtek 802.11ac wireless network chips like 8822B and
-> 8822C series. Compared to the earlier chips supported by rtlwifi like
-> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
-> have different MAC & PHY settings, such as new multi-port feature for the
-> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
-> 
-> Multi-Port feature is also supported under rtwlan's software architecture.
-> rtlwifi can only support one vif in the same time, most because of the
-> hardware limitations for early chips, hence the original design of it
-> also restricts the usage of multi-vif support, so latest chipset seems not
-> take advantages from its new MAC engine.
-> 
-> However, rtwlan can run multiple vifs concurrently by holding them on
-> hardware ports provided by MAC engine, so we can easily start different
-> roles on a single device.
-> 
-> Based on the reasons mentioned before, we implemented rtwlan. It had many
-> authors, they are listed here alphabetically:
-> 
-> Ping-Ke Shih <pkshih@realtek.com>
-> Tzu-En Huang <tehuang@realtek.com>
-> Yan-Hsuan Chuang <yhchuang@realtek.com>
+greearb@candelatech.com wrote:
 
-I didn't do detailed review, but my general impression is very very
-positive. New driver looks great!
+> The vdev-start-response message should cause the
+> completion to fire, even in the error case.  Otherwise,
+> the user still gets no useful information and everything
+> is blocked until the timeout period.
+> 
+> Add some warning text to print out the invalid status
+> code to aid debugging, and propagate failure code.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Just 2 generic remarks:
-- please add MAINTAINERS file entry
-- please post a patch or request to remove staging/rtlwifi driver
-  since this one is replace for it (8822BE PCI-ID is the same)
+This had few checkpatch warnings:
 
-Thanks
-Stanislaw
+drivers/net/wireless/ath/ath10k/wmi.h:6647: code indent should use tabs where possible
+drivers/net/wireless/ath/ath10k/wmi.h:6647: please, no spaces at the start of a line
+drivers/net/wireless/ath/ath10k/wmi.h:6648: code indent should use tabs where possible
+drivers/net/wireless/ath/ath10k/wmi.h:6648: please, no spaces at the start of a line
+
+I fixed those in the pending branch.
+
+-- 
+https://patchwork.kernel.org/patch/10524087/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
