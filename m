@@ -1,170 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54842 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726774AbeIDLG4 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12562 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727321AbeIDLEE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:06:56 -0400
-From: akolli@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [PATCHv2 0/4] Add support to dump tx stats histogram
-Date: Tue,  4 Sep 2018 12:15:12 +0530
-Message-Id: <1536043516-12462-1-git-send-email-akolli@codeaurora.org> (sfid-20180904_084318_618052_80C95AEB)
+        Tue, 4 Sep 2018 07:04:04 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 10/26] staging: wilc1000: refactor code to avoid use of wilc_set_multicast_list global
+Date: Tue, 4 Sep 2018 12:09:26 +0530
+Message-ID: <1536043182-19735-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084029_409970_EB71F970)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+Refactor the code to avoid use of 'wilc_set_multicast_list' global
+variable. Allocate the memory required to keep the multicast mac address
+and pass it to the worker thread.
 
-This patch series adds support to dump per station tx stats histogram.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 +++++++------
+ drivers/staging/wilc1000/host_interface.h |  5 ++---
+ drivers/staging/wilc1000/linux_wlan.c     | 28 ++++++++++++++++------------
+ 3 files changed, 25 insertions(+), 21 deletions(-)
 
-These stats can be enabled through ath10k/enable_extd_tx_stats debugfs entry,
-enabling this may impact in cpu usage and throughput.
-
-ath10k/enable_extd_tx_stats is disabled by default.
-
-Tx histogram has Per station tx stats which includes,
- - pkts/bytes transmitted at all possible rates(mcs/nss/bw/gi).
- - ACK fails count
- - ampdu bytes/pkts transmitted at all possible rates(mcs/nss/bw/gi).
- - BA fails count
- - tx duration
-
-Tested on QCA9984/QCA4019/QCA988x
-Firmware: 10.4-3.5.3-00057
-	  10.2.4-1.0-00037
-
-Example output format:
-# cat /sys/kernel/debug/ieee80211/phy0/netdev\:wlan0/stations/8c\:
-fd\:f0\:0a\:8c\:14/tx_stats
-
-succ_pkts
- VHT MCS packets
-  0 0 0 0 0 138 26 18 23 38747 
- HT MCS packets
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW packets (20,40,80,160 MHz)
-  41 337 38574 0
- NSS packets (1x1,2x2,3x3,4x4)
-  38952 0 0 0
- GI packets (LGI,SGI)
-  38 38914
- legacy rate packets (1,2 ... Mbps)
-  0 0 0 0 68 0 0 0 0 0 0 0 
-succ_bytes
- VHT MCS bytes
-  0 0 0 0 0 16407 3288 2360 2703 4651892 
- HT MCS bytes
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW bytes (20,40,80,160 MHz)
-  5163 40962 4630525 0
- NSS bytes (1x1,2x2,3x3,4x4)
-  4676650 0 0 0
- GI bytes (LGI,SGI)
-  4471 4672179
- legacy rate bytes (1,2 ... Mbps)
-  0 0 0 0 3270 0 0 0 0 0 0 0 
-ampdu_pkts
- VHT MCS packets
-  0 0 0 8 20 7872 34 21 33 39730 
- HT MCS packets
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW packets (20,40,80,160 MHz)
-  72 567 47079 0
- NSS packets (1x1,2x2,3x3,4x4)
-  40035 7683 0 0
- GI packets (LGI,SGI)
-  7698 40020
- legacy rate packets (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-
-ampdu_bytes
- VHT MCS bytes
-  0 0 0 896 2579 941417 4222 2666 3857 4774284 
- HT MCS bytes
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW bytes (20,40,80,160 MHz)
-  9262 70052 5650607 0
- NSS bytes (1x1,2x2,3x3,4x4)
-  4811265 918656 0 0
- GI bytes (LGI,SGI)
-  920650 4809271
- legacy rate bytes (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-fail_pkts
- VHT MCS packets
-  0 0 0 0 0 0 0 0 0 0 
- HT MCS packets
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW packets (20,40,80,160 MHz)
-  0 0 0 0
- NSS packets (1x1,2x2,3x3,4x4)
-  0 0 0 0
- GI packets (LGI,SGI)
-  0 0
- legacy rate packets (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-fail_bytes
- VHT MCS bytes
-  0 0 0 0 0 0 0 0 0 0 
- HT MCS bytes
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW bytes (20,40,80,160 MHz)
-  0 0 0 0
- NSS bytes (1x1,2x2,3x3,4x4)
-  0 0 0 0
- GI bytes (LGI,SGI)
-  0 0
- legacy rate bytes (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-retry_pkts
- VHT MCS packets
-  0 0 0 8 20 7734 8 3 10 983 
- HT MCS packets
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW packets (20,40,80,160 MHz)
-  31 230 8505 0
- NSS packets (1x1,2x2,3x3,4x4)
-  1083 7683 0 0
- GI packets (LGI,SGI)
-  7660 1106
- legacy rate packets (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-retry_bytes
- VHT MCS bytes
-  0 0 0 896 2579 925010 934 306 1154 122392 
- HT MCS bytes
-  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
- BW bytes (20,40,80,160 MHz)
-  4099 29090 1020082 0
- NSS bytes (1x1,2x2,3x3,4x4)
-  134615 918656 0 0
- GI bytes (LGI,SGI)
-  916179 137092
- legacy rate bytes (1,2 ... Mbps)
-  0 0 0 0 0 0 0 0 0 0 0 0 
-TX duration
- 6639098 usecs
-BA fails
- 8610
-ack fails
- 0
-
-
-Anilkumar Kolli (4):
-  ath10k: get the legacy rate index to update the txrate table
-  ath10k: add debugfs entry to enable extended tx stats
-  ath10k: add extended per sta tx statistics support
-  ath10k: add debugfs support to dump per sta tx stats
-
- drivers/net/wireless/ath/ath10k/core.h        |   32 ++++++
- drivers/net/wireless/ath/ath10k/debug.c       |   62 +++++++++++-
- drivers/net/wireless/ath/ath10k/debug.h       |    9 ++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |  101 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c      |  133 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/mac.c         |   10 ++
- drivers/net/wireless/ath/ath10k/wmi.h         |   13 ++-
- 7 files changed, 341 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d930f06..f5617ac 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -90,6 +90,7 @@ struct beacon_attr {
+ struct set_multicast {
+ 	bool enabled;
+ 	u32 cnt;
++	u8 *mc_list;
+ };
+ 
+ struct del_all_sta {
+@@ -193,8 +194,6 @@ static struct mutex hif_deinit_lock;
+ static struct timer_list periodic_rssi;
+ static struct wilc_vif *periodic_rssi_vif;
+ 
+-u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+-
+ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ 
+ static u8 set_ip[2][4];
+@@ -2587,8 +2586,8 @@ static void handle_set_mcast_filter(struct work_struct *work)
+ 	*cur_byte++ = ((hif_set_mc->cnt >> 16) & 0xFF);
+ 	*cur_byte++ = ((hif_set_mc->cnt >> 24) & 0xFF);
+ 
+-	if (hif_set_mc->cnt > 0)
+-		memcpy(cur_byte, wilc_multicast_mac_addr_list,
++	if (hif_set_mc->cnt > 0 && hif_set_mc->mc_list)
++		memcpy(cur_byte, hif_set_mc->mc_list,
+ 		       ((hif_set_mc->cnt) * ETH_ALEN));
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+@@ -2597,6 +2596,7 @@ static void handle_set_mcast_filter(struct work_struct *work)
+ 		netdev_err(vif->ndev, "Failed to send setup multicast\n");
+ 
+ error:
++	kfree(hif_set_mc->mc_list);
+ 	kfree(wid.val);
+ 	kfree(msg);
+ }
+@@ -3988,8 +3988,8 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 	return result;
+ }
+ 
+-int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+-				u32 count)
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled, u32 count,
++				u8 *mc_list)
+ {
+ 	int result;
+ 	struct host_if_msg *msg;
+@@ -4000,6 +4000,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 
+ 	msg->body.multicast_info.enabled = enabled;
+ 	msg->body.multicast_info.cnt = count;
++	msg->body.multicast_info.mc_list = mc_list;
+ 
+ 	result = wilc_enqueue_work(msg);
+ 	if (result) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index d026f44..4dd8510 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -341,8 +341,8 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ int wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *sta_param);
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+-int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+-				u32 count);
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled, u32 count,
++				u8 *mc_list);
+ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   u32 duration, u16 chan,
+@@ -362,7 +362,6 @@ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
+ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+ 
+ extern u8 wilc_connected_ssid[6];
+-extern u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+ 
+ extern int wilc_connecting;
+ 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 283bb74..1cea065 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -806,34 +806,38 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 	struct netdev_hw_addr *ha;
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	int i = 0;
++	u8 *mc_list;
++	int res;
+ 
+ 	if (dev->flags & IFF_PROMISC)
+ 		return;
+ 
+ 	if (dev->flags & IFF_ALLMULTI ||
+ 	    dev->mc.count > WILC_MULTICAST_TABLE_SIZE) {
+-		wilc_setup_multicast_filter(vif, false, 0);
++		wilc_setup_multicast_filter(vif, false, 0, NULL);
+ 		return;
+ 	}
+ 
+ 	if (dev->mc.count == 0) {
+-		wilc_setup_multicast_filter(vif, true, 0);
++		wilc_setup_multicast_filter(vif, true, 0, NULL);
+ 		return;
+ 	}
+ 
++	mc_list = kmalloc(dev->mc.count * ETH_ALEN, GFP_KERNEL);
++	if (!mc_list)
++		return;
++
+ 	netdev_for_each_mc_addr(ha, dev) {
+-		memcpy(wilc_multicast_mac_addr_list[i], ha->addr, ETH_ALEN);
+-		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i,
+-			   wilc_multicast_mac_addr_list[i][0],
+-			   wilc_multicast_mac_addr_list[i][1],
+-			   wilc_multicast_mac_addr_list[i][2],
+-			   wilc_multicast_mac_addr_list[i][3],
+-			   wilc_multicast_mac_addr_list[i][4],
+-			   wilc_multicast_mac_addr_list[i][5]);
+-		i++;
++		memcpy(mc_list + i, ha->addr, ETH_ALEN);
++		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i/ETH_ALEN,
++			   mc_list[i], mc_list[i + 1], mc_list[i + 2],
++			   mc_list[i + 3], mc_list[i + 4], mc_list[i + 5]);
++		i += ETH_ALEN;
+ 	}
+ 
+-	wilc_setup_multicast_filter(vif, true, (dev->mc.count));
++	res = wilc_setup_multicast_filter(vif, true, dev->mc.count, mc_list);
++	if (res)
++		kfree(mc_list);
+ }
+ 
+ static void linux_wlan_tx_complete(void *priv, int status)
 -- 
-1.7.9.5
+2.7.4
