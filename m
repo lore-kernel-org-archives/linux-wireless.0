@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46910 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727577AbeIEJeo (ORCPT
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:47024 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726052AbeIDUtc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:34:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Sep 2018 08:06:05 +0300
-Message-Id: <20180905050614.23273-1-luca@coelho.fi> (sfid-20180905_070629_959046_FC3D09D4)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [RESEND PATCH v2 0/9] cfg80211/mac80211: reworked patches from our internal tree 2018-08-31
+        Tue, 4 Sep 2018 16:49:32 -0400
+Date: Tue, 4 Sep 2018 19:23:38 +0300
+From: Aleksei Mamlin <mamlinav@gmail.com>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Add rtl8188ctv support
+Message-Id: <20180904192338.e9be91d4be447e33acefed5a@gmail.com> (sfid-20180904_182357_291472_1E5A2573)
+In-Reply-To: <53022e37-e9dc-1cf8-ec3c-4df668f3c045@gmail.com>
+References: <20180830140541.31964-1-mamlinav@gmail.com>
+        <20180904081619.7353B606AC@smtp.codeaurora.org>
+        <53022e37-e9dc-1cf8-ec3c-4df668f3c045@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Tue, 4 Sep 2018 11:36:50 -0400
+Jes Sorensen <jes.sorensen@gmail.com> wrote:
 
-Hi,
+> On 09/04/2018 04:16 AM, Kalle Valo wrote:
+> > Aleksei Mamlin <mamlinav@gmail.com> wrote:
+> > 
+> >> The Realtek rtl8188ctv (0x0bda:0x018a) is a highly integrated single-chip
+> >> WLAN USB2.0 network interface controller.
+> >>
+> >> Currently rtl8188ctv is supported by rtlwifi driver.
+> >> It is similar to the rtl8188cus(0x0bda:0x818a) and uses the same config.
+> >>
+> >> Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
+> > 
+> > Patch applied to wireless-drivers-next.git, thanks.
+> > 
+> > 514502c3a70b rtl8xxxu: Add rtl8188ctv support
+> 
+> Looks good to me too - assume it's been tested?
+> 
 
-[I'm resending this set again due to the corrupted X-SA headers in the
-previous attempts.  I have now removed all the X-SA headers and
-hopefully it will work fine.  Please let me know if you still have
-issues with it.]
+Yes, tested on my ARM tablet. It successfully connected to my home router
+using wpa_supplicant. There is dmesg output:
 
-I'm resending the patches that came out corrupted, excluding patch 22
-that was already in and with 19 and 20 reworked.
+[   16.887902] usb 2-1: This Realtek USB WiFi dongle (0x0bda:0x018a) is untested!
+[   16.887916] usb 2-1: Please report results to Jes.Sorensen@gmail.com
+[   17.133053] usb 2-1: Vendor: Realtek
+[   17.133066] usb 2-1: Product: 802.11n WLAN Adapter
+[   17.133076] usb 2-1: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
+[   17.133084] usb 2-1: 00: 29 81 00 a4 cd 00 20 00
+[   17.133090] usb 2-1: 08: ff 00 da 0b 8a 01 03 41
+[   17.133096] usb 2-1: 10: 32 00 85 62 9e ad 00 b3
+[   17.133102] usb 2-1: 18: 10 00 00 3a 0a 03 52 65
+[   17.133108] usb 2-1: 20: 61 6c 74 65 6b 00 16 03
+[   17.133114] usb 2-1: 28: 38 30 32 2e 31 31 6e 20
+[   17.133120] usb 2-1: 30: 57 4c 41 4e 20 41 64 61
+[   17.133125] usb 2-1: 38: 70 74 65 72 00 00 00 00
+[   17.133131] usb 2-1: 40: 00 00 00 00 00 00 00 00
+[   17.133137] usb 2-1: 48: 00 00 00 00 00 00 00 00
+[   17.133143] usb 2-1: 50: 81 00 00 00 00 00 00 00
+[   17.133149] usb 2-1: 58: 06 00 2b 2b 2c 00 00 00
+[   17.133154] usb 2-1: 60: 27 27 28 00 00 00 00 00
+[   17.133160] usb 2-1: 68: 00 02 02 04 04 04 05 00
+[   17.133166] usb 2-1: 70: 00 00 00 00 00 0a 00 00
+[   17.133172] usb 2-1: 78: 10 00 00 10 36 00 81 00
+[   17.133183] usb 2-1: RTL8188CU rev B (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
+[   17.133191] usb 2-1: RTL8188CU MAC: 00:b3:10:00:00:3a
+[   17.133199] usb 2-1: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+[   17.139167] usb 2-1: Firmware revision 80.0 (signature 0x88c1)
 
-I've left 9 and 12 out for now, because they still need to be reworked
-according to your comments.
+>
+> Thanks,
+> Jes
 
-Please review.
-
-Cheers,
-Luca.
-
-
-Andrei Otcheretianski (3):
-  cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
-  mac80211: Always report TX status
-  mac80211: Don't wake up from PS for offchannel TX
-
-Naftali Goldstein (1):
-  mac80211: fix saving a few HE values
-
-Sara Sharon (3):
-  mac80211: add an option for station management TXQ
-  mac80211: allow AMSDU size limitation per-TID
-  mac80211: add an option for drivers to check if packets can be
-    aggregated
-
-Shaul Triebitz (2):
-  mac80211: support reporting 0-length PSDU in radiotap
-  wireless: align to draft 11ax D3.0
-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 51 ++++++++----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 -
- drivers/net/wireless/mac80211_hwsim.c         | 18 ++---
- include/linux/ieee80211.h                     | 72 ++++++++++-------
- include/net/ieee80211_radiotap.h              |  6 ++
- include/net/mac80211.h                        | 21 +++++
- net/mac80211/debugfs.c                        |  1 +
- net/mac80211/debugfs_sta.c                    | 77 +++++++++++++------
- net/mac80211/driver-ops.h                     | 10 +++
- net/mac80211/mlme.c                           | 17 ++--
- net/mac80211/rx.c                             | 12 ++-
- net/mac80211/status.c                         |  7 +-
- net/mac80211/tx.c                             | 25 +++++-
- net/wireless/reg.c                            |  1 +
- 14 files changed, 227 insertions(+), 95 deletions(-)
 
 -- 
-2.18.0
+Thanks and regards,
+Aleksei Mamlin
