@@ -1,101 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58164 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54842 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726172AbeIXNIL (ORCPT
+        with ESMTP id S1726774AbeIDLG4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 09:08:11 -0400
-From: Anilkumar Kolli <akolli@codeaurora.org>
+        Tue, 4 Sep 2018 07:06:56 -0400
+From: akolli@codeaurora.org
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
         Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [RFC v4 1/2] mac80211: implement ieee80211_tx_rate_update to update rate
-Date: Mon, 24 Sep 2018 12:39:59 +0530
-Message-Id: <1537773000-2587-2-git-send-email-akolli@codeaurora.org> (sfid-20180924_090733_671289_7914F9E6)
-In-Reply-To: <1537773000-2587-1-git-send-email-akolli@codeaurora.org>
-References: <1537773000-2587-1-git-send-email-akolli@codeaurora.org>
+Subject: [PATCHv2 0/4] Add support to dump tx stats histogram
+Date: Tue,  4 Sep 2018 12:15:12 +0530
+Message-Id: <1536043516-12462-1-git-send-email-akolli@codeaurora.org> (sfid-20180904_084318_618052_80C95AEB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current mac80211 has provision to update tx status through
-ieee80211_tx_status() and ieee80211_tx_status_ext(). But
-drivers like ath10k updates the tx status from the skb except
-txrate, txrate will be updated from a different path, peer stats.
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-Using ieee80211_tx_status_ext() in two different paths
-  - (one for the stats, one for the tx rate) will duplicate the stats.
+This patch series adds support to dump per station tx stats histogram.
 
-To avoid this stats duplication, ieee80211_tx_rate_update() is implemented.
+These stats can be enabled through ath10k/enable_extd_tx_stats debugfs entry,
+enabling this may impact in cpu usage and throughput.
 
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
----
-V3:
-  - Added new API in mac80211 to update tx rate(Johannes)
-V4:
-  - Removed non NULL check on pubsta and updated comments on
-    ieee80211_tx_rate_update()
+ath10k/enable_extd_tx_stats is disabled by default.
 
- include/net/mac80211.h |   15 +++++++++++++++
- net/mac80211/status.c  |   22 ++++++++++++++++++++++
- 2 files changed, 37 insertions(+)
+Tx histogram has Per station tx stats which includes,
+ - pkts/bytes transmitted at all possible rates(mcs/nss/bw/gi).
+ - ACK fails count
+ - ampdu bytes/pkts transmitted at all possible rates(mcs/nss/bw/gi).
+ - BA fails count
+ - tx duration
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8c26d2d36cbe..86f6253a68c4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4331,6 +4331,21 @@ void ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
- 					   u32 thr);
- 
- /**
-+ * ieee80211_tx_rate_update - transmit rate update callback
-+ *
-+ * Drivers should call this functions with a non-NULL pubsta
-+ * This function can be used in drivers that does not have provision
-+ * in updating the tx rate in data path.
-+ *
-+ * @hw: the hardware the frame was transmitted by
-+ * @pubsta: the station to update the tx rate for.
-+ * @info: tx status information
-+ */
-+void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
-+			      struct ieee80211_sta *pubsta,
-+			      struct ieee80211_tx_info *info);
-+
-+/**
-  * ieee80211_tx_status - transmit status callback
-  *
-  * Call this function for all transmitted frames after they have been
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9a6d7208bf4f..a67547970a36 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -988,6 +988,28 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_tx_status_ext);
- 
-+void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
-+			      struct ieee80211_sta *pubsta,
-+			      struct ieee80211_tx_info *info)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_supported_band *sband;
-+	struct sta_info *sta;
-+	struct ieee80211_tx_status status;
-+
-+	sband = hw->wiphy->bands[info->band];
-+
-+	sta = container_of(pubsta, struct sta_info, sta);
-+	status.skb = NULL;
-+	status.info = info;
-+	status.sta = pubsta;
-+
-+	rate_control_tx_status(local, sband, &status);
-+	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL))
-+		sta->tx_stats.last_rate = info->status.rates[0];
-+}
-+EXPORT_SYMBOL(ieee80211_tx_rate_update);
-+
- void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
- {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+Tested on QCA9984/QCA4019/QCA988x
+Firmware: 10.4-3.5.3-00057
+	  10.2.4-1.0-00037
+
+Example output format:
+# cat /sys/kernel/debug/ieee80211/phy0/netdev\:wlan0/stations/8c\:
+fd\:f0\:0a\:8c\:14/tx_stats
+
+succ_pkts
+ VHT MCS packets
+  0 0 0 0 0 138 26 18 23 38747 
+ HT MCS packets
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW packets (20,40,80,160 MHz)
+  41 337 38574 0
+ NSS packets (1x1,2x2,3x3,4x4)
+  38952 0 0 0
+ GI packets (LGI,SGI)
+  38 38914
+ legacy rate packets (1,2 ... Mbps)
+  0 0 0 0 68 0 0 0 0 0 0 0 
+succ_bytes
+ VHT MCS bytes
+  0 0 0 0 0 16407 3288 2360 2703 4651892 
+ HT MCS bytes
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW bytes (20,40,80,160 MHz)
+  5163 40962 4630525 0
+ NSS bytes (1x1,2x2,3x3,4x4)
+  4676650 0 0 0
+ GI bytes (LGI,SGI)
+  4471 4672179
+ legacy rate bytes (1,2 ... Mbps)
+  0 0 0 0 3270 0 0 0 0 0 0 0 
+ampdu_pkts
+ VHT MCS packets
+  0 0 0 8 20 7872 34 21 33 39730 
+ HT MCS packets
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW packets (20,40,80,160 MHz)
+  72 567 47079 0
+ NSS packets (1x1,2x2,3x3,4x4)
+  40035 7683 0 0
+ GI packets (LGI,SGI)
+  7698 40020
+ legacy rate packets (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+
+ampdu_bytes
+ VHT MCS bytes
+  0 0 0 896 2579 941417 4222 2666 3857 4774284 
+ HT MCS bytes
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW bytes (20,40,80,160 MHz)
+  9262 70052 5650607 0
+ NSS bytes (1x1,2x2,3x3,4x4)
+  4811265 918656 0 0
+ GI bytes (LGI,SGI)
+  920650 4809271
+ legacy rate bytes (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+fail_pkts
+ VHT MCS packets
+  0 0 0 0 0 0 0 0 0 0 
+ HT MCS packets
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW packets (20,40,80,160 MHz)
+  0 0 0 0
+ NSS packets (1x1,2x2,3x3,4x4)
+  0 0 0 0
+ GI packets (LGI,SGI)
+  0 0
+ legacy rate packets (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+fail_bytes
+ VHT MCS bytes
+  0 0 0 0 0 0 0 0 0 0 
+ HT MCS bytes
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW bytes (20,40,80,160 MHz)
+  0 0 0 0
+ NSS bytes (1x1,2x2,3x3,4x4)
+  0 0 0 0
+ GI bytes (LGI,SGI)
+  0 0
+ legacy rate bytes (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+retry_pkts
+ VHT MCS packets
+  0 0 0 8 20 7734 8 3 10 983 
+ HT MCS packets
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW packets (20,40,80,160 MHz)
+  31 230 8505 0
+ NSS packets (1x1,2x2,3x3,4x4)
+  1083 7683 0 0
+ GI packets (LGI,SGI)
+  7660 1106
+ legacy rate packets (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+retry_bytes
+ VHT MCS bytes
+  0 0 0 896 2579 925010 934 306 1154 122392 
+ HT MCS bytes
+  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+ BW bytes (20,40,80,160 MHz)
+  4099 29090 1020082 0
+ NSS bytes (1x1,2x2,3x3,4x4)
+  134615 918656 0 0
+ GI bytes (LGI,SGI)
+  916179 137092
+ legacy rate bytes (1,2 ... Mbps)
+  0 0 0 0 0 0 0 0 0 0 0 0 
+TX duration
+ 6639098 usecs
+BA fails
+ 8610
+ack fails
+ 0
+
+
+Anilkumar Kolli (4):
+  ath10k: get the legacy rate index to update the txrate table
+  ath10k: add debugfs entry to enable extended tx stats
+  ath10k: add extended per sta tx statistics support
+  ath10k: add debugfs support to dump per sta tx stats
+
+ drivers/net/wireless/ath/ath10k/core.h        |   32 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c       |   62 +++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h       |    9 ++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |  101 +++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c      |  133 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/mac.c         |   10 ++
+ drivers/net/wireless/ath/ath10k/wmi.h         |   13 ++-
+ 7 files changed, 341 insertions(+), 19 deletions(-)
+
 -- 
 1.7.9.5
