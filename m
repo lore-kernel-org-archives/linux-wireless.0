@@ -1,86 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:36340 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728073AbeIVRjJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 13:39:09 -0400
-Received: by mail-wm1-f65.google.com with SMTP id y13-v6so987470wmi.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2018 04:45:51 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/9] mt76: move rate_txpower handler in mt76 debugfs
-Date: Sat, 22 Sep 2018 13:45:31 +0200
-Message-Id: <20180922114537.24004-4-lorenzo.bianconi@redhat.com> (sfid-20180922_134903_486887_2BFB184A)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46330 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725995AbeIDTGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 15:06:44 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 00/22] mt76 patches 2018-09-04
+Date: Tue,  4 Sep 2018 16:40:53 +0200
+Message-Id: <1536072075-6990-1-git-send-email-sgruszka@redhat.com> (sfid-20180904_164132_336098_232D40FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move rate_txpower handler in mt76 debugfs in order to be reused
-in mt76x0 driver and remove duplicated code
+More mt76x0/mt76x2 integration.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/debugfs.c  | 19 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt76x2_debugfs.c   | 10 ----------
- 2 files changed, 19 insertions(+), 10 deletions(-)
+This set is quite big but I would like to move patches upstream
+from my github tree as fast as possible. I have there 42 more
+ready to post patches from me and Lorenzo.
+https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v3
 
-diff --git a/drivers/net/wireless/mediatek/mt76/debugfs.c b/drivers/net/wireless/mediatek/mt76/debugfs.c
-index 03ce635334fa..a5adf22c3ffa 100644
---- a/drivers/net/wireless/mediatek/mt76/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
-@@ -68,6 +68,23 @@ void mt76_seq_puts_array(struct seq_file *file, const char *str,
- }
- EXPORT_SYMBOL_GPL(mt76_seq_puts_array);
- 
-+static int mt76_read_rate_txpower(struct seq_file *s, void *data)
-+{
-+	struct mt76_dev *dev = dev_get_drvdata(s->private);
-+
-+	mt76_seq_puts_array(s, "CCK", dev->rate_power.cck,
-+			    ARRAY_SIZE(dev->rate_power.cck));
-+	mt76_seq_puts_array(s, "OFDM", dev->rate_power.ofdm,
-+			    ARRAY_SIZE(dev->rate_power.ofdm));
-+	mt76_seq_puts_array(s, "STBC", dev->rate_power.stbc,
-+			    ARRAY_SIZE(dev->rate_power.stbc));
-+	mt76_seq_puts_array(s, "HT", dev->rate_power.ht,
-+			    ARRAY_SIZE(dev->rate_power.ht));
-+	mt76_seq_puts_array(s, "VHT", dev->rate_power.vht,
-+			    ARRAY_SIZE(dev->rate_power.vht));
-+	return 0;
-+}
-+
- struct dentry *mt76_register_debugfs(struct mt76_dev *dev)
- {
- 	struct dentry *dir;
-@@ -84,6 +101,8 @@ struct dentry *mt76_register_debugfs(struct mt76_dev *dev)
- 	if (dev->otp.data)
- 		debugfs_create_blob("otp", 0400, dir, &dev->otp);
- 	debugfs_create_devm_seqfile(dev->dev, "queues", dir, mt76_queues_read);
-+	debugfs_create_devm_seqfile(dev->dev, "rate_txpower", dir,
-+				    mt76_read_rate_txpower);
- 
- 	return dir;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-index 527c94d07d67..ea373bae1522 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-@@ -55,16 +55,6 @@ static int read_txpower(struct seq_file *file, void *data)
- 
- 	mt76_seq_puts_array(file, "Delta", dev->target_power_delta,
- 			    ARRAY_SIZE(dev->target_power_delta));
--	mt76_seq_puts_array(file, "CCK", dev->mt76.rate_power.cck,
--			    ARRAY_SIZE(dev->mt76.rate_power.cck));
--	mt76_seq_puts_array(file, "OFDM", dev->mt76.rate_power.ofdm,
--			    ARRAY_SIZE(dev->mt76.rate_power.ofdm));
--	mt76_seq_puts_array(file, "STBC", dev->mt76.rate_power.stbc,
--			    ARRAY_SIZE(dev->mt76.rate_power.stbc));
--	mt76_seq_puts_array(file, "HT", dev->mt76.rate_power.ht,
--			    ARRAY_SIZE(dev->mt76.rate_power.ht));
--	mt76_seq_puts_array(file, "VHT", dev->mt76.rate_power.vht,
--			    ARRAY_SIZE(dev->mt76.rate_power.vht));
- 	return 0;
- }
- 
+Note this set include:
+"mt76x0: fix wrong usage of wcid_mask in remove_interface"
+patch with I posted as fix for 4.19 . I assume this will be
+auto (or manually?) merged when -next will go to 4.20.
+
+Stanislaw Gruszka (22):
+  mt76: move wcid fields to common mt76_dev struct
+  mt76: unify sta_add / sta_remove
+  mt76: pratially unify add_interface
+  mt76x0: fix wrong usage of wcid_mask in remove_interface
+  mt76: unify ampdu_action
+  mt76: unify set_key
+  mt76x0: remove empty sta_notify
+  mt76: unify AC to hw queue mapping
+  mt76: remove q->hw_idx
+  mt76: unify conf_tx
+  mt76x0: remove vif_mask
+  mt76: unify remove_interface
+  mt76: unify add_interface
+  mt76: unify sta_rate_tbl_update and related helpers
+  mt76: unify txwi and rxwi structures
+  mt76: unify load_tx_status
+  mt76: unify send_tx_status and related helpers
+  mt76: use mt76_rx_status in mt76x0
+  mt76: unify mac_process_rate
+  mt76x0: reserve enough space in mac80211
+  mt76: unify {insert/remove}_hdr_pad
+  mt76: partially unify filling txwi fields
+
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |   3 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  23 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/Makefile |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/dma.c    |  14 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  24 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 310 +----------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    | 130 --------
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 215 +-----------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  26 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |  12 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     | 144 +-------
+ drivers/net/wireless/mediatek/mt76/mt76x0/util.c   |  42 ---
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 347 +++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   | 122 ++++++-
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c  | 325 ++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  23 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  23 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c | 254 +-------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    |  17 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |   3 +-
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |  12 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 110 +-----
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 368 +--------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  50 +--
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   6 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   3 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |  21 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |  18 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  22 +-
+ drivers/net/wireless/mediatek/mt76/tx.c            |  16 +
+ drivers/net/wireless/mediatek/mt76/usb.c           |   6 +-
+ 33 files changed, 974 insertions(+), 1723 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+
 -- 
-2.18.0
+2.7.5
