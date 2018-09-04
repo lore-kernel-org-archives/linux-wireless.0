@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:42276 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727068AbeIEOUV (ORCPT
+Received: from alexa-out-tai-02.qualcomm.com ([103.229.16.227]:34995 "EHLO
+        alexa-out-tai-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727024AbeIDPnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 10:20:21 -0400
-Message-ID: <1536141045.3528.4.camel@sipsolutions.net> (sfid-20180905_115059_607216_1B560655)
-Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Date: Wed, 05 Sep 2018 11:50:45 +0200
-In-Reply-To: <87in3k6zti.fsf@toke.dk>
-References: <20180905080036.9177-1-johannes@sipsolutions.net>
-         <87in3k6zti.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 4 Sep 2018 11:43:47 -0400
+From: Wen Gong <wgong@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>, Wen Gong <wgong@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [EXTERNAL] Re: [PATCH v3] ath10k: support NET_DETECT WoWLAN
+ feature
+Date: Tue, 4 Sep 2018 11:18:25 +0000
+Message-ID: <b6d8ada015e04738b6b3cee95e485e14@aptaiexm02f.ap.qualcomm.com> (sfid-20180904_131909_876042_BEEB79F0)
+References: <1534402113-14337-1-git-send-email-wgong@codeaurora.org>
+ <877ek18vyn.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877ek18vyn.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-05 at 11:47 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Some frames may have a non-zero skb->priority assigned by
-> > mac80211 internally, e.g. TDLS setup frames, regardless of
-> > support for QoS.
-> > 
-> > Currently, we set skb->priority to 0 for all data frames.
-> > Note that there's a comment that this is "required for
-> > correct WPA/11i MIC", but that doesn't seem true as we use
-> > 
-> >         if (ieee80211_is_data_qos(hdr->frame_control))
-> >                 qos_tid = ieee80211_get_tid(hdr);
-> >         else
-> >                 qos_tid = 0;
-> > 
-> > in the code there. We could therefore reconsider this, but
-> > it seems like unnecessary complexity for the unlikely (and
-> > not very useful) case of not having QoS on the connection.
-> > 
-> > This situation then causes something strange - most data
-> > frames will go on TXQ for TID 0 for non-QoS connections,
-> > but very few exceptions that are internally generated will
-> > go on another TXQ, possibly causing confusion.
-> 
-> What kind of confusion are you seeing? Reordering issues, or something
-> else?
 
-I haven't actually been able to test this...
+> -----Original Message-----
+> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Kalle Valo
+> Sent: Tuesday, September 4, 2018 5:15 PM
+> To: Wen Gong <wgong@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
+> Subject: [EXTERNAL] Re: [PATCH v3] ath10k: support NET_DETECT WoWLAN
+> feature
+>=20
+> Wen Gong <wgong@codeaurora.org> writes:
+>=20
+> > For WoWLAN support, it expect to support wake up based on discovery of
+> [...]
+>=20
+> > +	channel_list =3D (u32 *)ptr;
+> > +	for (i =3D 0; i < cmd->num_of_channels; i++)
+> > +		channel_list[i] =3D pno->a_networks[0].channels[i];
+>=20
+> channel_list does not look endian safe to me, I'll change this to use __l=
+e32.
+Yes, __le32 is more safe.
 
-But with the iwlwifi work we're doing, at the very least we'd waste a
-hardware queue for the case that basically never happens, since you'd
-end up putting these frames (that are very few) on a separate TXQ and
-thus hardware queue.
+> > +enum wmi_nlo_cipher_algorithm {
+> > +	WMI_NLO_CIPHER_ALGO_NONE           =3D 0x00,
+> > +	WMI_NLO_CIPHER_ALGO_WEP40          =3D 0x01,
+> > +	WMI_NLO_CIPHER_ALGO_TKIP           =3D 0x02,
+> > +	WMI_NLO_CIPHER_ALGO_CCMP           =3D 0x04,
+> > +	WMI_NLO_CIPHER_ALGO_WEP104         =3D 0x05,
+> > +	WMI_NLO_CIPHER_ALGO_BIP            =3D 0x06,
+> > +	WMI_NLO_CIPHER_ALGO_WPA_USE_GROUP  =3D 0x100,
+> > +	WMI_NLO_CIPHER_ALGO_RSN_USE_GROUP  =3D 0x100,
+>=20
+> Two defines with the same value 0x100, is this really correct?
 
-You could argue we should explicitly _not_ do this, but then we should
-also set skb->priority to be non-zero for non-QoS stations. Then we
-could benefit from some form of QoS (between the TXQs) for non-QoS
-connections, but that seems pretty complex and doesn't seem worth it
-since all connections that want anything from HT/11n and newer need QoS
-anyway.
+Yes, it is an interface between host driver /firmware.
 
-So basically this gets rid of a corner case that we shouldn't have.
-Either we should decide that using different TXQs is *always* correct
-for non-QoS, or - what I thought - that this isn't worth it, and then we
-should *never* do it.
-
-johannes
+> --
+> Kalle Valo
+>=20
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
