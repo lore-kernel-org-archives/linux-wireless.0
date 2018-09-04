@@ -1,82 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:51761 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728631AbeIRSpc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:45:32 -0400
-Received: by mail-it0-f67.google.com with SMTP id e14-v6so3079806itf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 06:13:00 -0700 (PDT)
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jbenc@redhat.com
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913193004.GF4590@localhost.localdomain>
- <20180913212742.GC3876@unicorn.suse.cz>
- <20180913215839.GI27095@localhost.localdomain>
- <1537177132.2957.6.camel@sipsolutions.net>
- <847cc635-cb90-821d-5824-07e7f941db75@mojatatu.com>
- <1537274378.2957.23.camel@sipsolutions.net>
- <26dd9a66-9515-93aa-e21f-51c37db6be2c@mojatatu.com>
- <1537275441.2957.26.camel@sipsolutions.net>
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Message-ID: <1a1e0b60-24d9-a313-f46e-afb590a99b3a@mojatatu.com> (sfid-20180918_151304_658872_671B8EA1)
-Date: Tue, 18 Sep 2018 09:12:57 -0400
+Received: from narfation.org ([79.140.41.39]:35932 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726292AbeIDQln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 12:41:43 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 9/9] mac80211: Don't wake up from PS for offchannel TX
+Date: Tue, 04 Sep 2018 14:16:47 +0200
+Message-ID: <2707426.UKz2r40yDP@bentobox> (sfid-20180904_141652_270747_8AD939E6)
+In-Reply-To: <8536772.7SmJXvWjMu@bentobox>
+References: <20180831083130.15525-1-luca@coelho.fi> <20180904114055.1429-10-luca@coelho.fi> <8536772.7SmJXvWjMu@bentobox>
 MIME-Version: 1.0
-In-Reply-To: <1537275441.2957.26.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; boundary="nextPart7317677.BvZNnZgmtP"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-18 8:57 a.m., Johannes Berg wrote:
-> On Tue, 2018-09-18 at 08:55 -0400, Jamal Hadi Salim wrote:
-> 
->> Execute permission kind of thing? i.e if i understood you correctly
->> if acl is "rwx" then attribute can only be written to (or read from) if
->> the "thing executing" is complete
-> 
-> But it's not an attribute that you're executing, it's some kind of
-> command, and then you get the return value of that command in that
-> attribute?
->
-> Say you want to scan for wifi networks - you trigger a scan, later you
-> get a notification giving you some data about the scan (let's say the
-> time it took) - there's no way you can set that time attribute.
-> 
+--nextPart7317677.BvZNnZgmtP
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Not very familiar with how wifi scan gets initiated. I am guessing
-you issue some GET or SET to start a scan - and you get an async
-response when it is complete (and it would include the time it took)?
-Or maybe you get an immediate response and event notification later
-and the time spent is in that notification?
-I would still see that as a read-only attribute.
-And the utility of "execute" bit is only in blocking another scan
-from being initiated when one is in progress, if that is a desired
-goal.
-Note in most net devices stats can only be read but not written to
-for example.
-
-> (NB: it doesn't work this way, we don't have that attribute now, but I
-> didn't want to pick a more complicated example)
+On Dienstag, 4. September 2018 14:07:54 CEST Sven Eckelmann wrote:
+> On Dienstag, 4. September 2018 14:40:55 CEST Luca Coelho wrote:
+> > )
+> > Sender: linux-wireless-owner@vger.kernel.org
+> > Precedence: bulk
+> > List-ID: <linux-wireless.vger.kernel.org>
+> > X-Mailing-List: linux-wireless@vger.kernel.org
 > 
->>> What would the practical difference be though? Hopefully you wouldn't
->>> have write-only attributes, and then NLA_REJECT is basically equivalent?
->>>
->>
->> If ACL says "-w-" then reading should get explicit permission denied
->> code possibly with an extack which is more descriptive that reading
->> is not allowed.
-> 
-> Perhaps. But NLA_REJECT comes with an extack string to tell you, so ...
-> 
-> I dunno. I think we already bloated the policies too much by including
-> the validation_data pointer, and would hate to add more to that :-)
+> Looks like the SMTP headers are broken in all your patches. Here the 
+> interesting part (as received by me):
 
-Your mileage may vary. NLA_REJECT may work acls offer more fine grained
-controls.
+I meant mail headers.
 
+>     [...]
+>     X-SA-Exim-Scanned: Yes (on 
+>     
+>     )
+>     Sender: linux-wireless-owner@vger.kernel.org
+>     Precedence: bulk
+>     List-ID: <linux-wireless.vger.kernel.org>
+>     X-Mailing-List: linux-wireless@vger.kernel.org
 
-cheers,
-jamal
+And just as additional info which I forgot: My mail setup is exim free. So 
+they were not added by me.
+
+The only exim in the path seems to be:
+
+    Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+            by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+            (Exim 4.91)
+            (envelope-from <luca@coelho.fi>)
+            id 1fx9hf-00085m-4i; Tue, 04 Sep 2018 14:41:03 +0300
+
+But as Johannes pointed out, they look fine on patch 1-3.
+
+    [...]
+    X-SA-Exim-Scanned: Yes (on farmhouse.coelho.fi)
+    Sender: linux-wireless-owner@vger.kernel.org
+    Precedence: bulk
+    List-ID: <linux-wireless.vger.kernel.org>
+    X-Mailing-List: linux-wireless@vger.kernel.org
+
+Kind regards,
+	Sven
+--nextPart7317677.BvZNnZgmtP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAluOd68ACgkQXYcKB8Em
+e0bWaw//UUcQyb3h9USNcdpACwKFKtR1G6Ybzzx13OPdxvjdyqQcmDO7T4YzpdUu
+gQsW1PaMCwcgfMpmWC2e3+k4Esqw9CNEloyCikRzkNptPu6Ueo7iNfK+ohHtukRA
+/OL3NC9My4ix+vhTJriennHxa7v7U5UzWneNsLasNJmG96kvj28ZjLCOE6uC6srZ
+fT67IMWxLGm1e2qXrlVG9zDu6RhNpn5K+/RWhU8XX1lJPNTNzHqubOnKK+q7+QVr
+ERStGSgivBHj0xmjcOyMM+MyRH1wQn3a/hvqk36hObS7O8PPcVbtCeaL4lCI2/j4
+BHaqqP4QqBs1pLAJrl+wQkccwOVEzG/QbvNWKg8Wk/vq9Tb4lvtuiCx6UiWlGSjj
+2WpzBuQobcwl8u5HFg9ayxWCqCV4aHJ27pb8OLLkThIn8idhe022rjjTuydzaRdV
+JnQdMWkYOxoGr9r1HFDqZGmcLWZwOBOQTyzCKb7gZTSmXuT9J5AZqsw74dyZMKlC
+0i4AMSXeAnRfLvgG5ynyDWiz8km/zUAInExvjZxzhybUQOzKaxUsOJERdvMSVA6G
+LAnIVxa8hES5ROORY4sRGKY2k50RPruNNyqp79ttblPoeTH3gc8ZnD0YNf6oVKxd
+dOD2aJQnKOkc+R/rgWSi1FCJDmJgv/ebkWfMeAOYPkAdh76hbwY=
+=YmqE
+-----END PGP SIGNATURE-----
+
+--nextPart7317677.BvZNnZgmtP--
