@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12385 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731675AbeITMF5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46500 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726956AbeIDQFy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:05:57 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 06/29] staging: wilc1000: use 'void' return type for host_int_get_assoc_res_info()
-Date: Thu, 20 Sep 2018 11:53:17 +0530
-Message-ID: <1537424620-6982-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082455_269257_B8226B0C)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 4 Sep 2018 12:05:54 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  4 Sep 2018 14:40:54 +0300
+Message-Id: <20180904114055.1429-9-luca@coelho.fi> (sfid-20180904_134135_549722_296C97BF)
+In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180904114055.1429-1-luca@coelho.fi>
+Subject: [PATCH v2 8/9] mac80211: Always report TX status
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change return type to 'void' for host_int_get_assoc_res_info() as its
-return value is not used. 'rcvd_assoc_resp_info_len' parameter value is
-used to know the status.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+If a frame is dropped for any reason, mac80211 wouldn't report the TX
+status back to user space.
+
+As the user space may rely on the TX_STATUS to kick its state
+machines, resends etc, it's better to just report this frame as not
+acked instead.
+
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ net/mac80211/status.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7729f83..237a098d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1388,10 +1388,10 @@ static void handle_rcvd_ntwrk_info(struct work_struct *work)
- 	kfree(msg);
- }
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 9a6d7208bf4f..001a869c059c 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -479,11 +479,6 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
+ 	if (!skb)
+ 		return;
  
--static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
--				       u8 *assoc_resp_info,
--				       u32 max_assoc_resp_info_len,
--				       u32 *rcvd_assoc_resp_info_len)
-+static void host_int_get_assoc_res_info(struct wilc_vif *vif,
-+					u8 *assoc_resp_info,
-+					u32 max_assoc_resp_info_len,
-+					u32 *rcvd_assoc_resp_info_len)
- {
- 	int result;
- 	struct wid wid;
-@@ -1406,11 +1406,10 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
- 	if (result) {
- 		*rcvd_assoc_resp_info_len = 0;
- 		netdev_err(vif->ndev, "Failed to send association response\n");
--		return -EINVAL;
-+		return;
- 	}
+-	if (dropped) {
+-		dev_kfree_skb_any(skb);
+-		return;
+-	}
+-
+ 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
+ 		u64 cookie = IEEE80211_SKB_CB(skb)->ack.cookie;
+ 		struct ieee80211_sub_if_data *sdata;
+@@ -506,6 +501,8 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
+ 		}
+ 		rcu_read_unlock();
  
- 	*rcvd_assoc_resp_info_len = wid.size;
--	return result;
- }
- 
- static inline void host_int_free_user_conn_req(struct host_if_drv *hif_drv)
++		dev_kfree_skb_any(skb);
++	} else if (dropped) {
+ 		dev_kfree_skb_any(skb);
+ 	} else {
+ 		/* consumes skb */
 -- 
-2.7.4
+2.18.0
