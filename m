@@ -1,493 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:34389 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728065AbeIQWBN (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12541 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727321AbeIDLDu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 18:01:13 -0400
-Received: by mail-wr1-f65.google.com with SMTP id g33-v6so18022977wrd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 09:33:04 -0700 (PDT)
-Received: from localhost.localdomain ([31.147.208.18])
-        by smtp.googlemail.com with ESMTPSA id c3-v6sm17807307wrm.56.2018.09.17.09.33.01
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Mon, 17 Sep 2018 09:33:02 -0700 (PDT)
-From: =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/5] rt2x00: set registers based on current band
-Date: Mon, 17 Sep 2018 18:32:51 +0200
-Message-Id: <1537201975-3032-1-git-send-email-pozega.tomislav@gmail.com> (sfid-20180917_183317_652831_48F92ACC)
+        Tue, 4 Sep 2018 07:03:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 06/26] staging: wilc1000: move during_ip_timer & wilc_optaining_ip to 'wilc_vif' struct
+Date: Tue, 4 Sep 2018 12:09:22 +0530
+Message-ID: <1536043182-19735-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084016_701231_3C51FA66)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use curr_band instead of rf->channel among various subroutines -
-mostly for 2.4GHz band but in some circumstances for 5GHz band too.
+Move global variable 'wilc_during_ip_timer' and 'wilc_optaining_ip' to
+'wilc_vif' structure.
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+Rename these variables like below
+
+wilc_during_ip_timer -> during_ip_timer
+wilc_optaining_ip -> obtaining_ip.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  130 +++++++++++++-----------
- 1 files changed, 72 insertions(+), 58 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 15 +++++++-------
+ drivers/staging/wilc1000/host_interface.h         |  2 --
+ drivers/staging/wilc1000/linux_wlan.c             |  6 +++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 ++
+ 5 files changed, 24 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index a567bc2..33968ab 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -2033,7 +2033,7 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
- 	u16 eeprom;
- 	short lna_gain;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 42d8acc..11eb632 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -186,7 +186,6 @@ struct join_bss_param {
+ };
  
--	if (libconf->rf.channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		eeprom = rt2800_eeprom_read(rt2x00dev, EEPROM_LNA);
- 		lna_gain = rt2x00_get_field16(eeprom, EEPROM_LNA_BG);
- 	} else if (libconf->rf.channel <= 64) {
-@@ -2122,7 +2122,7 @@ static void rt2800_config_channel_rf2xxx(struct rt2x00_dev *rt2x00dev,
- 	} else if (rt2x00dev->default_ant.rx_chain_num == 2)
- 		rt2x00_set_field32(&rf->rf2, RF2_ANTENNA_RX2, 1);
+ static struct host_if_drv *terminated_handle;
+-bool wilc_optaining_ip;
+ static u8 p2p_listen_state;
+ static struct workqueue_struct *hif_workqueue;
+ static struct completion hif_driver_comp;
+@@ -791,7 +790,7 @@ static void handle_scan(struct work_struct *work)
+ 		goto error;
+ 	}
  
--	if (rf->channel > 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_5GHZ) {
- 		/*
- 		 * When TX power is below 0, we should increase it by 7 to
- 		 * make it a positive value (Minimum value is -7).
-@@ -2271,21 +2271,21 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+-	if (wilc_optaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || wilc_connecting) {
+ 		netdev_err(vif->ndev, "Don't do obss scan\n");
+ 		result = -EBUSY;
+ 		goto error;
+@@ -1562,8 +1561,8 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 6);
- 	rt2x00_set_field8(&rfcsr, RFCSR6_R1, rf->rf2);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR6_TXDIV, 2);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR6_TXDIV, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+ 		hif_drv->hif_state = HOST_IF_CONNECTED;
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 5);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR5_R1, 1);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR5_R1, 2);
- 	rt2800_rfcsr_write(rt2x00dev, 5, rfcsr);
+-		wilc_optaining_ip = true;
+-		mod_timer(&wilc_during_ip_timer,
++		vif->obtaining_ip = true;
++		mod_timer(&vif->during_ip_timer,
+ 			  jiffies + msecs_to_jiffies(10000));
+ 	} else {
+ 		hif_drv->hif_state = HOST_IF_IDLE;
+@@ -1595,7 +1594,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+ 	disconn_info.ie_len = 0;
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 12);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2x00_set_field8(&rfcsr, RFCSR12_DR0, 3);
- 		rt2x00_set_field8(&rfcsr, RFCSR12_TX_POWER,
- 				  info->default_power1);
-@@ -2298,7 +2298,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 12, rfcsr);
+ 	if (conn_result) {
+-		wilc_optaining_ip = false;
++		vif->obtaining_ip = false;
+ 		wilc_set_power_mgmt(vif, 0, 0);
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 13);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2x00_set_field8(&rfcsr, RFCSR13_DR0, 3);
- 		rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
- 				  info->default_power2);
-@@ -2318,7 +2318,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
- 	rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
- 	if (rt2x00_has_cap_bt_coexist(rt2x00dev)) {
--		if (rf->channel <= 14) {
-+		if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 			rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
- 			rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
+ 		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
+@@ -1942,7 +1941,7 @@ static void handle_disconnect(struct work_struct *work)
+ 	wid.val = (s8 *)&dummy_reason_code;
+ 	wid.size = sizeof(char);
+ 
+-	wilc_optaining_ip = false;
++	vif->obtaining_ip = false;
+ 	wilc_set_power_mgmt(vif, 0, 0);
+ 
+ 	eth_zero_addr(wilc_connected_ssid);
+@@ -2397,7 +2396,7 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
+ 		goto error;
+ 	}
+ 
+-	if (wilc_optaining_ip || wilc_connecting) {
++	if (vif->obtaining_ip || wilc_connecting) {
+ 		result = -EBUSY;
+ 		goto error;
+ 	}
+@@ -3455,7 +3454,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 			break;
  		}
-@@ -2355,7 +2355,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 31, drv_data->calibration_bw20);
- 	}
  
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2800_rfcsr_write(rt2x00dev, 7, 0xd8);
- 		rt2800_rfcsr_write(rt2x00dev, 9, 0xc3);
- 		rt2800_rfcsr_write(rt2x00dev, 10, 0xf1);
-@@ -2408,7 +2408,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+-	wilc_optaining_ip = false;
++	vif->obtaining_ip = false;
  
- 	reg = rt2800_register_read(rt2x00dev, GPIO_CTRL);
- 	rt2x00_set_field32(&reg, GPIO_CTRL_DIR7, 0);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 1);
- 	else
- 		rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 0);
-@@ -2441,7 +2441,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&bbp, BBP110_TX2_POWER, 0);
- 	rt2800_bbp_write(rt2x00dev, 110, bbp);
+ 	if (clients_count == 0) {
+ 		init_completion(&hif_driver_comp);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 84866a6..d026f44 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -361,11 +361,9 @@ int wilc_get_vif_idx(struct wilc_vif *vif);
+ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
+ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
  
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		/* Restore BBP 25 & 26 for 2.4 GHz */
- 		rt2800_bbp_write(rt2x00dev, 25, drv_data->bbp25);
- 		rt2800_bbp_write(rt2x00dev, 26, drv_data->bbp26);
-@@ -2463,14 +2463,14 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
+-extern bool wilc_optaining_ip;
+ extern u8 wilc_connected_ssid[6];
+ extern u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 11);
- 	rt2x00_set_field8(&rfcsr, RFCSR11_PLL_IDOH, 1);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR11_PLL_MOD, 1);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR11_PLL_MOD, 2);
- 	rt2800_rfcsr_write(rt2x00dev, 11, rfcsr);
+ extern int wilc_connecting;
+-extern struct timer_list wilc_during_ip_timer;
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 53);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rfcsr = 0;
- 		rt2x00_set_field8(&rfcsr, RFCSR53_TX_POWER,
- 				  info->default_power1 & 0x1f);
-@@ -2485,7 +2485,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 53, rfcsr);
+ #endif
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 57e3176..283bb74 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -48,8 +48,8 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 	case NETDEV_UP:
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->ifc_up = 1;
+-			wilc_optaining_ip = false;
+-			del_timer(&wilc_during_ip_timer);
++			vif->obtaining_ip = false;
++			del_timer(&vif->during_ip_timer);
+ 		}
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 55);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rfcsr = 0;
- 		rt2x00_set_field8(&rfcsr, RFCSR55_TX_POWER,
- 				  info->default_power2 & 0x1f);
-@@ -2500,7 +2500,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 55, rfcsr);
+ 		if (vif->wilc->enable_ps)
+@@ -68,7 +68,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 	case NETDEV_DOWN:
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->ifc_up = 0;
+-			wilc_optaining_ip = false;
++			vif->obtaining_ip = false;
+ 		}
  
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 54);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rfcsr = 0;
- 		rt2x00_set_field8(&rfcsr, RFCSR54_TX_POWER,
- 				  info->default_power3 & 0x1f);
-@@ -2569,7 +2569,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 32);
- 	rt2x00_set_field8(&rfcsr, RFCSR32_TX_AGC_FC, txrx_agc_fc);
+ 		if (memcmp(dev_iface->ifa_label, wlan_dev_name, 5) == 0)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1eac244..1690890 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -82,7 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
  
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rfcsr = 0xa0;
- 	else
- 		rfcsr = 0x80;
-@@ -2582,28 +2582,28 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
+-struct timer_list wilc_during_ip_timer;
+ static u8 op_ifcs;
  
- 	/* Band selection */
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 36);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR36_RF_BS, 1);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR36_RF_BS, 0);
- 	rt2800_rfcsr_write(rt2x00dev, 36, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 34);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rfcsr = 0x3c;
- 	else
- 		rfcsr = 0x20;
- 	rt2800_rfcsr_write(rt2x00dev, 34, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 12);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rfcsr = 0x1a;
- 	else
- 		rfcsr = 0x12;
- 	rt2800_rfcsr_write(rt2x00dev, 12, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 6);
--	if (rf->channel >= 1 && rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR6_VCO_IC, 1);
- 	else if (rf->channel >= 36 && rf->channel <= 64)
- 		rt2x00_set_field8(&rfcsr, RFCSR6_VCO_IC, 2);
-@@ -2619,7 +2619,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_rfcsr_write(rt2x00dev, 46, 0x60);
- 
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2800_rfcsr_write(rt2x00dev, 10, 0xd3);
- 		rt2800_rfcsr_write(rt2x00dev, 13, 0x12);
- 	} else {
-@@ -2632,7 +2632,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 51, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 51);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2x00_set_field8(&rfcsr, RFCSR51_BITS24, 5);
- 		rt2x00_set_field8(&rfcsr, RFCSR51_BITS57, 3);
- 	} else {
-@@ -2642,7 +2642,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 51, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 49);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR49_TX_LO1_IC, 3);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR49_TX_LO1_IC, 2);
-@@ -2657,13 +2657,13 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 50, rfcsr);
- 
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 57);
--	if (rf->channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		rt2x00_set_field8(&rfcsr, RFCSR57_DRV_CC, 0x1b);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR57_DRV_CC, 0x0f);
- 	rt2800_rfcsr_write(rt2x00dev, 57, rfcsr);
- 
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2800_rfcsr_write(rt2x00dev, 44, 0x93);
- 		rt2800_rfcsr_write(rt2x00dev, 52, 0x45);
- 	} else {
-@@ -2673,7 +2673,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 
- 	/* Initiate VCO calibration */
- 	rfcsr = rt2800_rfcsr_read(rt2x00dev, 3);
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2x00_set_field8(&rfcsr, RFCSR3_VCOCAL_EN, 1);
- 	} else {
- 		rt2x00_set_field8(&rfcsr, RFCSR3_BIT1, 1);
-@@ -2685,7 +2685,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	}
- 	rt2800_rfcsr_write(rt2x00dev, 3, rfcsr);
- 
--	if (rf->channel >= 1 && rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rfcsr = 0x23;
- 		if (txbf_enabled)
- 			rt2x00_set_field8(&rfcsr, RFCSR39_RX_DIV, 1);
-@@ -2741,7 +2741,7 @@ static void rt2800_config_channel_rf3290(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_freq_cal_mode1(rt2x00dev);
- 
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		if (rf->channel == 6)
- 			rt2800_bbp_write(rt2x00dev, 68, 0x0c);
- 		else
-@@ -2786,12 +2786,12 @@ static void rt2800_config_channel_rf3322(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
- 	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
- 
--	if ( rt2x00dev->default_ant.tx_chain_num == 2 )
-+	if (rt2x00dev->default_ant.tx_chain_num == 2)
- 		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
- 
--	if ( rt2x00dev->default_ant.rx_chain_num == 2 )
-+	if (rt2x00dev->default_ant.rx_chain_num == 2)
- 		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
- 	else
- 		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
-@@ -2920,7 +2920,8 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 
- 	reg = rt2800_register_read(rt2x00dev, LDO_CFG0);
- 	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL,
--			   (rf->channel > 14 || conf_is_ht40(conf)) ? 5 : 0);
-+			   (rt2x00dev->curr_band == NL80211_BAND_5GHZ ||
-+			   			conf_is_ht40(conf)) ? 5 : 0);
- 	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
- 
- 	/* Order of values on rf_channel entry: N, K, mod, R */
-@@ -2937,7 +2938,7 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&rfcsr, RFCSR11_MOD, (rf->rf3 - 8) & 0x3);
- 	rt2800_rfcsr_write(rt2x00dev, 11, rfcsr);
- 
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		rt2800_rfcsr_write(rt2x00dev, 10, 0x90);
- 		/* FIXME: RF11 owerwrite ? */
- 		rt2800_rfcsr_write(rt2x00dev, 11, 0x4A);
-@@ -3160,24 +3161,34 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 	rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
- 	rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
- 
--	rt2800_bbp_write(rt2x00dev, 79, (rf->channel <= 14) ? 0x1C : 0x18);
--	rt2800_bbp_write(rt2x00dev, 80, (rf->channel <= 14) ? 0x0E : 0x08);
--	rt2800_bbp_write(rt2x00dev, 81, (rf->channel <= 14) ? 0x3A : 0x38);
--	rt2800_bbp_write(rt2x00dev, 82, (rf->channel <= 14) ? 0x62 : 0x92);
-+	rt2800_bbp_write(rt2x00dev, 79, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x1C : 0x18);
-+	rt2800_bbp_write(rt2x00dev, 80, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x0E : 0x08);
-+	rt2800_bbp_write(rt2x00dev, 81, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x3A : 0x38);
-+	rt2800_bbp_write(rt2x00dev, 82, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x62 : 0x92);
- 
- 	/* GLRT band configuration */
- 	rt2800_bbp_write(rt2x00dev, 195, 128);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0xE0 : 0xF0);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0xE0 : 0xF0);
- 	rt2800_bbp_write(rt2x00dev, 195, 129);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x1F : 0x1E);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x1F : 0x1E);
- 	rt2800_bbp_write(rt2x00dev, 195, 130);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x38 : 0x28);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x38 : 0x28);
- 	rt2800_bbp_write(rt2x00dev, 195, 131);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x32 : 0x20);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x32 : 0x20);
- 	rt2800_bbp_write(rt2x00dev, 195, 133);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x28 : 0x7F);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x28 : 0x7F);
- 	rt2800_bbp_write(rt2x00dev, 195, 124);
--	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x19 : 0x7F);
-+	rt2800_bbp_write(rt2x00dev, 196, (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+								? 0x19 : 0x7F);
+ #define CHAN2G(_channel, _freq, _flags) {	 \
+@@ -261,9 +260,11 @@ static void remove_network_from_shadow(struct timer_list *t)
+ 			  jiffies + msecs_to_jiffies(AGING_TIME));
  }
  
- static void rt2800_config_channel_rf7620(struct rt2x00_dev *rt2x00dev,
-@@ -3438,7 +3449,7 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+-static void clear_during_ip(struct timer_list *unused)
++static void clear_during_ip(struct timer_list *t)
+ {
+-	wilc_optaining_ip = false;
++	struct wilc_vif *vif = from_timer(vif, t, during_ip_timer);
++
++	vif->obtaining_ip = false;
+ }
  
- 	/* TX0 IQ Gain */
- 	rt2800_bbp_write(rt2x00dev, 158, 0x2c);
--	if (channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX0_2G);
- 	else if (channel >= 36 && channel <= 64)
- 		cal = rt2x00_eeprom_byte(rt2x00dev,
-@@ -3455,7 +3466,7 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ static int is_network_in_shadow(struct network_info *nw_info,
+@@ -518,7 +519,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 					conn_info->resp_ies_len, connect_status,
+ 					GFP_KERNEL);
+ 	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF) {
+-		wilc_optaining_ip = false;
++		vif->obtaining_ip = false;
+ 		p2p_local_random = 0x01;
+ 		p2p_recv_random = 0x00;
+ 		wilc_ie = false;
+@@ -1743,8 +1744,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	p2p_local_random = 0x01;
+ 	p2p_recv_random = 0x00;
+ 	wilc_ie = false;
+-	wilc_optaining_ip = false;
+-	del_timer(&wilc_during_ip_timer);
++	vif->obtaining_ip = false;
++	del_timer(&vif->during_ip_timer);
  
- 	/* TX0 IQ Phase */
- 	rt2800_bbp_write(rt2x00dev, 158, 0x2d);
--	if (channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX0_2G);
- 	else if (channel >= 36 && channel <= 64)
- 		cal = rt2x00_eeprom_byte(rt2x00dev,
-@@ -3472,7 +3483,7 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -1789,8 +1790,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		break;
  
- 	/* TX1 IQ Gain */
- 	rt2800_bbp_write(rt2x00dev, 158, 0x4a);
--	if (channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX1_2G);
- 	else if (channel >= 36 && channel <= 64)
- 		cal = rt2x00_eeprom_byte(rt2x00dev,
-@@ -3489,7 +3500,7 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ 	case NL80211_IFTYPE_P2P_GO:
+-		wilc_optaining_ip = true;
+-		mod_timer(&wilc_during_ip_timer,
++		vif->obtaining_ip = true;
++		mod_timer(&vif->during_ip_timer,
+ 			  jiffies + msecs_to_jiffies(DURING_IP_TIME_OUT));
+ 		wilc_set_operation_mode(vif, AP_MODE);
+ 		dev->ieee80211_ptr->iftype = type;
+@@ -2159,10 +2160,10 @@ int wilc_init_host_int(struct net_device *net)
+ {
+ 	int ret;
+ 	struct wilc_priv *priv = wdev_priv(net->ieee80211_ptr);
++	struct wilc_vif *vif = netdev_priv(priv->dev);
  
- 	/* TX1 IQ Phase */
- 	rt2800_bbp_write(rt2x00dev, 158, 0x4b);
--	if (channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX1_2G);
- 	else if (channel >= 36 && channel <= 64)
- 		cal = rt2x00_eeprom_byte(rt2x00dev,
-@@ -3525,7 +3536,7 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
- 	if (rt2x00_rt(rt2x00dev, RT3593))
- 		txpower = rt2x00_get_field8(txpower, EEPROM_TXPOWER_ALC);
+ 	timer_setup(&priv->aging_timer, remove_network_from_shadow, 0);
+-	if (op_ifcs == 0)
+-		timer_setup(&wilc_during_ip_timer, clear_during_ip, 0);
++	timer_setup(&vif->during_ip_timer, clear_during_ip, 0);
+ 	op_ifcs++;
  
--	if (channel <= 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
+ 	priv->p2p_listen_state = false;
+@@ -2190,8 +2191,7 @@ int wilc_deinit_host_int(struct net_device *net)
  
- 	if (rt2x00_rt(rt2x00dev, RT3593))
-@@ -3638,7 +3649,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_bbp_write(rt2x00dev, 86, 0x38);
- 		rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- 	} else if (rt2x00_rt(rt2x00dev, RT3593)) {
--		if (rf->channel > 14) {
-+		if (rt2x00dev->curr_band == NL80211_BAND_5GHZ) {
- 			/* Disable CCK Packet detection on 5GHz */
- 			rt2800_bbp_write(rt2x00dev, 70, 0x00);
- 		} else {
-@@ -3661,7 +3672,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_bbp_write(rt2x00dev, 86, 0);
- 	}
+ 	del_timer_sync(&priv->aging_timer);
+ 	clear_shadow_scan(priv);
+-	if (op_ifcs == 0)
+-		del_timer_sync(&wilc_during_ip_timer);
++	del_timer_sync(&vif->during_ip_timer);
  
--	if (rf->channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		if (!rt2x00_rt(rt2x00dev, RT5390) &&
- 		    !rt2x00_rt(rt2x00dev, RT5392) &&
- 		    !rt2x00_rt(rt2x00dev, RT6352)) {
-@@ -3698,8 +3709,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	if (ret)
+ 		netdev_err(net, "Error while deinitializing host interface\n");
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3767e31..8e56a28 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -118,6 +118,8 @@ struct wilc_vif {
+ 	struct net_device *ndev;
+ 	u8 mode;
+ 	u8 ifc_id;
++	struct timer_list during_ip_timer;
++	bool obtaining_ip;
+ };
  
- 	reg = rt2800_register_read(rt2x00dev, TX_BAND_CFG);
- 	rt2x00_set_field32(&reg, TX_BAND_CFG_HT40_MINUS, conf_is_ht40_minus(conf));
--	rt2x00_set_field32(&reg, TX_BAND_CFG_A, rf->channel > 14);
--	rt2x00_set_field32(&reg, TX_BAND_CFG_BG, rf->channel <= 14);
-+	rt2x00_set_field32(&reg, TX_BAND_CFG_A, rt2x00dev->curr_band ==
-+							NL80211_BAND_5GHZ);
-+	rt2x00_set_field32(&reg, TX_BAND_CFG_BG, rt2x00dev->curr_band ==
-+							NL80211_BAND_2GHZ);
- 	rt2800_register_write(rt2x00dev, TX_BAND_CFG, reg);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3572))
-@@ -3765,7 +3778,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 8, 0x80);
- 
- 		/* AGC init */
--		if (rf->channel <= 14)
-+		if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 			reg = 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			reg = 0x22 + ((rt2x00dev->lna_gain * 5) / 3);
-@@ -3781,7 +3794,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		    rt2x00_is_pcie(rt2x00dev)) {
- 			/* GPIO #8 controls all paths */
- 			rt2x00_set_field32(&reg, GPIO_CTRL_DIR8, 0);
--			if (rf->channel <= 14)
-+			if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 				rt2x00_set_field32(&reg, GPIO_CTRL_VAL8, 1);
- 			else
- 				rt2x00_set_field32(&reg, GPIO_CTRL_VAL8, 0);
-@@ -3806,7 +3819,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- 
- 		/* AGC init */
--		if (rf->channel <= 14)
-+		if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
- 			reg = 0x1c + 2 * rt2x00dev->lna_gain;
- 		else
- 			reg = 0x22 + ((rt2x00dev->lna_gain * 5) / 3);
-@@ -3833,7 +3846,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		if (rt2x00_rt(rt2x00dev, RT6352))
- 			reg = 0x04;
- 		else
--			reg = rf->channel <= 14 ? 0x1c : 0x24;
-+			reg = rt2x00dev->curr_band == NL80211_BAND_2GHZ ? 0x1c : 0x24;
- 
- 		reg += 2 * rt2x00dev->lna_gain;
- 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
-@@ -4915,7 +4928,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 		usleep_range(min_sleep, min_sleep * 2);
- 
- 	tx_pin = rt2800_register_read(rt2x00dev, TX_PIN_CFG);
--	if (rt2x00dev->rf_channel <= 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ) {
- 		switch (rt2x00dev->default_ant.tx_chain_num) {
- 		case 3:
- 			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN, 1);
-@@ -9265,8 +9278,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	if (WARN_ON_ONCE(!spec->channels))
- 		return -ENODEV;
- 
--	spec->supported_bands = SUPPORT_BAND_2GHZ;
--	if (spec->num_channels > 14)
-+	if (rt2x00dev->curr_band == NL80211_BAND_2GHZ)
-+		spec->supported_bands = SUPPORT_BAND_2GHZ;
-+	if (rt2x00dev->curr_band == NL80211_BAND_5GHZ)
- 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
- 
- 	/*
-@@ -9336,7 +9350,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 			info[i].default_power3 = default_power3[i];
- 	}
- 
--	if (spec->num_channels > 14) {
-+	if (rt2x00dev->curr_band == NL80211_BAND_5GHZ) {
- 		default_power1 = rt2800_eeprom_addr(rt2x00dev,
- 						    EEPROM_TXPOWER_A1);
- 		default_power2 = rt2800_eeprom_addr(rt2x00dev,
+ struct wilc {
 -- 
-1.7.0.4
+2.7.4
