@@ -1,86 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12390 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731675AbeITMGF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:05 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 08/29] staging: wilc1000: change return type to 'void' tcp ack filter functions
-Date: Thu, 20 Sep 2018 11:53:19 +0530
-Message-ID: <1537424620-6982-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082457_222300_544C0382)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga04.intel.com ([192.55.52.120]:42574 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726011AbeIDKuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 06:50:13 -0400
+Message-ID: <8771557a6d74a81b9d2bb32b0a1f65c811875c96.camel@intel.com> (sfid-20180904_082650_531200_25DA7366)
+Subject: Re: [PATCH] iwlwifi: d3: use struct_size() in kzalloc()
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Date: Tue, 04 Sep 2018 09:26:26 +0300
+In-Reply-To: <20180824011540.GA25716@embeddedor.com>
+References: <20180824011540.GA25716@embeddedor.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'void' return type for below functions as they always return '0' and
-their return value is not used by caller.
-add_tcp_pending_ack()
-update_tcp_session()
-add_tcp_pending_ack()
+On Thu, 2018-08-23 at 20:15 -0500, Gustavo A. R. Silva wrote:
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+> 
+> struct foo {
+> 	int stuff;
+>         void *entry[];
+> };
+> 
+> instance = kzalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
+> 
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+> 
+> instance = kzalloc(struct_size(instance, entry, count), GFP_KERNEL);
+> 
+> This issue was detected with the help of Coccinelle.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> index 79bdae9..6960318 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+> @@ -1769,8 +1769,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+>  		n_matches = 0;
+>  	}
+>  
+> -	net_detect = kzalloc(sizeof(*net_detect) +
+> -			     (n_matches * sizeof(net_detect->matches[0])),
+> +	net_detect = kzalloc(struct_size(net_detect, matches, n_matches),
+>  			     GFP_KERNEL);
+>  	if (!net_detect || !n_matches)
+>  		goto out_report_nd;
+> @@ -1785,8 +1784,7 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
+>  		for (j = 0; j < SCAN_OFFLOAD_MATCHING_CHANNELS_LEN; j++)
+>  			n_channels += hweight8(fw_match->matching_channels[j]);
+>  
+> -		match = kzalloc(sizeof(*match) +
+> -				(n_channels * sizeof(*match->channels)),
+> +		match = kzalloc(struct_size(match, channels, n_channels),
+>  				GFP_KERNEL);
+>  		if (!match)
+>  			goto out_report_nd;
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+Thanks! I applied this to our internal tree and it will reach the
+mainline following our normal process.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8057db9..66ce29d 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -91,8 +91,8 @@ static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
- 
- #define NOT_TCP_ACK			(-1)
- 
--static inline int add_tcp_session(struct wilc_vif *vif, u32 src_prt,
--				  u32 dst_prt, u32 seq)
-+static inline void add_tcp_session(struct wilc_vif *vif, u32 src_prt,
-+				   u32 dst_prt, u32 seq)
- {
- 	struct tcp_ack_filter *f = &vif->ack_filter;
- 
-@@ -103,22 +103,20 @@ static inline int add_tcp_session(struct wilc_vif *vif, u32 src_prt,
- 		f->ack_session_info[f->tcp_session].dst_port = dst_prt;
- 		f->tcp_session++;
- 	}
--	return 0;
- }
- 
--static inline int update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
-+static inline void update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
- {
- 	struct tcp_ack_filter *f = &vif->ack_filter;
- 
- 	if (index < 2 * MAX_TCP_SESSION &&
- 	    ack > f->ack_session_info[index].bigger_ack_num)
- 		f->ack_session_info[index].bigger_ack_num = ack;
--	return 0;
- }
- 
--static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
--				      u32 session_index,
--				      struct txq_entry_t *txqe)
-+static inline void add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
-+				       u32 session_index,
-+				       struct txq_entry_t *txqe)
- {
- 	struct tcp_ack_filter *f = &vif->ack_filter;
- 	u32 i = f->pending_base + f->pending_acks_idx;
-@@ -130,7 +128,6 @@ static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
- 		txqe->ack_idx = i;
- 		f->pending_acks_idx++;
- 	}
--	return 0;
- }
- 
- static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
--- 
-2.7.4
+--
+Cheers,
+Luca.
