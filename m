@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41548 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbeIUGQ2 (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53823 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727321AbeIDLDx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 02:16:28 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v5 0/3] support ftm responder configuration/statistics
-Date: Thu, 20 Sep 2018 17:30:08 -0700
-Message-Id: <1537489811-5752-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180921_023022_102046_2B5E9080)
+        Tue, 4 Sep 2018 07:03:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 07/26] staging: wilc1000: remove unused variable 'op_ifcs'
+Date: Tue, 4 Sep 2018 12:09:23 +0530
+Message-ID: <1536043182-19735-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084017_912087_8B372FBE)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+After code refactor in previous commit now 'op_ifcs' is not require any
+more, so remove it.
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
-
-changes in V5:
- - changed NL80211_ATTR_FTM_RESPONDER to nested attribute
- - renamed 'civic' parameter to 'civicloc'.
-
-changes in V4:
- - no changes. Rebased and resending as v4 as v3 patches were dropped
-   for unknown reason
-
-changes in V3:
- - fixed the ambiguous ftm responder disable case to be not supported
-
-changes in V2:
- - updated version number
- - rebased patches
-
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
-
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
-
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  28 +++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 +
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 ++++++++++++++++
- include/net/mac80211.h                 |  13 ++++
- include/uapi/linux/nl80211.h           |  90 ++++++++++++++++++++++
- net/mac80211/cfg.c                     |  84 +++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 ++++
- net/mac80211/trace.h                   |  23 ++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 134 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 ++++
- net/wireless/trace.h                   |  44 +++++++++++
- 14 files changed, 526 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1690890..3418d2d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -82,8 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
+ 
+-static u8 op_ifcs;
+-
+ #define CHAN2G(_channel, _freq, _flags) {	 \
+ 		.band             = NL80211_BAND_2GHZ, \
+ 		.center_freq      = (_freq),		 \
+@@ -2164,7 +2162,6 @@ int wilc_init_host_int(struct net_device *net)
+ 
+ 	timer_setup(&priv->aging_timer, remove_network_from_shadow, 0);
+ 	timer_setup(&vif->during_ip_timer, clear_during_ip, 0);
+-	op_ifcs++;
+ 
+ 	priv->p2p_listen_state = false;
+ 
+@@ -2184,8 +2181,6 @@ int wilc_deinit_host_int(struct net_device *net)
+ 
+ 	priv->p2p_listen_state = false;
+ 
+-	op_ifcs--;
+-
+ 	mutex_destroy(&priv->scan_req_lock);
+ 	ret = wilc_deinit(vif);
+ 
 -- 
-1.9.1
+2.7.4
