@@ -1,120 +1,318 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52938 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726956AbeIXPPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 11:15:34 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH] ath9k: add back support for using active monitor interfaces for tx99
-Date: Sat, 22 Sep 2018 18:49:05 +0200
-Message-Id: <20180922164905.46751-1-nbd@nbd.name> (sfid-20180924_111431_823997_F17DA364)
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53817 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726016AbeIDLDr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Sep 2018 07:03:47 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 05/26] staging: wilc1000: moved last_scanned_shadow & last_scanned_cnt to wilc_priv struct
+Date: Tue, 4 Sep 2018 12:09:21 +0530
+Message-ID: <1536043182-19735-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084010_611136_FFF67428)
+In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Various documented examples on how to set up tx99 with ath9k rely
-on setting up a regular monitor interface for setting the channel.
-My previous patch "ath9k: fix tx99 with monitor mode interface" made
-it possible to set it up this way again. However, it was removing support
-for using an active monitor interface, which is required for controlling
-the bitrate as well, since the bitrate is not passed down with a regular
-monitor interface.
+Avoid use of static variables and moved the varibles as part of private
+data. last_scanned_shadow & last_scanned_cnt variable is moved to
+'wilc_priv' to maintain for each interface. After moving static
+variable, clear_shadow_scan() doesn't require check 'op_ifcs'
+count as now for each interface the againg timer is initiated.
 
-This patch partially reverts the previous one, but keeps support for using
-a regular monitor interface to keep documented steps working in cases
-where the bitrate does not matter
-
-Fixes: d9c52fd17cb48 ("ath9k: fix tx99 with monitor mode interface")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 10 ++++++++--
- drivers/net/wireless/ath/ath9k/tx99.c  |  7 +++++++
- drivers/net/wireless/ath/ath9k/xmit.c  |  2 +-
- 4 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 105 +++++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   2 +
+ 2 files changed, 52 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 003e9fb456ac..21ba20981a80 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -1074,6 +1074,7 @@ struct ath_softc {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 00a167b..1eac244 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -82,8 +82,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
  
- 	struct ath_spec_scan_priv spec_priv;
+-static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+-static u32 last_scanned_cnt;
+ struct timer_list wilc_during_ip_timer;
+ static u8 op_ifcs;
  
-+	struct ieee80211_vif *tx99_vif;
- 	struct sk_buff *tx99_skb;
- 	bool tx99_state;
- 	s16 tx99_power;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6ce4b9f1dcb4..c85f613e8ceb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1251,8 +1251,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_node *an = &avp->mcast_node;
+@@ -157,21 +155,18 @@ static struct ieee80211_supported_band wilc_band_2ghz = {
+ #define AGING_TIME	(9 * 1000)
+ #define DURING_IP_TIME_OUT	15000
  
--	if (IS_ENABLED(CONFIG_ATH9K_TX99))
--		return -EOPNOTSUPP;
-+	if (IS_ENABLED(CONFIG_ATH9K_TX99)) {
-+		if (sc->cur_chan->nvifs >= 1) {
-+			mutex_unlock(&sc->mutex);
-+			return -EOPNOTSUPP;
-+		}
-+		sc->tx99_vif = vif;
-+	}
+-static void clear_shadow_scan(void)
++static void clear_shadow_scan(struct wilc_priv *priv)
+ {
+ 	int i;
  
- 	mutex_lock(&sc->mutex);
+-	if (op_ifcs != 0)
+-		return;
+-
+-	for (i = 0; i < last_scanned_cnt; i++) {
+-		kfree(last_scanned_shadow[i].ies);
+-		last_scanned_shadow[i].ies = NULL;
++	for (i = 0; i < priv->scanned_cnt; i++) {
++		kfree(priv->scanned_shadow[i].ies);
++		priv->scanned_shadow[i].ies = NULL;
  
-@@ -1337,6 +1342,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_p2p_remove_vif(sc, vif);
+-		kfree(last_scanned_shadow[i].join_params);
+-		last_scanned_shadow[i].join_params = NULL;
++		kfree(priv->scanned_shadow[i].join_params);
++		priv->scanned_shadow[i].join_params = NULL;
+ 	}
+-	last_scanned_cnt = 0;
++	priv->scanned_cnt = 0;
+ }
  
- 	sc->cur_chan->nvifs--;
-+	sc->tx99_vif = NULL;
- 	if (!ath9k_is_chanctx_enabled())
- 		list_del(&avp->list);
+ static u32 get_rssi_avg(struct network_info *network_info)
+@@ -193,14 +188,14 @@ static void refresh_scan(struct wilc_priv *priv, bool direct_scan)
+ 	struct wiphy *wiphy = priv->dev->ieee80211_ptr->wiphy;
+ 	int i;
  
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 9b05ffb68c34..95544ce05acf 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -54,6 +54,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb;
-+	struct ath_vif *avp;
+-	for (i = 0; i < last_scanned_cnt; i++) {
++	for (i = 0; i < priv->scanned_cnt; i++) {
+ 		struct network_info *network_info;
+ 		s32 freq;
+ 		struct ieee80211_channel *channel;
+ 		int rssi;
+ 		struct cfg80211_bss *bss;
  
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
-@@ -71,11 +72,17 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+-		network_info = &last_scanned_shadow[i];
++		network_info = &priv->scanned_shadow[i];
  
-+	if (sc->tx99_vif) {
-+		avp = (struct ath_vif *) sc->tx99_vif->drv_priv;
-+		hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
-+	}
-+
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
- 	rate = &tx_info->control.rates[0];
- 	tx_info->band = sc->cur_chan->chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
-+	tx_info->control.vif = sc->tx99_vif;
- 	rate->count = 1;
- 	if (ah->curchan && IS_CHAN_HT(ah->curchan)) {
- 		rate->flags |= IEEE80211_TX_RC_MCS;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 66b6a8872c06..43b6c8508e49 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2973,7 +2973,7 @@ int ath9k_tx99_send(struct ath_softc *sc, struct sk_buff *skb,
- 		return -EINVAL;
+ 		if (!memcmp("DIRECT-", network_info->ssid, 7) && !direct_scan)
+ 			continue;
+@@ -224,20 +219,20 @@ static void refresh_scan(struct wilc_priv *priv, bool direct_scan)
+ 	}
+ }
+ 
+-static void reset_shadow_found(void)
++static void reset_shadow_found(struct wilc_priv *priv)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < last_scanned_cnt; i++)
+-		last_scanned_shadow[i].found = 0;
++	for (i = 0; i < priv->scanned_cnt; i++)
++		priv->scanned_shadow[i].found = 0;
+ }
+ 
+-static void update_scan_time(void)
++static void update_scan_time(struct wilc_priv *priv)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < last_scanned_cnt; i++)
+-		last_scanned_shadow[i].time_scan = jiffies;
++	for (i = 0; i < priv->scanned_cnt; i++)
++		priv->scanned_shadow[i].time_scan = jiffies;
+ }
+ 
+ static void remove_network_from_shadow(struct timer_list *t)
+@@ -246,22 +241,22 @@ static void remove_network_from_shadow(struct timer_list *t)
+ 	unsigned long now = jiffies;
+ 	int i, j;
+ 
+-	for (i = 0; i < last_scanned_cnt; i++) {
+-		if (!time_after(now, last_scanned_shadow[i].time_scan +
++	for (i = 0; i < priv->scanned_cnt; i++) {
++		if (!time_after(now, priv->scanned_shadow[i].time_scan +
+ 				(unsigned long)(SCAN_RESULT_EXPIRE)))
+ 			continue;
+-		kfree(last_scanned_shadow[i].ies);
+-		last_scanned_shadow[i].ies = NULL;
++		kfree(priv->scanned_shadow[i].ies);
++		priv->scanned_shadow[i].ies = NULL;
+ 
+-		kfree(last_scanned_shadow[i].join_params);
++		kfree(priv->scanned_shadow[i].join_params);
+ 
+-		for (j = i; (j < last_scanned_cnt - 1); j++)
+-			last_scanned_shadow[j] = last_scanned_shadow[j + 1];
++		for (j = i; (j < priv->scanned_cnt - 1); j++)
++			priv->scanned_shadow[j] = priv->scanned_shadow[j + 1];
+ 
+-		last_scanned_cnt--;
++		priv->scanned_cnt--;
  	}
  
--	ath_set_rates(NULL, NULL, bf);
-+	ath_set_rates(sc->tx99_vif, NULL, bf);
+-	if (last_scanned_cnt != 0)
++	if (priv->scanned_cnt != 0)
+ 		mod_timer(&priv->aging_timer,
+ 			  jiffies + msecs_to_jiffies(AGING_TIME));
+ }
+@@ -277,13 +272,13 @@ static int is_network_in_shadow(struct network_info *nw_info,
+ 	int state = -1;
+ 	int i;
  
- 	ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, bf->bf_daddr);
- 	ath9k_hw_tx99_start(sc->sc_ah, txctl->txq->axq_qnum);
+-	if (last_scanned_cnt == 0) {
++	if (priv->scanned_cnt == 0) {
+ 		mod_timer(&priv->aging_timer,
+ 			  jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
+-		for (i = 0; i < last_scanned_cnt; i++) {
+-			if (memcmp(last_scanned_shadow[i].bssid,
++		for (i = 0; i < priv->scanned_cnt; i++) {
++			if (memcmp(priv->scanned_shadow[i].bssid,
+ 				   nw_info->bssid, 6) == 0) {
+ 				state = i;
+ 				break;
+@@ -301,16 +296,16 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	u8 rssi_index = 0;
+ 	struct network_info *shadow_nw_info;
+ 
+-	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
++	if (priv->scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
+ 		return;
+ 
+ 	if (ap_found == -1) {
+-		ap_index = last_scanned_cnt;
+-		last_scanned_cnt++;
++		ap_index = priv->scanned_cnt;
++		priv->scanned_cnt++;
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	shadow_nw_info = &last_scanned_shadow[ap_index];
++	shadow_nw_info = &priv->scanned_shadow[ap_index];
+ 	rssi_index = shadow_nw_info->rssi_history.index;
+ 	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+@@ -402,7 +397,7 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 			u32 i;
+ 
+ 			for (i = 0; i < priv->rcvd_ch_cnt; i++) {
+-				if (memcmp(last_scanned_shadow[i].bssid,
++				if (memcmp(priv->scanned_shadow[i].bssid,
+ 					   network_info->bssid, 6) == 0)
+ 					break;
+ 			}
+@@ -410,8 +405,8 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 			if (i >= priv->rcvd_ch_cnt)
+ 				return;
+ 
+-			last_scanned_shadow[i].rssi = network_info->rssi;
+-			last_scanned_shadow[i].time_scan = jiffies;
++			priv->scanned_shadow[i].rssi = network_info->rssi;
++			priv->scanned_shadow[i].time_scan = jiffies;
+ 		}
+ 	} else if (scan_event == SCAN_EVENT_DONE) {
+ 		refresh_scan(priv, false);
+@@ -437,7 +432,7 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 				.aborted = false,
+ 			};
+ 
+-			update_scan_time();
++			update_scan_time(priv);
+ 			refresh_scan(priv, false);
+ 
+ 			cfg80211_scan_done(priv->scan_req, &info);
+@@ -448,11 +443,11 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 	}
+ }
+ 
+-static inline bool wilc_wfi_cfg_scan_time_expired(int i)
++static inline bool wilc_cfg_scan_time_expired(struct wilc_priv *priv, int i)
+ {
+ 	unsigned long now = jiffies;
+ 
+-	if (time_after(now, last_scanned_shadow[i].time_scan_cached +
++	if (time_after(now, priv->scanned_shadow[i].time_scan_cached +
+ 		       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
+ 		return true;
+ 	else
+@@ -501,11 +496,11 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 			memcpy(priv->associated_bss, conn_info->bssid,
+ 			       ETH_ALEN);
+ 
+-			for (i = 0; i < last_scanned_cnt; i++) {
+-				if (memcmp(last_scanned_shadow[i].bssid,
++			for (i = 0; i < priv->scanned_cnt; i++) {
++				if (memcmp(priv->scanned_shadow[i].bssid,
+ 					   conn_info->bssid,
+ 					   ETH_ALEN) == 0) {
+-					if (wilc_wfi_cfg_scan_time_expired(i))
++					if (wilc_cfg_scan_time_expired(priv, i))
+ 						scan_refresh = true;
+ 
+ 					break;
+@@ -619,7 +614,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 
+ 	priv->rcvd_ch_cnt = 0;
+ 
+-	reset_shadow_found();
++	reset_shadow_found(priv);
+ 
+ 	priv->cfg_scanning = true;
+ 	if (request->n_channels <= MAX_NUM_SCANNED_NETWORKS) {
+@@ -679,18 +674,18 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	else
+ 		wfi_drv->p2p_connect = 0;
+ 
+-	for (i = 0; i < last_scanned_cnt; i++) {
+-		if (sme->ssid_len == last_scanned_shadow[i].ssid_len &&
+-		    memcmp(last_scanned_shadow[i].ssid,
++	for (i = 0; i < priv->scanned_cnt; i++) {
++		if (sme->ssid_len == priv->scanned_shadow[i].ssid_len &&
++		    memcmp(priv->scanned_shadow[i].ssid,
+ 			   sme->ssid,
+ 			   sme->ssid_len) == 0) {
+ 			if (!sme->bssid) {
+ 				if (sel_bssi_idx == UINT_MAX ||
+-				    last_scanned_shadow[i].rssi >
+-				    last_scanned_shadow[sel_bssi_idx].rssi)
++				    priv->scanned_shadow[i].rssi >
++				    priv->scanned_shadow[sel_bssi_idx].rssi)
+ 					sel_bssi_idx = i;
+ 			} else {
+-				if (memcmp(last_scanned_shadow[i].bssid,
++				if (memcmp(priv->scanned_shadow[i].bssid,
+ 					   sme->bssid,
+ 					   ETH_ALEN) == 0) {
+ 					sel_bssi_idx = i;
+@@ -700,8 +695,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		}
+ 	}
+ 
+-	if (sel_bssi_idx < last_scanned_cnt) {
+-		nw_info = &last_scanned_shadow[sel_bssi_idx];
++	if (sel_bssi_idx < priv->scanned_cnt) {
++		nw_info = &priv->scanned_shadow[sel_bssi_idx];
+ 	} else {
+ 		ret = -ENOENT;
+ 		wilc_connecting = 0;
+@@ -2194,7 +2189,7 @@ int wilc_deinit_host_int(struct net_device *net)
+ 	ret = wilc_deinit(vif);
+ 
+ 	del_timer_sync(&priv->aging_timer);
+-	clear_shadow_scan();
++	clear_shadow_scan(priv);
+ 	if (op_ifcs == 0)
+ 		del_timer_sync(&wilc_during_ip_timer);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index a76b68c..3767e31 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -95,6 +95,8 @@ struct wilc_priv {
+ 	struct mutex scan_req_lock;
+ 	bool p2p_listen_state;
+ 	struct timer_list aging_timer;
++	struct network_info scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
++	int scanned_cnt;
+ };
+ 
+ struct frame_reg {
 -- 
-2.17.0
+2.7.4
