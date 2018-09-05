@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36186 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726389AbeIFNyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:07 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 14/42] mt76x0: add mt76x0_queue_rx_skb routine
-Date: Thu,  6 Sep 2018 11:18:30 +0200
-Message-Id: <1536225538-16454-15-git-send-email-sgruszka@redhat.com> (sfid-20180906_111943_661628_2420B593)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53626 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727499AbeIEJU4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 05:20:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Carl Huang <cjhuang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: download firmware via diag Copy Engine for QCA6174 and QCA9377.
+References: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org>
+        <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
+Date: Wed, 05 Sep 2018 07:52:25 +0300
+In-Reply-To: <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org> (Carl
+        Huang's message of "Thu, 30 Aug 2018 10:29:42 +0800")
+Message-ID: <87musw7dh2.fsf@kamboji.qca.qualcomm.com> (sfid-20180905_065257_877961_A596E085)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Carl Huang <cjhuang@codeaurora.org> writes:
 
-Introduce mt76x0_queue_rx_skb routine as mt76x0 driver
-frame rx handler. mt76x0_queue_rx_skb will be run by mt76-usb layer
-rx datapath
+> Downloading firmware via BMI protocol takes too long time. For example,
+> a ~700K bytes firmware takes about 500ms to download via BMI protocol.
+> This is too long especially in suspend and resume scenario where firmware
+> is re-downloaded unless WoWLAN is enabled. Downloading firmware via diag CE
+> can reduce the time to ~40ms for a ~700K bytes firmware binary.
+>
+> Ath10k driver parses the firmware to segments and downloads the segments
+> to the specified address directly. If the firmware is compressed or has
+> unsupported segments, ath10k driver will try BMI download again.
+>
+> It's tested with QCA6174 hw3.2 and
+> firmware-6.bin_WLAN.RM.4.4.1-00111-QCARMSWP-1. QCA9377 is also affected.
+>
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  3 +++
- drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     | 15 +++++++++++++++
- 2 files changed, 18 insertions(+)
+There were new warnings:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 8b0bef9a15e4..8a01efb8d499 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -245,6 +245,9 @@ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
- void mt76x0_tx_status(struct mt76x0_dev *dev, struct sk_buff *skb);
- void mt76x0_tx_stat(struct work_struct *work);
- 
-+void mt76x0_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
-+			 struct sk_buff *skb);
-+
- int mt76x0_dma_init(struct mt76x0_dev *dev);
- void mt76x0_dma_cleanup(struct mt76x0_dev *dev);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-index d6dbd9b8d68b..7de739b7c46c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-@@ -131,6 +131,21 @@ int mt76x0_tx_prepare_skb(struct mt76_dev *mdev, void *data,
- 	return mt76x02_set_txinfo(skb, wcid, q2ep(*hwq_ptr));
- }
- 
-+void mt76x0_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
-+			 struct sk_buff *skb)
-+{
-+	struct mt76x0_dev *dev = container_of(mdev, struct mt76x0_dev, mt76);
-+	void *rxwi = skb->data;
-+
-+	skb_pull(skb, sizeof(struct mt76x02_rxwi));
-+	if (!mt76x0_mac_process_rx(dev, skb, rxwi)) {
-+		dev_kfree_skb(skb);
-+		return;
-+	}
-+
-+	mt76_rx(&dev->mt76, q, skb);
-+}
-+
- void mt76x0_tx_stat(struct work_struct *work)
- {
- 	struct mt76x0_dev *dev = container_of(work, struct mt76x0_dev,
+drivers/net/wireless/ath/ath10k/hw.c:1029:16: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/hw.c:1047:27: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/ath/ath10k/hw.c:1047:27:    expected unsigned int [unsigned] [usertype] base_addr
+drivers/net/wireless/ath/ath10k/hw.c:1047:27:    got restricted __le32 [usertype] addr
+drivers/net/wireless/ath/ath10k/hw.c:1048:26: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/ath/ath10k/hw.c:1048:26:    expected unsigned int [unsigned] [usertype] base_len
+drivers/net/wireless/ath/ath10k/hw.c:1048:26:    got restricted __le32 [usertype] length
+
+I fixed those in the pending branch, please review:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=f6f6f597654693ab122ecd950b56343489b91e59
+
 -- 
-2.7.5
+Kalle Valo
