@@ -1,61 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:36697 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727392AbeIUPOa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46950 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727577AbeIEJes (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 11:14:30 -0400
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] ath5k: Remove unused BUG_ON
-Date: Fri, 21 Sep 2018 02:25:48 -0700
-Message-Id: <20180921092547.28414-1-natechancellor@gmail.com> (sfid-20180921_112643_559266_23C2BA5E)
-MIME-Version: 1.0
+        Wed, 5 Sep 2018 05:34:48 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Sep 2018 08:06:11 +0300
+Message-Id: <20180905050614.23273-7-luca@coelho.fi> (sfid-20180905_070633_897861_228CFDBB)
+In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180905050614.23273-1-luca@coelho.fi>
+Subject: [RESEND PATCH v2 6/9] mac80211: add an option for drivers to check if packets can be aggregated
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clang warns that the address of a pointer will always evaluated as true
-in a boolean context:
+From: Sara Sharon <sara.sharon@intel.com>
 
-drivers/net/wireless/ath/ath5k/debug.c:1031:14: warning: address of
-array 'ah->sbands' will always evaluate to 'true'
-[-Wpointer-bool-conversion]
-        BUG_ON(!ah->sbands);
-               ~~~~~^~~~~~
-./include/asm-generic/bug.h:61:45: note: expanded from macro 'BUG_ON'
-#define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
-                                            ^~~~~~~~~
-./include/linux/compiler.h:77:42: note: expanded from macro 'unlikely'
-# define unlikely(x)    __builtin_expect(!!(x), 0)
-                                            ^
-1 warning generated.
+Some hardwares have limitations on the packets' type in AMSDU.
+Add an optional driver callback to determine if two skbs can
+be used in the same AMSDU or not.
 
-Given that this condition is always false because of the logical not,
-just remove it to fix the warning.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/142
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/debug.c | 2 --
- 1 file changed, 2 deletions(-)
+ include/net/mac80211.h    |  7 +++++++
+ net/mac80211/driver-ops.h | 10 ++++++++++
+ net/mac80211/tx.c         |  3 +++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index e01faf641288..94f70047d3fc 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -1028,8 +1028,6 @@ ath5k_debug_dump_bands(struct ath5k_hw *ah)
- 	if (likely(!(ah->debug.level & ATH5K_DEBUG_DUMPBANDS)))
- 		return;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 28da9e27ea70..c4fadbafbf21 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3594,6 +3594,10 @@ enum ieee80211_reconfig_type {
+  * @del_nan_func: Remove a NAN function. The driver must call
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
++ * @can_aggregate_in_amsdu: Called in order to determine if HW supports
++ *	aggregating two specific frames in the same A-MSDU. The relation
++ *	between the skbs should be symmetric and transitive. Note that while
++ *	skb is always a real frame, head may or may not be an A-MSDU.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3876,6 +3880,9 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	bool (*can_aggregate_in_amsdu)(struct ieee80211_hw *hw,
++				       struct sk_buff *head,
++				       struct sk_buff *skb);
+ };
  
--	BUG_ON(!ah->sbands);
--
- 	for (b = 0; b < NUM_NL80211_BANDS; b++) {
- 		struct ieee80211_supported_band *band = &ah->sbands[b];
- 		char bname[6];
+ /**
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 8f6998091d26..e42c641b6190 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1173,6 +1173,16 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
+ 
++static inline int drv_can_aggregate_in_amsdu(struct ieee80211_local *local,
++					     struct sk_buff *head,
++					     struct sk_buff *skb)
++{
++	if (!local->ops->can_aggregate_in_amsdu)
++		return true;
++
++	return local->ops->can_aggregate_in_amsdu(&local->hw, head, skb);
++}
++
+ static inline int drv_start_nan(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				struct cfg80211_nan_conf *conf)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 41eaa8e6a938..1c9ef0755bc0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3255,6 +3255,9 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+ 	if (skb->len + head->len > max_amsdu_len)
+ 		goto out;
+ 
++	if (!drv_can_aggregate_in_amsdu(local, head, skb))
++		goto out;
++
+ 	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
+ 		goto out;
+ 
 -- 
-2.19.0
+2.18.0
