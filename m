@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:51253 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726034AbeICPbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 11:31:03 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Grant Grundler <grundler@google.com>, wgong@qti.qualcomm.com
-Cc: wgong@codeaurora.org, ath10k@lists.infradead.org,
+Received: from s3.sipsolutions.net ([144.76.43.62]:42276 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727068AbeIEOUV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 10:20:21 -0400
+Message-ID: <1536141045.3528.4.camel@sipsolutions.net> (sfid-20180905_115059_607216_1B560655)
+Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-In-Reply-To: <1535967508.3437.31.camel@sipsolutions.net>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com> <1535967508.3437.31.camel@sipsolutions.net>
-Date: Mon, 03 Sep 2018 13:11:21 +0200
-Message-ID: <87in3m25uu.fsf@toke.dk> (sfid-20180903_131249_777038_0020D925)
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Felix Fietkau <nbd@nbd.name>
+Date: Wed, 05 Sep 2018 11:50:45 +0200
+In-Reply-To: <87in3k6zti.fsf@toke.dk>
+References: <20180905080036.9177-1-johannes@sipsolutions.net>
+         <87in3k6zti.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, 2018-09-05 at 11:47 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Some frames may have a non-zero skb->priority assigned by
+> > mac80211 internally, e.g. TDLS setup frames, regardless of
+> > support for QoS.
+> > 
+> > Currently, we set skb->priority to 0 for all data frames.
+> > Note that there's a comment that this is "required for
+> > correct WPA/11i MIC", but that doesn't seem true as we use
+> > 
+> >         if (ieee80211_is_data_qos(hdr->frame_control))
+> >                 qos_tid = ieee80211_get_tid(hdr);
+> >         else
+> >                 qos_tid = 0;
+> > 
+> > in the code there. We could therefore reconsider this, but
+> > it seems like unnecessary complexity for the unlikely (and
+> > not very useful) case of not having QoS on the connection.
+> > 
+> > This situation then causes something strange - most data
+> > frames will go on TXQ for TID 0 for non-QoS connections,
+> > but very few exceptions that are internally generated will
+> > go on another TXQ, possibly causing confusion.
+> 
+> What kind of confusion are you seeing? Reordering issues, or something
+> else?
 
-> On Thu, 2018-08-30 at 16:32 -0700, Grant Grundler wrote:
->> On Sun, Aug 12, 2018 at 10:37 PM Wen Gong <wgong@qti.qualcomm.com> wrote:
->> ...
->> > I have tested with your method for shift 6/8/10/7 all twice time in open air environment.
->> 
->> I've attached the graphed data which Wen provided me and I made one
->> "cleanup": the median and average "ICMP" are computed only using
->> values where flent has an "antagonist" load running.  The first 28 and
->> last 26 seconds of the test are "idle" - it makes no sense to include
->> the latency of those. This drops about 1/7th of the data points.
->> 
->> My observations:
->> o the delta between average and median is evidence this is not
->> particularly reliable data (but expected result for "open air" wifi
->> testing in a corp environment).
->> o sk_pacing_shift=8 and/or =7 appears to have suffered from
->> significant open air interference - I've attached a graph of the raw
->> data.
->> o I'm comfortable asserting throughput is higher and latency is lower
->> for sk_pacing_shift=6 (vs 7) at the cost of additional CPU
->> utilization.
->> 
->> My questions:
->> 1) Is the current conversation just quibbling about 6 vs 7 for the
->> ath10k default?
->
-> 6 vs. 8, I think? But I didn't follow the full discussion.
->
-> I also think that we shouldn't necessarily restrict this to "for the
-> ath10k". Is there any reason to think that this would be different for
-> different chips?
+I haven't actually been able to test this...
 
-No, I also think it should be possible to select a value that will work
-for all drivers. There's a strong diminishing returns effect here after
-a certain point, and I believe we should strongly push back against just
-adding more buffering to chase (single-flow) throughput numbers; and I'm
-not convinced that having different values for different drivers is
-worth the complexity.
+But with the iwlwifi work we're doing, at the very least we'd waste a
+hardware queue for the case that basically never happens, since you'd
+end up putting these frames (that are very few) on a separate TXQ and
+thus hardware queue.
 
-As far as I'm concerned, just showing an increase in maximum throughput
-under ideal conditions (as this initial patch submission did) is not
-sufficient argument for adding more buffering. At a minimum, the
-evaluation should also include:
+You could argue we should explicitly _not_ do this, but then we should
+also set skb->priority to be non-zero for non-QoS stations. Then we
+could benefit from some form of QoS (between the TXQs) for non-QoS
+connections, but that seems pretty complex and doesn't seem worth it
+since all connections that want anything from HT/11n and newer need QoS
+anyway.
 
-- Impact on latency and throughput for competing flows in the same test.
-- Impact on latency for the TCP flow itself.
-- A full evaluation at low rates and in scenarios with more than one
-  client.
+So basically this gets rid of a corner case that we shouldn't have.
+Either we should decide that using different TXQs is *always* correct
+for non-QoS, or - what I thought - that this isn't worth it, and then we
+should *never* do it.
 
-As far as the actual value, I *think* it may be that the default shift
-should be 7 (8 ms) rather than 8 (4 ms) as it currently is. Going back
-and looking at my data from when I submitted the original patch, it
-looks like the point of diminishing returns is somewhere between those
-two with ath9k (where I did most of my testing), and it seems reasonable
-that it could be slightly higher (i.e., more buffering) for ath10k.
-
--Toke
+johannes
