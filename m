@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:46328 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727348AbeIRT6R (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46922 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727579AbeIEJep (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 15:58:17 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-        Simon Wunderlich <sw@simonwunderlich.de>,
-        Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] mac80211: allow scans on radar channels, unless there is CAC or CSA
-Date: Tue, 18 Sep 2018 16:16:33 +0200
-Message-Id: <20180918141633.10282-1-sw@simonwunderlich.de> (sfid-20180918_162536_979944_8FE9CF87)
+        Wed, 5 Sep 2018 05:34:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Sep 2018 08:06:07 +0300
+Message-Id: <20180905050614.23273-3-luca@coelho.fi> (sfid-20180905_070630_602019_33BAD3F4)
+In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180905050614.23273-1-luca@coelho.fi>
+Subject: [RESEND PATCH v2 2/9] mac80211: fix saving a few HE values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Operating on a DFS channel doesn't mean we can't leave it for a short
-time - actually, some features like off-channel CAC work by leaving the
-operation channel to check other channels for availability (although
-off-channel CAC isn't implemented in mac80211). In our case, we want to
-use mesh while doing background surveys on other channels from time to
-time.
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-Therefore, we can enable scans while on DFS channels, unless there is
-CAC going on (must be continuous) or a CSA is happening.
+After masking the he_oper_params, to get the requested values as
+integers one must rshift and not lshift.  Fix that by using the
+le32_get_bits() macro.
 
-Reported-by: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
-Cc: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Fixes: 41cbb0f5a295 ("mac80211: add support for HE")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
+[converted to use le32_get_bits()]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/scan.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ net/mac80211/mlme.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 47d2ed570470..58a454515a5a 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -477,8 +477,11 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local,
- static bool ieee80211_can_scan(struct ieee80211_local *local,
- 			       struct ieee80211_sub_if_data *sdata)
- {
--	if (ieee80211_is_radar_required(local))
--		return false;
-+	if (sdata->wdev.cac_started)
-+		return -EBUSY;
-+
-+	if (sdata->vif.csa_active)
-+		return -EBUSY;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1bd714376635..3b1b7a77fa7d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3173,19 +3173,16 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	}
  
- 	if (!list_empty(&local->roc_list))
- 		return false;
-@@ -550,7 +553,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (bss_conf->he_support) {
+-		u32 he_oper_params =
+-			le32_to_cpu(elems.he_operation->he_oper_params);
++		bss_conf->bss_color =
++			le32_get_bits(elems.he_operation->he_oper_params,
++				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK);
  
- 	lockdep_assert_held(&local->mtx);
+-		bss_conf->bss_color = he_oper_params &
+-				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK;
+ 		bss_conf->htc_trig_based_pkt_ext =
+-			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) <<
+-			IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET;
++			le32_get_bits(elems.he_operation->he_oper_params,
++			      IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK);
+ 		bss_conf->frame_time_rts_th =
+-			(he_oper_params &
+-			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) <<
+-			IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET;
++			le32_get_bits(elems.he_operation->he_oper_params,
++			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
  
--	if (local->scan_req || ieee80211_is_radar_required(local))
-+	if (local->scan_req)
- 		return -EBUSY;
- 
- 	if (!ieee80211_can_scan(local, sdata)) {
+ 		bss_conf->multi_sta_back_32bit =
+ 			sta->sta.he_cap.he_cap_elem.mac_cap_info[2] &
 -- 
-2.11.0
+2.18.0
