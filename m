@@ -1,206 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:33309 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728300AbeIPXFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 19:05:53 -0400
-Subject: [PATCH RFC v4 2/4] cfg80211: Add airtime statistics and settings
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Date: Sun, 16 Sep 2018 19:42:11 +0200
-Message-ID: <153711973122.9231.1698150745560968565.stgit@alrua-x1.karlstad.toke.dk> (sfid-20180916_194321_624739_FE99306F)
-In-Reply-To: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56656 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727626AbeIEMSE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 08:18:04 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 2/2] brcmfmac: increase buffer for obtaining firmware capabilities
+Date: Wed,  5 Sep 2018 09:48:59 +0200
+Message-Id: <1536133739-5693-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180905_094911_460092_91CDC1CF)
+In-Reply-To: <1536133739-5693-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1536133739-5693-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds TX airtime statistics to the cfg80211 station dump (to go along
-with the RX info already present), and adds a new parameter to set the
-airtime weight of each station. The latter allows userspace to implement
-policies for different stations by varying their weights.
+When obtaining the firmware capability a buffer is provided of 512
+bytes. However, if all features in firmware are supported the buffer
+needs to be 565 bytes as otherwise truncated information is retrieved
+from firmware. Increasing the buffer to 768 bytes on stack.
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- include/net/cfg80211.h       |   10 +++++++++-
- include/uapi/linux/nl80211.h |   15 +++++++++++++++
- net/wireless/nl80211.c       |   29 +++++++++++++++++++++++++++++
- 3 files changed, 53 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9f3ed79c39d7..91d6fc222263 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -990,6 +990,7 @@ enum station_parameters_apply_mask {
-  * @support_p2p_ps: information if station supports P2P PS mechanism
-  * @he_capa: HE capabilities of station
-  * @he_capa_len: the length of the HE capabilities
-+ * @airtime_weight: airtime scheduler weight for this station
-  */
- struct station_parameters {
- 	const u8 *supported_rates;
-@@ -1019,6 +1020,7 @@ struct station_parameters {
- 	int support_p2p_ps;
- 	const struct ieee80211_he_cap_elem *he_capa;
- 	u8 he_capa_len;
-+	u16 airtime_weight;
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 8347da6..4c5a399 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -178,7 +178,7 @@ static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
+ 	ifp->fwil_fwerr = false;
+ }
  
- /**
-@@ -1286,6 +1288,8 @@ struct cfg80211_tid_stats {
-  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
-  *	from this peer
-  * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
-+ * @tx_duration: aggregate PPDU duration(usecs) for all the frames to a peer
-+ * @airtime_weight: current airtime scheduling weight
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-  *	Note that this doesn't use the @filled bit, but is used if non-NULL.
-@@ -1332,10 +1336,12 @@ struct station_info {
- 
- 	u32 expected_throughput;
- 
--	u64 rx_beacon;
-+	u64 tx_duration;
- 	u64 rx_duration;
-+	u64 rx_beacon;
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats *pertid;
-+	u16 airtime_weight;
- 	s8 ack_signal;
- 	s8 avg_ack_signal;
- };
-@@ -2363,6 +2369,8 @@ enum wiphy_params_flags {
- 	WIPHY_PARAM_TXQ_QUANTUM		= 1 << 8,
- };
- 
-+#define IEEE80211_DEFAULT_AIRTIME_WEIGHT	256
-+
- /**
-  * struct cfg80211_pmksa - PMK Security Association
-  *
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index cfc94178d608..3664bdc7c8c1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2241,6 +2241,9 @@ enum nl80211_commands {
-  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
-  *	only if %NL80211_STA_FLAG_WME is set.
-  *
-+ * @NL80211_ATTR_AIRTIME_WEIGHT: Station's weight when scheduled by the airtime
-+ *      scheduler.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2682,6 +2685,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_HE_CAPABILITY,
- 
-+	NL80211_ATTR_AIRTIME_WEIGHT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3051,6 +3056,9 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-  * @NL80211_STA_INFO_ACK_SIGNAL_AVG: avg signal strength of ACK frames (s8, dBm)
-+ * @NL80211_STA_INFO_TX_DURATION: aggregate PPDU duration for all frames
-+ *	sent to the station (u64, usec)
-+ * @NL80211_STA_INFO_AIRTIME_WEIGHT: current airtime weight for station (u16)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -3091,6 +3099,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_PAD,
- 	NL80211_STA_INFO_ACK_SIGNAL,
- 	NL80211_STA_INFO_ACK_SIGNAL_AVG,
-+	NL80211_STA_INFO_TX_DURATION,
-+	NL80211_STA_INFO_AIRTIME_WEIGHT,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -5231,6 +5241,10 @@ enum nl80211_feature_flags {
-  *      if this flag is not set. Ignoring this can leak clear text packets and/or
-  *      freeze the connection.
-  *
-+ * @NL80211_EXT_FEATURE_AIRTIME_FAIRNESS: Driver supports getting airtime
-+ *      fairness for transmitted packets and has enabled airtime fairness
-+ *      scheduling.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -5269,6 +5283,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
- 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
- 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
-+	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d5f9b5235cdd..9db19ae57716 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -430,6 +430,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
- 	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
- 					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
-+
-+	[NL80211_ATTR_AIRTIME_WEIGHT] = { .type = NLA_U16 },
- };
- 
- /* policy for the key attributes */
-@@ -4656,6 +4658,11 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(PLID, plid, u16);
- 	PUT_SINFO(PLINK_STATE, plink_state, u8);
- 	PUT_SINFO_U64(RX_DURATION, rx_duration);
-+	PUT_SINFO_U64(TX_DURATION, tx_duration);
-+
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
-+		PUT_SINFO(AIRTIME_WEIGHT, airtime_weight, u16);
- 
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
-@@ -5293,6 +5300,17 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_get_u8(info->attrs[NL80211_ATTR_OPMODE_NOTIF]);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]) {
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
-+			return -EOPNOTSUPP;
-+
-+		params.airtime_weight =
-+			nla_get_u16(info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]);
-+		if (!params.airtime_weight)
-+			return -EINVAL;
-+	}
-+
- 	/* Include parameters for TDLS peer (will check later) */
- 	err = nl80211_set_station_tdls(info, &params);
- 	if (err)
-@@ -5431,6 +5449,17 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]) {
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
-+			return -EOPNOTSUPP;
-+
-+		params.airtime_weight =
-+			nla_get_u16(info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]);
-+		if (!params.airtime_weight)
-+			return -EINVAL;
-+	}
-+
- 	err = nl80211_parse_sta_channel_info(info, &params);
- 	if (err)
- 		return err;
+-#define MAX_CAPS_BUFFER_SIZE	512
++#define MAX_CAPS_BUFFER_SIZE	768
+ static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ {
+ 	char caps[MAX_CAPS_BUFFER_SIZE];
+-- 
+1.9.1
