@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46508 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726956AbeIDQFz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:05:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  4 Sep 2018 14:40:55 +0300
-Message-Id: <20180904114055.1429-10-luca@coelho.fi> (sfid-20180904_134136_818704_97FAFBA0)
-In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180904114055.1429-1-luca@coelho.fi>
-Subject: [PATCH v2 9/9] mac80211: Don't wake up from PS for offchannel TX
+Received: from mail.toke.dk ([52.28.52.200]:43259 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725868AbeIEPhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 11:37:09 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
+In-Reply-To: <1536144985.3528.7.camel@sipsolutions.net>
+References: <20180905080036.9177-1-johannes@sipsolutions.net> <87in3k6zti.fsf@toke.dk> <1536141045.3528.4.camel@sipsolutions.net> <87d0ts6zeb.fsf@toke.dk> <1536144985.3528.7.camel@sipsolutions.net>
+Date: Wed, 05 Sep 2018 13:07:23 +0200
+Message-ID: <871sa86w44.fsf@toke.dk> (sfid-20180905_130728_083718_4EDA80B7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Otherwise the offchannel frame might be queued due to
-IEEE80211_QUEUE_STOP_REASON_PS and later dropped (in
-ieee80211_tx_frags()).  Anyway, it doesn't make much sense to wake up
-the device during ROC.
+> On Wed, 2018-09-05 at 11:56 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> > So basically this gets rid of a corner case that we shouldn't have.
+>> > Either we should decide that using different TXQs is *always* correct
+>> > for non-QoS, or - what I thought - that this isn't worth it, and then =
+we
+>> > should *never* do it.
+>>=20
+>> Yeah, I agree that this is not worth it. The queue is already
+>> FQ-CoDel'ed, which gives us most of the benefit of QoS anyway :)
+>
+> So do I read that as a tentative ack? :)
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Yeah, guess so :)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1c9ef0755bc0..7e8730c55ec9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -214,6 +214,7 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_local *local = tx->local;
- 	struct ieee80211_if_managed *ifmgd;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 
- 	/* driver doesn't support power save */
- 	if (!ieee80211_hw_check(&local->hw, SUPPORTS_PS))
-@@ -242,6 +243,9 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- 	if (tx->sdata->vif.type != NL80211_IFTYPE_STATION)
- 		return TX_CONTINUE;
- 
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK))
-+		return TX_CONTINUE;
-+
- 	ifmgd = &tx->sdata->u.mgd;
- 
- 	/*
--- 
-2.18.0
+> Felix wasn't really convinced, I think. He also pointed out some drivers
+> use skb->priority without checking anything, but I'm not sure we can
+> really squash all the cases of setting skb priority easily?
+
+~/build/linux/drivers/net/wireless $ git grep 'skb->priority =3D '
+ath/ath9k/channel.c:		skb->priority =3D 7;
+broadcom/brcm80211/brcmfmac/core.c:		skb->priority =3D cfg80211_classify802=
+1d(skb, NULL);
+broadcom/brcm80211/brcmutil/utils.c:		skb->priority =3D 0;
+intel/ipw2x00/libipw_tx.c:		skb->priority =3D libipw_classify(skb);
+marvell/mwifiex/cfg80211.c:	skb->priority =3D LOW_PRIO_TID;
+marvell/mwifiex/main.c:	skb->priority =3D cfg80211_classify8021d(skb, NULL);
+marvell/mwifiex/tdls.c:		skb->priority =3D MWIFIEX_PRIO_BK;
+marvell/mwifiex/tdls.c:		skb->priority =3D MWIFIEX_PRIO_VI;
+marvell/mwifiex/tdls.c:	skb->priority =3D MWIFIEX_PRIO_VI;
+rsi/rsi_91x_core.c:		skb->priority =3D q_num;
+rsi/rsi_91x_core.c:			skb->priority =3D TID_TO_WME_AC(tid);
+rsi/rsi_91x_core.c:			skb->priority =3D BE_Q;
+rsi/rsi_91x_core.c:			skb->priority =3D q_num;
+rsi/rsi_91x_hal.c:			skb->priority =3D VO_Q;
+rsi/rsi_91x_mgmt.c:	skb->priority =3D MGMT_SOFT_Q;
+ti/wlcore/main.c:	skb->priority =3D WL1271_TID_MGMT;
+
+Doesn't seem *that* excessive? Obviously there could be other cases, and
+I haven't looked closer at any of those...
+
+Does it matter for the drivers that don't use TXQs?
+
+-Toke
