@@ -1,35 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49799 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726114AbeIGXFU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726046AbeIEUXQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 19:05:20 -0400
-Received: from mail-yb1-f199.google.com ([209.85.219.199])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1fyLPR-0001Py-KJ
-        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 18:23:09 +0000
-Received: by mail-yb1-f199.google.com with SMTP id p4-v6so2757212yba.8
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 11:23:09 -0700 (PDT)
-Date: Fri, 7 Sep 2018 13:23:07 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: WIRELESS ML <linux-wireless@vger.kernel.org>,
-        REGDB ML <wireless-regdb@lists.infradead.org>
-Subject: Re: [PATCH] wireless-regdb: update source of info for CU and ES
-Message-ID: <20180907182307.GM4251@ubuntu-xps13> (sfid-20180907_202313_060693_E4779393)
-References: <20180907162841.11749-1-xose.vazquez@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907162841.11749-1-xose.vazquez@gmail.com>
+        Wed, 5 Sep 2018 16:23:16 -0400
+From: Jouni Malinen <jouni@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH] cfg80211: Address some corner cases in scan result channel updating
+Date: Wed,  5 Sep 2018 18:52:22 +0300
+Message-Id: <1536162742-11154-1-git-send-email-jouni@codeaurora.org> (sfid-20180905_175232_651511_E58AA3F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 06:28:41PM +0200, Xose Vazquez Perez wrote:
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
-> Cc: REGDB ML <wireless-regdb@lists.infradead.org>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+cfg80211_get_bss_channel() is used to update the RX channel based on the
+available frame payload information (channel number from DSSS Parameter
+Set element or HT Operation element). This is needed on 2.4 GHz channels
+where frames may be received on neighboring channels due to overlapping
+frequency range.
 
-Applied, thanks!
+This might of some use on the 5 GHz band in some corner cases, but
+things are more complex there since there is no n:1 or 1:n mapping
+between channel numbers and frequencies due to multiple different
+starting frequencies in different operating classes. This could result
+in ieee80211_channel_to_frequency() returning incorrect frequency and
+ieee80211_get_channel() returning incorrect channel information (or
+indication of no match). In the previous implementation, this could
+result in some scan results being dropped completely, e.g., for the 4.9
+GHz channels. That prevented connection to such BSSs.
+
+Fix this by using the driver-provided channel pointer if
+ieee80211_get_channel() does not find matching channel data for the
+channel number in the frame payload and if the scan is done with 5 MHz
+or 10 MHz channel bandwidth. While doing this, also add comments
+describing what the function is trying to achieve to make it easier to
+understand what happens here and why.
+
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
+---
+ net/wireless/scan.c | 58 ++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 49 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index d36c3eb..d0e7472 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1058,13 +1058,23 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 	return NULL;
+ }
+ 
++/*
++ * Update RX channel information based on the available frame payload
++ * information. This is mainly for the 2.4 GHz band where frames can be received
++ * from neighboring channels and the Beacon frames use the DSSS Parameter Set
++ * element to indicate the current (transmitting) channel, but this might also
++ * be needed on other bands if RX frequency does not match with the actual
++ * operating channel of a BSS.
++ */
+ static struct ieee80211_channel *
+ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
+-			 struct ieee80211_channel *channel)
++			 struct ieee80211_channel *channel,
++			 enum nl80211_bss_scan_width scan_width)
+ {
+ 	const u8 *tmp;
+ 	u32 freq;
+ 	int channel_number = -1;
++	struct ieee80211_channel *alt_channel;
+ 
+ 	tmp = cfg80211_find_ie(WLAN_EID_DS_PARAMS, ie, ielen);
+ 	if (tmp && tmp[1] == 1) {
+@@ -1078,16 +1088,45 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
+ 		}
+ 	}
+ 
+-	if (channel_number < 0)
++	if (channel_number < 0) {
++		/* No channel information in frame payload */
+ 		return channel;
++	}
+ 
+ 	freq = ieee80211_channel_to_frequency(channel_number, channel->band);
+-	channel = ieee80211_get_channel(wiphy, freq);
+-	if (!channel)
+-		return NULL;
+-	if (channel->flags & IEEE80211_CHAN_DISABLED)
++	alt_channel = ieee80211_get_channel(wiphy, freq);
++	if (!alt_channel) {
++		if (channel->band == NL80211_BAND_2GHZ) {
++			/*
++			 * Better not allow unexpected channels when that could
++			 * be going beyond the 1-11 range (e.g., discovering
++			 * BSS on channel 12 when radio is configured for
++			 * channel 11.
++			 */
++			return NULL;
++		}
++
++		/* No match for the payload channel number - ignore it */
++		return channel;
++	}
++
++	if (scan_width == NL80211_BSS_CHAN_WIDTH_10 ||
++	    scan_width == NL80211_BSS_CHAN_WIDTH_5) {
++		/*
++		 * Ignore channel number in 5 and 10 MHz channels where there
++		 * may not be an n:1 or 1:n mapping between frequencies and
++		 * channel numbers.
++		 */
++		return channel;
++	}
++
++	/*
++	 * Use the channel determined through the payload channel number
++	 * instead of the RX channel reported by the driver.
++	 */
++	if (alt_channel->flags & IEEE80211_CHAN_DISABLED)
+ 		return NULL;
+-	return channel;
++	return alt_channel;
+ }
+ 
+ /* Returned bss is reference counted and must be cleaned up appropriately. */
+@@ -1112,7 +1151,8 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
+ 		    (data->signal < 0 || data->signal > 100)))
+ 		return NULL;
+ 
+-	channel = cfg80211_get_bss_channel(wiphy, ie, ielen, data->chan);
++	channel = cfg80211_get_bss_channel(wiphy, ie, ielen, data->chan,
++					   data->scan_width);
+ 	if (!channel)
+ 		return NULL;
+ 
+@@ -1210,7 +1250,7 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
+ 		return NULL;
+ 
+ 	channel = cfg80211_get_bss_channel(wiphy, mgmt->u.beacon.variable,
+-					   ielen, data->chan);
++					   ielen, data->chan, data->scan_width);
+ 	if (!channel)
+ 		return NULL;
+ 
+-- 
+2.7.4
