@@ -1,139 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:12504 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726564AbeIKOTn (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:54012 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727603AbeIEOwx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 10:19:43 -0400
-Subject: Re: [PATCH v2 25/26] staging: wilc1000: refactor wilc_netdev_init()
- to handle memory free in error path
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
-References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
- <1536043182-19735-26-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <4146484d-e815-7d02-88dd-dc66493d0719@microchip.com> (sfid-20180911_112120_163910_46560B10)
-Date: Tue, 11 Sep 2018 12:21:13 +0300
-MIME-Version: 1.0
-In-Reply-To: <1536043182-19735-26-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 5 Sep 2018 10:52:53 -0400
+Received: by mail-it0-f65.google.com with SMTP id p79-v6so9153644itp.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2018 03:23:19 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+        Bob Copeland <bobcopeland@fb.com>
+Subject: [PATCH] mac80211: fix pending queue hang due to TX_DROP
+Date: Wed,  5 Sep 2018 06:22:59 -0400
+Message-Id: <20180905102259.16089-1-me@bobcopeland.com> (sfid-20180905_122324_321631_0CE0198B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In our environment running lots of mesh nodes, we are seeing the
+pending queue hang periodically, with the debugfs queues file showing
+lines such as:
 
+    00: 0x00000000/348
 
-On 04.09.2018 09:39, Ajay Singh wrote:
-> Refactor the wilc_netdev_init() to cleanup the memory for error
-> scenario and remove unnecessary 'dev' pointer check.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c             | 36 ++++++++++++++++-------
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 +++-
->  2 files changed, 30 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index d7d43fd..91a45a7 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -1073,10 +1073,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->  	INIT_LIST_HEAD(&wl->rxq_head.list);
->  
->  	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
-> -	if (!wl->hif_workqueue) {
-> -		kfree(wl);
-> -		return -ENOMEM;
-> -	}
-> +	if (!wl->hif_workqueue)
-> +		goto free_wl;
->  
->  	register_inetaddr_notifier(&g_dev_notifier);
->  
-> @@ -1085,7 +1083,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->  
->  		ndev = alloc_etherdev(sizeof(struct wilc_vif));
->  		if (!ndev)
-> -			return -ENOMEM;
-> +			goto free_ndev;
->  
->  		vif = netdev_priv(ndev);
->  		memset(vif, 0, sizeof(struct wilc_vif));
-> @@ -1106,15 +1104,13 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->  		ndev->netdev_ops = &wilc_netdev_ops;
->  
->  		wdev = wilc_create_wiphy(ndev, dev);
-> -
-> -		if (dev)
-> -			SET_NETDEV_DEV(ndev, dev);
-> -
->  		if (!wdev) {
->  			netdev_err(ndev, "Can't register WILC Wiphy\n");
-> -			return -1;
-> +			goto free_ndev;
->  		}
->  
-> +		SET_NETDEV_DEV(ndev, dev);
-> +
->  		vif->ndev->ieee80211_ptr = wdev;
->  		vif->ndev->ml_priv = vif;
->  		wdev->netdev = vif->ndev;
-> @@ -1125,11 +1121,29 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->  
->  		ret = register_netdev(ndev);
->  		if (ret)
-> -			return ret;
-> +			goto free_ndev;
+i.e. there are a large number of frames but no stop reason set.
 
-In case this happens you will loose the return code of register_netdev()
-and you will return instead -ENOMEM. Maybe, the best approach will be to
-initialize ret = -ENOMEM while declaring it
+One way this could happen is if queue processing from the pending
+tasklet exited early without processing all frames, and without having
+some future event (incoming frame, stop reason flag, ...) to reschedule
+it.
 
->  
->  		vif->iftype = STATION_MODE;
->  		vif->mac_opened = 0;
->  	}
->  
->  	return 0;
-> +
-> +free_ndev:
-> +	for (; i >= 0; i--) {
-> +		if (wl->vif[i]) {
-> +			if (wl->vif[i]->iftype == STATION_MODE)
-> +				unregister_netdev(wl->vif[i]->ndev);
-> +
-> +			if (wl->vif[i]->ndev) {
-> +				wilc_free_wiphy(wl->vif[i]->ndev);
-> +				free_netdev(wl->vif[i]->ndev);
-> +			}
-> +		}
-> +	}
-> +	unregister_inetaddr_notifier(&g_dev_notifier);
-> +	destroy_workqueue(wl->hif_workqueue);
-> +free_wl:
-> +	kfree(wl);
-> +	return -ENOMEM;
+Exactly this can occur today if ieee80211_tx() returns false due to
+packet drops or power-save buffering in the tx handlers.  In the
+past, this function would return true in such cases, and the change
+to false doesn't seem to be intentional.  Fix this case by reverting
+to the previous behavior.
 
-and here to just return ret.
+Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
+Signed-off-by: Bob Copeland <bobcopeland@fb.com>
+---
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->  }
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index d103dce2..37c26d4 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -2145,8 +2145,12 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net,
->  	set_wiphy_dev(wdev->wiphy, dev);
->  
->  	ret = wiphy_register(wdev->wiphy);
-> -	if (ret)
-> +	if (ret) {
->  		netdev_err(net, "Cannot register wiphy device\n");
-> +		wiphy_free(wdev->wiphy);
-> +		kfree(wdev);
-> +		return NULL;
-> +	}
->  
->  	priv->dev = net;
->  	return wdev;
-> 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e88547842239..6b83dc397c3e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1907,7 +1907,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+ 
+ 	if (invoke_tx_handlers_early(&tx))
+-		return false;
++		return true;
+ 
+ 	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb))
+ 		return true;
+-- 
+2.11.0
