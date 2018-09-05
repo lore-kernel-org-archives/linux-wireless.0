@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34376 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726761AbeIKTrO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 15:47:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: stable@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Zhi Chen <zhichen@codeaurora.org>,
-        ath10k@lists.infradead.org
-Subject: Re: [for -stable] commit "c82919888064 ath10k: fix scan crash due to incorrect length calculation"
-References: <20180906213620.GA72542@ban.mtv.corp.google.com>
-Date: Tue, 11 Sep 2018 17:47:31 +0300
-In-Reply-To: <20180906213620.GA72542@ban.mtv.corp.google.com> (Brian Norris's
-        message of "Thu, 6 Sep 2018 14:36:22 -0700")
-Message-ID: <87lg88t7jw.fsf@codeaurora.org> (sfid-20180911_164803_405952_A6C7CDAE)
+Received: from mail.toke.dk ([52.28.52.200]:54709 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726999AbeIEOZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 10:25:57 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
+In-Reply-To: <1536141045.3528.4.camel@sipsolutions.net>
+References: <20180905080036.9177-1-johannes@sipsolutions.net> <87in3k6zti.fsf@toke.dk> <1536141045.3528.4.camel@sipsolutions.net>
+Date: Wed, 05 Sep 2018 11:56:28 +0200
+Message-ID: <87d0ts6zeb.fsf@toke.dk> (sfid-20180905_115633_252755_BD4FDC58)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Hi Greg / stable maintainer(s),
+> On Wed, 2018-09-05 at 11:47 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >=20
+>> > Some frames may have a non-zero skb->priority assigned by
+>> > mac80211 internally, e.g. TDLS setup frames, regardless of
+>> > support for QoS.
+>> >=20
+>> > Currently, we set skb->priority to 0 for all data frames.
+>> > Note that there's a comment that this is "required for
+>> > correct WPA/11i MIC", but that doesn't seem true as we use
+>> >=20
+>> >         if (ieee80211_is_data_qos(hdr->frame_control))
+>> >                 qos_tid =3D ieee80211_get_tid(hdr);
+>> >         else
+>> >                 qos_tid =3D 0;
+>> >=20
+>> > in the code there. We could therefore reconsider this, but
+>> > it seems like unnecessary complexity for the unlikely (and
+>> > not very useful) case of not having QoS on the connection.
+>> >=20
+>> > This situation then causes something strange - most data
+>> > frames will go on TXQ for TID 0 for non-QoS connections,
+>> > but very few exceptions that are internally generated will
+>> > go on another TXQ, possibly causing confusion.
+>>=20
+>> What kind of confusion are you seeing? Reordering issues, or something
+>> else?
 >
-> IIUC, this commit is a good candidate for -stable. I just hit the bug on
-> 4.14, because of new vendor firmware that noticed the mismatched length
-> (an internal "assert"), but it seems like this is equally problematic
-> from the kernel side for as long as this code existed [1]:
+> I haven't actually been able to test this...
 >
-> commit c8291988806407e02a01b4b15b4504eafbcc04e0
-> Author: Zhi Chen <zhichen@codeaurora.org>
-> Date:   Mon Jun 18 17:00:39 2018 +0300
->
->     ath10k: fix scan crash due to incorrect length calculation
->
-> Thanks,
-> Brian
->
-> [1] I guess that would be:
->
-> Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
->
-> which was in v4.0.
+> But with the iwlwifi work we're doing, at the very least we'd waste a
+> hardware queue for the case that basically never happens, since you'd
+> end up putting these frames (that are very few) on a separate TXQ and
+> thus hardware queue.
 
-FWIW:
+Ah, right, you're doing 1-to-1 TXQ-to-HWQ mapping. Gotcha.
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> You could argue we should explicitly _not_ do this, but then we should
+> also set skb->priority to be non-zero for non-QoS stations. Then we
+> could benefit from some form of QoS (between the TXQs) for non-QoS
+> connections, but that seems pretty complex and doesn't seem worth it
+> since all connections that want anything from HT/11n and newer need QoS
+> anyway.
+>
+> So basically this gets rid of a corner case that we shouldn't have.
+> Either we should decide that using different TXQs is *always* correct
+> for non-QoS, or - what I thought - that this isn't worth it, and then we
+> should *never* do it.
 
-Thanks Brian!
+Yeah, I agree that this is not worth it. The queue is already
+FQ-CoDel'ed, which gives us most of the benefit of QoS anyway :)
 
--- 
-Kalle Valo
+-Toke
