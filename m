@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:36518 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726622AbeIKS6E (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:43406 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726909AbeIEQED (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 14:58:04 -0400
-Received: by mail-wr1-f67.google.com with SMTP id e1-v6so17119727wrt.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2018 06:58:36 -0700 (PDT)
-Date: Tue, 11 Sep 2018 15:58:32 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [linux-next:master 2211/3360]
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined reference to
- `mt76u_mcu_deinit'
-Message-ID: <20180911135831.GA2760@localhost.localdomain> (sfid-20180911_155840_191436_537CD1F6)
-References: <201809112137.2sMVZb3I%fengguang.wu@intel.com>
- <875zzcuosb.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <875zzcuosb.fsf@codeaurora.org>
+        Wed, 5 Sep 2018 12:04:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: TDLS: fix skb queue/priority assignment
+Date: Wed,  5 Sep 2018 13:34:02 +0200
+Message-Id: <20180905113402.7665-1-johannes@sipsolutions.net> (sfid-20180905_133416_297971_AFC86F42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> + felix, linux-wireless
-> 
-> kbuild test robot <lkp@intel.com> writes:
-> 
-> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> > head:   43783a8f68478e81fe183f86162d3e7ca29ba923
-> > commit: 6f4796b7063e334902049b0cc41514b6c3b52876 [2211/3360] mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
-> > config: x86_64-randconfig-s5-09111320 (attached as .config)
-> > compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
-> > reproduce:
-> >         git checkout 6f4796b7063e334902049b0cc41514b6c3b52876
-> >         # save the attached .config to linux build tree
-> >         make ARCH=x86_64 
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.o: In function `mt76x0_probe':
-> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.c:119: undefined reference to `mt76u_init'
-> >    drivers/net/wireless/mediatek/mt76/mt76x0/init.o: In function `mt76x0_init_hardware':
-> >>> drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined
-> >>> reference to `mt76u_mcu_deinit'
-> 
-> kbuild bot has been sending quite a few similar warnings during the last
-> day. Lorenzo, I assume you are looking at these?
+From: Johannes Berg <johannes.berg@intel.com>
 
-All reported errors from intel kbuild test robot are due to missing
-CONFIG_MT76_USB symbol. This should be fixed in latest Stanislaw's patchset:
-[PATCH 37/42] mt76x0: initial split between pci and usb.
+If the TDLS setup happens over a connection to an AP that
+doesn't have QoS, we nevertheless assign a non-zero TID
+(skb->priority) and queue mapping, which may confuse us or
+drivers later.
 
-Regards,
-Lorenzo
+Fix it by just assigning the special skb->priority and then
+using ieee80211_select_queue() just like other data frames
+would go through.
 
-> 
-> -- 
-> Kalle Valo
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+OK, this addresses the case I was worried about - perhaps
+better take this than the txq patch?
+---
+ net/mac80211/tdls.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 5cd5e6e5834e..6c647f425e05 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -16,6 +16,7 @@
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+ #include "rate.h"
++#include "wme.h"
+ 
+ /* give usermode some time for retries in setting up the TDLS session */
+ #define TDLS_PEER_SETUP_TIMEOUT	(15 * HZ)
+@@ -1010,14 +1011,13 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	switch (action_code) {
+ 	case WLAN_TDLS_SETUP_REQUEST:
+ 	case WLAN_TDLS_SETUP_RESPONSE:
+-		skb_set_queue_mapping(skb, IEEE80211_AC_BK);
+-		skb->priority = 2;
++		skb->priority = 256 + 2;
+ 		break;
+ 	default:
+-		skb_set_queue_mapping(skb, IEEE80211_AC_VI);
+-		skb->priority = 5;
++		skb->priority = 256 + 5;
+ 		break;
+ 	}
++	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
+ 
+ 	/*
+ 	 * Set the WLAN_TDLS_TEARDOWN flag to indicate a teardown in progress.
+-- 
+2.14.4
