@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:40250 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726753AbeIQPFk (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34125 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725868AbeIEPg3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 11:05:40 -0400
-Message-ID: <1537177132.2957.6.camel@sipsolutions.net> (sfid-20180917_113909_278047_511B0056)
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jbenc@redhat.com
-Date: Mon, 17 Sep 2018 11:38:52 +0200
-In-Reply-To: <20180913215839.GI27095@localhost.localdomain> (sfid-20180913_235845_154589_B8195738)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
-         <20180913193004.GF4590@localhost.localdomain>
-         <20180913212742.GC3876@unicorn.suse.cz>
-         <20180913215839.GI27095@localhost.localdomain>
-         (sfid-20180913_235845_154589_B8195738)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 5 Sep 2018 11:36:29 -0400
+Received: by mail-wm0-f67.google.com with SMTP id j25-v6so13680561wmc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2018 04:06:44 -0700 (PDT)
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+ <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
+ <5B30A85C.5080105@broadcom.com>
+ <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B8FB8C2.2040200@broadcom.com> (sfid-20180905_130647_950387_E38870A4)
+Date: Wed, 5 Sep 2018 13:06:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-09-13 at 18:58 -0300, Marcelo Ricardo Leitner wrote:
+On 8/29/2018 10:17 PM, Rafał Miłecki wrote:
+> Hi Arend,
+>
+> On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 6/25/2018 6:40 AM, Rafał Miłecki wrote:
+>>> On Sun, 24 Jun 2018 at 13:48, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>> Here a couple of patches in preparation of monitor mode support. It
+>>>>> is mostly about querying firmware for support. While at it I stumbled
+>>>>> upon the fact that 160MHz was not completely implemented in the driver
+>>>>> so there is a patch for that as well.
+>>>>>
+>>>>> The first two patches are actually some changes to the patches that
+>>>>> Rafal submitted. So this series depend on:
+>>>>>
+>>>>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+>>>>>
+>>>>> These apply to the master branch of the wireless-drivers-next repository.
+>>>>>
+>>>>> [1] https://patchwork.kernel.org/patch/10474799/
+>>>>
+>>>> I find it pointless to submit fixes for patches that weren't accepted
+>>>> yet. Let's work on improving original patches while they are still
+>>>> pending.
+>>>
+>>> I sent V4 with changes pointed our by Arend. That obsoletes all (?)
+>>> monitor patches from this patchset. I believe it was cleaner to
+>>> improve original patchset (not pushed yet).
+>>>
+>>> My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
+>>> related) and drop the others.
+>>
+>> Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit
+>> the series addressing the issues you found.
+>
+> Would you have a moment to resubmit these 2 patches or do you mind if I do that?
 
-> > It would be easier and IMHO cleaner if I could simply list these "read
-> > only attributes" with NLA_REJECT policy for "set" request.
-> 
-> Not that I'm against this. Point was fields that are considered output
-> only today are probably being silently ignored, and we can't change
-> them to be NLA_REJECT as it would break user applications. 
+Found a moment. Should be in patchwork now.
 
-Indeed.
-
-> Then we
-> will have fields that are rejected, and those old that are not. In the
-> long run, nearly all output fields would be marked as NLA_REJECT,
-> okay.
-
-Perhaps, yes, though I assume it would only really be true for new
-families that bother to mark as such.
-
-> Then I ask my first question again: why reject these? They are not
-> hurting anything, are they?  It's different from your example I think.
-> In there, the extra information which was ignored leads to a
-> different behavior.
-
-So in one case I was thinking of, there are some fields that simply
-cannot be used for input, they're only used for output. But it may not
-always be obvious to somebody using the API. Thus, I think it makes
-sense to instruct the kernel to reject that, so that whoever gets
-confused has immediate feedback that their usage is wrong. If we ignore
-that, they may not realize their error immediately.
-
-I think the ethtool case is similar: you can read and write some fields,
-and only read others - but if you try to write the read-only fields
-would you prefer to be told "sorry, this is not possible" vs. it being
-silently ignored? I'd definitely prefer the former.
-
-> Maybe it would be better to have NLA_IGNORE instead? </idea>
-
-I don't think so, it doesn't give any feedback to the application author
-that they're doing something wrong.
-
-johannes
+Regards,
+Arend
