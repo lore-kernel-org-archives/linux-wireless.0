@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36958 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727710AbeITRxW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:53:22 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:57079 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725890AbeIERUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 13:20:52 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: TDLS: fix skb queue/priority assignment
+In-Reply-To: <1536150812.3528.15.camel@sipsolutions.net>
+References: <20180905113402.7665-1-johannes@sipsolutions.net> <1536147453.3528.11.camel@sipsolutions.net> <87k1o05g04.fsf@toke.dk> <1536147683.3528.12.camel@sipsolutions.net> <1536147865.3528.14.camel@sipsolutions.net> <87efe8yvju.fsf@toke.dk> <1536150812.3528.15.camel@sipsolutions.net>
+Date: Wed, 05 Sep 2018 14:50:41 +0200
+Message-ID: <87bm9cyuou.fsf@toke.dk> (sfid-20180905_145046_447987_557F85BD)
 MIME-Version: 1.0
-Subject: Re: [PATCH V2 1/2] brcmfmac: fix for proper support of 160MHz
- bandwidth
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536133739-5693-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1536133739-5693-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20180920121010.9D30A602A7@smtp.codeaurora.org> (sfid-20180920_141015_273364_7B6773D7)
-Date: Thu, 20 Sep 2018 12:10:10 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Decoding of firmware channel information was not complete for 160MHz
-> support. This resulted in the following warning:
-> 
->   WARNING: CPU: 2 PID: 2222 at .../broadcom/brcm80211/brcmutil/d11.c:196
-> 	brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
->   Modules linked in: brcmfmac(O) brcmutil(O) sha256_generic cfg80211 ...
->   CPU: 2 PID: 2222 Comm: kworker/2:0 Tainted: G           O
->   4.17.0-wt-testing-x64-00002-gf1bed50 #1
->   Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
->   Workqueue: events request_firmware_work_func
->   RIP: 0010:brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
->   RSP: 0018:ffffc90000047bd0 EFLAGS: 00010206
->   RAX: 000000000000e832 RBX: ffff8801146fe910 RCX: ffff8801146fd3c0
->   RDX: 0000000000002800 RSI: 0000000000000070 RDI: ffffc90000047c30
->   RBP: ffffc90000047bd0 R08: 0000000000000000 R09: ffffffffa0798c80
->   R10: ffff88012bca55e0 R11: ffff880110a4ea00 R12: ffff8801146f8000
->   R13: ffffc90000047c30 R14: ffff8801146fe930 R15: ffff8801138e02e0
->   FS:  0000000000000000(0000) GS:ffff88012bc80000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: 00007f18ce8b8070 CR3: 000000000200a003 CR4: 00000000000206e0
->   Call Trace:
->    brcmf_setup_wiphybands+0x212/0x780 [brcmfmac]
->    brcmf_cfg80211_attach+0xae2/0x11a0 [brcmfmac]
->    brcmf_attach+0x1fc/0x4b0 [brcmfmac]
->    ? __kmalloc+0x13c/0x1c0
->    brcmf_pcie_setup+0x99b/0xe00 [brcmfmac]
->    brcmf_fw_request_done+0x16a/0x1f0 [brcmfmac]
->    request_firmware_work_func+0x36/0x60
->    process_one_work+0x146/0x350
->    worker_thread+0x4a/0x3b0
->    kthread+0x102/0x140
->    ? process_one_work+0x350/0x350
->    ? kthread_bind+0x20/0x20
->    ret_from_fork+0x35/0x40
->   Code: 66 90 0f b7 07 55 48 89 e5 89 c2 88 47 02 88 47 03 66 81 e2 00 38
-> 	66 81 fa 00 18 74 6e 66 81 fa 00 20 74 39 66 81 fa 00 10 74 14 <0f>
-> 	0b 66 25 00 c0 74 20 66 3d 00 c0 75 20 c6 47 04 01 5d c3 66
->   ---[ end trace 550c46682415b26d ]---
->   brcmfmac: brcmf_construct_chaninfo: Ignoring unexpected firmware channel 50
-> 
-> This patch adds the missing stuff to properly handle this.
-> 
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> On Wed, 2018-09-05 at 14:32 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > On Wed, 2018-09-05 at 13:41 +0200, Johannes Berg wrote:
+>> > > On Wed, 2018-09-05 at 13:40 +0200, Toke H=C3=B8iland-J=C3=B8rgensen =
+wrote:
+>> > > >=20
+>> > > > Guess we'll have to deal with everything else if we ever move mana=
+gement
+>> > > > frames onto the TXQ path as well...
+>> > >=20
+>> > > Depends on whether we care for management frame priorities or not ..=
+. so
+>> > > far we haven't really.
+>> >=20
+>> > Actually, for the most part we have implemented that properly. Except
+>> > for the TXQ I added for bufferable management ... oh well, I think we'=
+re
+>> > the only user thereof now.
+>> >=20
+>> > I'm not sure we want to have a TXQ per TID for management, that seems
+>> > overkill. But I'm also not sure how to solve this otherwise ...
+>>=20
+>> Graft it to an existing TXQ, similar to how the fragments queue is used
+>> now? Saves a TXQ at the expense of having to special-case it...
+>
+> The problem isn't so much how we handle it in mac80211 for the queueing,
+> but how we deal with things like A-MSDU and how we present it to the
+> driver ... for iwlwifi at least we'd really like to have only data
+> frames so we can map it directly to the hardware queue ...
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Ah, I see. No, then just putting them at the head of a different TXQ
+probably won't work...
 
-330994e8e8ec brcmfmac: fix for proper support of 160MHz bandwidth
-59c2a30d36c8 brcmfmac: increase buffer for obtaining firmware capabilities
+Are you mapping TXQs to hardware queues dynamically as they empty and
+re-fill? Presumably you'll have cases where you don't have enough HWQs?
 
--- 
-https://patchwork.kernel.org/patch/10588375/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
