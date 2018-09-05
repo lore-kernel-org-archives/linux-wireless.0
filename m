@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:50249 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726678AbeIKRRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 13:17:32 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        "Andrey Shevchenko" <ashevchenko@quantenna.com>
-CC: YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] qtnfmac: remove set but not used variable 'vif'
-Date: Tue, 11 Sep 2018 12:28:24 +0000
-Message-ID: <1536668904-13110-1-git-send-email-yuehaibing@huawei.com> (sfid-20180911_141831_602740_2CE33924)
-Content-Type: text/plain; charset="ISO-8859-1"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.62]:42990 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727508AbeIEP0R (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 11:26:17 -0400
+Message-ID: <1536144985.3528.7.camel@sipsolutions.net> (sfid-20180905_125638_387926_A072BC02)
+Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Date: Wed, 05 Sep 2018 12:56:25 +0200
+In-Reply-To: <87d0ts6zeb.fsf@toke.dk>
+References: <20180905080036.9177-1-johannes@sipsolutions.net>
+         <87in3k6zti.fsf@toke.dk> <1536141045.3528.4.camel@sipsolutions.net>
+         <87d0ts6zeb.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+On Wed, 2018-09-05 at 11:56 +0200, Toke Høiland-Jørgensen wrote:
 
-drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function 'qtnf_dump_survey':
-drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:694:19: warning:
- variable 'vif' set but not used [-Wunused-but-set-variable]
+> > So basically this gets rid of a corner case that we shouldn't have.
+> > Either we should decide that using different TXQs is *always* correct
+> > for non-QoS, or - what I thought - that this isn't worth it, and then we
+> > should *never* do it.
+> 
+> Yeah, I agree that this is not worth it. The queue is already
+> FQ-CoDel'ed, which gives us most of the benefit of QoS anyway :)
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 3 ---
- 1 file changed, 3 deletions(-)
+So do I read that as a tentative ack? :)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 4aa332f..452d4b7 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -691,11 +691,8 @@ static int qtnf_set_default_key(struct wiphy *wiphy, struct net_device *dev,
- 	const struct cfg80211_chan_def *chandef = &wdev->chandef;
- 	struct ieee80211_channel *chan;
- 	struct qtnf_chan_stats stats;
--	struct qtnf_vif *vif;
- 	int ret;
- 
--	vif = qtnf_netdev_get_priv(dev);
--
- 	sband = wiphy->bands[NL80211_BAND_2GHZ];
- 	if (sband && idx >= sband->n_channels) {
- 		idx -= sband->n_channels;
+Felix wasn't really convinced, I think. He also pointed out some drivers
+use skb->priority without checking anything, but I'm not sure we can
+really squash all the cases of setting skb priority easily?
+
+johannes
