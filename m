@@ -1,61 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36248 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728096AbeIFNyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:53 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 32/42] mt76x0: move stop related routines in mt76x0_mac_stop
-Date: Thu,  6 Sep 2018 11:18:48 +0200
-Message-Id: <1536225538-16454-33-git-send-email-sgruszka@redhat.com> (sfid-20180906_112023_782177_A652E150)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:46914 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727572AbeIEJep (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 05:34:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Sep 2018 08:06:06 +0300
+Message-Id: <20180905050614.23273-2-luca@coelho.fi> (sfid-20180905_070631_186202_C3008735)
+In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180905050614.23273-1-luca@coelho.fi>
+Subject: [RESEND PATCH v2 1/9] mac80211: support reporting 0-length PSDU in radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Move tear-down routines in mt76x0_mac_stop function.
-mt76x0_mac_stop routines will be reused in mt76x0_suspend
+For certain sounding frames, it may be useful to report them
+to userspace even though they don't have a PSDU in order to
+determine the PHY parameters (e.g. VHT rate/stream config.)
+Add support for this to mac80211.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c | 4 ----
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ include/net/ieee80211_radiotap.h |  6 ++++++
+ include/net/mac80211.h           |  7 +++++++
+ net/mac80211/rx.c                | 12 +++++++++++-
+ 3 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index d186f509b5a8..b1d5f647eac5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -361,6 +361,9 @@ static void mt76x0_mac_stop_hw(struct mt76x0_dev *dev)
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 80d543902b8b..8014153bdd49 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -75,6 +75,7 @@ enum ieee80211_radiotap_presence {
+ 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
+ 	IEEE80211_RADIOTAP_HE = 23,
+ 	IEEE80211_RADIOTAP_HE_MU = 24,
++	IEEE80211_RADIOTAP_ZERO_LEN_PSDU = 26,
+ 	IEEE80211_RADIOTAP_LSIG = 27,
  
- void mt76x0_mac_stop(struct mt76x0_dev *dev)
- {
-+	cancel_delayed_work_sync(&dev->cal_work);
-+	cancel_delayed_work_sync(&dev->mac_work);
-+	mt76u_stop_stat_wk(&dev->mt76);
- 	mt76x0_mac_stop_hw(dev);
- }
+ 	/* valid in every it_present bitmap, even vendor namespaces */
+@@ -340,6 +341,11 @@ struct ieee80211_radiotap_lsig {
+ 	__le16 data1, data2;
+ };
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index 8c8a0f676228..0d3c7accb4f8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -48,10 +48,6 @@ static void mt76x0_stop(struct ieee80211_hw *hw)
- 	mutex_lock(&dev->mt76.mutex);
++enum ieee80211_radiotap_zero_len_psdu_type {
++	IEEE80211_RADIOTAP_ZERO_LEN_PSDU_SOUNDING		= 0,
++	IEEE80211_RADIOTAP_ZERO_LEN_PSDU_VENDOR			= 0xff,
++};
++
+ /**
+  * ieee80211_get_radiotap_len - get radiotap header length
+  */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8c26d2d36cbe..50bf598abdfd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1142,6 +1142,10 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_RADIOTAP_HE_MU: HE MU radiotap data is present
+  *	(&struct ieee80211_radiotap_he_mu)
+  * @RX_FLAG_RADIOTAP_LSIG: L-SIG radiotap data is present
++ * @RX_FLAG_NO_PSDU: use the frame only for radiotap reporting, with
++ *	the "0-length PSDU" field included there.  The value for it is
++ *	in &struct ieee80211_rx_status.  Note that if this value isn't
++ *	known the frame shouldn't be reported.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -1173,6 +1177,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_RADIOTAP_HE		= BIT(26),
+ 	RX_FLAG_RADIOTAP_HE_MU		= BIT(27),
+ 	RX_FLAG_RADIOTAP_LSIG		= BIT(28),
++	RX_FLAG_NO_PSDU			= BIT(29),
+ };
  
- 	clear_bit(MT76_STATE_RUNNING, &dev->mt76.state);
--
--	cancel_delayed_work_sync(&dev->cal_work);
--	cancel_delayed_work_sync(&dev->mac_work);
--	mt76u_stop_stat_wk(&dev->mt76);
- 	mt76x0_mac_stop(dev);
+ /**
+@@ -1245,6 +1250,7 @@ enum mac80211_rx_encoding {
+  * @ampdu_reference: A-MPDU reference number, must be a different value for
+  *	each A-MPDU but the same for each subframe within one A-MPDU
+  * @ampdu_delimiter_crc: A-MPDU delimiter CRC
++ * @zero_length_psdu_type: radiotap type of the 0-length PSDU
+  */
+ struct ieee80211_rx_status {
+ 	u64 mactime;
+@@ -1265,6 +1271,7 @@ struct ieee80211_rx_status {
+ 	u8 chains;
+ 	s8 chain_signal[IEEE80211_MAX_CHAINS];
+ 	u8 ampdu_delimiter_crc;
++	u8 zero_length_psdu_type;
+ };
  
- 	mutex_unlock(&dev->mt76.mutex);
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 66cc2590e88c..5c8eaac8592f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -115,7 +115,8 @@ static inline bool should_drop_frame(struct sk_buff *skb, int present_fcs_len,
+ 
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
+ 			    RX_FLAG_FAILED_PLCP_CRC |
+-			    RX_FLAG_ONLY_MONITOR))
++			    RX_FLAG_ONLY_MONITOR |
++			    RX_FLAG_NO_PSDU))
+ 		return true;
+ 
+ 	if (unlikely(skb->len < 16 + present_fcs_len + rtap_space))
+@@ -189,6 +190,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 		BUILD_BUG_ON(sizeof(struct ieee80211_radiotap_he_mu) != 12);
+ 	}
+ 
++	if (status->flag & RX_FLAG_NO_PSDU)
++		len += 1;
++
+ 	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
+ 		len = ALIGN(len, 2);
+ 		len += 4;
+@@ -642,6 +646,12 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 		pos += sizeof(he_mu);
+ 	}
+ 
++	if (status->flag & RX_FLAG_NO_PSDU) {
++		rthdr->it_present |=
++			cpu_to_le32(1 << IEEE80211_RADIOTAP_ZERO_LEN_PSDU);
++		*pos++ = status->zero_length_psdu_type;
++	}
++
+ 	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
+ 		/* ensure 2 byte alignment */
+ 		while ((pos - (u8 *)rthdr) & 1)
 -- 
-2.7.5
+2.18.0
