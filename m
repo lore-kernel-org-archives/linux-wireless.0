@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41370 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727772AbeISRle (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:41194 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725865AbeIEM3q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:41:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sid Hayn <sidhayn@gmail.com>
-Cc: sgruszka@redhat.com,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] mt76x0: run vco calibration for each channel configuration
-References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
-        <20180918114356.GB15285@redhat.com>
-        <20180918120234.GD15285@redhat.com>
-        <871s9r2d3g.fsf@kamboji.qca.qualcomm.com>
-        <CAM0KTbAPHPK04SntA9UL0rGaaNjTy=E2hRoO7xiRkbMcq9b7Sw@mail.gmail.com>
-Date: Wed, 19 Sep 2018 15:03:52 +0300
-In-Reply-To: <CAM0KTbAPHPK04SntA9UL0rGaaNjTy=E2hRoO7xiRkbMcq9b7Sw@mail.gmail.com>
-        (Sid Hayn's message of "Tue, 18 Sep 2018 10:26:09 -0400")
-Message-ID: <87worh1yon.fsf@kamboji.qca.qualcomm.com> (sfid-20180919_140359_928757_CB0003EE)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 5 Sep 2018 08:29:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use non-zero TID only for QoS frames
+Date: Wed,  5 Sep 2018 10:00:36 +0200
+Message-Id: <20180905080036.9177-1-johannes@sipsolutions.net> (sfid-20180905_100116_813934_EDA72491)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sid Hayn <sidhayn@gmail.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> mt76x0 isn't in 4.18 at all, it's being added in 4.19 isn't it?  I'm
-> not sure you can call it a regression, but adding a new driver with a
-> known bug that breaks an entire use case (monitor mode) seems silly
-> when a small and tested fix is available.  Pretty please.
+Some frames may have a non-zero skb->priority assigned by
+mac80211 internally, e.g. TDLS setup frames, regardless of
+support for QoS.
 
-Unfortunately it's not that simple as you think. And do take into
-account that the maintainers need to deal with a lot of patches and
-email so keeping things simple is important.
+Currently, we set skb->priority to 0 for all data frames.
+Note that there's a comment that this is "required for
+correct WPA/11i MIC", but that doesn't seem true as we use
 
-And please do not top post:
+        if (ieee80211_is_data_qos(hdr->frame_control))
+                qos_tid = ieee80211_get_tid(hdr);
+        else
+                qos_tid = 0;
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
+in the code there. We could therefore reconsider this, but
+it seems like unnecessary complexity for the unlikely (and
+not very useful) case of not having QoS on the connection.
 
+This situation then causes something strange - most data
+frames will go on TXQ for TID 0 for non-QoS connections,
+but very few exceptions that are internally generated will
+go on another TXQ, possibly causing confusion.
+
+Avoid this confusion by putting non-QoS data frames into
+TID 0 regardless of the skb->priority.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5b6e06ad35ff..6540595addd1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1260,7 +1260,10 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 			txq = sta->sta.txq[IEEE80211_NUM_TIDS];
+ 		}
+ 	} else if (sta) {
+-		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++		u8 tid = 0;
++
++		if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA))
++			tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 
+ 		if (!sta->uploaded)
+ 			return NULL;
 -- 
-Kalle Valo
+2.14.4
