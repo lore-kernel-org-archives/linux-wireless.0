@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f194.google.com ([209.85.222.194]:35919 "EHLO
-        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727547AbeIQNI6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46562 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727606AbeIEKBk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 09:08:58 -0400
-Received: by mail-qk1-f194.google.com with SMTP id 93-v6so8522591qks.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 00:42:47 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: seth.forshee@canonical.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-        Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 1/2] wireless-regdb: Sync FR with ETSI EN 301 893 V2.1.1 (2017-05)
-Date: Mon, 17 Sep 2018 09:42:11 +0200
-Message-Id: <20180917074212.6739-1-sven.eckelmann@openmesh.com> (sfid-20180917_094254_872675_E52950B8)
+        Wed, 5 Sep 2018 06:01:40 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 05 Sep 2018 13:33:12 +0800
+From: Carl Huang <cjhuang@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: download firmware via diag Copy Engine for
+ QCA6174 and QCA9377.
+In-Reply-To: <87musw7dh2.fsf@kamboji.qca.qualcomm.com>
+References: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org>
+ <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
+ <87musw7dh2.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <a122a1ac5f4255ab704b1d6763754fe4@codeaurora.org> (sfid-20180905_073315_381630_C8587248)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The documents
-https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
-and
-https://www.anfr.fr/fileadmin/mediatheque/documents/controle/20171127ANFR_-_ficheRLAN_5GHz.pdf
-show that the limits for the 5GHz bands are out of date:
+On 2018-09-05 12:52, Kalle Valo wrote:
+> Carl Huang <cjhuang@codeaurora.org> writes:
+> 
+>> Downloading firmware via BMI protocol takes too long time. For 
+>> example,
+>> a ~700K bytes firmware takes about 500ms to download via BMI protocol.
+>> This is too long especially in suspend and resume scenario where 
+>> firmware
+>> is re-downloaded unless WoWLAN is enabled. Downloading firmware via 
+>> diag CE
+>> can reduce the time to ~40ms for a ~700K bytes firmware binary.
+>> 
+>> Ath10k driver parses the firmware to segments and downloads the 
+>> segments
+>> to the specified address directly. If the firmware is compressed or 
+>> has
+>> unsupported segments, ath10k driver will try BMI download again.
+>> 
+>> It's tested with QCA6174 hw3.2 and
+>> firmware-6.bin_WLAN.RM.4.4.1-00111-QCARMSWP-1. QCA9377 is also 
+>> affected.
+>> 
+>> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> 
+> There were new warnings:
+> 
+> drivers/net/wireless/ath/ath10k/hw.c:1029:16: warning: restricted
+> __le32 degrades to integer
+> drivers/net/wireless/ath/ath10k/hw.c:1047:27: warning: incorrect type
+> in assignment (different base types)
+> drivers/net/wireless/ath/ath10k/hw.c:1047:27:    expected unsigned int
+> [unsigned] [usertype] base_addr
+> drivers/net/wireless/ath/ath10k/hw.c:1047:27:    got restricted __le32
+> [usertype] addr
+> drivers/net/wireless/ath/ath10k/hw.c:1048:26: warning: incorrect type
+> in assignment (different base types)
+> drivers/net/wireless/ath/ath10k/hw.c:1048:26:    expected unsigned int
+> [unsigned] [usertype] base_len
+> drivers/net/wireless/ath/ath10k/hw.c:1048:26:    got restricted __le32
+> [usertype] length
+> 
+> I fixed those in the pending branch, please review:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=f6f6f597654693ab122ecd950b56343489b91e59
 
-* frequencies don't match the official limits
-* 5150 - 5350 MHz is not for outdoor usage
-* 5150 - 5250 MHz only usage is allowed to use up to 23 dBm (200 mW) even
-  without TPC
+Kalle,
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thank you for fixing the warnings. I don't see any issues with this 
+warning fix.
 
-diff --git a/db.txt b/db.txt
-index bc64628..7f978e1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -475,9 +475,9 @@ country FM: DFS-FCC
- 
- country FR: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
--	(5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
--	(5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
-+	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
-+	(5470 - 5725 @ 160), (27), DFS, wmmrule=ETSI
-         # short range devices (ETSI EN 300 440)
- 	(5725 - 5875 @ 80), (25 mW)
- 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
--- 
-2.11.0
+
+Thanks,
+Carl
