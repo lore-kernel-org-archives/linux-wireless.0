@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48442 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727675AbeISQnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 12:43:07 -0400
-Date: Wed, 19 Sep 2018 13:05:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/5] rt2x00: set registers based on current band
-Message-ID: <20180919110540.GC22689@redhat.com> (sfid-20180919_130547_123431_F6403406)
-References: <20180918122015.GB15481@redhat.com>
- <1537280073-9873-1-git-send-email-pozega.tomislav@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1537280073-9873-1-git-send-email-pozega.tomislav@gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:46938 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727572AbeIEJer (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Sep 2018 05:34:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  5 Sep 2018 08:06:09 +0300
+Message-Id: <20180905050614.23273-5-luca@coelho.fi> (sfid-20180905_070632_695712_3FCDF4E2)
+In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
+References: <20180831083130.15525-1-luca@coelho.fi>
+ <20180905050614.23273-1-luca@coelho.fi>
+Subject: [RESEND PATCH v2 4/9] mac80211: add an option for station management TXQ
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 18, 2018 at 04:14:33PM +0200, Tomislav Požega wrote:
-> On Tue, 18 Sep 2018 14:20:16 +0200, Stanislaw Gruszka wrote:
-> 
-> >On Mon, Sep 17, 2018 at 06:32:51PM +0200, Tomislav Požega wrote:
-> >> Use curr_band instead of rf->channel among various subroutines -
-> >> mostly for 2.4GHz band but in some circumstances for 5GHz band too.
-> >
-> >What is the reason for that change ?
-> 
-> Operating band should be fetched from device capabilities, not from userspace
-> variables. More changes will needed to be made to accomplish that.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Driver should provide on what channels are supported to mac80211, but
-user space decide what channel to use and that imply band 2.4GHz or
-5GHz. ->curr_band is just shortcut for band of current channel. Is set 
-in rt2x00lib_config() after we call rt2x00dev->ops->lib->config()
-[rt2800_config() for rt2800] . So patch is wrong. Either ->curr_band 
-should be set before ->config call or we need to consistently use
-rf->channel <= 14 for band check in any rt2800_config() function and
-all it's subroutines. I prefer the second solution (i.e. rf->channel)
-and now I can see few places when we use ->curr_band, what is a bug.
+We have a TXQ abstraction for non-data packets that need
+powersave buffering. Since the AP cannot sleep, in case
+of station we can use this TXQ for all management frames,
+regardless if they are bufferable. Add HW flag to allow
+that.
 
-> >> -	if (spec->num_channels > 14) {
-> >> +	if (rt2x00dev->curr_band == NL80211_BAND_5GHZ) {
-> >>  		default_power1 = rt2800_eeprom_addr(rt2x00dev,
-> >>  						    EEPROM_TXPOWER_A1);
-> >>  		default_power2 = rt2800_eeprom_addr(rt2x00dev,
-> >
-> >Above looks wrong.
-> >
-> >Thanks
-> >Stanislaw
-> 
-> Worked fine when I tried run two USB cards (RT3070-RF0005, RT5390-RF5370).
-> Why do you think it's wrong? Is there a dual-band card that operates on
-> both bands at the same time?
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h |  5 +++++
+ net/mac80211/debugfs.c |  1 +
+ net/mac80211/tx.c      | 14 +++++++++++---
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-It's because ->curr_band initialize to 0 and NL80211_BAND_2GHZ
-happen to be 0. Also problem will not trigger on single band
-2.4GHz devices.
-
-Regards
-Stanislaw
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 50bf598abdfd..fe71cec8ba42 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2152,6 +2152,10 @@ struct ieee80211_txq {
+  *	but if the rate control is built-in then it must be set by the driver.
+  *	See also the documentation for that flag.
+  *
++ * @IEEE80211_HW_STA_MMPDU_TXQ: use the extra non-TID per-station TXQ for all
++ *	MMPDUs on station interfaces. This of course requires the driver to use
++ *	TXQs to start with.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2199,6 +2203,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP,
+ 	IEEE80211_HW_BUFF_MMPDU_TXQ,
+ 	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
++	IEEE80211_HW_STA_MMPDU_TXQ,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index fb45eb5d1dc4..3fe541e358f3 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -217,6 +217,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(DOESNT_SUPPORT_QOS_NDP),
+ 	FLAG(BUFF_MMPDU_TXQ),
+ 	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
++	FLAG(STA_MMPDU_TXQ),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5b6e06ad35ff..6689492c9713 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1251,7 +1251,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
+ 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
+-		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
++		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
++		     vif->type == NL80211_IFTYPE_STATION) &&
+ 		    sta && sta->uploaded) {
+ 			/*
+ 			 * This will be NULL if the driver didn't set the
+@@ -1456,9 +1457,16 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (tid == IEEE80211_NUM_TIDS) {
+-		/* Drivers need to opt in to the bufferable MMPDU TXQ */
+-		if (!ieee80211_hw_check(&sdata->local->hw, BUFF_MMPDU_TXQ))
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			/* Drivers need to opt in to the management MPDU TXQ */
++			if (!ieee80211_hw_check(&sdata->local->hw,
++						STA_MMPDU_TXQ))
++				return;
++		} else if (!ieee80211_hw_check(&sdata->local->hw,
++					       BUFF_MMPDU_TXQ)) {
++			/* Drivers need to opt in to the bufferable MMPDU TXQ */
+ 			return;
++		}
+ 		txqi->txq.ac = IEEE80211_AC_VO;
+ 	} else {
+ 		txqi->txq.ac = ieee80211_ac_from_tid(tid);
+-- 
+2.18.0
