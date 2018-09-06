@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50302 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725898AbeIUO5b (ORCPT
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:36948 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729756AbeIFSfY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 10:57:31 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, robh+dt@kernel.org,
-        andy.gross@linaro.org, devicetree@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, briannorris@chromium.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 3/4] dt: bindings: add bindings for wifi iommu node
-Date: Fri, 21 Sep 2018 14:39:06 +0530
-Message-Id: <20180921090907.25937-4-govinds@codeaurora.org> (sfid-20180921_110939_123639_EF2C7ED9)
-In-Reply-To: <20180921090907.25937-1-govinds@codeaurora.org>
-References: <20180921090907.25937-1-govinds@codeaurora.org>
+        Thu, 6 Sep 2018 14:35:24 -0400
+Received: by mail-lj1-f193.google.com with SMTP id v9-v6so9424481ljk.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 06:59:42 -0700 (PDT)
+From: Jukka Pirinen <jukka.pirinen@gmail.com>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Jukka Pirinen <jukka.pirinen@gmail.com>
+Subject: [PATCH] Update regulatory rules for Finland (FI) on 5GHz (SRD devices)
+Date: Thu,  6 Sep 2018 16:59:15 +0300
+Message-Id: <20180906135915.8365-1-jukka.pirinen@gmail.com> (sfid-20180906_155946_241834_DE710F9A)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 wifi module can optionally make use of the IOMMU.
-Add binding documentation for phandle to the IOMMU and
-the stream id of wifi iommu block.
+Viestintävirasto 15 AM/2018 M
+Section 10 Non-specific short range devices
+https://www.finlex.fi/data/normit/32670/Regulation_15AM.pdf
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: Jukka Pirinen <jukka.pirinen@gmail.com>
 ---
- .../devicetree/bindings/net/wireless/qcom,ath10k.txt         | 5 +++++
- 1 file changed, 5 insertions(+)
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 22dea7d83ee8..07e58008c665 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -59,6 +59,10 @@ Optional properties:
- - <supply-name>-supply: handle to the regulator device tree node
- 			   optional "supply-name" are "vdd-0.8-cx-mx",
- 			   "vdd-1.8-xo", "vdd-1.3-rfa" and "vdd-3.3-ch0".
-+- iommus:
-+	Usage: optional
-+	Value type: <prop-encoded-array>
-+	Definition: A list of phandle and IOMMU specifier pairs.
+diff --git a/db.txt b/db.txt
+index 8cf7dee..b168f59 100644
+--- a/db.txt
++++ b/db.txt
+@@ -460,6 +460,8 @@ country FI: DFS-ETSI
+ 	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+ 	(5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+ 	(5470 - 5725 @ 160), (27), DFS, wmmrule=ETSI
++	# short range devices (ETSI EN 300 440-1)
++	(5725 - 5875 @ 80), (25 mW)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
  
- Example (to supply the calibration data alone):
- 
-@@ -157,4 +161,5 @@ wifi@18000000 {
- 		vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
- 		vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
- 		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
-+		iommus = <&apps_smmu 0x0040 0x1>;
- };
 -- 
-2.17.0
+2.17.1
