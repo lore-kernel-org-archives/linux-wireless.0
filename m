@@ -1,122 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:32985 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727854AbeILVBu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 17:01:50 -0400
-Received: by mail-pf1-f195.google.com with SMTP id d4-v6so1238177pfn.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2018 08:56:42 -0700 (PDT)
-Date: Wed, 12 Sep 2018 09:56:39 -0600
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180912155639.GF5633@ziepe.ca> (sfid-20180912_175651_737379_B9A5301D)
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+Received: from mail.toke.dk ([52.28.52.200]:36967 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727753AbeIFOxc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 10:53:32 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Grant Grundler <grundler@google.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, wgong@qti.qualcomm.com,
+        wgong@codeaurora.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
+In-Reply-To: <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
+References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com> <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk> <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk> <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
+Date: Thu, 06 Sep 2018 12:18:45 +0200
+Message-ID: <871sa7ylmi.fsf@toke.dk> (sfid-20180906_121849_988437_6CCD2552)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->  drivers/android/binder.c                    | 2 +-
->  drivers/crypto/qat/qat_common/adf_ctl_drv.c | 2 +-
->  drivers/dma-buf/dma-buf.c                   | 4 +---
->  drivers/dma-buf/sw_sync.c                   | 2 +-
->  drivers/dma-buf/sync_file.c                 | 2 +-
->  drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    | 2 +-
->  drivers/hid/hidraw.c                        | 4 +---
->  drivers/iio/industrialio-core.c             | 2 +-
->  drivers/infiniband/core/uverbs_main.c       | 4 ++--
->  drivers/media/rc/lirc_dev.c                 | 4 +---
->  drivers/mfd/cros_ec_dev.c                   | 4 +---
->  drivers/misc/vmw_vmci/vmci_host.c           | 2 +-
->  drivers/nvdimm/bus.c                        | 4 ++--
->  drivers/nvme/host/core.c                    | 2 +-
->  drivers/pci/switch/switchtec.c              | 2 +-
->  drivers/platform/x86/wmi.c                  | 2 +-
->  drivers/rpmsg/rpmsg_char.c                  | 4 ++--
->  drivers/sbus/char/display7seg.c             | 2 +-
->  drivers/sbus/char/envctrl.c                 | 4 +---
->  drivers/scsi/3w-xxxx.c                      | 4 +---
->  drivers/scsi/cxlflash/main.c                | 2 +-
->  drivers/scsi/esas2r/esas2r_main.c           | 2 +-
->  drivers/scsi/pmcraid.c                      | 4 +---
->  drivers/staging/android/ion/ion.c           | 4 +---
->  drivers/staging/vme/devices/vme_user.c      | 2 +-
->  drivers/tee/tee_core.c                      | 2 +-
->  drivers/usb/class/cdc-wdm.c                 | 2 +-
->  drivers/usb/class/usbtmc.c                  | 4 +---
->  drivers/video/fbdev/ps3fb.c                 | 2 +-
->  drivers/virt/fsl_hypervisor.c               | 2 +-
->  fs/btrfs/super.c                            | 2 +-
->  fs/ceph/dir.c                               | 2 +-
->  fs/ceph/file.c                              | 2 +-
->  fs/fuse/dev.c                               | 2 +-
->  fs/notify/fanotify/fanotify_user.c          | 2 +-
->  fs/userfaultfd.c                            | 2 +-
->  net/rfkill/core.c                           | 2 +-
->  37 files changed, 40 insertions(+), 58 deletions(-)
+Grant Grundler <grundler@google.com> writes:
 
-> diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
-> index 823beca448e1..f4755c1c9cfa 100644
-> +++ b/drivers/infiniband/core/uverbs_main.c
-> @@ -930,7 +930,7 @@ static const struct file_operations uverbs_fops = {
->  	.release = ib_uverbs_close,
->  	.llseek	 = no_llseek,
->  	.unlocked_ioctl = ib_uverbs_ioctl,
-> -	.compat_ioctl = ib_uverbs_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
->  static const struct file_operations uverbs_mmap_fops = {
-> @@ -941,7 +941,7 @@ static const struct file_operations uverbs_mmap_fops = {
->  	.release = ib_uverbs_close,
->  	.llseek	 = no_llseek,
->  	.unlocked_ioctl = ib_uverbs_ioctl,
-> -	.compat_ioctl = ib_uverbs_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
->  static struct ib_client uverbs_client = {
+>> And, well, Grant's data is from a single test in a noisy
+>> environment where the time series graph shows that throughput is all over
+>> the place for the duration of the test; so it's hard to draw solid
+>> conclusions from (for instance, for the 5-stream test, the average
+>> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for 7
+>> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
+>> used in this test, so I can't go verify it myself; so the only thing I
+>> can do is grumble about it here... :)
+>
+> It's a fair complaint and I agree with it. My counter argument is the
+> opposite is true too: most ideal benchmarks don't measure what most
+> users see. While the data wgong provided are way more noisy than I
+> like, my overall "confidence" in the "conclusion" I offered is still
+> positive.
 
-For uverbs:
+Right. I guess I would just prefer a slightly more comprehensive
+evaluation to base a 4x increase in buffer size on...
 
-Acked-by: Jason Gunthorpe <jgg@mellanox.com>
-
-It is very strange, this patch did not appear in the RDMA patchworks,
-I almost missed it  :|
-
-Jason
+-Toke
