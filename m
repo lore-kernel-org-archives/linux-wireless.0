@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:11621 "EHLO huawei.com"
+Received: from szxga05-in.huawei.com ([45.249.212.191]:11664 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725964AbeIALtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Sep 2018 07:49:02 -0400
+        id S1725981AbeIFHrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 03:47:55 -0400
 From: YueHaibing <yuehaibing@huawei.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Kees Cook <keescook@chromium.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-CC: YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH v4] rsi: remove set but not used variables 'header_size' and 'tx_params'
-Date: Sat, 1 Sep 2018 07:48:27 +0000
-Message-ID: <1535788107-171830-1-git-send-email-yuehaibing@huawei.com> (sfid-20180901_093809_318721_3CDE62BC)
-In-Reply-To: <1535786170-169698-1-git-send-email-yuehaibing@huawei.com>
-References: <1535786170-169698-1-git-send-email-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: <davem@davemloft.net>, <johannes.berg@intel.com>,
+        <emmanuel.grumbach@intel.com>, <luciano.coelho@intel.com>,
+        <linuxwifi@intel.com>, <kvalo@codeaurora.org>
+CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] iwlwifi: Use kmemdup instead of duplicating it in iwl_parse_nvm_mcc_info
+Date: Thu, 6 Sep 2018 11:13:22 +0800
+Message-ID: <20180906031322.17748-1-yuehaibing@huawei.com> (sfid-20180906_051457_506621_056DC383)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+Replace calls to kmalloc followed by a memcpy with a direct call to
+kmemdup.
 
-drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_send_data_pkt':
-drivers/net/wireless/rsi/rsi_91x_hal.c:288:5: warning:
- variable 'header_size' set but not used [-Wunused-but-set-variable]
-
-'tx_params' only used for 'header_size' dereferenced,so also
-can be removed.
+Patch found using coccinelle.
 
 Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
-v4:add missing changlog,also wipe a messy code in commit log
-v3:fix patch title as Siva Rebbagondla suggested
-v2:remove unused 'tx_params'
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 01edf96..182b066 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -282,10 +282,8 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	struct rsi_hw *adapter = common->priv;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_tx_info *info;
--	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
- 	int status = -EINVAL;
--	u8 header_size;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 27db4a3..bd91657 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -1113,14 +1113,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 	regd_to_copy = sizeof(struct ieee80211_regdomain) +
+ 		valid_rules * sizeof(struct ieee80211_reg_rule);
  
- 	if (!skb)
- 		return 0;
-@@ -297,8 +295,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 		goto err;
- 	vif = info->control.vif;
- 	bss = &vif->bss_conf;
--	tx_params = (struct skb_info *)info->driver_data;
--	header_size = tx_params->internal_hdr_size;
+-	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
++	copy_rd = kmemdup(reg, regd_to_copy, GFP_KERNEL);
+ 	if (!copy_rd) {
+ 		copy_rd = ERR_PTR(-ENOMEM);
+ 		goto out;
+ 	}
  
- 	if (((vif->type == NL80211_IFTYPE_STATION) ||
- 	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
+-	memcpy(copy_rd, regd, regd_to_copy);
+-
+ out:
+ 	kfree(regdb_ptrs);
+ 	kfree(regd);
+-- 
+2.7.0
