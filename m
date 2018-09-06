@@ -1,18 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:20896 "EHLO
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:3661 "EHLO
         alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbeIHLGC (ORCPT
+        with ESMTP id S1725963AbeIGJJF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Sep 2018 07:06:02 -0400
+        Fri, 7 Sep 2018 05:09:05 -0400
 From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v4 0/3] support ftm responder configuration/statistics
-Date: Fri,  7 Sep 2018 15:32:07 -0700
-Message-Id: <1536359530-11139-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180908_082132_082311_8D6981DB)
+Subject: [PATCH v3 0/3] support ftm responder configuration/statistics
+Date: Wed,  5 Sep 2018 18:01:37 -0700
+Message-Id: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180907_063007_060415_85EAF2DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -32,16 +31,12 @@ is added for the drivers to advertise the support. Setting the flag to
 enable FTM responder would imply that AP responds to all FTM requests.
 Default is considered to be disabled.
 
-changes in V4:
- - no changes. Rebased and resending as v4 as v3 patches were dropped
-   for unknown reason
-
 changes in V3:
  - fixed the ambiguous ftm responder disable case to be not supported
 
 changes in V2:
- - updated version number
- - rebased patches
+- updated version number
+- rebased patches
 
 Johannes Berg, Pradeep Kumar Chitrapu (1):
   cfg80211: support FTM responder configuration/statistics
@@ -53,7 +48,7 @@ Pradeep Kumar Chitrapu (1):
   ath10k: Add support to configure ftm responder role
 
  drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  28 ++++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
  drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
  drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
  include/net/cfg80211.h                 |  66 ++++++++++++++++++
@@ -66,7 +61,7 @@ Pradeep Kumar Chitrapu (1):
  net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
  net/wireless/rdev-ops.h                |  15 ++++
  net/wireless/trace.h                   |  44 ++++++++++++
- 14 files changed, 507 insertions(+), 5 deletions(-)
+ 14 files changed, 508 insertions(+), 5 deletions(-)
 
 -- 
 1.9.1
