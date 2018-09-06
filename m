@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:43030 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727623AbeIGVKZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 17:10:25 -0400
-Received: by mail-wr1-f66.google.com with SMTP id k5-v6so15540834wre.10
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 09:28:44 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        WIRELESS ML <linux-wireless@vger.kernel.org>,
-        REGDB ML <wireless-regdb@lists.infradead.org>
-Subject: [PATCH] wireless-regdb: update source of info for CU and ES
-Date: Fri,  7 Sep 2018 18:28:41 +0200
-Message-Id: <20180907162841.11749-1-xose.vazquez@gmail.com> (sfid-20180907_182847_455452_0B23B0B0)
+Received: from mx.fairtragen.de ([5.45.110.153]:57031 "EHLO mx.fairtragen.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727629AbeIFNfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:35:55 -0400
+Received: from ip-109-41-65-60.web.vodafone.de ([109.41.65.60] helo=[192.168.0.151])
+        by mx.fairtragen.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.84_2)
+        (envelope-from <leon@fairtragen.de>)
+        id 1fxppr-0001is-IB
+        for linux-wireless@vger.kernel.org; Thu, 06 Sep 2018 10:40:25 +0200
+To: linux-wireless@vger.kernel.org
+From: Leon Fellows <leon@fairtragen.de>
+Subject: ath10k_pci firmware crashes after shutdown of networking
+Message-ID: <88ebda03-cc09-ff52-77fc-ca3bc91697a3@fairtragen.de> (sfid-20180906_110130_787986_74A5DE9E)
+Date: Thu, 6 Sep 2018 10:40:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
-Cc: REGDB ML <wireless-regdb@lists.infradead.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- db.txt | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+Hello,
 
-diff --git a/db.txt b/db.txt
-index b168f59..54479fc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -311,9 +311,10 @@ country CR: DFS-FCC
- 	(5490 - 5730 @ 20), (24), DFS
- 	(5735 - 5835 @ 20), (30)
- 
-+# Source:
- # http://www.mincom.gob.cu/?q=marcoregulatorio
- # - Redes Informáticas
--# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
-+# Resolución 127- 2011 Reglamento de Banda de frecuencias de 2,4 GHz.
- country CU: DFS-FCC
- 	(2400 - 2483.5 @ 40), (200 mW)
- 
-@@ -432,13 +433,9 @@ country EG: DFS-ETSI
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
- 
--# Orden IET/787/2013, de 25 de abril, por la que se aprueba
--# el cuadro nacional de atribución de frecuencias.
--# http://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-4845
--#
--# more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
--# http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
--
-+# Source:
-+# Cuadro nacional de atribución de frecuencias (CNAF)
-+# http://www.mincotur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
--- 
-2.17.1
+I get a firmware crash, when I set my Laptop to "Standby".
+
+I created a bug-report to NetworkManager:
+https://bugzilla.gnome.org/show_bug.cgi?id=797067
+
+But Thomas Haller reckons, the bug lies in the driver/firmware.
+
+Can anyone give me some advice, what to do next?
+
+Kind Regards,
+Leon
