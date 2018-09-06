@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:38111 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726580AbeIMTzY (ORCPT
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:49963 "EHLO
+        relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727753AbeIFPOR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 15:55:24 -0400
-Received: by mail-lj1-f194.google.com with SMTP id p6-v6so4838446ljc.5
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2018 07:45:34 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 1/2] ath10k: add default value for num_peers in WMI TLV init
-Date: Thu, 13 Sep 2018 16:45:05 +0200
-Message-Id: <20180913144506.8272-1-erik.stromdahl@gmail.com> (sfid-20180913_164537_692435_83AEB349)
+        Thu, 6 Sep 2018 11:14:17 -0400
+MIME-Version: 1.0
+References: <20180906035323.GA11337@nems_nctu_lu> <877ejzynz9.fsf@toke.dk>
+In-Reply-To: <877ejzynz9.fsf@toke.dk>
+From: Louie Lu <git@louie.lu>
+Date: Thu, 6 Sep 2018 18:41:15 +0800
+Message-ID: <CADMDV=yBB-ipz25PWgp+fAdnh0mvqdCcsSzXCp65_SRQqkVBAQ@mail.gmail.com> (sfid-20180906_123934_741540_F3107E7A)
+Subject: Re: [PATCH] ath9k: add reset for airtime station debugfs
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        davem@davemloft.net, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hw_params value will only be used if it was explicitly set in the
-global hw_params array.
+Previous mail rejects by mailing list, re-send again...
 
-This makes it possible to have the num_peers member unset.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Toke Høiland-Jørgensen <toke@toke.dk> 於 2018年9月6日 週四 下午5:27寫道：
+>
+> Louie Lu <git@louie.lu> writes:
+>
+> > Let user can reset station airtime status by debugfs, it will
+> > reset all airtime deficit to ATH_AIRTIME_QUANTUM and reset rx/tx
+> > airtime accumulate to 0.
+>
+> No objections to the patch, but I'm curious which issues you were
+> debugging that led you to needing it? :)
+>
+I'm testing to get the packet queue time + airtime in ath_tx_process_buffer,
+it would be useful if I can reset the station airtime accumulated
+value, so I can observe in each test round (e.g. 5 ping) airtime
+accumulated
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 2640bc389f1d..e8e4ec5443e7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1569,7 +1569,10 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 
- 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
- 
--	cfg->num_peers = __cpu_to_le32(ar->hw_params.num_peers);
-+	if (ar->hw_params.num_peers)
-+		cfg->num_peers = __cpu_to_le32(ar->hw_params.num_peers);
-+	else
-+		cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
- 	cfg->ast_skid_limit = __cpu_to_le32(ar->hw_params.ast_skid_limit);
- 	cfg->num_wds_entries = __cpu_to_le32(ar->hw_params.num_wds_entries);
- 
--- 
-2.18.0
+Also to reset the deficit to make sure it runs like fresh one.
+
+Louie.
+
+>
+> -Toke
