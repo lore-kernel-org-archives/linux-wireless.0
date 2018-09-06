@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49774 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727716AbeIOBvU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33652 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725999AbeIFUjo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Sep 2018 21:51:20 -0400
-Date: Fri, 14 Sep 2018 13:35:06 -0700
-From: Darren Hart <dvhart@infradead.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180914203506.GE35251@wrath> (sfid-20180914_223538_685296_6D39219B)
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
+        Thu, 6 Sep 2018 16:39:44 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
+Subject: Re: [PATCHv2 1/4] ath10k: get the legacy rate index to update the
+ txrate table
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1536043516-12462-2-git-send-email-akolli@codeaurora.org>
+References: <1536043516-12462-2-git-send-email-akolli@codeaurora.org>
+To: akolli@codeaurora.org
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Message-Id: <20180906160333.81A51606FA@smtp.codeaurora.org> (sfid-20180906_180342_067623_8F57F4B0)
+Date: Thu,  6 Sep 2018 16:03:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-...
->  drivers/platform/x86/wmi.c                  | 2 +-
-...
->  static void link_event_work(struct work_struct *work)
-> diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
-> index 04791ea5d97b..e4d0697e07d6 100644
-> --- a/drivers/platform/x86/wmi.c
-> +++ b/drivers/platform/x86/wmi.c
-> @@ -886,7 +886,7 @@ static const struct file_operations wmi_fops = {
->  	.read		= wmi_char_read,
->  	.open		= wmi_char_open,
->  	.unlocked_ioctl	= wmi_ioctl,
-> -	.compat_ioctl	= wmi_ioctl,
-> +	.compat_ioctl	= generic_compat_ioctl_ptrarg,
->  };
+akolli@codeaurora.org wrote:
 
-For platform/drivers/x86:
+> Get the legacy rate index to update the pkts/bytes counter
+> against each possible tx rate.
+> 
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
+4 patches applied to ath-next branch of ath.git, thanks.
 
-As for a longer term solution, would it be possible to init fops in such
-a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
-so we don't have to duplicate this boilerplate for every ioctl fops
-structure?
+0189dbd71cbd ath10k: get the legacy rate index to update the txrate table
+348cd95c8196 ath10k: add debugfs entry to enable extended tx stats
+a904417fc876 ath10k: add extended per sta tx statistics support
+85dd28eb9917 ath10k: add debugfs support to dump per sta tx stats
 
 -- 
-Darren Hart
-VMware Open Source Technology Center
+https://patchwork.kernel.org/patch/10586755/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
