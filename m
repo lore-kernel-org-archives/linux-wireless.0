@@ -1,274 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55384 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51252 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727434AbeIDLH1 (ORCPT
+        with ESMTP id S1728699AbeIFSEZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:07:27 -0400
-From: akolli@codeaurora.org
+        Thu, 6 Sep 2018 14:04:25 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 06 Sep 2018 18:58:52 +0530
+From: Rakesh Pillai <pillair@codeaurora.org>
 To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [PATCHv2 3/4] ath10k: add extended per sta tx statistics support
-Date: Tue,  4 Sep 2018 12:15:15 +0530
-Message-Id: <1536043516-12462-4-git-send-email-akolli@codeaurora.org> (sfid-20180904_084348_448559_E54E343D)
-In-Reply-To: <1536043516-12462-1-git-send-email-akolli@codeaurora.org>
-References: <1536043516-12462-1-git-send-email-akolli@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Fix tx status flag setting for management frames
+In-Reply-To: <1536240014-10349-1-git-send-email-pillair@codeaurora.org>
+References: <1536240014-10349-1-git-send-email-pillair@codeaurora.org>
+Message-ID: <5432a9bbdf2b9461435d8a8e7cc74542@codeaurora.org> (sfid-20180906_152856_098764_AFEDB58A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+Hi All,
 
-This patch adds per station tx statistics support.
+Please ignore this patchset. I have added the Tested HW/FW info and sent 
+the v2 version for this patchset.
 
-Per station tx stats include
- - pkts/bytes transmitted at all possible rates(mcs/nss/bw/gi).
- - ACK fails count
- - ampdu bytes/pkts transmitted at all possible rates(mcs/nss/bw/gi).
- - BA fails count
+Thanks,
+Rakesh Pillai.
 
-Tested on QCA9984/QCA4019/QCA988x
-Firmware: 10.4-3.5.3-00057
-	  10.2.4-1.0-00037
-
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
----
-V2:
-  - Fix kbuild error, error: 'struct ath10k' has no member named 'debug'
-  - Addressed the Macro changes,  ATH10K_ prefix (kvalo) 
-
- drivers/net/wireless/ath/ath10k/core.h   |   31 +++++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c |  109 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/mac.c    |   10 +++
- drivers/net/wireless/ath/ath10k/wmi.h    |   13 ++--
- 4 files changed, 159 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index b5f6940bb102..2266c49444f3 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -461,6 +461,36 @@ struct ath10k_sta_tid_stats {
- 	unsigned long int rx_pkt_amsdu[ATH10K_AMSDU_SUBFRM_NUM_MAX];
- };
- 
-+enum ath10k_counter_type {
-+	ATH10K_COUNTER_TYPE_BYTES,
-+	ATH10K_COUNTER_TYPE_PKTS,
-+	ATH10K_COUNTER_TYPE_MAX,
-+};
-+
-+enum ath10k_stats_type {
-+	ATH10K_STATS_TYPE_SUCC,
-+	ATH10K_STATS_TYPE_FAIL,
-+	ATH10K_STATS_TYPE_RETRY,
-+	ATH10K_STATS_TYPE_AMPDU,
-+	ATH10K_STATS_TYPE_MAX,
-+};
-+
-+struct ath10k_htt_data_stats {
-+	u64 legacy[ATH10K_COUNTER_TYPE_MAX][ATH10K_LEGACY_NUM];
-+	u64 ht[ATH10K_COUNTER_TYPE_MAX][ATH10K_HT_MCS_NUM];
-+	u64 vht[ATH10K_COUNTER_TYPE_MAX][ATH10K_VHT_MCS_NUM];
-+	u64 bw[ATH10K_COUNTER_TYPE_MAX][ATH10K_BW_NUM];
-+	u64 nss[ATH10K_COUNTER_TYPE_MAX][ATH10K_NSS_NUM];
-+	u64 gi[ATH10K_COUNTER_TYPE_MAX][ATH10K_GI_NUM];
-+};
-+
-+struct ath10k_htt_tx_stats {
-+	struct ath10k_htt_data_stats stats[ATH10K_STATS_TYPE_MAX];
-+	u64 tx_duration;
-+	u64 ba_fails;
-+	u64 ack_fails;
-+};
-+
- struct ath10k_sta {
- 	struct ath10k_vif *arvif;
- 
-@@ -474,6 +504,7 @@ struct ath10k_sta {
- 
- 	struct work_struct update_wk;
- 	u64 rx_duration;
-+	struct ath10k_htt_tx_stats *tx_stats;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	/* protected by conf_mutex */
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 01eb4a7f4a69..4b9197b93be1 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2504,6 +2504,111 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- }
- 
- static void
-+ath10k_accumulate_per_peer_tx_stats(struct ath10k *ar,
-+				    struct ath10k_sta *arsta,
-+				    struct ath10k_per_peer_tx_stats *pstats,
-+				    u8 legacy_rate_idx)
-+{
-+	struct rate_info *txrate = &arsta->txrate;
-+	struct ath10k_htt_tx_stats *tx_stats;
-+	int ht_idx, gi, mcs, bw, nss;
-+
-+	if (!arsta->tx_stats)
-+		return;
-+
-+	tx_stats = arsta->tx_stats;
-+	gi = (arsta->txrate.flags & RATE_INFO_FLAGS_SHORT_GI);
-+	ht_idx = txrate->mcs + txrate->nss * 8;
-+	mcs = txrate->mcs;
-+	bw = txrate->bw;
-+	nss = txrate->nss;
-+
-+#define STATS_OP_FMT(name) tx_stats->stats[ATH10K_STATS_TYPE_##name]
-+
-+	if (txrate->flags == RATE_INFO_FLAGS_VHT_MCS) {
-+		STATS_OP_FMT(SUCC).vht[0][mcs] += pstats->succ_bytes;
-+		STATS_OP_FMT(SUCC).vht[1][mcs] += pstats->succ_pkts;
-+		STATS_OP_FMT(FAIL).vht[0][mcs] += pstats->failed_bytes;
-+		STATS_OP_FMT(FAIL).vht[1][mcs] += pstats->failed_pkts;
-+		STATS_OP_FMT(RETRY).vht[0][mcs] += pstats->retry_bytes;
-+		STATS_OP_FMT(RETRY).vht[1][mcs] += pstats->retry_pkts;
-+	} else if (txrate->flags == RATE_INFO_FLAGS_MCS) {
-+		STATS_OP_FMT(SUCC).ht[0][ht_idx] += pstats->succ_bytes;
-+		STATS_OP_FMT(SUCC).ht[1][ht_idx] += pstats->succ_pkts;
-+		STATS_OP_FMT(FAIL).ht[0][ht_idx] += pstats->failed_bytes;
-+		STATS_OP_FMT(FAIL).ht[1][ht_idx] += pstats->failed_pkts;
-+		STATS_OP_FMT(RETRY).ht[0][ht_idx] += pstats->retry_bytes;
-+		STATS_OP_FMT(RETRY).ht[1][ht_idx] += pstats->retry_pkts;
-+	} else {
-+		mcs = legacy_rate_idx;
-+		if (mcs < 0)
-+			return;
-+
-+		STATS_OP_FMT(SUCC).legacy[0][mcs] += pstats->succ_bytes;
-+		STATS_OP_FMT(SUCC).legacy[1][mcs] += pstats->succ_pkts;
-+		STATS_OP_FMT(FAIL).legacy[0][mcs] += pstats->failed_bytes;
-+		STATS_OP_FMT(FAIL).legacy[1][mcs] += pstats->failed_pkts;
-+		STATS_OP_FMT(RETRY).legacy[0][mcs] += pstats->retry_bytes;
-+		STATS_OP_FMT(RETRY).legacy[1][mcs] += pstats->retry_pkts;
-+	}
-+
-+	if (ATH10K_HW_AMPDU(pstats->flags)) {
-+		tx_stats->ba_fails += ATH10K_HW_BA_FAIL(pstats->flags);
-+
-+		if (txrate->flags == RATE_INFO_FLAGS_MCS) {
-+			STATS_OP_FMT(AMPDU).ht[0][ht_idx] +=
-+				pstats->succ_bytes + pstats->retry_bytes;
-+			STATS_OP_FMT(AMPDU).ht[1][ht_idx] +=
-+				pstats->succ_pkts + pstats->retry_pkts;
-+		} else {
-+			STATS_OP_FMT(AMPDU).vht[0][mcs] +=
-+				pstats->succ_bytes + pstats->retry_bytes;
-+			STATS_OP_FMT(AMPDU).vht[1][mcs] +=
-+				pstats->succ_pkts + pstats->retry_pkts;
-+		}
-+		STATS_OP_FMT(AMPDU).bw[0][bw] +=
-+			pstats->succ_bytes + pstats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).nss[0][nss] +=
-+			pstats->succ_bytes + pstats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).gi[0][gi] +=
-+			pstats->succ_bytes + pstats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).bw[1][bw] +=
-+			pstats->succ_pkts + pstats->retry_pkts;
-+		STATS_OP_FMT(AMPDU).nss[1][nss] +=
-+			pstats->succ_pkts + pstats->retry_pkts;
-+		STATS_OP_FMT(AMPDU).gi[1][gi] +=
-+			pstats->succ_pkts + pstats->retry_pkts;
-+	} else {
-+		tx_stats->ack_fails +=
-+				ATH10K_HW_BA_FAIL(pstats->flags);
-+	}
-+
-+	STATS_OP_FMT(SUCC).bw[0][bw] += pstats->succ_bytes;
-+	STATS_OP_FMT(SUCC).nss[0][nss] += pstats->succ_bytes;
-+	STATS_OP_FMT(SUCC).gi[0][gi] += pstats->succ_bytes;
-+
-+	STATS_OP_FMT(SUCC).bw[1][bw] += pstats->succ_pkts;
-+	STATS_OP_FMT(SUCC).nss[1][nss] += pstats->succ_pkts;
-+	STATS_OP_FMT(SUCC).gi[1][gi] += pstats->succ_pkts;
-+
-+	STATS_OP_FMT(FAIL).bw[0][bw] += pstats->failed_bytes;
-+	STATS_OP_FMT(FAIL).nss[0][nss] += pstats->failed_bytes;
-+	STATS_OP_FMT(FAIL).gi[0][gi] += pstats->failed_bytes;
-+
-+	STATS_OP_FMT(FAIL).bw[1][bw] += pstats->failed_pkts;
-+	STATS_OP_FMT(FAIL).nss[1][nss] += pstats->failed_pkts;
-+	STATS_OP_FMT(FAIL).gi[1][gi] += pstats->failed_pkts;
-+
-+	STATS_OP_FMT(RETRY).bw[0][bw] += pstats->retry_bytes;
-+	STATS_OP_FMT(RETRY).nss[0][nss] += pstats->retry_bytes;
-+	STATS_OP_FMT(RETRY).gi[0][gi] += pstats->retry_bytes;
-+
-+	STATS_OP_FMT(RETRY).bw[1][bw] += pstats->retry_pkts;
-+	STATS_OP_FMT(RETRY).nss[1][nss] += pstats->retry_pkts;
-+	STATS_OP_FMT(RETRY).gi[1][gi] += pstats->retry_pkts;
-+}
-+
-+static void
- ath10k_update_per_peer_tx_stats(struct ath10k *ar,
- 				struct ieee80211_sta *sta,
- 				struct ath10k_per_peer_tx_stats *peer_stats)
-@@ -2557,6 +2662,10 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 
- 	arsta->txrate.nss = txrate.nss;
- 	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
-+
-+	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
-+		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
-+						    rate_idx);
- }
- 
- static void ath10k_htt_fetch_peer_stats(struct ath10k *ar,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 90f9372dec25..5ae7913c9f03 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6243,6 +6243,13 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   ar->num_stations + 1, ar->max_num_stations,
- 			   ar->num_peers + 1, ar->max_num_peers);
- 
-+		if (ath10k_debug_is_extd_tx_stats_enabled(ar)) {
-+			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
-+						  GFP_KERNEL);
-+			if (!arsta->tx_stats)
-+				goto exit;
-+		}
-+
- 		num_tdls_stations = ath10k_mac_tdls_vif_stations_count(hw, vif);
- 		num_tdls_vifs = ath10k_mac_tdls_vifs_count(hw);
- 
-@@ -6328,6 +6335,9 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   "mac vdev %d peer delete %pM sta %pK (sta gone)\n",
- 			   arvif->vdev_id, sta->addr, sta);
- 
-+		if (ath10k_debug_is_extd_tx_stats_enabled(ar))
-+			kfree(arsta->tx_stats);
-+
- 		if (sta->tdls) {
- 			ret = ath10k_mac_tdls_peer_update(ar, arvif->vdev_id,
- 							  sta,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 36220258e3c7..9d0ef34381d5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4958,10 +4958,15 @@ enum wmi_rate_preamble {
- #define ATH10K_HW_GI(flags)		(((flags) >> 5) & 0x1)
- #define ATH10K_HW_RATECODE(rate, nss, preamble) \
- 	(((preamble) << 6) | ((nss) << 4) | (rate))
--
--#define VHT_MCS_NUM     10
--#define VHT_BW_NUM      4
--#define VHT_NSS_NUM     4
-+#define ATH10K_HW_AMPDU(flags)		((flags) & 0x1)
-+#define ATH10K_HW_BA_FAIL(flags)	(((flags) >> 1) & 0x3)
-+
-+#define ATH10K_VHT_MCS_NUM	10
-+#define ATH10K_BW_NUM		4
-+#define ATH10K_NSS_NUM		4
-+#define ATH10K_LEGACY_NUM	12
-+#define ATH10K_GI_NUM		2
-+#define ATH10K_HT_MCS_NUM	32
- 
- /* Value to disable fixed rate setting */
- #define WMI_FIXED_RATE_NONE    (0xff)
--- 
-1.7.9.5
+On 2018-09-06 18:50, Rakesh Pillai wrote:
+> The tx_status for management frames is being filled
+> incorrectly in the flags of skb_cb. This incorrect
+> flag setting causes the upper layers to consider that
+> the particular frame was not transmitted properly,
+> leading to improper behavior.
+> 
+> Set the IEEE80211_TX_STAT_ACK flag in the info flags
+> of skb_cb, to indicate the successful transmission of
+> the management frame.
+> 
+> Fixes: dc405152bb64d4ae01c9ac669de25b2d1fb6fc2d
+> 
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
+> b/drivers/net/wireless/ath/ath10k/wmi.c
+> index fd612d2..1dced0d 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -2336,7 +2336,12 @@ static int wmi_process_mgmt_tx_comp(struct
+> ath10k *ar, u32 desc_id,
+>  	dma_unmap_single(ar->dev, pkt_addr->paddr,
+>  			 msdu->len, DMA_FROM_DEVICE);
+>  	info = IEEE80211_SKB_CB(msdu);
+> -	info->flags |= status;
+> +
+> +	if (status)
+> +		info->flags &= ~IEEE80211_TX_STAT_ACK;
+> +	else
+> +		info->flags |= IEEE80211_TX_STAT_ACK;
+> +
+>  	ieee80211_tx_status_irqsafe(ar->hw, msdu);
+> 
+>  	ret = 0;
