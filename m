@@ -1,58 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48296 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726689AbeIKTKx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:47972 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725894AbeIFUpJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 15:10:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [linux-next:master 2211/3360] drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined reference to `mt76u_mcu_deinit'
-References: <201809112137.2sMVZb3I%fengguang.wu@intel.com>
-        <875zzcuosb.fsf@codeaurora.org>
-        <20180911135831.GA2760@localhost.localdomain>
-Date: Tue, 11 Sep 2018 17:11:18 +0300
-In-Reply-To: <20180911135831.GA2760@localhost.localdomain> (Lorenzo Bianconi's
-        message of "Tue, 11 Sep 2018 15:58:32 +0200")
-Message-ID: <871sa0unsp.fsf@codeaurora.org> (sfid-20180911_161130_735606_38A0A109)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 6 Sep 2018 16:45:09 -0400
+Message-ID: <1536250124.4015.10.camel@sipsolutions.net> (sfid-20180906_180900_819203_05C8B9AC)
+Subject: Re: [PATCH v3 0/3] support ftm responder configuration/statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        david.spinadel@intel.com
+Date: Thu, 06 Sep 2018 18:08:44 +0200
+In-Reply-To: <877ejy7j3u.fsf@kamboji.qca.qualcomm.com>
+References: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
+         <1536215640.4015.0.camel@sipsolutions.net>
+         <877ejy7j3u.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+On Thu, 2018-09-06 at 18:15 +0300, Kalle Valo wrote:
+> 
+> Actually patch 3 made it:
+> 
+> https://patchwork.kernel.org/patch/10590115/
+> 
+> But it didn't get the rest as it says "Untitled series #15763".
+> Patchwork was timing out for me quite heavily so in that way I'm not
+> surprised that patches are getting lost :(
 
->> + felix, linux-wireless
->> 
->> kbuild test robot <lkp@intel.com> writes:
->> 
->> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
->> > head:   43783a8f68478e81fe183f86162d3e7ca29ba923
->> > commit: 6f4796b7063e334902049b0cc41514b6c3b52876 [2211/3360] mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
->> > config: x86_64-randconfig-s5-09111320 (attached as .config)
->> > compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
->> > reproduce:
->> >         git checkout 6f4796b7063e334902049b0cc41514b6c3b52876
->> >         # save the attached .config to linux build tree
->> >         make ARCH=x86_64 
->> >
->> > All errors (new ones prefixed by >>):
->> >
->> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.o: In function `mt76x0_probe':
->> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.c:119: undefined reference to `mt76u_init'
->> >    drivers/net/wireless/mediatek/mt76/mt76x0/init.o: In function `mt76x0_init_hardware':
->> >>> drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined
->> >>> reference to `mt76u_mcu_deinit'
->> 
->> kbuild bot has been sending quite a few similar warnings during the last
->> day. Lorenzo, I assume you are looking at these?
->
-> All reported errors from intel kbuild test robot are due to missing
-> CONFIG_MT76_USB symbol. This should be fixed in latest Stanislaw's patchset:
-> [PATCH 37/42] mt76x0: initial split between pci and usb.
+No, it's not patchwork - I didn't get the patches (except for #3) via
+the list either.
 
-Great, thanks.
-
--- 
-Kalle Valo
+johannes
