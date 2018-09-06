@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:58618 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbeITAtU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 20:49:20 -0400
-Message-ID: <1537384189.10305.58.camel@sipsolutions.net> (sfid-20180919_211007_151897_E683CF90)
-Subject: Re: [PATCH 5/7] netlink: prepare validate extack setting for
- recursion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-        David Ahern <dsahern@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 19 Sep 2018 21:09:49 +0200
-In-Reply-To: <20180919190851.GM4590@localhost.localdomain> (sfid-20180919_210856_964991_06B14B8E)
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
-         <20180919120900.28708-6-johannes@sipsolutions.net>
-         <18ea5293-5a12-7aca-7373-12d1ab3a0821@gmail.com>
-         <1537374995.10305.47.camel@sipsolutions.net>
-         <50773483-5732-8874-c5bf-99fa09d7e94a@gmail.com>
-         <20180919190851.GM4590@localhost.localdomain>
-         (sfid-20180919_210856_964991_06B14B8E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33136 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728139AbeIFNyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:00 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 11/42] mt76x0: disable usb rx bulk aggregation
+Date: Thu,  6 Sep 2018 11:18:27 +0200
+Message-Id: <1536225538-16454-12-git-send-email-sgruszka@redhat.com> (sfid-20180906_111942_192597_BCAB2113)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-19 at 16:08 -0300, Marcelo Ricardo Leitner wrote:
-> 
-> > If it fails and returns (nested and all) on the first failure it should
-> > be fine. I was thinking something like this (whitespace damaged on paste):
-> 
-> This will avoid the situation that we were discussing in the older
-> thread, btw.
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-I think it only avoids the part where we have to worry about "have I
-already set this" - which is David's point AFAICT.
+In order to use zero-copying, disable usb rx bulk aggregation
 
-I'll reply over to your other email (as I already started writing a
-reply there)
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index ddbb52b4e5ac..b28ea45a7282 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -110,17 +110,17 @@ static void mt76x0_reset_csr_bbp(struct mt76x0_dev *dev)
+ 
+ static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
+ {
+-	struct mt76_usb *usb = &dev->mt76.usb;
+ 	u32 val;
+ 
+ 	val = mt76_rr(dev, MT_USB_DMA_CFG);
+ 
+-	val |= FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, MT_USB_AGGR_TIMEOUT) |
+-	       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_LMT, MT_USB_AGGR_SIZE_LIMIT) |
+-	       MT_USB_DMA_CFG_RX_BULK_EN |
++	val |= MT_USB_DMA_CFG_RX_BULK_EN |
+ 	       MT_USB_DMA_CFG_TX_BULK_EN;
+-	if (usb->in_max_packet == 512)
+-		val |= MT_USB_DMA_CFG_RX_BULK_AGG_EN;
++
++	/* disable AGGR_BULK_RX in order to receive one
++	 * frame in each rx urb and avoid copies
++	 */
++	val &= ~MT_USB_DMA_CFG_RX_BULK_AGG_EN;
+ 	mt76_wr(dev, MT_USB_DMA_CFG, val);
+ 
+ 	val = mt76_rr(dev, MT_COM_REG0);
+-- 
+2.7.5
