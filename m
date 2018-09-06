@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:38517 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728976AbeIXWNf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 18:13:35 -0400
-Received: by mail-wr1-f67.google.com with SMTP id j8-v6so16539919wrw.5
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 09:10:42 -0700 (PDT)
-Received: from localhost.localdomain (din-110-176-227-77.ipcom.comunitel.net. [77.227.176.110])
-        by smtp.gmail.com with ESMTPSA id 94-v6sm46182488wrc.10.2018.09.24.09.10.40
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 24 Sep 2018 09:10:40 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36200 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728039AbeIFNyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:15 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Fix a GET_KEY reply attribute
-Date: Mon, 24 Sep 2018 18:10:22 +0200
-Message-Id: <20180924161022.4332-1-andrew.zaborowski@intel.com> (sfid-20180924_181046_255472_F8EFA0AE)
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 17/42] mt76x0: set max fragments size
+Date: Thu,  6 Sep 2018 11:18:33 +0200
+Message-Id: <1536225538-16454-18-git-send-email-sgruszka@redhat.com> (sfid-20180906_111952_089304_362BFAAF)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the NL80211_KEY_IDX attribute inside the NL80211_ATTR_KEY in
-NL80211_CMD_GET_KEY responses to comply with nl80211_key_policy.
-This is unlikely to affect existing userspace.
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Set maximum number of tx fragments according to usb controller
+features
+
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5fb9b7dd98..ac08ba5f0a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3359,7 +3359,7 @@ static void get_key_callback(void *c, struct key_params *params)
- 			 params->cipher)))
- 		goto nla_put_failure;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 33730c93c63f..cd7cdf3d9731 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -722,6 +722,12 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
+ 	if (ret)
+ 		return ret;
  
--	if (nla_put_u8(cookie->msg, NL80211_ATTR_KEY_IDX, cookie->idx))
-+	if (nla_put_u8(cookie->msg, NL80211_KEY_IDX, cookie->idx))
- 		goto nla_put_failure;
++	/* check hw sg support in order to enable AMSDU */
++	if (mt76u_check_sg(&dev->mt76))
++		hw->max_tx_fragments = MT_SG_MAX_SIZE;
++	else
++		hw->max_tx_fragments = 1;
++
+ 	mt76x0_init_debugfs(dev);
  
- 	nla_nest_end(cookie->msg, key);
+ 	return 0;
 -- 
-2.17.1
+2.7.5
