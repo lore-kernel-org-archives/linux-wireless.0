@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:63144 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbeIGWCF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727860AbeIFUym (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 18:02:05 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
+        Thu, 6 Sep 2018 16:54:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        linux-wireless@vger.kernel.org, david.spinadel@intel.com,
         ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH resend v3 0/3] support ftm responder configuration/statistics
-Date: Fri,  7 Sep 2018 10:20:06 -0700
-Message-Id: <1536340806-26870-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180907_192014_073314_4A9CC7B7)
+Subject: Re: [PATCH v3 0/3] support ftm responder configuration/statistics
+References: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
+        <1536215640.4015.0.camel@sipsolutions.net>
+        <877ejy7j3u.fsf@kamboji.qca.qualcomm.com>
+        <1536250124.4015.10.camel@sipsolutions.net>
+Date: Thu, 06 Sep 2018 19:18:24 +0300
+In-Reply-To: <1536250124.4015.10.camel@sipsolutions.net> (Johannes Berg's
+        message of "Thu, 06 Sep 2018 18:08:44 +0200")
+Message-ID: <87y3ce61m7.fsf@kamboji.qca.qualcomm.com> (sfid-20180906_181834_550163_C81BD840)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+> On Thu, 2018-09-06 at 18:15 +0300, Kalle Valo wrote:
+>> 
+>> Actually patch 3 made it:
+>> 
+>> https://patchwork.kernel.org/patch/10590115/
+>> 
+>> But it didn't get the rest as it says "Untitled series #15763".
+>> Patchwork was timing out for me quite heavily so in that way I'm not
+>> surprised that patches are getting lost :(
+>
+> No, it's not patchwork - I didn't get the patches (except for #3) via
+> the list either.
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
-
-changes in V3:
- - fixed the ambiguous ftm responder disable case to be not supported
-
-changes in V2:
- - updated version number
- - rebased patches
-
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
-
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
-
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 ++++++++++++++++++
- include/net/mac80211.h                 |  13 ++++
- include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
- net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 +++++
- net/mac80211/trace.h                   |  23 ++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 ++++
- net/wireless/trace.h                   |  44 ++++++++++++
- 14 files changed, 508 insertions(+), 5 deletions(-)
+Ah, missed that as the ath10k list did get all the patches. But very
+good that patchwork was not to blame here.
 
 -- 
-1.9.1
+Kalle Valo
