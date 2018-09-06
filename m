@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38234 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726405AbeIJLRF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 07:17:05 -0400
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH v3] ath10k: management tx ack rssi capability check
-Date: Mon, 10 Sep 2018 11:54:30 +0530
-Message-Id: <1536560670-4292-1-git-send-email-bpothuno@codeaurora.org> (sfid-20180910_082443_005477_2BE2E4A2)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36214 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728433AbeIFNye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:34 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 25/42] mt76x0: init hw capabilities
+Date: Thu,  6 Sep 2018 11:18:41 +0200
+Message-Id: <1536225538-16454-26-git-send-email-sgruszka@redhat.com> (sfid-20180906_112008_380303_8852A1EC)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding WMI service check for management tx ack rssi support; this is
-done to maintain common avg ack signal in user level for both data
-and management tx ack packet.
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Tested on QCA4019(fw version-10.4-3.2.1-00063).
+Enable hw capabilities supported by mt76-usb layer
+- fast_xmit
+- tx/rx amsdu
+- MFP
+- non-linear tx skbs
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-v3:
- modified ack rssi support check to newly added command.
- cfg80211/mac80211 changes are already merged hence
- modified ath10k patch alone.
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
- drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 97548f9..84c6ecd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8479,9 +8479,10 @@ int ath10k_mac_register(struct ath10k *ar)
- 	wiphy_ext_feature_set(ar->hw->wiphy,
- 			      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
- 
--	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
-+	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map) ||
-+	    test_bit(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, ar->wmi.svc_map))
- 		wiphy_ext_feature_set(ar->hw->wiphy,
--				      NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
-+				      NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT);
- 
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 7cd939c97efe..418e1918086d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -676,6 +676,13 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
+ 	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+ 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+ 	ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
++	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
++	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
++	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
++	ieee80211_hw_set(hw, TX_AMSDU);
++	ieee80211_hw_set(hw, TX_FRAG_LIST);
++	ieee80211_hw_set(hw, MFP_CAPABLE);
++
+ 	hw->max_rates = 1;
+ 	hw->max_report_rates = 7;
+ 	hw->max_rate_tries = 1;
 -- 
-2.7.4
+2.7.5
