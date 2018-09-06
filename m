@@ -1,136 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48828 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727820AbeISPSv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47350 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725981AbeIFNS4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 11:18:51 -0400
-Date: Wed, 19 Sep 2018 12:41:32 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 29/29] staging: wilc1000: return exact error of
- register_netdev() from wilc_netdev_init()
-Message-ID: <20180919094132.3lfouwwzc7z3thf4@mwanda> (sfid-20180919_114151_881650_6569854F)
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
- <1537337119-14952-30-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1537337119-14952-30-git-send-email-ajay.kathat@microchip.com>
+        Thu, 6 Sep 2018 09:18:56 -0400
+Message-ID: <aa36d7cb91ef0aea757b46623c8d5bef8d61bc40.camel@coelho.fi> (sfid-20180906_104436_949074_E49308E0)
+From: Luca Coelho <luca@coelho.fi>
+To: Hao Wei Tee <angelsl@in04.sg>, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>
+Date: Thu, 06 Sep 2018 11:44:30 +0300
+In-Reply-To: <2ee6e4d9-d555-c29b-815d-3e66890189bc@in04.sg>
+References: <20180821063657.30071-1-luca@coelho.fi>
+         <20180821063657.30071-15-luca@coelho.fi>
+         <2ee6e4d9-d555-c29b-815d-3e66890189bc@in04.sg>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 14/15] iwlwifi: mvm: Send LQ command as async when
+ necessary
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was waiting for you to send this like a spider waits for flies.  You
-fell directly into my trap.  Mwuahahahahaha.
+On Thu, 2018-09-06 at 16:22 +0800, Hao Wei Tee wrote:
+> Hi,
 
-drivers/staging/wilc1000/linux_wlan.c
-  1056  int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
-  1057                       const struct wilc_hif_func *ops)
-  1058  {
-  1059          int i, ret = -ENOMEM;
-  1060          struct wilc_vif *vif;
-  1061          struct net_device *ndev;
-  1062          struct wilc *wl;
-  1063  
-  1064          wl = kzalloc(sizeof(*wl), GFP_KERNEL);
-  1065          if (!wl)
-  1066                  return ret;
-                               ^^^
-It's cleaner to return -ENOMEM so that we don't have to glance up to the
-declaration block.  This is especially true when "ret" is zero, btw,
-because that can indicate a reversed test.
+Hi Hao Wei,
 
-		if (!ret)
-			return ret;
 
-In this theoretically example it was supposed to be:
+> On 21/8/18 2:36 PM, Luca Coelho wrote:
+> > From: Avraham Stern <avraham.stern@intel.com>
+> > 
+> > The parameter that indicated whether the LQ command should be sent
+> > as sync or async was removed, causing the LQ command to be sent as
+> > sync from interrupt context (e.g. from the RX path). This resulted
+> > in a kernel warning: "scheduling while atomic" and failing to send
+> > the LQ command, which ultimately leads to a queue hang.
+> > 
+> > Fix it by adding back the required parameter to send the command as
+> > sync only when it is allowed.
+> > 
+> > Fixes: d94c5a820d10 ("iwlwifi: mvm: open BA session only when sta is authorized")
+> > Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> I'm not sure whether you guys normally send fixes to stable, but this
+> really should go to stable. I run into this bug as often as a few times
+> an hour and sometimes it leads to IRQs from other devices being dropped
+> (e.g. touchpad, in turn causing the driver to timeout and quit, and the
+> touchpad dies).
 
-		if (ret)
-			return ret;
+We do send things for stable and the "Fixes" tag included in this patch
+will cause it to be automatically considered for the stable releases
+that contain the commit it points to.  So we should be fine here.
 
-Normally, reversed conditions are caught in testing, but for the kernel,
-no one has the hardware to test everything so we do get reversed
-conditions from time to time.
+If you notice that, for some reason, this doesn't end up applied in the
+specific stable kernel you need it on, please let us know and we'll
+check it out.  Also note that anyone can suggest any patch to stable
+releases, there's a process[1] in place for that.
 
-  1067  
-  1068          if (wilc_wlan_cfg_init(wl))
-  1069                  goto free_wl;
-  1070  
-  1071          *wilc = wl;
-  1072          wl->io_type = io_type;
-  1073          wl->hif_func = ops;
-  1074          wl->enable_ps = true;
-  1075          wl->chip_ps_state = CHIP_WAKEDUP;
-  1076          INIT_LIST_HEAD(&wl->txq_head.list);
-  1077          INIT_LIST_HEAD(&wl->rxq_head.list);
-  1078  
-  1079          wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
-  1080          if (!wl->hif_workqueue)
-  1081                  goto free_cfg;
-  1082  
-  1083          register_inetaddr_notifier(&g_dev_notifier);
-  1084  
-  1085          for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
-  1086                  struct wireless_dev *wdev;
-  1087  
-  1088                  ndev = alloc_etherdev(sizeof(struct wilc_vif));
-  1089                  if (!ndev)
-  1090                          goto free_ndev;
-                                ^^^^^^^^^^^^^^^
-ret is zero on the second iteration through the loop.
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst
 
-  1091  
-  1092                  vif = netdev_priv(ndev);
-  1093                  memset(vif, 0, sizeof(struct wilc_vif));
-  1094  
-  1095                  if (i == 0) {
-  1096                          strcpy(ndev->name, "wlan%d");
-  1097                          vif->ifc_id = 1;
-  1098                  } else {
-  1099                          strcpy(ndev->name, "p2p%d");
-  1100                          vif->ifc_id = 0;
-  1101                  }
-  1102                  vif->wilc = *wilc;
-  1103                  vif->ndev = ndev;
-  1104                  wl->vif[i] = vif;
-  1105                  wl->vif_num = i;
-  1106                  vif->idx = wl->vif_num;
-  1107  
-  1108                  ndev->netdev_ops = &wilc_netdev_ops;
-  1109  
-  1110                  wdev = wilc_create_wiphy(ndev, dev);
-  1111                  if (!wdev) {
-  1112                          netdev_err(ndev, "Can't register WILC Wiphy\n");
-  1113                          goto free_ndev;
-                                ^^^^^^^^^^^^^^^
-Here too.
+Thanks for your contribution!
 
-  1114                  }
-  1115  
-  1116                  SET_NETDEV_DEV(ndev, dev);
-  1117  
-  1118                  vif->ndev->ieee80211_ptr = wdev;
-  1119                  vif->ndev->ml_priv = vif;
-  1120                  wdev->netdev = vif->ndev;
-  1121                  vif->netstats.rx_packets = 0;
-  1122                  vif->netstats.tx_packets = 0;
-  1123                  vif->netstats.rx_bytes = 0;
-  1124                  vif->netstats.tx_bytes = 0;
-  1125  
-  1126                  ret = register_netdev(ndev);
-  1127                  if (ret)
-  1128                          goto free_ndev;
-                        ^^^^^^^^
-ret is cleared on the first iteration through the loop.
-
-  1129  
-  1130                  vif->iftype = STATION_MODE;
-  1131                  vif->mac_opened = 0;
-  1132          }
-  1133  
-  1134          return 0;
-
-regards,
-dan carpenter
+--
+Cheers,
+Luca.
