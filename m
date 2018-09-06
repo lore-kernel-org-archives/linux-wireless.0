@@ -1,59 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55778 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731368AbeISVqW (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:59189 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728293AbeIFNnm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 17:46:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, arnd@arndb.de
-Subject: Re: [PATCH] net: wireless: mediatek: fix mt76 LEDS build error
-References: <563c7f90-1d9f-440c-4670-8fbebc9f76b0@infradead.org>
-        <20180907075612.GB2725@localhost.localdomain>
-        <87d0tp65km.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 19 Sep 2018 19:07:43 +0300
-In-Reply-To: <87d0tp65km.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 07 Sep 2018 12:05:13 +0300")
-Message-ID: <874lelsc6o.fsf@purkki.adurom.net> (sfid-20180919_180749_603989_1BAB776D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 6 Sep 2018 09:43:42 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v3 3/3] ath10k: Add support to configure ftm responder role
+Date: Wed,  5 Sep 2018 18:01:40 -0700
+Message-Id: <1536195700-1351-4-git-send-email-pradeepc@codeaurora.org> (sfid-20180906_110919_115028_1209C7E3)
+In-Reply-To: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
+References: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Configure fine timing measurement (FTM) responder role from the
+ftm_responder bss param sent by mac80211. With FTM functionality
+offloaded to firmware, adding the interface allows userspace
+to enable FTM responder functionality. ath10k disables it at the
+time of interface creation.
 
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->
->>> From: Randy Dunlap <rdunlap@infradead.org>
->>> 
->>> All of the mt76 driver options use its mac80211.o component,
->>> which uses led interfaces, so each of them should depend on
->>> LEDS_CLASS.
->>> 
->>> Fixes this build error:
->>> 
->>> drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_led_init':
->>> drivers/net/wireless/mediatek/mt76/mac80211.c:119: undefined
->>> reference to `devm_of_led_classdev_register'
->>> 
->>> Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
->>> 
->>
->> Hi Randy,
->>
->> a fix for it has been already proposed by Arnd here:
->> https://marc.info/?l=linux-wireless&m=151628136830540&w=2
->> but it has not been applied yet
->
-> Yet? Arnd's patch is not on my queue as it's from last January and Felix
-> had a comment for it:
->
-> https://patchwork.kernel.org/patch/10173197/
+Supported FW: 10.4
 
-So what should we do? Arnd hasn't submitted a new patch so should we
-take this one instead?
+Tested on QCA9984 with firmware: 10.4-3.6-00144
 
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |  4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.h  | 10 ++++++++++
+ 4 files changed, 44 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 9feea02e7d37..db190230b292 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -544,6 +544,7 @@ struct ath10k_vif {
+ 	bool nohwcrypt;
+ 	int num_legacy_stations;
+ 	int txpower;
++	bool ftm_responder;
+ 	struct wmi_wmm_params_all_arg wmm_params;
+ 	struct work_struct ap_csa_work;
+ 	struct delayed_work connection_loss_work;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 078058eef648..474df855342b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5260,6 +5260,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		goto err_peer_delete;
+ 	}
+ 
++	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map)) {
++		vdev_param = ar->wmi.vdev_param->rtt_responder_role;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++						arvif->ftm_responder);
++
++		/* It is harmless to not set FTM role. Do not warn */
++		if (ret && ret != -EOPNOTSUPP)
++			ath10k_warn(ar, "failed to set vdev %i FTM Responder: %d\n",
++				    arvif->vdev_id, ret);
++	}
++
+ 	if (vif->type == NL80211_IFTYPE_MONITOR) {
+ 		ar->monitor_arvif = arvif;
+ 		ret = ath10k_monitor_recalc(ar);
+@@ -5533,6 +5544,20 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID && !is_zero_ether_addr(info->bssid))
+ 		ether_addr_copy(arvif->bssid, info->bssid);
+ 
++	if (changed & BSS_CHANGED_FTM_RESPONDER &&
++	    arvif->ftm_responder != info->ftm_responder &&
++	    test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map)) {
++		arvif->ftm_responder = info->ftm_responder;
++
++		vdev_param = ar->wmi.vdev_param->rtt_responder_role;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++						arvif->ftm_responder);
++
++		ath10k_dbg(ar, ATH10K_DBG_MAC,
++			   "mac vdev %d ftm_responder %d:ret %d\n",
++			   arvif->vdev_id, arvif->ftm_responder, ret);
++	}
++
+ 	if (changed & BSS_CHANGED_BEACON_ENABLED)
+ 		ath10k_control_beaconing(arvif, info);
+ 
+@@ -8469,6 +8494,10 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	wiphy_ext_feature_set(ar->hw->wiphy,
+ 			      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
+ 
++	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map))
++		wiphy_ext_feature_set(ar->hw->wiphy,
++				      NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER);
++
+ 	/*
+ 	 * on LL hardware queues are managed entirely by the FW
+ 	 * so we only advertise to mac we can do the queues thing
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 212005cd0646..8e7f3a444e4b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -825,6 +825,7 @@
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
++	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
+ };
+ 
+ /* 10.X WMI VDEV param map */
+@@ -900,6 +901,7 @@
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
++	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
+ };
+ 
+ static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
+@@ -974,6 +976,7 @@
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
++	.rtt_responder_role = WMI_VDEV_PARAM_UNSUPPORTED,
+ };
+ 
+ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
+@@ -1051,6 +1054,7 @@
+ 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
+ 	.inc_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
+ 	.dec_tsf = WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
++	.rtt_responder_role = WMI_10_4_VDEV_PARAM_ENABLE_DISABLE_RTT_RESPONDER_ROLE,
+ };
+ 
+ static struct wmi_pdev_param_map wmi_pdev_param_map = {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 36220258e3c7..fa94873fe46f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5035,6 +5035,7 @@ struct wmi_vdev_param_map {
+ 	u32 bw_nss_ratemask;
+ 	u32 inc_tsf;
+ 	u32 dec_tsf;
++	u32 rtt_responder_role;
+ };
+ 
+ #define WMI_VDEV_PARAM_UNSUPPORTED 0
+@@ -5374,6 +5375,15 @@ enum wmi_10_4_vdev_param {
+ 	WMI_10_4_VDEV_PARAM_ATF_SSID_SCHED_POLICY,
+ 	WMI_10_4_VDEV_PARAM_DISABLE_DYN_BW_RTS,
+ 	WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
++	WMI_10_4_VDEV_PARAM_SELFGEN_FIXED_RATE,
++	WMI_10_4_VDEV_PARAM_AMPDU_SUBFRAME_SIZE_PER_AC,
++	WMI_10_4_VDEV_PARAM_NSS_VHT160,
++	WMI_10_4_VDEV_PARAM_NSS_VHT80_80,
++	WMI_10_4_VDEV_PARAM_AMSDU_SUBFRAME_SIZE_PER_AC,
++	WMI_10_4_VDEV_PARAM_DISABLE_CABQ,
++	WMI_10_4_VDEV_PARAM_SIFS_TRIGGER_RATE,
++	WMI_10_4_VDEV_PARAM_TX_POWER,
++	WMI_10_4_VDEV_PARAM_ENABLE_DISABLE_RTT_RESPONDER_ROLE,
+ };
+ 
+ #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
 -- 
-Kalle Valo
+1.9.1
