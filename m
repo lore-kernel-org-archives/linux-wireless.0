@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.fairtragen.de ([5.45.110.153]:57030 "EHLO mx.fairtragen.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727629AbeIFNfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:35:53 -0400
-Received: from ip-109-41-65-60.web.vodafone.de ([109.41.65.60] helo=[192.168.0.151])
-        by mx.fairtragen.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.84_2)
-        (envelope-from <leon@fairtragen.de>)
-        id 1fxppr-0001ir-Gu
-        for linux-wireless@vger.kernel.org; Thu, 06 Sep 2018 10:40:33 +0200
-To: linux-wireless@vger.kernel.org
-From: Leon Fellows <leon@fairtragen.de>
-Subject: ath10k_pci firmware crashes after shutdown of networking
-Message-ID: <55244c54-e475-81ab-7867-b4a38d7102f0@fairtragen.de> (sfid-20180906_110130_194111_F80C89AE)
-Date: Thu, 6 Sep 2018 10:40:17 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:1653 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728010AbeIGCmw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 22:42:52 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v3 0/3] support ftm responder configuration/statistics
+Date: Thu,  6 Sep 2018 14:11:29 -0700
+Message-Id: <1536268292-3819-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180907_000522_144396_33D0F54D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Currently ftm_responder parameter in hostapd.conf is only used for fine
+timing measurement (FTM) capability advertisement and actual control of
+the functionality is with low-level device/driver. This leads to confusion
+to the user when the capability advertisement is different from actual FTM
+responder functionality.
 
-I get a firmware crash, when I set my Laptop to "Standby".
+For example, FTM responder capability advertisement is set to 'enabled',
+but the functionality is disabled or not supported by the driver.
 
-I created a bug-report to NetworkManager:
-https://bugzilla.gnome.org/show_bug.cgi?id=797067
+The patch set allows userspace to enable FTM responder functionality
+with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
+with configurable lci/civic ocation parameters. Also extended feature flag
+is added for the drivers to advertise the support. Setting the flag to
+enable FTM responder would imply that AP responds to all FTM requests.
+Default is considered to be disabled.
 
-But Thomas Haller reckons, the bug lies in the driver/firmware.
+changes in V3:
+ - fixed the ambiguous ftm responder disable case to be not supported
 
-Can anyone give me some advice, what to do next?
+changes in V2:
+- updated version number
+- rebased patches
 
-Kind Regards,
-Leon
+Johannes Berg, Pradeep Kumar Chitrapu (1):
+  cfg80211: support FTM responder configuration/statistics
+
+David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
+  mac80211: support FTM responder configuration/statistics
+
+Pradeep Kumar Chitrapu (1):
+  ath10k: Add support to configure ftm responder role
+
+ drivers/net/wireless/ath/ath10k/core.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
+ include/net/cfg80211.h                 |  66 ++++++++++++++++++
+ include/net/mac80211.h                 |  13 ++++
+ include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
+ net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
+ net/mac80211/driver-ops.h              |  16 +++++
+ net/mac80211/trace.h                   |  23 ++++++
+ net/mac80211/util.c                    |   3 +
+ net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h                |  15 ++++
+ net/wireless/trace.h                   |  44 ++++++++++++
+ 14 files changed, 508 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
