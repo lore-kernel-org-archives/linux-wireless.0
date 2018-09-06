@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54102 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726094AbeIDKb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 06:31:28 -0400
-Message-ID: <78daed5d33990c816c7e947173a1ca12eaa27efb.camel@intel.com> (sfid-20180904_080835_462509_AFE2ED1D)
-Subject: Re: [PATCH] iwlwifi: pcie: make array 'prop' static, shrinks object
- size
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Colin King <colin.king@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Sep 2018 09:07:47 +0300
-In-Reply-To: <20180821102109.1630-1-colin.king@canonical.com>
-References: <20180821102109.1630-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:33844 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730048AbeIFTvU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 15:51:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        david.spinadel@intel.com
+Subject: Re: [PATCH v3 0/3] support ftm responder configuration/statistics
+References: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
+        <1536215640.4015.0.camel@sipsolutions.net>
+Date: Thu, 06 Sep 2018 18:15:17 +0300
+In-Reply-To: <1536215640.4015.0.camel@sipsolutions.net> (Johannes Berg's
+        message of "Thu, 06 Sep 2018 08:34:00 +0200")
+Message-ID: <877ejy7j3u.fsf@kamboji.qca.qualcomm.com> (sfid-20180906_171524_255889_912FF771)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-08-21 at 11:21 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Don't populate the array prop on the stack but instead make it static.
-> Makes the object code smaller by 30 bytes:
-> 
-> Before:
->    text	   data	    bss	    dec	    hex	filename
->   80138	  15382	    576	  96096	  17760	drivers/net/wireless/intel/iwlwifi/pcie/trans.o
-> 
-> After:
->    text	   data	    bss	    dec	    hex	filename
->   79948	  15542	    576	  96066	  17742	drivers/net/wireless/intel/iwlwifi/pcie/trans.o
-> 
-> (gcc version 8.2.0 x86_64)
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> index 7d319b6863fe..c7daf666ee21 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> @@ -1947,7 +1947,7 @@ static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
->  	struct iwl_trans_pcie_removal *removal =
->  		container_of(wk, struct iwl_trans_pcie_removal, work);
->  	struct pci_dev *pdev = removal->pdev;
-> -	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
-> +	static char *prop[] = {"EVENT=INACCESSIBLE", NULL};
->  
->  	dev_err(&pdev->dev, "Device gone - attempting removal\n");
->  	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Thanks! I pushed this to our internal tree and it will reach upstream
-following our normal process.
+> On Wed, 2018-09-05 at 18:01 -0700, Pradeep Kumar Chitrapu wrote:
+>> Currently ftm_responder parameter in hostapd.conf is only used for fine
+>> timing measurement (FTM) capability advertisement and actual control of
+>> the functionality is with low-level device/driver. This leads to confusion
+>> to the user when the capability advertisement is different from actual FTM
+>> responder functionality.
+>> 
+>> For example, FTM responder capability advertisement is set to 'enabled',
+>> but the functionality is disabled or not supported by the driver.
+>> 
+>> The patch set allows userspace to enable FTM responder functionality
+>> with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
+>> with configurable lci/civic ocation parameters. Also extended feature flag
+>> is added for the drivers to advertise the support. Setting the flag to
+>> enable FTM responder would imply that AP responds to all FTM requests.
+>> Default is considered to be disabled.
+>> 
+>> changes in V3:
+>>  - fixed the ambiguous ftm responder disable case to be not supported
+>
+> For reasons unknown to me, this patchset made it neither to the list
+> nor, consequently, patchwork. Please resend.
 
---
-Luca.
+Actually patch 3 made it:
+
+https://patchwork.kernel.org/patch/10590115/
+
+But it didn't get the rest as it says "Untitled series #15763".
+Patchwork was timing out for me quite heavily so in that way I'm not
+surprised that patches are getting lost :(
+
+-- 
+Kalle Valo
