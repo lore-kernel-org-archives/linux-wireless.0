@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44418 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726736AbeIRRQO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 13:16:14 -0400
-Date: Tue, 18 Sep 2018 13:43:57 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] mt76x0: run vco calibration for each channel
- configuration
-Message-ID: <20180918114356.GB15285@redhat.com> (sfid-20180918_134409_178616_ADB90F98)
-References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:45028 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725809AbeIFOd3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 10:33:29 -0400
+From: Colin King <colin.king@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] cfg80211: remove redundant check of !scan_plan
+Date: Thu,  6 Sep 2018 10:58:44 +0100
+Message-Id: <20180906095844.17071-1-colin.king@canonical.com> (sfid-20180906_115858_216355_E1212791)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 11:13:12PM +0200, Lorenzo Bianconi wrote:
-> According to vendor sdk, vco calibration has to be executed
-> for each channel configuration whereas mcu calibration has to be
-> performed during channel scanning. This patch fixes the mt76x0
-> monitor mode issue since in that configuration vco calibration
-> was never executed
-> 
-> Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
-> Tested-by: Sid Hayn <sidhayn@gmail.com>
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The check for !scan_plan is redunant as this has been checked
+in the proceeding statement and the code returns -ENOBUFS if
+it is true. Remove the redundant check.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ net/wireless/nl80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d5f9b5235cdd..b4908bcb0d77 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10690,8 +10690,7 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
+ 		if (!scan_plan)
+ 			return -ENOBUFS;
+ 
+-		if (!scan_plan ||
+-		    nla_put_u32(msg, NL80211_SCHED_SCAN_PLAN_INTERVAL,
++		if (nla_put_u32(msg, NL80211_SCHED_SCAN_PLAN_INTERVAL,
+ 				req->scan_plans[i].interval) ||
+ 		    (req->scan_plans[i].iterations &&
+ 		     nla_put_u32(msg, NL80211_SCHED_SCAN_PLAN_ITERATIONS,
+-- 
+2.17.1
