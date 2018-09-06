@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40738 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731675AbeITMGN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:13 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 10/29] staging: wilc1000: change return type to 'void' for wilc_wlan_cfg_indicate_rx()
-Date: Thu, 20 Sep 2018 11:53:21 +0530
-Message-ID: <1537424620-6982-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082459_026382_4BBE1DD6)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56716 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728071AbeIFNy0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:26 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 21/42] mt76x0: remove unused mt76x0_tx_status routine
+Date: Thu,  6 Sep 2018 11:18:37 +0200
+Message-Id: <1536225538-16454-22-git-send-email-sgruszka@redhat.com> (sfid-20180906_112000_032887_9CFCCBB0)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use 'void' return type for wilc_wlan_cfg_indicate_rx(),
-as its return value is not used in caller. The value set in
-'rsp' argument is used to get the success status.
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Remove no longer used mt76x0_tx_status routine since
+mt76x0 driver uses mt76-usb utility routines to report tx-feedbacks
+
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 8 ++------
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
- 2 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  1 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     | 15 ---------------
+ 2 files changed, 16 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 4215763..42c64ed 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -502,10 +502,9 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	return ret;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 6ba5e9ba2c7f..24712ac924ef 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -185,7 +185,6 @@ void mt76x0_mac_set_ampdu_factor(struct mt76x0_dev *dev);
+ /* TX */
+ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		struct sk_buff *skb);
+-void mt76x0_tx_status(struct mt76x0_dev *dev, struct sk_buff *skb);
  
--int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
--			      struct wilc_cfg_rsp *rsp)
-+void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
-+			       struct wilc_cfg_rsp *rsp)
- {
--	int ret = 1;
- 	u8 msg_type;
- 	u8 msg_id;
+ void mt76x0_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 			 struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+index de12c769b353..b59b16d374e1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+@@ -16,21 +16,6 @@
+ #include "trace.h"
+ #include "../mt76x02_util.h"
  
-@@ -547,11 +546,8 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 	default:
- 		rsp->type = 0;
- 		rsp->seq_no = msg_id;
--		ret = 0;
- 		break;
- 	}
+-void mt76x0_tx_status(struct mt76x0_dev *dev, struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 -
--	return ret;
- }
- 
- int wilc_wlan_cfg_init(void)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 0c649d1..189e617 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -31,8 +31,8 @@ struct wilc;
- int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
--int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
--			      struct wilc_cfg_rsp *rsp);
-+void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
-+			       struct wilc_cfg_rsp *rsp);
- int wilc_wlan_cfg_init(void);
- 
- #endif
+-	mt76x02_remove_dma_hdr(skb);
+-
+-	ieee80211_tx_info_clear_status(info);
+-	info->status.rates[0].idx = -1;
+-	info->flags |= IEEE80211_TX_STAT_ACK;
+-
+-	spin_lock(&dev->mac_lock);
+-	ieee80211_tx_status(dev->mt76.hw, skb);
+-	spin_unlock(&dev->mac_lock);
+-}
+-
+ static struct mt76x02_txwi *
+ mt76x0_push_txwi(struct mt76x0_dev *dev, struct sk_buff *skb,
+ 		  struct ieee80211_sta *sta, struct mt76_wcid *wcid,
 -- 
-2.7.4
+2.7.5
