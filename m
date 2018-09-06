@@ -1,96 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:37066 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728605AbeIRNXz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 09:23:55 -0400
-Message-ID: <1537257137.2957.15.camel@sipsolutions.net> (sfid-20180918_095235_100961_7DA0FD45)
-Subject: Re: [PATCH v4 1/3] cfg80211: support FTM responder
- configuration/statistics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>
-Date: Tue, 18 Sep 2018 09:52:17 +0200
-In-Reply-To: <1536702279-7643-2-git-send-email-pradeepc@codeaurora.org>
-References: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
-         <1536702279-7643-2-git-send-email-pradeepc@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49942 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728650AbeIFNxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:53:46 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 05/42] mt76: move mt76_qsel definition in dma.h
+Date: Thu,  6 Sep 2018 11:18:21 +0200
+Message-Id: <1536225538-16454-6-git-send-email-sgruszka@redhat.com> (sfid-20180906_111927_900667_9EFCC3E7)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Sorry for the delay with this. I was a bit fed up by all the resends,
-but I see the latest one did in fact finally make it to the list and
-patchwork.
-(As an aside - it would've helped to actually bump the version number
-for every resend, even if it's identical - now I don't know which
-version to reply to in my email so it goes to patchwork)
+Move mt76_qsel definition in dma.h in order to be reused in mt76x0
+driver. Moreover remove empty mt76x2_dma.h header file
 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.h           |  7 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    | 29 ----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h       |  2 +-
+ 7 files changed, 12 insertions(+), 34 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
 
-> + * @civic: CIVIC subelement content
-
-> + * @civic_len: Civic data length
-
-I was continuing work on the FTM initiator, and I think now that we
-should call this "civicloc", otherwise we're missing the arguably more
-important part of "civic location".
-
-> + * @NL80211_ATTR_FTM_RESPONDER: attribute which user-space can include in
-> + *	%NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON to enable(1)
-> + *	fine timing measurement (FTM) responder functionality.
-> + * @NL80211_ATTR_LCI: The content of Measurement Report Element (9.4.2.22
-> + *	in 802.11-2016) with type 8 - LCI (9.4.2.22.10)
-> + * @NL80211_ATTR_CIVIC: The content of Measurement Report Element (9.4.2.22
-> + *	in 802.11-2016) with type 11 - Civic (Section 9.4.2.22.13)
-
-Again, thinking about the FTM initiator side code, I think we're
-probably better off to nest these.
-
-NL80211_ATTR_FTM_RESPONDER -> nested
-
-enum nl80211_ftm_responder_attr {
-	NL80211_FTM_RESP_ATTR_INVALID,
-
-	NL80211_FTM_RESP_ATTR_ENABLED,
-	NL80211_FTM_RESP_ATTR_LCI,
-	NL80211_FTM_RESP_ATTR_CIVICLOC,
-
-	NUM/MAX...
-};
-
-That way we can extend this very easily in the future and don't need
-these attributes at the top level.
-
-The logic also makes sense in the beacon change command - if you don't
-include the NL80211_ATTR_FTM_RESPONDER then it means no change; if you
-do include it the new settings within it (which may be completely empty
-to disable it) should take effect.
-
-> +/**
-> + * enum nl80211_ftm_responder_state - fine timing measurement responder state
-> + * @NL80211_FTM_RESP_DISABLED: FTM responder is disabled
-> + * @NL80211_FTM_RESP_ENABLED: FTM responder is enabled
-> + */
-> +enum nl80211_ftm_responder_state {
-> +	NL80211_FTM_RESP_DISABLED,
-> +	NL80211_FTM_RESP_ENABLED,
-> +};
-
-We won't need this either then.
-
-> +	[NL80211_ATTR_FTM_RESPONDER] = { .type = NLA_U8 },
-
-And that of course becomes NLA_NESTED
-
-> +	[NL80211_ATTR_LCI] = { .type = NLA_BINARY },
-> +	[NL80211_ATTR_CIVIC] = { .type = NLA_BINARY },
-
-with those moving to a separate policy.
-
-What do you think?
-
-johannes
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
+index 828e52ae70e8..aa2faf19bf05 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.h
++++ b/drivers/net/wireless/mediatek/mt76/dma.h
+@@ -75,6 +75,13 @@ enum dma_msg_port {
+ 	DISCARD,
+ };
+ 
++enum mt76_qsel {
++	MT_QSEL_MGMT,
++	MT_QSEL_HCCA,
++	MT_QSEL_EDCA,
++	MT_QSEL_EDCA_2,
++};
++
+ enum mt76_mcu_evt_type {
+ 	EVT_CMD_DONE,
+ 	EVT_CMD_ERROR,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+index 98ecc8b68723..44ca660775fd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+@@ -15,7 +15,7 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "mt76x2_dma.h"
++#include "dma.h"
+ 
+ int
+ mt76x2_tx_queue_mcu(struct mt76x2_dev *dev, enum mt76_txq_id qid,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
+deleted file mode 100644
+index da294558c268..000000000000
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#ifndef __MT76x2_DMA_H
+-#define __MT76x2_DMA_H
+-
+-#include "dma.h"
+-
+-enum mt76x2_qsel {
+-	MT_QSEL_MGMT,
+-	MT_QSEL_HCCA,
+-	MT_QSEL_EDCA,
+-	MT_QSEL_EDCA_2,
+-};
+-
+-#endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index 743da57760dc..c90803334ef0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -20,8 +20,8 @@
+ 
+ #include "mt76x2.h"
+ #include "mt76x2_mcu.h"
+-#include "mt76x2_dma.h"
+ #include "mt76x2_eeprom.h"
++#include "dma.h"
+ 
+ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 41bae90e5f6a..41d660991839 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -15,8 +15,8 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "mt76x2_dma.h"
+ #include "mt76x02_util.h"
++#include "dma.h"
+ 
+ struct beacon_bc_data {
+ 	struct mt76x2_dev *dev;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+index c3c06e036832..dbb3071bed1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+@@ -16,7 +16,7 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "mt76x2_dma.h"
++#include "dma.h"
+ 
+ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 	       struct sk_buff *skb)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+index 6946123820e8..180779bebaa2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+@@ -20,8 +20,8 @@
+ #include <linux/device.h>
+ 
+ #include "mt76x2.h"
+-#include "mt76x2_dma.h"
+ #include "mt76x2_mcu.h"
++#include "dma.h"
+ 
+ #define MT7612U_EEPROM_SIZE		512
+ 
+-- 
+2.7.5
