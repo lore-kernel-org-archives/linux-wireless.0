@@ -1,99 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:32818 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727730AbeINDKH (ORCPT
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:38759 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727652AbeIFW6v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 23:10:07 -0400
-Date: Thu, 13 Sep 2018 18:58:39 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Michal Kubecek <mkubecek@suse.cz>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>, jbenc@redhat.com
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-Message-ID: <20180913215839.GI27095@localhost.localdomain> (sfid-20180913_235851_744540_DF2F2882)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913193004.GF4590@localhost.localdomain>
- <20180913212742.GC3876@unicorn.suse.cz>
+        Thu, 6 Sep 2018 18:58:51 -0400
+Received: by mail-lf1-f65.google.com with SMTP id i7-v6so9906572lfh.5
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 11:22:10 -0700 (PDT)
+Subject: Re: [RFC v5 01/12] ath10k: add struct ath10k_bus_params
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+References: <20180603182029.8914-2-erik.stromdahl@gmail.com>
+ <20180906161624.B4751606FA@smtp.codeaurora.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <9de4aaff-a26c-cac3-bc73-069834820a14@gmail.com> (sfid-20180906_202214_343989_AAC49B68)
+Date: Thu, 6 Sep 2018 20:22:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180913212742.GC3876@unicorn.suse.cz>
+In-Reply-To: <20180906161624.B4751606FA@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 11:27:42PM +0200, Michal Kubecek wrote:
-> On Thu, Sep 13, 2018 at 04:30:04PM -0300, Marcelo Ricardo Leitner wrote:
-> > On Thu, Sep 13, 2018 at 10:46:02AM +0200, Johannes Berg wrote:
-> > > From: Johannes Berg <johannes.berg@intel.com>
-> > > 
-> > > In some situations some netlink attributes may be used for output
-> > > only (kernel->userspace) or may be reserved for future use. It's
-> > > then helpful to be able to prevent userspace from using them in
-> > > messages sent to the kernel, since they'd otherwise be ignored and
-> > > any future will become impossible if this happens.
-> > 
-> > I don't follow, what's the issue with simply ignoring such attributes?
+Hi Kalle,
+
+On 9/6/18 6:16 PM, Kalle Valo wrote:
+> Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 > 
-> A bit artificial example but I can't come with somethin better at the
-> moment: let's say newer kernel and iproute2 allow something like
+>> This struct is used as argument to ath10k_core_register in order to
+>> make it easier to add more bus parameters in the future.
+>>
+>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 > 
->   ip link del <condition1> <condition2>
+> 12 patches applied to ath-next branch of ath.git, thanks.
 > 
-> and you run new ip with older kernel which only supports <condition1>.
-> You don't really want kernel to silently ignore the second condition.
-> Or e.g. when adding a netfilter rule, you wouldn't want kernel to ignore
-> parts of the rule it does not understand.
-
-Oh, I thought these are different issues. How would NLA_REJECT protect
-against this, by reserving <condition2> in advance?
-
-This example looks more like a case for NLM_F_STRICT:
-https://lwn.net/Articles/661266/
-On which the user space would explicitly say "please reject this if
-you don't get it all", but it was rejected back then.
-
+> c0d8d565787c ath10k: add struct ath10k_bus_params
+> 7c2dd6154fc2 ath10k: add device type enum to ath10k_bus_params
+> 367c899f622c ath10k: add bus type check in ath10k_init_hw_params
+> 9faaa14387fb ath10k: use hw_params.num_peers for num_tids in TLV init
+> 4875e0b52085 ath10k: add per target config of max_num_peers
+> e66d5361127a ath10k: DMA related fixes for high latency devices
+> 852d1bf86a5b ath10k: add HTT TX HL ops
+> d4e7f553eec3 ath10k: add HTT RX HL ops
+> 4daacc950d4d ath10k: htt: RX ring config HL support
+> a2097d6444c3 ath10k: htt: High latency TX support
+> f88d49345040 ath10k: htt: High latency RX support
+> 37f62c0d5822 ath10k: wmi: disable softirq's while calling ieee80211_rx
 > 
-> I must admit I'm not sure if there is really need for having reserved
-> attributes with netlink. Maybe e.g. when we want to share part of
-> (numeric) attribute types between different message types. Anyway, we
-> have the same problem with attributes higher than maximum; NLA_REJECT
-> wouldn't help with this but the discussion also touched the topic.
 
-Yes, agree.
+I am afraid that one of the patches in this series causes a regression for PCI devices :(
 
-> 
-> > > Add NLA_REJECT to the policy which does nothing but reject (with
-> > > EINVAL) validation of any messages containing this attribute.
-> > > Allow for returning a specific extended ACK error message in the
-> > > validation_data pointer.
-> > 
-> > This has potential to create confusion because we can't use it on
-> > {output,reserved} attributes that are already there (as we must always
-> > ignore them now) and we will end up with a mix of it.
-> 
-> We can return -EINVAL even now, we just need to add a check after
-> nla_parse() wrapper returns, e.g. here: (lines 314-320)
-> 
->   https://github.com/mkubecek/ethnl/blob/master/kernel/0019-ethtool-implement-SET_PARAMS-message.patch#L314
+The patch is:
 
-That's new code, it's okay. Won't break anyone's setup.
+4875e0b52085 ath10k: add per target config of max_num_peers
 
-> 
-> It would be easier and IMHO cleaner if I could simply list these "read
-> only attributes" with NLA_REJECT policy for "set" request.
+With this patch I got an error during driver load.
+Reverting the patch solved the problem.
 
-Not that I'm against this. Point was fields that are considered output
-only today are probably being silently ignored, and we can't change
-them to be NLA_REJECT as it would break user applications. Then we
-will have fields that are rejected, and those old that are not. In the
-long run, nearly all output fields would be marked as NLA_REJECT,
-okay.
+I discovered this yesterday when I was setting up a test AP with an ath10k pcie device.
+I thought it would be a good idea to use my own tree just to make sure it works with PCI, and apparently it didn't work.
+I did some bisecting and the patch mentioned above turned out to be the culprit.
+I have not looked into why it fails yet (I think it is related to a bad num_peers value in the ath10k_hw_params_list array),
+I just noticed that reverting the patch solved the problem
 
-Then I ask my first question again: why reject these? They are not
-hurting anything, are they?  It's different from your example I think.
-In there, the extra information which was ignored leads to a
-different behavior.
+I was actually planning on submitting a v6 series with this patch removed, but you were faster.
 
-Maybe it would be better to have NLA_IGNORE instead? </idea>
+I'll get back with more details about the error.
 
-  Marcelo
+The device I have been using is QCA9880 based: Compex WLE900VX
+
+--
+Erik
