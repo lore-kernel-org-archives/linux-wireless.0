@@ -1,74 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:11620 "EHLO huawei.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33144 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726163AbeIALcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Sep 2018 07:32:15 -0400
-Subject: Re: [PATCH v3] rsi: remove set but not used variables 'header_size'
- and 'tx_params'
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Kees Cook <keescook@chromium.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-References: <1535707647-191888-1-git-send-email-yuehaibing@huawei.com>
- <1535786170-169698-1-git-send-email-yuehaibing@huawei.com>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <8a827e79-ddd0-da00-6a16-d2b6e8809f51@huawei.com> (sfid-20180901_092129_303341_D5A830AF)
-Date: Sat, 1 Sep 2018 15:21:07 +0800
-MIME-Version: 1.0
-In-Reply-To: <1535786170-169698-1-git-send-email-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
+        id S1728039AbeIFNyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:21 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 19/42] mt76x0: remove unused stat work_queue
+Date: Thu,  6 Sep 2018 11:18:35 +0200
+Message-Id: <1536225538-16454-20-git-send-email-sgruszka@redhat.com> (sfid-20180906_111953_490363_E0584360)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018/9/1 15:16, YueHaibing wrote:
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_send_data_pkt':
-> drivers/net/wireless/rsi/rsi_91x_hal.c:288:5: warning:
->  variable 'header_size' set but not used [-Wunused-but-set-variable]
-> 
-> 'tx_params' only used for 'header_size' dereferencedï¼Oso also
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-sorry..., there is some messy code, Also missing changelog, I'll fix.
+Remove unused tx_status workqueue since now tx feedbacks are
+processed by mt76-usb layer
 
-> can be removed.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/rsi/rsi_91x_hal.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> index 01edf96..182b066 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> @@ -282,10 +282,8 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
->  	struct rsi_hw *adapter = common->priv;
->  	struct ieee80211_vif *vif;
->  	struct ieee80211_tx_info *info;
-> -	struct skb_info *tx_params;
->  	struct ieee80211_bss_conf *bss;
->  	int status = -EINVAL;
-> -	u8 header_size;
->  
->  	if (!skb)
->  		return 0;
-> @@ -297,8 +295,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
->  		goto err;
->  	vif = info->control.vif;
->  	bss = &vif->bss_conf;
-> -	tx_params = (struct skb_info *)info->driver_data;
-> -	header_size = tx_params->internal_hdr_size;
->  
->  	if (((vif->type == NL80211_IFTYPE_STATION) ||
->  	     (vif->type == NL80211_IFTYPE_P2P_CLIENT)) &&
-> 
-> 
-> .
-> 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  7 -----
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  2 --
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     | 30 ----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  2 --
+ 4 files changed, 41 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 9c4029b3d0ae..5be4c48936e4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -511,12 +511,6 @@ struct mt76x0_dev *mt76x0_alloc_device(struct device *pdev)
+ 	spin_lock_init(&dev->con_mon_lock);
+ 	atomic_set(&dev->avg_ampdu_len, 1);
+ 
+-	dev->stat_wq = alloc_workqueue("mt76x0", WQ_UNBOUND, 0);
+-	if (!dev->stat_wq) {
+-		ieee80211_free_hw(mdev->hw);
+-		return NULL;
+-	}
+-
+ 	return dev;
+ }
+ 
+@@ -715,7 +709,6 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
+ 	dev->mt76.chandef.chan = &dev->mt76.sband_2g.sband.channels[0];
+ 
+ 	INIT_DELAYED_WORK(&dev->mac_work, mt76x0_mac_work);
+-	INIT_DELAYED_WORK(&dev->stat_work, mt76x0_tx_stat);
+ 
+ 	ret = ieee80211_register_hw(hw);
+ 	if (ret)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 974ca932333c..f63c44999bdd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -132,7 +132,6 @@ struct mt76x0_dev {
+ 	struct delayed_work cal_work;
+ 	struct delayed_work mac_work;
+ 
+-	struct workqueue_struct *stat_wq;
+ 	struct delayed_work stat_work;
+ 
+ 	spinlock_t mac_lock;
+@@ -237,7 +236,6 @@ void mt76x0_mac_set_ampdu_factor(struct mt76x0_dev *dev);
+ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		struct sk_buff *skb);
+ void mt76x0_tx_status(struct mt76x0_dev *dev, struct sk_buff *skb);
+-void mt76x0_tx_stat(struct work_struct *work);
+ 
+ void mt76x0_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 			 struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+index 2b7ca7cd48c1..de12c769b353 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+@@ -126,33 +126,3 @@ void mt76x0_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 	mt76_rx(&dev->mt76, q, skb);
+ }
+ 
+-void mt76x0_tx_stat(struct work_struct *work)
+-{
+-	struct mt76x0_dev *dev = container_of(work, struct mt76x0_dev,
+-					       stat_work.work);
+-	struct mt76x02_tx_status stat;
+-	unsigned long flags;
+-	int cleaned = 0;
+-	u8 update = 1;
+-
+-	while (!test_bit(MT76_REMOVED, &dev->mt76.state)) {
+-		if (!mt76x02_mac_load_tx_status(&dev->mt76, &stat))
+-			break;
+-
+-		mt76x02_send_tx_status(&dev->mt76, &stat, &update);
+-
+-		cleaned++;
+-	}
+-	trace_mt76x0_tx_status_cleaned(&dev->mt76, cleaned);
+-
+-	spin_lock_irqsave(&dev->tx_lock, flags);
+-	if (cleaned)
+-		queue_delayed_work(dev->stat_wq, &dev->stat_work,
+-				   msecs_to_jiffies(10));
+-	else if (test_and_clear_bit(MT76_MORE_STATS, &dev->mt76.state))
+-		queue_delayed_work(dev->stat_wq, &dev->stat_work,
+-				   msecs_to_jiffies(20));
+-	else
+-		clear_bit(MT76_READING_STATS, &dev->mt76.state);
+-	spin_unlock_irqrestore(&dev->tx_lock, flags);
+-}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index a5ca74594290..219524c233ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -107,7 +107,6 @@ static int mt76x0_probe(struct usb_interface *usb_intf,
+ 	usb_set_intfdata(usb_intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(usb_intf));
+ 
+-	destroy_workqueue(dev->stat_wq);
+ 	ieee80211_free_hw(dev->mt76.hw);
+ 	return ret;
+ }
+@@ -126,7 +125,6 @@ static void mt76x0_disconnect(struct usb_interface *usb_intf)
+ 	usb_set_intfdata(usb_intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(usb_intf));
+ 
+-	destroy_workqueue(dev->stat_wq);
+ 	ieee80211_free_hw(dev->mt76.hw);
+ }
+ 
+-- 
+2.7.5
