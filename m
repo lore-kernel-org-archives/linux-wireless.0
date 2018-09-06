@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33136 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728139AbeIFNyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:00 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 11/42] mt76x0: disable usb rx bulk aggregation
-Date: Thu,  6 Sep 2018 11:18:27 +0200
-Message-Id: <1536225538-16454-12-git-send-email-sgruszka@redhat.com> (sfid-20180906_111942_192597_BCAB2113)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49100 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725959AbeIFFjC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 01:39:02 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 05 Sep 2018 18:06:14 -0700
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>
+Subject: Re: [PATCH v2 2/3] mac80211: support FTM responder
+ configuration/statistics
+In-Reply-To: <1535967225.3437.27.camel@sipsolutions.net>
+References: <1535745418-31336-1-git-send-email-pradeepc@codeaurora.org>
+ <1535745418-31336-3-git-send-email-pradeepc@codeaurora.org>
+ <1535967225.3437.27.camel@sipsolutions.net>
+Message-ID: <f6cb4548de9c5ca228124df1301d2aa0@codeaurora.org> (sfid-20180906_030709_228515_06675F16)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+On 2018-09-03 02:33, Johannes Berg wrote:
+> On Fri, 2018-08-31 at 12:56 -0700, Pradeep Kumar Chitrapu wrote:
+>> 
+>> + * @ftm_responder: whether to enable fine timing measurement FTM 
+>> functionality
+> 
+> missing "responder" somewhere there :)
+> 
+>> + * @ftmr_params: configurable lci/civic parameter when enabling FTM 
+>> responder.
+> 
 
-In order to use zero-copying, disable usb rx bulk aggregation
+Hi Johannes,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Thanks for the review..
+> Perhaps the *existence* of ftmr_params could indicate that it's 
+> enabled?
+My understanding is these are only optional parameters. So, I have kept 
+ftm_responder
+separate from params.
+I have tried to fix other review comments and posted v3 patch set.
+Please let me know your comments.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index ddbb52b4e5ac..b28ea45a7282 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -110,17 +110,17 @@ static void mt76x0_reset_csr_bbp(struct mt76x0_dev *dev)
- 
- static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
- {
--	struct mt76_usb *usb = &dev->mt76.usb;
- 	u32 val;
- 
- 	val = mt76_rr(dev, MT_USB_DMA_CFG);
- 
--	val |= FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, MT_USB_AGGR_TIMEOUT) |
--	       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_LMT, MT_USB_AGGR_SIZE_LIMIT) |
--	       MT_USB_DMA_CFG_RX_BULK_EN |
-+	val |= MT_USB_DMA_CFG_RX_BULK_EN |
- 	       MT_USB_DMA_CFG_TX_BULK_EN;
--	if (usb->in_max_packet == 512)
--		val |= MT_USB_DMA_CFG_RX_BULK_AGG_EN;
-+
-+	/* disable AGGR_BULK_RX in order to receive one
-+	 * frame in each rx urb and avoid copies
-+	 */
-+	val &= ~MT_USB_DMA_CFG_RX_BULK_AGG_EN;
- 	mt76_wr(dev, MT_USB_DMA_CFG, val);
- 
- 	val = mt76_rr(dev, MT_COM_REG0);
--- 
-2.7.5
+Thanks
+Pradeep
+
+> 
+>> @@ -865,6 +899,20 @@ static int ieee80211_assign_beacon(struct 
+>> ieee80211_sub_if_data *sdata,
+>>  	if (err == 0)
+>>  		changed |= BSS_CHANGED_AP_PROBE_RESP;
+>> 
+>> +	if (params->ftm_responder) {
+> 
+> Here you immediately have the problem I talked about in the earlier
+> patch ... yes, we don't have drivers that allow disabling it (so should
+> probably reject that now), but without it you can *enable* it on the
+> fly, but you cannot *disable*, in fact we assume saying "disable" means
+> "no change" which is rather confusing.
+> 
+> johannes
