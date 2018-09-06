@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35004 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47184 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726093AbeIDJhm (ORCPT
+        with ESMTP id S1725999AbeIFPAS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 05:37:42 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 6 Sep 2018 11:00:18 -0400
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] ath10k:  fix vdev-start timeout on error
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1531512596-31355-1-git-send-email-greearb@candelatech.com>
-References: <1531512596-31355-1-git-send-email-greearb@candelatech.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Ben Greear <greearb@candelatech.com>
-Message-Id: <20180904051416.C1C6460708@smtp.codeaurora.org> (sfid-20180904_071419_869741_7B2C959B)
-Date: Tue,  4 Sep 2018 05:14:16 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 06 Sep 2018 15:55:30 +0530
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] ath10k: management tx ack rssi capability check
+In-Reply-To: <1535532794.5215.20.camel@sipsolutions.net>
+References: <1532006789-32454-1-git-send-email-bpothuno@codeaurora.org>
+ <1532006789-32454-4-git-send-email-bpothuno@codeaurora.org>
+ (sfid-20180719_152706_974046_A35360D2)
+ <1535532794.5215.20.camel@sipsolutions.net>
+Message-ID: <d1446d6996ed97412dff5897d713a06b@codeaurora.org> (sfid-20180906_122534_069114_FD1C2C1C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com wrote:
-
-> The vdev-start-response message should cause the
-> completion to fire, even in the error case.  Otherwise,
-> the user still gets no useful information and everything
-> is blocked until the timeout period.
+On 2018-08-29 14:23, Johannes Berg wrote:
+> On Thu, 2018-07-19 at 18:56 +0530, Balaji Pothunoori wrote:
+>> 
+>> 
+>> -	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map))
+>> +	if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map) ||
+>> +	    test_bit(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, 
+>> ar->wmi.svc_map))
+>>  		wiphy_ext_feature_set(ar->hw->wiphy,
+>> -				NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
+>> +			NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
 > 
-> Add some warning text to print out the invalid status
-> code to aid debugging, and propagate failure code.
+> You should use the new name, and fix indentation.
 > 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> johannes
 
-This had few checkpatch warnings:
-
-drivers/net/wireless/ath/ath10k/wmi.h:6647: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/wmi.h:6647: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/wmi.h:6648: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/wmi.h:6648: please, no spaces at the start of a line
-
-I fixed those in the pending branch.
-
--- 
-https://patchwork.kernel.org/patch/10524087/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Sure, i will send updated v3 patch.
