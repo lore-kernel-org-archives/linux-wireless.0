@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60000 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726295AbeIDNjq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 09:39:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wen Gong <wgong@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] ath10k: support NET_DETECT WoWLAN feature
-References: <1534402113-14337-1-git-send-email-wgong@codeaurora.org>
-Date: Tue, 04 Sep 2018 12:15:28 +0300
-In-Reply-To: <1534402113-14337-1-git-send-email-wgong@codeaurora.org> (Wen
-        Gong's message of "Thu, 16 Aug 2018 14:48:33 +0800")
-Message-ID: <877ek18vyn.fsf@kamboji.qca.qualcomm.com> (sfid-20180904_111536_491620_E71276F5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36112 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728071AbeIFNy2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:54:28 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 22/42] mt76x0: remove unused endpoint definitions
+Date: Thu,  6 Sep 2018 11:18:38 +0200
+Message-Id: <1536225538-16454-23-git-send-email-sgruszka@redhat.com> (sfid-20180906_112000_666467_0F124B56)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wen Gong <wgong@codeaurora.org> writes:
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-> For WoWLAN support, it expect to support wake up based on discovery of
-> one or more known SSIDs. This is the WIPHY_WOWLAN_NET_DETECT feature,
-> which shows up as an NL80211 feature flag.
->
-> With an upgrade iw, this shows up in 'iw phy' as:
-> WoWLAN support:
-> * wake up on network detection, up to 16 match sets
-> And it can use command:
-> "iw phy0 wowlan enable net-detect interval 5000 delay 30 freqs 2412
-> matches ssid foo" to configure the parameters of net detect.
->
-> Firmware will do scan by the configured parameters after suspend and
-> wakeup if it found matched SSIDs. Tested with QCA6174 hw3.0 with
-> firmware WLAN.RM.4.4.1-00110-QCARMSWPZ-1.
->
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+remove unused usb endpoint definitions since mt76x0
+uses mt76-usb ones. Moreover remove unused usb_ctrl mutex
 
-[...]
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h | 6 ------
+ 2 files changed, 7 deletions(-)
 
-> +/* Request FW to start PNO operation */
-> +static struct sk_buff *ath10k_wmi_tlv_op_gen_config_pno_start
-> +				(struct ath10k *ar,
-> +				u32 vdev_id,
-> +				struct wmi_pno_scan_req *pno)
-> +{
-> +	struct wmi_tlv_wow_nlo_config_cmd *cmd;
-> +	struct wmi_tlv *tlv;
-> +	struct sk_buff *skb;
-> +	struct nlo_configured_parameters *nlo_list;
-> +	u32 *channel_list;
-
-[...]
-
-> +	channel_list = (u32 *)ptr;
-> +	for (i = 0; i < cmd->num_of_channels; i++)
-> +		channel_list[i] = pno->a_networks[0].channels[i];
-
-channel_list does not look endian safe to me, I'll change this to use
-__le32.
-
-> +enum wmi_nlo_cipher_algorithm {
-> +	WMI_NLO_CIPHER_ALGO_NONE           = 0x00,
-> +	WMI_NLO_CIPHER_ALGO_WEP40          = 0x01,
-> +	WMI_NLO_CIPHER_ALGO_TKIP           = 0x02,
-> +	WMI_NLO_CIPHER_ALGO_CCMP           = 0x04,
-> +	WMI_NLO_CIPHER_ALGO_WEP104         = 0x05,
-> +	WMI_NLO_CIPHER_ALGO_BIP            = 0x06,
-> +	WMI_NLO_CIPHER_ALGO_WPA_USE_GROUP  = 0x100,
-> +	WMI_NLO_CIPHER_ALGO_RSN_USE_GROUP  = 0x100,
-
-Two defines with the same value 0x100, is this really correct?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index a7d6e747f221..75597b5a2427 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -502,7 +502,6 @@ struct mt76x0_dev *mt76x0_alloc_device(struct device *pdev)
+ 	mdev->drv = &drv_ops;
+ 
+ 	dev = container_of(mdev, struct mt76x0_dev, mt76);
+-	mutex_init(&dev->usb_ctrl_mtx);
+ 	mutex_init(&dev->reg_atomic_mutex);
+ 	mutex_init(&dev->hw_atomic_mutex);
+ 	spin_lock_init(&dev->mac_lock);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 24712ac924ef..0bcf54c0a06f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -79,14 +79,8 @@ enum mt_bw {
+ struct mt76x0_dev {
+ 	struct mt76_dev mt76; /* must be first */
+ 
+-	struct mutex usb_ctrl_mtx;
+ 	u8 data[32];
+ 
+-	u8 out_ep[__MT_EP_OUT_MAX];
+-	u16 out_max_packet;
+-	u8 in_ep[__MT_EP_IN_MAX];
+-	u16 in_max_packet;
+-
+ 	struct delayed_work cal_work;
+ 	struct delayed_work mac_work;
+ 
 -- 
-Kalle Valo
+2.7.5
