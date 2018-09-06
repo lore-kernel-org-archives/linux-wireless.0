@@ -1,106 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46462 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726212AbeIDQFu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:05:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  4 Sep 2018 14:40:50 +0300
-Message-Id: <20180904114055.1429-5-luca@coelho.fi> (sfid-20180904_134133_353333_4E1B69F9)
-In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180904114055.1429-1-luca@coelho.fi>
-Subject: [PATCH v2 4/9] mac80211: add an option for station management TXQ
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36160 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728139AbeIFNx5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 09:53:57 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 09/42] mt76x0: init mt76_driver_ops callbacks
+Date: Thu,  6 Sep 2018 11:18:25 +0200
+Message-Id: <1536225538-16454-10-git-send-email-sgruszka@redhat.com> (sfid-20180906_111929_897765_F0B43D27)
+In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-We have a TXQ abstraction for non-data packets that need
-powersave buffering. Since the AP cannot sleep, in case
-of station we can use this TXQ for all management frames,
-regardless if they are bufferable. Add HW flag to allow
-that.
+Init mt76_driver_ops callbacks in mt76x0_alloc_device.
+mt76_driver_ops callbacks will be used by mt76-usb module
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- include/net/mac80211.h |  5 +++++
- net/mac80211/debugfs.c |  1 +
- net/mac80211/tx.c      | 14 +++++++++++---
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 50bf598abdfd..fe71cec8ba42 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2152,6 +2152,10 @@ struct ieee80211_txq {
-  *	but if the rate control is built-in then it must be set by the driver.
-  *	See also the documentation for that flag.
-  *
-+ * @IEEE80211_HW_STA_MMPDU_TXQ: use the extra non-TID per-station TXQ for all
-+ *	MMPDUs on station interfaces. This of course requires the driver to use
-+ *	TXQs to start with.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -2199,6 +2203,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP,
- 	IEEE80211_HW_BUFF_MMPDU_TXQ,
- 	IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW,
-+	IEEE80211_HW_STA_MMPDU_TXQ,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 45c9f1f7a89a..23b47c49bc17 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -19,6 +19,7 @@
+ #include "trace.h"
+ #include "mcu.h"
+ #include "usb.h"
++#include "../mt76x02_util.h"
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index fb45eb5d1dc4..3fe541e358f3 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -217,6 +217,7 @@ static const char *hw_flag_names[] = {
- 	FLAG(DOESNT_SUPPORT_QOS_NDP),
- 	FLAG(BUFF_MMPDU_TXQ),
- 	FLAG(SUPPORTS_VHT_EXT_NSS_BW),
-+	FLAG(STA_MMPDU_TXQ),
- #undef FLAG
- };
+ #include "initvals.h"
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b6e06ad35ff..6689492c9713 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1251,7 +1251,8 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+@@ -483,6 +484,12 @@ void mt76x0_cleanup(struct mt76x0_dev *dev)
  
- 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
- 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
--		     ieee80211_is_bufferable_mmpdu(hdr->frame_control)) &&
-+		     ieee80211_is_bufferable_mmpdu(hdr->frame_control) ||
-+		     vif->type == NL80211_IFTYPE_STATION) &&
- 		    sta && sta->uploaded) {
- 			/*
- 			 * This will be NULL if the driver didn't set the
-@@ -1456,9 +1457,16 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 	}
+ struct mt76x0_dev *mt76x0_alloc_device(struct device *pdev)
+ {
++	static const struct mt76_driver_ops drv_ops = {
++		.tx_prepare_skb = mt76x0_tx_prepare_skb,
++		.tx_complete_skb = mt76x02_tx_complete_skb,
++		.tx_status_data = mt76x02_tx_status_data,
++		.rx_skb = mt76x0_queue_rx_skb,
++	};
+ 	struct ieee80211_hw *hw;
+ 	struct mt76x0_dev *dev;
  
- 	if (tid == IEEE80211_NUM_TIDS) {
--		/* Drivers need to opt in to the bufferable MMPDU TXQ */
--		if (!ieee80211_hw_check(&sdata->local->hw, BUFF_MMPDU_TXQ))
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+			/* Drivers need to opt in to the management MPDU TXQ */
-+			if (!ieee80211_hw_check(&sdata->local->hw,
-+						STA_MMPDU_TXQ))
-+				return;
-+		} else if (!ieee80211_hw_check(&sdata->local->hw,
-+					       BUFF_MMPDU_TXQ)) {
-+			/* Drivers need to opt in to the bufferable MMPDU TXQ */
- 			return;
-+		}
- 		txqi->txq.ac = IEEE80211_AC_VO;
- 	} else {
- 		txqi->txq.ac = ieee80211_ac_from_tid(tid);
+@@ -493,7 +500,7 @@ struct mt76x0_dev *mt76x0_alloc_device(struct device *pdev)
+ 	dev = hw->priv;
+ 	dev->mt76.dev = pdev;
+ 	dev->mt76.hw = hw;
+-	dev->mt76.drv = NULL;
++	dev->mt76.drv = &drv_ops;
+ 	mutex_init(&dev->usb_ctrl_mtx);
+ 	mutex_init(&dev->reg_atomic_mutex);
+ 	mutex_init(&dev->hw_atomic_mutex);
 -- 
-2.18.0
+2.7.5
