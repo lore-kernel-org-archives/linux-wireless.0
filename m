@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:60354 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727676AbeITCPX (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:42637 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725978AbeIFOMc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 22:15:23 -0400
-Message-ID: <1537389335.10305.92.camel@sipsolutions.net> (sfid-20180919_223550_345465_9AF09A96)
-Subject: Re: Problem with sending pkt on a monitor port
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 19 Sep 2018 22:35:35 +0200
-In-Reply-To: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com> (sfid-20180919_223316_460674_F032A088)
-References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
-         (sfid-20180919_223316_460674_F032A088)
+        Thu, 6 Sep 2018 10:12:32 -0400
+Received: by mail-io0-f193.google.com with SMTP id n18-v6so8307406ioa.9
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 02:37:56 -0700 (PDT)
+MIME-Version: 1.0
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+ <1536225538-16454-40-git-send-email-sgruszka@redhat.com> <91c0c1d5-12a9-7155-c4bf-191a511080ee@nbd.name>
+In-Reply-To: <91c0c1d5-12a9-7155-c4bf-191a511080ee@nbd.name>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Thu, 6 Sep 2018 11:37:45 +0200
+Message-ID: <CAJ0CqmWrDke=WWPukf09rXYkCV3e4JKgcoBgvytVeyy1j8ZvOA@mail.gmail.com> (sfid-20180906_113759_352217_1B3D815B)
+Subject: Re: [PATCH 39/42] mt76: move some irq code to common mmio module
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek@lists.infradead.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-19 at 13:33 -0700, Ben Greear wrote:
-> This is with a modified 4.16.18+ kernel, though the code in question
-> is from 2011, so this is not new...
-> 
-> I am attempting to use radiotap packet injection on a monitor port.
-> 
-> In the ieee80211_monitor_start_xmit method, before this code below
-> runs, sdata is 'moni6a', my monitor port.  But, since I have a
-> station wlan1 with the same MAC address, then when this code is
-> completed, stdata becomes wlan1.
-> 
-> Ath10k has all sorts of issues transmitting raw frames, and sending on
-> the wrong vdev only makes it even more broken!
-> 
-> If user-space binds a socket to a monitor vdev and transmits a frame,
-> why would we want to change the vdev here?
+>
+> On 2018-09-06 11:18, Stanislaw Gruszka wrote:
+> > Move some irq handling code to generic mmio module.
+> >
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Please drop this patch. This won't work on MT7603 and later.
+>
+> - Felix
 
-For one, the driver has no concept of the original vif, since monitor
-vifs aren't added to it.
+I can move that code in a dedicated module with a separated patch.
+I have a pending patchset to fix that kind of issues for usb as well.
+Does it sound good?
 
-Secondly, the old hostapd code before nl80211 injects frames that way,
-and they need to go there.
-
-johannes
+Regards,
+Lorenzo
