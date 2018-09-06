@@ -1,173 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60674 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727986AbeITRqR (ORCPT
+Received: from mail-it0-f46.google.com ([209.85.214.46]:52065 "EHLO
+        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730149AbeIFU3h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:46:17 -0400
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [RFCv3 2/2] ath10k: report tx rate using ieee80211_tx_rate_update()
-Date: Thu, 20 Sep 2018 17:35:16 +0530
-Message-Id: <1537445116-10780-3-git-send-email-akolli@codeaurora.org> (sfid-20180920_140311_844622_400C313B)
-In-Reply-To: <1537445116-10780-1-git-send-email-akolli@codeaurora.org>
-References: <1537445116-10780-1-git-send-email-akolli@codeaurora.org>
+        Thu, 6 Sep 2018 16:29:37 -0400
+Received: by mail-it0-f46.google.com with SMTP id e14-v6so15584225itf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 08:53:30 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+ <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
+ <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+ <20180906093213.GB16539@redhat.com> <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
+ <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+In-Reply-To: <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Thu, 6 Sep 2018 15:53:19 +0000
+Message-ID: <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com> (sfid-20180906_175332_975079_0351D0A3)
+Subject: Re: mt76x0 bug report
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: sgruszka@redhat.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh path metric needs tx rate information from ieee80211_tx_status()
-call but in ath10k there is no mechanism to report tx rate information
-via ieee80211_tx_status(), the tx rate is only accessible via
-sta_statiscs() op.
+On Thu, Sep 6, 2018 at 11:43 AM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+>
+> >
+> > On Thu, Sep 6, 2018 at 5:32 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > >
+> > > On Wed, Sep 05, 2018 at 08:52:18PM +0000, Sid Hayn wrote:
+> > > > On Tue, Sep 4, 2018 at 5:11 PM Lorenzo Bianconi
+> > > > <lorenzo.bianconi@redhat.com> wrote:
+> > > > >
+> > > > > >
+> > > > > > I have one mt76x2u (Alfa AWUS036ACM) and a few mt76x0.
+> > > > > >
+> > > > > > I've noticed two additional issues in my testing.
+> > > > > >
+> > > > > > First issue, is that it appears the mt76x0 devices don't work properly
+> > > > > > in monitor mode.  Sometimes they seem to monitor one channel properly,
+> > > > > > but nothing else.  The mt76x2u works great, channel control, lots of
+> > > > > > packets, etc.
+> > > > >
+> > > > > Could you elaborate a little bit please? how can you reproduce the issue?
+> > > > > just add an interface in monitor mode and run a scan?
+> > > >
+> > > > Correct, standard stuff, use iw to create a monitor mode interface,
+> > > > use iw to remove managed mode interface, run some tool such as kismet
+> > > > or airodump-ng or even wireshark.
+> > >
+> > > But what exactly are the syptomps, I don't understand what you mean by
+> > > "mt76x0 devices don't work properly in monitor mode" ?
+> >
+> > Basically, when I put a device using mt76x0 into monitor mode (adding
+> > a monitor interface with iw and removing the managed interface) it
+> > will not report packets on any channel, or sometimes it will report
+> > packets on one channel but not any others.  I can switch channels as
+> > much, for example hopping channel 1-11, but it will only see packets
+> > on channel 7 and report no other packets on any other channels.  In my
+> > actual test case it was channel 44 that successfully reported packets,
+> > but even that mostly doesn't work.  I suspect the reason it reported
+> > packets on channel 44 in one of my tests is because the channel was
+> > set to 44 while in managed mode (connected to an AP).  If I put the
+> > device in monitor mode before connecting to any AP, it reports packets
+> > on no channels.  As such, I'm suspecting this has something to do with
+> > channel control in monitor mode.
+>
+> What about if you do not remove the managed interface and sniff on the
+> monitor one?
 
-Per peer tx stats has tx rate info available, Tx rate is available
-to ath10k driver after every 4 PPDU sent in the air. For each PPDU,
-ath10k driver updates rate informattion to mac80211 using
-ieee80211_tx_rate_update().
+Actions like that have caused great problems in the past, as the
+kernel won't allow channel control of a monitor interface at all when
+there is a managed interface on the same phy (afaik).
 
-Per peer txrate information is updated through per peer statistics
-and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+But just for fun and codepath testing here are two test scenarios:
 
-Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
-Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+Test 1: "iwconfig t2u mode monitor"
+Sees nothing on any channel, no packets reported
 
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
----
-V3:
-  - added new API to update tx rate alone.
-  - Tx rate is updated for each PPDUs sent
+Test 2(requested test): "iw phy phy11 interface add t2uhmon type monitor"
+Sees nothing on any channel, no packets reported.
+Despite having a monitor and managed interface on the same phy,
+iwconfig is reporting that the channel is changing as requested.  So
+perhaps my above "afaik" comment is partially outdated.
 
- drivers/net/wireless/ath/ath10k/core.h   |    1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |   66 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
- 3 files changed, 64 insertions(+), 4 deletions(-)
+For both tests the interface was not used to connect to any ap prior
+to or during testing.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f6e5c29f74e7..abeed6cdc4ae 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -493,6 +493,7 @@ struct ath10k_sta {
- 	u32 smps;
- 	u16 peer_id;
- 	struct rate_info txrate;
-+	struct ieee80211_tx_info tx_info;
- 
- 	struct work_struct update_wk;
- 	u64 rx_duration;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f2405258a6d3..355c39a0486c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2753,8 +2753,11 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 				struct ath10k_per_peer_tx_stats *peer_stats)
- {
- 	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
--	u8 rate = 0, rate_idx = 0, sgi;
-+	struct ieee80211_chanctx_conf *conf = NULL;
- 	struct rate_info txrate;
-+	u8 rate = 0, sgi;
-+	int rate_idx = 0;
-+	bool skip_auto_rate;
- 
- 	lockdep_assert_held(&ar->data_lock);
- 
-@@ -2763,6 +2766,13 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 	txrate.nss = ATH10K_HW_NSS(peer_stats->ratecode);
- 	txrate.mcs = ATH10K_HW_MCS_RATE(peer_stats->ratecode);
- 	sgi = ATH10K_HW_GI(peer_stats->flags);
-+	skip_auto_rate = ATH10K_FW_SKIPPED_RATE_CTRL(peer_stats->flags);
-+
-+	/* Firmware's rate control skips broadcast/management frames,
-+	 * if host has configure fixed rates and in some other special cases.
-+	 */
-+	if (skip_auto_rate)
-+		return;
- 
- 	if (txrate.flags == WMI_RATE_PREAMBLE_VHT && txrate.mcs > 9) {
- 		ath10k_warn(ar, "Invalid VHT mcs %hhd peer stats",  txrate.mcs);
-@@ -2777,7 +2787,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 	}
- 
- 	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
--
-+	memset(&arsta->tx_info.status, 0, sizeof(arsta->tx_info.status));
- 	if (txrate.flags == WMI_RATE_PREAMBLE_CCK ||
- 	    txrate.flags == WMI_RATE_PREAMBLE_OFDM) {
- 		rate = ATH10K_HW_LEGACY_RATE(peer_stats->ratecode);
-@@ -2796,11 +2806,59 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 		arsta->txrate.mcs = txrate.mcs;
- 	}
- 
--	if (sgi)
--		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+	switch (txrate.flags) {
-+	case WMI_RATE_PREAMBLE_OFDM:
-+		if (arsta->arvif && arsta->arvif->vif)
-+			conf = rcu_dereference(arsta->arvif->vif->chanctx_conf);
-+		if (conf && conf->def.chan->band == NL80211_BAND_5GHZ)
-+			arsta->tx_info.status.rates[0].idx = rate_idx - 4;
-+		break;
-+	case WMI_RATE_PREAMBLE_CCK:
-+		arsta->tx_info.status.rates[0].idx = rate_idx;
-+		if (sgi)
-+			arsta->tx_info.status.rates[0].flags |=
-+				(IEEE80211_TX_RC_USE_SHORT_PREAMBLE |
-+				 IEEE80211_TX_RC_SHORT_GI);
-+		break;
-+	case WMI_RATE_PREAMBLE_HT:
-+		arsta->tx_info.status.rates[0].idx =
-+				txrate.mcs + ((txrate.nss - 1) * 8);
-+		if (sgi)
-+			arsta->tx_info.status.rates[0].flags |=
-+					IEEE80211_TX_RC_SHORT_GI;
-+		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_MCS;
-+		break;
-+	case WMI_RATE_PREAMBLE_VHT:
-+		ieee80211_rate_set_vht(&arsta->tx_info.status.rates[0],
-+				       txrate.mcs, txrate.nss);
-+		if (sgi)
-+			arsta->tx_info.status.rates[0].flags |=
-+						IEEE80211_TX_RC_SHORT_GI;
-+		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_VHT_MCS;
-+		break;
-+	}
- 
- 	arsta->txrate.nss = txrate.nss;
- 	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
-+	if (sgi)
-+		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+
-+	switch (arsta->txrate.bw) {
-+	case RATE_INFO_BW_40:
-+		arsta->tx_info.status.rates[0].flags |=
-+				IEEE80211_TX_RC_40_MHZ_WIDTH;
-+		break;
-+	case RATE_INFO_BW_80:
-+		arsta->tx_info.status.rates[0].flags |=
-+				IEEE80211_TX_RC_80_MHZ_WIDTH;
-+		break;
-+	}
-+
-+	if (peer_stats->succ_pkts) {
-+		arsta->tx_info.flags = IEEE80211_TX_STAT_ACK;
-+		arsta->tx_info.status.rates[0].count = 1;
-+		ieee80211_tx_rate_update(ar->hw, sta, &arsta->tx_info);
-+	}
- 
- 	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
- 		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 15622943a885..f6799f3939bd 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4968,6 +4968,7 @@ enum wmi_rate_preamble {
- 	(((preamble) << 6) | ((nss) << 4) | (rate))
- #define ATH10K_HW_AMPDU(flags)		((flags) & 0x1)
- #define ATH10K_HW_BA_FAIL(flags)	(((flags) >> 1) & 0x3)
-+#define ATH10K_FW_SKIPPED_RATE_CTRL(flags)	(((flags) >> 6) & 0x1)
- 
- #define ATH10K_VHT_MCS_NUM	10
- #define ATH10K_BW_NUM		4
--- 
-1.7.9.5
+Thanks,
+Zero
+>
+> Regards,
+> Lorenzo
+>
+> > >
+> > > > > I guess it depends on eeprom values. Could you please enable debug
+> > > > > messages a paste
+> > > > > syslog output?
+> > > >
+> > > > I don't see a mediatek specific debug near the driver selection in
+> > > > menuconfig, what debug messages do you want me to enable and how?
+> > >
+> > > You need to uncomment this line:
+> > >
+> > > # ccflags-y := -DDEBUG
+> > >
+> > > in drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> >
+> > found it.  this box takes a few min to rebuild a kernel, so I'll get
+> > back with this response later today hopefully.
+> >
+> > Thanks,
+> > Zero
+> > >
+> > > Thanks
+> > > Stanislaw
+> > >
