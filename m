@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:38516 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726177AbeITPD6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39844 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726506AbeIFUwi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 11:03:58 -0400
-Message-ID: <1537435276.3874.14.camel@sipsolutions.net> (sfid-20180920_112130_398595_74D4AA22)
-Subject: Re: [PATCH] mac80211: allow scans on radar channels, unless there
- is CAC or CSA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>,
-        linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>
-Date: Thu, 20 Sep 2018 11:21:16 +0200
-In-Reply-To: <20180918141633.10282-1-sw@simonwunderlich.de>
-References: <20180918141633.10282-1-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 6 Sep 2018 16:52:38 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [RFC v5 01/12] ath10k: add struct ath10k_bus_params
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180603182029.8914-2-erik.stromdahl@gmail.com>
+References: <20180603182029.8914-2-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-Id: <20180906161624.833D760710@smtp.codeaurora.org> (sfid-20180906_181627_530875_C0A0F4CD)
+Date: Thu,  6 Sep 2018 16:16:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-09-18 at 16:16 +0200, Simon Wunderlich wrote:
-> Operating on a DFS channel doesn't mean we can't leave it for a short
-> time - actually, some features like off-channel CAC work by leaving the
-> operation channel to check other channels for availability (although
-> off-channel CAC isn't implemented in mac80211). In our case, we want to
-> use mesh while doing background surveys on other channels from time to
-> time.
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-Actually ... as far as I can tell it *does* mean that, at least
-currently for FCC.
+> This struct is used as argument to ath10k_core_register in order to
+> make it easier to add more bus parameters in the future.
+> 
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-johannes
+12 patches applied to ath-next branch of ath.git, thanks.
+
+c0d8d565787c ath10k: add struct ath10k_bus_params
+7c2dd6154fc2 ath10k: add device type enum to ath10k_bus_params
+367c899f622c ath10k: add bus type check in ath10k_init_hw_params
+9faaa14387fb ath10k: use hw_params.num_peers for num_tids in TLV init
+4875e0b52085 ath10k: add per target config of max_num_peers
+e66d5361127a ath10k: DMA related fixes for high latency devices
+852d1bf86a5b ath10k: add HTT TX HL ops
+d4e7f553eec3 ath10k: add HTT RX HL ops
+4daacc950d4d ath10k: htt: RX ring config HL support
+a2097d6444c3 ath10k: htt: High latency TX support
+f88d49345040 ath10k: htt: High latency RX support
+37f62c0d5822 ath10k: wmi: disable softirq's while calling ieee80211_rx
+
+-- 
+https://patchwork.kernel.org/patch/10445507/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
