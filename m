@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57102 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727848AbeICVSg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 17:18:36 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:36409 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728098AbeIFOCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Sep 2018 10:02:31 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Louie Lu <git@louie.lu>, kvalo@codeaurora.org
+Cc: ath9k-devel@qca.qualcomm.com, davem@davemloft.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] ath9k: add reset for airtime station debugfs
+In-Reply-To: <20180906035323.GA11337@nems_nctu_lu>
+References: <20180906035323.GA11337@nems_nctu_lu>
+Date: Thu, 06 Sep 2018 11:27:54 +0200
+Message-ID: <877ejzynz9.fsf@toke.dk> (sfid-20180906_112801_831569_C7C8F421)
 MIME-Version: 1.0
-Subject: Re: [PATCH] ath10k: Add waiting htt tx complete before wow enable
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1535442443-22152-1-git-send-email-wgong@codeaurora.org>
-References: <1535442443-22152-1-git-send-email-wgong@codeaurora.org>
-To: Wen Gong <wgong@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180903165738.A79FD607B9@smtp.codeaurora.org> (sfid-20180903_185752_797887_8DB712C0)
-Date: Mon,  3 Sep 2018 16:57:34 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wen Gong <wgong@codeaurora.org> wrote:
+Louie Lu <git@louie.lu> writes:
 
-> If there are some tx packets pending in firmware, and then system
-> enters suspend, firmware will fail for wow enable. This will trigger
-> mac80211 to stop ath10k and download firmware again, then it is
-> non-wow suspend.
-> 
-> After add the waiting htt tx complete, then firmware will have some
-> time window to send or flush the pending tx packets.
-> 
-> Tested with QCA6174 PCI with firmware
-> WLAN.RM.4.4.1-00109-QCARMSWPZ-1, but this will also affect QCA9377 PCI.
-> It's not a regression with new firmware releases.
-> 
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Let user can reset station airtime status by debugfs, it will
+> reset all airtime deficit to ATH_AIRTIME_QUANTUM and reset rx/tx
+> airtime accumulate to 0.
 
-Patch applied to ath-next branch of ath.git, thanks.
+No objections to the patch, but I'm curious which issues you were
+debugging that led you to needing it? :)
 
-828853ac5826 ath10k: add waiting htt tx complete before wow enable
-
--- 
-https://patchwork.kernel.org/patch/10578009/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
