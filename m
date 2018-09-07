@@ -1,25 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41786 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726022AbeIVR6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 13:58:11 -0400
-Subject: Re: [PATCH] mt76: usb: remove WARN_ON in mt76u_get_rx_entry_len
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-References: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
- <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <36091045-a13e-4287-4b8b-9a985ca91d14@nbd.name> (sfid-20180922_140524_716005_1BF3E3A8)
-Date: Sat, 22 Sep 2018 14:04:47 +0200
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38499 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727690AbeIGOED (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Sep 2018 10:04:03 -0400
+Received: by mail-wr1-f68.google.com with SMTP id w11-v6so14249000wrc.5
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 02:23:59 -0700 (PDT)
+Subject: Re: [PATCH v3 0/3] support ftm responder configuration/statistics
+To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        ath10k@lists.infradead.org
+References: <1536253591-20463-1-git-send-email-pradeepc@codeaurora.org>
+ <1536263880.4015.11.camel@sipsolutions.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, david.spinadel@intel.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B9243AD.6090005@broadcom.com> (sfid-20180907_112409_819395_E0B6CD2F)
+Date: Fri, 7 Sep 2018 11:23:57 +0200
 MIME-Version: 1.0
-In-Reply-To: <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1536263880.4015.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-18 14:12, Lorenzo Bianconi wrote:
-> Remove not useful WARN_ON macros in mt76u_get_rx_entry_len routine
-> since corrupted frames should just be silently discarded
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Merged, thanks.
+On 9/6/2018 9:58 PM, Johannes Berg wrote:
+> I'm not sure what you're doing, but this time only the cover letter made
+> it to the list, afaict.
+>
+> maybe try to resend from somewhere else?
+
+I guess you are using 'git send-email' so you could use --dry-run and 
+check if every message would be send to the linux-wireless list. If it 
+is your MTA is probably misconfigured.
+
+Regards,
+Arend
