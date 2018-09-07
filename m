@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:41194 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725865AbeIEM3q (ORCPT
+Received: from mail-io1-f67.google.com ([209.85.166.67]:38109 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726237AbeIHAiM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 08:29:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use non-zero TID only for QoS frames
-Date: Wed,  5 Sep 2018 10:00:36 +0200
-Message-Id: <20180905080036.9177-1-johannes@sipsolutions.net> (sfid-20180905_100116_813934_EDA72491)
+        Fri, 7 Sep 2018 20:38:12 -0400
+Received: by mail-io1-f67.google.com with SMTP id y3-v6so2450909ioc.5
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 12:55:43 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+ <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
+ <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+ <20180906093213.GB16539@redhat.com> <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
+ <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+ <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com> <20180907082413.GC2725@localhost.localdomain>
+In-Reply-To: <20180907082413.GC2725@localhost.localdomain>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Fri, 7 Sep 2018 19:55:33 +0000
+Message-ID: <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com> (sfid-20180907_215546_345039_39C7BC03)
+Subject: Re: mt76x0 bug report
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: sgruszka@redhat.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Sep 7, 2018 at 4:24 AM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+>
+> > Actions like that have caused great problems in the past, as the
+> > kernel won't allow channel control of a monitor interface at all when
+> > there is a managed interface on the same phy (afaik).
+> >
+> > But just for fun and codepath testing here are two test scenarios:
+> >
+> > Test 1: "iwconfig t2u mode monitor"
+> > Sees nothing on any channel, no packets reported
+> >
+> > Test 2(requested test): "iw phy phy11 interface add t2uhmon type monitor"
+> > Sees nothing on any channel, no packets reported.
+> > Despite having a monitor and managed interface on the same phy,
+> > iwconfig is reporting that the channel is changing as requested.  So
+> > perhaps my above "afaik" comment is partially outdated.
+> >
+> > For both tests the interface was not used to connect to any ap prior
+> > to or during testing.
+> >
+>
+> Could you please try following patch?
 
-Some frames may have a non-zero skb->priority assigned by
-mac80211 internally, e.g. TDLS setup frames, regardless of
-support for QoS.
+Excellent!  This seems to work for all channels up to 140, however,
+not 144 or above.  "iw list" shows these are supported but I cannot
+set them in monitor mode:
 
-Currently, we set skb->priority to 0 for all data frames.
-Note that there's a comment that this is "required for
-correct WPA/11i MIC", but that doesn't seem true as we use
+* 5720 MHz [144] (22.0 dBm) (no IR, radar detection)
+* 5745 MHz [149] (22.0 dBm) (no IR)
+* 5765 MHz [153] (22.0 dBm) (no IR)
+* 5785 MHz [157] (22.0 dBm) (no IR)
+* 5805 MHz [161] (22.0 dBm) (no IR)
+* 5825 MHz [165] (22.0 dBm) (no IR)
 
-        if (ieee80211_is_data_qos(hdr->frame_control))
-                qos_tid = ieee80211_get_tid(hdr);
-        else
-                qos_tid = 0;
+remote2 ~ # iw dev t2uhmon set channel 140
+remote2 ~ # iw dev t2uhmon set channel 144
+command failed: Invalid argument (-22)
 
-in the code there. We could therefore reconsider this, but
-it seems like unnecessary complexity for the unlikely (and
-not very useful) case of not having QoS on the connection.
+Thanks,
+Zero
 
-This situation then causes something strange - most data
-frames will go on TXQ for TID 0 for non-QoS connections,
-but very few exceptions that are internally generated will
-go on another TXQ, possibly causing confusion.
-
-Avoid this confusion by putting non-QoS data frames into
-TID 0 regardless of the skb->priority.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b6e06ad35ff..6540595addd1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1260,7 +1260,10 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 			txq = sta->sta.txq[IEEE80211_NUM_TIDS];
- 		}
- 	} else if (sta) {
--		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+		u8 tid = 0;
-+
-+		if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA))
-+			tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
- 
- 		if (!sta->uploaded)
- 			return NULL;
--- 
-2.14.4
+> Regards,
+>
+> Lorenzo
+>
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> @@ -756,11 +756,10 @@ __mt76x0_phy_set_channel(struct mt76x0_dev *dev,
+>
+>         /* Vendor driver don't do it */
+>         /* mt76x0_phy_set_tx_power(dev, channel, rf_bw_band); */
+> +       mt76x0_vco_cal(dev, channel);
+>
+>         if (scan)
+> -               mt76x0_vco_cal(dev, channel);
+> -
+> -       mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
+> +               mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
+>         mt76x0_phy_set_chan_pwr(dev, channel);
+>
+>         dev->mt76.chandef = *chandef;
