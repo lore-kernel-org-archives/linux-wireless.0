@@ -1,146 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:56075 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726845AbeINVGn (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:49799 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726114AbeIGXFU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Sep 2018 17:06:43 -0400
-Received: by mail-it0-f67.google.com with SMTP id d10-v6so3192704itj.5
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2018 08:51:38 -0700 (PDT)
+        Fri, 7 Sep 2018 19:05:20 -0400
+Received: from mail-yb1-f199.google.com ([209.85.219.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fyLPR-0001Py-KJ
+        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 18:23:09 +0000
+Received: by mail-yb1-f199.google.com with SMTP id p4-v6so2757212yba.8
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 11:23:09 -0700 (PDT)
+Date: Fri, 7 Sep 2018 13:23:07 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: WIRELESS ML <linux-wireless@vger.kernel.org>,
+        REGDB ML <wireless-regdb@lists.infradead.org>
+Subject: Re: [PATCH] wireless-regdb: update source of info for CU and ES
+Message-ID: <20180907182307.GM4251@ubuntu-xps13> (sfid-20180907_202313_060693_E4779393)
+References: <20180907162841.11749-1-xose.vazquez@gmail.com>
 MIME-Version: 1.0
-References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
- <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
- <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
- <20180906093213.GB16539@redhat.com> <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
- <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
- <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
- <20180907082413.GC2725@localhost.localdomain> <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
- <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com> <CAJ0CqmUDT44W7sb4qpmt6mPDZ5LwUDPgKCrhor_8POWpx_RaQA@mail.gmail.com>
-In-Reply-To: <CAJ0CqmUDT44W7sb4qpmt6mPDZ5LwUDPgKCrhor_8POWpx_RaQA@mail.gmail.com>
-From: Sid Hayn <sidhayn@gmail.com>
-Date: Fri, 14 Sep 2018 11:51:29 -0400
-Message-ID: <CAM0KTbDb4X7JZgYZa6-NmjD72_UHOqQ43Czv=HwWS3D0WcWrgQ@mail.gmail.com> (sfid-20180914_175141_755381_68414FD0)
-Subject: Re: mt76x0 bug report
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: sgruszka@redhat.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org, dcaratti@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180907162841.11749-1-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 14, 2018 at 11:47 AM Lorenzo Bianconi
-<lorenzo.bianconi@redhat.com> wrote:
->
-> >
-> > *bump*
-> >
-> > Been a few days, just a reminder that your monitor mode patch fixed
-> > all channels below 144 but something appears incorrect in regdomain
-> > handling as I cannot get channels 144 or higher working (my main AP
-> > being on channel 149.  Again, this works on mt76x2u but not on mt76x0.
-> > The patch I tested doesn't appear to have landed in wireless-testing
-> > yet, so if you haven't, please do push that up.
->
-> I have already sent the patch to linux-wireless ml
-> https://patchwork.kernel.org/patch/10592597/
+On Fri, Sep 07, 2018 at 06:28:41PM +0200, Xose Vazquez Perez wrote:
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
+> Cc: REGDB ML <wireless-regdb@lists.infradead.org>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Excellent, thank you.  Is someone working on the channel/regdomain
-issue as well?
->
-> >
-> > Secondarily, ethtool still doesn't report firmware version and that
-> > would be a very helpful thing to have before 4.19 hits.
-> >
->
-> +Davide Caratti
-
-Thanks, saw his message and will watch for it to test.
->
-> > Additionally, with much less severity, t1u still thinks it is dual
-> > band and I'm happy to run any command, test any patch, etc.  I
-> > honestly don't care about this at all short term, but it does slow the
-> > hardware down tuning to a bunch of channels which it cannot access so
-> > long term it should probably be fixed in some way.
-> >
->
-> I am busy with other mt76 activities at the moment, I will look into
-> it as soon as I have time
-
-Listed third and we seem to agree this is a "as time allows" task.
-
-Thanks for the prompt response.
-
--Zero
->
-> Regards,
-> Lorenzo
->
-> > Thanks again for all your hard work, watching the mailing list it is
-> > obvious how much effort is going into this right now.
-> >
-> > -Zero
-> > On Fri, Sep 7, 2018 at 3:55 PM Sid Hayn <sidhayn@gmail.com> wrote:
-> > >
-> > > On Fri, Sep 7, 2018 at 4:24 AM Lorenzo Bianconi
-> > > <lorenzo.bianconi@redhat.com> wrote:
-> > > >
-> > > > > Actions like that have caused great problems in the past, as the
-> > > > > kernel won't allow channel control of a monitor interface at all when
-> > > > > there is a managed interface on the same phy (afaik).
-> > > > >
-> > > > > But just for fun and codepath testing here are two test scenarios:
-> > > > >
-> > > > > Test 1: "iwconfig t2u mode monitor"
-> > > > > Sees nothing on any channel, no packets reported
-> > > > >
-> > > > > Test 2(requested test): "iw phy phy11 interface add t2uhmon type monitor"
-> > > > > Sees nothing on any channel, no packets reported.
-> > > > > Despite having a monitor and managed interface on the same phy,
-> > > > > iwconfig is reporting that the channel is changing as requested.  So
-> > > > > perhaps my above "afaik" comment is partially outdated.
-> > > > >
-> > > > > For both tests the interface was not used to connect to any ap prior
-> > > > > to or during testing.
-> > > > >
-> > > >
-> > > > Could you please try following patch?
-> > >
-> > > Excellent!  This seems to work for all channels up to 140, however,
-> > > not 144 or above.  "iw list" shows these are supported but I cannot
-> > > set them in monitor mode:
-> > >
-> > > * 5720 MHz [144] (22.0 dBm) (no IR, radar detection)
-> > > * 5745 MHz [149] (22.0 dBm) (no IR)
-> > > * 5765 MHz [153] (22.0 dBm) (no IR)
-> > > * 5785 MHz [157] (22.0 dBm) (no IR)
-> > > * 5805 MHz [161] (22.0 dBm) (no IR)
-> > > * 5825 MHz [165] (22.0 dBm) (no IR)
-> > >
-> > > remote2 ~ # iw dev t2uhmon set channel 140
-> > > remote2 ~ # iw dev t2uhmon set channel 144
-> > > command failed: Invalid argument (-22)
-> > >
-> > > Thanks,
-> > > Zero
-> > >
-> > > > Regards,
-> > > >
-> > > > Lorenzo
-> > > >
-> > > > --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> > > > +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> > > > @@ -756,11 +756,10 @@ __mt76x0_phy_set_channel(struct mt76x0_dev *dev,
-> > > >
-> > > >         /* Vendor driver don't do it */
-> > > >         /* mt76x0_phy_set_tx_power(dev, channel, rf_bw_band); */
-> > > > +       mt76x0_vco_cal(dev, channel);
-> > > >
-> > > >         if (scan)
-> > > > -               mt76x0_vco_cal(dev, channel);
-> > > > -
-> > > > -       mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
-> > > > +               mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
-> > > >         mt76x0_phy_set_chan_pwr(dev, channel);
-> > > >
-> > > >         dev->mt76.chandef = *chandef;
+Applied, thanks!
