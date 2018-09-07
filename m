@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:39274 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727547AbeIQNLv (ORCPT
+Received: from mail-io1-f48.google.com ([209.85.166.48]:36294 "EHLO
+        mail-io1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726295AbeIGTIE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 09:11:51 -0400
-Message-ID: <1537170327.2957.2.camel@sipsolutions.net> (sfid-20180917_094544_354215_EA12CBF3)
-Subject: Re: [PATCH 2/2] netlink: add ethernet address policy types
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kubecek <mkubecek@suse.cz>,
-        Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 17 Sep 2018 09:45:27 +0200
-In-Reply-To: <20180913203952.GA3876@unicorn.suse.cz>
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
-         <20180913084603.7979-2-johannes@sipsolutions.net>
-         <20180913115849.GF29691@unicorn.suse.cz>
-         <1536840173.4160.4.camel@sipsolutions.net>
-         <20180913121227.GH29691@unicorn.suse.cz>
-         <1536840966.4160.6.camel@sipsolutions.net>
-         <20180913194116.GG4590@localhost.localdomain>
-         <20180913203952.GA3876@unicorn.suse.cz>
+        Fri, 7 Sep 2018 15:08:04 -0400
+Received: by mail-io1-f48.google.com with SMTP id q5-v6so1671543iop.3
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 07:26:53 -0700 (PDT)
+MIME-Version: 1.0
+References: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com>
+In-Reply-To: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 7 Sep 2018 19:56:40 +0530
+Message-ID: <CABPxzYKUEr1R8Bt+hVNVQr6CoHwSOiTi6-cMFwFiNwzG-VEZDA@mail.gmail.com> (sfid-20180907_162655_877853_0DF0C218)
+Subject: Re: ath10k: adding wlan to bridge causes WPA2-PSK to fail
+To: "Hostap@lists.infradead.org" <hostap@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-09-13 at 22:39 +0200, Michal Kubecek wrote:
-
-> > What about
-> > #define NLA_FIELD_ETH_ADDR  { .type = NLA_BINARY_EXACT, .len = ETH_ALEN }
-> > 
-> > Or even
-> > #define NLA_FIELD_BINARY_EXACT(_len)	{ .type = NLA_BINARY_EXACT, .len = (_len) }
-> > #define NLA_FIELD_ETH_ADDR		NLA_FIELD_BINARY_EXACT(ETH_ALEN)
-> > 
-> > So that one would just:
-> >    [MYADDR] = NLA_FIELD_ETH_ADDR,
-> 
-> Yes, that's how I understoold Johannes' proposal above.
-
-I was really thinking of
-
-	[MYADDR] = { NLA_FIELD_ETH_ADDR },
-
-but it doesn't really matter much to me either way.
-
-johannes
+On Tue, Aug 28, 2018 at 9:47 PM Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+>
+> Hi,
+>
+> I am trying to connect ath10k interface to Linux bridge after enabling
+> of 4addr mode in WPA2-PSK mode, but EAPOL handshake fails, M1 is
+> not received by the wpa_supplicant.
+Did not pass "-b br0" to the wpa_supplicant so l2 bridge code is not
+initialized.
+After passing, it works fine. Thanks.
