@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
-        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726366AbeIXLOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 07:14:09 -0400
-From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
-        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: [PATCH 05/11] qtnfmac_pcie: pearl: rename spinlock tx0_lock to
- tx_lock
-Date: Mon, 24 Sep 2018 05:13:27 +0000
-Message-ID: <20180924051246.13371-6-igor.mitsyanko.os@quantenna.com> (sfid-20180924_071408_024879_F8488EDD)
-References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
-In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:43030 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727623AbeIGVKZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Sep 2018 17:10:25 -0400
+Received: by mail-wr1-f66.google.com with SMTP id k5-v6so15540834wre.10
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 09:28:44 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        WIRELESS ML <linux-wireless@vger.kernel.org>,
+        REGDB ML <wireless-regdb@lists.infradead.org>
+Subject: [PATCH] wireless-regdb: update source of info for CU and ES
+Date: Fri,  7 Sep 2018 18:28:41 +0200
+Message-Id: <20180907162841.11749-1-xose.vazquez@gmail.com> (sfid-20180907_182847_455452_0B23B0B0)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx_lock name will later be reused when common pcie code is extracted to
-separate files.
-
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
+Cc: REGDB ML <wireless-regdb@lists.infradead.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ db.txt | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/dri=
-vers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-index 4e9eb46..791a1e3 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-@@ -110,7 +110,7 @@ struct qtnf_pcie_pearl_state {
- 	/* lock for tx reclaim operations */
- 	spinlock_t tx_reclaim_lock;
- 	/* lock for tx0 operations */
--	spinlock_t tx0_lock;
-+	spinlock_t tx_lock;
- 	u8 msi_enabled;
- 	u8 tx_stopped;
- 	int mps;
-@@ -794,7 +794,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
-ct sk_buff *skb)
- 	u32 info;
- 	int ret =3D 0;
-=20
--	spin_lock_irqsave(&priv->tx0_lock, flags);
-+	spin_lock_irqsave(&priv->tx_lock, flags);
-=20
- 	if (!qtnf_tx_queue_ready(priv)) {
- 		if (skb->dev) {
-@@ -802,7 +802,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
-ct sk_buff *skb)
- 			priv->tx_stopped =3D 1;
- 		}
-=20
--		spin_unlock_irqrestore(&priv->tx0_lock, flags);
-+		spin_unlock_irqrestore(&priv->tx_lock, flags);
- 		return NETDEV_TX_BUSY;
- 	}
-=20
-@@ -852,7 +852,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
-ct sk_buff *skb)
- 	}
-=20
- 	priv->tx_done_count++;
--	spin_unlock_irqrestore(&priv->tx0_lock, flags);
-+	spin_unlock_irqrestore(&priv->tx_lock, flags);
-=20
- 	qtnf_pcie_data_tx_reclaim(priv);
-=20
-@@ -1404,7 +1404,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, cons=
-t struct pci_device_id *id)
-=20
- 	init_completion(&bus->firmware_init_complete);
- 	mutex_init(&bus->bus_lock);
--	spin_lock_init(&pcie_priv->tx0_lock);
-+	spin_lock_init(&pcie_priv->tx_lock);
- 	spin_lock_init(&pcie_priv->irq_lock);
- 	spin_lock_init(&pcie_priv->tx_reclaim_lock);
-=20
---=20
-2.9.5
+diff --git a/db.txt b/db.txt
+index b168f59..54479fc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -311,9 +311,10 @@ country CR: DFS-FCC
+ 	(5490 - 5730 @ 20), (24), DFS
+ 	(5735 - 5835 @ 20), (30)
+ 
++# Source:
+ # http://www.mincom.gob.cu/?q=marcoregulatorio
+ # - Redes Informáticas
+-# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
++# Resolución 127- 2011 Reglamento de Banda de frecuencias de 2,4 GHz.
+ country CU: DFS-FCC
+ 	(2400 - 2483.5 @ 40), (200 mW)
+ 
+@@ -432,13 +433,9 @@ country EG: DFS-ETSI
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+ 
+-# Orden IET/787/2013, de 25 de abril, por la que se aprueba
+-# el cuadro nacional de atribución de frecuencias.
+-# http://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-4845
+-#
+-# more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+-# http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+-
++# Source:
++# Cuadro nacional de atribución de frecuencias (CNAF)
++# http://www.mincotur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+ country ES: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+-- 
+2.17.1
