@@ -1,602 +1,451 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:60863 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726338AbeIPMJA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 08:09:00 -0400
-Date: Sun, 16 Sep 2018 08:47:02 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        kernel list <linux-kernel@vger.kernel.org>
-Subject: v4.19-rc3 on thinkpad x220: kernel BUG at kernel/dma/swiotlb.c:521
- when enabling radios
-Message-ID: <20180916064702.GA4180@amd> (sfid-20180916_084727_361291_299FED6C)
+Received: from mail.toke.dk ([52.28.52.200]:56627 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726631AbeIHDF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Sep 2018 23:05:58 -0400
+Subject: [PATCH RFC v3 2/4] mac80211: Add airtime accounting and scheduling
+ to TXQs
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Date: Sat, 08 Sep 2018 00:22:50 +0200
+Message-ID: <153635897061.14170.17999956909203163571.stgit@alrua-x1> (sfid-20180908_002305_131598_05A63919)
+In-Reply-To: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="V0207lvV8h4k8FAm"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds airtime accounting and scheduling to the mac80211 TXQ
+scheduler. A new callback, ieee80211_sta_register_airtime(), is added
+that drivers can call to report airtime usage for stations.
 
---V0207lvV8h4k8FAm
-Content-Type: multipart/mixed; boundary="fUYQa+Pmc3FrFX/N"
-Content-Disposition: inline
+When airtime information is present, mac80211 will schedule TXQs
+(through ieee80211_next_txq()) in a way that enforces airtime fairness
+between active stations. This scheduling works the same way as the ath9k
+in-driver airtime fairness scheduling. If no airtime usage is reported
+by the driver, the scheduler will default to round-robin scheduling.
 
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ include/net/mac80211.h       |   52 ++++++++++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h |    4 ++
+ net/mac80211/debugfs.c       |    3 ++
+ net/mac80211/debugfs_sta.c   |   42 ++++++++++++++++++++++++--
+ net/mac80211/ieee80211_i.h   |    2 +
+ net/mac80211/main.c          |    1 +
+ net/mac80211/sta_info.c      |   32 +++++++++++++++++++
+ net/mac80211/sta_info.h      |   16 ++++++++++
+ net/mac80211/tx.c            |   69 +++++++++++++++++++++++++++++++++++++++++-
+ 9 files changed, 216 insertions(+), 5 deletions(-)
 
---fUYQa+Pmc3FrFX/N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi!
-
-I was running X220 with wireless disabled for long long time. Now I
-needed to enable it, and got...
-
-Full dmesg attached.
-
-Any ideas?
-								Pavel
-
-[ 3142.376039] ata1.00: configured for UDMA/133
-[ 3142.400941] PM: resume devices took 2.060 seconds
-[ 3142.401994] OOM killer enabled.
-[ 3142.402006] Restarting tasks ... done.
-[ 3142.411927] PM: suspend exit
-[ 3142.547158] e1000e: eth2 NIC Link is Down
-[ 3144.320064] e1000e: eth2 NIC Link is Up 100 Mbps Full Duplex, Flow Contr=
-ol: Rx/Tx
-[ 3144.320087] e1000e 0000:00:19.0 eth2: 10/100 speed: disabling TSO
-[ 5339.173291] perf: interrupt took too long (2519 > 2500), lowering kernel=
-=2Eperf_event_max_sample_rate to 79250
-[ 6573.453378] iwlwifi 0000:03:00.0: RF_KILL bit toggled to enable radio.
-[ 6573.453399] iwlwifi 0000:03:00.0: reporting RF_KILL (radio enabled)
-[ 6573.477360] iwlwifi 0000:03:00.0: Radio type=3D0x0-0x0-0x3
-[ 6573.477959] ------------[ cut here ]------------
-[ 6573.477963] kernel BUG at kernel/dma/swiotlb.c:521!
-[ 6573.477970] invalid opcode: 0000 [#1] SMP PTI
-[ 6573.477972] CPU: 2 PID: 3127 Comm: NetworkManager Not tainted 4.19.0-rc3=
- #5
-[ 6573.477974] Hardware name: LENOVO 42872WU/42872WU, BIOS 8DET74WW (1.44 )=
- 03/13/2018
-[ 6573.477980] RIP: 0010:swiotlb_tbl_map_single+0x17f/0x2c0
-[ 6573.477982] Code: 21 c6 49 89 f5 49 81 c5 ff 07 00 00 49 c1 ed 0b 48 83 =
-f8 ff 0f 84 f2 fe ff ff 48 8d 90 00 08 00 00 48 c1 ea 0b e9 e2 fe ff ff <0f=
-> 0b 42 8d 0c 3b 89 d8 39 cb 7d 12 48 63 d0 83 c0 01 39 c8 41 c7
-[ 6573.477984] RSP: 0000:ffffc90000977070 EFLAGS: 00010246
-[ 6573.477986] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 00000000000=
-00000
-[ 6573.477987] RDX: 0000000000200000 RSI: 00000000d699f000 RDI: ffff8801970=
-8c0a8
-[ 6573.477989] RBP: ffffc900009770c8 R08: 0000000000000002 R09: 00000000000=
-00000
-[ 6573.477990] R10: 0000000000000034 R11: 0000000000000000 R12: 00000000000=
-00001
-[ 6573.477991] R13: 00000000001ad33e R14: 0000000000000000 R15: 00000000000=
-00000
-[ 6573.477993] FS:  0000000000000000(0000) GS:ffff88019e280000(0063) knlGS:=
-00000000f70407c0
-[ 6573.477995] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
-[ 6573.477996] CR2: 00000000f7ee4000 CR3: 00000001925ea002 CR4: 00000000000=
-606a0
-[ 6573.477999] Call Trace:
-[ 6573.478002]  ? dma_direct_alloc+0x6f/0x140
-[ 6573.478005]  swiotlb_alloc+0x88/0x170
-[ 6573.478008]  iwl_pcie_txq_alloc+0x205/0x420
-[ 6573.478010]  ? iwl_pcie_tx_init+0x28d/0x390
-[ 6573.478012]  iwl_pcie_tx_init+0x325/0x390
-[ 6573.478015]  iwl_trans_pcie_start_fw+0x267/0x590
-[ 6573.478017]  iwl_load_ucode_wait_alive+0xde/0x1b0
-[ 6573.478019]  ? iwl_init_notification_wait+0x78/0x90
-[ 6573.478021]  ? iwl_alloc_all+0x30/0x30
-[ 6573.478023]  iwl_run_init_ucode+0xa3/0x130
-[ 6573.478025]  ? iwl_run_init_ucode+0xa3/0x130
-[ 6573.478027]  ? iwl_alive_notify+0x1b0/0x1b0
-[ 6573.478030]  ? mutex_unlock+0xd/0x10
-[ 6573.478032]  iwlagn_mac_start+0x112/0x200
-[ 6573.478033]  ? iwlagn_mac_start+0x112/0x200
-[ 6573.478037]  drv_start+0x2e/0x50
-[ 6573.478041]  ieee80211_do_open+0x356/0x920
-[ 6573.478042]  ? mutex_unlock+0xd/0x10
-[ 6573.478045]  ieee80211_open+0x4e/0x60
-[ 6573.478048]  __dev_open+0xba/0x130
-[ 6573.478050]  __dev_change_flags+0x19c/0x200
-[ 6573.478052]  dev_change_flags+0x24/0x60
-[ 6573.478055]  do_setlink+0x2f4/0xce0
-[ 6573.478058]  ? _raw_spin_unlock_irq+0x22/0x30
-[ 6573.478061]  ? __lock_acquire.isra.25+0x39e/0xa50
-[ 6573.478065]  ? nla_parse+0x36/0x130
-[ 6573.478067]  rtnl_newlink+0x483/0x770
-[ 6573.478070]  ? update_group_capacity+0x27/0x1c0
-[ 6573.478072]  ? find_busiest_group+0x141/0xab0
-[ 6573.478075]  ? cpumask_next_and+0x1d/0x20
-[ 6573.478077]  ? load_balance+0x204/0xb80
-[ 6573.478079]  ? find_held_lock+0x39/0xb0
-[ 6573.478082]  ? find_held_lock+0x39/0xb0
-[ 6573.478084]  ? __lock_acquire.isra.25+0x39e/0xa50
-[ 6573.478087]  rtnetlink_rcv_msg+0x316/0x3e0
-[ 6573.478089]  ? rtnl_calcit.isra.40+0x140/0x140
-[ 6573.478092]  netlink_rcv_skb+0xcd/0x100
-[ 6573.478094]  rtnetlink_rcv+0x10/0x20
-[ 6573.478096]  netlink_unicast+0x179/0x210
-[ 6573.478098]  netlink_sendmsg+0x307/0x3a0
-[ 6573.478101]  sock_sendmsg+0x18/0x30
-[ 6573.478102]  ___sys_sendmsg+0x2a5/0x2c0
-[ 6573.478105]  ? sock_def_readable+0xce/0xe0
-[ 6573.478108]  ? unix_dgram_sendmsg+0x46b/0x6a0
-[ 6573.478110]  ? find_held_lock+0x39/0xb0
-[ 6573.478114]  ? __fget+0x8a/0xd0
-[ 6573.478116]  ? __fget+0xa2/0xd0
-[ 6573.478118]  __sys_sendmsg+0x63/0xa0
-[ 6573.478120]  ? __sys_sendmsg+0x63/0xa0
-[ 6573.478122]  __ia32_compat_sys_socketcall+0xde/0x220
-[ 6573.478124]  ? __ia32_compat_sys_time+0x10/0x40
-[ 6573.478127]  do_int80_syscall_32+0x50/0x100
-[ 6573.478129]  entry_INT80_compat+0x7d/0x82
-[ 6573.478131] RIP: 0023:0xf7f95c42
-[ 6573.478133] Code: 65 8b 15 04 00 00 00 8b 0e 8b 0c ca 83 f9 ff 75 0c 89 =
-04 24 89 f0 e8 b3 fe ff ff eb 05 8b 46 04 01 c8 83 c4 14 5b 5e c3 cd 80 <c3=
-> 8d b6 00 00 00 00 8d bc 27 00 00 00 00 8b 1c 24 c3 8d b6 00 00
-[ 6573.478135] RSP: 002b:00000000ff833284 EFLAGS: 00200293 ORIG_RAX: 000000=
-0000000066
-[ 6573.478137] RAX: ffffffffffffffda RBX: 0000000000000010 RCX: 00000000ff8=
-33290
-[ 6573.478138] RDX: 00000000f7c06000 RSI: 0000000000000000 RDI: 00000000081=
-ae170
-[ 6573.478140] RBP: 0000000008228d30 R08: 0000000000000000 R09: 00000000000=
-00000
-[ 6573.478141] R10: 0000000000000000 R11: 0000000000000000 R12: 00000000000=
-00000
-[ 6573.478142] R13: 0000000000000000 R14: 0000000000000000 R15: 00000000000=
-00000
-[ 6573.478144] Modules linked in:
-[ 6573.478147] ---[ end trace 9d43a92dfd042821 ]---
-[ 6573.478149] RIP: 0010:swiotlb_tbl_map_single+0x17f/0x2c0
-[ 6573.478151] Code: 21 c6 49 89 f5 49 81 c5 ff 07 00 00 49 c1 ed 0b 48 83 =
-f8 ff 0f 84 f2 fe ff ff 48 8d 90 00 08 00 00 48 c1 ea 0b e9 e2 fe ff ff <0f=
-> 0b 42 8d 0c 3b 89 d8 39 cb 7d 12 48 63 d0 83 c0 01 39 c8 41 c7
-[ 6573.478152] RSP: 0000:ffffc90000977070 EFLAGS: 00010246
-[ 6573.478154] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 00000000000=
-00000
-[ 6573.478156] RDX: 0000000000200000 RSI: 00000000d699f000 RDI: ffff8801970=
-8c0a8
-[ 6573.478157] RBP: ffffc900009770c8 R08: 0000000000000002 R09: 00000000000=
-00000
-[ 6573.478158] R10: 0000000000000034 R11: 0000000000000000 R12: 00000000000=
-00001
-[ 6573.478159] R13: 00000000001ad33e R14: 0000000000000000 R15: 00000000000=
-00000
-[ 6573.478161] FS:  0000000000000000(0000) GS:ffff88019e280000(0063) knlGS:=
-00000000f70407c0
-[ 6573.478163] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
-[ 6573.478164] CR2: 00000000f7ee4000 CR3: 00000001925ea002 CR4: 00000000000=
-606a0
-[ 6574.013888] usb 1-1.4: new full-speed USB device number 5 using ehci-pci
-[ 6574.128610] usb 1-1.4: New USB device found, idVendor=3D0a5c, idProduct=
-=3D217f, bcdDevice=3D 7.48
-[ 6574.128624] usb 1-1.4: New USB device strings: Mfr=3D1, Product=3D2, Ser=
-ialNumber=3D3
-[ 6574.128631] usb 1-1.4: Product: Broadcom Bluetooth Device
-[ 6574.128638] usb 1-1.4: Manufacturer: Broadcom Corp
-[ 6574.128644] usb 1-1.4: SerialNumber: 7CE9D3B855AA
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---fUYQa+Pmc3FrFX/N
-Content-Type: application/gzip
-Content-Disposition: attachment; filename="delme.gz"
-Content-Transfer-Encoding: base64
-
-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
-vtOOTvMT9cYZ8/r13/4HvXWNuzkpAQA=
-
---fUYQa+Pmc3FrFX/N--
-
---V0207lvV8h4k8FAm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlud/GYACgkQMOfwapXb+vKlrQCeJKG9uqnpZAco0i56YwjEkw7h
-m+AAn0p3So/mo+m3n6P//oewPfjePJyt
-=ZQF8
------END PGP SIGNATURE-----
-
---V0207lvV8h4k8FAm--
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ff413d9caa50..a744ad4f4f59 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5350,6 +5350,34 @@ void ieee80211_sta_eosp(struct ieee80211_sta *pubsta);
+  */
+ void ieee80211_send_eosp_nullfunc(struct ieee80211_sta *pubsta, int tid);
+ 
++/**
++ * ieee80211_sta_register_airtime - register airtime usage for a sta/tid
++ *
++ * Register airtime usage for a given sta on a given tid. The driver can call
++ * this function to notify mac80211 that a station used a certain amount of
++ * airtime. This information will be used by the TXQ scheduler to schedule
++ * stations in a way that ensures airtime fairness.
++ *
++ * The reported airtime should as a minimum include all time that is spent
++ * transmitting to the remote station, including overhead and padding, but not
++ * including time spent waiting for a TXOP. If the time is not reported by the
++ * hardware it can in some cases be calculated from the rate and known frame
++ * composition. When possible, the time should include any failed transmission
++ * attempts.
++ *
++ * The driver can either call this function synchronously for every packet or
++ * aggregate, or asynchronously as airtime usage information becomes available.
++ * TX and RX airtime can be reported together, or separately by setting one of
++ * them to 0.
++ *
++ * @pubsta: the station
++ * @tid: the TID to register airtime for
++ * @tx_airtime: airtime used during TX (in usec)
++ * @rx_airtime: airtime used during RX (in usec)
++ */
++void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
++				    u32 tx_airtime, u32 rx_airtime);
++
+ /**
+  * ieee80211_iter_keys - iterate keys programmed into the device
+  * @hw: pointer obtained from ieee80211_alloc_hw()
+@@ -6089,6 +6117,30 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
+ 					 bool first);
+ 
++/**
++ * ieee80211_airtime_may_transmit - check whether TXQ is allowed to transmit
++ *
++ * This function is used to check whether given txq is allowed to transmit by
++ * the airtime scheduler, and can be used by drivers to access the airtime
++ * fairness accounting without going using the scheduling order enfored by
++ * next_txq().
++ *
++ * Returns %true if the airtime scheduler does not think the TXQ should be
++ * throttled. This function can also have the side effect of rotating the TXQ in
++ * the scheduler rotation, which will eventually bring the deficit to positive
++ * and allow the station to transmit again.
++ *
++ * If this function returns %true, the TXQ will have been removed from the
++ * scheduling. It is the driver's responsibility to add it back (by calling
++ * ieee80211_schedule_txq()) if needed.
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @txq: pointer obtained from station or virtual interface
++ *
++ */
++bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
++				struct ieee80211_txq *txq);
++
+ /**
+  * ieee80211_txq_get_depth - get pending frame/byte count of given txq
+  *
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index cfc94178d608..6b2b61646b6a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5231,6 +5231,9 @@ enum nl80211_feature_flags {
+  *      if this flag is not set. Ignoring this can leak clear text packets and/or
+  *      freeze the connection.
+  *
++ * @NL80211_EXT_FEATURE_AIRTIME_FAIRNESS: Driver supports airtime fairness
++ *      scheduling.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5269,6 +5272,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
++	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 3fe541e358f3..81c5fec2eae7 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -383,6 +383,9 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	if (local->ops->wake_tx_queue)
+ 		DEBUGFS_ADD_MODE(aqm, 0600);
+ 
++	debugfs_create_u16("airtime_flags", 0600,
++			   phyd, &local->airtime_flags);
++
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+ 	/* if the dir failed, don't put all the other things into the root! */
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index af5185a836e5..b6950d883a3a 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -181,9 +181,9 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ 			       txqi->tin.tx_bytes,
+ 			       txqi->tin.tx_packets,
+ 			       txqi->flags,
+-			       txqi->flags & (1<<IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
+-			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
+-			       txqi->flags & (1<<IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" : "");
++			       txqi->flags & (1 << IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
++			       txqi->flags & (1 << IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
++			       txqi->flags & (1 << IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" : "");
+ 	}
+ 
+ 	rcu_read_unlock();
+@@ -195,6 +195,38 @@ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+ }
+ STA_OPS(aqm);
+ 
++static ssize_t sta_airtime_read(struct file *file, char __user *userbuf,
++				size_t count, loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct ieee80211_local *local = sta->sdata->local;
++	size_t bufsz = 200;
++	char *buf = kzalloc(bufsz, GFP_KERNEL), *p = buf;
++	ssize_t rv;
++
++	if (!buf)
++		return -ENOMEM;
++
++	spin_lock_bh(&local->active_txq_lock);
++
++	p += scnprintf(p, bufsz + buf - p,
++		"RX: %llu us\nTX: %llu us\nWeight: %u\n"
++		"Deficit: VO: %lld us VI: %lld us BE: %lld us BK: %lld us\n",
++		sta->airtime.rx_airtime,
++		sta->airtime.tx_airtime,
++		sta->airtime.weight,
++		sta->airtime.deficit[0],
++		sta->airtime.deficit[1],
++		sta->airtime.deficit[2],
++		sta->airtime.deficit[3]);
++
++	spin_unlock_bh(&local->active_txq_lock);
++	rv = simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++	kfree(buf);
++	return rv;
++}
++STA_OPS(airtime);
++
+ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
+ 					size_t count, loff_t *ppos)
+ {
+@@ -906,6 +938,10 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	if (local->ops->wake_tx_queue)
+ 		DEBUGFS_ADD(aqm);
+ 
++	if (wiphy_ext_feature_isset(local->hw.wiphy,
++				    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
++		DEBUGFS_ADD(airtime);
++
+ 	if (sizeof(sta->driver_buffered_tids) == sizeof(u32))
+ 		debugfs_create_x32("driver_buffered_tids", 0400,
+ 				   sta->debugfs_dir,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 75f9c9ab364f..838542b4f583 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1136,6 +1136,8 @@ struct ieee80211_local {
+ 	struct list_head active_txqs[IEEE80211_NUM_ACS];
+ 	u16 schedule_round[IEEE80211_NUM_ACS];
+ 
++	u16 airtime_flags;
++
+ 	const struct ieee80211_ops *ops;
+ 
+ 	/*
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index c6d88758cbb7..9e7b33a0d0a6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -666,6 +666,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+ 		INIT_LIST_HEAD(&local->active_txqs[i]);
+ 	spin_lock_init(&local->active_txq_lock);
++	local->airtime_flags = AIRTIME_USE_TX | AIRTIME_USE_RX;
+ 
+ 	INIT_LIST_HEAD(&local->chanctx_list);
+ 	mutex_init(&local->chanctx_mtx);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index c2f5cb7df54f..aba13f88bc86 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -387,9 +387,12 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (sta_prepare_rate_control(local, sta, gfp))
+ 		goto free_txq;
+ 
++	sta->airtime.weight = IEEE80211_DEFAULT_AIRTIME_WEIGHT;
++
+ 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 		skb_queue_head_init(&sta->ps_tx_buf[i]);
+ 		skb_queue_head_init(&sta->tx_filtered[i]);
++		sta->airtime.deficit[i] = sta->airtime.weight;
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
+@@ -1826,6 +1829,35 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
+ }
+ EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+ 
++void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
++				    u32 tx_airtime, u32 rx_airtime)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++	struct ieee80211_local *local = sta->sdata->local;
++	struct txq_info *txqi;
++	u8 ac = ieee80211_ac_from_tid(tid);
++	u32 airtime = 0;
++
++	if (sta->local->airtime_flags & AIRTIME_USE_TX)
++		airtime += tx_airtime;
++	if (sta->local->airtime_flags & AIRTIME_USE_RX)
++		airtime += rx_airtime;
++
++	spin_lock_bh(&local->active_txq_lock);
++	sta->airtime.tx_airtime += tx_airtime;
++	sta->airtime.rx_airtime += rx_airtime;
++	sta->airtime.deficit[ac] -= airtime;
++
++	if (sta->airtime.deficit[ac] < 0) {
++		txqi = to_txq_info(pubsta->txq[tid]);
++		if (list_empty(&txqi->schedule_order))
++			list_add_tail(&txqi->schedule_order,
++				      &local->active_txqs[ac]);
++	}
++	spin_unlock_bh(&local->active_txq_lock);
++}
++EXPORT_SYMBOL(ieee80211_sta_register_airtime);
++
+ int sta_info_move_state(struct sta_info *sta,
+ 			enum ieee80211_sta_state new_state)
+ {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 9a04327d71d1..97fff032eee5 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -127,6 +127,20 @@ enum ieee80211_agg_stop_reason {
+ 	AGG_STOP_DESTROY_STA,
+ };
+ 
++/* How much to increase airtime deficit on each scheduling round, by default
++ * (userspace can change this per phy) */
++#define IEEE80211_DEFAULT_AIRTIME_WEIGHT        256
++/* Debugfs flags to enable/disable use of RX/TX airtime in scheduler */
++#define AIRTIME_USE_TX		BIT(0)
++#define AIRTIME_USE_RX		BIT(1)
++
++struct airtime_info {
++	u64 rx_airtime;
++	u64 tx_airtime;
++	s64 deficit[IEEE80211_NUM_ACS];
++	u16 weight;
++};
++
+ struct sta_info;
+ 
+ /**
+@@ -563,6 +577,8 @@ struct sta_info {
+ 	} tx_stats;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+ 
++	struct airtime_info airtime;
++
+ 	/*
+ 	 * Aggregation information, locked with lock.
+ 	 */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8bcc447e2cbc..758368d6106e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1446,6 +1446,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 	codel_stats_init(&txqi->cstats);
+ 	__skb_queue_head_init(&txqi->frags);
+ 	INIT_LIST_HEAD(&txqi->schedule_order);
++	txqi->flags = 0;
+ 
+ 	txqi->txq.vif = &sdata->vif;
+ 
+@@ -1486,6 +1487,7 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 
+ 	fq_tin_reset(fq, tin, fq_skb_free_func);
+ 	ieee80211_purge_tx_queue(&local->hw, &txqi->frags);
++	txqi->flags = 0;
+ 	spin_lock_bh(&local->active_txq_lock);
+ 	list_del_init(&txqi->schedule_order);
+ 	spin_unlock_bh(&local->active_txq_lock);
+@@ -3637,8 +3639,22 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+ 	spin_lock_bh(&local->active_txq_lock);
+ 
+ 	if (list_empty(&txqi->schedule_order)) {
+-		list_add_tail(&txqi->schedule_order,
+-			      &local->active_txqs[txq->ac]);
++		/* If airtime accounting is active, always enqueue STAs at the
++		 * head of the list to ensure that they only get moved to the
++		 * back by the airtime DRR scheduler once they have a negative
++		 * deficit. A station that already has a negative deficit will
++		 * get immediately moved to the back of the list on the next
++		 * call to ieee80211_next_txq().
++		 */
++		if (wiphy_ext_feature_isset(local->hw.wiphy,
++					    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS)
++		    && txqi->txq.sta)
++			list_add(&txqi->schedule_order,
++				 &local->active_txqs[txq->ac]);
++		else
++			list_add_tail(&txqi->schedule_order,
++				      &local->active_txqs[txq->ac]);
++
+ 		ret = true;
+ 	}
+ 
+@@ -3648,6 +3664,32 @@ bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_schedule_txq);
+ 
++static bool ieee80211_txq_check_deficit(struct ieee80211_local *local,
++					struct txq_info *txqi)
++{
++	struct sta_info *sta;
++
++	lockdep_assert_held(&local->active_txq_lock);
++
++	if (!txqi->txq.sta)
++		return true;
++
++	sta = container_of(txqi->txq.sta, struct sta_info, sta);
++
++	if (sta->airtime.deficit[txqi->txq.ac] > 0)
++		return true;
++
++	if (txqi == list_first_entry_or_null(&local->active_txqs[txqi->txq.ac],
++					     struct txq_info,
++					     schedule_order)) {
++		sta->airtime.deficit[txqi->txq.ac] += sta->airtime.weight;
++		list_move_tail(&txqi->schedule_order,
++			       &local->active_txqs[txqi->txq.ac]);
++	}
++
++	return false;
++}
++
+ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
+ 					 bool first)
+ {
+@@ -3659,6 +3701,7 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
+ 	if (first)
+ 		local->schedule_round[ac]++;
+ 
++ begin:
+ 	if (list_empty(&local->active_txqs[ac]))
+ 		goto out;
+ 
+@@ -3666,6 +3709,9 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
+ 				struct txq_info,
+ 				schedule_order);
+ 
++	if (!ieee80211_txq_check_deficit(local, txqi))
++		goto begin;
++
+ 	if (txqi->schedule_round == local->schedule_round[ac])
+ 		txqi = NULL;
+ 	else
+@@ -3681,6 +3727,25 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
+ }
+ EXPORT_SYMBOL(ieee80211_next_txq);
+ 
++bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
++				struct ieee80211_txq *txq)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct txq_info *txqi = to_txq_info(txq);
++	bool may_tx = false;
++
++	spin_lock_bh(&local->active_txq_lock);
++
++	if (ieee80211_txq_check_deficit(local, txqi)) {
++		may_tx = true;
++		list_del_init(&txqi->schedule_order);
++	}
++
++	spin_unlock_bh(&local->active_txq_lock);
++	return may_tx;
++}
++EXPORT_SYMBOL(ieee80211_txq_may_transmit);
++
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags)
