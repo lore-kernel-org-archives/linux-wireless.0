@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:45548 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391541AbeIVD73 (ORCPT
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:49792 "EHLO
+        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725986AbeIGXum (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 23:59:29 -0400
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] rtlwifi: btcoex: Use proper enumerated types for Wi-Fi only interface
-Date: Fri, 21 Sep 2018 15:08:24 -0700
-Message-Id: <20180921220824.18344-1-natechancellor@gmail.com> (sfid-20180922_000851_500764_2F325A21)
-MIME-Version: 1.0
+        Fri, 7 Sep 2018 19:50:42 -0400
+Received: from mr6.cc.vt.edu (mr6.cc.ipv6.vt.edu [IPv6:2607:b400:92:8500:0:af:2d00:4488])
+        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id w87J8Nxx031743
+        for <linux-wireless@vger.kernel.org>; Fri, 7 Sep 2018 15:08:23 -0400
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+        by mr6.cc.vt.edu (8.14.7/8.14.7) with ESMTP id w87J8IEd016901
+        for <linux-wireless@vger.kernel.org>; Fri, 7 Sep 2018 15:08:23 -0400
+Received: by mail-qk1-f197.google.com with SMTP id z17-v6so11484867qka.9
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 12:08:23 -0700 (PDT)
+From: valdis.kletnieks@vt.edu
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: another missing 'select' in Kconfig
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Fri, 07 Sep 2018 15:08:13 -0400
+Message-ID: <30971.1536347293@turing-police.cc.vt.edu> (sfid-20180907_210845_119291_617CB9F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clang warns when one enumerated type is implicitly converted to another.
+commit b40b15e1521f7764ea8c68d5a00ecc971b673d21
+Author: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Tue Jul 31 10:09:19 2018 +0200
 
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1327:34:
-warning: implicit conversion from enumeration type 'enum
-btc_chip_interface' to different enumeration type 'enum
-wifionly_chip_interface' [-Wenum-conversion]
-                wifionly_cfg->chip_interface = BTC_INTF_PCI;
-                                             ~ ^~~~~~~~~~~~
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1330:34:
-warning: implicit conversion from enumeration type 'enum
-btc_chip_interface' to different enumeration type 'enum
-wifionly_chip_interface' [-Wenum-conversion]
-                wifionly_cfg->chip_interface = BTC_INTF_USB;
-                                             ~ ^~~~~~~~~~~~
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1333:34:
-warning: implicit conversion from enumeration type 'enum
-btc_chip_interface' to different enumeration type 'enum
-wifionly_chip_interface' [-Wenum-conversion]
-                wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
-                                             ~ ^~~~~~~~~~~~~~~~
-3 warnings generated.
+    mt76: add usb support to mt76 layer
 
-Use the values from the correct enumerated type, wifionly_chip_interface.
+add a new mt76-usb.c for MT76x2U USB devices, but failed to wire
+it up for MT76x0U USB devices.
 
-BTC_INTF_UNKNOWN = WIFIONLY_INTF_UNKNOWN = 0
-BTC_INTF_PCI = WIFIONLY_INTF_PCI = 0
-BTC_INTF_USB = WIFIONLY_INTF_USB = 0
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/135
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
 ---
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index b026e80940a4..6fbf8845a2ab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -1324,13 +1324,13 @@ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
- 
- 	switch (rtlpriv->rtlhal.interface) {
- 	case INTF_PCI:
--		wifionly_cfg->chip_interface = BTC_INTF_PCI;
-+		wifionly_cfg->chip_interface = WIFIONLY_INTF_PCI;
- 		break;
- 	case INTF_USB:
--		wifionly_cfg->chip_interface = BTC_INTF_USB;
-+		wifionly_cfg->chip_interface = WIFIONLY_INTF_USB;
- 		break;
- 	default:
--		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
-+		wifionly_cfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
- 		break;
- 	}
- 
--- 
-2.19.0
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 6a270e759006..cec977b81305 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -17,6 +17,7 @@ config MT76x2_COMMON
+ config MT76x0U
+ 	tristate "MediaTek MT76x0U (USB) support"
+ 	select MT76_CORE
++	select MT76_USB
+ 	depends on MAC80211
+ 	depends on USB
+ 	select MT76x02_LIB
