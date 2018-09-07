@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46972 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727577AbeIEJeu (ORCPT
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:20896 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726002AbeIHLGC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:34:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Sep 2018 08:06:13 +0300
-Message-Id: <20180905050614.23273-9-luca@coelho.fi> (sfid-20180905_070635_094172_67131BBF)
-In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180905050614.23273-1-luca@coelho.fi>
-Subject: [RESEND PATCH v2 8/9] mac80211: Always report TX status
+        Sat, 8 Sep 2018 07:06:02 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v4 0/3] support ftm responder configuration/statistics
+Date: Fri,  7 Sep 2018 15:32:07 -0700
+Message-Id: <1536359530-11139-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180908_082132_082311_8D6981DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Currently ftm_responder parameter in hostapd.conf is only used for fine
+timing measurement (FTM) capability advertisement and actual control of
+the functionality is with low-level device/driver. This leads to confusion
+to the user when the capability advertisement is different from actual FTM
+responder functionality.
 
-If a frame is dropped for any reason, mac80211 wouldn't report the TX
-status back to user space.
+For example, FTM responder capability advertisement is set to 'enabled',
+but the functionality is disabled or not supported by the driver.
 
-As the user space may rely on the TX_STATUS to kick its state
-machines, resends etc, it's better to just report this frame as not
-acked instead.
+The patch set allows userspace to enable FTM responder functionality
+with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
+with configurable lci/civic ocation parameters. Also extended feature flag
+is added for the drivers to advertise the support. Setting the flag to
+enable FTM responder would imply that AP responds to all FTM requests.
+Default is considered to be disabled.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/status.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+changes in V4:
+ - no changes. Rebased and resending as v4 as v3 patches were dropped
+   for unknown reason
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9a6d7208bf4f..001a869c059c 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -479,11 +479,6 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
- 	if (!skb)
- 		return;
- 
--	if (dropped) {
--		dev_kfree_skb_any(skb);
--		return;
--	}
--
- 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
- 		u64 cookie = IEEE80211_SKB_CB(skb)->ack.cookie;
- 		struct ieee80211_sub_if_data *sdata;
-@@ -506,6 +501,8 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
- 		}
- 		rcu_read_unlock();
- 
-+		dev_kfree_skb_any(skb);
-+	} else if (dropped) {
- 		dev_kfree_skb_any(skb);
- 	} else {
- 		/* consumes skb */
+changes in V3:
+ - fixed the ambiguous ftm responder disable case to be not supported
+
+changes in V2:
+ - updated version number
+ - rebased patches
+
+Johannes Berg, Pradeep Kumar Chitrapu (1):
+  cfg80211: support FTM responder configuration/statistics
+
+David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
+  mac80211: support FTM responder configuration/statistics
+
+Pradeep Kumar Chitrapu (1):
+  ath10k: Add support to configure ftm responder role
+
+ drivers/net/wireless/ath/ath10k/core.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  28 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
+ drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
+ include/net/cfg80211.h                 |  66 ++++++++++++++++++
+ include/net/mac80211.h                 |  13 ++++
+ include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
+ net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
+ net/mac80211/driver-ops.h              |  16 +++++
+ net/mac80211/trace.h                   |  23 ++++++
+ net/mac80211/util.c                    |   3 +
+ net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h                |  15 ++++
+ net/wireless/trace.h                   |  44 ++++++++++++
+ 14 files changed, 507 insertions(+), 5 deletions(-)
+
 -- 
-2.18.0
+1.9.1
