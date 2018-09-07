@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:35866 "EHLO
-        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727804AbeITAI7 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50311 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727607AbeIGXqW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 20:08:59 -0400
-Date: Wed, 19 Sep 2018 21:23:34 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Mathy Vanhoef <vanhoefm@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: SAE authentication frames in client mode
-Message-ID: <20180919182334.GA15542@w1.fi> (sfid-20180919_202953_192490_58203D02)
-References: <CAFXAJYzsmhAzSFXjmB0biTBFnU7OSWF6tdqspSqgabvx4x1stg@mail.gmail.com>
+        Fri, 7 Sep 2018 19:46:22 -0400
+Received: from mail-yb1-f199.google.com ([209.85.219.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fyM31-0003dY-QP
+        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 19:04:03 +0000
+Received: by mail-yb1-f199.google.com with SMTP id e126-v6so6139118ybb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 12:04:03 -0700 (PDT)
+Date: Fri, 7 Sep 2018 14:04:00 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2018-09-07
+Message-ID: <20180907190400.GN4251@ubuntu-xps13> (sfid-20180907_210436_304389_39EAA955)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFXAJYzsmhAzSFXjmB0biTBFnU7OSWF6tdqspSqgabvx4x1stg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 02:36:20PM +0200, Mathy Vanhoef wrote:
-> It seems that in client mode, the Linux kernel only accepts an
-> authentication frame after sending one itself. Is this interpretation
-> correct?
+A new release of wireless-regdb (master-2018-09-07) is available at:
 
-For infrastructure station case, yes.
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2018.09.07.tar.gz
 
-> If that is the case, this would conflict with the SAE handshake as
-> defined in the 802.11-2016 standard. That's because when the AP
-> receives a Commit frame, the AP is allowed to send both a Commit and
-> Confirm frame (see 12.4.8.6.3). So according to the standard, the
-> client must accept a SAE Confirm authentication frame, even if it
-> hasn't yet transmitted its own Confirm frame. So this appears to be a
-> bug. Thoughts?
+The short log of changes since the 2018-05-31 release is below.
 
-While the SAE authentication exchange itself has such flexibility in the
-sequence of Commit/Confirm messages, there is a constraint in IEEE
-802.11 on how the Authentication frames are exchanged in an
-infrastructure BSS between a non-AP STA and an AP. For SAE, this is
-explicitly requiring the exchange proceed in the sequence shown in
-Figure 4-29 (Example using SAE authentication), i.e., with the Commit
-messages exchanged first and the first Confirm message coming from STA
-to AP and the exchange concluded with the Confirm message from AP to
-STA. This matches the Linux kernel implementation.
+Thanks,
+Seth
 
-For mesh BSS cases, the SAE Confirm message can be sent out immediately
-after having processed the Commit message, so the sequence there may end
-up being different. That's also supported in the Linux implementation,
-but this flexibility is not extended to the infrastructure case on
-purpose.
+---
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Henrik Laxhuber (1):
+      wireless-regdb: update regulatory rules for Switzerland (CH), and Liechtenstein (LI) on 5GHz
+
+Jukka Pirinen (1):
+      Update regulatory rules for Finland (FI) on 5GHz (SRD devices)
+
+Seth Forshee (1):
+      wireless-regdb: update regulatory database based on preceding changes
+
+Xose Vazquez Perez (1):
+      wireless-regdb: update source of info for CU and ES
+
+bkil (1):
+      wireless-regdb: update rules for Hungary (HU) on 2.4/5/60G, 5725-5875MHz
