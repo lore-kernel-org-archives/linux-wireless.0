@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:33062 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727820AbeISRUa (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:49790 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726114AbeIGXFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:20:30 -0400
-Received: by mail-wr1-f67.google.com with SMTP id v90-v6so5475216wrc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2018 04:42:58 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x0: pci: add mt7650 PCI ID
-Date: Wed, 19 Sep 2018 13:42:44 +0200
-Message-Id: <6015cdd8ec0bda955107f235487cb8a75fd4e04c.1537356982.git.lorenzo.bianconi@redhat.com> (sfid-20180919_134301_846532_9D7AAFF2)
-In-Reply-To: <cover.1537356982.git.lorenzo.bianconi@redhat.com>
-References: <cover.1537356982.git.lorenzo.bianconi@redhat.com>
+        Fri, 7 Sep 2018 19:05:09 -0400
+Received: from mail-yw1-f71.google.com ([209.85.161.71])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fyLPH-0001P2-BG
+        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 18:22:59 +0000
+Received: by mail-yw1-f71.google.com with SMTP id i63-v6so9365640ywb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 11:22:59 -0700 (PDT)
+Date: Fri, 7 Sep 2018 13:22:56 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Henrik Laxhuber <henrik@laxhuber.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH] wireless-regdb: update regulatory rules for Switzerland
+ (CH), and Liechtenstein (LI) on 5GHz
+Message-ID: <20180907182256.GL4251@ubuntu-xps13> (sfid-20180907_202303_308982_AFA204C2)
+References: <2441d0ea-b862-9675-9342-356606d9228d@laxhuber.com>
+ <20180907123256.GJ4251@ubuntu-xps13>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180907123256.GJ4251@ubuntu-xps13>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt7650 PCI id found on ASUS rt-51ac to pci_device_id table
+On Fri, Sep 07, 2018 at 07:32:56AM -0500, Seth Forshee wrote:
+> On Thu, Sep 06, 2018 at 04:13:22PM +0200, Henrik Laxhuber wrote:
+> > Update to reflect the current data published in the 'National Frequency
+> > Allocation Strategy Table' [0] for Switzerland and Liechtenstein, which
+> > at the time of writing points to the documents [1] and [2].
+> > 
+> > [0] https://www.ofcomnet.ch/#/fatTable
+> > [1] https://www.ofcomnet.ch/api/rir/1010/05
+> > [2] https://www.ofcomnet.ch/api/rir/1010/04
+> > 
+> > Signed-off-by: Henrik Laxhuber <henrik@laxhuber.com>
+> > ---
+> >  db.txt | 19 +++++++++++++++----
+> >  1 file changed, 15 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/db.txt b/db.txt
+> > index 8cf7dee..69cea85 100644
+> > --- a/db.txt
+> > +++ b/db.txt
+> > @@ -265,10 +265,14 @@ country CF: DFS-FCC
+> >      (5490 - 5730 @ 40), (24), DFS
+> >      (5735 - 5835 @ 40), (30)
+> > 
+> > +# Source:
+> > +# https://www.ofcomnet.ch/#/fatTable
+> > +# Note that the maximum transmitter power can be doubled for 5250-5710MHz
+> > if
+> > +# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
+> >  country CH: DFS-ETSI
+> >      (2402 - 2482 @ 40), (20)
+> > -    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
+> > -    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
+> > +    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+> 
+> Maybe you missed this in my last reply, I had suggested this range can
+> be 5150-5250 as in the document you linked to. If you agree with this
+> change I can make it when I apply the patch.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
-This patch is based on top of Felix's pull request:
-https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-09-19
----
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index eb383f96ec9a..c5e47bc70202 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -65,6 +65,7 @@ mt76x0e_remove(struct pci_dev *pdev)
- 
- static const struct pci_device_id mt76x0e_device_table[] = {
- 	{ PCI_DEVICE(0x14c3, 0x7630) },
-+	{ PCI_DEVICE(0x14c3, 0x7650) },
- 	{ },
- };
- 
--- 
-2.17.1
+Applied with this change here and in the rules for Liechtenstein.
+Thanks!
