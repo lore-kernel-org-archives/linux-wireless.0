@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53728 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725995AbeIDTHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 15:07:04 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 04/22] mt76x0: fix wrong usage of wcid_mask in remove_interface
-Date: Tue,  4 Sep 2018 16:40:57 +0200
-Message-Id: <1536072075-6990-5-git-send-email-sgruszka@redhat.com> (sfid-20180904_164158_998933_2B39308C)
-In-Reply-To: <1536072075-6990-1-git-send-email-sgruszka@redhat.com>
-References: <1536072075-6990-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ua1-f45.google.com ([209.85.222.45]:44968 "EHLO
+        mail-ua1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727608AbeIIA6i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Sep 2018 20:58:38 -0400
+Received: by mail-ua1-f45.google.com with SMTP id m11-v6so14441569uao.11
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Sep 2018 13:11:43 -0700 (PDT)
+MIME-Version: 1.0
+From: Nikolay Martynov <mar.kolya@gmail.com>
+Date: Sat, 8 Sep 2018 16:11:31 -0400
+Message-ID: <CALGY4ft2u2QufAcWLygNzRp8+=XvSz1FD+-f8Jr4A3qhuwU6JQ@mail.gmail.com> (sfid-20180908_221147_185245_EB6F0197)
+Subject: QCA988X firmware version and performance
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org, Kalle Valo <kvalo@codeaurora.org>,
+        kavitam@cdot.in
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We wrongly use wcid_mask instead of vif_mask
+Hi.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+  I've got some observation about firmware version and speed that I
+would like to share.
+  I have tp-link archer c5 with 'ath10k_pci 0000:01:00.0: qca988x
+hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000' running
+Openwrt.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index 12884504c833..1b0ddba96ea1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -74,9 +74,8 @@ static void mt76x0_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct mt76x0_dev *dev = hw->priv;
- 	struct mt76x02_vif *mvif = (struct mt76x02_vif *) vif->drv_priv;
--	unsigned int wcid = mvif->group_wcid.idx;
- 
--	dev->mt76.wcid_mask[wcid / BITS_PER_LONG] &= ~BIT(wcid % BITS_PER_LONG);
-+	dev->vif_mask &= ~BIT(mvif->idx);
- 	mt76_txq_remove(&dev->mt76, vif->txq);
- }
- 
+  When I use firmware version 10.2.4.70.61-2 I get modulation speeds
+about twice as large as with other firmware versions. I've also tried
+10.2.4.70.66 and firmware-5.bin_10.2.4-1.0-00033 and one that was
+Openwrt/Lede stock before that - all show performance noticeably worse
+than 10.2.4.70.61-2.
+  In fact if my laptop stands on my desk (some distance away from AP)
+and I use 10.2.4.70.61-2 I get stable 2 spacial stream reception, if I
+use other versions mentioned above I usually get one 1 special stream
+as shown by 'iw' command on a client.
+  I've also perfomed some speed measurements with iperf:
+* with latest firmware I get 30MB/s and iw on a client shows signal
+strength of -72dBm
+* with 10.2.4.70.61-2I get 53MB/s and iw on a client shows signal
+strength of -63dBm
+All with laptop (client) unmoved.
+  So it looks like downgrading firmware gains 30+% performance.
+
+  I've already tried to raise this question ~8 months ago but didn't
+get any reply.
+
+  It seems like this is a bug in newer versions of firmware and it
+would be really nice if that bug could be fixed.
+  Is there any way I can help with that? Maybe someone could provide
+me with better channel to ask these questions?
+
+  Please let me know if I can provide any more information.
+  Thanks!
 -- 
-2.7.5
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
