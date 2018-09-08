@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33192 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732593AbeITRrb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:47:31 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:51019 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726587AbeIHTKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Sep 2018 15:10:49 -0400
+From: zhong jiang <zhongjiang@huawei.com>
+To: <davem@davemloft.net>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] wireless: remove unnecessary condition check before kfree
+Date: Sat, 8 Sep 2018 22:12:35 +0800
+Message-ID: <1536415955-33776-1-git-send-email-zhongjiang@huawei.com> (sfid-20180908_162514_404097_5E7EC1C1)
 MIME-Version: 1.0
-Subject: Re: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
-References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
-To: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-Message-Id: <20180920120421.B886360BE3@smtp.codeaurora.org> (sfid-20180920_140424_764657_96F10B3C)
-Date: Thu, 20 Sep 2018 12:04:21 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com> wrote:
+kfree has taken the null pointer into account. Just remove the
+redundant condition check before kfree.
 
-> Beacons+TIM are created/updated for fw beaconing only when BSS_CHANGED_BEACON.
-> This is not compliant with power-saving stations. 
-> Fix it by updating beacon templates on mac80211 set_tim callback.
-> Adresses the issue in:
-> https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
-> 
-> Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ net/wireless/reg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Arend, what do you think about this?
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 5ad5b9f..dc87e3d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1086,7 +1086,7 @@ int reg_reload_regdb(void)
+ 	}
+ 
+ 	rtnl_lock();
+-	if (!IS_ERR_OR_NULL(regdb))
++	if (!IS_ERR(regdb))
+ 		kfree(regdb);
+ 	regdb = db;
+ 	rtnl_unlock();
+@@ -3920,7 +3920,7 @@ void regulatory_exit(void)
+ 		kfree(reg_request);
+ 	}
+ 
+-	if (!IS_ERR_OR_NULL(regdb))
++	if (!IS_ERR(regdb))
+ 		kfree(regdb);
+ 
+ 	free_regdb_keyring();
 -- 
-https://patchwork.kernel.org/patch/10596025/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.12.4
