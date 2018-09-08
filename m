@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39806 "EHLO mx1.suse.de"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:37821 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727859AbeINBzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 21:55:03 -0400
-Date: Thu, 13 Sep 2018 22:43:53 +0200
-From: Michal Kubecek <mkubecek@suse.cz>
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-Message-ID: <20180913204352.GB3876@unicorn.suse.cz> (sfid-20180913_224359_991611_5183ED18)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913104955.GE29691@unicorn.suse.cz>
- <1536837915.4160.1.camel@sipsolutions.net>
- <20180913120554.GG29691@unicorn.suse.cz>
- <20180913192014.GE4590@localhost.localdomain>
+        id S1726351AbeIHQTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 8 Sep 2018 12:19:11 -0400
+From: zhong jiang <zhongjiang@huawei.com>
+To: <johannes@sipsolutions.net>, <davem@davemloft.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] cfg80211: remove unnecessary null pointer check in cfg80211_netdev_notifier_call
+Date: Sat, 8 Sep 2018 19:21:28 +0800
+Message-ID: <1536405688-26239-1-git-send-email-zhongjiang@huawei.com> (sfid-20180908_133442_414412_E649F9D0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180913192014.GE4590@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 04:20:14PM -0300, Marcelo Ricardo Leitner wrote:
-> On Thu, Sep 13, 2018 at 02:05:54PM +0200, Michal Kubecek wrote:
-> > On Thu, Sep 13, 2018 at 01:25:15PM +0200, Johannes Berg wrote:
-> > > On Thu, 2018-09-13 at 12:49 +0200, Michal Kubecek wrote:
-> > > 
-> > > > >  		if (type > 0 && type <= maxtype) {
-> > > > >  			if (policy) {
-> > > > > -				err = validate_nla(nla, maxtype, policy);
-> > > > > +				err = validate_nla(nla, maxtype, policy,
-> > > > > +						   extack);
-> > > > >  				if (err < 0) {
-> > > > > -					NL_SET_ERR_MSG_ATTR(extack, nla,
-> > > > > -							    "Attribute failed policy validation");
-> > > > > +					NL_SET_BAD_ATTR(extack, nla);
-> > > > > +					if (extack && !extack->_msg)
-> > > > > +						NL_SET_ERR_MSG(extack,
-> > > > > +							       "Attribute failed policy validation");
-> > > > >  					goto errout;
-> > > > >  				}
-> > > > >  			}
-> > > > > -- 
-> > > > 
-> > > > Technically, this would change the outcome when nla_parse() is called
-> > > > with extack->_msg already set nad validate_nla() fails on something else
-> > > > than NLA_REJECT; it will preserve the previous message in such case.
-> > > > But I don't think this is a serious problem.
-> > > 
-> > > Yes, that's true. I looked at quite a few of the setters just now (there
-> > > are ~500 already, wow!), and they all set & return, so this shouldn't be
-> > > an issue.
-> > 
-> > In ethtool (work in progress) I sometimes use extack message for
-> > non-fatal warnings but AFAICS never before parsing the userspace
-> > request (actually always shortly before returning). So I don't have
-> > a problem with it.
-> 
-> Considering we can only report 1 message, it should be okay to drop
-> the previous message in favor of the new one, which is either a
-> critical one or just another non-fatal one.
+The iterator in list_for_each_entry_safe is never null, therefore, remove
+the redundant null pointer check.
 
-What I wanted to point out is that the code above does not behave like
-this. It does not distinguish between extack->_msg set by NLA_REJECT
-branch and extack->_msg which had been set before nla_parse() was
-called.
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ net/wireless/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Michal Kubecek
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a88551f..4d5215e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1238,7 +1238,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 
+ 		list_for_each_entry_safe(pos, tmp,
+ 					 &rdev->sched_scan_req_list, list) {
+-			if (WARN_ON(pos && pos->dev == wdev->netdev))
++			if (WARN_ON(pos->dev == wdev->netdev))
+ 				cfg80211_stop_sched_scan_req(rdev, pos, false);
+ 		}
+ 
+-- 
+1.7.12.4
