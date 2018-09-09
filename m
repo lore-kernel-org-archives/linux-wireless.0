@@ -1,136 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50094 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727161AbeIRQRA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48046 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726787AbeIIO0l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 12:17:00 -0400
-Subject: Re: [PATCH] ath10k: Advertize beacon_int_min_gcd as 100 while bring
- up multi vaps
-To: Maharaja Kennadyrajan <mkenna@codeaurora.org>,
-        ath10k@lists.infradead.org
-References: <1537252429-8655-1-git-send-email-mkenna@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <00ea718a-2ccb-74ba-11c2-102071200743@candelatech.com> (sfid-20180918_124502_262159_69071810)
-Date: Tue, 18 Sep 2018 03:44:51 -0700
-MIME-Version: 1.0
-In-Reply-To: <1537252429-8655-1-git-send-email-mkenna@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sun, 9 Sep 2018 10:26:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Erel Geron <erelx.geron@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:50 +0300
+Message-Id: <20180909093656.10194-11-luca@coelho.fi> (sfid-20180909_113737_692282_9049D32E)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 10/16] iwlwifi: mvm: TLC support for Coex Schema 2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Erel Geron <erelx.geron@intel.com>
 
+The new coex schema requires setting the non-shared antenna
+for the single_stream_ant_msk field in the TLC command.
 
-On 09/17/2018 11:33 PM, Maharaja Kennadyrajan wrote:
-> With the latest firmware design, the beacon interval should be
-> greater than 100 to bring the multiple vaps.
->
-> Set beacon_int_min_gcd to 100, when the wmi service
-> WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT is enabled
-> in the firmware. If not, beacon_int_min_gcd will be set
-> to the default value 1.
->
-> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00015
-> Tested in QCA9888 with firmware ver 10.4-3.5.1-0005
->
-> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/wmi.h |  9 +++++++++
->  2 files changed, 34 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 97548f9..532fc5d 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -8163,6 +8163,24 @@ void ath10k_mac_destroy(struct ath10k *ar)
->  	},
->  };
->
-> +static const struct
-> +ieee80211_iface_combination ath10k_10_4_bcn_int_if_comb[] = {
-> +	{
-> +		.limits = ath10k_10_4_if_limits,
-> +		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
-> +		.max_interfaces = 16,
-> +		.num_different_channels = 1,
-> +		.beacon_int_infra_match = true,
-> +		.beacon_int_min_gcd = 100,
-> +#ifdef CONFIG_ATH10K_DFS_CERTIFIED
-> +		.radar_detect_widths =  BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-> +					BIT(NL80211_CHAN_WIDTH_20) |
-> +					BIT(NL80211_CHAN_WIDTH_40) |
-> +					BIT(NL80211_CHAN_WIDTH_80),
-> +#endif
-> +	},
-> +};
-> +
->  static void ath10k_get_arvif_iter(void *data, u8 *mac,
->  				  struct ieee80211_vif *vif)
->  {
-> @@ -8526,6 +8544,13 @@ int ath10k_mac_register(struct ath10k *ar)
->  		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
->  		ar->hw->wiphy->n_iface_combinations =
->  			ARRAY_SIZE(ath10k_10_4_if_comb);
-> +		if (test_bit(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-> +			     ar->wmi.svc_map)) {
-> +			ar->hw->wiphy->iface_combinations =
-> +				ath10k_10_4_bcn_int_if_comb;
-> +			ar->hw->wiphy->n_iface_combinations =
-> +				ARRAY_SIZE(ath10k_10_4_bcn_int_if_comb);
-> +		}
->  		break;
->  	case ATH10K_FW_WMI_OP_VERSION_UNSET:
->  	case ATH10K_FW_WMI_OP_VERSION_MAX:
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-> index 1562294..126eb17 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -204,6 +204,7 @@ enum wmi_service {
->  	WMI_SERVICE_RESET_CHIP,
->  	WMI_SERVICE_SPOOF_MAC_SUPPORT,
->  	WMI_SERVICE_TX_DATA_ACK_RSSI,
-> +	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->
->  	/* keep last */
->  	WMI_SERVICE_MAX,
-> @@ -353,6 +354,11 @@ enum wmi_10_4_service {
->  	WMI_10_4_SERVICE_TPC_STATS_FINAL,
->  	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
->  	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
-> +	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
+Signed-off-by: Erel Geron <erelx.geron@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 5 +++--
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-That should end with "LEGACY" instead of "LAGACY" maybe?
-
-> +	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
-> +	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
-> +	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
-> +	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->  };
->
->  static inline char *wmi_service_name(int service_id)
-> @@ -467,6 +473,7 @@ static inline char *wmi_service_name(int service_id)
->  	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
->  	SVCSTR(WMI_SERVICE_RESET_CHIP);
->  	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
-> +	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
->  	default:
->  		return NULL;
->  	}
-> @@ -777,6 +784,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
->  	       WMI_SERVICE_TPC_STATS_FINAL, len);
->  	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
->  	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
-> +	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-> +	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
->  }
->
->  #undef SVCMAP
->
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index ec3b60cdcf18..730e37744dc0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -691,6 +691,15 @@ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
+ 	return bt_activity >= BT_LOW_TRAFFIC;
+ }
+ 
++u8 iwl_mvm_bt_coex_get_single_ant_msk(struct iwl_mvm *mvm, u8 enabled_ants)
++{
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_COEX_SCHEMA_2) &&
++	    (mvm->cfg->non_shared_ant & enabled_ants))
++		return mvm->cfg->non_shared_ant;
++
++	return first_antenna(enabled_ants);
++}
++
+ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			   struct ieee80211_tx_info *info, u8 ac)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 33f8697740a5..8f71eeed50d9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1819,6 +1819,7 @@ bool iwl_mvm_bt_coex_is_ant_avail(struct iwl_mvm *mvm, u8 ant);
+ bool iwl_mvm_bt_coex_is_shared_ant_avail(struct iwl_mvm *mvm);
+ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
+ 				    enum nl80211_band band);
++u8 iwl_mvm_bt_coex_get_single_ant_msk(struct iwl_mvm *mvm, u8 enabled_ants);
+ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			   struct ieee80211_tx_info *info, u8 ac);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index c3282f1d77ba..2c75f51a04e4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3213,7 +3213,7 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	/* These values will be overridden later */
+ 	lq_sta->lq.single_stream_ant_msk =
+-		first_antenna(iwl_mvm_get_valid_tx_ant(mvm));
++		iwl_mvm_bt_coex_get_single_ant_msk(mvm, iwl_mvm_get_valid_tx_ant(mvm));
+ 	lq_sta->lq.dual_stream_ant_msk = ANT_AB;
+ 
+ 	/* as default allow aggregation for all tids */
+@@ -3576,7 +3576,8 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
+ 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
+ 
+-	if (num_of_ant(initial_rate->ant) == 1)
++	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_COEX_SCHEMA_2) &&
++	    num_of_ant(initial_rate->ant) == 1)
+ 		lq_cmd->single_stream_ant_msk = initial_rate->ant;
+ 
+ 	lq_cmd->agg_frame_cnt_limit = mvmsta->max_agg_bufsize;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.18.0
