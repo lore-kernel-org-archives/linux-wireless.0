@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:45792 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727547AbeIQNMR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48054 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726627AbeIIO0o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 09:12:17 -0400
-Received: by mail-qt0-f193.google.com with SMTP id g44-v6so14400276qtb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 00:46:05 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: seth.forshee@canonical.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-        Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH v2 2/2] wireless-regdb: Sync DE with ETSI EN 301 893 V2.1.1 (2017-05)
-Date: Mon, 17 Sep 2018 09:45:49 +0200
-Message-Id: <20180917074549.7011-1-sven.eckelmann@openmesh.com> (sfid-20180917_094607_626726_B9E77834)
-In-Reply-To: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
-References: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
+        Sun, 9 Sep 2018 10:26:44 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:52 +0300
+Message-Id: <20180909093656.10194-13-luca@coelho.fi> (sfid-20180909_113741_368842_7486FB46)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 12/16] iwlwifi: pcie: support transmitting SKBs with fraglist
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The documents
-https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
-and
-https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2010_07_WLAN_5GHz_pdf.pdf
-show that the limits for the 5GHz bands are out of date:
+From: Johannes Berg <johannes.berg@intel.com>
 
-* 5150 - 5250 MHz only usage is allowed to use up to 23 dBm (200 mW) even
-  without TPC
+We want to be able to build A-MSDUs in higher layers, e.g. by
+xmit_more, so support transmitting SKBs with fraglist to use
+it for such.
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 7f978e1..8f356f7 100644
---- a/db.txt
-+++ b/db.txt
-@@ -378,7 +378,7 @@ country CZ: DFS-ETSI
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 6b6b86458819..67820bfaba64 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -2408,10 +2408,18 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 						     tb1_len)))
+ 			goto out_err;
+ 	} else {
++		struct sk_buff *frag;
++
+ 		if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
+ 					       out_meta)))
+ 			goto out_err;
  
- country DE: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
--	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-+	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
- 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
- 	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
- 	# short range devices (ETSI EN 300 440-1)
++		skb_walk_frags(skb, frag) {
++			if (unlikely(iwl_fill_data_tbs(trans, frag, txq, 0,
++						       out_meta)))
++				goto out_err;
++		}
++
+ 		trace_iwlwifi_dev_tx(trans->dev, skb,
+ 				     iwl_pcie_get_tfd(trans, txq,
+ 						      txq->write_ptr),
 -- 
-2.11.0
+2.18.0
