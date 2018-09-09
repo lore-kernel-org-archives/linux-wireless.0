@@ -1,95 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:36190 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725853AbeIEEKl (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:52697 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726839AbeIJBX7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 00:10:41 -0400
-Received: by mail-it0-f68.google.com with SMTP id u13-v6so7170027iti.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 16:43:17 -0700 (PDT)
-MIME-Version: 1.0
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
- <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk>
- <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
- <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
- <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
- <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
- <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
-In-Reply-To: <878t4i1z74.fsf@toke.dk>
-From: Grant Grundler <grundler@google.com>
-Date: Tue, 4 Sep 2018 16:43:04 -0700
-Message-ID: <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com> (sfid-20180905_014320_692319_25EF0CB1)
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-To: toke@toke.dk
-Cc: Johannes Berg <johannes@sipsolutions.net>, wgong@qti.qualcomm.com,
-        wgong@codeaurora.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 9 Sep 2018 21:23:59 -0400
+Received: by mail-wm0-f68.google.com with SMTP id y139-v6so19309652wmc.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2018 13:33:05 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/11] mt76x02: move TXD/RXD/MCU definitions in mt76x02_dma.h
+Date: Sun,  9 Sep 2018 22:32:43 +0200
+Message-Id: <20180909203246.21608-9-lorenzo.bianconi@redhat.com> (sfid-20180909_223311_469066_EE01BFEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 3, 2018 at 6:35 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.=
-dk> wrote:
->
-> Johannes Berg <johannes@sipsolutions.net> writes:
-....
-> > Grant's data shows a significant difference between 6 and 7 for both
-> > latency and throughput:
+Introduce mt76x02_dma.h header file to contain mt76x02 dma
+related definitions
 
-Minor nit: this is wgong's data more thoughtfully processed.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.h      | 38 ------------
+ .../net/wireless/mediatek/mt76/mt76x02_dma.h  | 60 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c |  2 +-
+ .../wireless/mediatek/mt76/mt76x02_usb_mcu.c  |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2_dma.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mcu.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx.c    |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h  |  2 +-
+ 9 files changed, 67 insertions(+), 45 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
 
-> >
-> >  * median tpt
-> >    - ~241 vs ~201 (both 1 and 5 streams)
-> >  * median latency
-> >    - 7.5 vs 6 (1 stream)
-> >    - 17.3 vs. 16.6 (5 streams)
-> >
-> > A 20% throughput improvement at <=3D 1.5ms latency cost seems like a
-> > pretty reasonable trade-off?
->
-> Yeah, on it's face. What I'm bothered about is that it is the exact
-> opposite results that I got from my ath10k tests (there, throughput
-> *dropped* and latency doubled when going to from 4 to 16 ms of
-> buffering).
-
-Hrm, yeah...that would bother me too. I think even if we don't
-understand why/how that happened, at some level we need to allow
-subsystems or drivers to adjust sk_pacing_shift value. Changing
-sk_pacing_shift clearly has an effect that can be optimized.
-
-If smaller values of sk_pacing_shift is increasing the interval (and
-allows more buffering), I'm wondering why CPU utilization gets higher.
-More buffering is usually more efficient. :/
-
-wgong: can you confirm (a) I've entered the data correctly in the
-spreadsheet and (b) you've labeled the data sets correctly when you
-generated the data?
-If either of us made a mistake, it would be good to know. :)
-
-I'm going to speculate that "other processing" (e.g. device level
-interrupt mitigation or possibly CPU scheduling behaviors which
-handles TX/RX completion) could cause a "bathtub" effect similar to
-the performance graphs that originally got NAPI accepted into the
-kernel ~15 years ago.  So the "optimal" value could be different for
-different architectures and different IO devices (which have different
-max link rates and different host bus interconnects). But honestly, I
-don't understand all the details of sk_pacing_shift value nearly as
-well as just about anyone else reading this thread.
-
-> And, well, Grant's data is from a single test in a noisy
-> environment where the time series graph shows that throughput is all over
-> the place for the duration of the test; so it's hard to draw solid
-> conclusions from (for instance, for the 5-stream test, the average
-> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for 7
-> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
-> used in this test, so I can't go verify it myself; so the only thing I
-> can do is grumble about it here... :)
-
-It's a fair complaint and I agree with it.  My counter argument is the
-opposite is true too: most ideal benchmarks don't measure what most
-users see. While the data wgong provided are way more noisy than I
-like, my overall "confidence" in the "conclusion" I offered is still
-positive.
-
-cheers,
-grant
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
+index aa2faf19bf05..357cc356342d 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.h
++++ b/drivers/net/wireless/mediatek/mt76/dma.h
+@@ -25,34 +25,6 @@
+ #define MT_DMA_CTL_LAST_SEC0		BIT(30)
+ #define MT_DMA_CTL_DMA_DONE		BIT(31)
+ 
+-#define MT_TXD_INFO_LEN			GENMASK(15, 0)
+-#define MT_TXD_INFO_NEXT_VLD		BIT(16)
+-#define MT_TXD_INFO_TX_BURST		BIT(17)
+-#define MT_TXD_INFO_80211		BIT(19)
+-#define MT_TXD_INFO_TSO			BIT(20)
+-#define MT_TXD_INFO_CSO			BIT(21)
+-#define MT_TXD_INFO_WIV			BIT(24)
+-#define MT_TXD_INFO_QSEL		GENMASK(26, 25)
+-#define MT_TXD_INFO_DPORT		GENMASK(29, 27)
+-#define MT_TXD_INFO_TYPE		GENMASK(31, 30)
+-
+-#define MT_RX_FCE_INFO_LEN		GENMASK(13, 0)
+-#define MT_RX_FCE_INFO_SELF_GEN		BIT(15)
+-#define MT_RX_FCE_INFO_CMD_SEQ		GENMASK(19, 16)
+-#define MT_RX_FCE_INFO_EVT_TYPE		GENMASK(23, 20)
+-#define MT_RX_FCE_INFO_PCIE_INTR	BIT(24)
+-#define MT_RX_FCE_INFO_QSEL		GENMASK(26, 25)
+-#define MT_RX_FCE_INFO_D_PORT		GENMASK(29, 27)
+-#define MT_RX_FCE_INFO_TYPE		GENMASK(31, 30)
+-
+-/* MCU request message header  */
+-#define MT_MCU_MSG_LEN			GENMASK(15, 0)
+-#define MT_MCU_MSG_CMD_SEQ		GENMASK(19, 16)
+-#define MT_MCU_MSG_CMD_TYPE		GENMASK(26, 20)
+-#define MT_MCU_MSG_PORT			GENMASK(29, 27)
+-#define MT_MCU_MSG_TYPE			GENMASK(31, 30)
+-#define MT_MCU_MSG_TYPE_CMD		BIT(30)
+-
+ #define MT_DMA_HDR_LEN			4
+ #define MT_RX_INFO_LEN			4
+ #define MT_FCE_INFO_LEN			4
+@@ -65,16 +37,6 @@ struct mt76_desc {
+ 	__le32 info;
+ } __packed __aligned(4);
+ 
+-enum dma_msg_port {
+-	WLAN_PORT,
+-	CPU_RX_PORT,
+-	CPU_TX_PORT,
+-	HOST_PORT,
+-	VIRTUAL_CPU_RX_PORT,
+-	VIRTUAL_CPU_TX_PORT,
+-	DISCARD,
+-};
+-
+ enum mt76_qsel {
+ 	MT_QSEL_MGMT,
+ 	MT_QSEL_HCCA,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+new file mode 100644
+index 000000000000..32a323ebc6a7
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+@@ -0,0 +1,60 @@
++/*
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef __MT76x02_DMA_H
++#define __MT76x02_DMA_H
++
++#include "dma.h"
++
++#define MT_TXD_INFO_LEN			GENMASK(15, 0)
++#define MT_TXD_INFO_NEXT_VLD		BIT(16)
++#define MT_TXD_INFO_TX_BURST		BIT(17)
++#define MT_TXD_INFO_80211		BIT(19)
++#define MT_TXD_INFO_TSO			BIT(20)
++#define MT_TXD_INFO_CSO			BIT(21)
++#define MT_TXD_INFO_WIV			BIT(24)
++#define MT_TXD_INFO_QSEL		GENMASK(26, 25)
++#define MT_TXD_INFO_DPORT		GENMASK(29, 27)
++#define MT_TXD_INFO_TYPE		GENMASK(31, 30)
++
++#define MT_RX_FCE_INFO_LEN		GENMASK(13, 0)
++#define MT_RX_FCE_INFO_SELF_GEN		BIT(15)
++#define MT_RX_FCE_INFO_CMD_SEQ		GENMASK(19, 16)
++#define MT_RX_FCE_INFO_EVT_TYPE		GENMASK(23, 20)
++#define MT_RX_FCE_INFO_PCIE_INTR	BIT(24)
++#define MT_RX_FCE_INFO_QSEL		GENMASK(26, 25)
++#define MT_RX_FCE_INFO_D_PORT		GENMASK(29, 27)
++#define MT_RX_FCE_INFO_TYPE		GENMASK(31, 30)
++
++/* MCU request message header  */
++#define MT_MCU_MSG_LEN			GENMASK(15, 0)
++#define MT_MCU_MSG_CMD_SEQ		GENMASK(19, 16)
++#define MT_MCU_MSG_CMD_TYPE		GENMASK(26, 20)
++#define MT_MCU_MSG_PORT			GENMASK(29, 27)
++#define MT_MCU_MSG_TYPE			GENMASK(31, 30)
++#define MT_MCU_MSG_TYPE_CMD		BIT(30)
++
++enum dma_msg_port {
++	WLAN_PORT,
++	CPU_RX_PORT,
++	CPU_TX_PORT,
++	HOST_PORT,
++	VIRTUAL_CPU_RX_PORT,
++	VIRTUAL_CPU_TX_PORT,
++	DISCARD,
++};
++
++#endif /* __MT76x02_DMA_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index 9ca9e3d414d3..235b1bc5a367 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -15,7 +15,7 @@
+  */
+ 
+ #include "mt76.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ 
+ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+index cc63efa16634..b39a4d7d71cc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+@@ -17,7 +17,7 @@
+ #include <linux/firmware.h>
+ 
+ #include "mt76.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ #include "mt76x02_mcu.h"
+ #include "mt76x02_usb.h"
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 33d5cd00e48d..a14d7dba628b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -16,7 +16,7 @@
+  */
+ 
+ #include "mt76.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ #include "mt76x02_regs.h"
+ #include "mt76x02_mac.h"
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+index 44ca660775fd..d3f787644c87 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+@@ -15,7 +15,7 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ 
+ int
+ mt76x2_tx_queue_mcu(struct mt76x2_dev *dev, enum mt76_txq_id qid,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index c90803334ef0..9a174db5a23a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -21,7 +21,7 @@
+ #include "mt76x2.h"
+ #include "mt76x2_mcu.h"
+ #include "mt76x2_eeprom.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ 
+ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 41d660991839..fcdf1879162e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -16,7 +16,7 @@
+ 
+ #include "mt76x2.h"
+ #include "mt76x02_util.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ 
+ struct beacon_bc_data {
+ 	struct mt76x2_dev *dev;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+index 5a11217c03ed..83abbafc0c1a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
+@@ -21,7 +21,7 @@
+ 
+ #include "mt76x2.h"
+ #include "mt76x2_mcu.h"
+-#include "dma.h"
++#include "mt76x02_dma.h"
+ 
+ #define MT7612U_EEPROM_SIZE		512
+ 
+-- 
+2.18.0
