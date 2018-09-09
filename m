@@ -1,41 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36967 "EHLO mail.toke.dk"
+Received: from Gamera.Varna.Net ([217.145.80.8]:51508 "EHLO Gamera.varna.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727753AbeIFOxc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 10:53:32 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Grant Grundler <grundler@google.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, wgong@qti.qualcomm.com,
-        wgong@codeaurora.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi chips
-In-Reply-To: <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org> <1533724802-30944-3-git-send-email-wgong@codeaurora.org> <87sh3pdtpg.fsf@toke.dk> <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com> <87mutue4y8.fsf@toke.dk> <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com> <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com> <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk> <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk> <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
-Date: Thu, 06 Sep 2018 12:18:45 +0200
-Message-ID: <871sa7ylmi.fsf@toke.dk> (sfid-20180906_121849_988437_6CCD2552)
+        id S1726717AbeIIRWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 9 Sep 2018 13:22:37 -0400
+Received: from [192.168.110.102] (ip4-nat-95-82-135-157.cust.nbox.cz [95.82.135.157] (may be forged))
+        (authenticated bits=0)
+        by Gamera.varna.net (8.15.2/8.15.2) with ESMTPSA id w89CWvoW018699
+        (version=TLSv1.2 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+        for <linux-wireless@vger.kernel.org>; Sun, 9 Sep 2018 15:32:59 +0300
+Subject: Testing simulated Wi-Fi with hostap
+References: <050031f7-7699-9eac-7c9b-e26315cd0870@varna.net>
+To: linux-wireless@vger.kernel.org
+From: Pavlin Georgiev <pavlin@varna.net>
+Message-ID: <1304eeb8-67e4-485e-754e-4001d16ee88d@varna.net> (sfid-20180909_143348_640028_E74000FC)
+Date: Sun, 9 Sep 2018 14:32:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <050031f7-7699-9eac-7c9b-e26315cd0870@varna.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grant Grundler <grundler@google.com> writes:
+Hi,
 
->> And, well, Grant's data is from a single test in a noisy
->> environment where the time series graph shows that throughput is all over
->> the place for the duration of the test; so it's hard to draw solid
->> conclusions from (for instance, for the 5-stream test, the average
->> throughput for 6 is 331 and 379 Mbps for the two repetitions, and for 7
->> it's 326 and 371 Mbps) . Unfortunately I don't have the same hardware
->> used in this test, so I can't go verify it myself; so the only thing I
->> can do is grumble about it here... :)
->
-> It's a fair complaint and I agree with it. My counter argument is the
-> opposite is true too: most ideal benchmarks don't measure what most
-> users see. While the data wgong provided are way more noisy than I
-> like, my overall "confidence" in the "conclusion" I offered is still
-> positive.
+I am a software tester who decided to experiment with hostap.
+I am not a C++ programmer, but I have general understanding of that 
+language.
+My Linux distro is Fedora 27.
 
-Right. I guess I would just prefer a slightly more comprehensive
-evaluation to base a 4x increase in buffer size on...
 
--Toke
+My goal is to test network connections with various authentication methods
+between a simulated Wi-Fi access point and a station.
+I would like to test on a physical/virtual machine without Wi-Fi adapter.
+One testing machine contains both - the access point and the station.
+
+
+What I did so far?
+I read the documentation...
+
+     https://wireless.wiki.kernel.org/en/users/documentation/hostapd
+     http://w1.fi/hostapd/
+     https://wireless.wiki.kernel.org/en/users/drivers/mac80211_hwsim
+
+
+I installed hostap:
+yum install hostapd
+
+
+
+I loaded the module:
+modprobe mac80211_hwsim
+
+
+
+I check network devices:
+
+# nmcli device
+DEVICE      TYPE      STATE         CONNECTION
+virbr0      bridge    connected     virbr0
+enp7s0      ethernet  connected     enp7s0
+vnet0       tun       connected     vnet0
+wlan0       wifi      disconnected  --
+wlan1       wifi      disconnected  --
+lo          loopback  unmanaged     --
+virbr0-nic  tun       unmanaged     --
+hwsim0      unknown   unmanaged     --
+
+
+
+When I follow the steps from the 
+https://wireless.wiki.kernel.org/en/users/drivers/mac80211_hwsim#simple_example[simple 
+example] from the documentation
+then I receive message:
+
+Configuration file: hostapd.conf
+nl80211: Could not configure driver mode
+nl80211: deinit ifname=wlan0 disabled_11b_rates=0
+nl80211 driver initialization failed.
+wlan0: interface state UNINITIALIZED->DISABLED
+wlan0: AP-DISABLED
+hostapd_free_hapd_data: Interface wlan0 wasn't started
+
+
+When I try to load module nl80211 manually
+then I see:
+modprobe: FATAL: Module nl80211 not found in directory 
+/lib/modules/4.13.16-302.fc27.x86_64
+
+I try another configuration taken from gitweb:
+http://w1.fi/cgit/hostap/tree/tests/hwsim
+
+
+When I load hostapd with configuration "bss-1.conf"
+then I receive message:
+
+Configuration file: bss-1.conf
+Could not read interface wlan3 flags: No such device
+nl80211: Driver does not support authentication/association or connect 
+commands
+nl80211: deinit ifname=wlan3 disabled_11b_rates=0
+Could not read interface wlan3 flags: No such device
+nl80211 driver initialization failed.
+wlan3: interface state UNINITIALIZED->DISABLED
+wlan3: AP-DISABLED
+hostapd_free_hapd_data: Interface wlan3 wasn't started
+
+
+When I replace interface wlan3 with wlan0
+  and I run hostapd with configuration "bss-1.conf"
+then I receive message:
+
+Configuration file: bss-1.conf
+nl80211: Could not configure driver mode
+nl80211: deinit ifname=wlan0 disabled_11b_rates=0
+nl80211 driver initialization failed.
+wlan0: interface state UNINITIALIZED->DISABLED
+wlan0: AP-DISABLED
+hostapd_free_hapd_data: Interface wlan0 wasn't started
+
+
+Questions
+1. Why does hostapd fail to start?
+2. Which of the interfaces wlan0 and wlan1 should be the AP?
+3. What configuration should be taken as example for simulated AP and 
+station?
+4. How to troubleshoot the initial loading of hostapd?
+
+
+Details
+kernel-4.13.16-302.fc27.x86_64
+hostapd-2.6-9.fc27.x86_64
+
+
+Thank you in advance for any advice.
+Pavlin
