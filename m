@@ -1,77 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:38690 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728073AbeIVRjL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47942 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726689AbeIIO0L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 13:39:11 -0400
-Received: by mail-wm1-f65.google.com with SMTP id t25-v6so5719404wmi.3
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2018 04:45:53 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/9] mt76x0: remove mt76x0_phy_set_tx_power and mt76x0_extra_power_over_mac
-Date: Sat, 22 Sep 2018 13:45:33 +0200
-Message-Id: <20180922114537.24004-6-lorenzo.bianconi@redhat.com> (sfid-20180922_134904_073895_770F5177)
+        Sun, 9 Sep 2018 10:26:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:43 +0300
+Message-Id: <20180909093656.10194-4-luca@coelho.fi> (sfid-20180909_113711_154230_E4991E4C)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 03/16] iwlwifi: pcie: tx: pull tracing out of iwl_fill_data_tbs()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove mt76x0_extra_power_over_mac and mt76x0_phy_set_tx_power routines
-since they are not actually used and tx power handling will be unified
-with mt76x2 driver
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+This will allow us to reuse the function later for adding fraglist
+SKBs to the TFD.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 38 -------------------
- 1 file changed, 38 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 41 ++++++++++----------
+ 1 file changed, 21 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index c3db4c1cd4fe..99446fc4503e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -547,44 +547,6 @@ mt76x0_phy_set_chan_bbp_params(struct mt76x0_dev *dev, u8 channel, u16 rf_bw_ban
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 2742c41c88b3..14b6e726da46 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1977,26 +1977,24 @@ int iwl_trans_pcie_send_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 
+ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
+ 			     struct iwl_txq *txq, u8 hdr_len,
+-			     struct iwl_cmd_meta *out_meta,
+-			     struct iwl_device_cmd *dev_cmd, u16 tb1_len)
++			     struct iwl_cmd_meta *out_meta)
+ {
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	u16 tb2_len;
++	u16 head_tb_len;
+ 	int i;
+ 
+ 	/*
+ 	 * Set up TFD's third entry to point directly to remainder
+ 	 * of skb's head, if any
+ 	 */
+-	tb2_len = skb_headlen(skb) - hdr_len;
++	head_tb_len = skb_headlen(skb) - hdr_len;
+ 
+-	if (tb2_len > 0) {
+-		dma_addr_t tb2_phys = dma_map_single(trans->dev,
+-						     skb->data + hdr_len,
+-						     tb2_len, DMA_TO_DEVICE);
+-		if (unlikely(dma_mapping_error(trans->dev, tb2_phys)))
++	if (head_tb_len > 0) {
++		dma_addr_t tb_phys = dma_map_single(trans->dev,
++						    skb->data + hdr_len,
++						    head_tb_len, DMA_TO_DEVICE);
++		if (unlikely(dma_mapping_error(trans->dev, tb_phys)))
+ 			return -EINVAL;
+-		iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false);
++		iwl_pcie_txq_build_tfd(trans, txq, tb_phys, head_tb_len, false);
  	}
+ 
+ 	/* set up the remaining entries to point to the data */
+@@ -2019,12 +2017,6 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
+ 		out_meta->tbs |= BIT(tb_idx);
+ 	}
+ 
+-	trace_iwlwifi_dev_tx(trans->dev, skb,
+-			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
+-			     trans_pcie->tfd_size,
+-			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
+-			     hdr_len);
+-	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
+ 	return 0;
  }
  
--#if 0
--static void
--mt76x0_extra_power_over_mac(struct mt76x0_dev *dev)
--{
--	u32 val;
--
--	val = ((mt76_rr(dev, MT_TX_PWR_CFG_1) & 0x00003f00) >> 8);
--	val |= ((mt76_rr(dev, MT_TX_PWR_CFG_2) & 0x00003f00) << 8);
--	mt76_wr(dev, MT_TX_PWR_CFG_7, val);
--
--	/* TODO: fix VHT */
--	val = ((mt76_rr(dev, MT_TX_PWR_CFG_3) & 0x0000ff00) >> 8);
--	mt76_wr(dev, MT_TX_PWR_CFG_8, val);
--
--	val = ((mt76_rr(dev, MT_TX_PWR_CFG_4) & 0x0000ff00) >> 8);
--	mt76_wr(dev, MT_TX_PWR_CFG_9, val);
--}
--
--static void
--mt76x0_phy_set_tx_power(struct mt76x0_dev *dev, u8 channel, u8 rf_bw_band)
--{
--	u32 val;
--	int i;
--	int bw = (rf_bw_band & RF_BW_20) ? 0 : 1;
--
--	for (i = 0; i < 4; i++) {
--		if (channel <= 14)
--			val = dev->ee->tx_pwr_cfg_2g[i][bw];
--		else
--			val = dev->ee->tx_pwr_cfg_5g[i][bw];
--
--		mt76_wr(dev, MT_TX_PWR_CFG_0 + 4*i, val);
--	}
--
--	mt76x0_extra_power_over_mac(dev);
--}
--#endif
--
- static void
- mt76x0_bbp_set_bw(struct mt76x0_dev *dev, enum nl80211_chan_width width)
- {
+@@ -2415,9 +2407,18 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 						     out_meta, dev_cmd,
+ 						     tb1_len)))
+ 			goto out_err;
+-	} else if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
+-				       out_meta, dev_cmd, tb1_len))) {
+-		goto out_err;
++	} else {
++		if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
++					       out_meta)))
++			goto out_err;
++
++		trace_iwlwifi_dev_tx(trans->dev, skb,
++				     iwl_pcie_get_tfd(trans, txq,
++						      txq->write_ptr),
++				     trans_pcie->tfd_size,
++				     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
++				     hdr_len);
++		trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
+ 	}
+ 
+ 	/* building the A-MSDU might have changed this data, so memcpy it now */
 -- 
 2.18.0
