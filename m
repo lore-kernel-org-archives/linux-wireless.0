@@ -1,114 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50572 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726093AbeIDJYZ (ORCPT
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:37841 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725906AbeIJILk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 05:24:25 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 10 Sep 2018 04:11:40 -0400
+Received: by mail-lf1-f67.google.com with SMTP id j8-v6so16205160lfb.4
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2018 20:19:48 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] ath10k: Support extended board data download for
- dual-band QCA9984
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180824141221.3661-2-murugana@codeaurora.org>
-References: <20180824141221.3661-2-murugana@codeaurora.org>
-To: Sathishkumar Muruganandam <murugana@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-Message-Id: <20180904050102.C6C83606AC@smtp.codeaurora.org> (sfid-20180904_070118_531081_0A4FDBBA)
-Date: Tue,  4 Sep 2018 05:01:02 +0000 (UTC)
+In-Reply-To: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+From: Kan Yan <kyan@google.com>
+Date: Sun, 9 Sep 2018 15:08:01 -0700
+Message-ID: <CA+iem5te2vFq+aXiVDZ7OhuWkR+cScOKiV8bSb85ycD6WDK1WQ@mail.gmail.com> (sfid-20180910_051953_035673_4D978FAE)
+Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sathishkumar Muruganandam <murugana@codeaurora.org> wrote:
+Hi Toke,
 
-> To support dual-band variant of QCA9984, new extended board data (eBDF)
-> is introduced since existing board data ran out of space.
-> 
-> Below is the brief implementation & design detail,
-> ----------------------------------------------------
-> 
-> 1. New OTP changes to inform eBDF support in existing OTP download to
-> fetch board ID and chip ID. This is backward compatible and older
-> card sends 0 by default for eBDF support bit (bit 18 of OTP response) we
-> check in ath10k driver.
-> 
-> 2. If eBDF is supported, then we need to fetch eBDF ID which is bundled
-> in downloaded board data. So again OTP is executed for knowing the eBDF ID.
-> This is done once we set 'board_data_initialized' bit. If eBDF ID
-> returned is zero, we continue booting with previous board data downloaded.
-> 
-> 3. Based on the eBDF ID fetched, ath10k driver tries to download the
-> extended board data to a new offset ahead of already downloaded board
-> data address.
-> 
-> 4. A new BD IE type, ATH10K_BD_IE_BOARD_EXT is added to differentiate in
-> bundling eBDF separately in board-2.bin and also to parse through
-> board bundle for eBDF download in ath10k boot.
-> 
-> 5. If eBDF is not present in the board-2.bin bundle or when board ID is
-> zero, we do a fallback boot to "eboard.bin" in the same QCA9984/hw1.0 dir.
-> This is same as done to existing "board.bin" if board ID is not present
-> in board-2.bin bundle.
-> 
-> Current design is that eBDF size will be 2KB and eBDF ID will be
-> byte value.
-> 
-> Tested the above changes with dual-band variant of QCA9984 card. OTP
-> update needed for the test will be part of next FW release 10.4-3.6-xxxx.
-> 
-> Below are the logs with ath10k BOOT debugs enabled.
-> 
-> First OTP response :
-> ---------------------
-> ..
-> boot upload otp to 0x1234 len 9478 for board id
-> boot get otp board id result 0x00040400 board_id 1 chip_id 0 ext_bid_support 1
-> ..
-> 
-> Second OTP response :
-> ---------------------
-> ..
-> boot upload otp to 0x1234 len 9478 for ext board id
-> boot get otp ext board id result 0x00000005 ext_board_id 5
-> boot using eboard name 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
-> ..
-> 
-> Extended board data download:
-> ------------------------------
-> ..
-> board name
-> 00000000: 62 75 73 3d 70 63 69 2c 62 6d 69 2d 63 68 69 70  bus=pci,bmi-chip
-> 00000010: 2d 69 64 3d 30 2c 62 6d 69 2d 65 62 6f 61 72 64  -id=0,bmi-eboard
-> 00000020: 2d 69 64 3d 35                                   -id=5
-> boot found match for name 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
-> boot found eboard data for 'bus=pci,bmi-chip-id=0,bmi-eboard-id=5'
-> using board api 2
-> boot writing ext board data to addr 0xc3000
-> ..
-> 
-> Fallback Extended board data download from "eboard.bin":
-> ---------------------------------------------------------
-> ..
-> board name
-> 00000000: 62 75 73 3d 70 63 69 2c 62 6d 69 2d 63 68 69 70  bus=pci,bmi-chip
-> 00000010: 2d 69 64 3d 30 2c 62 6d 69 2d 62 6f 61 72 64 2d  -id=0,bmi-board-
-> 00000020: 69 64 3d 31 30                                   id=10
-> failed to fetch board data for bus=pci,bmi-chip-id=0,bmi-eboard-id=5 from ath10k/QCA9984/hw1.0/board-2.bin
-> boot fw request 'ath10k/QCA9984/hw1.0/eboard.bin': 0
-> using board api 1
-> boot writing ext board data to addr 0xc3000
-> ..
-> 
-> Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+It is great to see finally there will be a general airtime fairness
+support in mac80211. I feel this patch set could still use some
+improvements to make it works better with 11ac drivers like ath10k. I
+did a version of airtime fairness in the ath10k driver that used in
+Google Wifi and I'd like to share a few things I learned from this
+experience.
 
-This introduced a new checkpatch warning:
+Airtime fairness is a cool feature, but that's not the motivation for
+me to implement that. The goal is to solve the bufferbloat problem at
+wireless interface. Fq_CoDel has been proved to be very effective in
+fixing bufferbloat for wired interface, and it has been integrated
+with mac802.11 for more than 2 years. However, it still does not work
+well with 11ac drivers like ath10k, which relies heavily on firmware
+to do most of transmit scheduling, and hence has deep firmware queue.
+FQ_CoDel expects a thin driver layer queue so it can get an accurate
+measurement of sojourn time and use the sojourn time to control
+latency.  However, the queue in ath10k firmware is so deep, that
+packets only stay in mac80211 layer queue transiently. The sojourn
+time is almost always below target, and hence CoDel doesn't do much to
+control the latency.
 
-drivers/net/wireless/ath/ath10k/core.c:1059: line over 90 characters
+The key to make Fq_Codel works effectively with 11ac wireless driver
+is to limit the queue depth in lower layer. It looks to me this patch
+set only enforce fairness among stations (airtime wise), but did not
+limit how many packets can be released to firmware/hardware.  When a
+txq run out of its airtime deficit, the txq is put to the back of the
+list but will get a refill of airtime deficit in next round. It
+doesn't keep counts of the total pending airtime released to hardware
+or firmware. Packets will be released as long as wireless driver keeps
+calling the dequeue function. This maybe not an issue for ath9k,
+because the number of available tx descriptors is more limited.
+However, for 11ac drivers like ath10k, it routinely queues thousands
+packets when the bandwidth is oversubscribed in my test.
 
-I fixed this in the pending branch.
+The version I did is to use pending airtime to restrict the firmware
+queue depth. Another difference is it does not use airtime reported
+from firmware, which is "past" or spent airtime, but use "future"
+airtime, the estimated airtime calculated using last reported tx rate
+for the inflight packets pending in the firmware queue. Host driver
+keeps counts of total pending airtime for each TxQ (per station, per
+AC). It tries to release up to 4-8 ms worth of frames for each TxQ.
+The idea is to use airtime accounting to give firmware just enough
+frames to keep it busy and form good aggregations, and keeps the rest
+of frames in mac80211 layer queues so Fq_Codel can work on it to
+control latency.
 
--- 
-https://patchwork.kernel.org/patch/10575361/
+Here are some of the patches from the version I did in ath10k for
+kernel in ChromeOs.
+CHROMIUM: net: mac80211: Recording last tx bitrate.
+https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/=
+588189
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+CHROMIUM: ath10k: Implementing airtime fairness based TX scheduler.
+https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/=
+588190/13
+
+CHROMIUM: ath10k: use frame count as defict for fq_codel.
+https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/=
+588192/13
+
+I had some discussions with Rajkumar on how to adapt some methods from
+my patch and make it fit with the new TXQ scheduling API proposed
+here. The major issue is the lack of pending airtime accounting. It
+could be done in individual wireless drivers, such as in ath10k, or
+even in firmware, but implement it in mac80211 could be a better
+choice than do it one driver at a time.
+
+Thanks,
+Kan
+
+On Fri, Sep 7, 2018 at 3:22 PM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke=
+.dk> wrote:
+> This is an updated version of the patch series to move TXQ scheduling and
+> airtime fairness scheduling into mac80211. I've only compile tested this
+> version, but thought it was better to get the conversation moving instead
+> of being blocked on me.
+>
+> This addresses most of the comments from the last round. Specifically:
+>
+> - It folds in Rajkumar's patches to keep per-AC TXQ lists, and to add an
+>   API that ath10k can use to check if a TXQ may transmit according even
+>   when not using get_next_txq(). I changed a few names and descriptions,
+>   but otherwise it's mostly the same. After the discussions we had in the
+>   last series, I *think* it will work this way, but I'm not entirely sure=
+.
+>
+> - I got rid of any mention of seqno in next_txq() and schedule_txq() - an=
+d
+>   removed the third parameter to schedule_txq() entirely, so drivers can =
+no
+>   longer signal that a TXQ should be allowed to re-appear in a scheduling
+>   round. We can add that back if needed.
+>
+> - Added a helper function to schedule and wake TXQs in a single call, for
+>   internal mac80211 use.
+>
+> - Changed the default station weight to 256 and got rid of the per-phy
+>   quantum. This makes it possible to lower station weights without having
+>   to change the weights of every other station.
+>
+> A few things that were discussed in the last round that I did *not* chang=
+e:
+>
+> - I did not add any locking around next_txq(); the driver is still suppos=
+ed
+>   to maintain a lock that prevents two threads from trying to schedule th=
+e
+>   same AC at the same time. This is what drivers already do, so I figured=
+ it
+>   was easier to just keep it that way rather than do it in mac80211.
+>
+> - I didn't get rid of the register_airtime() callback. As far as I can te=
+ll,
+>   only iwlwifi uses the tx_time field in the struct tx_info. Which means =
+that
+>   we *could* probably use it for this and just make the other drivers set=
+ it;
+>   but I'm not sure what effects that would have in relation to WMM-AC for
+>   those drivers, so I chickened out. Will have to try it out, I guess; bu=
+t it
+>   also depends on whether ath10k needs to be able to report airtime
+>   asynchronously anyway. So I'll hold off on that for a bit more.
+>
+> -Toke
+>
+> ---
+>
+> Toke H=C3=B8iland-J=C3=B8rgensen (4):
+>       mac80211: Add TXQ scheduling API
+>       mac80211: Add airtime accounting and scheduling to TXQs
+>       cfg80211: Add airtime statistics and settings
+>       ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
+>
+>
+>  drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
+>  drivers/net/wireless/ath/ath9k/debug.c     |    3
+>  drivers/net/wireless/ath/ath9k/debug.h     |    8 -
+>  drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
+>  drivers/net/wireless/ath/ath9k/init.c      |    3
+>  drivers/net/wireless/ath/ath9k/recv.c      |    9 -
+>  drivers/net/wireless/ath/ath9k/xmit.c      |  245 ++++++++--------------=
+------
+>  include/net/cfg80211.h                     |   12 +
+>  include/net/mac80211.h                     |   97 +++++++++++
+>  include/uapi/linux/nl80211.h               |   15 ++
+>  net/mac80211/agg-tx.c                      |    2
+>  net/mac80211/cfg.c                         |    3
+>  net/mac80211/debugfs.c                     |    3
+>  net/mac80211/debugfs_sta.c                 |   42 ++++-
+>  net/mac80211/driver-ops.h                  |    7 +
+>  net/mac80211/ieee80211_i.h                 |   11 +
+>  net/mac80211/main.c                        |    5 +
+>  net/mac80211/sta_info.c                    |   49 +++++-
+>  net/mac80211/sta_info.h                    |   13 +
+>  net/mac80211/tx.c                          |  125 ++++++++++++++
+>  net/wireless/nl80211.c                     |   25 +++
+>  21 files changed, 471 insertions(+), 274 deletions(-)
+>
+> X-Clacks-Overhead: GNU Terry Pratchett
