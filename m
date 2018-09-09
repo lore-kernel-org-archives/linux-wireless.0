@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12446 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731240AbeITMHM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47960 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726609AbeIIO0N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:07:12 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 26/29] staging: wilc1000: remove unnecessary option used with ccflags-y in Makefile
-Date: Thu, 20 Sep 2018 11:53:37 +0530
-Message-ID: <1537424620-6982-27-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082628_810753_EFBE7D2D)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 9 Sep 2018 10:26:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:45 +0300
+Message-Id: <20180909093656.10194-6-luca@coelho.fi> (sfid-20180909_113712_347694_F837091F)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 05/16] iwlwifi: pcie: fit reclaim msg to MAX_MSG_LEN
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove -I(src) and -DWILC_ASIC_A0 option used in
-ccflag-y in Makefile.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Today, the length of a debug message in iwl_trans_pcie_reclaim
+may pass the MAX_MSG_LEN, which is 110.
+An example for this kind of message is:
+
+'iwl_trans_pcie_reclaim: Read index for DMA queue txq id (2),
+last_to_free 65535 is out of range [0-65536] 2 2.'
+
+Cut the message a bit so it will fit the allowed MAX_MSG_LEN.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/Makefile | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index 5718bc4..37e8560 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -4,8 +4,6 @@ obj-$(CONFIG_WILC1000) += wilc1000.o
- ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
- 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 14b6e726da46..6b6b86458819 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1097,7 +1097,7 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
  
--ccflags-y += -I$(src)/ -DWILC_ASIC_A0
--
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			coreconfigurator.o host_interface.o \
- 			wilc_wlan_cfg.o wilc_wlan.o
+ 	if (!iwl_queue_used(txq, last_to_free)) {
+ 		IWL_ERR(trans,
+-			"%s: Read index for DMA queue txq id (%d), last_to_free %d is out of range [0-%d] %d %d.\n",
++			"%s: Read index for txq id (%d), last_to_free %d is out of range [0-%d] %d %d.\n",
+ 			__func__, txq_id, last_to_free,
+ 			trans->cfg->base_params->max_tfd_queue_size,
+ 			txq->write_ptr, txq->read_ptr);
 -- 
-2.7.4
+2.18.0
