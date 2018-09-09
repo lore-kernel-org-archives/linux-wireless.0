@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48553 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728633AbeIFRnM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47928 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726689AbeIIO0J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 13:43:12 -0400
-Received: from mail-yw1-f69.google.com ([209.85.161.69])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1fxu0f-0001aQ-T7
-        for linux-wireless@vger.kernel.org; Thu, 06 Sep 2018 13:07:45 +0000
-Received: by mail-yw1-f69.google.com with SMTP id l2-v6so6984528ywb.6
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 06:07:45 -0700 (PDT)
-Date: Thu, 6 Sep 2018 08:07:42 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Jukka Pirinen <jukka.pirinen@gmail.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: Update regulatory rules for Finland (FI) on 5GHz
- (SRD devices)
-Message-ID: <20180906130742.GF4251@ubuntu-xps13> (sfid-20180906_150749_983693_4B1EA906)
-References: <CADyz9cHb+T3dTfQGShs3oHiZagQDdJP8LRKwmWPzp1fD_EPxag@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CADyz9cHb+T3dTfQGShs3oHiZagQDdJP8LRKwmWPzp1fD_EPxag@mail.gmail.com>
+        Sun, 9 Sep 2018 10:26:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:41 +0300
+Message-Id: <20180909093656.10194-2-luca@coelho.fi> (sfid-20180909_113708_244604_D9DFDA1B)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 01/16] iwlwifi: pcie: gen2: build A-MSDU only for GSO
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 01:32:25PM +0300, Jukka Pirinen wrote:
-> Viestintävirasto 15 AM/2018 M
-> 
-> Section 10 Non-specific short range devices
-> https://www.finlex.fi/data/normit/32670/Regulation_15AM.pdf
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for the patch. It looks like it should be fine to add that range,
-but there are a couple of problems. First, your patch has tabs replaced
-with spaces and so it does not apply. Second, you must include a
-Signed-off-by tag as specified in the CONTRIBUTING file.
+If the incoming frame should be an A-MSDU, it may already be one,
+for example in the case of NAN multicast being encapsulated in an
+A-MSDU. Thus, use the GSO algorithm to build A-MSDU only if the
+skb actually contains GSO data.
 
-Thanks,
-Seth
+Fixes: 6ffe5de35b05 ("iwlwifi: pcie: add AMSDU to gen2")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> 
-> 
-> diff --git a/db.txt b/db.txt
-> index 8cf7dee..7abb064 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -460,6 +460,8 @@ country FI: DFS-ETSI
->         (5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
->         (5250 - 5350 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
->         (5470 - 5725 @ 160), (27), DFS, wmmrule=ETSI
-> +        # short range devices (ETSI EN 300 440-1)
-> +        (5725 - 5875 @ 80), (25 mW)
->         # 60 GHz band channels 1-4, ref: Etsi En 302 567
->         (57000 - 66000 @ 2160), (40)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 943891a9d3e7..ba9d37bed4c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -539,7 +539,12 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+ 
+-	if (amsdu)
++	/*
++	 * Only build A-MSDUs here if doing so by GSO, otherwise it may be
++	 * an A-MSDU for other reasons, e.g. NAN or an A-MSDU having been
++	 * built in the higher layers already.
++	 */
++	if (amsdu && skb_shinfo(skb)->gso_size)
+ 		return iwl_pcie_gen2_build_tx_amsdu(trans, txq, dev_cmd, skb,
+ 						    out_meta, hdr_len, len);
+ 
+-- 
+2.18.0
