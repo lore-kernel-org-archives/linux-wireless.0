@@ -1,103 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:46742 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbeIJBXt (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48002 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726787AbeIIO0Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 21:23:49 -0400
-Received: by mail-wr1-f66.google.com with SMTP id a108-v6so19725685wrc.13
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2018 13:32:56 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/11] mt76: add mt76_mcu_ops data structure for mcu related pointers
-Date: Sun,  9 Sep 2018 22:32:37 +0200
-Message-Id: <20180909203246.21608-3-lorenzo.bianconi@redhat.com> (sfid-20180909_223259_661431_8349E95E)
+        Sun, 9 Sep 2018 10:26:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:49 +0300
+Message-Id: <20180909093656.10194-10-luca@coelho.fi> (sfid-20180909_113714_010304_34C781F8)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 09/16] iwlwifi: mvm: set wep key for all stations in soft ap mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce mt76_mcu_ops data structure to contain mcu related function
-pointers. This is a preliminary patch to move mt76x02 usb mcu code in
-mt76x02-usb module
+From: Avraham Stern <avraham.stern@intel.com>
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+When operating as a soft ap with wep security, the key was not
+configured to the fw for the stations, based on the fact that the
+key will be specified in the tx command.
+
+However, in the new tx api the tx command does not include the key,
+which resulted in all data frames going out un-encrypted.
+
+Fix it by configuring the key for all the stations as they are added.
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h    | 11 +++++++++++
- drivers/net/wireless/mediatek/mt76/usb.c     |  1 +
- drivers/net/wireless/mediatek/mt76/usb_mcu.c | 10 ++++++++++
- 3 files changed, 22 insertions(+)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 29 ++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 21 ++++++++++++++
+ 3 files changed, 43 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 80390be041cb..d36ffc030b15 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -118,6 +118,12 @@ struct mt76_queue {
- 	struct sk_buff *rx_head;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index b55a2e4a0024..c445e93951bf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2476,6 +2476,9 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
+ 
+ 	iwl_mvm_mac_ctxt_remove(mvm, vif);
+ 
++	kfree(mvmvif->ap_wep_key);
++	mvmvif->ap_wep_key = NULL;
++
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
+@@ -2968,7 +2971,13 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
+ 				     true);
+ 
+-		ret = 0;
++		/* if wep is used, need to set the key for the station now */
++		if (vif->type == NL80211_IFTYPE_AP && mvmvif->ap_wep_key)
++			ret = iwl_mvm_set_sta_key(mvm, vif, sta,
++						  mvmvif->ap_wep_key,
++						  STA_KEY_IDX_INVALID);
++		else
++			ret = 0;
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+ 		   new_state == IEEE80211_STA_ASSOC) {
+ 		/* disable beacon filtering */
+@@ -3174,13 +3183,17 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
+-		/* For non-client mode, only use WEP keys for TX as we probably
+-		 * don't have a station yet anyway and would then have to keep
+-		 * track of the keys, linking them to each of the clients/peers
+-		 * as they appear. For now, don't do that, for performance WEP
+-		 * offload doesn't really matter much, but we need it for some
+-		 * other offload features in client mode.
+-		 */
++		if (vif->type == NL80211_IFTYPE_AP) {
++			struct iwl_mvm_vif *mvmvif =
++				iwl_mvm_vif_from_mac80211(vif);
++
++			mvmvif->ap_wep_key = kmemdup(key,
++						     sizeof(*key) + key->keylen,
++						     GFP_KERNEL);
++			if (!mvmvif->ap_wep_key)
++				return -ENOMEM;
++		}
++
+ 		if (vif->type != NL80211_IFTYPE_STATION)
+ 			return 0;
+ 		break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 087e8a454ac2..33f8697740a5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -471,6 +471,7 @@ struct iwl_mvm_vif {
+ 	netdev_features_t features;
+ 
+ 	struct iwl_probe_resp_data __rcu *probe_resp_data;
++	struct ieee80211_key_conf *ap_wep_key;
  };
  
-+struct mt76_mcu_ops {
-+	struct sk_buff *(*mcu_msg_alloc)(const void *data, int len);
-+	int (*mcu_send_msg)(struct mt76_dev *dev, struct sk_buff *skb,
-+			    int cmd, bool wait_resp);
-+};
+ static inline struct iwl_mvm_vif *
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 6ebc715d90df..550e24da0f5b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -67,6 +67,14 @@
+ #include "sta.h"
+ #include "rs.h"
+ 
++static int iwl_mvm_set_fw_key_idx(struct iwl_mvm *mvm);
 +
- struct mt76_queue_ops {
- 	int (*init)(struct mt76_dev *dev);
- 
-@@ -335,6 +341,7 @@ struct mt76_dev {
- 
- 	const struct mt76_bus_ops *bus;
- 	const struct mt76_driver_ops *drv;
-+	const struct mt76_mcu_ops *mcu_ops;
- 	void __iomem *regs;
- 	struct device *dev;
- 
-@@ -435,6 +442,9 @@ struct mt76_rx_status {
- #define mt76_rmw(dev, ...)	(dev)->mt76.bus->rmw(&((dev)->mt76), __VA_ARGS__)
- #define mt76_wr_copy(dev, ...)	(dev)->mt76.bus->copy(&((dev)->mt76), __VA_ARGS__)
- 
-+#define mt76_mcu_msg_alloc(dev, ...)	(dev)->mt76.mcu_ops->mcu_msg_alloc(__VA_ARGS__)
-+#define mt76_mcu_send_msg(dev, ...)	(dev)->mt76.mcu_ops->mcu_send_msg(&((dev)->mt76), __VA_ARGS__)
++static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
++				u32 sta_id,
++				struct ieee80211_key_conf *key, bool mcast,
++				u32 tkip_iv32, u16 *tkip_p1k, u32 cmd_flags,
++				u8 key_offset, bool mfp);
 +
- #define mt76_set(dev, offset, val)	mt76_rmw(dev, offset, 0, val)
- #define mt76_clear(dev, offset, val)	mt76_rmw(dev, offset, val, 0)
+ /*
+  * New version of ADD_STA_sta command added new fields at the end of the
+  * structure, so sending the size of the relevant API's structure is enough to
+@@ -2096,6 +2104,19 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		iwl_mvm_enable_txq(mvm, vif->cab_queue, vif->cab_queue, 0,
+ 				   &cfg, timeout);
  
-@@ -642,5 +652,6 @@ int mt76u_mcu_send_msg(struct mt76_dev *dev, struct sk_buff *skb,
- void mt76u_mcu_fw_reset(struct mt76_dev *dev);
- int mt76u_mcu_init_rx(struct mt76_dev *dev);
- void mt76u_mcu_deinit(struct mt76_dev *dev);
-+void mt76u_init_mcu_ops(struct mt76_dev *dev);
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 5785e54c32d0..5d568c910979 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -836,6 +836,7 @@ int mt76u_init(struct mt76_dev *dev,
- 	mutex_init(&usb->usb_ctrl_mtx);
- 	dev->bus = &mt76u_ops;
- 	dev->queue_ops = &usb_queue_ops;
-+	mt76u_init_mcu_ops(dev);
- 
- 	return mt76u_set_endpoints(intf, usb);
++	if (mvmvif->ap_wep_key) {
++		u8 key_offset = iwl_mvm_set_fw_key_idx(mvm);
++
++		if (key_offset == STA_KEY_IDX_INVALID)
++			return -ENOSPC;
++
++		ret = iwl_mvm_send_sta_key(mvm, mvmvif->mcast_sta.sta_id,
++					   mvmvif->ap_wep_key, 1, 0, NULL, 0,
++					   key_offset, 0);
++		if (ret)
++			return ret;
++	}
++
+ 	return 0;
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-index d80dbfafba6d..4cce807ec24e 100644
---- a/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb_mcu.c
-@@ -296,3 +296,13 @@ void mt76u_mcu_deinit(struct mt76_dev *dev)
- 	mt76u_buf_free(&usb->mcu.res);
- }
- EXPORT_SYMBOL_GPL(mt76u_mcu_deinit);
-+
-+void mt76u_init_mcu_ops(struct mt76_dev *dev)
-+{
-+	static const struct mt76_mcu_ops mt76u_mcu_ops = {
-+		.mcu_msg_alloc = mt76u_mcu_msg_alloc,
-+		.mcu_send_msg = mt76u_mcu_send_msg,
-+	};
-+
-+	dev->mcu_ops = &mt76u_mcu_ops;
-+}
+ 
 -- 
 2.18.0
