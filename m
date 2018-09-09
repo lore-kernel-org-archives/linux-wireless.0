@@ -1,58 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:60168 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727885AbeITB5Q (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47986 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726743AbeIIO0O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 21:57:16 -0400
-Message-ID: <1537388251.10305.89.camel@sipsolutions.net> (sfid-20180919_221746_905682_6E8C1D4B)
-Subject: Re: Help with ath10k related circular locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 19 Sep 2018 22:17:31 +0200
-In-Reply-To: <923b8022-0e92-0ce3-4c11-baa0d6d6918b@candelatech.com> (sfid-20180919_175338_578962_EAD8E691)
-References: <923b8022-0e92-0ce3-4c11-baa0d6d6918b@candelatech.com>
-         (sfid-20180919_175338_578962_EAD8E691)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 9 Sep 2018 10:26:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:47 +0300
+Message-Id: <20180909093656.10194-8-luca@coelho.fi> (sfid-20180909_113713_341905_977804C7)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 07/16] iwlwifi: pcie: set RB size according to user settings
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-19 at 08:53 -0700, Ben Greear wrote:
-> Hello,
-> 
-> I see this lockdep splat on a modified 4.16.18+ kernel when the ath10k
-> firmware crashes early.
-> 
-> I am having a hard time figuring out how to go about fixing this, and would welcome
-> some suggestions.
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Not really sure how to fix it - it basically means that "ath10k_wq"
-contains code that acquires the RTNL:
+RB size can be configured by user to be greater than 4K.
+That's needed for monitor to capture big AMSDUs.
+The firmware now enables different RB sizes configuration
+via context info.
 
->                                      -> #2 (rtnl_mutex){+.+.}:
-> Sep 19 08:38:51 lf0313-6477 kernel:        wiphy_register+0x1120/0x1f90 [cfg80211]
-> Sep 19 08:38:51 lf0313-6477 kernel:        ieee80211_register_hw+0x114e/0x2d20 [mac80211]
-> Sep 19 08:38:51 lf0313-6477 kernel:        ath10k_mac_register+0x1b2f/0x2ff0 [ath10k_core]
-> Sep 19 08:38:51 lf0313-6477 kernel:        ath10k_core_register_work+0x2365/0x30e0 [ath10k_core]
-> Sep 19 08:38:51 lf0313-6477 kernel:        process_one_work+0x5f7/0x14d0
-> Sep 19 08:38:51 lf0313-6477 kernel:        worker_thread+0xdc/0x12d0
-> Sep 19 08:38:51 lf0313-6477 kernel:        kthread+0x2cf/0x3c0
-> Sep 19 08:38:51 lf0313-6477 kernel:        ret_from_fork+0x24/0x30
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/iwl-context-info.h | 25 +++++++++++++++--
+ .../wireless/intel/iwlwifi/pcie/ctxt-info.c   | 28 +++++++++++++++----
+ 2 files changed, 46 insertions(+), 7 deletions(-)
 
-but something on the workqueue is also flushed while holding rtnl.
-
-The solution might be as simple as making it not be an ordered/single-
-threaded workqueue (which can spawn extra threads if needed), but I
-don't know how it's used.
-
-
-Then again, ath10k_stop() only calls cancel_work_sync() and
-cancel_delayed_work_sync() ... which I think means you're running into
-the lockdep annotation bug I fixed recently!
-
-See upstream commits
-87915adc3f0ac ("workqueue: re-add lockdep dependencies for flushing")
-d6e89786bed97 ("workqueue: skip lockdep wq dependency in cancel_work_sync()")
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info.h
+index 4b6fdf3b15fb..5ed07e37e3ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info.h
+@@ -64,20 +64,41 @@
+  *	the init done for driver command that configures several system modes
+  * @IWL_CTXT_INFO_EARLY_DEBUG: enable early debug
+  * @IWL_CTXT_INFO_ENABLE_CDMP: enable core dump
+- * @IWL_CTXT_INFO_RB_SIZE_4K: Use 4K RB size (the default is 2K)
+  * @IWL_CTXT_INFO_RB_CB_SIZE_POS: position of the RBD Cyclic Buffer Size
+  *	exponent, the actual size is 2**value, valid sizes are 8-2048.
+  *	The value is four bits long. Maximum valid exponent is 12
+  * @IWL_CTXT_INFO_TFD_FORMAT_LONG: use long TFD Format (the
+  *	default is short format - not supported by the driver)
++ * @IWL_CTXT_INFO_RB_SIZE_POS: RB size position
++ *	(values are IWL_CTXT_INFO_RB_SIZE_*K)
++ * @IWL_CTXT_INFO_RB_SIZE_1K: Value for 1K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_2K: Value for 2K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_4K: Value for 4K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_8K: Value for 8K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_12K: Value for 12K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_16K: Value for 16K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_20K: Value for 20K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_24K: Value for 24K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_28K: Value for 28K RB size
++ * @IWL_CTXT_INFO_RB_SIZE_32K: Value for 32K RB size
+  */
+ enum iwl_context_info_flags {
+ 	IWL_CTXT_INFO_AUTO_FUNC_INIT	= BIT(0),
+ 	IWL_CTXT_INFO_EARLY_DEBUG	= BIT(1),
+ 	IWL_CTXT_INFO_ENABLE_CDMP	= BIT(2),
+-	IWL_CTXT_INFO_RB_SIZE_4K	= BIT(3),
+ 	IWL_CTXT_INFO_RB_CB_SIZE_POS	= 4,
+ 	IWL_CTXT_INFO_TFD_FORMAT_LONG	= BIT(8),
++	IWL_CTXT_INFO_RB_SIZE_POS	= 9,
++	IWL_CTXT_INFO_RB_SIZE_1K	= 0x1,
++	IWL_CTXT_INFO_RB_SIZE_2K	= 0x2,
++	IWL_CTXT_INFO_RB_SIZE_4K	= 0x4,
++	IWL_CTXT_INFO_RB_SIZE_8K	= 0x8,
++	IWL_CTXT_INFO_RB_SIZE_12K	= 0x9,
++	IWL_CTXT_INFO_RB_SIZE_16K	= 0xa,
++	IWL_CTXT_INFO_RB_SIZE_20K	= 0xb,
++	IWL_CTXT_INFO_RB_SIZE_24K	= 0xc,
++	IWL_CTXT_INFO_RB_SIZE_28K	= 0xd,
++	IWL_CTXT_INFO_RB_SIZE_32K	= 0xe,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index b2cd7ef5fc3a..6f45a0303ddd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -162,7 +162,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_context_info *ctxt_info;
+ 	struct iwl_context_info_rbd_cfg *rx_cfg;
+-	u32 control_flags = 0;
++	u32 control_flags = 0, rb_size;
+ 	int ret;
+ 
+ 	ctxt_info = dma_alloc_coherent(trans->dev, sizeof(*ctxt_info),
+@@ -177,11 +177,29 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 	/* size is in DWs */
+ 	ctxt_info->version.size = cpu_to_le16(sizeof(*ctxt_info) / 4);
+ 
++	switch (trans_pcie->rx_buf_size) {
++	case IWL_AMSDU_2K:
++		rb_size = IWL_CTXT_INFO_RB_SIZE_2K;
++		break;
++	case IWL_AMSDU_4K:
++		rb_size = IWL_CTXT_INFO_RB_SIZE_4K;
++		break;
++	case IWL_AMSDU_8K:
++		rb_size = IWL_CTXT_INFO_RB_SIZE_8K;
++		break;
++	case IWL_AMSDU_12K:
++		rb_size = IWL_CTXT_INFO_RB_SIZE_12K;
++		break;
++	default:
++		WARN_ON(1);
++		rb_size = IWL_CTXT_INFO_RB_SIZE_4K;
++	}
++
+ 	BUILD_BUG_ON(RX_QUEUE_CB_SIZE(MQ_RX_TABLE_SIZE) > 0xF);
+-	control_flags = IWL_CTXT_INFO_RB_SIZE_4K |
+-			IWL_CTXT_INFO_TFD_FORMAT_LONG |
+-			RX_QUEUE_CB_SIZE(MQ_RX_TABLE_SIZE) <<
+-			IWL_CTXT_INFO_RB_CB_SIZE_POS;
++	control_flags = IWL_CTXT_INFO_TFD_FORMAT_LONG |
++			(RX_QUEUE_CB_SIZE(MQ_RX_TABLE_SIZE) <<
++			 IWL_CTXT_INFO_RB_CB_SIZE_POS) |
++			(rb_size << IWL_CTXT_INFO_RB_SIZE_POS);
+ 	ctxt_info->control.control_flags = cpu_to_le32(control_flags);
+ 
+ 	/* initialize RX default queue */
+-- 
+2.18.0
