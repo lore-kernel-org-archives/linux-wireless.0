@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:39872 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726812AbeIRSaD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48084 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726862AbeIIO07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:30:03 -0400
-Message-ID: <1537275441.2957.26.camel@sipsolutions.net> (sfid-20180918_145740_492030_67BED375)
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jamal Hadi Salim <jhs@mojatatu.com>,
-        Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jbenc@redhat.com
-Date: Tue, 18 Sep 2018 14:57:21 +0200
-In-Reply-To: <26dd9a66-9515-93aa-e21f-51c37db6be2c@mojatatu.com> (sfid-20180918_145515_710821_B5A2C6C9)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
-         <20180913193004.GF4590@localhost.localdomain>
-         <20180913212742.GC3876@unicorn.suse.cz>
-         <20180913215839.GI27095@localhost.localdomain>
-         <1537177132.2957.6.camel@sipsolutions.net>
-         <847cc635-cb90-821d-5824-07e7f941db75@mojatatu.com>
-         <1537274378.2957.23.camel@sipsolutions.net>
-         <26dd9a66-9515-93aa-e21f-51c37db6be2c@mojatatu.com>
-         (sfid-20180918_145515_710821_B5A2C6C9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 9 Sep 2018 10:26:59 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun,  9 Sep 2018 12:36:51 +0300
+Message-Id: <20180909093656.10194-12-luca@coelho.fi> (sfid-20180909_113756_538322_1CF9CC5D)
+In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
+References: <20180909093656.10194-1-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: mvm: remove support for adjacent channel compensation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-09-18 at 08:55 -0400, Jamal Hadi Salim wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Execute permission kind of thing? i.e if i understood you correctly
-> if acl is "rwx" then attribute can only be written to (or read from) if
-> the "thing executing" is complete
+We no longer want to consider the RSSI if the beacon / probe
+has been heard on an adjacent channel.
+This was based on a firmware capability that is now
+unavailable.
 
-But it's not an attribute that you're executing, it's some kind of
-command, and then you get the return value of that command in that
-attribute?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Say you want to scan for wifi networks - you trigger a scan, later you
-get a notification giving you some data about the scan (let's say the
-time it took) - there's no way you can set that time attribute.
-
-(NB: it doesn't work this way, we don't have that attribute now, but I
-didn't want to pick a more complicated example)
-
-> > What would the practical difference be though? Hopefully you wouldn't
-> > have write-only attributes, and then NLA_REJECT is basically equivalent?
-> > 
-> 
-> If ACL says "-w-" then reading should get explicit permission denied
-> code possibly with an extack which is more descriptive that reading
-> is not allowed.
-
-Perhaps. But NLA_REJECT comes with an extack string to tell you, so ...
-
-I dunno. I think we already bloated the policies too much by including
-the validation_data pointer, and would hate to add more to that :-)
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index c445e93951bf..4a54756bd1d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -554,8 +554,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 
+ 	hw->wiphy->max_remain_on_channel_duration = 10000;
+ 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
+-	/* we can compensate an offset of up to 3 channels = 15 MHz */
+-	hw->wiphy->max_adj_channel_rssi_comp = 3 * 5;
+ 
+ 	/* Extract MAC address */
+ 	memcpy(mvm->addresses[0].addr, mvm->nvm_data->hw_addr, ETH_ALEN);
+-- 
+2.18.0
