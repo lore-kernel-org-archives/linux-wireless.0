@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36514 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726434AbeIFOGx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 10:06:53 -0400
-Date: Thu, 6 Sep 2018 11:32:14 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sid Hayn <sidhayn@gmail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: mt76x0 bug report
-Message-ID: <20180906093213.GB16539@redhat.com> (sfid-20180906_113221_002484_9BB980F0)
-References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
- <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
- <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+Received: from mail.toke.dk ([52.28.52.200]:51127 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727683AbeIJQIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Sep 2018 12:08:50 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 3/4] cfg80211: Add airtime statistics and settings
+In-Reply-To: <1536567800.3224.39.camel@sipsolutions.net>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <153635897088.14170.10601367738164730253.stgit@alrua-x1> <1536567800.3224.39.camel@sipsolutions.net>
+Date: Mon, 10 Sep 2018 13:15:16 +0200
+Message-ID: <87efe1li2j.fsf@toke.dk> (sfid-20180910_131520_988814_44F3D165)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 05, 2018 at 08:52:18PM +0000, Sid Hayn wrote:
-> On Tue, Sep 4, 2018 at 5:11 PM Lorenzo Bianconi
-> <lorenzo.bianconi@redhat.com> wrote:
-> >
-> > >
-> > > I have one mt76x2u (Alfa AWUS036ACM) and a few mt76x0.
-> > >
-> > > I've noticed two additional issues in my testing.
-> > >
-> > > First issue, is that it appears the mt76x0 devices don't work properly
-> > > in monitor mode.  Sometimes they seem to monitor one channel properly,
-> > > but nothing else.  The mt76x2u works great, channel control, lots of
-> > > packets, etc.
-> >
-> > Could you elaborate a little bit please? how can you reproduce the issue?
-> > just add an interface in monitor mode and run a scan?
-> 
-> Correct, standard stuff, use iw to create a monitor mode interface,
-> use iw to remove managed mode interface, run some tool such as kismet
-> or airodump-ng or even wireshark.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-But what exactly are the syptomps, I don't understand what you mean by
-"mt76x0 devices don't work properly in monitor mode" ?
+> On Sat, 2018-09-08 at 00:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> This adds airtime statistics to the cfg80211 station dump, and also adds=
+ a new
+>> parameter to set the airtime weight of each station. The latter allows u=
+serspace
+>> to implement policies for different stations by varying their weights.
+>
+> Maybe some documentation on the weights - both for other implementers as
+> well as users - would be useful.
+>
+>> + * @NL80211_STA_INFO_AIRTIME_WEIGHT: current airtime weight for station
+>> + *      (u16, usec)
+>
+> how could the weight be in usec? copy/paste issue?
 
-> > I guess it depends on eeprom values. Could you please enable debug
-> > messages a paste
-> > syslog output?
-> 
-> I don't see a mediatek specific debug near the driver selection in
-> menuconfig, what debug messages do you want me to enable and how?
+Well, technically it is a usec value (the amount of airtime added to the
+deficit each round); but I agree that it shouldn't be documented as such
+if we want freedom to change the mechanism later...
 
-You need to uncomment this line:
-
-# ccflags-y := -DDEBUG
-
-in drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-
-Thanks
-Stanislaw
+-Toke
