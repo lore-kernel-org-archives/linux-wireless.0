@@ -1,133 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53238 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:49320 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731439AbeISRqy (ORCPT
+        with ESMTP id S1726405AbeIJMiy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:46:54 -0400
+        Mon, 10 Sep 2018 08:38:54 -0400
+Message-ID: <1536565561.3224.10.camel@sipsolutions.net> (sfid-20180910_094613_922328_3948A37C)
+Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/7] netlink: prepare validate extack setting for recursion
-Date: Wed, 19 Sep 2018 14:08:58 +0200
-Message-Id: <20180919120900.28708-6-johannes@sipsolutions.net> (sfid-20180919_140949_126084_7E01098D)
-In-Reply-To: <20180919120900.28708-1-johannes@sipsolutions.net>
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Date: Mon, 10 Sep 2018 09:46:01 +0200
+In-Reply-To: <153635803319.14170.10011969968767927187.stgit@alrua-x1> (sfid-20180908_002304_387192_9DBCE4B9)
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+         (sfid-20180908_002304_387192_9DBCE4B9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, 2018-09-08 at 00:22 +0200, Toke Høiland-Jørgensen wrote:
 
-In one of my previous patches in this area I introduced code
-to pass out just the error message to store in the extack, for
-use in NLA_REJECT.
+> - I didn't get rid of the register_airtime() callback. As far as I can tell,
+>   only iwlwifi uses the tx_time field in the struct tx_info. Which means that
+>   we *could* probably use it for this and just make the other drivers set it;
+>   but I'm not sure what effects that would have in relation to WMM-AC for
+>   those drivers, so I chickened out. Will have to try it out, I guess; but it
+>   also depends on whether ath10k needs to be able to report airtime
+>   asynchronously anyway. So I'll hold off on that for a bit more.
 
-Change this code now to set both the error message and the bad
-attribute pointer, and carry around a boolean indicating that
-the values have been set.
+I don't think you need to be concerned, the reporting through this has
+no immediate effect as the driver would also have to set the feature
+flag (NL80211_FEATURE_SUPPORTS_WMM_ADMISSION) for userspace to be able
+to use WMM admission TSPECs, and getting tx_tspec->admitted_time to be
+non-zero in ieee80211_sta_tx_wmm_ac_notify().
 
-This will be used in the next patch to allow recursive validation
-of nested policies, while preserving the innermost error message
-rather than overwriting it with a generic out-level message.
+I just think that this may be desirable to drivers eventually, and/or
+maybe iwlwifi wants to take advantage of the airtime scheduling
+eventually, so having two APIs overlapping seems a bit strange.
 
-Note that this is a completely local change - code calling one
-of nla_parse/nla_validate isn't affected, both functions continue
-to overwrite any previously set message with an error generated
-here, but in the next patch the message generated may come from
-an inner call to nested attribute validation instead, and there
-the outer (generic) message shouldn't overwrite the inner.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- lib/nlattr.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
-
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 966cd3dcf31b..2b015e43b725 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -69,7 +69,7 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
- 
- static int validate_nla(const struct nlattr *nla, int maxtype,
- 			const struct nla_policy *policy,
--			const char **error_msg)
-+			struct netlink_ext_ack *extack, bool *extack_set)
- {
- 	const struct nla_policy *pt;
- 	int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
-@@ -94,8 +94,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 		break;
- 
- 	case NLA_REJECT:
--		if (pt->validation_data && error_msg)
--			*error_msg = pt->validation_data;
-+		if (pt->validation_data && extack && !*extack_set) {
-+			*extack_set = true;
-+			extack->_msg = pt->validation_data;
-+			NL_SET_BAD_ATTR(extack, nla);
-+		}
- 		return -EINVAL;
- 
- 	case NLA_FLAG:
-@@ -160,24 +163,25 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 
- static int nla_validate_parse(const struct nlattr *head, int len, int maxtype,
- 			      const struct nla_policy *policy,
--			      struct netlink_ext_ack *extack,
-+			      struct netlink_ext_ack *extack, bool *extack_set,
- 			      struct nlattr **tb)
- {
- 	const struct nlattr *nla;
- 	int rem;
- 
- 	nla_for_each_attr(nla, head, len, rem) {
--		static const char _msg[] = "Attribute failed policy validation";
--		const char *msg = _msg;
- 		u16 type = nla_type(nla);
- 
- 		if (policy) {
--			int err = validate_nla(nla, maxtype, policy, &msg);
-+			int err = validate_nla(nla, maxtype, policy,
-+					       extack, extack_set);
- 
- 			if (err < 0) {
--				if (extack)
--					extack->_msg = msg;
--				NL_SET_BAD_ATTR(extack, nla);
-+				if (!*extack_set) {
-+					*extack_set = true;
-+					NL_SET_ERR_MSG_ATTR(extack, nla,
-+							    "Attribute failed policy validation");
-+				}
- 				return err;
- 			}
- 		}
-@@ -207,9 +211,11 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
- 		 const struct nla_policy *policy,
- 		 struct netlink_ext_ack *extack)
- {
-+	bool extack_set = false;
- 	int rem;
- 
--	rem = nla_validate_parse(head, len, maxtype, policy, extack, NULL);
-+	rem = nla_validate_parse(head, len, maxtype, policy,
-+				 extack, &extack_set, NULL);
- 
- 	if (rem < 0)
- 		return rem;
-@@ -266,11 +272,13 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
- 	      int len, const struct nla_policy *policy,
- 	      struct netlink_ext_ack *extack)
- {
-+	bool extack_set = false;
- 	int rem;
- 
- 	memset(tb, 0, sizeof(struct nlattr *) * (maxtype + 1));
- 
--	rem = nla_validate_parse(head, len, maxtype, policy, extack, tb);
-+	rem = nla_validate_parse(head, len, maxtype, policy,
-+				 extack, &extack_set, tb);
- 	if (rem < 0)
- 		return rem;
- 
--- 
-2.14.4
+johannes
