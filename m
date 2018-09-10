@@ -1,107 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47942 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726689AbeIIO0L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:43 +0300
-Message-Id: <20180909093656.10194-4-luca@coelho.fi> (sfid-20180909_113711_154230_E4991E4C)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 03/16] iwlwifi: pcie: tx: pull tracing out of iwl_fill_data_tbs()
+Received: from mail.toke.dk ([52.28.52.200]:46933 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727269AbeIJSC6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Sep 2018 14:02:58 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <1536583587.3224.71.camel@sipsolutions.net>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <153635897010.14170.2992498632345986102.stgit@alrua-x1> <1536565717.3224.12.camel@sipsolutions.net> <87musplivy.fsf@toke.dk> <1536577419.3224.50.camel@sipsolutions.net> <87zhwpjzme.fsf@toke.dk> <1536583587.3224.71.camel@sipsolutions.net>
+Date: Mon, 10 Sep 2018 15:08:56 +0200
+Message-ID: <87wortjy8n.fsf@toke.dk> (sfid-20180910_150900_980206_A300CCD3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-This will allow us to reuse the function later for adding fraglist
-SKBs to the TFD.
+> On Mon, 2018-09-10 at 14:39 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> > From then on, right now we basically just try to refill the hardware
+>> > queue from the TXQ whenever the hardware releases frames from that
+>> > queue. If there are none, we fall back to putting them on the hardware
+>> > queue from the wake signal.
+>>=20
+>> OK. So if the TXQ is ineligible to dequeue packets, but still have them
+>> queued, there would need to be a signal (such as wake_txq()) when it
+>> becomes eligible again, right?
+>
+> Right. It wouldn't have to be wake_txq, but that seems as appropriate as
+> anything else.
+>
+> If we were to use ieee80211_airtime_may_transmit(), we'd have to have
+> something that tells us "I previously told you it may not transmit, but
+> now I changed my mind" :-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 41 ++++++++++----------
- 1 file changed, 21 insertions(+), 20 deletions(-)
+Yes, exactly. Hmm, I'll see what I can come up with :)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 2742c41c88b3..14b6e726da46 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1977,26 +1977,24 @@ int iwl_trans_pcie_send_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 			     struct iwl_txq *txq, u8 hdr_len,
--			     struct iwl_cmd_meta *out_meta,
--			     struct iwl_device_cmd *dev_cmd, u16 tb1_len)
-+			     struct iwl_cmd_meta *out_meta)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	u16 tb2_len;
-+	u16 head_tb_len;
- 	int i;
- 
- 	/*
- 	 * Set up TFD's third entry to point directly to remainder
- 	 * of skb's head, if any
- 	 */
--	tb2_len = skb_headlen(skb) - hdr_len;
-+	head_tb_len = skb_headlen(skb) - hdr_len;
- 
--	if (tb2_len > 0) {
--		dma_addr_t tb2_phys = dma_map_single(trans->dev,
--						     skb->data + hdr_len,
--						     tb2_len, DMA_TO_DEVICE);
--		if (unlikely(dma_mapping_error(trans->dev, tb2_phys)))
-+	if (head_tb_len > 0) {
-+		dma_addr_t tb_phys = dma_map_single(trans->dev,
-+						    skb->data + hdr_len,
-+						    head_tb_len, DMA_TO_DEVICE);
-+		if (unlikely(dma_mapping_error(trans->dev, tb_phys)))
- 			return -EINVAL;
--		iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false);
-+		iwl_pcie_txq_build_tfd(trans, txq, tb_phys, head_tb_len, false);
- 	}
- 
- 	/* set up the remaining entries to point to the data */
-@@ -2019,12 +2017,6 @@ static int iwl_fill_data_tbs(struct iwl_trans *trans, struct sk_buff *skb,
- 		out_meta->tbs |= BIT(tb_idx);
- 	}
- 
--	trace_iwlwifi_dev_tx(trans->dev, skb,
--			     iwl_pcie_get_tfd(trans, txq, txq->write_ptr),
--			     trans_pcie->tfd_size,
--			     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
--			     hdr_len);
--	trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
- 	return 0;
- }
- 
-@@ -2415,9 +2407,18 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 						     out_meta, dev_cmd,
- 						     tb1_len)))
- 			goto out_err;
--	} else if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
--				       out_meta, dev_cmd, tb1_len))) {
--		goto out_err;
-+	} else {
-+		if (unlikely(iwl_fill_data_tbs(trans, skb, txq, hdr_len,
-+					       out_meta)))
-+			goto out_err;
-+
-+		trace_iwlwifi_dev_tx(trans->dev, skb,
-+				     iwl_pcie_get_tfd(trans, txq,
-+						      txq->write_ptr),
-+				     trans_pcie->tfd_size,
-+				     &dev_cmd->hdr, IWL_FIRST_TB_SIZE + tb1_len,
-+				     hdr_len);
-+		trace_iwlwifi_dev_tx_data(trans->dev, skb, hdr_len);
- 	}
- 
- 	/* building the A-MSDU might have changed this data, so memcpy it now */
--- 
-2.18.0
+-Toke
