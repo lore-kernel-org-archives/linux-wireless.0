@@ -1,79 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:42296 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730984AbeITRFC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:49814 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727488AbeIJNQU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:05:02 -0400
-Date: Thu, 20 Sep 2018 16:51:55 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Joe Perches <joe@perches.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <aditya.shankar@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <claudiu.beznea@microchip.com>, <adham.abozaeid@microchip.com>
-Subject: Re: [PATCH v2 28/29] staging: wilc1000: avoid spaces preferred
- around checkpatch issue
-Message-ID: <20180920165155.08f72ea0@ajaysk-VirtualBox> (sfid-20180920_132210_517004_C50A9CEF)
-In-Reply-To: <6e925b2021d5fbc59f1933d37a1deb1332ede752.camel@perches.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-        <1537424620-6982-29-git-send-email-ajay.kathat@microchip.com>
-        <6e925b2021d5fbc59f1933d37a1deb1332ede752.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Mon, 10 Sep 2018 09:16:20 -0400
+Message-ID: <1536567800.3224.39.camel@sipsolutions.net> (sfid-20180910_102332_042865_558DC693)
+Subject: Re: [PATCH RFC v3 3/4] cfg80211: Add airtime statistics and settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Date: Mon, 10 Sep 2018 10:23:20 +0200
+In-Reply-To: <153635897088.14170.10601367738164730253.stgit@alrua-x1> (sfid-20180908_002305_769585_4A855C77)
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+         <153635897088.14170.10601367738164730253.stgit@alrua-x1>
+         (sfid-20180908_002305_769585_4A855C77)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 20 Sep 2018 02:57:21 -0700
-Joe Perches <joe@perches.com> wrote:
+On Sat, 2018-09-08 at 00:22 +0200, Toke Høiland-Jørgensen wrote:
+> This adds airtime statistics to the cfg80211 station dump, and also adds a new
+> parameter to set the airtime weight of each station. The latter allows userspace
+> to implement policies for different stations by varying their weights.
 
-> On Thu, 2018-09-20 at 11:53 +0530, Ajay Singh wrote:
-> > Cleanup patch to add extra spaces around the '/' to avoid the below
-> > checkpatch warning.
-> > 
-> > 'spaces preferred around that '/' (ctx:VxV)'
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/linux_wlan.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/linux_wlan.c
-> > b/drivers/staging/wilc1000/linux_wlan.c index 695d5b2..29c1317
-> > 100644 --- a/drivers/staging/wilc1000/linux_wlan.c
-> > +++ b/drivers/staging/wilc1000/linux_wlan.c
-> > @@ -823,7 +823,7 @@ static void wilc_set_multicast_list(struct
-> > net_device *dev) 
-> >  	netdev_for_each_mc_addr(ha, dev) {
-> >  		memcpy(mc_list + i, ha->addr, ETH_ALEN);
-> > -		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n",
-> > i/ETH_ALEN,
-> > +		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n",
-> > i / ETH_ALEN, mc_list[i], mc_list[i + 1], mc_list[i + 2],
-> >  			   mc_list[i + 3], mc_list[i + 4],
-> > mc_list[i + 5]); i += ETH_ALEN;  
-> 
-> Probably better using the vsprintf %pM extension:
-> 
-> 	netdev_dbg(dev, Entry[%d]: %pM\n", i / ETH_ALEN, mc_list + i);
-> 
-> though I would also suggest using another temporary
-> pointer instead of an offset and divisions.
-> 
-> Something like:
-> 
-> o use kmalloc_array
-> o remove unnecessary res
-> o add u8 *cur_mc
-> o use i as index
+Maybe some documentation on the weights - both for other implementers as
+well as users - would be useful.
 
-Hi Joe,
+> + * @NL80211_STA_INFO_AIRTIME_WEIGHT: current airtime weight for station
+> + *      (u16, usec)
 
-Thanks for your suggestion and sharing the code changes.
-I agree, it looks better with your modification.
+how could the weight be in usec? copy/paste issue?
 
-
-Do I need to resend the updated patch series by including your
-changes or can this patch be applied from your mail ?
-
-Regards,
-Ajay
+johannes
