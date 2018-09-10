@@ -1,128 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12606 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727518AbeIDLE4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:04:56 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 25/26] staging: wilc1000: refactor wilc_netdev_init() to handle memory free in error path
-Date: Tue, 4 Sep 2018 12:09:41 +0530
-Message-ID: <1536043182-19735-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084123_797596_87AEDB6F)
-In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
-References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+Received: from nbd.name ([46.4.11.11]:35120 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726148AbeIJO0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Sep 2018 10:26:44 -0400
+Subject: Re: [PATCH 39/42] mt76: move some irq code to common mmio module
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-mediatek@lists.infradead.org
+References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+ <1536225538-16454-40-git-send-email-sgruszka@redhat.com>
+ <91c0c1d5-12a9-7155-c4bf-191a511080ee@nbd.name>
+ <20180906104348.GE16539@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <6759963b-6a37-f635-9d6a-4022624d867e@nbd.name> (sfid-20180910_113338_887944_E0279AD5)
+Date: Mon, 10 Sep 2018 11:33:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180906104348.GE16539@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor the wilc_netdev_init() to cleanup the memory for error
-scenario and remove unnecessary 'dev' pointer check.
+On 2018-09-06 12:43, Stanislaw Gruszka wrote:
+> On Thu, Sep 06, 2018 at 11:33:55AM +0200, Felix Fietkau wrote:
+>> On 2018-09-06 11:18, Stanislaw Gruszka wrote:
+>> > Move some irq handling code to generic mmio module.
+>> > 
+>> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> Please drop this patch. This won't work on MT7603 and later.
+> 
+> Yeah, I thought MT_INT_MASK_CSR is the same 0x0204 for all chips,
+> but for MT7603 this is MT_HIF(0x204). I assume we can still unify 
+> irq_lock, irqmask fields in common structure.
+> 
+> Anyway would be good to have mt7603 driver unstreamed, so we could
+> easily see what can be shared in mt76 generic code for all chips.
+> 
+> Felix, do you have plans to upstream it? Want some help with that ?
+I plan on sending it upstream soon. It's still not fully stable, but
+that shouldn't be a blocker.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c             | 36 ++++++++++++++++-------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 +++-
- 2 files changed, 30 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d7d43fd..91a45a7 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1073,10 +1073,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	INIT_LIST_HEAD(&wl->rxq_head.list);
- 
- 	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
--	if (!wl->hif_workqueue) {
--		kfree(wl);
--		return -ENOMEM;
--	}
-+	if (!wl->hif_workqueue)
-+		goto free_wl;
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-@@ -1085,7 +1083,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 
- 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
- 		if (!ndev)
--			return -ENOMEM;
-+			goto free_ndev;
- 
- 		vif = netdev_priv(ndev);
- 		memset(vif, 0, sizeof(struct wilc_vif));
-@@ -1106,15 +1104,13 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		ndev->netdev_ops = &wilc_netdev_ops;
- 
- 		wdev = wilc_create_wiphy(ndev, dev);
--
--		if (dev)
--			SET_NETDEV_DEV(ndev, dev);
--
- 		if (!wdev) {
- 			netdev_err(ndev, "Can't register WILC Wiphy\n");
--			return -1;
-+			goto free_ndev;
- 		}
- 
-+		SET_NETDEV_DEV(ndev, dev);
-+
- 		vif->ndev->ieee80211_ptr = wdev;
- 		vif->ndev->ml_priv = vif;
- 		wdev->netdev = vif->ndev;
-@@ -1125,11 +1121,29 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 
- 		ret = register_netdev(ndev);
- 		if (ret)
--			return ret;
-+			goto free_ndev;
- 
- 		vif->iftype = STATION_MODE;
- 		vif->mac_opened = 0;
- 	}
- 
- 	return 0;
-+
-+free_ndev:
-+	for (; i >= 0; i--) {
-+		if (wl->vif[i]) {
-+			if (wl->vif[i]->iftype == STATION_MODE)
-+				unregister_netdev(wl->vif[i]->ndev);
-+
-+			if (wl->vif[i]->ndev) {
-+				wilc_free_wiphy(wl->vif[i]->ndev);
-+				free_netdev(wl->vif[i]->ndev);
-+			}
-+		}
-+	}
-+	unregister_inetaddr_notifier(&g_dev_notifier);
-+	destroy_workqueue(wl->hif_workqueue);
-+free_wl:
-+	kfree(wl);
-+	return -ENOMEM;
- }
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d103dce2..37c26d4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2145,8 +2145,12 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net,
- 	set_wiphy_dev(wdev->wiphy, dev);
- 
- 	ret = wiphy_register(wdev->wiphy);
--	if (ret)
-+	if (ret) {
- 		netdev_err(net, "Cannot register wiphy device\n");
-+		wiphy_free(wdev->wiphy);
-+		kfree(wdev);
-+		return NULL;
-+	}
- 
- 	priv->dev = net;
- 	return wdev;
--- 
-2.7.4
+- Felix
