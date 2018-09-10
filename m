@@ -1,120 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12413 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731455AbeITMGg (ORCPT
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:35114 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726867AbeIJWWr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:36 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 16/29] staging: wilc1000: refactor code to remove 'mac_status' from 'wilc_mac_cfg' struct
-Date: Thu, 20 Sep 2018 11:53:27 +0530
-Message-ID: <1537424620-6982-17-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_085421_777542_392DF531)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 10 Sep 2018 18:22:47 -0400
+Received: by mail-yb1-f196.google.com with SMTP id o17-v6so8260763yba.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Sep 2018 10:27:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <4922c981d88ab8b16d6ebd130829b6c04d8bbc56.camel@mbuf.com>
+In-Reply-To: <4922c981d88ab8b16d6ebd130829b6c04d8bbc56.camel@mbuf.com>
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Date: Mon, 10 Sep 2018 19:27:28 +0200
+Message-ID: <CAA2SeNKshXx2e9z+iWf=pbM0SN0teT2cvnye4noEjBxtOo4Vvw@mail.gmail.com> (sfid-20180910_192955_991020_9FFB412B)
+Subject: Re: desktop hard lock up (kernel panic) with Alfa AWUSB036ACM and
+ wireless-testing 72d1e548defbf
+To: davep@mbuf.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        dpoole@cradlepoint.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor the code by removing use of 'mac_status' from 'wilc_mac_cfg'
-and only have the string type configuration values in 'wilc_mac_cfg'
-struct. Now fetch the value 'WID_STATUS' configuration from 'g_cfg_byte'
-array.
+>
+> Start wpa_supplicant
+> Attach to a Cisco AP (haven't tried too many other APs yet). Desktop
+> locks up hard.  I have some shell scripts I use start wpa_supp and run
+> wpa_cli (I'm not going through the GNOME ui or other).
+>
+> (Occurs to me I need to verify I didn't have the system's
+> wpa_supplicant running... I forget to kill the systemd started wpa_supp
+> before starting mine.)
+>
+> Captured a kernel oops (attached) with netconsole. Same kernel with my
+> 2nd wifi (an Intel 8265 PCI-e card) works.
+>
+> Running:
+> git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-
+> testing.git   72d1e548defbf75c6bb42fc99276cd88fda7dda0
+>
+>
+> I can 'iw dev scan' & scan through wpa_supplicant with the card fairly
+> successfully. I haven't tried monitor mode. Have recreated the oops a
+> couple times.
+>
+>
+> Alfa AWUSB036ACM
+>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c         |  4 ++--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.c      | 23 ++++++++++++++---------
- 3 files changed, 17 insertions(+), 12 deletions(-)
+Hi David,
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index e2669b9..d9f927e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -159,9 +159,9 @@ static void deinit_irq(struct net_device *dev)
- 
- void wilc_mac_indicate(struct wilc *wilc)
- {
--	int status;
-+	s8 status;
- 
--	wilc_wlan_cfg_get_val(WID_STATUS, (unsigned char *)&status, 4);
-+	wilc_wlan_cfg_get_val(WID_STATUS, &status, 1);
- 	if (wilc->mac_status == MAC_STATUS_INIT) {
- 		wilc->mac_status = status;
- 		complete(&wilc->sync_event);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 30151b2..70bae3a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -155,7 +155,7 @@ struct wilc_vif {
- struct wilc {
- 	const struct wilc_hif_func *hif_func;
- 	int io_type;
--	int mac_status;
-+	s8 mac_status;
- 	struct gpio_desc *gpio_irq;
- 	bool initialized;
- 	int dev_irq_num;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 541251b..4434976 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -18,7 +18,6 @@ enum cfg_cmd_type {
- };
- 
- struct wilc_mac_cfg {
--	int mac_status;
- 	u8 mac_address[7];
- 	u8 firmware_version[129];
- 	u8 assoc_rsp[256];
-@@ -251,15 +250,26 @@ static void wilc_wlan_parse_response_frame(u8 *info, int size)
- 
- static void wilc_wlan_parse_info_frame(u8 *info)
- {
--	struct wilc_mac_cfg *pd = &g_mac;
- 	u32 wid, len;
- 
- 	wid = info[0] | (info[1] << 8);
- 
- 	len = info[2];
- 
--	if (len == 1 && wid == WID_STATUS)
--		pd->mac_status = info[3];
-+	if (len == 1 && wid == WID_STATUS) {
-+		int i = 0;
-+
-+		do {
-+			if (g_cfg_byte[i].id == WID_NIL)
-+				break;
-+
-+			if (g_cfg_byte[i].id == wid) {
-+				g_cfg_byte[i].val = info[3];
-+				break;
-+			}
-+			i++;
-+		} while (1);
-+	}
- }
- 
- /********************************************
-@@ -323,11 +333,6 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	u32 type = (wid >> 12) & 0xf;
- 	int i, ret = 0;
- 
--	if (wid == WID_STATUS) {
--		*((u32 *)buffer) = g_mac.mac_status;
--		return 4;
--	}
--
- 	i = 0;
- 	if (type == CFG_BYTE_CMD) {
- 		do {
--- 
-2.7.4
+according to the kernel log you provided the crash occurs in
+ieee80211_wake_txqs().
+Could you please run gdb in order to identify the point where NULL
+pointer dereference occurs? E.g:
+
+$gdb mac80211.ko
+$info address ieee80211_wake_txqs
+$l*(<func addr>+<offset>)
+offset is 0x1e3 in your log
+
+Regards,
+Lorenzo
