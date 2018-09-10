@@ -1,143 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50316 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726768AbeIRRet (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:52860 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727269AbeIJSFC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 13:34:49 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 18 Sep 2018 17:32:31 +0530
-From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Advertize beacon_int_min_gcd as 100 while bring
- up multi vaps
-In-Reply-To: <00ea718a-2ccb-74ba-11c2-102071200743@candelatech.com>
-References: <1537252429-8655-1-git-send-email-mkenna@codeaurora.org>
- <00ea718a-2ccb-74ba-11c2-102071200743@candelatech.com>
-Message-ID: <8353e4d02ebb2bae996aa184b65d2756@codeaurora.org> (sfid-20180918_140236_205268_FF289C98)
+        Mon, 10 Sep 2018 14:05:02 -0400
+Message-ID: <1536585051.3224.72.camel@sipsolutions.net> (sfid-20180910_151104_509273_68D12311)
+Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Date: Mon, 10 Sep 2018 15:10:51 +0200
+In-Reply-To: <87wortjy8n.fsf@toke.dk>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+         <153635897010.14170.2992498632345986102.stgit@alrua-x1>
+         <1536565717.3224.12.camel@sipsolutions.net> <87musplivy.fsf@toke.dk>
+         <1536577419.3224.50.camel@sipsolutions.net> <87zhwpjzme.fsf@toke.dk>
+         <1536583587.3224.71.camel@sipsolutions.net> <87wortjy8n.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-18 4:14 pm, Ben Greear wrote:
-> On 09/17/2018 11:33 PM, Maharaja Kennadyrajan wrote:
->> With the latest firmware design, the beacon interval should be
->> greater than 100 to bring the multiple vaps.
->> 
->> Set beacon_int_min_gcd to 100, when the wmi service
->> WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT is enabled
->> in the firmware. If not, beacon_int_min_gcd will be set
->> to the default value 1.
->> 
->> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00015
->> Tested in QCA9888 with firmware ver 10.4-3.5.1-0005
->> 
->> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
->>  drivers/net/wireless/ath/ath10k/wmi.h |  9 +++++++++
->>  2 files changed, 34 insertions(+)
->> 
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
->> b/drivers/net/wireless/ath/ath10k/mac.c
->> index 97548f9..532fc5d 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -8163,6 +8163,24 @@ void ath10k_mac_destroy(struct ath10k *ar)
->>  	},
->>  };
->> 
->> +static const struct
->> +ieee80211_iface_combination ath10k_10_4_bcn_int_if_comb[] = {
->> +	{
->> +		.limits = ath10k_10_4_if_limits,
->> +		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
->> +		.max_interfaces = 16,
->> +		.num_different_channels = 1,
->> +		.beacon_int_infra_match = true,
->> +		.beacon_int_min_gcd = 100,
->> +#ifdef CONFIG_ATH10K_DFS_CERTIFIED
->> +		.radar_detect_widths =  BIT(NL80211_CHAN_WIDTH_20_NOHT) |
->> +					BIT(NL80211_CHAN_WIDTH_20) |
->> +					BIT(NL80211_CHAN_WIDTH_40) |
->> +					BIT(NL80211_CHAN_WIDTH_80),
->> +#endif
->> +	},
->> +};
->> +
->>  static void ath10k_get_arvif_iter(void *data, u8 *mac,
->>  				  struct ieee80211_vif *vif)
->>  {
->> @@ -8526,6 +8544,13 @@ int ath10k_mac_register(struct ath10k *ar)
->>  		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
->>  		ar->hw->wiphy->n_iface_combinations =
->>  			ARRAY_SIZE(ath10k_10_4_if_comb);
->> +		if (test_bit(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->> +			     ar->wmi.svc_map)) {
->> +			ar->hw->wiphy->iface_combinations =
->> +				ath10k_10_4_bcn_int_if_comb;
->> +			ar->hw->wiphy->n_iface_combinations =
->> +				ARRAY_SIZE(ath10k_10_4_bcn_int_if_comb);
->> +		}
->>  		break;
->>  	case ATH10K_FW_WMI_OP_VERSION_UNSET:
->>  	case ATH10K_FW_WMI_OP_VERSION_MAX:
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
->> b/drivers/net/wireless/ath/ath10k/wmi.h
->> index 1562294..126eb17 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -204,6 +204,7 @@ enum wmi_service {
->>  	WMI_SERVICE_RESET_CHIP,
->>  	WMI_SERVICE_SPOOF_MAC_SUPPORT,
->>  	WMI_SERVICE_TX_DATA_ACK_RSSI,
->> +	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->> 
->>  	/* keep last */
->>  	WMI_SERVICE_MAX,
->> @@ -353,6 +354,11 @@ enum wmi_10_4_service {
->>  	WMI_10_4_SERVICE_TPC_STATS_FINAL,
->>  	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
->>  	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
->> +	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
+On Mon, 2018-09-10 at 15:08 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
 > 
-> That should end with "LEGACY" instead of "LAGACY" maybe?
-
-[Maha]: Thanks Ben for noticing it. I will take care it in v2 patch.
-
+> > On Mon, 2018-09-10 at 14:39 +0200, Toke Høiland-Jørgensen wrote:
+> > 
+> > > > From then on, right now we basically just try to refill the hardware
+> > > > queue from the TXQ whenever the hardware releases frames from that
+> > > > queue. If there are none, we fall back to putting them on the hardware
+> > > > queue from the wake signal.
+> > > 
+> > > OK. So if the TXQ is ineligible to dequeue packets, but still have them
+> > > queued, there would need to be a signal (such as wake_txq()) when it
+> > > becomes eligible again, right?
+> > 
+> > Right. It wouldn't have to be wake_txq, but that seems as appropriate as
+> > anything else.
+> > 
+> > If we were to use ieee80211_airtime_may_transmit(), we'd have to have
+> > something that tells us "I previously told you it may not transmit, but
+> > now I changed my mind" :-)
 > 
->> +	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
->> +	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
->> +	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
->> +	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->>  };
->> 
->>  static inline char *wmi_service_name(int service_id)
->> @@ -467,6 +473,7 @@ static inline char *wmi_service_name(int 
->> service_id)
->>  	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
->>  	SVCSTR(WMI_SERVICE_RESET_CHIP);
->>  	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
->> +	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
->>  	default:
->>  		return NULL;
->>  	}
->> @@ -777,6 +784,8 @@ static inline void wmi_10_4_svc_map(const __le32 
->> *in, unsigned long *out,
->>  	       WMI_SERVICE_TPC_STATS_FINAL, len);
->>  	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
->>  	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
->> +	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
->> +	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
->>  }
->> 
->>  #undef SVCMAP
->> 
-> 
-> Thanks,
-> Ben
+> Yes, exactly. Hmm, I'll see what I can come up with :)
 
--- 
-Regards,
-Maha
+No need to look at this right now - let's get this stuff sorted out
+first :)
+
+johannes
