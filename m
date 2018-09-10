@@ -1,51 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:50933 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727646AbeIJQL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:11:26 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
-In-Reply-To: <1536565926.3224.15.camel@sipsolutions.net>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <1536565926.3224.15.camel@sipsolutions.net>
-Date: Mon, 10 Sep 2018 13:17:51 +0200
-Message-ID: <878t49lhy8.fsf@toke.dk> (sfid-20180910_131755_536087_1AE67262)
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:44442 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726476AbeIKNs3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Sep 2018 09:48:29 -0400
+Date: Mon, 10 Sep 2018 18:12:59 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: gregkh <gregkh@linuxfoundation.org>
+CC: Arnd Bergmann <arnd@arndb.de>,
+        driverdevel <devel@driverdev.osuosl.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH] staging: wilc1000: revert "fix TODO to compile spi and
+ sdio components in single module"
+Message-ID: <20180910181259.2cbe6b8d@ajaysk-VirtualBox> (sfid-20180911_105023_482866_CB8486A7)
+In-Reply-To: <20180911082110.GB17267@kroah.com>
+References: <20180813212108.2442868-1-arnd@arndb.de>
+        <20180814105237.64b01528@ajaysk-VirtualBox>
+        <CAK8P3a3bk7urG9zO=F1NtH8hTnGQQ_Hk0qq=o8fmeYY_nEyy5w@mail.gmail.com>
+        <20180814084335.GB7208@kroah.com>
+        <20180910160836.24efb0b9@ajaysk-VirtualBox>
+        <20180911082110.GB17267@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Tue, 11 Sep 2018 10:21:10 +0200
+gregkh <gregkh@linuxfoundation.org> wrote:
 
-> On Sat, 2018-09-08 at 00:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>=20
->> A few things that were discussed in the last round that I did *not* chan=
-ge:
->
-> Thanks for this list btw.
->
->> - I did not add any locking around next_txq(); the driver is still suppo=
-sed
->>   to maintain a lock that prevents two threads from trying to schedule t=
-he
->>   same AC at the same time. This is what drivers already do, so I figure=
-d it
->>   was easier to just keep it that way rather than do it in mac80211.
->
-> I'll look at this in the code, but from a maintainer perspective I'm
-> somewhat worried that this will lead to issues that are really the
-> driver's fault, but surface in mac80211. I don't know how easy it
-> would be to catch that.
+> On Mon, Sep 10, 2018 at 04:08:36PM +0530, Ajay Singh wrote:
+> > Hi Greg,
+> > 
+> > On Tue, 14 Aug 2018 10:43:35 +0200
+> > gregkh <gregkh@linuxfoundation.org> wrote:
+> >   
+> > > On Tue, Aug 14, 2018 at 10:34:27AM +0200, Arnd Bergmann wrote:  
+> > > > On Tue, Aug 14, 2018 at 7:22 AM Ajay Singh
+> > > > <ajay.kathat@microchip.com> wrote:  
+> > > > >
+> > > > > Hi Arnd,
+> > > > >
+> > > > > On Mon, 13 Aug 2018 23:20:33 +0200
+> > > > > Arnd Bergmann <arnd@arndb.de> wrote:
+> > > > >  
+> > > > > > The TODO item named "make spi and sdio components coexist
+> > > > > > in one build" was apparently addressed a long time ago, but
+> > > > > > never removed from the TODO file. However, the new patch
+> > > > > > that tries to address it actually makes it worse again by
+> > > > > > duplicating the common parts of the driver into two
+> > > > > > separate modules rather than sharing them. This also
+> > > > > > introduces a build regression when one of the two is
+> > > > > > built-in while the other is a loadable module:  
+> > > > >
+> > > > > Thanks for sharing your inputs and submitting patch.
+> > > > > I have also submitted a patch to address the compilation
+> > > > > error[1]. We can ignore my patch and proceed with your
+> > > > > changes.
+> > > > >
+> > > > > [1].https://patchwork.kernel.org/patch/10563873/  
+> > > > 
+> > > > That patch seems useful regardless, as it removes dead code,
+> > > > but I'd still prefer to revert staging-linusthe 9abc44ba4e2f
+> > > > ("staging: wilc1000: fix TODO to compile spi and sdio
+> > > > components in single module") commit for the other reasons I
+> > > > explained.  
+> > > 
+> > > I agree, I'll queue it up soon, I have other patches to get to
+> > > Linus first.
+> > >   
+> > 
+> > This patch is applied only to 'staging-linus' in commit f45b893 and
+> > it's not applied to 'staging-testing/next' tree. 
+> > Please apply this patch to 'staging-next' tree also. Because I have
+> > one patch to submit on top of these changes to delete the
+> > 'wilc_debug.c' unused file.  
+> 
+> I will merge the staging-linus branch into staging-testing once Linus
+> pulls them in.  Should happen next Monday or so.  You can send me
+> patches that build on top of this now, I'll just wait until then to
+> apply them to my tree.
 
-Yeah, I get what you mean. The alternative would be to have a
-ieee80211_start_schedule(ac) and ieee80211_end_schedule(ac), which
-basically just takes a lock. Would mean we could get rid of the 'first'
-parameter for next_txq(), so might not be such a bad idea; and if the
-driver has its own locking the extra locking in mac80211 would just be
-an always-uncontested spinlock, which shouldn't be much overhead, right?
+Thanks Greg.
 
--Toke
+Sure, I will send the patch set build on top of this.
+
+Regards,
+Ajay
