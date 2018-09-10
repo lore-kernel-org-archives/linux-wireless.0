@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33844 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730048AbeIFTvU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 15:51:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        david.spinadel@intel.com
-Subject: Re: [PATCH v3 0/3] support ftm responder configuration/statistics
-References: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org>
-        <1536215640.4015.0.camel@sipsolutions.net>
-Date: Thu, 06 Sep 2018 18:15:17 +0300
-In-Reply-To: <1536215640.4015.0.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 06 Sep 2018 08:34:00 +0200")
-Message-ID: <877ejy7j3u.fsf@kamboji.qca.qualcomm.com> (sfid-20180906_171524_255889_912FF771)
+Received: from mail.toke.dk ([52.28.52.200]:50933 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727646AbeIJQL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Sep 2018 12:11:26 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
+In-Reply-To: <1536565926.3224.15.camel@sipsolutions.net>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <1536565926.3224.15.camel@sipsolutions.net>
+Date: Mon, 10 Sep 2018 13:17:51 +0200
+Message-ID: <878t49lhy8.fsf@toke.dk> (sfid-20180910_131755_536087_1AE67262)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Wed, 2018-09-05 at 18:01 -0700, Pradeep Kumar Chitrapu wrote:
->> Currently ftm_responder parameter in hostapd.conf is only used for fine
->> timing measurement (FTM) capability advertisement and actual control of
->> the functionality is with low-level device/driver. This leads to confusion
->> to the user when the capability advertisement is different from actual FTM
->> responder functionality.
->> 
->> For example, FTM responder capability advertisement is set to 'enabled',
->> but the functionality is disabled or not supported by the driver.
->> 
->> The patch set allows userspace to enable FTM responder functionality
->> with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
->> with configurable lci/civic ocation parameters. Also extended feature flag
->> is added for the drivers to advertise the support. Setting the flag to
->> enable FTM responder would imply that AP responds to all FTM requests.
->> Default is considered to be disabled.
->> 
->> changes in V3:
->>  - fixed the ambiguous ftm responder disable case to be not supported
+> On Sat, 2018-09-08 at 00:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>=20
+>> A few things that were discussed in the last round that I did *not* chan=
+ge:
 >
-> For reasons unknown to me, this patchset made it neither to the list
-> nor, consequently, patchwork. Please resend.
+> Thanks for this list btw.
+>
+>> - I did not add any locking around next_txq(); the driver is still suppo=
+sed
+>>   to maintain a lock that prevents two threads from trying to schedule t=
+he
+>>   same AC at the same time. This is what drivers already do, so I figure=
+d it
+>>   was easier to just keep it that way rather than do it in mac80211.
+>
+> I'll look at this in the code, but from a maintainer perspective I'm
+> somewhat worried that this will lead to issues that are really the
+> driver's fault, but surface in mac80211. I don't know how easy it
+> would be to catch that.
 
-Actually patch 3 made it:
+Yeah, I get what you mean. The alternative would be to have a
+ieee80211_start_schedule(ac) and ieee80211_end_schedule(ac), which
+basically just takes a lock. Would mean we could get rid of the 'first'
+parameter for next_txq(), so might not be such a bad idea; and if the
+driver has its own locking the extra locking in mac80211 would just be
+an always-uncontested spinlock, which shouldn't be much overhead, right?
 
-https://patchwork.kernel.org/patch/10590115/
-
-But it didn't get the rest as it says "Untitled series #15763".
-Patchwork was timing out for me quite heavily so in that way I'm not
-surprised that patches are getting lost :(
-
--- 
-Kalle Valo
+-Toke
