@@ -1,113 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:55096 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726502AbeILNjx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 09:39:53 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 1/2] netlink: add NLA_REJECT policy type
-Date: Wed, 12 Sep 2018 10:36:09 +0200
-Message-Id: <20180912083610.20857-1-johannes@sipsolutions.net> (sfid-20180912_103626_907703_3A24107A)
+Received: from mail.toke.dk ([52.28.52.200]:56683 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728597AbeIJSMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Sep 2018 14:12:46 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <1536585051.3224.72.camel@sipsolutions.net>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <153635897010.14170.2992498632345986102.stgit@alrua-x1> <1536565717.3224.12.camel@sipsolutions.net> <87musplivy.fsf@toke.dk> <1536577419.3224.50.camel@sipsolutions.net> <87zhwpjzme.fsf@toke.dk> <1536583587.3224.71.camel@sipsolutions.net> <87wortjy8n.fsf@toke.dk> <1536585051.3224.72.camel@sipsolutions.net>
+Date: Mon, 10 Sep 2018 15:18:41 +0200
+Message-ID: <87r2i1jxse.fsf@toke.dk> (sfid-20180910_151854_506037_057D8929)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-In some situations some netlink attributes may be used for output
-only (kernel->userspace) or may be reserved for future use. It's
-then helpful to be able to prevent userspace from using them in
-messages sent to the kernel, since they'd otherwise be ignored and
-any future will become impossible if this happens.
+> On Mon, 2018-09-10 at 15:08 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > On Mon, 2018-09-10 at 14:39 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wr=
+ote:
+>> >=20
+>> > > > From then on, right now we basically just try to refill the hardwa=
+re
+>> > > > queue from the TXQ whenever the hardware releases frames from that
+>> > > > queue. If there are none, we fall back to putting them on the hard=
+ware
+>> > > > queue from the wake signal.
+>> > >=20
+>> > > OK. So if the TXQ is ineligible to dequeue packets, but still have t=
+hem
+>> > > queued, there would need to be a signal (such as wake_txq()) when it
+>> > > becomes eligible again, right?
+>> >=20
+>> > Right. It wouldn't have to be wake_txq, but that seems as appropriate =
+as
+>> > anything else.
+>> >=20
+>> > If we were to use ieee80211_airtime_may_transmit(), we'd have to have
+>> > something that tells us "I previously told you it may not transmit, but
+>> > now I changed my mind" :-)
+>>=20
+>> Yes, exactly. Hmm, I'll see what I can come up with :)
+>
+> No need to look at this right now - let's get this stuff sorted out
+> first :)
 
-Add NLA_REJECT to the policy which does nothing but reject (with
-EINVAL) validation of any messages containing this attribute.
-Allow for returning a specific extended ACK error message in the
-validation_data pointer.
+Right, sure, I'll get the port of ath9k done first; but doesn't hurt to
+think about API compatibility with the other drivers at the same time as
+well...
 
-While at it fix the indentation of NLA_BITFIELD32 and describe the
-validation_data pointer for it.
+If we have the start_schedule() / end_schedule() pair anyway, the latter
+could notify any TXQs that became eligible during the scheduling round.
 
-The specific case I have in mind now is a shared nested attribute
-containing request/response data, and it would be pointless and
-potentially confusing to have userspace include response data in
-the messages that actually contain a request.
+Also, instead of having the three different API functions
+(next_txq()/may_tx()/schedule_txq()), we could  have get_txq(txq)/put_txq(t=
+xq)
+which would always need to be paired; but the argument to get_txq()
+could be optional, and if the driver passes NULL it means "give me the
+next available TXQ".
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/netlink.h |  6 +++++-
- lib/nlattr.c          | 12 +++++++++---
- 2 files changed, 14 insertions(+), 4 deletions(-)
+So for ath9k it would be:
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 0c154f98e987..04e40fcc70d6 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -180,6 +180,7 @@ enum {
- 	NLA_S32,
- 	NLA_S64,
- 	NLA_BITFIELD32,
-+	NLA_REJECT,
- 	__NLA_TYPE_MAX,
- };
- 
-@@ -208,7 +209,10 @@ enum {
-  *    NLA_MSECS            Leaving the length field zero will verify the
-  *                         given type fits, using it verifies minimum length
-  *                         just like "All other"
-- *    NLA_BITFIELD32      A 32-bit bitmap/bitselector attribute
-+ *    NLA_BITFIELD32       A 32-bit bitmap/bitselector attribute, validation
-+ *                         data must point to a u32 value of valid flags
-+ *    NLA_REJECT           Reject this attribute, validation data may point
-+ *                         to a string to report as the error in extended ACK.
-  *    All other            Minimum length of attribute payload
-  *
-  * Example:
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index e335bcafa9e4..9ec0cc151148 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -69,7 +69,8 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
+
+start_schedule(ac);
+while ((txq =3D get_txq(NULL)) {
+  queue_aggregate(txq);
+  put_txq(txq);
+}
+end_schedule(ac);
+
+And for ath10k/iwlwifi it would be:
+
+on_hw_notify(txq) {
+ start_schedule(ac);
+ if (txq =3D get_txq(txq)) {
+   queue_packets(txq);
+   put_txq(txq);
  }
- 
- static int validate_nla(const struct nlattr *nla, int maxtype,
--			const struct nla_policy *policy)
-+			const struct nla_policy *policy,
-+			struct netlink_ext_ack *extack)
- {
- 	const struct nla_policy *pt;
- 	int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
-@@ -87,6 +88,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 	}
- 
- 	switch (pt->type) {
-+	case NLA_REJECT:
-+		if (pt->validation_data && extack)
-+			extack->_msg = pt->validation_data;
-+		return -EINVAL;
-+
- 	case NLA_FLAG:
- 		if (attrlen > 0)
- 			return -ERANGE;
-@@ -180,7 +186,7 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
- 	int rem;
- 
- 	nla_for_each_attr(nla, head, len, rem) {
--		int err = validate_nla(nla, maxtype, policy);
-+		int err = validate_nla(nla, maxtype, policy, extack);
- 
- 		if (err < 0) {
- 			if (extack)
-@@ -251,7 +257,7 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
- 
- 		if (type > 0 && type <= maxtype) {
- 			if (policy) {
--				err = validate_nla(nla, maxtype, policy);
-+				err = validate_nla(nla, maxtype, policy, extack);
- 				if (err < 0) {
- 					NL_SET_ERR_MSG_ATTR(extack, nla,
- 							    "Attribute failed policy validation");
--- 
-2.14.4
+ end_schedule(ac);
+}
+
+
+I think that would be simpler, API-wise?
+
+-Toke
