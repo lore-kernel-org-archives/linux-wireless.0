@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-blr-02.qualcomm.com ([103.229.18.198]:65451 "EHLO
-        alexa-out-blr.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727708AbeIFSDG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 14:03:06 -0400
-From: Rakesh Pillai <pillair@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH v2] ath10k: Fix tx status flag setting for management frames
-Date: Thu,  6 Sep 2018 18:57:27 +0530
-Message-Id: <1536240447-14841-1-git-send-email-pillair@codeaurora.org> (sfid-20180906_152738_467087_785ADBD4)
+Received: from mail.toke.dk ([52.28.52.200]:35907 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726559AbeIKOrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Sep 2018 10:47:11 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net
+Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <1536657605.3224.122.camel@sipsolutions.net>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <153635897010.14170.2992498632345986102.stgit@alrua-x1> <1536565717.3224.12.camel@sipsolutions.net> <87musplivy.fsf@toke.dk> <1536577419.3224.50.camel@sipsolutions.net> <87zhwpjzme.fsf@toke.dk> <1536583587.3224.71.camel@sipsolutions.net> <87wortjy8n.fsf@toke.dk> <1536585051.3224.72.camel@sipsolutions.net> <87r2i1jxse.fsf@toke.dk> <1536591110.3224.76.camel@sipsolutions.net> <87muspjt38.fsf@toke.dk> <1536657605.3224.122.camel@sipsolutions.net>
+Date: Tue, 11 Sep 2018 11:48:37 +0200
+Message-ID: <87d0tkjrey.fsf@toke.dk> (sfid-20180911_114843_026263_9BD032C5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tx_status for management frames is being filled
-incorrectly in the flags of skb_cb. This incorrect
-flag setting causes the upper layers to consider that
-the particular frame was not transmitted properly,
-leading to improper behavior.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Set the IEEE80211_TX_STAT_ACK flag in the info flags
-of skb_cb, to indicate the successful transmission of
-the management frame.
+> On Mon, 2018-09-10 at 17:00 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+>> > Do we even need end_schedule()? It's hard to pass multiple things to a
+>> > single call (do you build a list?), so having
+>> >=20
+>> > 	start_schedule(), get_txq(), return_txq()
+>> >=20
+>> > would be sufficient?
+>>=20
+>> Well, start_schedule() / end_schedule() would be needed if we are going
+>> to add locking in mac80211?
+>
+> [...]
+>
+>> If we decide mac80211 needs to do locking to prevent two threads from
+>> scheduling the same ac, that would also be needed for the hw-managed
+>> case?
+>
+> Yes, good point.
+>
+>> > It seems like not? Basically it seems to me that in the hw-managed
+>> > case all you need is may_tx()? And in fact, once you opt in you don't
+>> > even really need *that* since mac80211 can just return NULL from
+>> > get_skb()?
+>>=20
+>> Yeah, we could just throttle in get_skb(); the separate call was to
+>> avoid the overhead of the check for every packet. Typically, you'll pick
+>> a TXQ, then dequeue multiple packets from it in succession; with a
+>> separate call to may_tx(), you only do the check once, not for every
+>> packet...
+>
+> Yeah, also a good point.
+>
+> Still, txq =3D get_txq(txq) doesn't feel right, so better to keep that
+> separate I think.
 
-Fixes: dc405152bb64d4ae01c9ac669de25b2d1fb6fc2d
+Right, will do :)
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index fd612d2..1dced0d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2336,7 +2336,12 @@ static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
- 	dma_unmap_single(ar->dev, pkt_addr->paddr,
- 			 msdu->len, DMA_FROM_DEVICE);
- 	info = IEEE80211_SKB_CB(msdu);
--	info->flags |= status;
-+
-+	if (status)
-+		info->flags &= ~IEEE80211_TX_STAT_ACK;
-+	else
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+
- 	ieee80211_tx_status_irqsafe(ar->hw, msdu);
- 
- 	ret = 0;
--- 
-2.7.4
+-Toke
