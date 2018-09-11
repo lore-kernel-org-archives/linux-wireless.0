@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:37821 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726351AbeIHQTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Sep 2018 12:19:11 -0400
-From: zhong jiang <zhongjiang@huawei.com>
-To: <johannes@sipsolutions.net>, <davem@davemloft.net>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] cfg80211: remove unnecessary null pointer check in cfg80211_netdev_notifier_call
-Date: Sat, 8 Sep 2018 19:21:28 +0800
-Message-ID: <1536405688-26239-1-git-send-email-zhongjiang@huawei.com> (sfid-20180908_133442_414412_E649F9D0)
+Received: from smtp.codeaurora.org ([198.145.29.96]:44170 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726713AbeILAFK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Sep 2018 20:05:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 11 Sep 2018 22:04:28 +0300
+From: merez@codeaurora.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH] wil6210: remove set but not used variable 'start'
+In-Reply-To: <1536669139-14848-1-git-send-email-yuehaibing@huawei.com>
+References: <1536669139-14848-1-git-send-email-yuehaibing@huawei.com>
+Message-ID: <dc5a51943508e915c860c2c7dcafe23c@codeaurora.org> (sfid-20180911_210436_421208_3BD09AAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iterator in list_for_each_entry_safe is never null, therefore, remove
-the redundant null pointer check.
+On 2018-09-11 15:32, YueHaibing wrote:
+> Fixes gcc '-Wunused-but-set-variable' warning:
+> 
+> drivers/net/wireless/ath/wil6210/pm.c: In function 
+> 'wil_suspend_keep_radio_on':
+> drivers/net/wireless/ath/wil6210/pm.c:193:16: warning:
+>  variable 'start' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
----
- net/wireless/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Maya Erez <merez@codeaurora.org>
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a88551f..4d5215e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1238,7 +1238,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 
- 		list_for_each_entry_safe(pos, tmp,
- 					 &rdev->sched_scan_req_list, list) {
--			if (WARN_ON(pos && pos->dev == wdev->netdev))
-+			if (WARN_ON(pos->dev == wdev->netdev))
- 				cfg80211_stop_sched_scan_req(rdev, pos, false);
- 		}
- 
 -- 
-1.7.12.4
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
