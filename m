@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33675 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730956AbeISLmM (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:57350 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727034AbeIKWjQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:12 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 07/29] staging: wilc1000: use 'void' return for wilc_wlan_txq_add_to_head()
-Date: Wed, 19 Sep 2018 11:34:57 +0530
-Message-ID: <1537337119-14952-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080555_656993_AC2A743F)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 11 Sep 2018 18:39:16 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix null checks on wilc
+Date: Tue, 11 Sep 2018 18:38:51 +0100
+Message-Id: <20180911173851.17567-1-colin.king@canonical.com> (sfid-20180911_193902_146732_754D873A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'void' return for wilc_wlan_txq_add_to_head() as its always
-return '0' value.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Currently the pointer wilc is being null checked several times
+and yet not checked for the final workqueue flush and destroy
+(which can lead to a null pointer dereference if wilc is null);
+these missing null checks were overlooked in an earlier core
+refactoring commit.
+
+Clean up the code by checking wilc at the start and bailing out
+early if it is null allowing the subsequent null checks to be
+removed, this also fixes the potential null pointer deferences
+on the workqueue flush and destroy calls.
+
+Detected by CoverityScan, CID#1473305 ("Dereference after null check")
+
+Fixes: b3ee105c332e ("staging: wilc1000: refactor code to move initilization in wilc_netdev_init()")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 590a51c..8057db9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -71,8 +71,8 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 	complete(&wilc->txq_event);
- }
- 
--static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
--				     struct txq_entry_t *tqe)
-+static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
-+				      struct txq_entry_t *tqe)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a498321c908b..49afda669393 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1015,15 +1015,18 @@ void wilc_netdev_cleanup(struct wilc *wilc)
  {
- 	unsigned long flags;
- 	struct wilc *wilc = vif->wilc;
-@@ -87,8 +87,6 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 	mutex_unlock(&wilc->txq_add_to_head_cs);
- 	complete(&wilc->txq_event);
--
--	return 0;
- }
+ 	int i;
  
- #define NOT_TCP_ACK			(-1)
-@@ -275,10 +273,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
- 	tqe->priv = NULL;
- 	tqe->ack_idx = NOT_TCP_ACK;
+-	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev))
++	if (!wilc)
++		return;
++
++	if (wilc->vif[0]->ndev || wilc->vif[1]->ndev)
+ 		unregister_inetaddr_notifier(&g_dev_notifier);
  
--	if (wilc_wlan_txq_add_to_head(vif, tqe)) {
--		kfree(tqe);
--		return 0;
--	}
-+	wilc_wlan_txq_add_to_head(vif, tqe);
+-	if (wilc && wilc->firmware) {
++	if (wilc->firmware) {
+ 		release_firmware(wilc->firmware);
+ 		wilc->firmware = NULL;
+ 	}
  
- 	return 1;
- }
+-	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
++	if (wilc->vif[0]->ndev || wilc->vif[1]->ndev) {
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+ 			if (wilc->vif[i]->ndev)
+ 				if (wilc->vif[i]->mac_opened)
 -- 
-2.7.4
+2.17.1
