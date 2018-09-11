@@ -1,122 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47994 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726722AbeIIO0P (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:48138 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727645AbeILCDS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:48 +0300
-Message-Id: <20180909093656.10194-9-luca@coelho.fi> (sfid-20180909_113714_061007_504B9BD1)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 08/16] iwlwifi: mvm: use correct FIFO length
+        Tue, 11 Sep 2018 22:03:18 -0400
+Message-ID: <1536699720.3224.152.camel@sipsolutions.net> (sfid-20180911_230314_083418_24732640)
+Subject: Re: 4.19-rc[23] iwlwifi: BUG in swiotlb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <rdunlap@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+Date: Tue, 11 Sep 2018 23:02:00 +0200
+In-Reply-To: <8bea4cfc-4b16-7c7c-3e9a-5b6684b47345@infradead.org>
+References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
+         <1536651177.3224.106.camel@sipsolutions.net>
+         <8bea4cfc-4b16-7c7c-3e9a-5b6684b47345@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Tue, 2018-09-11 at 13:57 -0700, Randy Dunlap wrote:
 
-Current FIFO size calculation is wrong for two reasons:
-- We access lmac 0 by default
-- We don't take 11ax into consideration.
-Fix both.
+> I can't be sure.  I've been having problems booting this laptop for a few
+> weeks now but haven't tracked it down yet.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 47 +++++++++++++------
- 2 files changed, 36 insertions(+), 15 deletions(-)
+Ok.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 56871aff1698..781f30356720 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -82,6 +82,10 @@ const u8 iwl_mvm_ac_to_gen2_tx_fifo[] = {
- 	IWL_GEN2_EDCA_TX_FIFO_VI,
- 	IWL_GEN2_EDCA_TX_FIFO_BE,
- 	IWL_GEN2_EDCA_TX_FIFO_BK,
-+	IWL_GEN2_TRIG_TX_FIFO_VO,
-+	IWL_GEN2_TRIG_TX_FIFO_VI,
-+	IWL_GEN2_TRIG_TX_FIFO_BE,
-+	IWL_GEN2_TRIG_TX_FIFO_BK,
- };
- 
- struct iwl_mvm_mac_iface_iterator_data {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index ffc0ad1eef15..a6877b3f8037 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -840,6 +840,36 @@ iwl_mvm_tx_tso_segment(struct sk_buff *skb, unsigned int num_subframes,
- 	return 0;
- }
- 
-+static unsigned int iwl_mvm_max_amsdu_size(struct iwl_mvm *mvm,
-+					   struct ieee80211_sta *sta,
-+					   unsigned int tid)
-+{
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	enum nl80211_band band = mvmsta->vif->bss_conf.chandef.chan->band;
-+	u8 ac = tid_to_mac80211_ac[tid];
-+	unsigned int txf;
-+	int lmac = IWL_LMAC_24G_INDEX;
-+
-+	if (iwl_mvm_is_cdb_supported(mvm) &&
-+	    band == NL80211_BAND_5GHZ)
-+		lmac = IWL_LMAC_5G_INDEX;
-+
-+	/* For HE redirect to trigger based fifos */
-+	if (sta->he_cap.has_he && !WARN_ON(!iwl_mvm_has_new_tx_api(mvm)))
-+		ac += 4;
-+
-+	txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, ac);
-+
-+	/*
-+	 * Don't send an AMSDU that will be longer than the TXF.
-+	 * Add a security margin of 256 for the TX command + headers.
-+	 * We also want to have the start of the next packet inside the
-+	 * fifo to be able to send bursts.
-+	 */
-+	return min_t(unsigned int, mvmsta->max_amsdu_len,
-+		     mvm->fwrt.smem_cfg.lmac[lmac].txfifo_size[txf] - 256);
-+}
-+
- static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			  struct ieee80211_tx_info *info,
- 			  struct ieee80211_sta *sta,
-@@ -852,7 +882,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	u16 snap_ip_tcp, pad;
- 	unsigned int dbg_max_amsdu_len;
- 	netdev_features_t netdev_flags = NETIF_F_CSUM_MASK | NETIF_F_SG;
--	u8 tid, txf;
-+	u8 tid;
- 
- 	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
- 		tcp_hdrlen(skb);
-@@ -891,20 +921,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	    !(mvmsta->amsdu_enabled & BIT(tid)))
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
--	max_amsdu_len = mvmsta->max_amsdu_len;
--
--	/* the Tx FIFO to which this A-MSDU will be routed */
--	txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, tid_to_mac80211_ac[tid]);
--
--	/*
--	 * Don't send an AMSDU that will be longer than the TXF.
--	 * Add a security margin of 256 for the TX command + headers.
--	 * We also want to have the start of the next packet inside the
--	 * fifo to be able to send bursts.
--	 */
--	max_amsdu_len = min_t(unsigned int, max_amsdu_len,
--			      mvm->fwrt.smem_cfg.lmac[0].txfifo_size[txf] -
--			      256);
-+	max_amsdu_len = iwl_mvm_max_amsdu_size(mvm, sta, tid);
- 
- 	if (unlikely(dbg_max_amsdu_len))
- 		max_amsdu_len = min_t(unsigned int, max_amsdu_len,
--- 
-2.18.0
+> The wireless NIC is Condor Peak:
+> 
+> 04:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000 [Condor Peak]
+
+Wow, that's old. I should have one somewhere, but we haven't worked on
+this NIC in many years. We've touched the driver, of course, but the
+configuration for this wouldn't have changed.
+
+> sigh.  I can reproduce it without the patch:
+> 
+> > https://p.sipsolutions.net/aa0dccd7a60fe176.txt
+> 
+> but with that patch, it just hangs after about 25 seconds of booting
+> (slow hard drive, not SSD).
+> 
+> I'll try some other ways.
+
+Hmm. That makes me think you have some corruption going on, rather than
+something really being set to 0, because otherwise you should've seen
+the warning at least?
+
+johannes
