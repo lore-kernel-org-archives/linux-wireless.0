@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34401 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726857AbeIPNoi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:37400 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726301AbeIKMbG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 09:44:38 -0400
-Date: Sun, 16 Sep 2018 10:22:28 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        rdunlap@infradead.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org,
-        kernel list <linux-kernel@vger.kernel.org>
-Subject: Re: v4.19-rc3 on thinkpad x220: kernel BUG at
- kernel/dma/swiotlb.c:521 when enabling radios
-Message-ID: <20180916082227.GA4602@amd> (sfid-20180916_102246_175363_6866D106)
-References: <20180916064702.GA4180@amd>
- <20180916065703.GA4392@amd>
- <CAF7Mx6o1PV2xcgLp94=9OP1ZaxoxjebPE1_t93hQ65UkDLgKWQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-In-Reply-To: <CAF7Mx6o1PV2xcgLp94=9OP1ZaxoxjebPE1_t93hQ65UkDLgKWQ@mail.gmail.com>
+        Tue, 11 Sep 2018 08:31:06 -0400
+Message-ID: <1536651177.3224.106.camel@sipsolutions.net> (sfid-20180911_093318_629067_E666D7C1)
+Subject: Re: 4.19-rc[23] iwlwifi: BUG in swiotlb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <rdunlap@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+Date: Tue, 11 Sep 2018 09:32:57 +0200
+In-Reply-To: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org> (sfid-20180911_041837_063528_262C06DC)
+References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
+         (sfid-20180911_041837_063528_262C06DC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2018-09-10 at 19:17 -0700, Randy Dunlap wrote:
+> Hi,
+> 
+> Any ideas?
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hmm. Is this new?
 
-Hi!
+> 2018-09-10T18:47:54.532837-07:00 dragon kernel: [   31.472371] kernel BUG at ../kernel/dma/swiotlb.c:521!
 
-> > > I was running X220 with wireless disabled for long long time. Now I
-> > > needed to enable it, and got...
-> >
-> > Tried with next-0913, and machine crashed with capslock LED blinking
-> > when I toggled the switch...
-> >
-> > Any ideas?
->=20
-> Replying using my phone. There has been such a report from Randy Dunlap on
-> September 11 with subject "4.19-rc[23] iwlwifi: BUG in swiotlb".
->=20
-> Did not quite follow that, just recall seeing it fly by. Maybe it helps.
+        nslots = ALIGN(size, 1 << IO_TLB_SHIFT) >> IO_TLB_SHIFT;
+	[...]
+	BUG_ON(!nslots)
 
-Thanks for pointer.
+> 2018-09-10T18:47:54.613655-07:00 dragon kernel: [   31.490325]  swiotlb_alloc+0x88/0x170
+> 2018-09-10T18:47:54.613656-07:00 dragon kernel: [   31.490329]  ? __kmalloc+0x1cc/0x200
+> 2018-09-10T18:47:54.613657-07:00 dragon kernel: [   31.491652]  iwl_pcie_txq_alloc+0x1d4/0x3b0 [iwlwifi]
 
-Hi, Randy! We have same problem.
+There are two calls to dma_alloc_coherent() here, should those even hit
+swiotlb? The sizes of those should be
+ * 256 x 128 (32k)
+ * 32 x 256 (8k) [TFH, unlikely to be the case here]
+ * 256 x 256 (65k) [TFH]
+ * 32 x 64 (2k)
+ * 256 x 64 (16k)
 
-I switched back to v4.18, and it seems to be ok.
 
-I'd prefer not to hear the b-word. Any other ideas?
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+IO_TLB_SHIFT is 11, so we get 2k alignment, so even the smallest size
+(32*64) should result in nslots being 1?
 
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+In fact, unless the driver passed *ZERO* as the size, this should never
+happen (hence the BUG_ON), since ALIGN() would take care of rounding up
+any smaller allocation here.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Presumably you can reproduce this pretty easily (and I don't know what
+specific model of NIC you have etc.), so perhaps you can do something
+like this?
 
-iEYEARECAAYFAlueEsMACgkQMOfwapXb+vK6igCgtQ23s8F5RGloD0DXZehRvtZH
-j8gAnjhINpzzmzRaD5ICdCnIIHlRrksz
-=HcVE
------END PGP SIGNATURE-----
+https://p.sipsolutions.net/aa0dccd7a60fe176.txt
 
---k+w/mQv8wyuph6w0--
+johannes
