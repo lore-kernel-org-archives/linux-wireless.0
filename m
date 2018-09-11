@@ -1,137 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:23245 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727675AbeISQmK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53344 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726761AbeIKTTN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 12:42:10 -0400
-Date: Wed, 19 Sep 2018 16:34:40 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
-        <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 29/29] staging: wilc1000: return exact error of
- register_netdev() from wilc_netdev_init()
-Message-ID: <20180919163440.2dfd185b@ajaysk-VirtualBox> (sfid-20180919_130450_423472_D74F0C67)
-In-Reply-To: <20180919094132.3lfouwwzc7z3thf4@mwanda>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-        <1537337119-14952-30-git-send-email-ajay.kathat@microchip.com>
-        <20180919094132.3lfouwwzc7z3thf4@mwanda>
+        Tue, 11 Sep 2018 15:19:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH 00/22] mt76 patches 2018-09-04
+References: <1536072075-6990-1-git-send-email-sgruszka@redhat.com>
+Date: Tue, 11 Sep 2018 17:19:37 +0300
+In-Reply-To: <1536072075-6990-1-git-send-email-sgruszka@redhat.com> (Stanislaw
+        Gruszka's message of "Tue, 4 Sep 2018 16:40:53 +0200")
+Message-ID: <87h8iwru9y.fsf@purkki.adurom.net> (sfid-20180911_162004_102520_B0313056)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Thanks your reviewing the patch.
+> More mt76x0/mt76x2 integration.
+>
+> This set is quite big but I would like to move patches upstream
+> from my github tree as fast as possible. I have there 42 more
+> ready to post patches from me and Lorenzo.
+> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v3
+>
+> Note this set include:
+> "mt76x0: fix wrong usage of wcid_mask in remove_interface"
+> patch with I posted as fix for 4.19 . I assume this will be
+> auto (or manually?) merged when -next will go to 4.20.
 
-On Wed, 19 Sep 2018 12:41:32 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+The problem is that having two identical patches with different commit
+ids will confuse git and can create annoying merge conflicts. A much
+safer approach is that the patch is first applied to wireless-drivers
+and then I merge wireless-drivers into wireless-drivers-next. I'm
+planning to do that in a day or two, I was away for a long weekend so
+lagging behind again.
 
-> I was waiting for you to send this like a spider waits for flies.  You
-> fell directly into my trap.  Mwuahahahahaha.
+But the patch "mt76x0: fix wrong usage of wcid_mask in remove_interface"
+should be dropped from this series. But Felix is planning to send all
+pending mt76 to me via a pull request anyway so you don't need to worry
+about this.
 
-Oops!!! I missed seeing it coming :)
-
-> 
-> drivers/staging/wilc1000/linux_wlan.c
->   1056  int wilc_netdev_init(struct wilc **wilc, struct device *dev,
-> int io_type, 1057                       const struct wilc_hif_func
-> *ops) 1058  {
->   1059          int i, ret = -ENOMEM;
->   1060          struct wilc_vif *vif;
->   1061          struct net_device *ndev;
->   1062          struct wilc *wl;
->   1063  
->   1064          wl = kzalloc(sizeof(*wl), GFP_KERNEL);
->   1065          if (!wl)
->   1066                  return ret;
->                                ^^^
-> It's cleaner to return -ENOMEM so that we don't have to glance up to
-> the declaration block.  This is especially true when "ret" is zero,
-> btw, because that can indicate a reversed test.
-
-I will change it to directly return -ENOMEM value.
-
-> 
-> 		if (!ret)
-> 			return ret;
-> 
-> In this theoretically example it was supposed to be:
-> 
-> 		if (ret)
-> 			return ret;
-> 
-> Normally, reversed conditions are caught in testing, but for the
-> kernel, no one has the hardware to test everything so we do get
-> reversed conditions from time to time.
-> 
->   1067  
->   1068          if (wilc_wlan_cfg_init(wl))
-
-I will set 'ret' value to -ENOMEM here also.
-
->   1069                  goto free_wl;
->   1070  
->   1071          *wilc = wl;
->   1072          wl->io_type = io_type;
->   1073          wl->hif_func = ops;
->   1074          wl->enable_ps = true;
->   1075          wl->chip_ps_state = CHIP_WAKEDUP;
->   1076          INIT_LIST_HEAD(&wl->txq_head.list);
->   1077          INIT_LIST_HEAD(&wl->rxq_head.list);
->   1078  
->   1079          wl->hif_workqueue =
-> create_singlethread_workqueue("WILC_wq"); 1080          if
-> (!wl->hif_workqueue) 1081                  goto free_cfg;
->   1082  
->   1083          register_inetaddr_notifier(&g_dev_notifier);
->   1084  
->   1085          for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
->   1086                  struct wireless_dev *wdev;
->   1087  
->   1088                  ndev = alloc_etherdev(sizeof(struct
-> wilc_vif)); 1089                  if (!ndev)
->   1090                          goto free_ndev;
->                                 ^^^^^^^^^^^^^^^
-> ret is zero on the second iteration through the loop.
-
-I will set 'ret' to -ENOMEM before 'goto', which should handle this
-scenario.
-
-> 
->   1091  
->   1092                  vif = netdev_priv(ndev);
->   1093                  memset(vif, 0, sizeof(struct wilc_vif));
->   1094  
->   1095                  if (i == 0) {
->   1096                          strcpy(ndev->name, "wlan%d");
->   1097                          vif->ifc_id = 1;
->   1098                  } else {
->   1099                          strcpy(ndev->name, "p2p%d");
->   1100                          vif->ifc_id = 0;
->   1101                  }
->   1102                  vif->wilc = *wilc;
->   1103                  vif->ndev = ndev;
->   1104                  wl->vif[i] = vif;
->   1105                  wl->vif_num = i;
->   1106                  vif->idx = wl->vif_num;
->   1107  
->   1108                  ndev->netdev_ops = &wilc_netdev_ops;
->   1109  
->   1110                  wdev = wilc_create_wiphy(ndev, dev);
->   1111                  if (!wdev) {
->   1112                          netdev_err(ndev, "Can't register WILC
-> Wiphy\n"); 1113                          goto free_ndev;
->                                 ^^^^^^^^^^^^^^^
-> Here too.
-
-Same here, i.e setting ret = -ENOMEM should handle the condition.
-
-Also I will remove the default setting of 'ret' value to -ENOMEM because
-after modification the error scenarios will set 'ret' explicitly.
-
-Regards,
-Ajay
+-- 
+Kalle Valo
