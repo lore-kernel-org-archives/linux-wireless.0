@@ -1,116 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:60763 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727210AbeICOd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 10:33:28 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Anilkumar Kolli <akolli@codeaurora.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-In-Reply-To: <ebb12dc92de318b8d88eb607d9182ead@codeaurora.org>
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org> <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com> <87zhx21uqc.fsf@toke.dk> <ebb12dc92de318b8d88eb607d9182ead@codeaurora.org>
-Date: Mon, 03 Sep 2018 12:13:57 +0200
-Message-ID: <87r2ia28ii.fsf@toke.dk> (sfid-20180903_121404_412879_236A9BE4)
+Received: from mail-ua1-f66.google.com ([209.85.222.66]:39788 "EHLO
+        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726670AbeIKSPV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Sep 2018 14:15:21 -0400
+Received: by mail-ua1-f66.google.com with SMTP id g18-v6so20481927uam.6
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2018 06:16:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
+ <1534246392.3547.26.camel@sipsolutions.net> <5B83C2FE.90000@redpinesignals.com>
+ <1535527450.5215.8.camel@sipsolutions.net> <CANGSkXTnEV7efC8nY9MRK1q2Ky-Ao_6rLoLp75oj4cvCkguZGw@mail.gmail.com>
+ <1535970059.3437.39.camel@sipsolutions.net> <CANGSkXTPejV11TVpauXn+t6g+rUQ8cYik8KAz7W1P-2Y-8XebA@mail.gmail.com>
+ <CANGSkXR11ZxFoiZ7sbKTu8BnXSpTsiAhH=DOD=e9Zh8bquDC0A@mail.gmail.com> <1536668735.3224.145.camel@sipsolutions.net>
+In-Reply-To: <1536668735.3224.145.camel@sipsolutions.net>
+From: Siva Rebbagondla <siva8118@gmail.com>
+Date: Tue, 11 Sep 2018 18:50:06 +0530
+Message-ID: <CANGSkXSD4dWKBLROMLT=oqCJLXV7R6HAWw9sfS=d1CBppAQhbw@mail.gmail.com> (sfid-20180911_151607_139114_5879F59C)
+Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
+        sushant kumar mishra <sushant2k1513@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anilkumar Kolli <akolli@codeaurora.org> writes:
-
-> On 2018-08-31 19:52, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>=20
->>> Anilkumar Kolli <akolli@codeaurora.org> writes:
->>>=20
->>>> Mesh path metric needs txrate information from ieee80211_tx_status()
->>>> call but in ath10k there is no mechanism to report tx rate=20
->>>> information
->>>> via ieee80211_tx_status(), the rate is only accessible via
->>>> sta_statiscs() op.
->>>>=20
->>>> Per peer stats has tx rate info available, this patch stores per peer
->>>> last tx rate and updates the tx rate info structures in tx=20
->>>> completition.
->>>> The rate updated in ieee80211_tx_status() is not exactly for the last
->>>> transmitted frame instead the rate is from one of the previous=20
->>>> frames.
->>>>=20
->>>> Per peer txrate information is updated through per peer statistics
->>>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->>>>=20
->>>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
->>>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->>>>=20
->>>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
->>>=20
->>> This is a patch from last March, full patch here:
->>>=20
->>> https://patchwork.kernel.org/patch/10267693/
->>>=20
->>>> @@ -119,6 +122,18 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
->>>>  			info->flags &=3D ~IEEE80211_TX_STAT_ACK;
->>>>  	}
->>>>=20
->>>> +	if (sta) {
->>>> +		spin_lock_bh(&ar->data_lock);
->>>> +		arsta =3D (struct ath10k_sta *)sta->drv_priv;
->>>> +		info->status.rates[0].idx =3D
->>>> +			arsta->tx_info.status.rates[0].idx;
->>>> +		info->status.rates[0].count =3D
->>>> +			arsta->tx_info.status.rates[0].count;
->>>> +		info->status.rates[0].flags =3D
->>> <> +			arsta->tx_info.status.rates[0].flags;
->>>> +		spin_unlock_bh(&ar->data_lock);
->>>> +	}
->>>> +
->>>>  	ieee80211_tx_status(htt->ar->hw, msdu);
->>>>  	/* we do not own the msdu anymore */
->>>=20
->>> "is not exactly" is IMHO an understatement. What it means that with=20
->>> this
->>> patch ath10k reports the rate information from another frame instead=20
->>> of
->>> the current skb, because the firmware provides the rate information=20
->>> "out
->>> of band". A simple example to clarify:
->>>=20
->>>    Let's say ath10k transmits frames A, B and C. Then ath10k calls
->>>    ieee80211_tx_status() for frame C the rate information could be for
->>>    frame A, or it could be the other around for frame A status the=20
->>> rate
->>>    information is from frame C.
->>>=20
->>> In other words, there's no guarantee from what frame the rate
->>> information is from.
->>>=20
->>> Too me this feels like a bad idea but I'm not familiar enough with
->>> mac80211 to really comment on this. What kind of implications does=20
->>> this
->>> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
->>> about their opinion about this.
->>=20
->> I was under the impression that the values gathered (at least for
->> airtime) would be cumulative values? If it's just the airtime of a
->> single random frame, which is what I understand from your example, it's
->> not going to be terribly useful to provide ATF at least...
->>=20
->> -Toke
+On Tue, Sep 11, 2018 at 5:55 PM Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> The design:
-> Whenever radio transmits packet, firmware will record numbers of bytes=20
-> sent, MSDU=E2=80=99s sent, TX duration, AMPDU information, ACK fail, BA f=
-ail,=20
-> Rate at which packet is sent. This is recorded for 4 frames sent on that=
-=20
-> peer. Once 4 frames are sent for that peer, TX packet event is sent to=20
-> ath10k driver with the recorded values. These rate values are updated to=
-=20
-> mac80211 using ieee80211_tx_status().
+> [re-adding the previous thread]
+>
+> > As discussed earlier, please find attached tar ball for driver logs,
+> > traces and debug patches.
+> > I have added a README for reference in attached folder, go through the
+> > steps and let me know your feedback.
+>
+> Thanks! The tracing doesn't seem to have worked, but the logging helps a
+> lot.
+>
+> So what happens, to summarize, is that we have hardware that doesn't
+> support scanning on both bands at the same time, i.e.
+> SINGLE_SCAN_ON_ALL_BANDS isn't set.
+>
+> This is with the patch to make -EPERM into "please do software scan" (we
+> can debate whether that should be -EPERM or 1 or something, doesn't
+> matter for this discussion).
+>
+> This logic only happens here:
+>
+>         if (local->ops->hw_scan) {
+>                 WARN_ON(!ieee80211_prep_hw_scan(local));
+>                 rc = drv_hw_scan(local, sdata, local->hw_scan_req);
+>                 if (rc == -EPERM) {
+>                         set_bit(SCAN_HW_CANCELLED, &local->scanning);
+>                         __set_bit(SCAN_SW_SCANNING, &local->scanning);
+>                         rc = ieee80211_start_sw_scan(local, sdata);
+>                 }
+> (in __ieee80211_start_scan).
+>
+> Next thing is that the software scan completes. This calls
+> __ieee80211_scan_completed(), which assumes hardware scan is running,
+> since
+>         bool hw_scan = local->ops->hw_scan;
+>
+> This now again runs drv_hw_scan():
+>
+>         if (hw_scan && !aborted &&
+>             !ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS) &&
+>             ieee80211_prep_hw_scan(local)) {
+>                 int rc;
+>
+>                 rc = drv_hw_scan(local,
+>                         rcu_dereference_protected(local->scan_sdata,
+>                                                   lockdep_is_held(&local->mtx)),
+>                         local->hw_scan_req);
+>
+> which presumably again returns -EPERM (conditions didn't change), and
+> thus we end up with scan abort.
+>
+> To work around this, you were setting and testing HW_SCAN_CANCELLED in
+> two new places (you can see the setting above).
+>
+> Looking at this in more detail, I think we have multiple issues with the
+> way the fallback is implemented.
+>
+> First of all, this issue at hand. That's worked around, and could be -
+> more properly IMHO - worked around by setting a new bit
+> (HW_SCAN_SW_FALLBACK or so).
+>
+> However, note that due to the way you implemented this, the software
+> scan requests that happens as a fallback behaves differently from a
+> regular software scan. This doesn't matter to you (right now) because
+> you only fall back to software if you're not connected, but in the case
+> that you _are_ connected, it would behave differently due to all the
+> code in __ieee80211_start_scan() that handles a single-channel software
+> scan differently if that matches the currently used channel.
+>
+>
+> So ultimately, I think the (combined) problem is that the fallback is
+> implemented badly.
+>
+> My suggestion would be to separate the decision of whether to do
+> software or hardware scan from the hw_scan callback. This could be done
+> by flags, e.g. hw->scanflags & IEEE80211_SW_SCAN_WHILE_UNASSOC, which
+> would be your case IIRC, though TBD what that means for AP mode.
+>
+> Obviously, you'll have to change all the (four) things that are checking
+> for "local->ops->hw_scan" to check something else. The three in
+> __ieee80211_start_scan() obviously just check the result of the
+> condition, and the one in __ieee80211_scan_completed() can already check
+> local->scanning today since that's set by then (and the scanning==0 case
+> is only valid with aborted, so not relevant for the hw_scan condition).
+>
+> Perhaps we can actually do the return value from drv_hw_scan(), but in
+> that case I'd say it should look something like this:
+>
+> https://p.sipsolutions.net/6ca3554b24e09ffb.txt
+>
+> Yes, that's less efficient (due to the whole idle recalculation), but
+> it's much easier to understand what's going on, IMHO.
+>
+> There's also a question about whether or not capabilities match, e.g. if
+> we do software scan we report 4 SSIDs, low prio scan, AP scan, random
+> scan, minimal scan content ... these are OK, but if there are ever
+> features that mac80211 *doesn't* support, we'll be in trouble if
+> somebody tries to use them.
+>
+> Hope this helps. If my patch actually works (I obviously haven't tested)
+> then I can send it to the list with signed-off-by and all.
+>
+> johannes
 
-So the values reported are the sums for all four packets? But the latest
-value for rate information?
+Hi Johannes,
+Thanks for the brief explanation and As you mentioned above, we made
+the changes w.r.t our module.
+We will understand, what we missed here and will test with your patch
+and update you.
 
--Toke
+Regards,
+Siva Rebbagondla.
