@@ -1,1144 +1,559 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:40785 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389229AbeIULwN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57514 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728027AbeILCq1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 07:52:13 -0400
-From: <yhchuang@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
-        <pkshih@realtek.com>, <tehuang@realtek.com>
-Subject: [PATCH 05/12] rtwlan: mac files
-Date: Fri, 21 Sep 2018 14:04:00 +0800
-Message-ID: <1537509847-21087-6-git-send-email-yhchuang@realtek.com> (sfid-20180921_080503_274175_FE25C0E5)
-In-Reply-To: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
-References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 11 Sep 2018 22:46:27 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        David Spinadel <david.spinadel@intel.com>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v4 1/3] cfg80211: support FTM responder configuration/statistics
+Date: Tue, 11 Sep 2018 14:44:37 -0700
+Message-Id: <1536702279-7643-2-git-send-email-pradeepc@codeaurora.org> (sfid-20180911_234602_115065_5BBFD29E)
+In-Reply-To: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
+References: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Allow userspace to enable fine timing measurement responder
+functionality with configurable lci/civic parameters in AP mode.
+This can be done at AP start or changing beacon parameters.
 
-mac files for Realtek 802.11ac wireless network chips
+A new EXT_FEATURE flag is introduced for drivers to advertise
+the capability.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Also nl80211 API support for retrieving statistics is added.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtwlan/mac.c | 1063 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtwlan/mac.h |   35 +
- 2 files changed, 1098 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtwlan/mac.c
- create mode 100644 drivers/net/wireless/realtek/rtwlan/mac.h
+v3:
+ - fixed ftm responder disabled case to be not supported.
+ - changed ftm_responder param from bool to s8.
 
-diff --git a/drivers/net/wireless/realtek/rtwlan/mac.c b/drivers/net/wireless/realtek/rtwlan/mac.c
-new file mode 100644
-index 0000000..0309f0f
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtwlan/mac.c
-@@ -0,0 +1,1063 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright(c) 2018  Realtek Corporation.
+ include/net/cfg80211.h       |  66 +++++++++++++++++++++++
+ include/uapi/linux/nl80211.h |  81 ++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 124 +++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h      |  15 ++++++
+ net/wireless/trace.h         |  44 +++++++++++++++
+ 5 files changed, 325 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f3ed79c39d7..473087f04b2c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -775,6 +775,11 @@ struct cfg80211_crypto_settings {
+  * @assocresp_ies_len: length of assocresp_ies in octets
+  * @probe_resp_len: length of probe response template (@probe_resp)
+  * @probe_resp: probe response template (AP mode only)
++ * @ftm_responder: enable FTM responder functionality
++ * @lci: LCI subelement content
++ * @civic: CIVIC subelement content
++ * @lci_len: LCI data length
++ * @civic_len: Civic data length
+  */
+ struct cfg80211_beacon_data {
+ 	const u8 *head, *tail;
+@@ -782,12 +787,17 @@ struct cfg80211_beacon_data {
+ 	const u8 *proberesp_ies;
+ 	const u8 *assocresp_ies;
+ 	const u8 *probe_resp;
++	const u8 *lci;
++	const u8 *civic;
++	s8 ftm_responder;
+ 
+ 	size_t head_len, tail_len;
+ 	size_t beacon_ies_len;
+ 	size_t proberesp_ies_len;
+ 	size_t assocresp_ies_len;
+ 	size_t probe_resp_len;
++	size_t lci_len;
++	size_t civic_len;
+ };
+ 
+ struct mac_address {
+@@ -2797,6 +2807,55 @@ struct cfg80211_external_auth_params {
+ };
+ 
+ /**
++ * cfg80211_ftm_responder_params - FTM responder parameters
++ *
++ * @lci: LCI subelement content
++ * @civic: CIVIC subelement content
++ * @lci_len: LCI data length
++ * @civic_len: Civic data length
 + */
++struct cfg80211_ftm_responder_params {
++	const u8 *lci;
++	const u8 *civic;
++	size_t lci_len;
++	size_t civic_len;
++};
 +
-+#include "main.h"
-+#include "mac.h"
-+#include "reg.h"
-+#include "fw.h"
-+#include "debug.h"
++/**
++ * cfg80211_ftm_responder_stats - FTM responder statistics
++ *
++ * @filled: bitflag of flags using the bits of &enum nl80211_ftm_stats to
++ *	indicate the relevant values in this struct for them
++ * @success_num: number of FTM sessions in which all frames were successfully
++ *	answered
++ * @partial_num: number of FTM sessions in which part of frames were
++ *	successfully answered
++ * @failed_num: number of failed FTM sessions
++ * @asap_num: number of ASAP FTM sessions
++ * @non_asap_num: number of  non-ASAP FTM sessions
++ * @total_duration_ms: total sessions durations - gives an indication
++ *	of how much time the responder was busy
++ * @unknown_triggers_num: number of unknown FTM triggers - triggers from
++ *	initiators that didn't finish successfully the negotiation phase with
++ *	the responder
++ * @reschedule_requests_num: number of FTM reschedule requests - initiator asks
++ *	for a new scheduling although it already has scheduled FTM slot
++ * @out_of_window_triggers_num: total FTM triggers out of scheduled window
++ */
++struct cfg80211_ftm_responder_stats {
++	u32 filled;
++	u32 success_num;
++	u32 partial_num;
++	u32 failed_num;
++	u32 asap_num;
++	u32 non_asap_num;
++	u64 total_duration_ms;
++	u32 unknown_triggers_num;
++	u32 reschedule_requests_num;
++	u32 out_of_window_triggers_num;
++};
 +
-+void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+			 u8 primary_ch_idx)
-+{
-+	u8 txsc40 = 0, txsc20 = 0;
-+	u32 value32;
-+	u8 value8;
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -3128,6 +3187,9 @@ struct cfg80211_external_auth_params {
+  *
+  * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
+  *	tells the driver that the frame should not be encrypted.
++ *
++ * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
++ *	Statistics should be cumulative, currently no way to reset is provided.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -3433,6 +3495,10 @@ struct cfg80211_ops {
+ 				   const u8 *buf, size_t len,
+ 				   const u8 *dest, const __be16 proto,
+ 				   const bool noencrypt);
 +
-+	txsc20 = primary_ch_idx;
-+	if (txsc20 == 1 || txsc20 == 3)
-+		txsc40 = 9;
-+	else
-+		txsc40 = 10;
-+	rtw_write8(rtwdev, REG_DATA_SC,
-+		   BIT_TXSC_20M(txsc20) | BIT_TXSC_40M(txsc40));
++	int	(*get_ftm_responder_stats)(struct wiphy *wiphy,
++				struct net_device *dev,
++				struct cfg80211_ftm_responder_stats *ftm_stats);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index cfc94178d608..246416764623 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1033,6 +1033,9 @@
+  *	%NL80211_ATTR_CHANNEL_WIDTH,%NL80211_ATTR_NSS attributes with its
+  *	address(specified in %NL80211_ATTR_MAC).
+  *
++ * @NL80211_CMD_GET_FTM_RESPONDER_STATS: Retrieve FTM responder statistics, in
++ *	the %NL80211_ATTR_FTM_RESPONDER_STATS attribute.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1245,6 +1248,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_CONTROL_PORT_FRAME,
+ 
++	NL80211_CMD_GET_FTM_RESPONDER_STATS,
 +
-+	value32 = rtw_read32(rtwdev, REG_WMAC_TRXPTCL_CTL);
-+	value32 = value32 & (~(BIT(7) | BIT(8)));
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_80:
-+		value32 = value32 | BIT(7);
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		value32 = value32 | BIT(8);
-+		break;
-+	case RTW_CHANNEL_WIDTH_20:
-+	default:
-+		break;
-+	}
-+	rtw_write32(rtwdev, REG_WMAC_TRXPTCL_CTL, value32);
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -2241,6 +2246,17 @@ enum nl80211_commands {
+  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
+  *	only if %NL80211_STA_FLAG_WME is set.
+  *
++ * @NL80211_ATTR_FTM_RESPONDER: attribute which user-space can include in
++ *	%NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON to enable(1)
++ *	fine timing measurement (FTM) responder functionality.
++ * @NL80211_ATTR_LCI: The content of Measurement Report Element (9.4.2.22
++ *	in 802.11-2016) with type 8 - LCI (9.4.2.22.10)
++ * @NL80211_ATTR_CIVIC: The content of Measurement Report Element (9.4.2.22
++ *	in 802.11-2016) with type 11 - Civic (Section 9.4.2.22.13)
++ *
++ * @NL80211_ATTR_FTM_RESPONDER_STATS: Nested attribute with FTM responder
++ *	statistics, see &enum nl80211_ftm_responder_stats.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2682,6 +2698,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_HE_CAPABILITY,
+ 
++	NL80211_ATTR_FTM_RESPONDER,
++	NL80211_ATTR_LCI,
++	NL80211_ATTR_CIVIC,
 +
-+	value32 = rtw_read32(rtwdev, REG_AFE_CTRL1) & ~(BIT(20) | BIT(21));
-+	value32 |= (MAC_CLK_HW_DEF_80M << BIT_SHIFT_MAC_CLK_SEL);
-+	rtw_write32(rtwdev, REG_AFE_CTRL1, value32);
++	NL80211_ATTR_FTM_RESPONDER_STATS,
 +
-+	rtw_write8(rtwdev, REG_USTIME_TSF, MAC_CLK_SPEED);
-+	rtw_write8(rtwdev, REG_USTIME_EDCA, MAC_CLK_SPEED);
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -5225,6 +5247,8 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT: Driver/device can omit all data
+  *	except for supported rates from the probe request content if requested
+  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
++ * @NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER: Driver supports enabling fine
++ *	timing measurement responder role.
+  *
+  * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
+  *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
+@@ -5269,6 +5293,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
++	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5808,4 +5833,60 @@ enum nl80211_external_auth_action {
+ 	NL80211_EXTERNAL_AUTH_ABORT,
+ };
+ 
++/**
++ * enum nl80211_ftm_responder_state - fine timing measurement responder state
++ * @NL80211_FTM_RESP_DISABLED: FTM responder is disabled
++ * @NL80211_FTM_RESP_ENABLED: FTM responder is enabled
++ */
++enum nl80211_ftm_responder_state {
++	NL80211_FTM_RESP_DISABLED,
++	NL80211_FTM_RESP_ENABLED,
++};
 +
-+	value8 = rtw_read8(rtwdev, REG_CCK_CHECK);
-+	value8 = value8 & (~(BIT(7)));
-+	if (channel > 35)
-+		value8 = value8 | BIT(7);
-+	rtw_write8(rtwdev, REG_CCK_CHECK, value8);
-+}
++/*
++ * enum nl80211_ftm_responder_stats - FTM responder statistics
++ *
++ * These attribute types are used with %NL80211_ATTR_FTM_RESPONDER_STATS
++ * when getting FTM responder statistics.
++ *
++ * @__NL80211_FTM_STATS_INVALID: attribute number 0 is reserved
++ * @NL80211_FTM_STATS_SUCCESS_NUM: number of FTM sessions in which all frames
++ *	were ssfully answered (u32)
++ * @NL80211_FTM_STATS_PARTIAL_NUM: number of FTM sessions in which part of the
++ *	frames were successfully answered (u32)
++ * @NL80211_FTM_STATS_FAILED_NUM: number of failed FTM sessions (u32)
++ * @NL80211_FTM_STATS_ASAP_NUM: number of ASAP sessions (u32)
++ * @NL80211_FTM_STATS_NON_ASAP_NUM: number of non-ASAP sessions (u32)
++ * @NL80211_FTM_STATS_TOTAL_DURATION_MSEC: total sessions durations - gives an
++ *	indication of how much time the responder was busy (u64, msec)
++ * @NL80211_FTM_STATS_UNKNOWN_TRIGGERS_NUM: number of unknown FTM triggers -
++ *	triggers from initiators that didn't finish successfully the negotiation
++ *	phase with the responder (u32)
++ * @NL80211_FTM_STATS_RESCHEDULE_REQUESTS_NUM: number of FTM reschedule requests
++ *	- initiator asks for a new scheduling although it already has scheduled
++ *	FTM slot (u32)
++ * @NL80211_FTM_STATS_OUT_OF_WINDOW_TRIGGERS_NUM: number of FTM triggers out of
++ *	scheduled window (u32)
++ * @NL80211_FTM_STATS_PAD: used for padding, ignore
++ * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
++ * @NL80211_FTM_STATS_MAX: highest possible FTM responder stats attribute
++ */
++enum nl80211_ftm_responder_stats {
++	__NL80211_FTM_STATS_INVALID,
++	NL80211_FTM_STATS_SUCCESS_NUM,
++	NL80211_FTM_STATS_PARTIAL_NUM,
++	NL80211_FTM_STATS_FAILED_NUM,
++	NL80211_FTM_STATS_ASAP_NUM,
++	NL80211_FTM_STATS_NON_ASAP_NUM,
++	NL80211_FTM_STATS_TOTAL_DURATION_MSEC,
++	NL80211_FTM_STATS_UNKNOWN_TRIGGERS_NUM,
++	NL80211_FTM_STATS_RESCHEDULE_REQUESTS_NUM,
++	NL80211_FTM_STATS_OUT_OF_WINDOW_TRIGGERS_NUM,
++	NL80211_FTM_STATS_PAD,
 +
-+static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
-+{
-+	u32 value32;
-+	u8 value8;
++	/* keep last */
++	__NL80211_FTM_STATS_AFTER_LAST,
++	NL80211_FTM_STATS_MAX = __NL80211_FTM_STATS_AFTER_LAST - 1
++};
 +
-+	rtw_write8(rtwdev, REG_RSV_CTRL, 0);
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d5f9b5235cdd..b7ec45d2387c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -430,6 +430,10 @@ enum nl80211_multicast_groups {
+ 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
+ 					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
 +
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rtw_write32_mask(rtwdev, REG_HCI_OPT_CTRL, BIT(8), 1);
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
++	[NL80211_ATTR_FTM_RESPONDER] = { .type = NLA_U8 },
++	[NL80211_ATTR_LCI] = { .type = NLA_BINARY },
++	[NL80211_ATTR_CIVIC] = { .type = NLA_BINARY },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3997,7 +4001,8 @@ static int validate_beacon_tx_rate(struct cfg80211_registered_device *rdev,
+ 	return 0;
+ }
+ 
+-static int nl80211_parse_beacon(struct nlattr *attrs[],
++static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
++				struct nlattr *attrs[],
+ 				struct cfg80211_beacon_data *bcn)
+ {
+ 	bool haveinfo = false;
+@@ -4051,6 +4056,38 @@ static int nl80211_parse_beacon(struct nlattr *attrs[],
+ 		bcn->probe_resp_len = nla_len(attrs[NL80211_ATTR_PROBE_RESP]);
+ 	}
+ 
++	if (attrs[NL80211_ATTR_FTM_RESPONDER]) {
++		bcn->ftm_responder =
++			nla_get_u8(attrs[NL80211_ATTR_FTM_RESPONDER]);
 +
-+	/* config PIN Mux */
-+	value32 = rtw_read32(rtwdev, REG_PAD_CTRL1);
-+	value32 = value32 & (~(BIT(28) | BIT(29)));
-+	value32 = value32 | BIT(28) | BIT(29);
-+	rtw_write32(rtwdev, REG_PAD_CTRL1, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_LED_CFG);
-+	value32 = value32 & (~(BIT(25) | BIT(26)));
-+	rtw_write32(rtwdev, REG_LED_CFG, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_GPIO_MUXCFG);
-+	value32 = value32 & (~(BIT(2)));
-+	value32 = value32 | BIT(2);
-+	rtw_write32(rtwdev, REG_GPIO_MUXCFG, value32);
-+
-+	/* disable BB/RF */
-+	value8 = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	value8 = value8 & (~(BIT(0) | BIT(1)));
-+	rtw_write8(rtwdev, REG_SYS_FUNC_EN, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_RF_CTRL);
-+	value8 = value8 & (~(BIT(0) | BIT(1) | BIT(2)));
-+	rtw_write8(rtwdev, REG_RF_CTRL, value8);
-+
-+	value32 = rtw_read32(rtwdev, REG_WLRF1);
-+	value32 = value32 & (~(BIT(24) | BIT(25) | BIT(26)));
-+	rtw_write32(rtwdev, REG_WLRF1, value32);
-+
-+	return 0;
-+}
-+
-+static int rtw_pwr_cmd_polling(struct rtw_dev *rtwdev,
-+			       struct rtw_pwr_seq_cmd *cmd)
-+{
-+	u8 value;
-+	u8 flag = 0;
-+	u32 offset;
-+	u32 cnt = RTW_PWR_POLLING_CNT;
-+
-+	if (cmd->base == RTW_PWR_ADDR_SDIO)
-+		offset = cmd->offset | SDIO_LOCAL_OFFSET;
-+	else
-+		offset = cmd->offset;
-+
-+	do {
-+		cnt--;
-+		value = rtw_read8(rtwdev, offset);
-+		value &= cmd->mask;
-+		if (value == (cmd->value & cmd->mask))
-+			return 0;
-+		if (cnt == 0) {
-+			if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE &&
-+			    flag == 0) {
-+				value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
-+				value |= BIT(3);
-+				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
-+				value &= ~BIT(3);
-+				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
-+				cnt = RTW_PWR_POLLING_CNT;
-+				flag = 1;
-+			} else {
-+				return -EBUSY;
-+			}
-+		} else {
-+			udelay(50);
-+		}
-+	} while (1);
-+}
-+
-+static int rtw_sub_pwr_seq_parser(struct rtw_dev *rtwdev, u8 intf_mask,
-+				  u8 cut_mask, struct rtw_pwr_seq_cmd *cmd)
-+{
-+	struct rtw_pwr_seq_cmd *cur_cmd;
-+	u32 offset;
-+	u8 value;
-+
-+	for (cur_cmd = cmd; cur_cmd->cmd != RTW_PWR_CMD_END; cur_cmd++) {
-+		if (!(cur_cmd->intf_mask & intf_mask) ||
-+		    !(cur_cmd->cut_mask & cut_mask))
-+			continue;
-+
-+		switch (cur_cmd->cmd) {
-+		case RTW_PWR_CMD_WRITE:
-+			offset = cur_cmd->offset;
-+
-+			if (cur_cmd->base == RTW_PWR_ADDR_SDIO)
-+				offset |= SDIO_LOCAL_OFFSET;
-+
-+			value = rtw_read8(rtwdev, offset);
-+			value &= ~cur_cmd->mask;
-+			value |= (cur_cmd->value & cur_cmd->mask);
-+			rtw_write8(rtwdev, offset, value);
-+			break;
-+		case RTW_PWR_CMD_POLLING:
-+			if (rtw_pwr_cmd_polling(rtwdev, cur_cmd))
-+				return -EBUSY;
-+			break;
-+		case RTW_PWR_CMD_DELAY:
-+			if (cur_cmd->value == RTW_PWR_DELAY_US)
-+				udelay(cur_cmd->offset);
-+			else
-+				mdelay(cur_cmd->offset);
-+			break;
-+		case RTW_PWR_CMD_READ:
-+			break;
-+		default:
++		if (bcn->ftm_responder != NL80211_FTM_RESP_DISABLED &&
++		    bcn->ftm_responder != NL80211_FTM_RESP_ENABLED)
 +			return -EINVAL;
-+		}
-+	}
 +
-+	return 0;
-+}
-+
-+static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
-+			      struct rtw_pwr_seq_cmd **cmd_seq)
-+{
-+	u8 cut_mask;
-+	u8 intf_mask;
-+	u8 cut;
-+	u32 idx = 0;
-+	struct rtw_pwr_seq_cmd *cmd;
-+	int ret;
-+
-+	cut = rtwdev->hal.cut_version;
-+	cut_mask = cut_version_to_mask(cut);
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		intf_mask = BIT(2);
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		intf_mask = BIT(1);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	do {
-+		cmd = cmd_seq[idx];
-+		if (!cmd)
-+			break;
-+
-+		ret = rtw_sub_pwr_seq_parser(rtwdev, intf_mask, cut_mask, cmd);
-+		if (ret)
-+			return -EBUSY;
-+
-+		idx++;
-+	} while (1);
-+
-+	return 0;
-+}
-+
-+static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pwr_seq_cmd **pwr_seq;
-+	u8 rpwm;
-+	bool cur_pwr;
-+
-+	rpwm = rtw_read8(rtwdev, rtwdev->hci.rpwm_addr);
-+
-+	/* Check FW still exist or not */
-+	if (rtw_read16(rtwdev, REG_MCUFW_CTRL) == 0xC078) {
-+		rpwm = (rpwm ^ BIT(7)) & BIT(7);
-+		rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, rpwm);
-+	}
-+
-+	if (rtw_read8(rtwdev, REG_CR) == 0xea)
-+		cur_pwr = false;
-+	else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
-+		 (rtw_read8(rtwdev, REG_SYS_STATUS1 + 1) & BIT(0)))
-+		cur_pwr = false;
-+	else
-+		cur_pwr = true;
-+
-+	if (pwr_on && cur_pwr)
-+		return -EALREADY;
-+
-+	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
-+	if (rtw_pwr_seq_parser(rtwdev, pwr_seq))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int rtw_mac_init_system_cfg(struct rtw_dev *rtwdev)
-+{
-+	u8 sys_func_en = rtwdev->chip->sys_func_en;
-+	u8 value8;
-+	u32 value, tmp;
-+
-+	value = rtw_read32(rtwdev, REG_CPU_DMEM_CON);
-+	value |= BIT_WL_PLATFORM_RST | BIT_DDMA_EN;
-+	rtw_write32(rtwdev, REG_CPU_DMEM_CON, value);
-+
-+	rtw_write8(rtwdev, REG_SYS_FUNC_EN + 1, sys_func_en);
-+	value8 = (rtw_read8(rtwdev, REG_CR_EXT + 3) & 0xF0) | 0x0C;
-+	rtw_write8(rtwdev, REG_CR_EXT + 3, value8);
-+
-+	/* disable boot-from-flash for driver's DL FW */
-+	tmp = rtw_read32(rtwdev, REG_MCUFW_CTRL);
-+	if (tmp & BIT_BOOT_FSPI_EN) {
-+		rtw_write32(rtwdev, REG_MCUFW_CTRL, tmp & (~BIT_BOOT_FSPI_EN));
-+		value = rtw_read32(rtwdev, REG_GPIO_MUXCFG) & (~BIT_FSPI_EN);
-+		rtw_write32(rtwdev, REG_GPIO_MUXCFG, value);
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw_mac_power_on(struct rtw_dev *rtwdev)
-+{
-+	int ret = 0;
-+
-+	ret = rtw_mac_pre_system_cfg(rtwdev);
-+	if (ret)
-+		goto err;
-+
-+	ret = rtw_mac_power_switch(rtwdev, true);
-+	if (ret)
-+		goto err;
-+
-+	ret = rtw_mac_init_system_cfg(rtwdev);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+
-+err:
-+	rtw_err(rtwdev, "mac power on failed");
-+	return ret;
-+}
-+
-+void rtw_mac_power_off(struct rtw_dev *rtwdev)
-+{
-+	rtw_mac_power_switch(rtwdev, false);
-+}
-+
-+static void
-+restore_mac_reg(struct rtw_dev *rtwdev, struct rtw_backup_info *bckp, u32 num)
-+{
-+	u8 len;
-+	u32 reg;
-+	u32 val;
-+	int i;
-+
-+	for (i = 0; i < num; i++, bckp++) {
-+		len = bckp->len;
-+		reg = bckp->reg;
-+		val = bckp->val;
-+
-+		switch (len) {
-+		case 1:
-+			rtw_write8(rtwdev, reg, (u8)val);
-+			break;
-+		case 2:
-+			rtw_write16(rtwdev, reg, (u16)val);
-+			break;
-+		case 4:
-+			rtw_write32(rtwdev, reg, (u32)val);
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+}
-+
-+static bool check_firmware_size(const u8 *data, u32 size)
-+{
-+	u32 dmem_size;
-+	u32 imem_size;
-+	u32 emem_size;
-+	u32 real_size;
-+
-+	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
-+	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
-+	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
-+		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
-+
-+	dmem_size += FW_HDR_CHKSUM_SIZE;
-+	imem_size += FW_HDR_CHKSUM_SIZE;
-+	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
-+	real_size = FW_HDR_SIZE + dmem_size + imem_size + emem_size;
-+	if (real_size != size)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool ltecoex_read_reg(struct rtw_dev *rtwdev, u16 offset, u32 *val)
-+{
-+	u32 cnt = 10000;
-+
-+	while ((rtw_read8(rtwdev, LTECOEX_ACCESS_CTRL + 3) & BIT(5)) == 0) {
-+		if (cnt-- == 0)
-+			return false;
-+		udelay(50);
-+	}
-+
-+	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0x800F0000 | offset);
-+	*val = rtw_read32(rtwdev, LTECOEX_READ_DATA);
-+
-+	return true;
-+}
-+
-+static bool ltecoex_reg_write(struct rtw_dev *rtwdev, u16 offset, u32 value)
-+{
-+	u32 cnt;
-+
-+	cnt = 10000;
-+	while ((rtw_read8(rtwdev, LTECOEX_ACCESS_CTRL + 3) & BIT(5)) == 0) {
-+		if (cnt == 0) {
-+			pr_err("[ERR]lte ready(W)\n");
-+			return false;
-+		}
-+		cnt--;
-+		udelay(50);
-+	}
-+
-+	rtw_write32(rtwdev, LTECOEX_WRITE_DATA, value);
-+	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0xC00F0000 | offset);
-+
-+	return true;
-+}
-+
-+static void wlan_cpu_enable(struct rtw_dev *rtwdev, bool enable)
-+{
-+	u8 val;
-+
-+	if (enable) {
-+		/* cpu io interface enable */
-+		val = rtw_read8(rtwdev, REG_RSV_CTRL + 1);
-+		val |= BIT(0);
-+		rtw_write8(rtwdev, REG_RSV_CTRL + 1, val);
-+
-+		/* cpu enable */
-+		val = rtw_read8(rtwdev, REG_SYS_FUNC_EN + 1);
-+		val |= BIT(2);
-+		rtw_write8(rtwdev, REG_SYS_FUNC_EN + 1, val);
++		if (bcn->ftm_responder == NL80211_FTM_RESP_DISABLED ||
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++					    NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER))
++			return -EOPNOTSUPP;
 +	} else {
-+		/* cpu io interface disable */
-+		val = rtw_read8(rtwdev, REG_SYS_FUNC_EN + 1);
-+		val &= ~BIT(2);
-+		rtw_write8(rtwdev, REG_SYS_FUNC_EN + 1, val);
-+
-+		/* cpu disable */
-+		val = rtw_read8(rtwdev, REG_RSV_CTRL + 1);
-+		val &= ~BIT(0);
-+		rtw_write8(rtwdev, REG_RSV_CTRL + 1, val);
-+	}
-+}
-+
-+#define DLFW_RESTORE_REG_NUM 6
-+
-+static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
-+					 struct rtw_backup_info *bckp)
-+{
-+	u8 tmp;
-+	u8 bckp_idx = 0;
-+
-+	/* set HIQ to hi priority */
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_TXDMA_PQ_MAP + 1;
-+	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_TXDMA_PQ_MAP + 1);
-+	bckp_idx++;
-+	tmp = RTW_DMA_MAPPING_HIGH << 6;
-+	rtw_write8(rtwdev, REG_TXDMA_PQ_MAP + 1, tmp);
-+
-+	/* DLFW only use HIQ, map HIQ to hi priority */
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_CR;
-+	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_CR);
-+	bckp_idx++;
-+	bckp[bckp_idx].len = 4;
-+	bckp[bckp_idx].reg = REG_H2CQ_CSR;
-+	bckp[bckp_idx].val = BIT(31);
-+	bckp_idx++;
-+	tmp = BIT_HCI_TXDMA_EN | BIT_TXDMA_EN;
-+	rtw_write8(rtwdev, REG_CR, tmp);
-+	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT(31));
-+
-+	/* Config hi priority queue and public priority queue page number */
-+	bckp[bckp_idx].len = 2;
-+	bckp[bckp_idx].reg = REG_FIFOPAGE_INFO_1;
-+	bckp[bckp_idx].val = rtw_read16(rtwdev, REG_FIFOPAGE_INFO_1);
-+	bckp_idx++;
-+	bckp[bckp_idx].len = 4;
-+	bckp[bckp_idx].reg = REG_RQPN_CTRL_2;
-+	bckp[bckp_idx].val = rtw_read32(rtwdev, REG_RQPN_CTRL_2) | BIT(31);
-+	bckp_idx++;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, 0x200);
-+	rtw_write32(rtwdev, REG_RQPN_CTRL_2, bckp[bckp_idx - 1].val);
-+
-+	/* Disable beacon related functions */
-+	tmp = rtw_read8(rtwdev, REG_BCN_CTRL);
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_BCN_CTRL;
-+	bckp[bckp_idx].val = tmp;
-+	bckp_idx++;
-+	tmp = (u8)((tmp & (~BIT(3))) | BIT(4));
-+	rtw_write8(rtwdev, REG_BCN_CTRL, tmp);
-+
-+	WARN(bckp_idx != DLFW_RESTORE_REG_NUM, "wrong backup number");
-+}
-+
-+static void download_firmware_reset_platform(struct rtw_dev *rtwdev)
-+{
-+	u8 tmp;
-+
-+	tmp = rtw_read8(rtwdev, REG_CPU_DMEM_CON + 2) & ~BIT(0);
-+	rtw_write8(rtwdev, REG_CPU_DMEM_CON + 2, tmp);
-+	tmp = rtw_read8(rtwdev, REG_SYS_CLK_CTRL + 1) & ~BIT(6);
-+	rtw_write8(rtwdev, REG_SYS_CLK_CTRL + 1, tmp);
-+	tmp = rtw_read8(rtwdev, REG_CPU_DMEM_CON + 2) | BIT(0);
-+	rtw_write8(rtwdev, REG_CPU_DMEM_CON + 2, tmp);
-+	tmp = rtw_read8(rtwdev, REG_SYS_CLK_CTRL + 1) | BIT(6);
-+	rtw_write8(rtwdev, REG_SYS_CLK_CTRL + 1, tmp);
-+}
-+
-+static void download_firmware_reg_restore(struct rtw_dev *rtwdev,
-+					  struct rtw_backup_info *bckp,
-+					  u8 bckp_num)
-+{
-+	restore_mac_reg(rtwdev, bckp, bckp_num);
-+}
-+
-+#define TX_DESC_SIZE 48
-+
-+static int
-+send_firmware_pkt(struct rtw_dev *rtwdev, u16 pg_addr, const u8 *data, u32 size)
-+{
-+	u8 *fw_add_num = NULL;
-+	u8 *buf;
-+	int ret;
-+
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
-+	    !((size + TX_DESC_SIZE) & (512 - 1))) {
-+		fw_add_num = kmalloc(size + 1, GFP_KERNEL);
-+		if (!fw_add_num)
-+			return -ENOMEM;
-+		memcpy(fw_add_num, data, size);
-+		ret = rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, fw_add_num,
-+						  size + 1);
-+		if (ret)
-+			rtw_err(rtwdev, "fail to download rsvd page for usb");
-+
-+		kfree(fw_add_num);
-+		return ret;
++		bcn->ftm_responder = -1;
 +	}
 +
-+	buf = kmalloc(size, GFP_KERNEL);
-+	memcpy(buf, data, size);
-+	ret = rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
-+	if (ret)
-+		rtw_err(rtwdev, "fail to download rsvd page");
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
-+static int
-+iddma_enable(struct rtw_dev *rtwdev, u32 src, u32 dst, u32 ctrl)
-+{
-+	u32 cnt = DDMA_POLLING_COUNT;
-+
-+	rtw_write32(rtwdev, REG_DDMA_CH0SA, src);
-+	rtw_write32(rtwdev, REG_DDMA_CH0DA, dst);
-+	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, ctrl);
-+
-+	while (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
-+		cnt--;
-+		if (cnt == 0)
-+			return -EBUSY;
-+	}
-+
-+	return 0;
-+}
-+
-+static int iddma_download_firmware(struct rtw_dev *rtwdev, u32 src, u32 dst,
-+				   u32 len, u8 first)
-+{
-+	u32 cnt = DDMA_POLLING_COUNT;
-+	u32 ch0_ctrl = BIT_DDMACH0_CHKSUM_EN | BIT_DDMACH0_OWN;
-+
-+	while (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
-+		cnt--;
-+		if (cnt == 0)
-+			return -EBUSY;
-+	}
-+
-+	ch0_ctrl |= len & BIT_MASK_DDMACH0_DLEN;
-+	if (!first)
-+		ch0_ctrl |= BIT_DDMACH0_CHKSUM_CONT;
-+
-+	if (iddma_enable(rtwdev, src, dst, ch0_ctrl))
-+		return -EBUSY;
-+
-+	return 0;
-+}
-+
-+static bool
-+check_fw_checksum(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	u8 fw_ctrl;
-+
-+	fw_ctrl = rtw_read8(rtwdev, REG_MCUFW_CTRL);
-+
-+	if (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_CHKSUM_STS) {
-+		if (addr < OCPBASE_DMEM_88XX) {
-+			fw_ctrl |= BIT_IMEM_DW_OK;
-+			fw_ctrl &= ~BIT_IMEM_CHKSUM_OK;
-+			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+		} else {
-+			fw_ctrl |= BIT_DMEM_DW_OK;
-+			fw_ctrl &= ~BIT_DMEM_CHKSUM_OK;
-+			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+		}
-+
-+		rtw_err(rtwdev, "invalid fw checksum");
-+
-+		return false;
-+	}
-+
-+	if (addr < OCPBASE_DMEM_88XX) {
-+		fw_ctrl |= (BIT_IMEM_DW_OK | BIT_IMEM_CHKSUM_OK);
-+		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+	} else {
-+		fw_ctrl |= (BIT_DMEM_DW_OK | BIT_DMEM_CHKSUM_OK);
-+		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+	}
-+
-+	return true;
-+}
-+
-+static int
-+download_firmware_to_mem(struct rtw_dev *rtwdev, const u8 *data,
-+			 u32 src, u32 dst, u32 size)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u32 desc_size = chip->tx_pkt_desc_sz;
-+	u8 first_part;
-+	u32 mem_offset;
-+	u32 residue_size;
-+	u32 pkt_size;
-+	u32 max_size = 0x1000;
-+	u32 val;
-+	int ret;
-+
-+	mem_offset = 0;
-+	first_part = 1;
-+	residue_size = size;
-+
-+	val = rtw_read32(rtwdev, REG_DDMA_CH0CTRL);
-+	val |= BIT_DDMACH0_RESET_CHKSUM_STS;
-+	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, val);
-+
-+	while (residue_size) {
-+		if (residue_size >= max_size)
-+			pkt_size = max_size;
-+		else
-+			pkt_size = residue_size;
-+
-+		ret = send_firmware_pkt(rtwdev, (u16)(src >> 7),
-+					data + mem_offset, pkt_size);
-+		if (ret)
-+			return ret;
-+
-+		ret = iddma_download_firmware(rtwdev, OCPBASE_TXBUF_88XX +
-+					      src + desc_size,
-+					      dst + mem_offset, pkt_size,
-+					      first_part);
-+		if (ret)
-+			return ret;
-+
-+		first_part = 0;
-+		mem_offset += pkt_size;
-+		residue_size -= pkt_size;
-+	}
-+
-+	if (!check_fw_checksum(rtwdev, dst))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static void update_firmware_info(struct rtw_dev *rtwdev, const u8 *data)
-+{
-+	struct rtw_fw_state *fw = &rtwdev->fw;
-+
-+	fw->h2c_version =
-+		le16_to_cpu(*((__le16 *)(data + FW_HDR_H2C_FMT_VER)));
-+	fw->version =
-+		le16_to_cpu(*((__le16 *)(data + FW_HDR_VERSION)));
-+	fw->sub_version = *(data + FW_HDR_SUBVERSION);
-+	fw->sub_index = *(data + FW_HDR_SUBINDEX);
-+
-+	rtw_dbg(rtwdev, "fw h2c version: %x", fw->h2c_version);
-+	rtw_dbg(rtwdev, "fw version:     %x", fw->version);
-+	rtw_dbg(rtwdev, "fw sub version: %x", fw->sub_version);
-+	rtw_dbg(rtwdev, "fw sub index:   %x", fw->sub_index);
-+}
-+
-+static int
-+start_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size)
-+{
-+	const u8 *cur_fw;
-+	u16 val;
-+	u16 fw_ctrl;
-+	u32 imem_size;
-+	u32 dmem_size;
-+	u32 emem_size;
-+	u32 addr;
-+	int ret;
-+
-+	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
-+	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
-+	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
-+		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
-+	dmem_size += FW_HDR_CHKSUM_SIZE;
-+	imem_size += FW_HDR_CHKSUM_SIZE;
-+	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
-+
-+	val = (u16)(rtw_read16(rtwdev, REG_MCUFW_CTRL) & 0x3800);
-+	val |= BIT(0);
-+	rtw_write16(rtwdev, REG_MCUFW_CTRL, val);
-+
-+	cur_fw = data + FW_HDR_SIZE;
-+	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_ADDR)));
-+	addr &= ~BIT(31);
-+	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, dmem_size);
-+	if (ret)
-+		return ret;
-+
-+	cur_fw = data + FW_HDR_SIZE + dmem_size;
-+	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_ADDR)));
-+	addr &= ~BIT(31);
-+	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, imem_size);
-+	if (ret)
-+		return ret;
-+
-+	if (emem_size) {
-+		cur_fw = data + FW_HDR_SIZE + dmem_size + imem_size;
-+		addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_ADDR)));
-+		addr &= ~BIT(31);
-+		ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr,
-+					       emem_size);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	rtw_write32(rtwdev, REG_TXDMA_STATUS, BIT(2));
-+
-+	/* Check IMEM & DMEM checksum is OK or not */
-+	fw_ctrl = rtw_read16(rtwdev, REG_MCUFW_CTRL);
-+	if ((fw_ctrl & 0x50) != 0x50)
-+		return -EBUSY;
-+
-+	fw_ctrl = (fw_ctrl | BIT_FW_DW_RDY) & ~BIT(0);
-+	rtw_write16(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+
-+	return 0;
-+}
-+
-+static int download_firmware_validate(struct rtw_dev *rtwdev)
-+{
-+	u32 cnt;
-+
-+	cnt = 5000;
-+	while (rtw_read16(rtwdev, REG_MCUFW_CTRL) != 0xC078) {
-+		if (cnt == 0) {
-+			rtw_err(rtwdev, "invalid fw status");
-+			if ((rtw_read32(rtwdev, REG_FW_DBG7) & 0xFFFFFF00) ==
-+			    ILLEGAL_KEY_GROUP) {
-+				rtw_err(rtwdev, "invalid fw key");
-+				return -EINVAL;
-+			}
++	if (attrs[NL80211_ATTR_LCI]) {
++		if (nla_len(attrs[NL80211_ATTR_LCI]) > U8_MAX)
 +			return -EINVAL;
-+		}
-+		cnt--;
-+		udelay(50);
++
++		bcn->lci = nla_data(attrs[NL80211_ATTR_LCI]);
++		bcn->lci_len = nla_len(attrs[NL80211_ATTR_LCI]);
 +	}
 +
-+	return 0;
-+}
-+
-+int rtw_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size)
-+{
-+	struct rtw_backup_info bckp[DLFW_RESTORE_REG_NUM];
-+	u32 ltecoex_bckp;
-+	int ret;
-+
-+	if (!check_firmware_size(data, size))
-+		return -EINVAL;
-+
-+	if (!ltecoex_read_reg(rtwdev, 0x38, &ltecoex_bckp))
-+		return -EBUSY;
-+
-+	wlan_cpu_enable(rtwdev, false);
-+
-+	download_firmware_reg_backup(rtwdev, bckp);
-+	download_firmware_reset_platform(rtwdev);
-+
-+	ret = start_download_firmware(rtwdev, data, size);
-+	if (ret)
-+		goto dlfw_fail;
-+
-+	download_firmware_reg_restore(rtwdev, bckp, DLFW_RESTORE_REG_NUM);
-+
-+	wlan_cpu_enable(rtwdev, true);
-+
-+	if (!ltecoex_reg_write(rtwdev, 0x38, ltecoex_bckp))
-+		return -EBUSY;
-+
-+	ret = download_firmware_validate(rtwdev);
-+	if (ret)
-+		goto dlfw_fail;
-+
-+	update_firmware_info(rtwdev, data);
-+
-+	rtw_flag_set(rtwdev, RTW_FLAG_FW_RUNNING);
-+
-+	return 0;
-+
-+dlfw_fail:
-+	/* Disable FWDL_EN */
-+	rtw_write8_clr(rtwdev, REG_MCUFW_CTRL, BIT(0));
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN + 1, BIT(2));
-+
-+	return ret;
-+}
-+
-+static int txdma_queue_mapping(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_rqpn *rqpn = NULL;
-+	u16 txdma_pq_map = 0;
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rqpn = &chip->rqpn_table[1];
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		if (rtwdev->hci.bulkout_num == 2)
-+			rqpn = &chip->rqpn_table[2];
-+		else if (rtwdev->hci.bulkout_num == 3)
-+			rqpn = &chip->rqpn_table[3];
-+		else if (rtwdev->hci.bulkout_num == 4)
-+			rqpn = &chip->rqpn_table[4];
-+		else
++	if (attrs[NL80211_ATTR_CIVIC]) {
++		if (nla_len(attrs[NL80211_ATTR_CIVIC]) > U8_MAX)
 +			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
++
++		bcn->civic = nla_data(attrs[NL80211_ATTR_CIVIC]);
++		bcn->civic_len = nla_len(attrs[NL80211_ATTR_CIVIC]);
 +	}
 +
-+	txdma_pq_map |= BIT_TXDMA_HIQ_MAP(rqpn->dma_map_hi);
-+	txdma_pq_map |= BIT_TXDMA_MGQ_MAP(rqpn->dma_map_mg);
-+	txdma_pq_map |= BIT_TXDMA_BKQ_MAP(rqpn->dma_map_bk);
-+	txdma_pq_map |= BIT_TXDMA_BEQ_MAP(rqpn->dma_map_be);
-+	txdma_pq_map |= BIT_TXDMA_VIQ_MAP(rqpn->dma_map_vi);
-+	txdma_pq_map |= BIT_TXDMA_VOQ_MAP(rqpn->dma_map_vo);
-+	rtw_write16(rtwdev, REG_TXDMA_PQ_MAP, txdma_pq_map);
-+
-+	rtw_write8(rtwdev, REG_CR, 0);
-+	rtw_write8(rtwdev, REG_CR, MAC_TRX_ENABLE);
-+	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT(31));
-+
-+	return 0;
-+}
-+
-+static int set_trx_fifo_info(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
+@@ -4197,7 +4234,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	    !info->attrs[NL80211_ATTR_BEACON_HEAD])
+ 		return -EINVAL;
+ 
+-	err = nl80211_parse_beacon(info->attrs, &params.beacon);
++	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon);
+ 	if (err)
+ 		return err;
+ 
+@@ -4381,7 +4418,7 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 	if (!wdev->beacon_interval)
+ 		return -EINVAL;
+ 
+-	err = nl80211_parse_beacon(info->attrs, &params);
++	err = nl80211_parse_beacon(rdev, info->attrs, &params);
+ 	if (err)
+ 		return err;
+ 
+@@ -7943,7 +7980,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	if (!need_new_beacon)
+ 		goto skip_beacons;
+ 
+-	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
++	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon_after);
+ 	if (err)
+ 		return err;
+ 
+@@ -7953,7 +7990,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+ 
+-	err = nl80211_parse_beacon(csa_attrs, &params.beacon_csa);
++	err = nl80211_parse_beacon(rdev, csa_attrs, &params.beacon_csa);
+ 	if (err)
+ 		return err;
+ 
+@@ -12993,6 +13030,76 @@ static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static int nl80211_get_ftm_responder_stats(struct sk_buff *skb,
++					   struct genl_info *info)
 +{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u16 cur_pg_addr;
-+	u8 csi_buf_pg_num = chip->csi_buf_pg_num;
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_ftm_responder_stats ftm_stats = {};
++	struct sk_buff *msg;
++	void *hdr;
++	struct nlattr *ftm_stats_attr;
++	int err;
 +
-+	/* config rsvd page num */
-+	fifo->rsvd_drv_pg_num = 8;
-+	fifo->txff_pg_num = chip->txff_size >> 7;
-+	fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num +
-+			   RSVD_PG_H2C_EXTRAINFO_NUM +
-+			   RSVD_PG_H2C_STATICINFO_NUM +
-+			   RSVD_PG_H2CQ_NUM +
-+			   RSVD_PG_CPU_INSTRUCTION_NUM +
-+			   RSVD_PG_FW_TXBUF_NUM +
-+			   csi_buf_pg_num;
++	if (wdev->iftype != NL80211_IFTYPE_AP || !wdev->beacon_interval)
++		return -EOPNOTSUPP;
 +
-+	if (fifo->rsvd_pg_num > fifo->txff_pg_num)
++	err = rdev_get_ftm_responder_stats(rdev, dev, &ftm_stats);
++	if (err)
++		return err;
++
++	if (!ftm_stats.filled)
++		return -ENODATA;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
 +		return -ENOMEM;
 +
-+	fifo->acq_pg_num = fifo->txff_pg_num - fifo->rsvd_pg_num;
-+	fifo->rsvd_boundary = fifo->txff_pg_num - fifo->rsvd_pg_num;
++	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
++			     NL80211_CMD_GET_FTM_RESPONDER_STATS);
++	if (!hdr)
++		return -ENOBUFS;
 +
-+	cur_pg_addr = fifo->txff_pg_num;
-+	cur_pg_addr -= csi_buf_pg_num;
-+	fifo->rsvd_csibuf_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_FW_TXBUF_NUM;
-+	fifo->rsvd_fw_txbuf_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_CPU_INSTRUCTION_NUM;
-+	fifo->rsvd_cpu_instr_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2CQ_NUM;
-+	fifo->rsvd_h2cq_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2C_STATICINFO_NUM;
-+	fifo->rsvd_h2c_sta_info_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2C_EXTRAINFO_NUM;
-+	fifo->rsvd_h2c_info_addr = cur_pg_addr;
-+	cur_pg_addr -= fifo->rsvd_drv_pg_num;
-+	fifo->rsvd_drv_addr = cur_pg_addr;
++	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex))
++		goto nla_put_failure;
 +
-+	if (fifo->rsvd_boundary != fifo->rsvd_drv_addr) {
-+		rtw_err(rtwdev, "wrong rsvd driver address");
-+		return -EINVAL;
-+	}
++	ftm_stats_attr = nla_nest_start(msg, NL80211_ATTR_FTM_RESPONDER_STATS);
++	if (!ftm_stats_attr)
++		goto nla_put_failure;
 +
-+	return 0;
++#define SET_FTM(field, name, type)					 \
++	do { if ((ftm_stats.filled & BIT(NL80211_FTM_STATS_ ## name)) && \
++	    nla_put_ ## type(msg, NL80211_FTM_STATS_ ## name,		 \
++			     ftm_stats.field))				 \
++		goto nla_put_failure; } while (0)
++#define SET_FTM_U64(field, name)					 \
++	do { if ((ftm_stats.filled & BIT(NL80211_FTM_STATS_ ## name)) && \
++	    nla_put_u64_64bit(msg, NL80211_FTM_STATS_ ## name,		 \
++			      ftm_stats.field, NL80211_FTM_STATS_PAD))	 \
++		goto nla_put_failure; } while (0)
++
++	SET_FTM(success_num, SUCCESS_NUM, u32);
++	SET_FTM(partial_num, PARTIAL_NUM, u32);
++	SET_FTM(failed_num, FAILED_NUM, u32);
++	SET_FTM(asap_num, ASAP_NUM, u32);
++	SET_FTM(non_asap_num, NON_ASAP_NUM, u32);
++	SET_FTM_U64(total_duration_ms, TOTAL_DURATION_MSEC);
++	SET_FTM(unknown_triggers_num, UNKNOWN_TRIGGERS_NUM, u32);
++	SET_FTM(reschedule_requests_num, RESCHEDULE_REQUESTS_NUM, u32);
++	SET_FTM(out_of_window_triggers_num, OUT_OF_WINDOW_TRIGGERS_NUM, u32);
++#undef SET_FTM
++
++	nla_nest_end(msg, ftm_stats_attr);
++
++	genlmsg_end(msg, hdr);
++	return genlmsg_reply(msg, info);
++
++nla_put_failure:
++	nlmsg_free(msg);
++	return -ENOBUFS;
 +}
 +
-+static int priority_queue_cfg(struct rtw_dev *rtwdev)
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -13904,6 +14011,13 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_GET_FTM_RESPONDER_STATS,
++		.doit = nl80211_get_ftm_responder_stats,
++		.policy = nl80211_policy,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_family nl80211_fam __ro_after_init = {
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 364f5d67f05b..51380b5c32f2 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1232,4 +1232,19 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int
++rdev_get_ftm_responder_stats(struct cfg80211_registered_device *rdev,
++			     struct net_device *dev,
++			     struct cfg80211_ftm_responder_stats *ftm_stats)
 +{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_page_table *pg_tbl = NULL;
-+	u32 cnt;
-+	u16 pubq_num;
-+	int ret;
++	int ret = -EOPNOTSUPP;
 +
-+	ret = set_trx_fifo_info(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		pg_tbl = &chip->page_table[1];
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		if (rtwdev->hci.bulkout_num == 2)
-+			pg_tbl = &chip->page_table[2];
-+		else if (rtwdev->hci.bulkout_num == 3)
-+			pg_tbl = &chip->page_table[3];
-+		else if (rtwdev->hci.bulkout_num == 4)
-+			pg_tbl = &chip->page_table[4];
-+		else
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
-+		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, pg_tbl->hq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_2, pg_tbl->lq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_3, pg_tbl->nq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_4, pg_tbl->exq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_5, pubq_num);
-+	rtw_write32_set(rtwdev, REG_RQPN_CTRL_2, BIT(31));
-+
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, fifo->rsvd_boundary);
-+	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL + 2, BIT(4));
-+
-+	rtw_write16(rtwdev, REG_BCNQ_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2 + 2, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_BCNQ1_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write32(rtwdev, REG_RXFF_BNDY, chip->rxff_size - C2H_PKT_BUF - 1);
-+	rtw_write8_set(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1);
-+
-+	cnt = 1000;
-+	while (rtw_read8(rtwdev, REG_AUTO_LLT_V1) & BIT_AUTO_INIT_LLT_V1)
-+		if (cnt-- == 0)
-+			return -EBUSY;
-+
-+	rtw_write8(rtwdev, REG_CR + 3, 0);
-+
-+	return 0;
++	trace_rdev_get_ftm_responder_stats(&rdev->wiphy, dev, ftm_stats);
++	if (rdev->ops->get_ftm_responder_stats)
++		ret = rdev->ops->get_ftm_responder_stats(&rdev->wiphy, dev,
++							ftm_stats);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
 +}
 +
-+static int init_h2c(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	u8 value8;
-+	u32 value32;
-+	u32 h2cq_addr;
-+	u32 h2cq_size;
-+	u32 h2cq_free;
-+	u32 wp, rp;
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 5e7eec849200..89bd1f7aa7ed 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3259,6 +3259,50 @@
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT, WIPHY_PR_ARG, WDEV_PR_ARG)
+ );
 +
-+	h2cq_addr = fifo->rsvd_h2cq_addr << TX_PAGE_SIZE_SHIFT;
-+	h2cq_size = RSVD_PG_H2CQ_NUM << TX_PAGE_SIZE_SHIFT;
++TRACE_EVENT(rdev_get_ftm_responder_stats,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_ftm_responder_stats *ftm_stats),
 +
-+	value32 = rtw_read32(rtwdev, REG_H2C_HEAD);
-+	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
-+	rtw_write32(rtwdev, REG_H2C_HEAD, value32);
++	TP_ARGS(wiphy, netdev, ftm_stats),
 +
-+	value32 = rtw_read32(rtwdev, REG_H2C_READ_ADDR);
-+	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
-+	rtw_write32(rtwdev, REG_H2C_READ_ADDR, value32);
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(u64, timestamp)
++		__field(u32, success_num)
++		__field(u32, partial_num)
++		__field(u32, failed_num)
++		__field(u32, asap_num)
++		__field(u32, non_asap_num)
++		__field(u64, duration)
++		__field(u32, unknown_triggers)
++		__field(u32, reschedule)
++		__field(u32, out_of_window)
++	),
 +
-+	value32 = rtw_read32(rtwdev, REG_H2C_TAIL);
-+	value32 &= 0xFFFC0000;
-+	value32 |= (h2cq_addr + h2cq_size);
-+	rtw_write32(rtwdev, REG_H2C_TAIL, value32);
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->success_num = ftm_stats->success_num;
++		__entry->partial_num = ftm_stats->partial_num;
++		__entry->failed_num = ftm_stats->failed_num;
++		__entry->asap_num = ftm_stats->asap_num;
++		__entry->non_asap_num = ftm_stats->non_asap_num;
++		__entry->duration = ftm_stats->total_duration_ms;
++		__entry->unknown_triggers = ftm_stats->unknown_triggers_num;
++		__entry->reschedule = ftm_stats->reschedule_requests_num;
++		__entry->out_of_window = ftm_stats->out_of_window_triggers_num;
++	),
 +
-+	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
-+	value8 = (u8)((value8 & 0xFC) | 0x01);
-+	rtw_write8(rtwdev, REG_H2C_INFO, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
-+	value8 = (u8)((value8 & 0xFB) | 0x04);
-+	rtw_write8(rtwdev, REG_H2C_INFO, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_TXDMA_OFFSET_CHK + 1);
-+	value8 = (u8)((value8 & 0x7f) | 0x80);
-+	rtw_write8(rtwdev, REG_TXDMA_OFFSET_CHK + 1, value8);
-+
-+	wp = rtw_read32(rtwdev, REG_H2C_PKT_WRITEADDR) & 0x3FFFF;
-+	rp = rtw_read32(rtwdev, REG_H2C_PKT_READADDR) & 0x3FFFF;
-+	h2cq_free = wp >= rp ? h2cq_size - (wp - rp) : rp - wp;
-+
-+	if (h2cq_size != h2cq_free) {
-+		rtw_err(rtwdev, "H2C queue mismatch");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw_init_trx_cfg(struct rtw_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = txdma_queue_mapping(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = priority_queue_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = init_h2c(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int rtw_drv_info_cfg(struct rtw_dev *rtwdev)
-+{
-+	u8 value8;
-+
-+	rtw_write8(rtwdev, REG_RX_DRVINFO_SZ, PHY_STATUS_SIZE);
-+	value8 = rtw_read8(rtwdev, REG_TRXFF_BNDY + 1);
-+	value8 &= 0xF0;
-+	/* For rxdesc len = 0 issue */
-+	value8 |= 0xF;
-+	rtw_write8(rtwdev, REG_TRXFF_BNDY + 1, value8);
-+	rtw_write32_set(rtwdev, REG_RCR, BIT_APP_PHYSTS);
-+	rtw_write32_clr(rtwdev, REG_WMAC_OPTION_FUNCTION + 4, BIT(8) | BIT(9));
-+
-+	return 0;
-+}
-+
-+int rtw_mac_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw_general_info info;
-+	int ret;
-+
-+	ret = rtw_init_trx_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = chip->ops->mac_init(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = rtw_drv_info_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	efuse = &rtwdev->efuse;
-+	info.rfe_type = efuse->rfe_option;
-+	if (rtwdev->hal.rf_type == RF_1T1R)
-+		info.rf_type = FW_RF_1T1R;
-+	else if (rtwdev->hal.rf_type == RF_2T2R)
-+		info.rf_type = FW_RF_2T2R;
-+
-+	rtw_fw_send_general_info(rtwdev, &info);
-+	rtw_fw_send_phydm_info(rtwdev, &info);
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/realtek/rtwlan/mac.h b/drivers/net/wireless/realtek/rtwlan/mac.h
-new file mode 100644
-index 0000000..cc598cf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtwlan/mac.h
-@@ -0,0 +1,35 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW_MAC_H__
-+#define __RTW_MAc_H__
-+
-+#define RTW_HW_PORT_NUM		5
-+#define cut_version_to_mask(cut) (0x1 << ((cut) + 1))
-+#define SDIO_LOCAL_OFFSET	0x10250000
-+#define DDMA_POLLING_COUNT	1000
-+#define C2H_PKT_BUF		256
-+#define PHY_STATUS_SIZE		4
-+#define ILLEGAL_KEY_GROUP	0xFAAAAA00
-+
-+/* HW memory address */
-+#define OCPBASE_TXBUF_88XX		0x18780000
-+#define OCPBASE_DMEM_88XX		0x00200000
-+#define OCPBASE_EMEM_88XX		0x00100000
-+
-+#define RSVD_PG_DRV_NUM			16
-+#define RSVD_PG_H2C_EXTRAINFO_NUM	24
-+#define RSVD_PG_H2C_STATICINFO_NUM	8
-+#define RSVD_PG_H2CQ_NUM		8
-+#define RSVD_PG_CPU_INSTRUCTION_NUM	0
-+#define RSVD_PG_FW_TXBUF_NUM		4
-+
-+void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+			 u8 primary_ch_idx);
-+int rtw_mac_power_on(struct rtw_dev *rtwdev);
-+void rtw_mac_power_off(struct rtw_dev *rtwdev);
-+int rtw_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size);
-+int rtw_mac_init(struct rtw_dev *rtwdev);
-+
-+#endif
++	TP_printk(WIPHY_PR_FMT "Ftm responder stats: success %u, partial %u, "
++		"failed %u, asap %u, non asap %u, total duration %llu, unknown "
++		"triggers %u, rescheduled %u, out of window %u", WIPHY_PR_ARG,
++		__entry->success_num, __entry->partial_num, __entry->failed_num,
++		__entry->asap_num, __entry->non_asap_num, __entry->duration,
++		__entry->unknown_triggers, __entry->reschedule,
++		__entry->out_of_window)
++);
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
-2.7.4
+1.9.1
