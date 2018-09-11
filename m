@@ -1,178 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40789 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731240AbeITMHV (ORCPT
+Received: from p3plsmtpa08-07.prod.phx3.secureserver.net ([173.201.193.108]:34096
+        "EHLO p3plsmtpa08-07.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726761AbeIKRzI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:07:21 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 25/29] staging: wilc1000: remove wilc_debugfs.c file as its not used
-Date: Thu, 20 Sep 2018 11:53:36 +0530
-Message-ID: <1537424620-6982-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082629_396590_FC2800C8)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 11 Sep 2018 13:55:08 -0400
+To: linux-wireless@vger.kernel.org
+From: "Peter A. Bigot" <pab@pabigot.com>
+Subject: linux-firmware: updating Cypress firmware for Raspberry Pi hardware?
+Message-ID: <e413bd24-f11a-ada1-d032-c370b3f994e9@pabigot.com> (sfid-20180911_145559_460863_3E596940)
+Date: Tue, 11 Sep 2018 07:48:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Deleted wilc_debugfs.c file as it's not used.
+How can I help get updated material from Cypress/Broadcom for Bluetooth
+and WiFi firmware into linux-firmware?
 
-Earlier discussion link:
-[1]. https://www.spinics.net/lists/linux-wireless/msg176076.html
+The Raspberry Pi folks maintain two repositories[1,2] for firmware
+required for their hardware under Raspbian.  Their repos have some
+firmware not in linux-firmware, and some firmware that is newer than
+linux-firmware.
 
-Suggested-by: Greg KH <gregkh@linuxfoundation.org>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/Makefile       |   5 +-
- drivers/staging/wilc1000/wilc_debugfs.c | 115 --------------------------------
- 2 files changed, 2 insertions(+), 118 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
+I need to have this hardware work on Raspberry Pi under Yocto [3].  To
+do that I currently have to build a linux-firmware package that pulls
+from three different locations.  Tracking licenses also becomes an issue
+because the in-repo Raspbian license is not up to date with the recent
+change to LICENCE.Cypress.
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index ee7e26b..5718bc4 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -4,12 +4,11 @@ obj-$(CONFIG_WILC1000) += wilc1000.o
- ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
- 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
- 
--ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
-+ccflags-y += -I$(src)/ -DWILC_ASIC_A0
- 
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			coreconfigurator.o host_interface.o \
--			wilc_wlan_cfg.o wilc_debugfs.o \
--			wilc_wlan.o
-+			wilc_wlan_cfg.o wilc_wlan.o
- 
- obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
- wilc1000-sdio-objs += wilc_sdio.o
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-deleted file mode 100644
-index 8001df6..0000000
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ /dev/null
-@@ -1,115 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
-- * All rights reserved.
-- */
--
--#if defined(WILC_DEBUGFS)
--#include <linux/module.h>
--#include <linux/debugfs.h>
--
--#include "wilc_wlan_if.h"
--
--static struct dentry *wilc_dir;
--
--#define DEBUG           BIT(0)
--#define INFO            BIT(1)
--#define WRN             BIT(2)
--#define ERR             BIT(3)
--
--#define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
--EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
--
--static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
--				     size_t count, loff_t *ppos)
--{
--	char buf[128];
--	int res = 0;
--
--	/* only allow read from start */
--	if (*ppos > 0)
--		return 0;
--
--	res = scnprintf(buf, sizeof(buf), "Debug Level: %x\n",
--			atomic_read(&WILC_DEBUG_LEVEL));
--
--	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
--}
--
--static ssize_t wilc_debug_level_write(struct file *filp,
--				      const char __user *buf, size_t count,
--				      loff_t *ppos)
--{
--	int flag = 0;
--	int ret;
--
--	ret = kstrtouint_from_user(buf, count, 16, &flag);
--	if (ret)
--		return ret;
--
--	if (flag > DBG_LEVEL_ALL) {
--		pr_info("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n",
--			__func__, flag, atomic_read(&WILC_DEBUG_LEVEL));
--		return -EINVAL;
--	}
--
--	atomic_set(&WILC_DEBUG_LEVEL, (int)flag);
--
--	if (flag == 0)
--		pr_info("Debug-level disabled\n");
--	else
--		pr_info("Debug-level enabled\n");
--
--	return count;
--}
--
--#define FOPS(_open, _read, _write, _poll) { \
--		.owner	= THIS_MODULE, \
--		.open	= (_open), \
--		.read	= (_read), \
--		.write	= (_write), \
--		.poll		= (_poll), \
--}
--
--struct wilc_debugfs_info_t {
--	const char *name;
--	int perm;
--	unsigned int data;
--	const struct file_operations fops;
--};
--
--static struct wilc_debugfs_info_t debugfs_info[] = {
--	{
--		"wilc_debug_level",
--		0666,
--		(DEBUG | ERR),
--		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
--	},
--};
--
--static int __init wilc_debugfs_init(void)
--{
--	int i;
--	struct wilc_debugfs_info_t *info;
--
--	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
--	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
--		info = &debugfs_info[i];
--		debugfs_create_file(info->name,
--				    info->perm,
--				    wilc_dir,
--				    &info->data,
--				    &info->fops);
--	}
--	return 0;
--}
--module_init(wilc_debugfs_init);
--
--static void __exit wilc_debugfs_remove(void)
--{
--	debugfs_remove_recursive(wilc_dir);
--}
--module_exit(wilc_debugfs_remove);
--
--#endif
--- 
-2.7.4
+I would really like to be able to use only one source.  If there's some
+reason linux-firmware doesn't carry Bluetooth pieces, I can cope with
+that.
+
+I don't feel the provenance of what's in RPi-Distro is clear enough to
+take its content and make a pull-request for linux-firmware myself.
+
+The pieces needed include:
+
+ From firmware-nonfree [1]:
+   brcmfmac43430-sdio.bin  (matches recent update in linux-firmware)
+   brcmfmac43430-sdio.txt  (as brcmfmac43430-sdio.RPi.txt ?)
+   brcmfmac43455-sdio.bin  (newer than 2015 version in linux-firmware)
+   brcmfmac43455-sdio.clm_blob  (as ...?)
+   brcmfmac43455-sdio.txt  (as brcmfmac43455-sdio.RPi.txt ?)
+
+ From bluez-firmware [2]:
+   BCM43430A1.hcd
+   BCM4345C0.hcd
+
+Could somebody help me make this happen?
+
+Thanks.
+
+Peter
+
+[1]: https://github.com/RPi-Distro/firmware-nonfree forked from 
+linux-firmware long ago
+[2]: https://github.com/RPi-Distro/bluez-firmware
+[3]: https://github.com/agherzan/meta-raspberrypi/issues/298
