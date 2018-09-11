@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:43170 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbeIEPiR (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:36518 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726622AbeIKS6E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 11:38:17 -0400
-Message-ID: <1536145704.3528.8.camel@sipsolutions.net> (sfid-20180905_130835_791056_FBF3F79B)
-Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Date: Wed, 05 Sep 2018 13:08:24 +0200
-In-Reply-To: <871sa86w44.fsf@toke.dk>
-References: <20180905080036.9177-1-johannes@sipsolutions.net>
-         <87in3k6zti.fsf@toke.dk> <1536141045.3528.4.camel@sipsolutions.net>
-         <87d0ts6zeb.fsf@toke.dk> <1536144985.3528.7.camel@sipsolutions.net>
-         <871sa86w44.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 11 Sep 2018 14:58:04 -0400
+Received: by mail-wr1-f67.google.com with SMTP id e1-v6so17119727wrt.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2018 06:58:36 -0700 (PDT)
+Date: Tue, 11 Sep 2018 15:58:32 +0200
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [linux-next:master 2211/3360]
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined reference to
+ `mt76u_mcu_deinit'
+Message-ID: <20180911135831.GA2760@localhost.localdomain> (sfid-20180911_155840_191436_537CD1F6)
+References: <201809112137.2sMVZb3I%fengguang.wu@intel.com>
+ <875zzcuosb.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <875zzcuosb.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-05 at 13:07 +0200, Toke Høiland-Jørgensen wrote:
-
-> > Felix wasn't really convinced, I think. He also pointed out some drivers
-> > use skb->priority without checking anything, but I'm not sure we can
-> > really squash all the cases of setting skb priority easily?
+> + felix, linux-wireless
 > 
-> ~/build/linux/drivers/net/wireless $ git grep 'skb->priority = '
-> ath/ath9k/channel.c:		skb->priority = 7;
-> broadcom/brcm80211/brcmfmac/core.c:		skb->priority = cfg80211_classify8021d(skb, NULL);
-> broadcom/brcm80211/brcmutil/utils.c:		skb->priority = 0;
-> intel/ipw2x00/libipw_tx.c:		skb->priority = libipw_classify(skb);
-> marvell/mwifiex/cfg80211.c:	skb->priority = LOW_PRIO_TID;
-> marvell/mwifiex/main.c:	skb->priority = cfg80211_classify8021d(skb, NULL);
-> marvell/mwifiex/tdls.c:		skb->priority = MWIFIEX_PRIO_BK;
-> marvell/mwifiex/tdls.c:		skb->priority = MWIFIEX_PRIO_VI;
-> marvell/mwifiex/tdls.c:	skb->priority = MWIFIEX_PRIO_VI;
-> rsi/rsi_91x_core.c:		skb->priority = q_num;
-> rsi/rsi_91x_core.c:			skb->priority = TID_TO_WME_AC(tid);
-> rsi/rsi_91x_core.c:			skb->priority = BE_Q;
-> rsi/rsi_91x_core.c:			skb->priority = q_num;
-> rsi/rsi_91x_hal.c:			skb->priority = VO_Q;
-> rsi/rsi_91x_mgmt.c:	skb->priority = MGMT_SOFT_Q;
-> ti/wlcore/main.c:	skb->priority = WL1271_TID_MGMT;
+> kbuild test robot <lkp@intel.com> writes:
 > 
-> Doesn't seem *that* excessive? Obviously there could be other cases, and
-> I haven't looked closer at any of those...
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+> > head:   43783a8f68478e81fe183f86162d3e7ca29ba923
+> > commit: 6f4796b7063e334902049b0cc41514b6c3b52876 [2211/3360] mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
+> > config: x86_64-randconfig-s5-09111320 (attached as .config)
+> > compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
+> > reproduce:
+> >         git checkout 6f4796b7063e334902049b0cc41514b6c3b52876
+> >         # save the attached .config to linux build tree
+> >         make ARCH=x86_64 
+> >
+> > All errors (new ones prefixed by >>):
+> >
+> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.o: In function `mt76x0_probe':
+> >    drivers/net/wireless/mediatek/mt76/mt76x0/usb.c:119: undefined reference to `mt76u_init'
+> >    drivers/net/wireless/mediatek/mt76/mt76x0/init.o: In function `mt76x0_init_hardware':
+> >>> drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined
+> >>> reference to `mt76u_mcu_deinit'
+> 
+> kbuild bot has been sending quite a few similar warnings during the last
+> day. Lorenzo, I assume you are looking at these?
 
-That's assignments. For assignments, I guess you'd have to look at
-net/mac80211/. It's not that excessive either, but it's not in all
-places trivial to determine ...
+All reported errors from intel kbuild test robot are due to missing
+CONFIG_MT76_USB symbol. This should be fixed in latest Stanislaw's patchset:
+[PATCH 37/42] mt76x0: initial split between pci and usb.
 
-Whatever, I'll just try, give me a minute :)
+Regards,
+Lorenzo
 
-> Does it matter for the drivers that don't use TXQs?
-
-Probably.
-
-johannes
+> 
+> -- 
+> Kalle Valo
