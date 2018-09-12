@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:41147 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729096AbeIMTQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 15:16:52 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <ath10k@lists.infradead.org>, <kvalo@codeaurora.org>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] ath10k: Remove duplicated includes
-Date: Thu, 13 Sep 2018 22:01:21 +0800
-Message-ID: <20180913140121.23152-1-yuehaibing@huawei.com> (sfid-20180913_160949_229227_D4B6DB45)
+Received: from smtp.codeaurora.org ([198.145.29.96]:34888 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725740AbeILFJ3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Sep 2018 01:09:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 11 Sep 2018 17:07:45 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH RFC v3 2/4] mac80211: Add airtime accounting and
+ scheduling to TXQs
+In-Reply-To: <87h8ixli4s.fsf@toke.dk>
+References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
+ <153635897061.14170.17999956909203163571.stgit@alrua-x1>
+ <1536567496.3224.36.camel@sipsolutions.net> <87h8ixli4s.fsf@toke.dk>
+Message-ID: <e90d3540e3c92c6e894217982cd77ff1@codeaurora.org> (sfid-20180912_020749_422566_777C5CDD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove duplicated include from ath10k driver.
+On 2018-09-10 04:13, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>>> -			       txqi->flags & (1<<IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
+>>> -			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
+>>> -			       txqi->flags & (1<<IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" : 
+>>> "");
+>>> +			       txqi->flags & (1 << IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
+>>> +			       txqi->flags & (1 << IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
+>>> +			       txqi->flags & (1 << IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" 
+>>> : "");
+>> 
+>> consider BIT() instead as a cleanup? :)
+>> 
+>> (or maybe this is just a leftover from merging some other patches?)
+> 
+> Yeah, this is a merging artifact; Rajkumar's patch added another flag,
+> that I removed again. Didn't notice that there was still a whitespace
+> change in this patch...
+> 
+I added the flag based on our last discussion. The driver needs to check
+txq status for each tx_dequeue(). One time txq check is not sufficient
+as it allows the driver to dequeue all frames from txq.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/ath/ath10k/htt.h     | 1 -
- drivers/net/wireless/ath/ath10k/mac.c     | 1 -
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 1 -
- 3 files changed, 3 deletions(-)
+drv_func() {
+       while (ieee80211_airtime_may_transmit(txq) &&
+               hw_has_space() &&
+              (pkt = ieee80211_tx_dequeue(hw, txq)))
+           push_to_hw(pkt);
+}
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 5d3ff80..eaf3a00 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -29,7 +29,6 @@
- #include "htc.h"
- #include "hw.h"
- #include "rx_desc.h"
--#include "hw.h"
- 
- enum htt_dbg_stats_type {
- 	HTT_DBG_STATS_WAL_PDEV_TXRX = 1 << 0,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 496772d..e37ea39 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -30,7 +30,6 @@
- #include "htt.h"
- #include "txrx.h"
- #include "testmode.h"
--#include "wmi.h"
- #include "wmi-tlv.h"
- #include "wmi-ops.h"
- #include "wow.h"
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index cdc1e64..6c6656d6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -19,7 +19,6 @@
- #include "debug.h"
- #include "mac.h"
- #include "hw.h"
--#include "mac.h"
- #include "wmi.h"
- #include "wmi-ops.h"
- #include "wmi-tlv.h"
--- 
-2.7.0
+>>> +bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+>>> +				struct ieee80211_txq *txq)
+>>> +{
+>>> +	struct ieee80211_local *local = hw_to_local(hw);
+>>> +	struct txq_info *txqi = to_txq_info(txq);
+>>> +	bool may_tx = false;
+>>> +
+>>> +	spin_lock_bh(&local->active_txq_lock);
+>>> +
+>>> +	if (ieee80211_txq_check_deficit(local, txqi)) {
+>>> +		may_tx = true;
+>>> +		list_del_init(&txqi->schedule_order);
+>> 
+
+To handle above case, may_transmit should remove the node only
+when it is in list.
+
+if (list_empty(&txqi->schedule_order))
+        list_del_init(&txqi->schedule_order);
+
+So that it can be used to determine whether txq is running negative.
+
+-Rajkumar
