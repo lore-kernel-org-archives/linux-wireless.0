@@ -1,144 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45244 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728096AbeIFNy6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:58 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 34/42] mt76x0: do not free/alloc buffers during suspend/resume
-Date: Thu,  6 Sep 2018 11:18:50 +0200
-Message-Id: <1536225538-16454-35-git-send-email-sgruszka@redhat.com> (sfid-20180906_112034_267414_FB9AAF8E)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:33196 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726677AbeILVHG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Sep 2018 17:07:06 -0400
+Date: Wed, 12 Sep 2018 13:01:31 -0300
+From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180912130131.2c6581d5@coco.lan> (sfid-20180912_180203_262529_FBA4DAEA)
+In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
+References: <20180912150142.157913-1-arnd@arndb.de>
+        <20180912151134.436719-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Em Wed, 12 Sep 2018 17:08:52 +0200
+Arnd Bergmann <arnd@arndb.de> escreveu:
 
-Do not free/alloc {tx,rx} buffers during suspend/resume phases
-but use the ones previously allocated during hw probe.
-Move {tx,rx}/mcu buffers allocation from mt76x0_init_hardware routine
-to mt76x0_register_device
+> The .ioctl and .compat_ioctl file operations have the same prototype so
+> they can both point to the same function, which works great almost all
+> the time when all the commands are compatible.
+>=20
+> One exception is the s390 architecture, where a compat pointer is only
+> 31 bit wide, and converting it into a 64-bit pointer requires calling
+> compat_ptr(). Most drivers here will ever run in s390, but since we now
+> have a generic helper for it, it's easy enough to use it consistently.
+>=20
+> I double-checked all these drivers to ensure that all ioctl arguments
+> are used as pointers or are ignored, but are not interpreted as integer
+> values.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 12 +++++---
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c  |  6 ----
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c  | 38 ++++++++++++++++++------
- 3 files changed, 37 insertions(+), 19 deletions(-)
+>  drivers/media/rc/lirc_dev.c                 | 4 +---
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index deceece52492..8f4b3197ab95 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -408,10 +408,6 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
- 	if (ret)
- 		return ret;
- 
--	ret = mt76u_alloc_queues(&dev->mt76);
--	if (ret < 0)
--		return ret;
--
- 	mt76x0_init_mac_registers(dev);
- 
- 	if (!mt76_poll_msec(dev, MT_MAC_STATUS,
-@@ -614,6 +610,14 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
- 	struct wiphy *wiphy = hw->wiphy;
- 	int ret;
- 
-+	ret = mt76u_mcu_init_rx(mdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = mt76u_alloc_queues(mdev);
-+	if (ret < 0)
-+		return ret;
-+
- 	ret = mt76x0_init_hardware(dev);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-index 7be2835f3b4f..29c0b3978af7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -387,11 +387,5 @@ int mt76x0_mcu_init(struct mt76x0_dev *dev)
- 
- int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
- {
--	int ret;
--
--	ret = mt76u_mcu_init_rx(&dev->mt76);
--	if (ret)
--		return ret;
--
- 	return mt76x0_mcu_function_select(dev, Q_SELECT, 1);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 09b544890450..fc8884c38f7e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -124,29 +124,49 @@ static void mt76x0_disconnect(struct usb_interface *usb_intf)
- 	ieee80211_free_hw(dev->mt76.hw);
- }
- 
--static int mt76x0_suspend(struct usb_interface *usb_intf, pm_message_t state)
-+static int __maybe_unused mt76x0_suspend(struct usb_interface *usb_intf,
-+					 pm_message_t state)
- {
- 	struct mt76x0_dev *dev = usb_get_intfdata(usb_intf);
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 
--	mt76x0_cleanup(dev);
-+	mt76u_stop_queues(&dev->mt76);
-+	mt76x0_mac_stop(dev);
-+	usb_kill_urb(usb->mcu.res.urb);
- 
- 	return 0;
- }
- 
--static int mt76x0_resume(struct usb_interface *usb_intf)
-+static int __maybe_unused mt76x0_resume(struct usb_interface *usb_intf)
- {
- 	struct mt76x0_dev *dev = usb_get_intfdata(usb_intf);
-+	struct mt76_usb *usb = &dev->mt76.usb;
- 	int ret;
- 
--	ret = mt76x0_init_hardware(dev);
--	if (ret) {
--		mt76x0_cleanup(dev);
--		return ret;
--	}
-+	reinit_completion(&usb->mcu.cmpl);
-+	ret = mt76u_submit_buf(&dev->mt76, USB_DIR_IN,
-+			       MT_EP_IN_CMD_RESP,
-+			       &usb->mcu.res, GFP_KERNEL,
-+			       mt76u_mcu_complete_urb,
-+			       &usb->mcu.cmpl);
-+	if (ret < 0)
-+		goto err;
- 
--	set_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
-+	ret = mt76u_submit_rx_buffers(&dev->mt76);
-+	if (ret < 0)
-+		goto err;
-+
-+	tasklet_enable(&usb->rx_tasklet);
-+	tasklet_enable(&usb->tx_tasklet);
-+
-+	ret = mt76x0_init_hardware(dev);
-+	if (ret)
-+		goto err;
- 
- 	return 0;
-+err:
-+	mt76x0_cleanup(dev);
-+	return ret;
- }
- 
- MODULE_DEVICE_TABLE(usb, mt76x0_device_table);
--- 
-2.7.5
+> diff --git a/drivers/media/rc/lirc_dev.c b/drivers/media/rc/lirc_dev.c
+> index f862f1b7f996..077209f414ed 100644
+> --- a/drivers/media/rc/lirc_dev.c
+> +++ b/drivers/media/rc/lirc_dev.c
+> @@ -730,9 +730,7 @@ static const struct file_operations lirc_fops =3D {
+>  	.owner		=3D THIS_MODULE,
+>  	.write		=3D ir_lirc_transmit_ir,
+>  	.unlocked_ioctl	=3D ir_lirc_ioctl,
+> -#ifdef CONFIG_COMPAT
+> -	.compat_ioctl	=3D ir_lirc_ioctl,
+> -#endif
+> +	.compat_ioctl	=3D generic_compat_ioctl_ptrarg,
+>  	.read		=3D ir_lirc_read,
+>  	.poll		=3D ir_lirc_poll,
+>  	.open		=3D ir_lirc_open,
+
+Adding an infrared remote controller to a s390 mainframe sounds fun :-)
+
+I suspect that one could implement it on a s390 platform=20
+using gpio-ir-recv and/or gpio-ir-tx drivers. Perhaps one possible
+practical usage would be to let the mainframe to send remote
+controller codes to adjust the air conditioning system ;-)
+
+=46rom lirc driver's PoV, there's nothing that really prevents one to
+do that and use lirc API, and the driver is generic enough to work
+on any hardware platform.
+
+I didn't check the implementation of generic_compat_ioctl_ptrarg(),
+but assuming it is ok,
+
+Acked-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+Thanks,
+Mauro
