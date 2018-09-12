@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49790 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726114AbeIGXFJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 19:05:09 -0400
-Received: from mail-yw1-f71.google.com ([209.85.161.71])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1fyLPH-0001P2-BG
-        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 18:22:59 +0000
-Received: by mail-yw1-f71.google.com with SMTP id i63-v6so9365640ywb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 11:22:59 -0700 (PDT)
-Date: Fri, 7 Sep 2018 13:22:56 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Henrik Laxhuber <henrik@laxhuber.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH] wireless-regdb: update regulatory rules for Switzerland
- (CH), and Liechtenstein (LI) on 5GHz
-Message-ID: <20180907182256.GL4251@ubuntu-xps13> (sfid-20180907_202303_308982_AFA204C2)
-References: <2441d0ea-b862-9675-9342-356606d9228d@laxhuber.com>
- <20180907123256.GJ4251@ubuntu-xps13>
+Received: from mx2.suse.de ([195.135.220.15]:60024 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728196AbeIMAf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Sep 2018 20:35:26 -0400
+Date: Wed, 12 Sep 2018 21:29:26 +0200
+From: Michal Kubecek <mkubecek@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC v2 1/2] netlink: add NLA_REJECT policy type
+Message-ID: <20180912192925.GD29691@unicorn.suse.cz> (sfid-20180912_212940_689076_6BA1DCA9)
+References: <20180912083610.20857-1-johannes@sipsolutions.net>
+ <20180912.111555.1317690378514849083.davem@davemloft.net>
+ <1536777285.3678.28.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180907123256.GJ4251@ubuntu-xps13>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1536777285.3678.28.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 07, 2018 at 07:32:56AM -0500, Seth Forshee wrote:
-> On Thu, Sep 06, 2018 at 04:13:22PM +0200, Henrik Laxhuber wrote:
-> > Update to reflect the current data published in the 'National Frequency
-> > Allocation Strategy Table' [0] for Switzerland and Liechtenstein, which
-> > at the time of writing points to the documents [1] and [2].
-> > 
-> > [0] https://www.ofcomnet.ch/#/fatTable
-> > [1] https://www.ofcomnet.ch/api/rir/1010/05
-> > [2] https://www.ofcomnet.ch/api/rir/1010/04
-> > 
-> > Signed-off-by: Henrik Laxhuber <henrik@laxhuber.com>
-> > ---
-> >  db.txt | 19 +++++++++++++++----
-> >  1 file changed, 15 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/db.txt b/db.txt
-> > index 8cf7dee..69cea85 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -265,10 +265,14 @@ country CF: DFS-FCC
-> >      (5490 - 5730 @ 40), (24), DFS
-> >      (5735 - 5835 @ 40), (30)
-> > 
-> > +# Source:
-> > +# https://www.ofcomnet.ch/#/fatTable
-> > +# Note that the maximum transmitter power can be doubled for 5250-5710MHz
-> > if
-> > +# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
-> >  country CH: DFS-ETSI
-> >      (2402 - 2482 @ 40), (20)
-> > -    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
-> > -    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
-> > +    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+On Wed, Sep 12, 2018 at 08:34:45PM +0200, Johannes Berg wrote:
+> It wouldn't be hard to reject attributes that are higher than maxtype -
+> we already pass that to nla_parse() wherever we call it, but we'd have
+> to find a way to make it optional I guess, for compatibility reasons.
+> Perhaps with a warning, like attribute validation. For genetlink, a flag
+> in the family (something like "strict attribute validation") would be
+> easy, but for "netlink proper" we have a lot of nlmsg_parse() calls to
+> patch, and/or replace by nlmsg_parse_strict().
 > 
-> Maybe you missed this in my last reply, I had suggested this range can
-> be 5150-5250 as in the document you linked to. If you agree with this
-> change I can make it when I apply the patch.
+> I guess we should
+> 
+> 1) implement nlmsg_parse_strict() for those new things that want it
+>    strictly - greenfield type stuff that doesn't need to work with
+>    existing applications
+> 
+> 2) add a warning to nlmsg_parse() when a too high attribute is
+>    encountered
+> 
+> 3) eventually replace nlmsg_parse() calls by nlmsg_parse_strict() and
+>    see what breaks? :-) We won't be able to rely on that any time soon
+>    though (unless userspace first checks with a guaranteed rejected
+>    attribute, e.g. one that has NLA_REJECT, perhaps the u64 pad
+>    attributes could be marked such since the kernel can't assume
+>    alignment anyway)
 
-Applied with this change here and in the rules for Liechtenstein.
-Thanks!
+I'm not so sure we (eventually) want to reject unknown attributes
+everywhere. I don't have any concrete example in mind but I think there
+will be use cases where we want to ignore unrecognized attributes
+(probably per parse call). But it makes sense to require caller to
+explicitely declare this is the case.
+
+> While we're talking about wishlist, I'm also toying with the idea of
+> having some sort of generic mechanism to convert netlink attributes
+> to/from structs, for internal kernel representation; so far though I
+> haven't been able to come up with anything useful.
+
+I was also thinking about something like this. One motivation was to
+design extensible version of ethtool_ops, the other was allowing complex
+data types (structures, arrays) for ethtool tunables. But I have nothing
+more than a vague idea so far.
+
+Michal Kubecek
