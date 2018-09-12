@@ -1,43 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg1-f174.google.com ([209.85.215.174]:40029 "EHLO
-        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726116AbeIGCNv (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:55100 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726624AbeILNjw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 22:13:51 -0400
-Received: by mail-pg1-f174.google.com with SMTP id l63-v6so5870491pga.7
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Sep 2018 14:36:26 -0700 (PDT)
-Date: Thu, 6 Sep 2018 14:36:22 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Zhi Chen <zhichen@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org
-Subject: [for -stable] commit "c82919888064 ath10k: fix scan crash due to
- incorrect length calculation"
-Message-ID: <20180906213620.GA72542@ban.mtv.corp.google.com> (sfid-20180906_233635_042171_26F54294)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 12 Sep 2018 09:39:52 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Michal Kubecek <mkubecek@suse.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 2/2] netlink: add ethernet address policy types
+Date: Wed, 12 Sep 2018 10:36:10 +0200
+Message-Id: <20180912083610.20857-2-johannes@sipsolutions.net> (sfid-20180912_103626_323977_496053AC)
+In-Reply-To: <20180912083610.20857-1-johannes@sipsolutions.net>
+References: <20180912083610.20857-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg / stable maintainer(s),
+From: Johannes Berg <johannes.berg@intel.com>
 
-IIUC, this commit is a good candidate for -stable. I just hit the bug on
-4.14, because of new vendor firmware that noticed the mismatched length
-(an internal "assert"), but it seems like this is equally problematic
-from the kernel side for as long as this code existed [1]:
+Commonly, ethernet addresses are just using a policy of
+	{ .len = ETH_ALEN }
+which leaves userspace free to send more data than it should,
+which may hide bugs.
 
-commit c8291988806407e02a01b4b15b4504eafbcc04e0
-Author: Zhi Chen <zhichen@codeaurora.org>
-Date:   Mon Jun 18 17:00:39 2018 +0300
+Introduce NLA_ETH_ADDR which checks for exact size, and rejects
+the attribute if the length isn't ETH_ALEN.
 
-    ath10k: fix scan crash due to incorrect length calculation
+Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
+policy above, but will, in addition, warn on an address that's
+too long.
 
-Thanks,
-Brian
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/netlink.h | 4 ++++
+ lib/nlattr.c          | 8 ++++++++
+ 2 files changed, 12 insertions(+)
 
-[1] I guess that would be:
-
-Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
-
-which was in v4.0.
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 04e40fcc70d6..1139163c0db0 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -181,6 +181,8 @@ enum {
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
+ 	NLA_REJECT,
++	NLA_ETH_ADDR,
++	NLA_ETH_ADDR_COMPAT,
+ 	__NLA_TYPE_MAX,
+ };
+ 
+@@ -213,6 +215,8 @@ enum {
+  *                         data must point to a u32 value of valid flags
+  *    NLA_REJECT           Reject this attribute, validation data may point
+  *                         to a string to report as the error in extended ACK.
++ *    NLA_ETH_ADDR         Ethernet address, rejected if not exactly 6 octets.
++ *    NLA_ETH_ADDR_COMPAT  Ethernet address, only warns if not exactly 6 octets.
+  *    All other            Minimum length of attribute payload
+  *
+  * Example:
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index 9ec0cc151148..3165b6d0baaa 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -29,6 +29,8 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
+ 	[NLA_S16]	= sizeof(s16),
+ 	[NLA_S32]	= sizeof(s32),
+ 	[NLA_S64]	= sizeof(s64),
++	[NLA_ETH_ADDR]	= ETH_ALEN,
++	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
+ };
+ 
+ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+@@ -42,6 +44,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+ 	[NLA_S16]	= sizeof(s16),
+ 	[NLA_S32]	= sizeof(s32),
+ 	[NLA_S64]	= sizeof(s64),
++	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
+ };
+ 
+ static int validate_nla_bitfield32(const struct nlattr *nla,
+@@ -93,6 +96,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			extack->_msg = pt->validation_data;
+ 		return -EINVAL;
+ 
++	case NLA_ETH_ADDR:
++		if (attrlen != ETH_ALEN)
++			return -ERANGE;
++		break;
++
+ 	case NLA_FLAG:
+ 		if (attrlen > 0)
+ 			return -ERANGE;
+-- 
+2.14.4
