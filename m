@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12405 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731675AbeITMGS (ORCPT
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:34584 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727659AbeILNxf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:18 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 11/29] staging: wilc1000: refactor wilc_wlan_parse_info_frame() function
-Date: Thu, 20 Sep 2018 11:53:22 +0530
-Message-ID: <1537424620-6982-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082500_354980_273B498D)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 12 Sep 2018 09:53:35 -0400
+Received: by mail-qt0-f172.google.com with SMTP id m13-v6so1053829qth.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2018 01:50:02 -0700 (PDT)
+Subject: Re: [RFC v2 2/2] netlink: add ethernet address policy types
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20180912083610.20857-1-johannes@sipsolutions.net>
+ <20180912083610.20857-2-johannes@sipsolutions.net>
+Cc: Michal Kubecek <mkubecek@suse.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B98D336.4090107@broadcom.com> (sfid-20180912_105009_979443_14993FF1)
+Date: Wed, 12 Sep 2018 10:49:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180912083610.20857-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return 'void' from wilc_wlan_parse_info_frame() as same constant value
-is returned always. Also removed the 'size' from input parameter as its
-not used in the function.
+On 9/12/2018 10:36 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Commonly, ethernet addresses are just using a policy of
+> 	{ .len = ETH_ALEN }
+> which leaves userspace free to send more data than it should,
+> which may hide bugs.
+>
+> Introduce NLA_ETH_ADDR which checks for exact size, and rejects
+> the attribute if the length isn't ETH_ALEN.
+>
+> Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
+> policy above, but will, in addition, warn on an address that's
+> too long.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+Not sure if this is correctly described here. It seems longer addresses 
+are not rejected, but only result in a warning message. I guess the 
+problem is in the reference to the "policy above" ;-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 42c64ed..2b5471b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -350,22 +350,17 @@ static void wilc_wlan_parse_response_frame(u8 *info, int size)
- 	}
- }
- 
--static int wilc_wlan_parse_info_frame(u8 *info, int size)
-+static void wilc_wlan_parse_info_frame(u8 *info)
- {
- 	struct wilc_mac_cfg *pd = &g_mac;
- 	u32 wid, len;
--	int type = WILC_CFG_RSP_STATUS;
- 
- 	wid = info[0] | (info[1] << 8);
- 
- 	len = info[2];
- 
--	if (len == 1 && wid == WID_STATUS) {
-+	if (len == 1 && wid == WID_STATUS)
- 		pd->mac_status = info[3];
--		type = WILC_CFG_RSP_STATUS;
--	}
--
--	return type;
- }
- 
- /********************************************
-@@ -528,7 +523,8 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 		break;
- 
- 	case 'I':
--		rsp->type = wilc_wlan_parse_info_frame(frame, size);
-+		wilc_wlan_parse_info_frame(frame);
-+		rsp->type = WILC_CFG_RSP_STATUS;
- 		rsp->seq_no = msg_id;
- 		/*call host interface info parse as well*/
- 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
--- 
-2.7.4
+Regards,
+Arend
