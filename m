@@ -1,258 +1,610 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:40011 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730923AbeISRbv (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:44907 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726673AbeILURP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:31:51 -0400
-Received: by mail-wm1-f67.google.com with SMTP id 207-v6so6549647wme.5
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2018 04:54:15 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH] mt76x0: pci: add fw uploading routine
-Date: Wed, 19 Sep 2018 13:53:58 +0200
-Message-Id: <5cfdd943b73c2ffe92e23360e7668d688faaa687.1537357781.git.lorenzo.bianconi@redhat.com> (sfid-20180919_135419_742867_5B7F8160)
-In-Reply-To: <cover.1537357781.git.lorenzo.bianconi@redhat.com>
-References: <cover.1537357781.git.lorenzo.bianconi@redhat.com>
+        Wed, 12 Sep 2018 16:17:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: viro@zeniv.linux.org.uk
+Cc: linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v2 05/17] compat_ioctl: move more drivers to generic_compat_ioctl_ptrarg
+Date: Wed, 12 Sep 2018 17:08:52 +0200
+Message-Id: <20180912151134.436719-1-arnd@arndb.de> (sfid-20180912_171231_559421_071C25A0)
+In-Reply-To: <20180912150142.157913-1-arnd@arndb.de>
+References: <20180912150142.157913-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add pci load firmware routine. Move some shared mcu definitions
-in mt76x02_mcu.h
+The .ioctl and .compat_ioctl file operations have the same prototype so
+they can both point to the same function, which works great almost all
+the time when all the commands are compatible.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-This patch is based on top of Felix's pull request:
-https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-09-19
----
- .../net/wireless/mediatek/mt76/mt76x0/mcu.h   |   5 +
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   | 120 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   |   5 -
- .../net/wireless/mediatek/mt76/mt76x02_mcu.h  |   9 ++
- .../net/wireless/mediatek/mt76/mt76x2_mcu.h   |   7 -
- 5 files changed, 133 insertions(+), 13 deletions(-)
+One exception is the s390 architecture, where a compat pointer is only
+31 bit wide, and converting it into a 64-bit pointer requires calling
+compat_ptr(). Most drivers here will ever run in s390, but since we now
+have a generic helper for it, it's easy enough to use it consistently.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-index f2a87d283e09..09c78a101593 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-@@ -41,4 +41,9 @@ enum mcu_calibrate {
- 	MCU_CAL_TX_GROUP_DELAY,
+I double-checked all these drivers to ensure that all ioctl arguments
+are used as pointers or are ignored, but are not interpreted as integer
+values.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/android/binder.c                    | 2 +-
+ drivers/crypto/qat/qat_common/adf_ctl_drv.c | 2 +-
+ drivers/dma-buf/dma-buf.c                   | 4 +---
+ drivers/dma-buf/sw_sync.c                   | 2 +-
+ drivers/dma-buf/sync_file.c                 | 2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    | 2 +-
+ drivers/hid/hidraw.c                        | 4 +---
+ drivers/iio/industrialio-core.c             | 2 +-
+ drivers/infiniband/core/uverbs_main.c       | 4 ++--
+ drivers/media/rc/lirc_dev.c                 | 4 +---
+ drivers/mfd/cros_ec_dev.c                   | 4 +---
+ drivers/misc/vmw_vmci/vmci_host.c           | 2 +-
+ drivers/nvdimm/bus.c                        | 4 ++--
+ drivers/nvme/host/core.c                    | 2 +-
+ drivers/pci/switch/switchtec.c              | 2 +-
+ drivers/platform/x86/wmi.c                  | 2 +-
+ drivers/rpmsg/rpmsg_char.c                  | 4 ++--
+ drivers/sbus/char/display7seg.c             | 2 +-
+ drivers/sbus/char/envctrl.c                 | 4 +---
+ drivers/scsi/3w-xxxx.c                      | 4 +---
+ drivers/scsi/cxlflash/main.c                | 2 +-
+ drivers/scsi/esas2r/esas2r_main.c           | 2 +-
+ drivers/scsi/pmcraid.c                      | 4 +---
+ drivers/staging/android/ion/ion.c           | 4 +---
+ drivers/staging/vme/devices/vme_user.c      | 2 +-
+ drivers/tee/tee_core.c                      | 2 +-
+ drivers/usb/class/cdc-wdm.c                 | 2 +-
+ drivers/usb/class/usbtmc.c                  | 4 +---
+ drivers/video/fbdev/ps3fb.c                 | 2 +-
+ drivers/virt/fsl_hypervisor.c               | 2 +-
+ fs/btrfs/super.c                            | 2 +-
+ fs/ceph/dir.c                               | 2 +-
+ fs/ceph/file.c                              | 2 +-
+ fs/fuse/dev.c                               | 2 +-
+ fs/notify/fanotify/fanotify_user.c          | 2 +-
+ fs/userfaultfd.c                            | 2 +-
+ net/rfkill/core.c                           | 2 +-
+ 37 files changed, 40 insertions(+), 58 deletions(-)
+
+diff --git a/drivers/android/binder.c b/drivers/android/binder.c
+index d58763b6b009..d2464f5759f8 100644
+--- a/drivers/android/binder.c
++++ b/drivers/android/binder.c
+@@ -5576,7 +5576,7 @@ static const struct file_operations binder_fops = {
+ 	.owner = THIS_MODULE,
+ 	.poll = binder_poll,
+ 	.unlocked_ioctl = binder_ioctl,
+-	.compat_ioctl = binder_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.mmap = binder_mmap,
+ 	.open = binder_open,
+ 	.flush = binder_flush,
+diff --git a/drivers/crypto/qat/qat_common/adf_ctl_drv.c b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+index abc7a7f64d64..8ff77a70addc 100644
+--- a/drivers/crypto/qat/qat_common/adf_ctl_drv.c
++++ b/drivers/crypto/qat/qat_common/adf_ctl_drv.c
+@@ -68,7 +68,7 @@ static long adf_ctl_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
+ static const struct file_operations adf_ctl_ops = {
+ 	.owner = THIS_MODULE,
+ 	.unlocked_ioctl = adf_ctl_ioctl,
+-	.compat_ioctl = adf_ctl_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
  };
  
-+static inline int mt76x0_firmware_running(struct mt76x0_dev *dev)
-+{
-+	return mt76_rr(dev, MT_MCU_COM_REG0) == 1;
-+}
-+
+ struct adf_ctl_drv_info {
+diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+index 13884474d158..a6d7dc4cf7e9 100644
+--- a/drivers/dma-buf/dma-buf.c
++++ b/drivers/dma-buf/dma-buf.c
+@@ -325,9 +325,7 @@ static const struct file_operations dma_buf_fops = {
+ 	.llseek		= dma_buf_llseek,
+ 	.poll		= dma_buf_poll,
+ 	.unlocked_ioctl	= dma_buf_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= dma_buf_ioctl,
+-#endif
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ /*
+diff --git a/drivers/dma-buf/sw_sync.c b/drivers/dma-buf/sw_sync.c
+index 53c1d6d36a64..bc810506d487 100644
+--- a/drivers/dma-buf/sw_sync.c
++++ b/drivers/dma-buf/sw_sync.c
+@@ -419,5 +419,5 @@ const struct file_operations sw_sync_debugfs_fops = {
+ 	.open           = sw_sync_debugfs_open,
+ 	.release        = sw_sync_debugfs_release,
+ 	.unlocked_ioctl = sw_sync_ioctl,
+-	.compat_ioctl	= sw_sync_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+diff --git a/drivers/dma-buf/sync_file.c b/drivers/dma-buf/sync_file.c
+index 35dd06479867..1c64ed60c658 100644
+--- a/drivers/dma-buf/sync_file.c
++++ b/drivers/dma-buf/sync_file.c
+@@ -488,5 +488,5 @@ static const struct file_operations sync_file_fops = {
+ 	.release = sync_file_release,
+ 	.poll = sync_file_poll,
+ 	.unlocked_ioctl = sync_file_ioctl,
+-	.compat_ioctl = sync_file_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
+index 297b36c26a05..1d7b1e3c3ebe 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c
+@@ -47,7 +47,7 @@ static const char kfd_dev_name[] = "kfd";
+ static const struct file_operations kfd_fops = {
+ 	.owner = THIS_MODULE,
+ 	.unlocked_ioctl = kfd_ioctl,
+-	.compat_ioctl = kfd_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.open = kfd_open,
+ 	.mmap = kfd_mmap,
+ };
+diff --git a/drivers/hid/hidraw.c b/drivers/hid/hidraw.c
+index 4a44e48e08b2..e44b64812850 100644
+--- a/drivers/hid/hidraw.c
++++ b/drivers/hid/hidraw.c
+@@ -476,9 +476,7 @@ static const struct file_operations hidraw_ops = {
+ 	.release =      hidraw_release,
+ 	.unlocked_ioctl = hidraw_ioctl,
+ 	.fasync =	hidraw_fasync,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl   = hidraw_ioctl,
+-#endif
++	.compat_ioctl   = generic_compat_ioctl_ptrarg,
+ 	.llseek =	noop_llseek,
+ };
+ 
+diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+index a062cfddc5af..22844b94b0e9 100644
+--- a/drivers/iio/industrialio-core.c
++++ b/drivers/iio/industrialio-core.c
+@@ -1630,7 +1630,7 @@ static const struct file_operations iio_buffer_fileops = {
+ 	.owner = THIS_MODULE,
+ 	.llseek = noop_llseek,
+ 	.unlocked_ioctl = iio_ioctl,
+-	.compat_ioctl = iio_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static int iio_check_unique_scan_index(struct iio_dev *indio_dev)
+diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
+index 823beca448e1..f4755c1c9cfa 100644
+--- a/drivers/infiniband/core/uverbs_main.c
++++ b/drivers/infiniband/core/uverbs_main.c
+@@ -930,7 +930,7 @@ static const struct file_operations uverbs_fops = {
+ 	.release = ib_uverbs_close,
+ 	.llseek	 = no_llseek,
+ 	.unlocked_ioctl = ib_uverbs_ioctl,
+-	.compat_ioctl = ib_uverbs_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static const struct file_operations uverbs_mmap_fops = {
+@@ -941,7 +941,7 @@ static const struct file_operations uverbs_mmap_fops = {
+ 	.release = ib_uverbs_close,
+ 	.llseek	 = no_llseek,
+ 	.unlocked_ioctl = ib_uverbs_ioctl,
+-	.compat_ioctl = ib_uverbs_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static struct ib_client uverbs_client = {
+diff --git a/drivers/media/rc/lirc_dev.c b/drivers/media/rc/lirc_dev.c
+index f862f1b7f996..077209f414ed 100644
+--- a/drivers/media/rc/lirc_dev.c
++++ b/drivers/media/rc/lirc_dev.c
+@@ -730,9 +730,7 @@ static const struct file_operations lirc_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.write		= ir_lirc_transmit_ir,
+ 	.unlocked_ioctl	= ir_lirc_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= ir_lirc_ioctl,
+-#endif
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.read		= ir_lirc_read,
+ 	.poll		= ir_lirc_poll,
+ 	.open		= ir_lirc_open,
+diff --git a/drivers/mfd/cros_ec_dev.c b/drivers/mfd/cros_ec_dev.c
+index 999dac752bcc..35a04bcf55da 100644
+--- a/drivers/mfd/cros_ec_dev.c
++++ b/drivers/mfd/cros_ec_dev.c
+@@ -258,9 +258,7 @@ static const struct file_operations fops = {
+ 	.release = ec_device_release,
+ 	.read = ec_device_read,
+ 	.unlocked_ioctl = ec_device_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = ec_device_ioctl,
+-#endif
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static void cros_ec_sensors_register(struct cros_ec_dev *ec)
+diff --git a/drivers/misc/vmw_vmci/vmci_host.c b/drivers/misc/vmw_vmci/vmci_host.c
+index 83e0c95d20a4..1308f889e53b 100644
+--- a/drivers/misc/vmw_vmci/vmci_host.c
++++ b/drivers/misc/vmw_vmci/vmci_host.c
+@@ -983,7 +983,7 @@ static const struct file_operations vmuser_fops = {
+ 	.release	= vmci_host_close,
+ 	.poll		= vmci_host_poll,
+ 	.unlocked_ioctl	= vmci_host_unlocked_ioctl,
+-	.compat_ioctl	= vmci_host_unlocked_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ static struct miscdevice vmci_host_miscdev = {
+diff --git a/drivers/nvdimm/bus.c b/drivers/nvdimm/bus.c
+index 8aae6dcc839f..7449cbc55df7 100644
+--- a/drivers/nvdimm/bus.c
++++ b/drivers/nvdimm/bus.c
+@@ -1133,7 +1133,7 @@ static const struct file_operations nvdimm_bus_fops = {
+ 	.owner = THIS_MODULE,
+ 	.open = nd_open,
+ 	.unlocked_ioctl = nd_ioctl,
+-	.compat_ioctl = nd_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.llseek = noop_llseek,
+ };
+ 
+@@ -1141,7 +1141,7 @@ static const struct file_operations nvdimm_fops = {
+ 	.owner = THIS_MODULE,
+ 	.open = nd_open,
+ 	.unlocked_ioctl = nvdimm_ioctl,
+-	.compat_ioctl = nvdimm_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.llseek = noop_llseek,
+ };
+ 
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index dd8ec1dd9219..2d986f573a29 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2579,7 +2579,7 @@ static const struct file_operations nvme_dev_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.open		= nvme_dev_open,
+ 	.unlocked_ioctl	= nvme_dev_ioctl,
+-	.compat_ioctl	= nvme_dev_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ static ssize_t nvme_sysfs_reset(struct device *dev,
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 9940cc70f38b..4296919c784e 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -967,7 +967,7 @@ static const struct file_operations switchtec_fops = {
+ 	.read = switchtec_dev_read,
+ 	.poll = switchtec_dev_poll,
+ 	.unlocked_ioctl = switchtec_dev_ioctl,
+-	.compat_ioctl = switchtec_dev_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static void link_event_work(struct work_struct *work)
+diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
+index 04791ea5d97b..e4d0697e07d6 100644
+--- a/drivers/platform/x86/wmi.c
++++ b/drivers/platform/x86/wmi.c
+@@ -886,7 +886,7 @@ static const struct file_operations wmi_fops = {
+ 	.read		= wmi_char_read,
+ 	.open		= wmi_char_open,
+ 	.unlocked_ioctl	= wmi_ioctl,
+-	.compat_ioctl	= wmi_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ static int wmi_dev_probe(struct device *dev)
+diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
+index a76b963a7e50..02aefb2b2d47 100644
+--- a/drivers/rpmsg/rpmsg_char.c
++++ b/drivers/rpmsg/rpmsg_char.c
+@@ -285,7 +285,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
+ 	.write = rpmsg_eptdev_write,
+ 	.poll = rpmsg_eptdev_poll,
+ 	.unlocked_ioctl = rpmsg_eptdev_ioctl,
+-	.compat_ioctl = rpmsg_eptdev_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static ssize_t name_show(struct device *dev, struct device_attribute *attr,
+@@ -446,7 +446,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
+ 	.open = rpmsg_ctrldev_open,
+ 	.release = rpmsg_ctrldev_release,
+ 	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
+-	.compat_ioctl = rpmsg_ctrldev_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static void rpmsg_ctrldev_release_device(struct device *dev)
+diff --git a/drivers/sbus/char/display7seg.c b/drivers/sbus/char/display7seg.c
+index 5c8ed7350a04..064fe7247eb2 100644
+--- a/drivers/sbus/char/display7seg.c
++++ b/drivers/sbus/char/display7seg.c
+@@ -155,7 +155,7 @@ static long d7s_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ static const struct file_operations d7s_fops = {
+ 	.owner =		THIS_MODULE,
+ 	.unlocked_ioctl =	d7s_ioctl,
+-	.compat_ioctl =		d7s_ioctl,
++	.compat_ioctl =		generic_compat_ioctl_ptrarg,
+ 	.open =			d7s_open,
+ 	.release =		d7s_release,
+ 	.llseek = noop_llseek,
+diff --git a/drivers/sbus/char/envctrl.c b/drivers/sbus/char/envctrl.c
+index 56e962a01493..a26665ccea56 100644
+--- a/drivers/sbus/char/envctrl.c
++++ b/drivers/sbus/char/envctrl.c
+@@ -714,9 +714,7 @@ static const struct file_operations envctrl_fops = {
+ 	.owner =		THIS_MODULE,
+ 	.read =			envctrl_read,
+ 	.unlocked_ioctl =	envctrl_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl =		envctrl_ioctl,
+-#endif
++	.compat_ioctl =		generic_compat_ioctl_ptrarg,
+ 	.open =			envctrl_open,
+ 	.release =		envctrl_release,
+ 	.llseek =		noop_llseek,
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 471366945bd4..86c9f22a152f 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1047,9 +1047,7 @@ static int tw_chrdev_open(struct inode *inode, struct file *file)
+ static const struct file_operations tw_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.unlocked_ioctl	= tw_chrdev_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl   = tw_chrdev_ioctl,
+-#endif
++	.compat_ioctl   = generic_compat_ioctl_ptrarg,
+ 	.open		= tw_chrdev_open,
+ 	.release	= NULL,
+ 	.llseek		= noop_llseek,
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 6637116529aa..d968efeb50e8 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3596,7 +3596,7 @@ static const struct file_operations cxlflash_chr_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.open           = cxlflash_chr_open,
+ 	.unlocked_ioctl	= cxlflash_chr_ioctl,
+-	.compat_ioctl	= cxlflash_chr_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ /**
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index c07118617d89..95142292e702 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -614,7 +614,7 @@ static int __init esas2r_init(void)
+ 
+ /* Handle ioctl calls to "/proc/scsi/esas2r/ATTOnode" */
+ static const struct file_operations esas2r_proc_fops = {
+-	.compat_ioctl	= esas2r_proc_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.unlocked_ioctl = esas2r_proc_ioctl,
+ };
+ 
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 4e86994e10e8..8a8c73d3bdad 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3999,9 +3999,7 @@ static const struct file_operations pmcraid_fops = {
+ 	.open = pmcraid_chr_open,
+ 	.fasync = pmcraid_chr_fasync,
+ 	.unlocked_ioctl = pmcraid_chr_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl = pmcraid_chr_ioctl,
+-#endif
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.llseek = noop_llseek,
+ };
+ 
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 99073325b0c0..ef727c235392 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -484,9 +484,7 @@ int ion_query_heaps(struct ion_heap_query *query)
+ static const struct file_operations ion_fops = {
+ 	.owner          = THIS_MODULE,
+ 	.unlocked_ioctl = ion_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= ion_ioctl,
+-#endif
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ };
+ 
+ static int debug_shrink_set(void *data, u64 val)
+diff --git a/drivers/staging/vme/devices/vme_user.c b/drivers/staging/vme/devices/vme_user.c
+index 6a33aaa1a49f..568700ffd2f2 100644
+--- a/drivers/staging/vme/devices/vme_user.c
++++ b/drivers/staging/vme/devices/vme_user.c
+@@ -494,7 +494,7 @@ static const struct file_operations vme_user_fops = {
+ 	.write = vme_user_write,
+ 	.llseek = vme_user_llseek,
+ 	.unlocked_ioctl = vme_user_unlocked_ioctl,
+-	.compat_ioctl = vme_user_unlocked_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.mmap = vme_user_mmap,
+ };
+ 
+diff --git a/drivers/tee/tee_core.c b/drivers/tee/tee_core.c
+index dd46b758852a..cb79f28be894 100644
+--- a/drivers/tee/tee_core.c
++++ b/drivers/tee/tee_core.c
+@@ -670,7 +670,7 @@ static const struct file_operations tee_fops = {
+ 	.open = tee_open,
+ 	.release = tee_release,
+ 	.unlocked_ioctl = tee_ioctl,
+-	.compat_ioctl = tee_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static void tee_release_device(struct device *dev)
+diff --git a/drivers/usb/class/cdc-wdm.c b/drivers/usb/class/cdc-wdm.c
+index bec581fb7c63..6e4998c8e64f 100644
+--- a/drivers/usb/class/cdc-wdm.c
++++ b/drivers/usb/class/cdc-wdm.c
+@@ -724,7 +724,7 @@ static const struct file_operations wdm_fops = {
+ 	.release =	wdm_release,
+ 	.poll =		wdm_poll,
+ 	.unlocked_ioctl = wdm_ioctl,
+-	.compat_ioctl = wdm_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.llseek =	noop_llseek,
+ };
+ 
+diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c
+index 83ffa5a14c3d..d5da47c4c462 100644
+--- a/drivers/usb/class/usbtmc.c
++++ b/drivers/usb/class/usbtmc.c
+@@ -1460,9 +1460,7 @@ static const struct file_operations fops = {
+ 	.open		= usbtmc_open,
+ 	.release	= usbtmc_release,
+ 	.unlocked_ioctl	= usbtmc_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= usbtmc_ioctl,
+-#endif
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.fasync         = usbtmc_fasync,
+ 	.poll           = usbtmc_poll,
+ 	.llseek		= default_llseek,
+diff --git a/drivers/video/fbdev/ps3fb.c b/drivers/video/fbdev/ps3fb.c
+index 5ed2db39d823..f9f8ffaf1c4a 100644
+--- a/drivers/video/fbdev/ps3fb.c
++++ b/drivers/video/fbdev/ps3fb.c
+@@ -949,7 +949,7 @@ static struct fb_ops ps3fb_ops = {
+ 	.fb_mmap	= ps3fb_mmap,
+ 	.fb_blank	= ps3fb_blank,
+ 	.fb_ioctl	= ps3fb_ioctl,
+-	.fb_compat_ioctl = ps3fb_ioctl
++	.fb_compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static const struct fb_fix_screeninfo ps3fb_fix = {
+diff --git a/drivers/virt/fsl_hypervisor.c b/drivers/virt/fsl_hypervisor.c
+index 8ba726e600e9..406b7e492214 100644
+--- a/drivers/virt/fsl_hypervisor.c
++++ b/drivers/virt/fsl_hypervisor.c
+@@ -703,7 +703,7 @@ static const struct file_operations fsl_hv_fops = {
+ 	.poll = fsl_hv_poll,
+ 	.read = fsl_hv_read,
+ 	.unlocked_ioctl = fsl_hv_ioctl,
+-	.compat_ioctl = fsl_hv_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ };
+ 
+ static struct miscdevice fsl_hv_misc_dev = {
+diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+index 6601c9aa5e35..2b5a8ad86305 100644
+--- a/fs/btrfs/super.c
++++ b/fs/btrfs/super.c
+@@ -2352,7 +2352,7 @@ static const struct super_operations btrfs_super_ops = {
+ static const struct file_operations btrfs_ctl_fops = {
+ 	.open = btrfs_control_open,
+ 	.unlocked_ioctl	 = btrfs_control_ioctl,
+-	.compat_ioctl = btrfs_control_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.owner	 = THIS_MODULE,
+ 	.llseek = noop_llseek,
+ };
+diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
+index da73f29d7faa..eb869fe6774d 100644
+--- a/fs/ceph/dir.c
++++ b/fs/ceph/dir.c
+@@ -1489,7 +1489,7 @@ const struct file_operations ceph_dir_fops = {
+ 	.open = ceph_open,
+ 	.release = ceph_release,
+ 	.unlocked_ioctl = ceph_ioctl,
+-	.compat_ioctl = ceph_ioctl,
++	.compat_ioctl = generic_compat_ioctl_ptrarg,
+ 	.fsync = ceph_fsync,
+ 	.lock = ceph_lock,
+ 	.flock = ceph_flock,
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 92ab20433682..85094042cfac 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1842,7 +1842,7 @@ const struct file_operations ceph_file_fops = {
+ 	.splice_read = generic_file_splice_read,
+ 	.splice_write = iter_file_splice_write,
+ 	.unlocked_ioctl = ceph_ioctl,
+-	.compat_ioctl	= ceph_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.fallocate	= ceph_fallocate,
+ };
+ 
+diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
+index 11ea2c4a38ab..a6d4a24963ed 100644
+--- a/fs/fuse/dev.c
++++ b/fs/fuse/dev.c
+@@ -2258,7 +2258,7 @@ const struct file_operations fuse_dev_operations = {
+ 	.release	= fuse_dev_release,
+ 	.fasync		= fuse_dev_fasync,
+ 	.unlocked_ioctl = fuse_dev_ioctl,
+-	.compat_ioctl   = fuse_dev_ioctl,
++	.compat_ioctl   = generic_compat_ioctl_ptrarg,
+ };
+ EXPORT_SYMBOL_GPL(fuse_dev_operations);
+ 
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 69054886915b..fc4193b384cf 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -447,7 +447,7 @@ static const struct file_operations fanotify_fops = {
+ 	.fasync		= NULL,
+ 	.release	= fanotify_release,
+ 	.unlocked_ioctl	= fanotify_ioctl,
+-	.compat_ioctl	= fanotify_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.llseek		= noop_llseek,
+ };
+ 
+diff --git a/fs/userfaultfd.c b/fs/userfaultfd.c
+index bfa0ec69f924..bc9118b58a8a 100644
+--- a/fs/userfaultfd.c
++++ b/fs/userfaultfd.c
+@@ -1878,7 +1878,7 @@ static const struct file_operations userfaultfd_fops = {
+ 	.poll		= userfaultfd_poll,
+ 	.read		= userfaultfd_read,
+ 	.unlocked_ioctl = userfaultfd_ioctl,
+-	.compat_ioctl	= userfaultfd_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+ 	.llseek		= noop_llseek,
+ };
+ 
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 1355f5ca8d22..ba68b53f58ab 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1323,7 +1323,7 @@ static const struct file_operations rfkill_fops = {
+ 	.release	= rfkill_fop_release,
+ #ifdef CONFIG_RFKILL_INPUT
+ 	.unlocked_ioctl	= rfkill_fop_ioctl,
+-	.compat_ioctl	= rfkill_fop_ioctl,
++	.compat_ioctl	= generic_compat_ioctl_ptrarg,
  #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index c5e47bc70202..76e6d52b3a64 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -15,10 +15,122 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/firmware.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- 
- #include "mt76x0.h"
-+#include "mcu.h"
-+
-+#define MT7610E_FIRMWARE	"mediatek/mt7610e.bin"
-+#define MT7650E_FIRMWARE	"mediatek/mt7650e.bin"
-+
-+#define MT_MCU_IVB_ADDR		(MT_MCU_ILM_ADDR + 0x54000 - MT_MCU_IVB_SIZE)
-+
-+static int mt76x0e_load_firmware(struct mt76x0_dev *dev)
-+{
-+	bool is_combo_chip = mt76_chip(&dev->mt76) != 0x7610;
-+	u32 val, ilm_len, dlm_len, offset = 0;
-+	const struct mt76x02_fw_header *hdr;
-+	const struct firmware *fw;
-+	const char *firmware;
-+	const u8 *fw_payload;
-+	int len, err;
-+
-+	if (mt76x0_firmware_running(dev))
-+		return 0;
-+
-+	if (is_combo_chip)
-+		firmware = MT7650E_FIRMWARE;
-+	else
-+		firmware = MT7610E_FIRMWARE;
-+
-+	err = request_firmware(&fw, firmware, dev->mt76.dev);
-+	if (err)
-+		return err;
-+
-+	if (!fw || !fw->data || fw->size < sizeof(*hdr)) {
-+		err = -EIO;
-+		goto out;
-+	}
-+
-+	hdr = (const struct mt76x02_fw_header *)fw->data;
-+
-+	len = sizeof(*hdr);
-+	len += le32_to_cpu(hdr->ilm_len);
-+	len += le32_to_cpu(hdr->dlm_len);
-+
-+	if (fw->size != len) {
-+		err = -EIO;
-+		goto out;
-+	}
-+
-+	fw_payload = fw->data + sizeof(*hdr);
-+
-+	val = le16_to_cpu(hdr->fw_ver);
-+	dev_info(dev->mt76.dev, "Firmware Version: %d.%d.%02d\n",
-+		 (val >> 12) & 0xf, (val >> 8) & 0xf, val & 0xf);
-+
-+	val = le16_to_cpu(hdr->fw_ver);
-+	dev_dbg(dev->mt76.dev,
-+		"Firmware Version: %d.%d.%02d Build: %x Build time: %.16s\n",
-+		(val >> 12) & 0xf, (val >> 8) & 0xf, val & 0xf,
-+		le16_to_cpu(hdr->build_ver), hdr->build_time);
-+
-+	if (is_combo_chip && !mt76_poll(dev, MT_MCU_SEMAPHORE_00, 1, 1, 600)) {
-+		dev_err(dev->mt76.dev,
-+			"Could not get hardware semaphore for loading fw\n");
-+		err = -ETIMEDOUT;
-+		goto out;
-+	}
-+
-+	/* upload ILM. */
-+	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, 0);
-+	ilm_len = le32_to_cpu(hdr->ilm_len);
-+	if (is_combo_chip) {
-+		ilm_len -= MT_MCU_IVB_SIZE;
-+		offset = MT_MCU_IVB_SIZE;
-+	}
-+	dev_dbg(dev->mt76.dev, "loading FW - ILM %u\n", ilm_len);
-+	mt76_wr_copy(dev, MT_MCU_ILM_ADDR + offset, fw_payload + offset,
-+		     ilm_len);
-+
-+	/* upload IVB. */
-+	if (is_combo_chip) {
-+		dev_dbg(dev->mt76.dev, "loading FW - IVB %u\n",
-+			MT_MCU_IVB_SIZE);
-+		mt76_wr_copy(dev, MT_MCU_IVB_ADDR, fw_payload, MT_MCU_IVB_SIZE);
-+	}
-+
-+	/* upload DLM. */
-+	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, MT_MCU_DLM_OFFSET);
-+	dlm_len = le32_to_cpu(hdr->dlm_len);
-+	dev_dbg(dev->mt76.dev, "loading FW - DLM %u\n", dlm_len);
-+	mt76_wr_copy(dev, MT_MCU_ILM_ADDR,
-+		     fw_payload + le32_to_cpu(hdr->ilm_len), dlm_len);
-+
-+	/* trigger firmware */
-+	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, 0);
-+	if (is_combo_chip)
-+		mt76_wr(dev, MT_MCU_INT_LEVEL, 0x3);
-+	else
-+		mt76_wr(dev, MT_MCU_RESET_CTL, 0x300);
-+
-+	if (!mt76_poll_msec(dev, MT_MCU_COM_REG0, 1, 1, 1000)) {
-+		dev_err(dev->mt76.dev, "Firmware failed to start\n");
-+		err = -ETIMEDOUT;
-+		goto out;
-+	}
-+
-+	dev_dbg(dev->mt76.dev, "Firmware running!\n");
-+
-+out:
-+	if (is_combo_chip)
-+		mt76_wr(dev, MT_MCU_SEMAPHORE_00, 0x1);
-+	release_firmware(fw);
-+
-+	return err;
-+}
- 
- static int
- mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-@@ -49,7 +161,13 @@ mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	dev->mt76.rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	dev_info(dev->mt76.dev, "ASIC revision: %08x\n", dev->mt76.rev);
- 
--/* error: */
-+	ret = mt76x0e_load_firmware(dev);
-+	if (ret < 0)
-+		goto error;
-+
-+	return 0;
-+
-+error:
- 	ieee80211_free_hw(mt76_hw(dev));
- 	return ret;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index bb8c0cd3d48a..94a2968147a3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -54,11 +54,6 @@ static struct usb_device_id mt76x0_device_table[] = {
- #define MCU_FW_URB_MAX_PAYLOAD		0x38f8
- #define MCU_FW_URB_SIZE			(MCU_FW_URB_MAX_PAYLOAD + 12)
- 
--static inline int mt76x0_firmware_running(struct mt76x0_dev *dev)
--{
--	return mt76_rr(dev, MT_MCU_COM_REG0) == 1;
--}
--
- static int
- mt76x0u_upload_firmware(struct mt76x0_dev *dev,
- 			const struct mt76x02_fw_header *hdr)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-index 2f5af3dad2bb..7bfd403f56f6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-@@ -27,6 +27,15 @@
- #define MT_INBAND_PACKET_MAX_LEN	192
- #define MT_MCU_MEMMAP_WLAN		0x410000
- 
-+#define MT_MCU_PCIE_REMAP_BASE4		0x074C
-+
-+#define MT_MCU_SEMAPHORE_00		0x07B0
-+#define MT_MCU_SEMAPHORE_01		0x07B4
-+#define MT_MCU_SEMAPHORE_02		0x07B8
-+#define MT_MCU_SEMAPHORE_03		0x07BC
-+
-+#define MT_MCU_ILM_ADDR			0x80000
-+
- enum mcu_cmd {
- 	CMD_FUN_SET_OP = 1,
- 	CMD_LOAD_CR = 2,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-index 3de062d0b644..fa72d5a5ecad 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-@@ -25,7 +25,6 @@
- #define MT_MCU_PCIE_REMAP_BASE1		0x0740
- #define MT_MCU_PCIE_REMAP_BASE2		0x0744
- #define MT_MCU_PCIE_REMAP_BASE3		0x0748
--#define MT_MCU_PCIE_REMAP_BASE4		0x074C
- 
- #define MT_LED_CTRL			0x0770
- #define MT_LED_CTRL_REPLAY(_n)		BIT(0 + (8 * (_n)))
-@@ -50,16 +49,10 @@
- #define MT_LED_STATUS_DURATION(_v)	(((_v) << __ffs(MT_LED_STATUS_DURATION_MASK)) & \
- 					 MT_LED_STATUS_DURATION_MASK)
- 
--#define MT_MCU_SEMAPHORE_00		0x07B0
--#define MT_MCU_SEMAPHORE_01		0x07B4
--#define MT_MCU_SEMAPHORE_02		0x07B8
--#define MT_MCU_SEMAPHORE_03		0x07BC
--
- #define MT_MCU_ROM_PATCH_OFFSET		0x80000
- #define MT_MCU_ROM_PATCH_ADDR		0x90000
- 
- #define MT_MCU_ILM_OFFSET		0x80000
--#define MT_MCU_ILM_ADDR			0x80000
- 
- #define MT_MCU_DLM_OFFSET		0x100000
- #define MT_MCU_DLM_ADDR			0x90000
+ 	.llseek		= no_llseek,
+ };
 -- 
-2.17.1
+2.18.0
