@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57350 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727034AbeIKWjQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:54278 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726442AbeILMgL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 18:39:16 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix null checks on wilc
-Date: Tue, 11 Sep 2018 18:38:51 +0100
-Message-Id: <20180911173851.17567-1-colin.king@canonical.com> (sfid-20180911_193902_146732_754D873A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Wed, 12 Sep 2018 08:36:11 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] netlink: add NLA_REJECT policy type
+Date: Wed, 12 Sep 2018 09:32:45 +0200
+Message-Id: <20180912073245.8047-1-johannes@sipsolutions.net> (sfid-20180912_093302_352983_7B175D9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Currently the pointer wilc is being null checked several times
-and yet not checked for the final workqueue flush and destroy
-(which can lead to a null pointer dereference if wilc is null);
-these missing null checks were overlooked in an earlier core
-refactoring commit.
+In some situations some netlink attributes may be used for output
+only (kernel->userspace) or may be reserved for future use. It's
+then helpful to be able to prevent userspace from using them in
+messages sent to the kernel, since they'd otherwise be ignored and
+any future will become impossible if this happens.
 
-Clean up the code by checking wilc at the start and bailing out
-early if it is null allowing the subsequent null checks to be
-removed, this also fixes the potential null pointer deferences
-on the workqueue flush and destroy calls.
+Add NLA_REJECT to the policy which does nothing but reject (with
+EINVAL) validation of any messages containing this attribute.
 
-Detected by CoverityScan, CID#1473305 ("Dereference after null check")
+The specific case I have in mind now is a shared nested attribute
+containing request/response data, and it would be pointless and
+potentially confusing to have userspace include response data in
+the messages that actually contain a request.
 
-Fixes: b3ee105c332e ("staging: wilc1000: refactor code to move initilization in wilc_netdev_init()")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ include/net/netlink.h | 1 +
+ lib/nlattr.c          | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a498321c908b..49afda669393 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1015,15 +1015,18 @@ void wilc_netdev_cleanup(struct wilc *wilc)
- {
- 	int i;
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 0c154f98e987..ea7e87564f59 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -180,6 +180,7 @@ enum {
+ 	NLA_S32,
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
++	NLA_REJECT,
+ 	__NLA_TYPE_MAX,
+ };
  
--	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev))
-+	if (!wilc)
-+		return;
-+
-+	if (wilc->vif[0]->ndev || wilc->vif[1]->ndev)
- 		unregister_inetaddr_notifier(&g_dev_notifier);
- 
--	if (wilc && wilc->firmware) {
-+	if (wilc->firmware) {
- 		release_firmware(wilc->firmware);
- 		wilc->firmware = NULL;
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index e335bcafa9e4..4644ae74bf63 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -87,6 +87,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
  	}
  
--	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
-+	if (wilc->vif[0]->ndev || wilc->vif[1]->ndev) {
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
- 			if (wilc->vif[i]->ndev)
- 				if (wilc->vif[i]->mac_opened)
+ 	switch (pt->type) {
++	case NLA_REJECT:
++		return -EINVAL;
++
+ 	case NLA_FLAG:
+ 		if (attrlen > 0)
+ 			return -ERANGE;
 -- 
-2.17.1
+2.14.4
