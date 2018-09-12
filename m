@@ -1,125 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34690 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725856AbeICJ40 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:55096 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726502AbeILNjx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 05:56:26 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 03 Sep 2018 11:07:51 +0530
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-In-Reply-To: <87zhx21uqc.fsf@toke.dk>
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
- <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com> <87zhx21uqc.fsf@toke.dk>
-Message-ID: <ebb12dc92de318b8d88eb607d9182ead@codeaurora.org> (sfid-20180903_073757_259017_5600A130)
+        Wed, 12 Sep 2018 09:39:53 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Michal Kubecek <mkubecek@suse.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 1/2] netlink: add NLA_REJECT policy type
+Date: Wed, 12 Sep 2018 10:36:09 +0200
+Message-Id: <20180912083610.20857-1-johannes@sipsolutions.net> (sfid-20180912_103626_907703_3A24107A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-08-31 19:52, Toke Høiland-Jørgensen wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
->> Anilkumar Kolli <akolli@codeaurora.org> writes:
->> 
->>> Mesh path metric needs txrate information from ieee80211_tx_status()
->>> call but in ath10k there is no mechanism to report tx rate 
->>> information
->>> via ieee80211_tx_status(), the rate is only accessible via
->>> sta_statiscs() op.
->>> 
->>> Per peer stats has tx rate info available, this patch stores per peer
->>> last tx rate and updates the tx rate info structures in tx 
->>> completition.
->>> The rate updated in ieee80211_tx_status() is not exactly for the last
->>> transmitted frame instead the rate is from one of the previous 
->>> frames.
->>> 
->>> Per peer txrate information is updated through per peer statistics
->>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->>> 
->>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
->>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->>> 
->>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
->> 
->> This is a patch from last March, full patch here:
->> 
->> https://patchwork.kernel.org/patch/10267693/
->> 
->>> @@ -119,6 +122,18 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
->>>  			info->flags &= ~IEEE80211_TX_STAT_ACK;
->>>  	}
->>> 
->>> +	if (sta) {
->>> +		spin_lock_bh(&ar->data_lock);
->>> +		arsta = (struct ath10k_sta *)sta->drv_priv;
->>> +		info->status.rates[0].idx =
->>> +			arsta->tx_info.status.rates[0].idx;
->>> +		info->status.rates[0].count =
->>> +			arsta->tx_info.status.rates[0].count;
->>> +		info->status.rates[0].flags =
->> <> +			arsta->tx_info.status.rates[0].flags;
->>> +		spin_unlock_bh(&ar->data_lock);
->>> +	}
->>> +
->>>  	ieee80211_tx_status(htt->ar->hw, msdu);
->>>  	/* we do not own the msdu anymore */
->> 
->> "is not exactly" is IMHO an understatement. What it means that with 
->> this
->> patch ath10k reports the rate information from another frame instead 
->> of
->> the current skb, because the firmware provides the rate information 
->> "out
->> of band". A simple example to clarify:
->> 
->>    Let's say ath10k transmits frames A, B and C. Then ath10k calls
->>    ieee80211_tx_status() for frame C the rate information could be for
->>    frame A, or it could be the other around for frame A status the 
->> rate
->>    information is from frame C.
->> 
->> In other words, there's no guarantee from what frame the rate
->> information is from.
->> 
->> Too me this feels like a bad idea but I'm not familiar enough with
->> mac80211 to really comment on this. What kind of implications does 
->> this
->> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
->> about their opinion about this.
-> 
-> I was under the impression that the values gathered (at least for
-> airtime) would be cumulative values? If it's just the airtime of a
-> single random frame, which is what I understand from your example, it's
-> not going to be terribly useful to provide ATF at least...
-> 
-> -Toke
+From: Johannes Berg <johannes.berg@intel.com>
 
-The design:
-Whenever radio transmits packet, firmware will record numbers of bytes 
-sent, MSDU’s sent, TX duration, AMPDU information, ACK fail, BA fail, 
-Rate at which packet is sent. This is recorded for 4 frames sent on that 
-peer. Once 4 frames are sent for that peer, TX packet event is sent to 
-ath10k driver with the recorded values. These rate values are updated to 
-mac80211 using ieee80211_tx_status().
+In some situations some netlink attributes may be used for output
+only (kernel->userspace) or may be reserved for future use. It's
+then helpful to be able to prevent userspace from using them in
+messages sent to the kernel, since they'd otherwise be ignored and
+any future will become impossible if this happens.
 
-Agreed mac80211 is not getting the tx rate value for the last packet 
-sent on the air, but this will be delivered to mac80211 at a later time 
-for each transmitted packet.
+Add NLA_REJECT to the policy which does nothing but reject (with
+EINVAL) validation of any messages containing this attribute.
+Allow for returning a specific extended ACK error message in the
+validation_data pointer.
 
-Example:
-Firmware TX for peer 1 -> pkt1 -> pkt2 -> pkt3 -> pkt4 -> pkt5 -> pkt6 
--> pkt7 -> pkt8 -> pkt9 -> pkt10
-Driver updates                                         -> 
-ieee80211_tx_status()        ->ieee80211_tx_status()
+While at it fix the indentation of NLA_BITFIELD32 and describe the
+validation_data pointer for it.
 
-On each 4th packet sent in air, driver will update the tx rate.
+The specific case I have in mind now is a shared nested attribute
+containing request/response data, and it would be pointless and
+potentially confusing to have userspace include response data in
+the messages that actually contain a request.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/netlink.h |  6 +++++-
+ lib/nlattr.c          | 12 +++++++++---
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
-Thanks
-Anil.
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 0c154f98e987..04e40fcc70d6 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -180,6 +180,7 @@ enum {
+ 	NLA_S32,
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
++	NLA_REJECT,
+ 	__NLA_TYPE_MAX,
+ };
+ 
+@@ -208,7 +209,10 @@ enum {
+  *    NLA_MSECS            Leaving the length field zero will verify the
+  *                         given type fits, using it verifies minimum length
+  *                         just like "All other"
+- *    NLA_BITFIELD32      A 32-bit bitmap/bitselector attribute
++ *    NLA_BITFIELD32       A 32-bit bitmap/bitselector attribute, validation
++ *                         data must point to a u32 value of valid flags
++ *    NLA_REJECT           Reject this attribute, validation data may point
++ *                         to a string to report as the error in extended ACK.
+  *    All other            Minimum length of attribute payload
+  *
+  * Example:
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index e335bcafa9e4..9ec0cc151148 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -69,7 +69,8 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
+ }
+ 
+ static int validate_nla(const struct nlattr *nla, int maxtype,
+-			const struct nla_policy *policy)
++			const struct nla_policy *policy,
++			struct netlink_ext_ack *extack)
+ {
+ 	const struct nla_policy *pt;
+ 	int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
+@@ -87,6 +88,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 	}
+ 
+ 	switch (pt->type) {
++	case NLA_REJECT:
++		if (pt->validation_data && extack)
++			extack->_msg = pt->validation_data;
++		return -EINVAL;
++
+ 	case NLA_FLAG:
+ 		if (attrlen > 0)
+ 			return -ERANGE;
+@@ -180,7 +186,7 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
+ 	int rem;
+ 
+ 	nla_for_each_attr(nla, head, len, rem) {
+-		int err = validate_nla(nla, maxtype, policy);
++		int err = validate_nla(nla, maxtype, policy, extack);
+ 
+ 		if (err < 0) {
+ 			if (extack)
+@@ -251,7 +257,7 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
+ 
+ 		if (type > 0 && type <= maxtype) {
+ 			if (policy) {
+-				err = validate_nla(nla, maxtype, policy);
++				err = validate_nla(nla, maxtype, policy, extack);
+ 				if (err < 0) {
+ 					NL_SET_ERR_MSG_ATTR(extack, nla,
+ 							    "Attribute failed policy validation");
+-- 
+2.14.4
