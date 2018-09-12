@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40789 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731240AbeITMHY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:07:24 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 29/29] staging: wilc1000: return exact error of register_netdev() from wilc_netdev_init()
-Date: Thu, 20 Sep 2018 11:53:40 +0530
-Message-ID: <1537424620-6982-30-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082632_429298_D7DEAB89)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mx2.suse.de ([195.135.220.15]:41226 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725948AbeILNTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Sep 2018 09:19:48 -0400
+Date: Wed, 12 Sep 2018 10:16:22 +0200
+From: Michal Kubecek <mkubecek@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC] netlink: add NLA_REJECT policy type
+Message-ID: <20180912081621.GC29691@unicorn.suse.cz> (sfid-20180912_101630_152628_264E770A)
+References: <20180912073245.8047-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180912073245.8047-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor wilc_netdev_init() to return the error code received from
-register_netdev() during the failure condition.
+On Wed, Sep 12, 2018 at 09:32:45AM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In some situations some netlink attributes may be used for output
+> only (kernel->userspace) or may be reserved for future use. It's
+> then helpful to be able to prevent userspace from using them in
+> messages sent to the kernel, since they'd otherwise be ignored and
+> any future will become impossible if this happens.
+> 
+> Add NLA_REJECT to the policy which does nothing but reject (with
+> EINVAL) validation of any messages containing this attribute.
+> 
+> The specific case I have in mind now is a shared nested attribute
+> containing request/response data, and it would be pointless and
+> potentially confusing to have userspace include response data in
+> the messages that actually contain a request.
 
-Earlier discussion link
-[1]. https://www.spinics.net/lists/linux-wireless/msg177304.html
+I find this feature very useful. Actually, I was a bit surprised when
+I found I can't mark an attribute "forbidden" using policy.
 
-Suggested-by: Claudiu Beznea <claudiu.beznea@microchip.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+IMHO it would be even nicer if one could also specify an error message
+to use in extack if NLA_REJECT is applied; the easiest way would be
+using .validation_data and passing extack to validate_nla() but I'm not
+sure if it wouldn't qualify as an abuse.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 29c1317..b5e6765 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1065,7 +1065,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	if (!wl)
- 		return -ENOMEM;
- 
--	if (wilc_wlan_cfg_init(wl))
-+	ret = wilc_wlan_cfg_init(wl);
-+	if (ret)
- 		goto free_wl;
- 
- 	*wilc = wl;
-@@ -1077,8 +1078,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	INIT_LIST_HEAD(&wl->rxq_head.list);
- 
- 	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
--	if (!wl->hif_workqueue)
-+	if (!wl->hif_workqueue) {
-+		ret = -ENOMEM;
- 		goto free_cfg;
-+	}
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-@@ -1086,8 +1089,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		struct wireless_dev *wdev;
- 
- 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
--		if (!ndev)
-+		if (!ndev) {
-+			ret = -ENOMEM;
- 			goto free_ndev;
-+		}
- 
- 		vif = netdev_priv(ndev);
- 		memset(vif, 0, sizeof(struct wilc_vif));
-@@ -1110,6 +1115,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		wdev = wilc_create_wiphy(ndev, dev);
- 		if (!wdev) {
- 			netdev_err(ndev, "Can't register WILC Wiphy\n");
-+			ret = -ENOMEM;
- 			goto free_ndev;
- 		}
- 
-@@ -1151,7 +1157,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	wilc_wlan_cfg_deinit(wl);
- free_wl:
- 	kfree(wl);
--	return -ENOMEM;
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(wilc_netdev_init);
- 
--- 
-2.7.4
+Michal Kubecek
