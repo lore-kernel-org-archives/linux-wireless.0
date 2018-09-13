@@ -1,85 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:41354 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725889AbeIJH3N (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:42350 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726855AbeIMNyr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 03:29:13 -0400
-MIME-Version: 1.0
-References: <20180906035323.GA11337@nems_nctu_lu> <877ejzynz9.fsf@toke.dk>
- <CADMDV=ws-iM6+L+CLyrGK=srV56jbYgBbOVWg2AxEX0gR6t8WQ@mail.gmail.com> <87sh2mykmt.fsf@toke.dk>
-In-Reply-To: <87sh2mykmt.fsf@toke.dk>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Sun, 9 Sep 2018 16:44:53 -0700
-Message-ID: <CAA93jw4ud9f2hwhz5nqJa3B0p8N7hP=Hd9ZyGok-k16_-sonoQ@mail.gmail.com> (sfid-20180910_043735_764128_54AF44EE)
-Subject: Re: [PATCH] ath9k: add reset for airtime station debugfs
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: git@louie.lu, Kalle Valo <kvalo@codeaurora.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Kernel Network Developers <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 13 Sep 2018 09:54:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Michal Kubecek <mkubecek@suse.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] netlink: add ethernet address policy types
+Date: Thu, 13 Sep 2018 10:46:03 +0200
+Message-Id: <20180913084603.7979-2-johannes@sipsolutions.net> (sfid-20180913_104626_888696_931A12F0)
+In-Reply-To: <20180913084603.7979-1-johannes@sipsolutions.net>
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 6, 2018 at 4:13 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.=
-dk> wrote:
->
-> Louie Lu <git@louie.lu> writes:
->
-> > Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> =E6=96=BC 2018=E5=B9=B4=
-9=E6=9C=886=E6=97=A5 =E9=80=B1=E5=9B=9B =E4=B8=8B=E5=8D=885:27=E5=AF=AB=E9=
-=81=93=EF=BC=9A
-> >
-> >> Louie Lu <git@louie.lu> writes:
-> >>
-> >> > Let user can reset station airtime status by debugfs, it will
-> >> > reset all airtime deficit to ATH_AIRTIME_QUANTUM and reset rx/tx
-> >> > airtime accumulate to 0.
-> >>
-> >> No objections to the patch, but I'm curious which issues you were
-> >> debugging that led you to needing it? :)
-> >>
-> > I'm testing to get the packet queue time + airtime in
-> > ath_tx_process_buffer,
->
-> Right; I've been thinking that it would be useful to make the CoDel
-> enqueue time available to drivers. And minstrel, for that matter
-> (lowering the number of retries for packets that has queued for a long
-> time, for instance). Good to hear that others are looking into something
-> similar :)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yea! Seeing retransmits scale down would be a goodness. Last I looked
-ath9k was at, like 10?, when it should be, like, 2, at mcs0 and 10 at
-mcs15.
+Commonly, ethernet addresses are just using a policy of
+	{ .len = ETH_ALEN }
+which leaves userspace free to send more data than it should,
+which may hide bugs.
 
-I can't seem to publish a link to this directly, but it's open access
-if you search via https://scholar.google.com/:
+Introduce NLA_ETH_ADDR which checks for exact size, and rejects
+the attribute if the length isn't ETH_ALEN.
 
-"Resolving Bufferbloat in TCP Communication over IEEE 802.11 n WLAN by
-Reducing MAC Retransmission Limit at Low Data Rate"
+Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
+pure length policy, but will, in addition, trigger a netlink
+attribute warning if the passed value is too long.
 
-even their simple bifurcated model worked well.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/netlink.h | 4 ++++
+ lib/nlattr.c          | 8 ++++++++
+ 2 files changed, 12 insertions(+)
 
-
-
-
->
-> > it would be useful if I can reset the station airtime accumulated
-> > value, so I can observe in each test round (e.g. 5 ping) airtime
-> > accumulated
-> >
-> > Also to reset the deficit to make sure it run like fresh one.
->
-> Yup, makes sense.
->
-> -Toke
-
-
-
---=20
-
-Dave T=C3=A4ht
-CEO, TekLibre, LLC
-http://www.teklibre.com
-Tel: 1-669-226-2619
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 04e40fcc70d6..1139163c0db0 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -181,6 +181,8 @@ enum {
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
+ 	NLA_REJECT,
++	NLA_ETH_ADDR,
++	NLA_ETH_ADDR_COMPAT,
+ 	__NLA_TYPE_MAX,
+ };
+ 
+@@ -213,6 +215,8 @@ enum {
+  *                         data must point to a u32 value of valid flags
+  *    NLA_REJECT           Reject this attribute, validation data may point
+  *                         to a string to report as the error in extended ACK.
++ *    NLA_ETH_ADDR         Ethernet address, rejected if not exactly 6 octets.
++ *    NLA_ETH_ADDR_COMPAT  Ethernet address, only warns if not exactly 6 octets.
+  *    All other            Minimum length of attribute payload
+  *
+  * Example:
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index 56e0aae5cf23..b7c519f6e12a 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -29,6 +29,8 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
+ 	[NLA_S16]	= sizeof(s16),
+ 	[NLA_S32]	= sizeof(s32),
+ 	[NLA_S64]	= sizeof(s64),
++	[NLA_ETH_ADDR]	= ETH_ALEN,
++	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
+ };
+ 
+ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+@@ -42,6 +44,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+ 	[NLA_S16]	= sizeof(s16),
+ 	[NLA_S32]	= sizeof(s32),
+ 	[NLA_S64]	= sizeof(s64),
++	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
+ };
+ 
+ static int validate_nla_bitfield32(const struct nlattr *nla,
+@@ -93,6 +96,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			extack->_msg = pt->validation_data;
+ 		return -EINVAL;
+ 
++	case NLA_ETH_ADDR:
++		if (attrlen != ETH_ALEN)
++			return -ERANGE;
++		break;
++
+ 	case NLA_FLAG:
+ 		if (attrlen > 0)
+ 			return -ERANGE;
+-- 
+2.14.4
