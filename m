@@ -1,99 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:43710 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727706AbeIFNch (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:42346 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726839AbeIMNyr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:32:37 -0400
-From: Yuan-Chi Pang <fu3mo6goo@gmail.com>
-Cc: fu3mo6goo@gmail.com, Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] mac80211: fix TX status reporting for ieee80211s
-Date: Thu,  6 Sep 2018 16:57:48 +0800
-Message-Id: <1536224269-69350-1-git-send-email-fu3mo6goo@gmail.com> (sfid-20180906_105821_135924_64F6DB09)
-In-Reply-To: <1535963610.3437.10.camel@sipsolutions.net>
-References: <1535963610.3437.10.camel@sipsolutions.net>
-To: unlisted-recipients:; (no To-header on input)
+        Thu, 13 Sep 2018 09:54:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Michal Kubecek <mkubecek@suse.cz>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] netlink: add NLA_REJECT policy type
+Date: Thu, 13 Sep 2018 10:46:02 +0200
+Message-Id: <20180913084603.7979-1-johannes@sipsolutions.net> (sfid-20180913_104624_288696_1CD2B877)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX status reporting to ieee80211s is through ieee80211s_update_metric.
-There are two problems about ieee80211s_update_metric:
+From: Johannes Berg <johannes.berg@intel.com>
 
-1. The purpose is to estimate the fail probability
-to a specific link. No need to restrict to data frame.
+In some situations some netlink attributes may be used for output
+only (kernel->userspace) or may be reserved for future use. It's
+then helpful to be able to prevent userspace from using them in
+messages sent to the kernel, since they'd otherwise be ignored and
+any future will become impossible if this happens.
 
-2. Current implementation does not work if wireless driver does not
-pass tx_status with skb.
+Add NLA_REJECT to the policy which does nothing but reject (with
+EINVAL) validation of any messages containing this attribute.
+Allow for returning a specific extended ACK error message in the
+validation_data pointer.
 
-Fix this by removing ieee80211_is_data condition, passing
-ieee80211_tx_status directly to ieee80211s_update_metric, and
-putting it in both __ieee80211_tx_status and ieee80211_tx_status_ext.
+While at it fix the indentation of NLA_BITFIELD32 and describe the
+validation_data pointer for it.
 
-Signed-off-by: Yuan-Chi Pang <fu3mo6goo@gmail.com>
+The specific case I have in mind now is a shared nested attribute
+containing request/response data, and it would be pointless and
+potentially confusing to have userspace include response data in
+the messages that actually contain a request.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.h      | 2 +-
- net/mac80211/mesh_hwmp.c | 8 ++------
- net/mac80211/status.c    | 4 +++-
- 3 files changed, 6 insertions(+), 8 deletions(-)
+ include/net/netlink.h |  6 +++++-
+ lib/nlattr.c          | 22 +++++++++++++++-------
+ 2 files changed, 20 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index ee56f18..7ffe56a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -217,7 +217,7 @@ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
- void ieee80211s_update_metric(struct ieee80211_local *local,
--			      struct sta_info *sta, struct sk_buff *skb);
-+			 struct sta_info *sta, struct ieee80211_tx_status *st);
- void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_teardown_sdata(struct ieee80211_sub_if_data *sdata);
- int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index daf9db3..4286673 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -295,15 +295,11 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 0c154f98e987..04e40fcc70d6 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -180,6 +180,7 @@ enum {
+ 	NLA_S32,
+ 	NLA_S64,
+ 	NLA_BITFIELD32,
++	NLA_REJECT,
+ 	__NLA_TYPE_MAX,
+ };
+ 
+@@ -208,7 +209,10 @@ enum {
+  *    NLA_MSECS            Leaving the length field zero will verify the
+  *                         given type fits, using it verifies minimum length
+  *                         just like "All other"
+- *    NLA_BITFIELD32      A 32-bit bitmap/bitselector attribute
++ *    NLA_BITFIELD32       A 32-bit bitmap/bitselector attribute, validation
++ *                         data must point to a u32 value of valid flags
++ *    NLA_REJECT           Reject this attribute, validation data may point
++ *                         to a string to report as the error in extended ACK.
+  *    All other            Minimum length of attribute payload
+  *
+  * Example:
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index e335bcafa9e4..56e0aae5cf23 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -69,7 +69,8 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
  }
  
- void ieee80211s_update_metric(struct ieee80211_local *local,
--		struct sta_info *sta, struct sk_buff *skb)
-+		struct sta_info *sta, struct ieee80211_tx_status *st)
+ static int validate_nla(const struct nlattr *nla, int maxtype,
+-			const struct nla_policy *policy)
++			const struct nla_policy *policy,
++			struct netlink_ext_ack *extack)
  {
--	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *txinfo = st->info;
- 	int failed;
- 
--	if (!ieee80211_is_data(hdr->frame_control))
--		return;
--
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
- 
- 	/* moving average, scaled to 100.
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9a6d720..dfcd419 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -811,7 +811,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 
- 		rate_control_tx_status(local, sband, status);
- 		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
--			ieee80211s_update_metric(local, sta, skb);
-+			ieee80211s_update_metric(local, sta, status);
- 
- 		if (!(info->flags & IEEE80211_TX_CTL_INJECTED) && acked)
- 			ieee80211_frame_acked(sta, skb);
-@@ -972,6 +972,8 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
- 		}
- 
- 		rate_control_tx_status(local, sband, status);
-+		if (ieee80211_vif_is_mesh(&sta->sdata->vif))
-+			ieee80211s_update_metric(local, sta, status);
+ 	const struct nla_policy *pt;
+ 	int minlen = 0, attrlen = nla_len(nla), type = nla_type(nla);
+@@ -87,6 +88,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
  	}
  
- 	if (acked || noack_success) {
+ 	switch (pt->type) {
++	case NLA_REJECT:
++		if (pt->validation_data && extack)
++			extack->_msg = pt->validation_data;
++		return -EINVAL;
++
+ 	case NLA_FLAG:
+ 		if (attrlen > 0)
+ 			return -ERANGE;
+@@ -180,11 +186,10 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
+ 	int rem;
+ 
+ 	nla_for_each_attr(nla, head, len, rem) {
+-		int err = validate_nla(nla, maxtype, policy);
++		int err = validate_nla(nla, maxtype, policy, extack);
+ 
+ 		if (err < 0) {
+-			if (extack)
+-				extack->bad_attr = nla;
++			NL_SET_BAD_ATTR(extack, nla);
+ 			return err;
+ 		}
+ 	}
+@@ -251,10 +256,13 @@ int nla_parse(struct nlattr **tb, int maxtype, const struct nlattr *head,
+ 
+ 		if (type > 0 && type <= maxtype) {
+ 			if (policy) {
+-				err = validate_nla(nla, maxtype, policy);
++				err = validate_nla(nla, maxtype, policy,
++						   extack);
+ 				if (err < 0) {
+-					NL_SET_ERR_MSG_ATTR(extack, nla,
+-							    "Attribute failed policy validation");
++					NL_SET_BAD_ATTR(extack, nla);
++					if (extack && !extack->_msg)
++						NL_SET_ERR_MSG(extack,
++							       "Attribute failed policy validation");
+ 					goto errout;
+ 				}
+ 			}
 -- 
-2.7.4
+2.14.4
