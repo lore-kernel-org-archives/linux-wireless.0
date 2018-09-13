@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40165 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731421AbeISU2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 16:28:44 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <878t3xsg3h.fsf@purkki.adurom.net>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk> <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org> <87o9cvksiv.fsf@toke.dk> <efa33810860b2e5db789a76747bb826b@codeaurora.org> <87efdq8rn0.fsf@toke.dk> <5e2612cbd4ea9f560a63149c599f8587@codeaurora.org> <87y3bxkg5p.fsf@toke.dk> <878t3xsg3h.fsf@purkki.adurom.net>
-Date: Wed, 19 Sep 2018 16:50:25 +0200
-Message-ID: <8736u5k0cu.fsf@toke.dk> (sfid-20180919_165030_054314_C85045EA)
+Received: from mx2.suse.de ([195.135.220.15]:34480 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726763AbeIMVNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Sep 2018 17:13:36 -0400
+Date: Thu, 13 Sep 2018 18:03:25 +0200
+From: Michal Kubecek <mkubecek@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 2/2] netlink: add ethernet address policy types
+Message-ID: <20180913160325.GJ29691@unicorn.suse.cz> (sfid-20180913_180333_751863_CDF37E0D)
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
+ <20180913084603.7979-2-johannes@sipsolutions.net>
+ <20180913115849.GF29691@unicorn.suse.cz>
+ <1536840173.4160.4.camel@sipsolutions.net>
+ <20180913121227.GH29691@unicorn.suse.cz>
+ <1536840966.4160.6.camel@sipsolutions.net>
+ <20180913122412.GI29691@unicorn.suse.cz>
+ <1536842777.4160.9.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1536842777.4160.9.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On Thu, Sep 13, 2018 at 02:46:17PM +0200, Johannes Berg wrote:
+> On Thu, 2018-09-13 at 14:24 +0200, Michal Kubecek wrote:
+> > On Thu, Sep 13, 2018 at 02:16:06PM +0200, Johannes Berg wrote:
+> > > On Thu, 2018-09-13 at 14:12 +0200, Michal Kubecek wrote:
+> > > > Maybe rather
+> > > > 
+> > > >   #define NLA_ETH_ADDR NLA_BINARY_EXACT, .len = ETH_ALEN
+> > > >   #define NLA_IP6_ADDR NLA_BINARY_EXACT, .len = sizeof(struct in6_addr)
+> > > > 
+> > > > so that one could write
+> > > > 
+> > > >   { .type = NLA_ETH_ADDR }
+> > > 
+> > > Yeah, that's possible. I considered it for a second, but it was slightly
+> > > too magical for my taste :-)
+> > > 
+> > > Better pick a different "namespace", perhaps NLA_POLICY_ETH_ADDR or so?
+> > 
+> > Right, that sounds better. I'm afraid anything too tricky would
+> > inevitably trick people into using it in an unexpected way and ending up
+> > with very confusing error messages.
+> 
+> Right.
+> 
+> Then again though, we already have NLA_MSECS which is basically
+> equivalent to NLA_U64 afaict, so why not have more types?
+> 
+> It doesn't really cost us that much, just a few bytes in the validation?
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->>> Unfortunately ath10k is not reporting last_tx_rate in tx_status(). So
->>> I also applied this "ath10k: report tx rate using ieee80211_tx_status"
->>> change.
->>
->> Yeah, that and the patch that computes the last used rate will probably
->> be necessary; but they can be pretty much applied as-is, right?
->
-> Unfortunately not. I think the plan is now to follow Johannes' proposal:
->
->    "I'd recommend against doing this and disentangling the necessary
->     code in mac80211, e.g. with ieee80211_tx_status_ext() or adding
->     similar APIs."
->
->    https://patchwork.kernel.org/patch/10353959/
+And one more branch in the switch in validate_nla().
 
-Ahh, right... *that* patch :)
+I'm not really opposed to having special policy types for MAC/IPv4/IPv6
+address, these types are quite common, at least in networking code which
+is where netlink is used most oftena. I rather felt that technically the
+only difference between MAC and IPv6 address is the size and as we have
+.len already, it would be more useful to have generic policy allowing to
+also handle other fixes size data types.
 
-Was thinking on this one with the "as-is" comment:
+On the other hand, if there was a trend of adding special policies for
+more "endemic" data types, it might be more appropriate to introduce
+a generic policy where validation_data would be a "validator function"
+doing specific checks (probably using a union to allow type check of the
+callback). But that's not happening (yet).
 
-https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/=
-588189
+> Also, with .type = NLA_ETH_ADDR_COMPAT we could get a warning, which is
+> not true for just checking .len.
 
--Toke
+We could have three flavors of NLA_BINARY.
+
+Michal Kubecek
