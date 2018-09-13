@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46974 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726812AbeIRSMt (ORCPT
+Received: from shards.monkeyblade.net ([23.128.96.9]:55590 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725757AbeINELJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:12:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] mt76x0: run vco calibration for each channel configuration
-References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
-        <20180918114356.GB15285@redhat.com>
-        <20180918120234.GD15285@redhat.com>
-Date: Tue, 18 Sep 2018 15:40:19 +0300
-In-Reply-To: <20180918120234.GD15285@redhat.com> (Stanislaw Gruszka's message
-        of "Tue, 18 Sep 2018 14:02:35 +0200")
-Message-ID: <871s9r2d3g.fsf@kamboji.qca.qualcomm.com> (sfid-20180918_144027_080874_4D32DBAF)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 14 Sep 2018 00:11:09 -0400
+Date: Thu, 13 Sep 2018 15:59:34 -0700 (PDT)
+Message-Id: <20180913.155934.742447935316828936.davem@davemloft.net> (sfid-20180914_005940_836009_9F9699C5)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        mkubecek@suse.cz, johannes.berg@intel.com
+Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180913084603.7979-1-johannes@sipsolutions.net>
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 13 Sep 2018 10:46:02 +0200
 
-> On Tue, Sep 18, 2018 at 01:43:56PM +0200, Stanislaw Gruszka wrote:
->> On Fri, Sep 07, 2018 at 11:13:12PM +0200, Lorenzo Bianconi wrote:
->> > According to vendor sdk, vco calibration has to be executed
->> > for each channel configuration whereas mcu calibration has to be
->> > performed during channel scanning. This patch fixes the mt76x0
->> > monitor mode issue since in that configuration vco calibration
->> > was never executed
->> > 
->> > Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
->> > Tested-by: Sid Hayn <sidhayn@gmail.com>
->> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->> 
->> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
->
-> For the record this is 4.19 material.
+> +					NL_SET_BAD_ATTR(extack, nla);
+> +					if (extack && !extack->_msg)
+> +						NL_SET_ERR_MSG(extack,
+> +							       "Attribute failed policy validation");
 
-I really want to minimise conflicts and because of so many mt76 patches
-conflicts are likely to happen, so I'm keeping the bar high for mt76
-patches going 4.19. Is this a regression from 4.18? If not, I think this
-should go to -next and cc stable. And besides, monitor mode isn't that
-critical anyway.
+Given the lively discussion that resulted from this conditional I am
+pretty sure we want to override existing messages.
 
--- 
-Kalle Valo
+If we have an existing message, and we continued to process and
+parse anyways, then the existing message was informational or
+a warning.
+
+The message should be overridden when the action will be to fail, as
+it will be here when we return -EINVAL.
