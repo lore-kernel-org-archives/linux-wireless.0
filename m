@@ -1,40 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:52294 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731206AbeISRzQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:44062 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726919AbeIMRV3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:55:16 -0400
-Received: by mail-wm1-f65.google.com with SMTP id y139-v6so5995394wmc.2
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2018 05:17:35 -0700 (PDT)
-From: =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To: sgruszka@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/5] rt2x00: set registers based on current band
-Date: Wed, 19 Sep 2018 14:17:30 +0200
-Message-Id: <1537359450-8843-1-git-send-email-pozega.tomislav@gmail.com> (sfid-20180919_141753_723050_4CF71019)
-In-Reply-To: <20180919110540.GC22689@redhat.com>
-References: <20180919110540.GC22689@redhat.com>
+        Thu, 13 Sep 2018 13:21:29 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: combine duplicate wdev init code
+Date: Thu, 13 Sep 2018 14:12:03 +0200
+Message-Id: <20180913121203.10553-1-johannes@sipsolutions.net> (sfid-20180913_141220_210807_663EFC18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 19 Sep 2018 13:05:41 +0200, Stanislaw Gruszka wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
->Driver should provide on what channels are supported to mac80211, but
->user space decide what channel to use and that imply band 2.4GHz or
->5GHz. ->curr_band is just shortcut for band of current channel. Is set 
->in rt2x00lib_config() after we call rt2x00dev->ops->lib->config()
->[rt2800_config() for rt2800] . So patch is wrong. Either ->curr_band 
->should be set before ->config call or we need to consistently use
->rf->channel <= 14 for band check in any rt2800_config() function and
->all it's subroutines. I prefer the second solution (i.e. rf->channel)
->and now I can see few places when we use ->curr_band, what is a bug.
+There's a bit of duplicated code to initialize a wdev, pull it out
+into a separate function to call from both places.
 
-Works fine, no any kind of regression, especially not performance ones.
-So I don't see a reason to claim it is wrong or bug just because you
-prefer current solution.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c    | 40 +++++++++++++++++++++++-----------------
+ net/wireless/core.h    |  3 +++
+ net/wireless/nl80211.c | 10 +---------
+ 3 files changed, 27 insertions(+), 26 deletions(-)
 
->It's because ->curr_band initialize to 0 and NL80211_BAND_2GHZ
->happen to be 0. Also problem will not trigger on single band
->2.4GHz devices.
-
-Can you show us how will the problem trigger on dual band devices?
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 1e5f7d4e4666..85724527bad9 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1181,6 +1181,28 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ }
+ EXPORT_SYMBOL(cfg80211_stop_iface);
+ 
++void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
++			struct wireless_dev *wdev)
++{
++	mutex_init(&wdev->mtx);
++	INIT_LIST_HEAD(&wdev->event_list);
++	spin_lock_init(&wdev->event_lock);
++	INIT_LIST_HEAD(&wdev->mgmt_registrations);
++	spin_lock_init(&wdev->mgmt_registrations_lock);
++
++	/*
++	 * We get here also when the interface changes network namespaces,
++	 * as it's registered into the new one, but we don't want it to
++	 * change ID in that case. Checking if the ID is already assigned
++	 * works, because 0 isn't considered a valid ID and the memory is
++	 * 0-initialized.
++	 */
++	if (!wdev->identifier)
++		wdev->identifier = ++rdev->wdev_id;
++	list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
++	rdev->devlist_generation++;
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state, void *ptr)
+ {
+@@ -1206,23 +1228,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 * called within code protected by it when interfaces
+ 		 * are added with nl80211.
+ 		 */
+-		mutex_init(&wdev->mtx);
+-		INIT_LIST_HEAD(&wdev->event_list);
+-		spin_lock_init(&wdev->event_lock);
+-		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+-		spin_lock_init(&wdev->mgmt_registrations_lock);
+-
+-		/*
+-		 * We get here also when the interface changes network namespaces,
+-		 * as it's registered into the new one, but we don't want it to
+-		 * change ID in that case. Checking if the ID is already assigned
+-		 * works, because 0 isn't considered a valid ID and the memory is
+-		 * 0-initialized.
+-		 */
+-		if (!wdev->identifier)
+-			wdev->identifier = ++rdev->wdev_id;
+-		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+-		rdev->devlist_generation++;
++		cfg80211_init_wdev(rdev, wdev);
+ 		/* can only change netns with wiphy */
+ 		dev->features |= NETIF_F_NETNS_LOCAL;
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 7f52ef569320..45fd4e21dbda 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -187,6 +187,9 @@ struct wiphy *wiphy_idx_to_wiphy(int wiphy_idx);
+ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
+ 			  struct net *net);
+ 
++void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
++			struct wireless_dev *wdev);
++
+ static inline void wdev_lock(struct wireless_dev *wdev)
+ 	__acquires(wdev)
+ {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 271f3cd77066..79e1e4c7d5bf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3368,15 +3368,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		 * P2P Device and NAN do not have a netdev, so don't go
+ 		 * through the netdev notifier and must be added here
+ 		 */
+-		mutex_init(&wdev->mtx);
+-		INIT_LIST_HEAD(&wdev->event_list);
+-		spin_lock_init(&wdev->event_lock);
+-		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+-		spin_lock_init(&wdev->mgmt_registrations_lock);
+-
+-		wdev->identifier = ++rdev->wdev_id;
+-		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+-		rdev->devlist_generation++;
++		cfg80211_init_wdev(rdev, wdev);
+ 		break;
+ 	default:
+ 		break;
+-- 
+2.14.4
