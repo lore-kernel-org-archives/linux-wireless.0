@@ -1,96 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42488 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726598AbeIGRNp (ORCPT
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:36678 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727716AbeIMTz1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 13:13:45 -0400
-Received: from mail-yb1-f198.google.com ([209.85.219.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1fyFwZ-0002LS-Ki
-        for linux-wireless@vger.kernel.org; Fri, 07 Sep 2018 12:32:59 +0000
-Received: by mail-yb1-f198.google.com with SMTP id r2-v6so5521521ybb.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 05:32:59 -0700 (PDT)
-Date: Fri, 7 Sep 2018 07:32:56 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Henrik Laxhuber <henrik@laxhuber.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH] wireless-regdb: update regulatory rules for Switzerland
- (CH), and Liechtenstein (LI) on 5GHz
-Message-ID: <20180907123256.GJ4251@ubuntu-xps13> (sfid-20180907_143303_436242_641A7964)
-References: <2441d0ea-b862-9675-9342-356606d9228d@laxhuber.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <2441d0ea-b862-9675-9342-356606d9228d@laxhuber.com>
+        Thu, 13 Sep 2018 15:55:27 -0400
+Received: by mail-lf1-f68.google.com with SMTP id x207-v6so5050850lff.3
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Sep 2018 07:45:35 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 2/2] ath10k: remove num_peers in hw_params for most targets
+Date: Thu, 13 Sep 2018 16:45:06 +0200
+Message-Id: <20180913144506.8272-2-erik.stromdahl@gmail.com> (sfid-20180913_164540_564785_B2B9951B)
+In-Reply-To: <20180913144506.8272-1-erik.stromdahl@gmail.com>
+References: <20180913144506.8272-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 06, 2018 at 04:13:22PM +0200, Henrik Laxhuber wrote:
-> Update to reflect the current data published in the 'National Frequency
-> Allocation Strategy Table' [0] for Switzerland and Liechtenstein, which
-> at the time of writing points to the documents [1] and [2].
-> 
-> [0] https://www.ofcomnet.ch/#/fatTable
-> [1] https://www.ofcomnet.ch/api/rir/1010/05
-> [2] https://www.ofcomnet.ch/api/rir/1010/04
-> 
-> Signed-off-by: Henrik Laxhuber <henrik@laxhuber.com>
-> ---
->  db.txt | 19 +++++++++++++++----
->  1 file changed, 15 insertions(+), 4 deletions(-)
-> 
-> diff --git a/db.txt b/db.txt
-> index 8cf7dee..69cea85 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -265,10 +265,14 @@ country CF: DFS-FCC
->      (5490 - 5730 @ 40), (24), DFS
->      (5735 - 5835 @ 40), (30)
-> 
-> +# Source:
-> +# https://www.ofcomnet.ch/#/fatTable
-> +# Note that the maximum transmitter power can be doubled for 5250-5710MHz
-> if
-> +# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
->  country CH: DFS-ETSI
->      (2402 - 2482 @ 40), (20)
-> -    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
-> -    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
-> +    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+>From commit "ath10k: add per target config of max_num_peers",
+the num_peers value in struct ath10k_hw_params is used to override
+the value obtained from the WMI op version in the firmware file.
 
-Maybe you missed this in my last reply, I had suggested this range can
-be 5150-5250 as in the document you linked to. If you agree with this
-change I can make it when I apply the patch.
+Currently, only high latency devices (USB and SDIO) need to use this
+value, since the value obtained from the WMI op version is not
+applicable for these devices.
 
-Thanks,
-Seth
+Many devices in ath10k_hw_params_list have the wrong value set.
 
-> +    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
->      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
->      # 60 GHz band channels 1-4, ref: Etsi En 302 567
->      (57000 - 66000 @ 2160), (40)
-> @@ -743,11 +747,18 @@ country LC: DFS-ETSI
->      (5490 - 5710 @ 160), (30), DFS
->      (5735 - 5815 @ 80), (30)
-> 
-> +
-> +# Source:
-> +# https://www.ofcomnet.ch/#/fatTable
-> +# Note that the maximum transmitter power can be doubled for 5250-5710MHz
-> if
-> +# transmitter power control is in use: 5250-5330@23db, 5490-5710@30db
->  country LI: DFS-ETSI
->      (2402 - 2482 @ 40), (20)
-> -    (5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
-> -    (5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
-> +    (5170 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
-> +    (5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
->      (5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
-> +    # 60 GHz band channels 1-4, ref: Etsi En 302 567
-> +    (57000 - 66000 @ 2160), (40)
-> 
->  country LK: DFS-FCC
->      (2402 - 2482 @ 40), (20)
-> -- 
-> 2.18.0
+An example of this is the QCA9880 hw2.0 chipset that had (before this
+patch) num_peers set to TARGET_TLV_NUM_PEERS although the firmware
+uses WMI version ATH10K_FW_WMI_OP_VERSION_10_2_4.
+
+Using the wrong value for the QCA9880 chip results in a fw crash:
+
+ath10k_pci 0000:01:00.0: firmware crashed! (guid ddf39880-3e64-4edf-b4e4-979d31724503)
+ath10k_pci 0000:01:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
+ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 0
+ath10k_pci 0000:01:00.0: firmware ver 10.2.4-1.0-00037 api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 a4a52adb
+ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+ath10k_pci 0000:01:00.0: htt-ver 0.0 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
+ath10k_pci 0000:01:00.0: firmware register dump:
+ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3 0x009B54B7 0x00955B31
+ath10k_pci 0000:01:00.0: [04]: 0x009B54B7 0x00060530 0x00000011 0x00400000
+ath10k_pci 0000:01:00.0: [08]: 0x000001B8 0x00000007 0x00443138 0x00955A00
+ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000 0x009B548E 0x009B54AB
+ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094078E 0x00000000 0x00000000
+ath10k_pci 0000:01:00.0: [20]: 0x409B54B7 0x0040AC64 0x00400000 0x00000087
+ath10k_pci 0000:01:00.0: [24]: 0x809A3831 0x0040ACC4 0x000001B1 0xC09B54B7
+ath10k_pci 0000:01:00.0: [28]: 0x809A2F08 0x0040AD04 0x00410410 0x00000001
+ath10k_pci 0000:01:00.0: [32]: 0x80988856 0x0040AD24 0x00410410 0x00000001
+ath10k_pci 0000:01:00.0: [36]: 0x8098AF64 0x0040AD44 0x00410410 0x00000001
+ath10k_pci 0000:01:00.0: [40]: 0x809B5DEC 0x0040AD84 0x00410410 0x00410FF4
+ath10k_pci 0000:01:00.0: [44]: 0x809B1F20 0x0040ADA4 0x00400000 0x00416C54
+ath10k_pci 0000:01:00.0: [48]: 0x809C0295 0x0040ADE4 0x0040AE08 0x00411DC8
+ath10k_pci 0000:01:00.0: [52]: 0x809486FA 0x0040AE04 0x00000001 0x00000000
+ath10k_pci 0000:01:00.0: [56]: 0x80948E2C 0x0040AEA4 0x0041F290 0x004123D4
+ath10k_pci 0000:01:00.0: Copy Engine register dump:
+ath10k_pci 0000:01:00.0: [00]: 0x00057400  10  10   3   3
+ath10k_pci 0000:01:00.0: [01]: 0x00057800   3   3   8   9
+ath10k_pci 0000:01:00.0: [02]: 0x00057c00   2   2   1   2
+ath10k_pci 0000:01:00.0: [03]: 0x00058000   1   1   2   1
+ath10k_pci 0000:01:00.0: [04]: 0x00058400   0   0  40   0
+ath10k_pci 0000:01:00.0: [05]: 0x00058800   1   1   0   1
+ath10k_pci 0000:01:00.0: [06]: 0x00058c00   0   0   0   0
+ath10k_pci 0000:01:00.0: [07]: 0x00059000   0   0   0   0
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 039ddafdb3b9..11ce6c886d7c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -86,7 +86,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -120,7 +119,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -156,7 +154,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -191,7 +188,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -226,7 +222,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -261,7 +256,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -299,7 +293,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -340,7 +333,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -388,7 +380,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 1560,
+ 		.vht160_mcs_tx_highest = 1560,
+ 		.n_cipher_suites = 11,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -433,7 +424,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 780,
+ 		.vht160_mcs_tx_highest = 780,
+ 		.n_cipher_suites = 11,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -468,7 +458,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -505,7 +494,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+@@ -599,7 +587,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
+-		.num_peers = TARGET_TLV_NUM_PEERS,
+ 		.ast_skid_limit = 0x10,
+ 		.num_wds_entries = 0x20,
+ 		.target_64bit = false,
+-- 
+2.18.0
