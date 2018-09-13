@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:49963 "EHLO
-        relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727753AbeIFPOR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:44428 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726797AbeIMRzs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 11:14:17 -0400
-MIME-Version: 1.0
-References: <20180906035323.GA11337@nems_nctu_lu> <877ejzynz9.fsf@toke.dk>
-In-Reply-To: <877ejzynz9.fsf@toke.dk>
-From: Louie Lu <git@louie.lu>
-Date: Thu, 6 Sep 2018 18:41:15 +0800
-Message-ID: <CADMDV=yBB-ipz25PWgp+fAdnh0mvqdCcsSzXCp65_SRQqkVBAQ@mail.gmail.com> (sfid-20180906_123934_741540_F3107E7A)
-Subject: Re: [PATCH] ath9k: add reset for airtime station debugfs
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
+        Thu, 13 Sep 2018 13:55:48 -0400
+Message-ID: <1536842777.4160.9.camel@sipsolutions.net> (sfid-20180913_144637_094524_83D6223A)
+Subject: Re: [PATCH 2/2] netlink: add ethernet address policy types
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kubecek <mkubecek@suse.cz>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 13 Sep 2018 14:46:17 +0200
+In-Reply-To: <20180913122412.GI29691@unicorn.suse.cz>
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
+         <20180913084603.7979-2-johannes@sipsolutions.net>
+         <20180913115849.GF29691@unicorn.suse.cz>
+         <1536840173.4160.4.camel@sipsolutions.net>
+         <20180913121227.GH29691@unicorn.suse.cz>
+         <1536840966.4160.6.camel@sipsolutions.net>
+         <20180913122412.GI29691@unicorn.suse.cz>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previous mail rejects by mailing list, re-send again...
+On Thu, 2018-09-13 at 14:24 +0200, Michal Kubecek wrote:
+> On Thu, Sep 13, 2018 at 02:16:06PM +0200, Johannes Berg wrote:
+> > On Thu, 2018-09-13 at 14:12 +0200, Michal Kubecek wrote:
+> > > On Thu, Sep 13, 2018 at 02:02:53PM +0200, Johannes Berg wrote:
+> > > > On Thu, 2018-09-13 at 13:58 +0200, Michal Kubecek wrote:
+> > > > 
+> > > > > The code looks correct to me but I have some doubts. Having a special
+> > > > > policy for MAC addresses may lead to adding one for IPv4 address (maybe
+> > > > > not, we can use NLA_U32 for them), IPv6 addresses and other data types
+> > > > > with fixed length. Wouldn't it be more helpful to add a variant of
+> > > > > NLA_BINARY (NLA_BINARY_EXACT?) which would fail/warn if attribute length
+> > > > > isn't equal to .len?
+> > > > 
+> > > > Yeah, I guess we could do that, and then
+> > > > 
+> > > > #define NLA_ETH_ADDR .len = ETH_ALEN, .type = NLA_BINARY_EXACT
+> > > > #define NLA_IP6_ADDR .len = 16, .type = NLA_BINARY_EXACT
+> > > > 
+> > > > or so?
+> > > 
+> > > Maybe rather
+> > > 
+> > >   #define NLA_ETH_ADDR NLA_BINARY_EXACT, .len = ETH_ALEN
+> > >   #define NLA_IP6_ADDR NLA_BINARY_EXACT, .len = sizeof(struct in6_addr)
+> > > 
+> > > so that one could write
+> > > 
+> > >   { .type = NLA_ETH_ADDR }
+> > 
+> > Yeah, that's possible. I considered it for a second, but it was slightly
+> > too magical for my taste :-)
+> > 
+> > Better pick a different "namespace", perhaps NLA_POLICY_ETH_ADDR or so?
+> 
+> Right, that sounds better. I'm afraid anything too tricky would
+> inevitably trick people into using it in an unexpected way and ending up
+> with very confusing error messages.
 
+Right.
 
-Toke Høiland-Jørgensen <toke@toke.dk> 於 2018年9月6日 週四 下午5:27寫道：
->
-> Louie Lu <git@louie.lu> writes:
->
-> > Let user can reset station airtime status by debugfs, it will
-> > reset all airtime deficit to ATH_AIRTIME_QUANTUM and reset rx/tx
-> > airtime accumulate to 0.
->
-> No objections to the patch, but I'm curious which issues you were
-> debugging that led you to needing it? :)
->
-I'm testing to get the packet queue time + airtime in ath_tx_process_buffer,
-it would be useful if I can reset the station airtime accumulated
-value, so I can observe in each test round (e.g. 5 ping) airtime
-accumulated
+Then again though, we already have NLA_MSECS which is basically
+equivalent to NLA_U64 afaict, so why not have more types?
 
-Also to reset the deficit to make sure it runs like fresh one.
+It doesn't really cost us that much, just a few bytes in the validation?
 
-Louie.
+Also, with .type = NLA_ETH_ADDR_COMPAT we could get a warning, which is
+not true for just checking .len.
 
->
-> -Toke
+OTOH, you could argue that adding two types for ethernet addresses, two
+for IPv6 addresses, and possibly more quickly adds up to make that "just
+a few bytes" matter ...
+
+johannes
