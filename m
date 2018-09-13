@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:42731 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727645AbeIGWFj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 18:05:39 -0400
-Received: by mail-pl1-f194.google.com with SMTP id g23-v6so6872084plq.9
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 10:23:45 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] ath10k: utilize random MAC address if none is provided
-Date: Fri,  7 Sep 2018 10:21:57 -0700
-Message-Id: <20180907172157.203785-1-briannorris@chromium.org> (sfid-20180907_192354_386262_F385084A)
+Received: from mx2.suse.de ([195.135.220.15]:39806 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727859AbeINBzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Sep 2018 21:55:03 -0400
+Date: Thu, 13 Sep 2018 22:43:53 +0200
+From: Michal Kubecek <mkubecek@suse.cz>
+To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
+Message-ID: <20180913204352.GB3876@unicorn.suse.cz> (sfid-20180913_224359_991611_5183ED18)
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
+ <20180913104955.GE29691@unicorn.suse.cz>
+ <1536837915.4160.1.camel@sipsolutions.net>
+ <20180913120554.GG29691@unicorn.suse.cz>
+ <20180913192014.GE4590@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180913192014.GE4590@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit 9d5804662ce1 ("ath10k: retrieve MAC address from system
-firmware if provided"), we support pulling our MAC address from system
-firmware. Along with this, we should admit that it's possible for system
-firmware to be screwed up as well, omitting the MAC address there.
+On Thu, Sep 13, 2018 at 04:20:14PM -0300, Marcelo Ricardo Leitner wrote:
+> On Thu, Sep 13, 2018 at 02:05:54PM +0200, Michal Kubecek wrote:
+> > On Thu, Sep 13, 2018 at 01:25:15PM +0200, Johannes Berg wrote:
+> > > On Thu, 2018-09-13 at 12:49 +0200, Michal Kubecek wrote:
+> > > 
+> > > > >  		if (type > 0 && type <= maxtype) {
+> > > > >  			if (policy) {
+> > > > > -				err = validate_nla(nla, maxtype, policy);
+> > > > > +				err = validate_nla(nla, maxtype, policy,
+> > > > > +						   extack);
+> > > > >  				if (err < 0) {
+> > > > > -					NL_SET_ERR_MSG_ATTR(extack, nla,
+> > > > > -							    "Attribute failed policy validation");
+> > > > > +					NL_SET_BAD_ATTR(extack, nla);
+> > > > > +					if (extack && !extack->_msg)
+> > > > > +						NL_SET_ERR_MSG(extack,
+> > > > > +							       "Attribute failed policy validation");
+> > > > >  					goto errout;
+> > > > >  				}
+> > > > >  			}
+> > > > > -- 
+> > > > 
+> > > > Technically, this would change the outcome when nla_parse() is called
+> > > > with extack->_msg already set nad validate_nla() fails on something else
+> > > > than NLA_REJECT; it will preserve the previous message in such case.
+> > > > But I don't think this is a serious problem.
+> > > 
+> > > Yes, that's true. I looked at quite a few of the setters just now (there
+> > > are ~500 already, wow!), and they all set & return, so this shouldn't be
+> > > an issue.
+> > 
+> > In ethtool (work in progress) I sometimes use extack message for
+> > non-fatal warnings but AFAICS never before parsing the userspace
+> > request (actually always shortly before returning). So I don't have
+> > a problem with it.
+> 
+> Considering we can only report 1 message, it should be okay to drop
+> the previous message in favor of the new one, which is either a
+> critical one or just another non-fatal one.
 
-Provide a fallback, such that we choose a randomly-generated MAC
-address, with the local assignment bit set.
+What I wanted to point out is that the code above does not behave like
+this. It does not distinguish between extack->_msg set by NLA_REJECT
+branch and extack->_msg which had been set before nla_parse() was
+called.
 
-This is not a preferred mode of operation and really should only serve
-the purpose of keeping the system chugging along while someone figures
-out what's wrong with the system. Grepping through other wireless
-drivers shows very similar fallback logic though, so why not?
-
-  git grep eth_random_addr drivers/net/wireless/
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 97548f96a2f7..484f9c74ce46 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8325,6 +8325,10 @@ int ath10k_mac_register(struct ath10k *ar)
- 	void *channels;
- 	int ret;
- 
-+	if (!is_valid_ether_addr(ar->mac_addr)) {
-+		ath10k_warn(ar, "invalid MAC address; choosing random\n");
-+		eth_random_addr(ar->mac_addr);
-+	}
- 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->mac_addr);
- 
- 	SET_IEEE80211_DEV(ar->hw, ar->dev);
--- 
-2.19.0.rc2.392.g5ba43deb5a-goog
+Michal Kubecek
