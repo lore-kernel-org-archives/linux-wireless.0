@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f194.google.com ([209.85.222.194]:41246 "EHLO
-        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726950AbeINAwR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 20:52:17 -0400
-Date: Thu, 13 Sep 2018 16:41:16 -0300
-From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kubecek <mkubecek@suse.cz>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/2] netlink: add ethernet address policy types
-Message-ID: <20180913194116.GG4590@localhost.localdomain> (sfid-20180913_214126_535477_5C4ADE9D)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913084603.7979-2-johannes@sipsolutions.net>
- <20180913115849.GF29691@unicorn.suse.cz>
- <1536840173.4160.4.camel@sipsolutions.net>
- <20180913121227.GH29691@unicorn.suse.cz>
- <1536840966.4160.6.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1536840966.4160.6.camel@sipsolutions.net>
+Received: from mx2.suse.de ([195.135.220.15]:33794 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726415AbeIMLX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Sep 2018 07:23:28 -0400
+From: Takashi Iwai <tiwai@suse.de>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH] brcmsmac: Use kvmalloc() for ucode allocations
+Date: Thu, 13 Sep 2018 08:15:17 +0200
+Message-Id: <20180913061517.26295-1-tiwai@suse.de> (sfid-20180913_081531_084262_7BEF6F2A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 02:16:06PM +0200, Johannes Berg wrote:
-> On Thu, 2018-09-13 at 14:12 +0200, Michal Kubecek wrote:
-> > On Thu, Sep 13, 2018 at 02:02:53PM +0200, Johannes Berg wrote:
-> > > On Thu, 2018-09-13 at 13:58 +0200, Michal Kubecek wrote:
-> > > 
-> > > > The code looks correct to me but I have some doubts. Having a special
-> > > > policy for MAC addresses may lead to adding one for IPv4 address (maybe
-> > > > not, we can use NLA_U32 for them), IPv6 addresses and other data types
-> > > > with fixed length. Wouldn't it be more helpful to add a variant of
-> > > > NLA_BINARY (NLA_BINARY_EXACT?) which would fail/warn if attribute length
-> > > > isn't equal to .len?
-> > > 
-> > > Yeah, I guess we could do that, and then
-> > > 
-> > > #define NLA_ETH_ADDR .len = ETH_ALEN, .type = NLA_BINARY_EXACT
-> > > #define NLA_IP6_ADDR .len = 16, .type = NLA_BINARY_EXACT
-> > > 
-> > > or so?
-> > 
-> > Maybe rather
-> > 
-> >   #define NLA_ETH_ADDR NLA_BINARY_EXACT, .len = ETH_ALEN
-> >   #define NLA_IP6_ADDR NLA_BINARY_EXACT, .len = sizeof(struct in6_addr)
-> > 
-> > so that one could write
-> > 
-> >   { .type = NLA_ETH_ADDR }
-> 
-> Yeah, that's possible. I considered it for a second, but it was slightly
-> too magical for my taste :-)
-> 
-> Better pick a different "namespace", perhaps NLA_POLICY_ETH_ADDR or so?
+The ucode chunk might be relatively large and the allocation with
+kmalloc() may fail occasionally.  Since the data isn't DMA-transferred
+but by manual loops, we can use vmalloc instead of kmalloc.
+For a better performance, though, kvmalloc() would be the best choice
+in such a case, so let's replace with it.
 
-What about
-#define NLA_FIELD_ETH_ADDR  { .type = NLA_BINARY_EXACT, .len = ETH_ALEN }
+Bugzilla: https://bugzilla.suse.com/show_bug.cgi?id=1103431
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+---
+ .../net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c  | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Or even
-#define NLA_FIELD_BINARY_EXACT(_len)	{ .type = NLA_BINARY_EXACT, .len = (_len) }
-#define NLA_FIELD_ETH_ADDR		NLA_FIELD_BINARY_EXACT(ETH_ALEN)
-
-So that one would just:
-   [MYADDR] = NLA_FIELD_ETH_ADDR,
-
-and if we change how we parse/validate it, users should be good
-already.
-
-  Marcelo
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index ecc89e718b9c..6255fb6d97a7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -1578,10 +1578,10 @@ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
+ 			if (le32_to_cpu(hdr->idx) == idx) {
+ 				pdata = wl->fw.fw_bin[i]->data +
+ 					le32_to_cpu(hdr->offset);
+-				*pbuf = kmemdup(pdata, len, GFP_KERNEL);
++				*pbuf = kvmalloc(len, GFP_KERNEL);
+ 				if (*pbuf == NULL)
+ 					goto fail;
+-
++				memcpy(*pbuf, pdata, len);
+ 				return 0;
+ 			}
+ 		}
+@@ -1629,7 +1629,7 @@ int brcms_ucode_init_uint(struct brcms_info *wl, size_t *n_bytes, u32 idx)
+  */
+ void brcms_ucode_free_buf(void *p)
+ {
+-	kfree(p);
++	kvfree(p);
+ }
+ 
+ /*
+-- 
+2.18.0
