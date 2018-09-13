@@ -1,109 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:33893 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725869AbeICLol (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 07:44:41 -0400
-Received: by mail-qk1-f193.google.com with SMTP id d15-v6so5095518qkc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 00:25:49 -0700 (PDT)
-Subject: Re: [PATCH 12/16] iwlwifi: mvm: enable sending HE_AIR_SNIFFER command
- via debugfs
-To: Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org
-References: <20180831095614.14099-1-luca@coelho.fi>
- <20180831095614.14099-13-luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Ido Yariv <idox.yariv@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B8CE1FB.1060402@broadcom.com> (sfid-20180903_092553_395518_3BFC2C8D)
-Date: Mon, 3 Sep 2018 09:25:47 +0200
+Received: from grunblatt.org ([148.251.48.246]:60218 "EHLO grunblatt.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726741AbeIMQXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Sep 2018 12:23:22 -0400
+From: =?UTF-8?Q?R=c3=a9my_Gr=c3=bcnblatt?= <remy@grunblatt.org>
+Subject: [PATCH] Minor corrections of comments in the iwlwifi mvm rate scaling
+ source
+To: linux-wireless@vger.kernel.org
+Cc: linuxwifi@intel.com
+Message-ID: <b403d919-57dd-aa2a-24f2-09d857cada5b@grunblatt.org> (sfid-20180913_131425_639216_3699924E)
+Date: Thu, 13 Sep 2018 13:07:40 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180831095614.14099-13-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/31/2018 11:56 AM, Luca Coelho wrote:
-> From: Shaul Triebitz <shaul.triebitz@intel.com>
->
-> In order to receive TB (Trigger Based) PPDU in monitor mode,
-> the Driver must send the HE_AIR_SNIFFER_CONFIG_CMD host command.
-> Enable that via debugfs.
->
-> Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-> Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-> Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->   .../wireless/intel/iwlwifi/fw/api/datapath.h  |  5 ++
->   .../net/wireless/intel/iwlwifi/fw/api/mac.h   | 14 +++++
->   .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 53 +++++++++++++++++++
->   3 files changed, 72 insertions(+)
+Hi,
 
-[snip]
+I believe some comments in the rate scaling source of the iwlwifi mvm
+are wrong, as we have #define RATE_MCS_SGI_POS  13 and #define
+RATE_MCS_SGI_MSK  (1 << RATE_MCS_SGI_POS)
 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> index 202158d03d36..725b97ecb447 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> @@ -1727,6 +1727,57 @@ iwl_dbgfs_send_echo_cmd_write(struct iwl_mvm *mvm, char *buf,
->   	return ret ?: count;
->   }
->
-> +static ssize_t
-> +iwl_dbgfs_set_aid_read(struct file *file, char __user *user_buf,
-> +		       size_t count, loff_t *ppos)
-> +{
-> +	return 0;
-> +}
-> +
-> +static ssize_t
-> +iwl_dbgfs_set_aid_write(struct file *file, const char __user *user_buf,
-> +			size_t count, loff_t *ppos)
-> +{
-> +	struct iwl_mvm *mvm = file->private_data;
-> +	struct iwl_he_monitor_cmd he_mon_cmd = {};
-> +	u8 tmp_buf[32];
-> +	u32 aid;
-> +	int ret;
-> +
-> +	if (!iwl_mvm_firmware_running(mvm))
-> +		return -EIO;
-> +
-> +	if (count > sizeof(tmp_buf))
-> +		return -EINVAL;
-> +
-> +	if (copy_from_user(tmp_buf, user_buf, count))
-> +		return -EIO;
-> +
-> +	ret = sscanf(tmp_buf, "%x %2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", &aid,
-> +		     &he_mon_cmd.bssid[0], &he_mon_cmd.bssid[1],
-> +		     &he_mon_cmd.bssid[2], &he_mon_cmd.bssid[3],
-> +		     &he_mon_cmd.bssid[4], &he_mon_cmd.bssid[5]);
-> +	if (ret != 7)
-> +		return -EINVAL;
-> +
-> +	he_mon_cmd.aid = cpu_to_le16(aid);
-> +
-> +	mutex_lock(&mvm->mutex);
-> +	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(HE_AIR_SNIFFER_CONFIG_CMD,
-> +						   DATA_PATH_GROUP, 0), 0,
-> +				   sizeof(he_mon_cmd), &he_mon_cmd);
-> +	mutex_unlock(&mvm->mutex);
-> +
-> +	return ret ?: count;
-> +}
-> +
-> +static const struct file_operations iwl_dbgfs_set_aid_ops = {
-> +	.read = iwl_dbgfs_set_aid_read,
-> +	.write = iwl_dbgfs_set_aid_write,
-> +	.open = simple_open,
-> +	.llseek = default_llseek,
-> +};
+Thanks,
 
-What's with the name 'set_aid'?
+Rémy
 
-Regards,
-Arend
+
+Signed-off-by: Rémy Grünblatt <remy@grunblatt.org>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 30cfd7d50bc9..4a3acfd0ad5c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3320,12 +3320,12 @@ static void rs_fill_rates_for_column(struct
+iwl_mvm *mvm,
+ /* Building the rate table is non trivial. When we're in
+MIMO2/VHT/80Mhz/SGI
+  * column the rate table should look like this:
+  *
+- * rate[0] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
+- * rate[1] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
+- * rate[2] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
+- * rate[3] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
+- * rate[4] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
+- * rate[5] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
++ * rate[0] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 NGI
++ * rate[1] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 NGI
++ * rate[2] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 NGI
++ * rate[3] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 NGI
++ * rate[4] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 NGI
++ * rate[5] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 NGI
+  * rate[6] 0x4005007 VHT | ANT: A BW: 80Mhz MCS: 7 NSS: 1 NGI
+  * rate[7] 0x4009006 VHT | ANT: B BW: 80Mhz MCS: 6 NSS: 1 NGI
+  * rate[8] 0x4005005 VHT | ANT: A BW: 80Mhz MCS: 5 NSS: 1 NGI
+-- 
+2.19.0
