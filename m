@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60024 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728196AbeIMAf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 20:35:26 -0400
-Date: Wed, 12 Sep 2018 21:29:26 +0200
-From: Michal Kubecek <mkubecek@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC v2 1/2] netlink: add NLA_REJECT policy type
-Message-ID: <20180912192925.GD29691@unicorn.suse.cz> (sfid-20180912_212940_689076_6BA1DCA9)
-References: <20180912083610.20857-1-johannes@sipsolutions.net>
- <20180912.111555.1317690378514849083.davem@davemloft.net>
- <1536777285.3678.28.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1536777285.3678.28.camel@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726902AbeINU57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Sep 2018 16:57:59 -0400
+Message-ID: <cc038bb1e343b04f837af72f9ce9b815bf4c73ea.camel@redhat.com> (sfid-20180914_174258_756231_D25C3F32)
+Subject: Re: mt76x0 bug report
+From: Davide Caratti <dcaratti@redhat.com>
+To: Sid Hayn <sidhayn@gmail.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: sgruszka@redhat.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org
+In-Reply-To: <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com>
+References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+         <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
+         <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+         <20180906093213.GB16539@redhat.com>
+         <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
+         <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+         <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
+         <20180907082413.GC2725@localhost.localdomain>
+         <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
+         <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 14 Sep 2018 17:42:50 +0200
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 08:34:45PM +0200, Johannes Berg wrote:
-> It wouldn't be hard to reject attributes that are higher than maxtype -
-> we already pass that to nla_parse() wherever we call it, but we'd have
-> to find a way to make it optional I guess, for compatibility reasons.
-> Perhaps with a warning, like attribute validation. For genetlink, a flag
-> in the family (something like "strict attribute validation") would be
-> easy, but for "netlink proper" we have a lot of nlmsg_parse() calls to
-> patch, and/or replace by nlmsg_parse_strict().
-> 
-> I guess we should
-> 
-> 1) implement nlmsg_parse_strict() for those new things that want it
->    strictly - greenfield type stuff that doesn't need to work with
->    existing applications
-> 
-> 2) add a warning to nlmsg_parse() when a too high attribute is
->    encountered
-> 
-> 3) eventually replace nlmsg_parse() calls by nlmsg_parse_strict() and
->    see what breaks? :-) We won't be able to rely on that any time soon
->    though (unless userspace first checks with a guaranteed rejected
->    attribute, e.g. one that has NLA_REJECT, perhaps the u64 pad
->    attributes could be marked such since the kernel can't assume
->    alignment anyway)
+On Fri, 2018-09-14 at 11:32 -0400, Sid Hayn wrote:
+> Secondarily, ethtool still doesn't report firmware version and that
+> would be a very helpful thing to have before 4.19 hits.
 
-I'm not so sure we (eventually) want to reject unknown attributes
-everywhere. I don't have any concrete example in mind but I think there
-will be use cases where we want to ignore unrecognized attributes
-(probably per parse call). But it makes sense to require caller to
-explicitely declare this is the case.
+hello,
 
-> While we're talking about wishlist, I'm also toying with the idea of
-> having some sort of generic mechanism to convert netlink attributes
-> to/from structs, for internal kernel representation; so far though I
-> haven't been able to come up with anything useful.
+I just tested a draft patch for mt76 addressing the missing FW version in
+ethtool, will send it to the ML in the next days.
 
-I was also thinking about something like this. One motivation was to
-design extensible version of ethtool_ops, the other was allowing complex
-data types (structures, arrays) for ethtool tunables. But I have nothing
-more than a vague idea so far.
-
-Michal Kubecek
+regards,
+-- 
+davide
