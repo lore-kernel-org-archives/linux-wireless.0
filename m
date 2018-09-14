@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33652 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725999AbeIFUjo (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:42968 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727416AbeIOCOJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:39:44 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 14 Sep 2018 22:14:09 -0400
+Date: Fri, 14 Sep 2018 21:57:48 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: Darren Hart <dvhart@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180914205748.GC19965@ZenIV.linux.org.uk> (sfid-20180914_225804_788570_B05D205B)
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
+ <20180914203506.GE35251@wrath>
 MIME-Version: 1.0
-Subject: Re: [PATCHv2 1/4] ath10k: get the legacy rate index to update the
- txrate table
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536043516-12462-2-git-send-email-akolli@codeaurora.org>
-References: <1536043516-12462-2-git-send-email-akolli@codeaurora.org>
-To: akolli@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Message-Id: <20180906160333.81A51606FA@smtp.codeaurora.org> (sfid-20180906_180342_067623_8F57F4B0)
-Date: Thu,  6 Sep 2018 16:03:33 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180914203506.GE35251@wrath>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@codeaurora.org wrote:
-
-> Get the legacy rate index to update the pkts/bytes counter
-> against each possible tx rate.
+On Fri, Sep 14, 2018 at 01:35:06PM -0700, Darren Hart wrote:
+ 
+> Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
 > 
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> As for a longer term solution, would it be possible to init fops in such
+> a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
+> so we don't have to duplicate this boilerplate for every ioctl fops
+> structure?
 
-4 patches applied to ath-next branch of ath.git, thanks.
+	Bad idea, that...  Because several years down the road somebody will add
+an ioctl that takes an unsigned int for argument.  Without so much as looking
+at your magical mystery macro being used to initialize file_operations.
 
-0189dbd71cbd ath10k: get the legacy rate index to update the txrate table
-348cd95c8196 ath10k: add debugfs entry to enable extended tx stats
-a904417fc876 ath10k: add extended per sta tx statistics support
-85dd28eb9917 ath10k: add debugfs support to dump per sta tx stats
-
--- 
-https://patchwork.kernel.org/patch/10586755/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+	FWIW, I would name that helper in more blunt way - something like
+compat_ioctl_only_compat_pointer_ioctls_here()...
