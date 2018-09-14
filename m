@@ -1,84 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:34980 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727651AbeILXkn (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:56075 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726845AbeINVGn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 19:40:43 -0400
-Message-ID: <1536777285.3678.28.camel@sipsolutions.net> (sfid-20180912_203504_951247_25759FD4)
-Subject: Re: [RFC v2 1/2] netlink: add NLA_REJECT policy type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        mkubecek@suse.cz
-Date: Wed, 12 Sep 2018 20:34:45 +0200
-In-Reply-To: <20180912.111555.1317690378514849083.davem@davemloft.net>
-References: <20180912083610.20857-1-johannes@sipsolutions.net>
-         <20180912.111555.1317690378514849083.davem@davemloft.net>
+        Fri, 14 Sep 2018 17:06:43 -0400
+Received: by mail-it0-f67.google.com with SMTP id d10-v6so3192704itj.5
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2018 08:51:38 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
+ <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
+ <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
+ <20180906093213.GB16539@redhat.com> <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
+ <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+ <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
+ <20180907082413.GC2725@localhost.localdomain> <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
+ <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com> <CAJ0CqmUDT44W7sb4qpmt6mPDZ5LwUDPgKCrhor_8POWpx_RaQA@mail.gmail.com>
+In-Reply-To: <CAJ0CqmUDT44W7sb4qpmt6mPDZ5LwUDPgKCrhor_8POWpx_RaQA@mail.gmail.com>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Fri, 14 Sep 2018 11:51:29 -0400
+Message-ID: <CAM0KTbDb4X7JZgYZa6-NmjD72_UHOqQ43Czv=HwWS3D0WcWrgQ@mail.gmail.com> (sfid-20180914_175141_755381_68414FD0)
+Subject: Re: mt76x0 bug report
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: sgruszka@redhat.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org, dcaratti@redhat.com
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-09-12 at 11:15 -0700, David Miller wrote:
+On Fri, Sep 14, 2018 at 11:47 AM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+>
+> >
+> > *bump*
+> >
+> > Been a few days, just a reminder that your monitor mode patch fixed
+> > all channels below 144 but something appears incorrect in regdomain
+> > handling as I cannot get channels 144 or higher working (my main AP
+> > being on channel 149.  Again, this works on mt76x2u but not on mt76x0.
+> > The patch I tested doesn't appear to have landed in wireless-testing
+> > yet, so if you haven't, please do push that up.
+>
+> I have already sent the patch to linux-wireless ml
+> https://patchwork.kernel.org/patch/10592597/
 
-> This looks great, no objections to this idea or the facility.
+Excellent, thank you.  Is someone working on the channel/regdomain
+issue as well?
+>
+> >
+> > Secondarily, ethtool still doesn't report firmware version and that
+> > would be a very helpful thing to have before 4.19 hits.
+> >
+>
+> +Davide Caratti
 
-Great. I'll post this (with the fixups) for real tomorrow then, I guess.
-A bit too late for me to do now.
+Thanks, saw his message and will watch for it to test.
+>
+> > Additionally, with much less severity, t1u still thinks it is dual
+> > band and I'm happy to run any command, test any patch, etc.  I
+> > honestly don't care about this at all short term, but it does slow the
+> > hardware down tuning to a bunch of channels which it cannot access so
+> > long term it should probably be fixed in some way.
+> >
+>
+> I am busy with other mt76 activities at the moment, I will look into
+> it as soon as I have time
 
-> It does, however, remind me about about the classic problem of how bad
-> we are at feature support detection because unrecognized attributes are
-> ignored.
-> 
-> I do really hope we can fully solve that problem some day.
+Listed third and we seem to agree this is a "as time allows" task.
 
-Yes.
+Thanks for the prompt response.
 
-There may be two or more levels to this.
-
-It wouldn't be hard to reject attributes that are higher than maxtype -
-we already pass that to nla_parse() wherever we call it, but we'd have
-to find a way to make it optional I guess, for compatibility reasons.
-Perhaps with a warning, like attribute validation. For genetlink, a flag
-in the family (something like "strict attribute validation") would be
-easy, but for "netlink proper" we have a lot of nlmsg_parse() calls to
-patch, and/or replace by nlmsg_parse_strict().
-
-I guess we should
-
-1) implement nlmsg_parse_strict() for those new things that want it
-   strictly - greenfield type stuff that doesn't need to work with
-   existing applications
-
-2) add a warning to nlmsg_parse() when a too high attribute is
-   encountered
-
-3) eventually replace nlmsg_parse() calls by nlmsg_parse_strict() and
-   see what breaks? :-) We won't be able to rely on that any time soon
-   though (unless userspace first checks with a guaranteed rejected
-   attribute, e.g. one that has NLA_REJECT, perhaps the u64 pad
-   attributes could be marked such since the kernel can't assume
-   alignment anyway)
-
-Perhaps we also have too many calls to nlmsg_parse() without a policy,
-but that's orthogonal to this check.
-
-
-On a second level though, with complex things like nl80211 it's often
-not clear at all which attributes are used with which commands. Some
-attributes (like NL80211_ATTR_IFINDEX) are (almost) universal, but there
-are others that aren't. Perhaps this isn't all that important, since if
-you try to trigger scanning and at the same time tell the kernel about a
-key index, that clearly makes no sense at all. OTOH, we have no good way
-of discovering what attribute is used where - we (try to) document this
-well in the nl80211.h kernel-doc, but that isn't always complete.
-
-So more introspection (of sorts) could be useful.
-
-
-While we're talking about wishlist, I'm also toying with the idea of
-having some sort of generic mechanism to convert netlink attributes
-to/from structs, for internal kernel representation; so far though I
-haven't been able to come up with anything useful.
-
-johannes
+-Zero
+>
+> Regards,
+> Lorenzo
+>
+> > Thanks again for all your hard work, watching the mailing list it is
+> > obvious how much effort is going into this right now.
+> >
+> > -Zero
+> > On Fri, Sep 7, 2018 at 3:55 PM Sid Hayn <sidhayn@gmail.com> wrote:
+> > >
+> > > On Fri, Sep 7, 2018 at 4:24 AM Lorenzo Bianconi
+> > > <lorenzo.bianconi@redhat.com> wrote:
+> > > >
+> > > > > Actions like that have caused great problems in the past, as the
+> > > > > kernel won't allow channel control of a monitor interface at all when
+> > > > > there is a managed interface on the same phy (afaik).
+> > > > >
+> > > > > But just for fun and codepath testing here are two test scenarios:
+> > > > >
+> > > > > Test 1: "iwconfig t2u mode monitor"
+> > > > > Sees nothing on any channel, no packets reported
+> > > > >
+> > > > > Test 2(requested test): "iw phy phy11 interface add t2uhmon type monitor"
+> > > > > Sees nothing on any channel, no packets reported.
+> > > > > Despite having a monitor and managed interface on the same phy,
+> > > > > iwconfig is reporting that the channel is changing as requested.  So
+> > > > > perhaps my above "afaik" comment is partially outdated.
+> > > > >
+> > > > > For both tests the interface was not used to connect to any ap prior
+> > > > > to or during testing.
+> > > > >
+> > > >
+> > > > Could you please try following patch?
+> > >
+> > > Excellent!  This seems to work for all channels up to 140, however,
+> > > not 144 or above.  "iw list" shows these are supported but I cannot
+> > > set them in monitor mode:
+> > >
+> > > * 5720 MHz [144] (22.0 dBm) (no IR, radar detection)
+> > > * 5745 MHz [149] (22.0 dBm) (no IR)
+> > > * 5765 MHz [153] (22.0 dBm) (no IR)
+> > > * 5785 MHz [157] (22.0 dBm) (no IR)
+> > > * 5805 MHz [161] (22.0 dBm) (no IR)
+> > > * 5825 MHz [165] (22.0 dBm) (no IR)
+> > >
+> > > remote2 ~ # iw dev t2uhmon set channel 140
+> > > remote2 ~ # iw dev t2uhmon set channel 144
+> > > command failed: Invalid argument (-22)
+> > >
+> > > Thanks,
+> > > Zero
+> > >
+> > > > Regards,
+> > > >
+> > > > Lorenzo
+> > > >
+> > > > --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> > > > +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> > > > @@ -756,11 +756,10 @@ __mt76x0_phy_set_channel(struct mt76x0_dev *dev,
+> > > >
+> > > >         /* Vendor driver don't do it */
+> > > >         /* mt76x0_phy_set_tx_power(dev, channel, rf_bw_band); */
+> > > > +       mt76x0_vco_cal(dev, channel);
+> > > >
+> > > >         if (scan)
+> > > > -               mt76x0_vco_cal(dev, channel);
+> > > > -
+> > > > -       mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
+> > > > +               mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
+> > > >         mt76x0_phy_set_chan_pwr(dev, channel);
+> > > >
+> > > >         dev->mt76.chandef = *chandef;
