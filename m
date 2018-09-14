@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot1-f51.google.com ([209.85.210.51]:43318 "EHLO
-        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387424AbeITSWk (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:49774 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727716AbeIOBvU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 14:22:40 -0400
-Received: by mail-ot1-f51.google.com with SMTP id u20-v6so9211564otk.10
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 05:39:21 -0700 (PDT)
+        Fri, 14 Sep 2018 21:51:20 -0400
+Date: Fri, 14 Sep 2018 13:35:06 -0700
+From: Darren Hart <dvhart@infradead.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        qat-linux@intel.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
+ generic_compat_ioctl_ptrarg
+Message-ID: <20180914203506.GE35251@wrath> (sfid-20180914_223538_685296_6D39219B)
+References: <20180912150142.157913-1-arnd@arndb.de>
+ <20180912151134.436719-1-arnd@arndb.de>
 MIME-Version: 1.0
-References: <CAFXAJYzsmhAzSFXjmB0biTBFnU7OSWF6tdqspSqgabvx4x1stg@mail.gmail.com>
- <20180919182334.GA15542@w1.fi> <CAFXAJYwa2usdkuvyjdE79iEuzqbZy6J=LYM=UhdAmLbwFP4KLA@mail.gmail.com>
- <20180920091221.GA7326@w1.fi>
-In-Reply-To: <20180920091221.GA7326@w1.fi>
-From: Mathy Vanhoef <vanhoefm@gmail.com>
-Date: Thu, 20 Sep 2018 14:39:12 +0200
-Message-ID: <CAFXAJYzT7nYEX-ScisqimA=u79B1obycS8msbhMo3TCa5bWa4A@mail.gmail.com> (sfid-20180920_143925_260809_1992F92A)
-Subject: Re: SAE authentication frames in client mode
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        alfred.arnold@lancom.de, Philipp.Ebbecke@lancom.de,
-        dharkins@lounge.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 20, 2018 at 11:12 AM Jouni Malinen <j@w1.fi> wrote:
-> On Thu, Sep 20, 2018 at 12:55:10AM +0200, Mathy Vanhoef wrote:
-> > That figure only appears to be an example. It doesn't say an exchange
-> > must ("shall") follow that order. So I don't see where the standard
-> > puts a constraint on how the authentication frames are exchanged.
->
-> I know this figure is not a normative requirement, but it is a
-> convenient location to point to for showing that specific sequence. I
-> did discuss this in the IEEE 802.11 working group when working on the
-> SAE implementation for infrastructure BSS case and the conclusion from
-> that discussion was that it is better to follow the common sequence of
-> STA->AP->STA round trips for the Authentication frames and have the STA
-> be the one taking care of retransmissions, if needed. I thought we ended
-> up clarifying that in the standard text somewhere as well, but that was
-> years ago and I do not remember how exactly this got documented. It is
-> possible that there would be benefit from adding a more explicit
-> requirement in REVmd. In any case, this sequence is the one that is
-> being implemented and enforced for implementations of WPA3.
+On Wed, Sep 12, 2018 at 05:08:52PM +0200, Arnd Bergmann wrote:
+> The .ioctl and .compat_ioctl file operations have the same prototype so
+> they can both point to the same function, which works great almost all
+> the time when all the commands are compatible.
+> 
+> One exception is the s390 architecture, where a compat pointer is only
+> 31 bit wide, and converting it into a 64-bit pointer requires calling
+> compat_ptr(). Most drivers here will ever run in s390, but since we now
+> have a generic helper for it, it's easy enough to use it consistently.
+> 
+> I double-checked all these drivers to ensure that all ioctl arguments
+> are used as pointers or are ignored, but are not interpreted as integer
+> values.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+...
+>  drivers/platform/x86/wmi.c                  | 2 +-
+...
+>  static void link_event_work(struct work_struct *work)
+> diff --git a/drivers/platform/x86/wmi.c b/drivers/platform/x86/wmi.c
+> index 04791ea5d97b..e4d0697e07d6 100644
+> --- a/drivers/platform/x86/wmi.c
+> +++ b/drivers/platform/x86/wmi.c
+> @@ -886,7 +886,7 @@ static const struct file_operations wmi_fops = {
+>  	.read		= wmi_char_read,
+>  	.open		= wmi_char_open,
+>  	.unlocked_ioctl	= wmi_ioctl,
+> -	.compat_ioctl	= wmi_ioctl,
+> +	.compat_ioctl	= generic_compat_ioctl_ptrarg,
+>  };
 
-Thanks for the information. The standard should indeed be more clear,
-currently there doesn't seem to be a requirement to follow a specific
-sequence of frames.
+For platform/drivers/x86:
 
-> > A related observation is that retransmissions of the Confirm message
-> > are done by the kernel? Unfortunately this means the Send-Confirm
-> > field is not being incremented (as per 12.4.8.6.5). In practice we
-> > indeed see that this field is not being incremented for retransmitted
-> > Confirm frames (when using wpa_supplicant). This means that if the
-> > first Confirm frame sent by the AP is lost, the handshake will fail,
-> > since the AP will not accept retransmissions with the same
-> > Send-Confirm counter (and hence won't retransmit its own Confirm
-> > frame).
->
-> For mac80111-based drivers, there is indeed retransmission cases in the
-> kernel implementation for authentication and association frames. SAE is
-> not the only case where those are somewhat pointless; similar issue
-> applies at least for FILS authentication where the timeout is too short
-> and the retry incorrect anyway. I have some local patches in mac80211
-> for testing purposes, but I have not yet found time to clean those up
-> for contribution.
->
-> For SAE, wpa_supplicant should really try to send out another Confirm if
-> no response from the AP is received. The mac80211 retries could be
-> removed as useless both for SAE and FILS. For now, the recovery from
-> this by starting authentication exchange from scratch which is likely
-> sufficient for covering robustness needs with all the link layer retries
-> making it sufficiently unlikely for the Authentication frames to be lost
-> completely.
+Acked-by: Darren Hart (VMware) <dvhart@infradead.org>
 
-If the mac80211 retransmissions fail, wpa_supplicant will abort the
-authentication attempt (seems like sme_auth_timer is fired, and the
-client deauthenticates from the network). So wpa_supplicant itself
-will not attempt to send another Confirm frame with a higher
-Send-Confirm?
+As for a longer term solution, would it be possible to init fops in such
+a way that the compat_ioctl call defaults to generic_compat_ioctl_ptrarg
+so we don't have to duplicate this boilerplate for every ioctl fops
+structure?
+
+-- 
+Darren Hart
+VMware Open Source Technology Center
