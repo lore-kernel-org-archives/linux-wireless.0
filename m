@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:63058 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725955AbeICN7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 09:59:31 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: RE: [PATCH 09/28] mac80211: pass the TWT support bits in extended
- caps to the driver
-Date: Mon, 3 Sep 2018 09:38:57 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30126D281DE@HASMSX112.ger.corp.intel.com> (sfid-20180903_114018_428043_75407523)
-References: <20180831083130.15525-1-luca@coelho.fi>
-         <20180831083130.15525-10-luca@coelho.fi>
-         (sfid-20180831_103155_573128_7D703B85)
- <1535964771.3437.17.camel@sipsolutions.net>
-         <0BA3FCBA62E2DC44AF3030971E174FB30126D281A5@HASMSX112.ger.corp.intel.com>
- <1535967088.3437.25.camel@sipsolutions.net>
-In-Reply-To: <1535967088.3437.25.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:60398 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728169AbeIQDwA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Sep 2018 23:52:00 -0400
+Subject: Re: [PATCH] fix iwlwifi on old cards in v4.19 was Re: 4.19-rc[23]
+ iwlwifi: BUG in swiotlb
+To: Pavel Machek <pavel@ucw.cz>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
+ <1536651177.3224.106.camel@sipsolutions.net> <20180916093414.GA4299@amd>
+ <20180916094142.GB4299@amd> <20180916095535.GA4245@amd>
+ <20180916095935.GA4388@amd>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <23940459-3a95-7ccb-6ad0-dfa0790910d1@infradead.org> (sfid-20180917_002741_853998_C34F1E02)
+Date: Sun, 16 Sep 2018 15:27:29 -0700
 MIME-Version: 1.0
+In-Reply-To: <20180916095935.GA4388@amd>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gTW9uLCAyMDE4LTA5LTAzIGF0IDA5OjI4ICswMDAwLCBHcnVtYmFjaCwgRW1tYW51
-ZWwgd3JvdGU6DQo+ID4gPg0KPiA+IEZvciBtYW5hZ2VkIG1vZGUsIHRoZSBkcml2ZXIgd2lsbCBu
-ZWVkIHRvIGNoZWNrIHRoZSBIRSBjYXAgYWxvbmcgd2l0aA0KPiA+IHRoZSBleHRlbmRlZCBjYXBh
-YmlsaXRpZXMgdG8gZGV0ZXJtaW5lIHdoZXRoZXIgQVAgc3VwcG9ydHMgVFdUIG9yIG5vdC4NCj4g
-DQo+IERvIHlvdSBoYXZlIGFueSBpZGVhIHdoeSBpdCdzIHRoZXJlIHR3aWNlPyBTb3VuZHMgbGlr
-ZSB3ZSBzaG91bGQgcmVzb2x2ZQ0KPiB0aGF0IGluIG1hYzgwMjExLCByYXRoZXIgdGhhbiByZXF1
-aXJpbmcgdGhlIGRyaXZlciB0byBjaGVjayB0d28gcGxhY2VzLi4uDQo+DQoNCkkgYW0gbm93IGxv
-b2tpbmcgYXQgdGFibGUgOS0xMzUgaW4gRDMuMCBhbmQgYXQgVGFibGUtOS0yNjJ6LiBUaGUgZmly
-c3QgZGVzY3JpYmVzDQp0aGUgZXh0ZW5kZWQgY2FwcyBJRSwgdGhlIHNlY29uZCwgdGhlIEhFIENB
-UCBJRS4gSSBjYW4ndCByZWFsbHkgZmluZCBhbnkgZGlmZmVyZW5jZS4NClNpbmNlIHRoZSBkcml2
-ZXIgYWxyZWFkeSBoYXMgdGhlIGZ1bGwgSEUgQ0FQIElFLCBJIHRob3VnaHQgd2UnZCBqdXN0IHJl
-ZmxlY3Qgd2hhdCB3ZQ0KaGFkIGluIHRoZSBleHRlbmRlZCBjYXBzIElFIHNvIHRoYXQgaXQgaGFz
-IHRoZSAicmF3IiBkYXRhLCBidXQgSSBhZ3JlZSB0aGF0IG1hYzgwMjExDQpjb3VsZCAvIHNob3Vs
-ZCBhZ2dyZWdhdGUgdGhlIGRhdGEuDQo=
+On 9/16/18 2:59 AM, Pavel Machek wrote:
+> 
+> .max_tfd_queue_size was ommited for old cards, leading to oops in
+> swiotlb.
+> 
+> Signed-off-by: Pavel Machek <pavel@ucw.cz>
+> 
+
+Hi,
+Thanks.  Works for me.
+
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+
+
+PS:  I started the b-word yesterday but my old laptop is slow...
+
+
+> --- linux/drivers/net/wireless/intel/iwlwifi/cfg/1000.c	2018-09-05 13:12:40.453164067 +0200
+> +++ linux-64/drivers/net/wireless/intel/iwlwifi/cfg/1000.c	2018-09-16 11:54:04.010970756 +0200
+> @@ -51,6 +51,7 @@
+>  
+>  static const struct iwl_base_params iwl1000_base_params = {
+>  	.num_of_queues = IWLAGN_NUM_QUEUES,
+> +	.max_tfd_queue_size = 256,
+>  	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+>  	.pll_cfg = true,
+>  	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
+> 
+> 
+
+
+-- 
+~Randy
