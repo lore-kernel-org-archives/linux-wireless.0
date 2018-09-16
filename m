@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53298 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726507AbeIDIyw (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34401 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726857AbeIPNoi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 04:54:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        ath9k_htc_fw@lists.infradead.org
-Subject: Re: [PATCH 3/3] ath9k_htc: increase number of configurable virtual interfaces
-References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
-        <1535997033-16330-3-git-send-email-pozega.tomislav@gmail.com>
-Date: Tue, 04 Sep 2018 07:31:33 +0300
-In-Reply-To: <1535997033-16330-3-git-send-email-pozega.tomislav@gmail.com>
-        ("Tomislav \=\?utf-8\?Q\?Po\=C5\=BEega\=22's\?\= message of "Mon, 3 Sep 2018
- 19:50:33 +0200")
-Message-ID: <87pnxtsx22.fsf@purkki.adurom.net> (sfid-20180904_063139_375306_99B21F61)
+        Sun, 16 Sep 2018 09:44:38 -0400
+Date: Sun, 16 Sep 2018 10:22:28 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        rdunlap@infradead.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        luciano.coelho@intel.com, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org,
+        kernel list <linux-kernel@vger.kernel.org>
+Subject: Re: v4.19-rc3 on thinkpad x220: kernel BUG at
+ kernel/dma/swiotlb.c:521 when enabling radios
+Message-ID: <20180916082227.GA4602@amd> (sfid-20180916_102246_175363_6866D106)
+References: <20180916064702.GA4180@amd>
+ <20180916065703.GA4392@amd>
+ <CAF7Mx6o1PV2xcgLp94=9OP1ZaxoxjebPE1_t93hQ65UkDLgKWQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+In-Reply-To: <CAF7Mx6o1PV2xcgLp94=9OP1ZaxoxjebPE1_t93hQ65UkDLgKWQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomislav Po=C5=BEega <pozega.tomislav@gmail.com> writes:
 
-> Increase driver limit for various interface combinations.
-> I was able to start 8 virtual APs and connect 5 clients to
-> these. Frimware support is required too, see:
-> https://github.com/qca/open-ath9k-htc-firmware/pull/149
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So what is the exact firmware version which has this support? Is it
-available from linux-firmware.git?
+Hi!
 
-And what about people using older firmware? Now it's easy to use a
-unsupported configuration with those firmware images. The best would be
-that ath9k could somehow detect what features the firmware supports.
+> > > I was running X220 with wireless disabled for long long time. Now I
+> > > needed to enable it, and got...
+> >
+> > Tried with next-0913, and machine crashed with capslock LED blinking
+> > when I toggled the switch...
+> >
+> > Any ideas?
+>=20
+> Replying using my phone. There has been such a report from Randy Dunlap on
+> September 11 with subject "4.19-rc[23] iwlwifi: BUG in swiotlb".
+>=20
+> Did not quite follow that, just recall seeing it fly by. Maybe it helps.
 
+Thanks for pointer.
+
+Hi, Randy! We have same problem.
+
+I switched back to v4.18, and it seems to be ok.
+
+I'd prefer not to hear the b-word. Any other ideas?
+									Pavel
 --=20
-Kalle Valo
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--k+w/mQv8wyuph6w0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlueEsMACgkQMOfwapXb+vK6igCgtQ23s8F5RGloD0DXZehRvtZH
+j8gAnjhINpzzmzRaD5ICdCnIIHlRrksz
+=HcVE
+-----END PGP SIGNATURE-----
+
+--k+w/mQv8wyuph6w0--
