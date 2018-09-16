@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46562 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727606AbeIEKBk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 06:01:40 -0400
+Received: from mga09.intel.com ([134.134.136.24]:58837 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726722AbeIPPhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Sep 2018 11:37:15 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        Johannes Berg <johannes@sipsolutions.net>
+CC: Randy Dunlap <rdunlap@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: RE: [linuxwifi] [PATCH] fix iwlwifi on old cards in v4.19 was Re:
+ 4.19-rc[23] iwlwifi: BUG in swiotlb
+Date: Sun, 16 Sep 2018 10:14:22 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301336B2111@HASMSX111.ger.corp.intel.com> (sfid-20180916_121505_432109_535F1E00)
+References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
+ <1536651177.3224.106.camel@sipsolutions.net> <20180916093414.GA4299@amd>
+ <20180916094142.GB4299@amd> <20180916095535.GA4245@amd>
+ <20180916095935.GA4388@amd>
+ <0BA3FCBA62E2DC44AF3030971E174FB301336B20F4@HASMSX111.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301336B20F4@HASMSX111.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 05 Sep 2018 13:33:12 +0800
-From: Carl Huang <cjhuang@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath10k: download firmware via diag Copy Engine for
- QCA6174 and QCA9377.
-In-Reply-To: <87musw7dh2.fsf@kamboji.qca.qualcomm.com>
-References: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org>
- <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
- <87musw7dh2.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <a122a1ac5f4255ab704b1d6763754fe4@codeaurora.org> (sfid-20180905_073315_381630_C8587248)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-05 12:52, Kalle Valo wrote:
-> Carl Huang <cjhuang@codeaurora.org> writes:
 > 
->> Downloading firmware via BMI protocol takes too long time. For 
->> example,
->> a ~700K bytes firmware takes about 500ms to download via BMI protocol.
->> This is too long especially in suspend and resume scenario where 
->> firmware
->> is re-downloaded unless WoWLAN is enabled. Downloading firmware via 
->> diag CE
->> can reduce the time to ~40ms for a ~700K bytes firmware binary.
->> 
->> Ath10k driver parses the firmware to segments and downloads the 
->> segments
->> to the specified address directly. If the firmware is compressed or 
->> has
->> unsupported segments, ath10k driver will try BMI download again.
->> 
->> It's tested with QCA6174 hw3.2 and
->> firmware-6.bin_WLAN.RM.4.4.1-00111-QCARMSWP-1. QCA9377 is also 
->> affected.
->> 
->> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> >
+> >
+> > .max_tfd_queue_size was ommited for old cards, leading to oops in
+> swiotlb.
+> >
+> > Signed-off-by: Pavel Machek <pavel@ucw.cz>
+> >
 > 
-> There were new warnings:
+> I picked it up in our tree with minor commit message fixes.
+> I also added the Fixes tag for stable.
 > 
-> drivers/net/wireless/ath/ath10k/hw.c:1029:16: warning: restricted
-> __le32 degrades to integer
-> drivers/net/wireless/ath/ath10k/hw.c:1047:27: warning: incorrect type
-> in assignment (different base types)
-> drivers/net/wireless/ath/ath10k/hw.c:1047:27:    expected unsigned int
-> [unsigned] [usertype] base_addr
-> drivers/net/wireless/ath/ath10k/hw.c:1047:27:    got restricted __le32
-> [usertype] addr
-> drivers/net/wireless/ath/ath10k/hw.c:1048:26: warning: incorrect type
-> in assignment (different base types)
-> drivers/net/wireless/ath/ath10k/hw.c:1048:26:    expected unsigned int
-> [unsigned] [usertype] base_len
-> drivers/net/wireless/ath/ath10k/hw.c:1048:26:    got restricted __le32
-> [usertype] length
-> 
-> I fixed those in the pending branch, please review:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=f6f6f597654693ab122ecd950b56343489b91e59
 
-Kalle,
-
-Thank you for fixing the warnings. I don't see any issues with this 
-warning fix.
-
-
-Thanks,
-Carl
+Ah, of course... not needed... Sorry...
