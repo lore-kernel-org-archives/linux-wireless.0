@@ -1,137 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:56692 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727626AbeIEMSF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 08:18:05 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 1/2] brcmfmac: fix for proper support of 160MHz bandwidth
-Date: Wed,  5 Sep 2018 09:48:58 +0200
-Message-Id: <1536133739-5693-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180905_094912_044935_0B4CA8D0)
-In-Reply-To: <1536133739-5693-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1536133739-5693-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail.toke.dk ([52.28.52.200]:47131 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728216AbeIPXFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Sep 2018 19:05:52 -0400
+Subject: [PATCH RFC v4 0/4] Move TXQ scheduling into mac80211
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Date: Sun, 16 Sep 2018 19:42:11 +0200
+Message-ID: <153711966150.9231.13481453399723518107.stgit@alrua-x1> (sfid-20180916_194317_752625_E6E12A5A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decoding of firmware channel information was not complete for 160MHz
-support. This resulted in the following warning:
+Another update, addressing most of the concerns raised in the last round:
 
-  WARNING: CPU: 2 PID: 2222 at .../broadcom/brcm80211/brcmutil/d11.c:196
-	brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
-  Modules linked in: brcmfmac(O) brcmutil(O) sha256_generic cfg80211 ...
-  CPU: 2 PID: 2222 Comm: kworker/2:0 Tainted: G           O
-  4.17.0-wt-testing-x64-00002-gf1bed50 #1
-  Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
-  Workqueue: events request_firmware_work_func
-  RIP: 0010:brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
-  RSP: 0018:ffffc90000047bd0 EFLAGS: 00010206
-  RAX: 000000000000e832 RBX: ffff8801146fe910 RCX: ffff8801146fd3c0
-  RDX: 0000000000002800 RSI: 0000000000000070 RDI: ffffc90000047c30
-  RBP: ffffc90000047bd0 R08: 0000000000000000 R09: ffffffffa0798c80
-  R10: ffff88012bca55e0 R11: ffff880110a4ea00 R12: ffff8801146f8000
-  R13: ffffc90000047c30 R14: ffff8801146fe930 R15: ffff8801138e02e0
-  FS:  0000000000000000(0000) GS:ffff88012bc80000(0000) knlGS:0000000000000000
-  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-  CR2: 00007f18ce8b8070 CR3: 000000000200a003 CR4: 00000000000206e0
-  Call Trace:
-   brcmf_setup_wiphybands+0x212/0x780 [brcmfmac]
-   brcmf_cfg80211_attach+0xae2/0x11a0 [brcmfmac]
-   brcmf_attach+0x1fc/0x4b0 [brcmfmac]
-   ? __kmalloc+0x13c/0x1c0
-   brcmf_pcie_setup+0x99b/0xe00 [brcmfmac]
-   brcmf_fw_request_done+0x16a/0x1f0 [brcmfmac]
-   request_firmware_work_func+0x36/0x60
-   process_one_work+0x146/0x350
-   worker_thread+0x4a/0x3b0
-   kthread+0x102/0x140
-   ? process_one_work+0x350/0x350
-   ? kthread_bind+0x20/0x20
-   ret_from_fork+0x35/0x40
-  Code: 66 90 0f b7 07 55 48 89 e5 89 c2 88 47 02 88 47 03 66 81 e2 00 38
-	66 81 fa 00 18 74 6e 66 81 fa 00 20 74 39 66 81 fa 00 10 74 14 <0f>
-	0b 66 25 00 c0 74 20 66 3d 00 c0 75 20 c6 47 04 01 5d c3 66
-  ---[ end trace 550c46682415b26d ]---
-  brcmfmac: brcmf_construct_chaninfo: Ignoring unexpected firmware channel 50
+- Added schedule_start()/end() functions that adds locking around the
+  whole scheduling operation, which means we can get rid of the 'first'
+  parameter to ieee80211_next_txq().
 
-This patch adds the missing stuff to properly handle this.
+- Adds a callback in the wake_txqs tasklet which will ensure that any
+  TXQs throttled by ieee80211_txq_may_transmit() will get woken up
+  again. This also makes it possible to ensure all TXQs' deficits are
+  increased in the case where the rotation in may_transmit is not
+  effective because TXQs are not scheduled in round-robin order by the
+  hardware. As part of this, bring back the flag that marks a TXQ as
+  throttled.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+- Rename ieee80211_schedule_txq() to ieee80211_return_txq() and add a
+  check of empty TXQs inside it, so the driver can just call it
+  unconditionally.
+
+- Add a call to ieee80211_sta_register_airtime() from the existing
+  tx_status path if tx_time is set in the tx_info status field.
+
+- Reorder the patches to the cfg80211 airtime changes come before the
+  changes to mac80211.
+
+I didn't port over Kan's "airtime queue limits" stuff yet, partly
+because I ran out of time, and partly because I wasn't use if he wanted
+to do it himself :)
+
+-Toke
+
 ---
- .../net/wireless/broadcom/brcm80211/brcmutil/d11.c | 34 +++++++++++++++++++++-
- .../broadcom/brcm80211/include/brcmu_wifi.h        |  2 ++
- 2 files changed, 35 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-index d8b79cb..e7584b8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-@@ -77,6 +77,8 @@ static u16 d11ac_bw(enum brcmu_chan_bw bw)
- 		return BRCMU_CHSPEC_D11AC_BW_40;
- 	case BRCMU_CHAN_BW_80:
- 		return BRCMU_CHSPEC_D11AC_BW_80;
-+	case BRCMU_CHAN_BW_160:
-+		return BRCMU_CHSPEC_D11AC_BW_160;
- 	default:
- 		WARN_ON(1);
- 	}
-@@ -190,8 +192,38 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
- 			break;
- 		}
- 		break;
--	case BRCMU_CHSPEC_D11AC_BW_8080:
- 	case BRCMU_CHSPEC_D11AC_BW_160:
-+		switch (ch->sb) {
-+		case BRCMU_CHAN_SB_LLL:
-+			ch->control_ch_num -= CH_70MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LLU:
-+			ch->control_ch_num -= CH_50MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LUL:
-+			ch->control_ch_num -= CH_30MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LUU:
-+			ch->control_ch_num -= CH_10MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_ULL:
-+			ch->control_ch_num += CH_10MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_ULU:
-+			ch->control_ch_num += CH_30MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_UUL:
-+			ch->control_ch_num += CH_50MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_UUU:
-+			ch->control_ch_num += CH_70MHZ_APART;
-+			break;
-+		default:
-+			WARN_ON_ONCE(1);
-+			break;
-+		}
-+		break;
-+	case BRCMU_CHSPEC_D11AC_BW_8080:
- 	default:
- 		WARN_ON_ONCE(1);
- 		break;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-index 91fca79..dddebaa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-@@ -29,6 +29,8 @@
- #define CH_UPPER_SB			0x01
- #define CH_LOWER_SB			0x02
- #define CH_EWA_VALID			0x04
-+#define CH_70MHZ_APART			14
-+#define CH_50MHZ_APART			10
- #define CH_30MHZ_APART			6
- #define CH_20MHZ_APART			4
- #define CH_10MHZ_APART			2
--- 
-1.9.1
+Toke Høiland-Jørgensen (4):
+      mac80211: Add TXQ scheduling API
+      cfg80211: Add airtime statistics and settings
+      mac80211: Add airtime accounting and scheduling to TXQs
+      ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
+
+
+ drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
+ drivers/net/wireless/ath/ath9k/debug.c     |    3 
+ drivers/net/wireless/ath/ath9k/debug.h     |    8 -
+ drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
+ drivers/net/wireless/ath/ath9k/init.c      |    3 
+ drivers/net/wireless/ath/ath9k/recv.c      |    9 -
+ drivers/net/wireless/ath/ath9k/xmit.c      |  244 ++++++++--------------------
+ include/net/cfg80211.h                     |   10 +
+ include/net/mac80211.h                     |  114 +++++++++++++
+ include/uapi/linux/nl80211.h               |   15 ++
+ net/mac80211/agg-tx.c                      |    2 
+ net/mac80211/cfg.c                         |    3 
+ net/mac80211/debugfs.c                     |    3 
+ net/mac80211/debugfs_sta.c                 |   51 ++++++
+ net/mac80211/driver-ops.h                  |    9 +
+ net/mac80211/ieee80211_i.h                 |   12 +
+ net/mac80211/main.c                        |    6 +
+ net/mac80211/sta_info.c                    |   51 ++++++
+ net/mac80211/sta_info.h                    |   13 +
+ net/mac80211/status.c                      |    6 +
+ net/mac80211/tx.c                          |  134 +++++++++++++++
+ net/mac80211/util.c                        |   55 ++++++
+ net/wireless/nl80211.c                     |   29 +++
+ 23 files changed, 575 insertions(+), 273 deletions(-)
+
+X-Clacks-Overhead: GNU Terry Pratchett
