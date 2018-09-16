@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46438 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726133AbeIDMgV (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36561 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727697AbeIPPWB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 08:36:21 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sun, 16 Sep 2018 11:22:01 -0400
+Date: Sun, 16 Sep 2018 11:59:36 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+Subject: [PATCH] fix iwlwifi on old cards in v4.19 was Re: 4.19-rc[23]
+ iwlwifi: BUG in swiotlb
+Message-ID: <20180916095935.GA4388@amd> (sfid-20180916_115949_196401_EFA2524C)
+References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
+ <1536651177.3224.106.camel@sipsolutions.net>
+ <20180916093414.GA4299@amd>
+ <20180916094142.GB4299@amd>
+ <20180916095535.GA4245@amd>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/16] mt76: move mt76_reg_pair definition in mt76.h
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180825104056.9130-2-lorenzo.bianconi@redhat.com>
-References: <20180825104056.9130-2-lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Message-Id: <20180904081221.4F3EB60708@smtp.codeaurora.org> (sfid-20180904_101229_444858_55174392)
-Date: Tue,  4 Sep 2018 08:12:21 +0000 (UTC)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
+In-Reply-To: <20180916095535.GA4245@amd>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-> Move common definition of mt76_reg_pair in mt76.h
-> and remove duplicated code in mt76x2_init_common.c
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-16 patches applied to wireless-drivers-next.git, thanks.
 
-5090efa4a2e8 mt76: move mt76_reg_pair definition in mt76.h
-4c89ff2c74e3 mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
-288d600a8880 mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
-851ab66e293c mt76: add multiple regs read support to usb_mcu layer
-795dbf0fd20c mt76x0: use mt76u_init for bus initialization
-e9fa647a0ad3 mt76x0: remove mt76x0_vendor_reset routine
-72750efddba9 mt76x0: remove mt76x0_vendor_single_wr routine
-84740d5dc66e mt76x0: remove mt76x0_mcu_msg_alloc routine
-ad27c4ae0ba7 mt76x0: use shared mt76 usb mcu completion
-73d411e2d499 mt76x0: remove mt76x0_complete_urb routine
-172222cff066 mt76x0: remove mt76x0_vendor_request routine
-876d3d02ee31 mt76x0: remove unused mt76x0_wait_asic_ready routine
-6f4796b7063e mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
-0e3612e06be4 mt76x0: remove unused mt76x0_mcu structure
-a0b65ca60ec7 mt76x0: use mt76u_mcu_fw_send_data for fw uploading
-01b302cd5874 mt76x0: remove unused routines for usb_buff alloc/free
+=2Emax_tfd_queue_size was ommited for old cards, leading to oops in
+swiotlb.
 
--- 
-https://patchwork.kernel.org/patch/10576059/
+Signed-off-by: Pavel Machek <pavel@ucw.cz>
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--- linux/drivers/net/wireless/intel/iwlwifi/cfg/1000.c	2018-09-05 13:12:40=
+=2E453164067 +0200
++++ linux-64/drivers/net/wireless/intel/iwlwifi/cfg/1000.c	2018-09-16 11:54=
+:04.010970756 +0200
+@@ -51,6 +51,7 @@
+=20
+ static const struct iwl_base_params iwl1000_base_params =3D {
+ 	.num_of_queues =3D IWLAGN_NUM_QUEUES,
++	.max_tfd_queue_size =3D 256,
+ 	.eeprom_size =3D OTP_LOW_IMAGE_SIZE,
+ 	.pll_cfg =3D true,
+ 	.max_ll_items =3D OTP_MAX_LL_ITEMS_1000,
+
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlueKYcACgkQMOfwapXb+vLZ5QCgjbBnATFi5lFY8Fq4EA7weVue
+QnAAn3xqHVBVB6njWkAYMbm8EaMogmXF
+=Fr1Q
+-----END PGP SIGNATURE-----
+
+--XsQoSWH+UP9D9v3l--
