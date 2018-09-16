@@ -1,79 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12575 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727665AbeIDLES (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:04:18 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 14/26] staging: wilc1000: move 'rcv_assoc_resp' as part of hif_drv
-Date: Tue, 4 Sep 2018 12:09:30 +0530
-Message-ID: <1536043182-19735-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084101_910361_78E7C483)
-In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
-References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mail.toke.dk ([52.28.52.200]:33309 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728300AbeIPXFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Sep 2018 19:05:53 -0400
+Subject: [PATCH RFC v4 2/4] cfg80211: Add airtime statistics and settings
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Date: Sun, 16 Sep 2018 19:42:11 +0200
+Message-ID: <153711973122.9231.1698150745560968565.stgit@alrua-x1.karlstad.toke.dk> (sfid-20180916_194321_624739_FE99306F)
+In-Reply-To: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
+References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid use of static variable and move 'rcv_assoc_resp' as part of
-'hif_drv' struct. Rename from 'rcv_assoc_resp' to 'assoc_resp'.
+This adds TX airtime statistics to the cfg80211 station dump (to go along
+with the RX info already present), and adds a new parameter to set the
+airtime weight of each station. The latter allows userspace to implement
+policies for different stations by varying their weights.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 +++-----
- drivers/staging/wilc1000/host_interface.h | 1 +
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h       |   10 +++++++++-
+ include/uapi/linux/nl80211.h |   15 +++++++++++++++
+ net/wireless/nl80211.c       |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 53 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 18448fa..c3f2fc9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -191,8 +191,6 @@ static u8 p2p_listen_state;
- static struct completion hif_driver_comp;
- static struct mutex hif_deinit_lock;
- 
--static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
--
- static u8 set_ip[2][4];
- static u8 get_ip[2][4];
- 
-@@ -1502,16 +1500,16 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 	if (mac_status == MAC_STATUS_CONNECTED) {
- 		u32 assoc_resp_info_len;
- 
--		memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
-+		memset(hif_drv->assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
- 
--		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
-+		host_int_get_assoc_res_info(vif, hif_drv->assoc_resp,
- 					    MAX_ASSOC_RESP_FRAME_SIZE,
- 					    &assoc_resp_info_len);
- 
- 		if (assoc_resp_info_len != 0) {
- 			s32 err = 0;
- 
--			err = wilc_parse_assoc_resp_info(rcv_assoc_resp,
-+			err = wilc_parse_assoc_resp_info(hif_drv->assoc_resp,
- 							 assoc_resp_info_len,
- 							 &conn_info);
- 			if (err)
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4dd8510..12dec47 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -284,6 +284,7 @@ struct host_if_drv {
- 
- 	bool ifc_up;
- 	int driver_handler_id;
-+	u8 assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9f3ed79c39d7..91d6fc222263 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -990,6 +990,7 @@ enum station_parameters_apply_mask {
+  * @support_p2p_ps: information if station supports P2P PS mechanism
+  * @he_capa: HE capabilities of station
+  * @he_capa_len: the length of the HE capabilities
++ * @airtime_weight: airtime scheduler weight for this station
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -1019,6 +1020,7 @@ struct station_parameters {
+ 	int support_p2p_ps;
+ 	const struct ieee80211_he_cap_elem *he_capa;
+ 	u8 he_capa_len;
++	u16 airtime_weight;
  };
  
- struct add_sta_param {
--- 
-2.7.4
+ /**
+@@ -1286,6 +1288,8 @@ struct cfg80211_tid_stats {
+  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
+  *	from this peer
+  * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
++ * @tx_duration: aggregate PPDU duration(usecs) for all the frames to a peer
++ * @airtime_weight: current airtime scheduling weight
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  *	Note that this doesn't use the @filled bit, but is used if non-NULL.
+@@ -1332,10 +1336,12 @@ struct station_info {
+ 
+ 	u32 expected_throughput;
+ 
+-	u64 rx_beacon;
++	u64 tx_duration;
+ 	u64 rx_duration;
++	u64 rx_beacon;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats *pertid;
++	u16 airtime_weight;
+ 	s8 ack_signal;
+ 	s8 avg_ack_signal;
+ };
+@@ -2363,6 +2369,8 @@ enum wiphy_params_flags {
+ 	WIPHY_PARAM_TXQ_QUANTUM		= 1 << 8,
+ };
+ 
++#define IEEE80211_DEFAULT_AIRTIME_WEIGHT	256
++
+ /**
+  * struct cfg80211_pmksa - PMK Security Association
+  *
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index cfc94178d608..3664bdc7c8c1 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2241,6 +2241,9 @@ enum nl80211_commands {
+  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
+  *	only if %NL80211_STA_FLAG_WME is set.
+  *
++ * @NL80211_ATTR_AIRTIME_WEIGHT: Station's weight when scheduled by the airtime
++ *      scheduler.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2682,6 +2685,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_HE_CAPABILITY,
+ 
++	NL80211_ATTR_AIRTIME_WEIGHT,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3051,6 +3056,9 @@ enum nl80211_sta_bss_param {
+  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
+  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
+  * @NL80211_STA_INFO_ACK_SIGNAL_AVG: avg signal strength of ACK frames (s8, dBm)
++ * @NL80211_STA_INFO_TX_DURATION: aggregate PPDU duration for all frames
++ *	sent to the station (u64, usec)
++ * @NL80211_STA_INFO_AIRTIME_WEIGHT: current airtime weight for station (u16)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -3091,6 +3099,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_PAD,
+ 	NL80211_STA_INFO_ACK_SIGNAL,
+ 	NL80211_STA_INFO_ACK_SIGNAL_AVG,
++	NL80211_STA_INFO_TX_DURATION,
++	NL80211_STA_INFO_AIRTIME_WEIGHT,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+@@ -5231,6 +5241,10 @@ enum nl80211_feature_flags {
+  *      if this flag is not set. Ignoring this can leak clear text packets and/or
+  *      freeze the connection.
+  *
++ * @NL80211_EXT_FEATURE_AIRTIME_FAIRNESS: Driver supports getting airtime
++ *      fairness for transmitted packets and has enabled airtime fairness
++ *      scheduling.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5269,6 +5283,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
+ 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
++	NL80211_EXT_FEATURE_AIRTIME_FAIRNESS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d5f9b5235cdd..9db19ae57716 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -430,6 +430,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
+ 					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
++
++	[NL80211_ATTR_AIRTIME_WEIGHT] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4656,6 +4658,11 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO(PLID, plid, u16);
+ 	PUT_SINFO(PLINK_STATE, plink_state, u8);
+ 	PUT_SINFO_U64(RX_DURATION, rx_duration);
++	PUT_SINFO_U64(TX_DURATION, tx_duration);
++
++	if (wiphy_ext_feature_isset(&rdev->wiphy,
++				    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
++		PUT_SINFO(AIRTIME_WEIGHT, airtime_weight, u16);
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+@@ -5293,6 +5300,17 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 			nla_get_u8(info->attrs[NL80211_ATTR_OPMODE_NOTIF]);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]) {
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
++			return -EOPNOTSUPP;
++
++		params.airtime_weight =
++			nla_get_u16(info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]);
++		if (!params.airtime_weight)
++			return -EINVAL;
++	}
++
+ 	/* Include parameters for TDLS peer (will check later) */
+ 	err = nl80211_set_station_tdls(info, &params);
+ 	if (err)
+@@ -5431,6 +5449,17 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]) {
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
++			return -EOPNOTSUPP;
++
++		params.airtime_weight =
++			nla_get_u16(info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]);
++		if (!params.airtime_weight)
++			return -EINVAL;
++	}
++
+ 	err = nl80211_parse_sta_channel_info(info, &params);
+ 	if (err)
+ 		return err;
