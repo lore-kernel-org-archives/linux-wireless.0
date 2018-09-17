@@ -1,110 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50098 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726919AbeIMRIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 13:08:00 -0400
-Date: Thu, 13 Sep 2018 13:58:49 +0200
-From: Michal Kubecek <mkubecek@suse.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/2] netlink: add ethernet address policy types
-Message-ID: <20180913115849.GF29691@unicorn.suse.cz> (sfid-20180913_135858_079175_5ED11459)
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913084603.7979-2-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180913084603.7979-2-johannes@sipsolutions.net>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:33516 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728372AbeIQNJG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Sep 2018 09:09:06 -0400
+Received: by mail-qk1-f195.google.com with SMTP id z78-v6so8534475qka.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 00:42:55 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: seth.forshee@canonical.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+        Simon Wunderlich <simon.wunderlich@openmesh.com>,
+        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: [PATCH 2/2] wireless-regdb: Sync DE with ETSI EN 301 893 V2.1.1 (2017-05)
+Date: Mon, 17 Sep 2018 09:42:12 +0200
+Message-Id: <20180917074212.6739-2-sven.eckelmann@openmesh.com> (sfid-20180917_094258_073436_3A2C2FB6)
+In-Reply-To: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
+References: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 13, 2018 at 10:46:03AM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Commonly, ethernet addresses are just using a policy of
-> 	{ .len = ETH_ALEN }
-> which leaves userspace free to send more data than it should,
-> which may hide bugs.
-> 
-> Introduce NLA_ETH_ADDR which checks for exact size, and rejects
-> the attribute if the length isn't ETH_ALEN.
-> 
-> Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
-> pure length policy, but will, in addition, trigger a netlink
-> attribute warning if the passed value is too long.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+The documents
+https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
+and
+https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteilungen/2010_07_WLAN_5GHz_pdf.pdf
+show that the limits for the 5GHz bands are out of date:
 
-The code looks correct to me but I have some doubts. Having a special
-policy for MAC addresses may lead to adding one for IPv4 address (maybe
-not, we can use NLA_U32 for them), IPv6 addresses and other data types
-with fixed length. Wouldn't it be more helpful to add a variant of
-NLA_BINARY (NLA_BINARY_EXACT?) which would fail/warn if attribute length
-isn't equal to .len?
+* 5150 - 5250 MHz only usage is allowed to use up to 23 dBm (200 mW) even
+  without TPC
 
-Michal Kubecek
+Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
->  include/net/netlink.h | 4 ++++
->  lib/nlattr.c          | 8 ++++++++
->  2 files changed, 12 insertions(+)
-> 
-> diff --git a/include/net/netlink.h b/include/net/netlink.h
-> index 04e40fcc70d6..1139163c0db0 100644
-> --- a/include/net/netlink.h
-> +++ b/include/net/netlink.h
-> @@ -181,6 +181,8 @@ enum {
->  	NLA_S64,
->  	NLA_BITFIELD32,
->  	NLA_REJECT,
-> +	NLA_ETH_ADDR,
-> +	NLA_ETH_ADDR_COMPAT,
->  	__NLA_TYPE_MAX,
->  };
->  
-> @@ -213,6 +215,8 @@ enum {
->   *                         data must point to a u32 value of valid flags
->   *    NLA_REJECT           Reject this attribute, validation data may point
->   *                         to a string to report as the error in extended ACK.
-> + *    NLA_ETH_ADDR         Ethernet address, rejected if not exactly 6 octets.
-> + *    NLA_ETH_ADDR_COMPAT  Ethernet address, only warns if not exactly 6 octets.
->   *    All other            Minimum length of attribute payload
->   *
->   * Example:
-> diff --git a/lib/nlattr.c b/lib/nlattr.c
-> index 56e0aae5cf23..b7c519f6e12a 100644
-> --- a/lib/nlattr.c
-> +++ b/lib/nlattr.c
-> @@ -29,6 +29,8 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
->  	[NLA_S16]	= sizeof(s16),
->  	[NLA_S32]	= sizeof(s32),
->  	[NLA_S64]	= sizeof(s64),
-> +	[NLA_ETH_ADDR]	= ETH_ALEN,
-> +	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
->  };
->  
->  static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
-> @@ -42,6 +44,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
->  	[NLA_S16]	= sizeof(s16),
->  	[NLA_S32]	= sizeof(s32),
->  	[NLA_S64]	= sizeof(s64),
-> +	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
->  };
->  
->  static int validate_nla_bitfield32(const struct nlattr *nla,
-> @@ -93,6 +96,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
->  			extack->_msg = pt->validation_data;
->  		return -EINVAL;
->  
-> +	case NLA_ETH_ADDR:
-> +		if (attrlen != ETH_ALEN)
-> +			return -ERANGE;
-> +		break;
-> +
->  	case NLA_FLAG:
->  		if (attrlen > 0)
->  			return -ERANGE;
-> -- 
-> 2.14.4
-> 
+diff --git a/db.txt b/db.txt
+index 7f978e1..f406ac0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -379,7 +379,7 @@ country CZ: DFS-ETSI
+ country DE: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
++	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+ 	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
+ 	# short range devices (ETSI EN 300 440-1)
+ 	(5725 - 5875 @ 80), (25 mW)
+-- 
+2.11.0
