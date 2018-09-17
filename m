@@ -1,151 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53246 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731478AbeISRqz (ORCPT
+Received: from mail-yb1-f174.google.com ([209.85.219.174]:41833 "EHLO
+        mail-yb1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727204AbeIQNlQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:46:55 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/7] netlink: add nested array policy validation
-Date: Wed, 19 Sep 2018 14:09:00 +0200
-Message-Id: <20180919120900.28708-8-johannes@sipsolutions.net> (sfid-20180919_140950_390965_6E7259F0)
-In-Reply-To: <20180919120900.28708-1-johannes@sipsolutions.net>
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
+        Mon, 17 Sep 2018 09:41:16 -0400
+Received: by mail-yb1-f174.google.com with SMTP id v10-v6so7365151ybm.8
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Sep 2018 01:14:58 -0700 (PDT)
+MIME-Version: 1.0
+References: <4922c981d88ab8b16d6ebd130829b6c04d8bbc56.camel@mbuf.com>
+ <CAA2SeNKshXx2e9z+iWf=pbM0SN0teT2cvnye4noEjBxtOo4Vvw@mail.gmail.com> <85af1917c8da6179f6455318d9db3132819ac1b4.camel@mbuf.com>
+In-Reply-To: <85af1917c8da6179f6455318d9db3132819ac1b4.camel@mbuf.com>
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Date: Mon, 17 Sep 2018 10:14:47 +0200
+Message-ID: <CAA2SeN+ueC55MA8E5g0XcYF=6qZ0W+Dp6zNtpGOUcQBCM31wtA@mail.gmail.com> (sfid-20180917_101501_426687_29ABD0D0)
+Subject: Re: desktop hard lock up (kernel panic) with Alfa AWUSB036ACM and
+ wireless-testing 72d1e548defbf
+To: davep@mbuf.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        dpoole@cradlepoint.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+>
+> Hello. Here's the requested info.
+>
+> ...trillian:wireless-testing% gdb ./net/mac80211/mac80211.ko
+> [...]
+> (gdb) info address ieee80211_wake_txqs
+> Symbol "ieee80211_wake_txqs" is a function at address 0x35890.
+> [...]
+> (gdb) l*(0x35890+0x1e3)
+> 0x35a73 is in ieee80211_wake_txqs (net/mac80211/util.c:269).
+> 264                     for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++)
+> {
+> 265                             struct ieee80211_txq *txq = sta-
+> >sta.txq[i];
+> 266
+> 267                             txqi = to_txq_info(txq);
+> 268
+> 269                             if (ac != txq->ac)
+> 270                                     continue;
+> 271
+> 272                             if
+> (!test_and_clear_bit(IEEE80211_TXQ_STOP_NETIF_TX,
+> 273                                                     &txqi->flags))
 
-Sometimes nested netlink attributes are just used as arrays, with
-the nla_type() of each not being used; we have this in nl80211 and
-e.g. NFTA_SET_ELEM_LIST_ELEMENTS.
-
-Add the ability to validate this type of message directly in the
-policy, by adding the type NLA_NESTED_ARRAY which does exactly
-this: require a first level of nesting but ignore the attribute
-type, and then inside each require a second level of nested and
-validate those attributes against a given policy (if present).
-
-Note that some nested array types actually require that all of
-the entries have the same index, this is possible to express in
-a nested policy already, apart from the validation that only the
-one allowed type is used.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/netlink.h | 12 +++++++++++-
- lib/nlattr.c          | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 58 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 91907852da1c..3698ca8ff92c 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -172,6 +172,7 @@ enum {
- 	NLA_FLAG,
- 	NLA_MSECS,
- 	NLA_NESTED,
-+	NLA_NESTED_ARRAY,
- 	NLA_NUL_STRING,
- 	NLA_BINARY,
- 	NLA_S8,
-@@ -200,7 +201,8 @@ enum {
-  *    NLA_NUL_STRING       Maximum length of string (excluding NUL)
-  *    NLA_FLAG             Unused
-  *    NLA_BINARY           Maximum length of attribute payload
-- *    NLA_NESTED           Length verification is done by checking len of
-+ *    NLA_NESTED,
-+ *    NLA_NESTED_ARRAY     Length verification is done by checking len of
-  *                         nested header (or empty); len field is used if
-  *                         validation_data is also used, for the max attr
-  *                         number in the nested policy.
-@@ -230,6 +232,12 @@ enum {
-  *                         `len' to the max attribute number.
-  *                         Note that nla_parse() will validate, but of course not
-  *                         parse, the nested sub-policies.
-+ *    NLA_NESTED_ARRAY     Points to a nested policy to validate, must also set
-+ *                         `len' to the max attribute number. The difference to
-+ *                         NLA_NESTED is the structure - NLA_NESTED has the
-+ *                         nested attributes directly inside, while an array has
-+ *                         the nested attributes at another level down and the
-+ *                         attributes directly in the nesting don't matter.
-  *    All other            Unused
-  *
-  * Example:
-@@ -255,6 +263,8 @@ struct nla_policy {
- 
- #define NLA_POLICY_NESTED(maxattr, policy) \
- 	{ .type = NLA_NESTED, .validation_data = policy, .len = maxattr }
-+#define NLA_POLICY_NESTED_ARRAY(maxattr, policy) \
-+	{ .type = NLA_NESTED_ARRAY, .validation_data = policy, .len = maxattr }
- 
- /**
-  * struct nl_info - netlink source information
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index c0ea8a78eda6..234763b41ab7 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -72,6 +72,35 @@ static int nla_validate_parse(const struct nlattr *head, int len, int maxtype,
- 			      struct netlink_ext_ack *extack, bool *extack_set,
- 			      struct nlattr **tb);
- 
-+static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
-+			      const struct nla_policy *policy,
-+			      struct netlink_ext_ack *extack, bool *extack_set)
-+{
-+	const struct nlattr *entry;
-+	int rem;
-+
-+	nla_for_each_attr(entry, head, len, rem) {
-+		int ret;
-+
-+		if (nla_len(entry) == 0)
-+			continue;
-+
-+		if (nla_len(entry) < NLA_HDRLEN) {
-+			NL_SET_ERR_MSG_ATTR(extack, entry,
-+					    "Array element too short");
-+			return -ERANGE;
-+		}
-+
-+		ret = nla_validate_parse(nla_data(entry), nla_len(entry),
-+					 maxtype, policy, extack, extack_set,
-+					 NULL);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int validate_nla(const struct nlattr *nla, int maxtype,
- 			const struct nla_policy *policy,
- 			struct netlink_ext_ack *extack, bool *extack_set)
-@@ -165,6 +194,24 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 				return err;
- 		}
- 		break;
-+	case NLA_NESTED_ARRAY:
-+		/* a nested array attribute is allowed to be empty; if its not,
-+		 * it must have a size of at least NLA_HDRLEN.
-+		 */
-+		if (attrlen == 0)
-+			break;
-+		if (attrlen < NLA_HDRLEN)
-+			return -ERANGE;
-+		if (pt->validation_data) {
-+			int err;
-+
-+			err = nla_validate_array(nla_data(nla), nla_len(nla),
-+						 pt->len, pt->validation_data,
-+						 extack, extack_set);
-+			if (err < 0)
-+				return err;
-+		}
-+		break;
- 	default:
- 		if (pt->len)
- 			minlen = pt->len;
+It should be fixed here:
+https://marc.info/?l=linux-kernel&m=153694084922438&w=2
 -- 
-2.14.4
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
