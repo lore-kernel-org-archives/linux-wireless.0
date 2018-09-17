@@ -1,119 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60466 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726434AbeIRMCe (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:38201 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727672AbeIRBq2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 08:02:34 -0400
-From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH] ath10k: Advertize beacon_int_min_gcd as 100 while bring up  multi vaps
-Date: Tue, 18 Sep 2018 12:03:49 +0530
-Message-Id: <1537252429-8655-1-git-send-email-mkenna@codeaurora.org> (sfid-20180918_083130_449260_F0B993FB)
+        Mon, 17 Sep 2018 21:46:28 -0400
+Date: Mon, 17 Sep 2018 17:17:29 -0300
+From: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kubecek <mkubecek@suse.cz>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, jbenc@redhat.com
+Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
+Message-ID: <20180917201729.GH4590@localhost.localdomain> (sfid-20180917_221740_984341_4978017D)
+References: <20180913084603.7979-1-johannes@sipsolutions.net>
+ <20180913193004.GF4590@localhost.localdomain>
+ <20180913212742.GC3876@unicorn.suse.cz>
+ <20180913215839.GI27095@localhost.localdomain>
+ <1537177132.2957.6.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1537177132.2957.6.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the latest firmware design, the beacon interval should be
-greater than 100 to bring the multiple vaps.
+On Mon, Sep 17, 2018 at 11:38:52AM +0200, Johannes Berg wrote:
+> On Thu, 2018-09-13 at 18:58 -0300, Marcelo Ricardo Leitner wrote:
+> 
+> > Then I ask my first question again: why reject these? They are not
+> > hurting anything, are they?  It's different from your example I think.
+> > In there, the extra information which was ignored leads to a
+> > different behavior.
+> 
+> So in one case I was thinking of, there are some fields that simply
+> cannot be used for input, they're only used for output. But it may not
+> always be obvious to somebody using the API. Thus, I think it makes
+> sense to instruct the kernel to reject that, so that whoever gets
+> confused has immediate feedback that their usage is wrong. If we ignore
+> that, they may not realize their error immediately.
+> 
+> I think the ethtool case is similar: you can read and write some fields,
+> and only read others - but if you try to write the read-only fields
+> would you prefer to be told "sorry, this is not possible" vs. it being
+> silently ignored? I'd definitely prefer the former.
 
-Set beacon_int_min_gcd to 100, when the wmi service
-WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT is enabled
-in the firmware. If not, beacon_int_min_gcd will be set
-to the default value 1.
+See below.
 
-Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00015
-Tested in QCA9888 with firmware ver 10.4-3.5.1-0005
+> 
+> > Maybe it would be better to have NLA_IGNORE instead? </idea>
+> 
+> I don't think so, it doesn't give any feedback to the application author
+> that they're doing something wrong.
 
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h |  9 +++++++++
- 2 files changed, 34 insertions(+)
+Yes, it would have to have some other ways to signal return values.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 97548f9..532fc5d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8163,6 +8163,24 @@ void ath10k_mac_destroy(struct ath10k *ar)
- 	},
- };
- 
-+static const struct
-+ieee80211_iface_combination ath10k_10_4_bcn_int_if_comb[] = {
-+	{
-+		.limits = ath10k_10_4_if_limits,
-+		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
-+		.max_interfaces = 16,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+		.beacon_int_min_gcd = 100,
-+#ifdef CONFIG_ATH10K_DFS_CERTIFIED
-+		.radar_detect_widths =  BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+					BIT(NL80211_CHAN_WIDTH_20) |
-+					BIT(NL80211_CHAN_WIDTH_40) |
-+					BIT(NL80211_CHAN_WIDTH_80),
-+#endif
-+	},
-+};
-+
- static void ath10k_get_arvif_iter(void *data, u8 *mac,
- 				  struct ieee80211_vif *vif)
- {
-@@ -8526,6 +8544,13 @@ int ath10k_mac_register(struct ath10k *ar)
- 		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
- 		ar->hw->wiphy->n_iface_combinations =
- 			ARRAY_SIZE(ath10k_10_4_if_comb);
-+		if (test_bit(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-+			     ar->wmi.svc_map)) {
-+			ar->hw->wiphy->iface_combinations =
-+				ath10k_10_4_bcn_int_if_comb;
-+			ar->hw->wiphy->n_iface_combinations =
-+				ARRAY_SIZE(ath10k_10_4_bcn_int_if_comb);
-+		}
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 1562294..126eb17 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -204,6 +204,7 @@ enum wmi_service {
- 	WMI_SERVICE_RESET_CHIP,
- 	WMI_SERVICE_SPOOF_MAC_SUPPORT,
- 	WMI_SERVICE_TX_DATA_ACK_RSSI,
-+	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -353,6 +354,11 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_TPC_STATS_FINAL,
- 	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
- 	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
-+	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
-+	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
-+	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
-+	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
-+	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
- };
- 
- static inline char *wmi_service_name(int service_id)
-@@ -467,6 +473,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
- 	SVCSTR(WMI_SERVICE_RESET_CHIP);
- 	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
-+	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
- 	default:
- 		return NULL;
- 	}
-@@ -777,6 +784,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_TPC_STATS_FINAL, len);
- 	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
- 	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
-+	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-+	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
- }
- 
- #undef SVCMAP
--- 
-1.9.1
+In some cases there may be other ways to tell the application that it
+couldn't be handled at the time. For example, when changing several
+ethtool offloadings at once, we could have a feedback for each of the
+offloading that was request and it could include "ack, nack and
+ignored" and let the application decide if that "ignored" should be an
+error or not. It all boils down to what one is trying to do.
+
+That said, I'm now liking this patch. Just too bad we cannot flag
+current output-only fields as so, but in the long term I think this
+patch will help us.
+
+Thanks,
+  Marcelo
