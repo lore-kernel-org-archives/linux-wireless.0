@@ -1,95 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:42350 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.62]:40274 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726855AbeIMNyr (ORCPT
+        with ESMTP id S1726917AbeIQPGl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Sep 2018 09:54:47 -0400
+        Mon, 17 Sep 2018 11:06:41 -0400
+Message-ID: <1537177194.2957.7.camel@sipsolutions.net> (sfid-20180917_114008_673731_492806E3)
+Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] netlink: add ethernet address policy types
-Date: Thu, 13 Sep 2018 10:46:03 +0200
-Message-Id: <20180913084603.7979-2-johannes@sipsolutions.net> (sfid-20180913_104626_888696_931A12F0)
-In-Reply-To: <20180913084603.7979-1-johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        mkubecek@suse.cz
+Date: Mon, 17 Sep 2018 11:39:54 +0200
+In-Reply-To: <20180913.155934.742447935316828936.davem@davemloft.net>
 References: <20180913084603.7979-1-johannes@sipsolutions.net>
+         <20180913.155934.742447935316828936.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2018-09-13 at 15:59 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Thu, 13 Sep 2018 10:46:02 +0200
+> 
+> > +                                     NL_SET_BAD_ATTR(extack, nla);
+> > +                                     if (extack && !extack->_msg)
+> > +                                             NL_SET_ERR_MSG(extack,
+> > +                                                            "Attribute failed policy validation");
+> 
+> Given the lively discussion that resulted from this conditional I am
+> pretty sure we want to override existing messages.
+> 
+> If we have an existing message, and we continued to process and
+> parse anyways, then the existing message was informational or
+> a warning.
+> 
+> The message should be overridden when the action will be to fail, as
+> it will be here when we return -EINVAL.
 
-Commonly, ethernet addresses are just using a policy of
-	{ .len = ETH_ALEN }
-which leaves userspace free to send more data than it should,
-which may hide bugs.
+Not just -EINVAL, but yeah, I've just reworked the patch to do this.
 
-Introduce NLA_ETH_ADDR which checks for exact size, and rejects
-the attribute if the length isn't ETH_ALEN.
-
-Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
-pure length policy, but will, in addition, trigger a netlink
-attribute warning if the passed value is too long.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/netlink.h | 4 ++++
- lib/nlattr.c          | 8 ++++++++
- 2 files changed, 12 insertions(+)
-
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 04e40fcc70d6..1139163c0db0 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -181,6 +181,8 @@ enum {
- 	NLA_S64,
- 	NLA_BITFIELD32,
- 	NLA_REJECT,
-+	NLA_ETH_ADDR,
-+	NLA_ETH_ADDR_COMPAT,
- 	__NLA_TYPE_MAX,
- };
- 
-@@ -213,6 +215,8 @@ enum {
-  *                         data must point to a u32 value of valid flags
-  *    NLA_REJECT           Reject this attribute, validation data may point
-  *                         to a string to report as the error in extended ACK.
-+ *    NLA_ETH_ADDR         Ethernet address, rejected if not exactly 6 octets.
-+ *    NLA_ETH_ADDR_COMPAT  Ethernet address, only warns if not exactly 6 octets.
-  *    All other            Minimum length of attribute payload
-  *
-  * Example:
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 56e0aae5cf23..b7c519f6e12a 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -29,6 +29,8 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
- 	[NLA_S16]	= sizeof(s16),
- 	[NLA_S32]	= sizeof(s32),
- 	[NLA_S64]	= sizeof(s64),
-+	[NLA_ETH_ADDR]	= ETH_ALEN,
-+	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
- };
- 
- static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
-@@ -42,6 +44,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
- 	[NLA_S16]	= sizeof(s16),
- 	[NLA_S32]	= sizeof(s32),
- 	[NLA_S64]	= sizeof(s64),
-+	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
- };
- 
- static int validate_nla_bitfield32(const struct nlattr *nla,
-@@ -93,6 +96,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			extack->_msg = pt->validation_data;
- 		return -EINVAL;
- 
-+	case NLA_ETH_ADDR:
-+		if (attrlen != ETH_ALEN)
-+			return -ERANGE;
-+		break;
-+
- 	case NLA_FLAG:
- 		if (attrlen > 0)
- 			return -ERANGE;
--- 
-2.14.4
+johannes
