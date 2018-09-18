@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48062 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726627AbeIIO0s (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:56 +0300
-Message-Id: <20180909093656.10194-17-luca@coelho.fi> (sfid-20180909_113745_357939_A81EEAF0)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 16/16] iwlwifi: mvm: Allow TKIP for AP mode
+Received: from mx1.redhat.com ([209.132.183.28]:38096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727757AbeIRRfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 13:35:05 -0400
+Date: Tue, 18 Sep 2018 14:02:35 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] mt76x0: run vco calibration for each channel
+ configuration
+Message-ID: <20180918120234.GD15285@redhat.com> (sfid-20180918_140311_888500_F8F5B984)
+References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
+ <20180918114356.GB15285@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180918114356.GB15285@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+On Tue, Sep 18, 2018 at 01:43:56PM +0200, Stanislaw Gruszka wrote:
+> On Fri, Sep 07, 2018 at 11:13:12PM +0200, Lorenzo Bianconi wrote:
+> > According to vendor sdk, vco calibration has to be executed
+> > for each channel configuration whereas mcu calibration has to be
+> > performed during channel scanning. This patch fixes the mt76x0
+> > monitor mode issue since in that configuration vco calibration
+> > was never executed
+> > 
+> > Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
+> > Tested-by: Sid Hayn <sidhayn@gmail.com>
+> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> 
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Support for setting keys for TKIP cipher suite was mistakenly removed
-for AP mode. Fix this.
-
-Fixes: 85aeb58cec1a ("iwlwifi: mvm: Enable security on new TX API")
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 550e24da0f5b..8f929c774e70 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3149,10 +3149,6 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 
- 	switch (keyconf->cipher) {
- 	case WLAN_CIPHER_SUITE_TKIP:
--		if (vif->type == NL80211_IFTYPE_AP) {
--			ret = -EINVAL;
--			break;
--		}
- 		addr = iwl_mvm_get_mac_addr(mvm, vif, sta);
- 		/* get phase 1 key from mac80211 */
- 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
--- 
-2.18.0
+For the record this is 4.19 material.
