@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:45777 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727611AbeIDUCc (ORCPT
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:41077 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726037AbeIRRoa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 16:02:32 -0400
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] rtl8xxxu: Add rtl8188ctv support
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Aleksei Mamlin <mamlinav@gmail.com>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180830140541.31964-1-mamlinav@gmail.com>
- <20180904081619.7353B606AC@smtp.codeaurora.org>
-Message-ID: <53022e37-e9dc-1cf8-ec3c-4df668f3c045@gmail.com> (sfid-20180904_173738_331881_F886DDD6)
-Date: Tue, 4 Sep 2018 11:36:50 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180904081619.7353B606AC@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+        Tue, 18 Sep 2018 13:44:30 -0400
+Received: by mail-wr1-f68.google.com with SMTP id z96-v6so1832187wrb.8
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 05:12:10 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: [PATCH] mt76: usb: remove WARN_ON in mt76u_get_rx_entry_len
+Date: Tue, 18 Sep 2018 14:12:05 +0200
+Message-Id: <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com> (sfid-20180918_141227_572635_3C019727)
+In-Reply-To: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
+References: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/04/2018 04:16 AM, Kalle Valo wrote:
-> Aleksei Mamlin <mamlinav@gmail.com> wrote:
-> 
->> The Realtek rtl8188ctv (0x0bda:0x018a) is a highly integrated single-chip
->> WLAN USB2.0 network interface controller.
->>
->> Currently rtl8188ctv is supported by rtlwifi driver.
->> It is similar to the rtl8188cus(0x0bda:0x818a) and uses the same config.
->>
->> Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
-> 
-> Patch applied to wireless-drivers-next.git, thanks.
-> 
-> 514502c3a70b rtl8xxxu: Add rtl8188ctv support
+Remove not useful WARN_ON macros in mt76u_get_rx_entry_len routine
+since corrupted frames should just be silently discarded
 
-Looks good to me too - assume it's been tested?
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/usb.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks,
-Jes
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 7780b07543bb..81f036b3df86 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -326,9 +326,9 @@ static int mt76u_get_rx_entry_len(u8 *data, u32 data_len)
+ 	min_len = MT_DMA_HDR_LEN + MT_RX_RXWI_LEN +
+ 		  MT_FCE_INFO_LEN;
+ 
+-	if (data_len < min_len || WARN_ON(!dma_len) ||
+-	    WARN_ON(dma_len + MT_DMA_HDR_LEN > data_len) ||
+-	    WARN_ON(dma_len & 0x3))
++	if (data_len < min_len || !dma_len ||
++	    dma_len + MT_DMA_HDR_LEN > data_len ||
++	    (dma_len & 0x3))
+ 		return -EINVAL;
+ 	return dma_len;
+ }
+-- 
+2.17.1
