@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io1-f43.google.com ([209.85.166.43]:45520 "EHLO
-        mail-io1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725982AbeIXUae (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 16:30:34 -0400
-Received: by mail-io1-f43.google.com with SMTP id e12-v6so17708479iok.12
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 07:28:10 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:38950 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726812AbeIRRzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 13:55:00 -0400
+Date: Tue, 18 Sep 2018 14:22:37 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/5] rt2x00: rework channel config function
+Message-ID: <20180918122237.GC15481@redhat.com> (sfid-20180918_142242_708974_E148BF9C)
+References: <1537201975-3032-1-git-send-email-pozega.tomislav@gmail.com>
+ <1537201975-3032-2-git-send-email-pozega.tomislav@gmail.com>
 MIME-Version: 1.0
-References: <20180924140701.GA2089@redhat.com> <20180924141311.GI783@localhost.localdomain>
- <20180924141932.GA5031@redhat.com>
-In-Reply-To: <20180924141932.GA5031@redhat.com>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Mon, 24 Sep 2018 16:27:59 +0200
-Message-ID: <CAJ0CqmW7KeuvYvyu3h6nY8z9X3Z1OknzW81iM4=gqLDY7XVzyw@mail.gmail.com> (sfid-20180924_162814_403542_B170BBD7)
-Subject: Re: mt76x0 random crashes after c12128ce44b0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Felix Fietkau <nbd@nbd.name>, Zero Chaos <sidhayn@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1537201975-3032-2-git-send-email-pozega.tomislav@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> hi
->
-> On Mon, Sep 24, 2018 at 04:13:11PM +0200, Lorenzo Bianconi wrote:
-> > On Sep 24, Stanislaw Gruszka wrote:
-> > > Hi, after -next commit:
-> > >
-> > > commit c12128ce44b04a987c4eb0f733cc99c4dd50d45a
-> > > Author: Felix Fietkau <nbd@nbd.name>
-> > > Date:   Fri Jul 13 16:26:15 2018 +0200
-> > >
-> > >     mt76: use a per rx queue page fragment cache
-> > >
-> > > I have random crashes when load or unlod mt76x0u module.
-> > >
-> >
-> > Hi Stanislaw,
-> >
-> > could you please try following patch (I am not 100% sure it fixes the issue)
->
-> Still crashes when module is unloaded.
+On Mon, Sep 17, 2018 at 06:32:52PM +0200, Tomislav Požega wrote:
+> -	switch (rt2x00dev->default_ant.tx_chain_num) {
+> -	case 3:
+> -		/* Turn on tertiary PAs */
+> -		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN,
+> -				   rf->channel > 14);
+> -		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN,
+> -				   rf->channel <= 14);
+> -		/* fall-through */
+> -	case 2:
+> -		/* Turn on secondary PAs */
+> -		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN,
+> -				   rf->channel > 14);
+> -		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN,
+> -				   rf->channel <= 14);
+> -		/* fall-through */
+> -	case 1:
+> -		/* Turn on primary PAs */
+> -		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN,
+> -				   rf->channel > 14);
+> -		if (rt2x00_has_cap_bt_coexist(rt2x00dev))
+> +	if (rt2x00dev->curr_band == NL80211_BAND_5GHZ) {
+> +		switch (rt2x00dev->default_ant.tx_chain_num) {
+> +		case 3:
+> +			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN, 1);
+> +		case 2:
+> +			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
+> +		case 1:
+> +			rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, 1);
+> +		break;
 
-ok, what are the steps to reproduce it? rmmod mt76x0?
-
->
-> Regards
-> Stanislaw
+Please keep /* fall-through */ comments, this is needed 
+for some automatic code checkers tools.
