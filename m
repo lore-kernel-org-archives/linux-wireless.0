@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51286 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727674AbeIJQGN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:06:13 -0400
-Message-ID: <1536577952.3224.58.camel@sipsolutions.net> (sfid-20180910_131244_687464_56B13903)
-Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Date: Mon, 10 Sep 2018 13:12:32 +0200
-In-Reply-To: <87k1ntlinf.fsf@toke.dk>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
-         <153635897010.14170.2992498632345986102.stgit@alrua-x1>
-         <1536566666.3224.24.camel@sipsolutions.net> <87k1ntlinf.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.toke.dk ([52.28.52.200]:45713 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726768AbeIRQBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 12:01:44 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org>
+References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk> <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org>
+Date: Tue, 18 Sep 2018 12:29:44 +0200
+Message-ID: <87o9cvksiv.fsf@toke.dk> (sfid-20180918_122949_701246_BFC89227)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-09-10 at 13:02 +0200, Toke Høiland-Jørgensen wrote:
-> 
-> > Is there a case where it's allowed to call this while *not* empty? At
-> > least for the drivers it seems not, so perhaps when called from the
-> > driver it should WARN() here or so?
-> 
-> Yeah, mac80211 calls this on wake_txq, where it will often be scheduled
-> already. And since that can happen while drivers schedule stuff, it
-> could also be the case that a driver re-schedules a queue that is
-> already scheduled.
+Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 
-Right, I kinda gathered that but was thinking more from a driver POV as
-I was reviewing, makes sense.
+> On 2018-09-16 10:42, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> +/**
+>> + * ieee80211_return_txq - return a TXQ previously acquired by
+>> ieee80211_next_txq()
+>> + *
+>> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+>> + * @txq: pointer obtained from station or virtual interface
+>> + *
+>> + * Should only be called between calls to=20
+>> ieee80211_txq_schedule_start()
+>> + * and ieee80211_txq_schedule_end().
+>> + */
+>> +void ieee80211_return_txq(struct ieee80211_hw *hw, struct=20
+>> ieee80211_txq *txq);
+>> +
+>>=20
+> return_txq() should return a bool to inform the driver that whether
+> txq is queued back or not.
 
-> > I'm just a bit worried that drivers will get this a bit wrong, and
-> > we'll never know, but things won't work properly in some weird way.
-> 
-> What, subtle bugs in the data path that causes hangs in hard-to-debug
-> cases? Nah, that never happens ;)
+What would the driver do with that return value, exactly?
 
-Good :-P
+> Otherwise the same txq will be served indefinitely until txq becomes
+> empty. This problem occurs when the driver is running out of hw
+> descriptors or driver sends only N frames (< backlog_packets).
 
-Actually though, we can't put a warn on there, because the driver might
-take a txq, then mac80211 puts it on the list due to a new packet, and
-then the driver also returns it.
+No, if it's using next_txq(), the API guarantees that the same TXQ will
+not be returned more than once between a set of calls to
+schedule_start()/schedule_end() (by way of the seqno mechanism). I
+didn't add the same check to may_transmit(), because I assumed the
+driver would not be looping in this case. Is that not correct?
 
+> Also an option to add the node at head or tail would be preferred. If
+> return_txq adds node at head of list, then it is forcing the driver to
+> serve same txq until it becomes empty. Also this will not allow the
+> driver to send N frames from each txqs.
 
-> > > +	txqi = list_first_entry(&local->active_txqs[ac],
-> > > +				struct txq_info,
-> > > +				schedule_order);
-> > > +
-> > > +	if (txqi->schedule_round == local->schedule_round[ac])
-> > > +		txqi = NULL;
-> > 
-> > that assigment seems unnecessary? txqi defaults to NULL.
-> 
-> No, this is an 'undo' of the previous line. I.e., we get the first txqi,
-> check if we've already seen it this round, and if we have, unset txqi so
-> the function returns NULL (causing the driver to stop looping).
+The whole point of this patch set is to move those kinds of decisions
+out of the driver and into mac80211. The airtime scheduler won't achieve
+fairness if it allows queues to be queued to the end of the rotation
+before its deficit turns negative. And obviously there's some lag in
+this since we're using after-the-fact airtime information.
 
-Err, yeah, obviously.
+For ath9k this has not really been a problem in my tests; if the lag
+turns out to be too great for ath10k (which I suppose is a possibility
+since we don't get airtime information on every TX-compl), I figure we
+can use the same estimated airtime value that is used for throttling the
+queues to adjust the deficit immediately...
 
-johannes
+>> +/**
+>> + * ieee80211_txq_schedule_start - acquire locks for safe scheduling of=
+=20
+>> an AC
+>> + *
+>> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+>> + * @ac: AC number to acquire locks for
+>> + *
+>> + * Acquire locks needed to schedule TXQs from the given AC. Should be=20
+>> called
+>> + * before ieee80211_next_txq() or ieee80211_schedule_txq().
+>> + */
+> Typo error. s/schedule_txq()/return_txq()/.
+
+Yup, will fix :)
+
+-Toke
