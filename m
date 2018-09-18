@@ -1,139 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46436 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726212AbeIDQFr (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:52866 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730103AbeIRT7H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:05:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  4 Sep 2018 14:40:47 +0300
-Message-Id: <20180904114055.1429-2-luca@coelho.fi> (sfid-20180904_134132_137858_685A28BF)
-In-Reply-To: <20180904114055.1429-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180904114055.1429-1-luca@coelho.fi>
-Subject: [PATCH v2 1/9] mac80211: support reporting 0-length PSDU in radiotap
+        Tue, 18 Sep 2018 15:59:07 -0400
+Received: by mail-it0-f65.google.com with SMTP id h3-v6so3460185ita.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 07:26:17 -0700 (PDT)
+MIME-Version: 1.0
+References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
+ <20180918114356.GB15285@redhat.com> <20180918120234.GD15285@redhat.com> <871s9r2d3g.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <871s9r2d3g.fsf@kamboji.qca.qualcomm.com>
+From: Sid Hayn <sidhayn@gmail.com>
+Date: Tue, 18 Sep 2018 10:26:09 -0400
+Message-ID: <CAM0KTbAPHPK04SntA9UL0rGaaNjTy=E2hRoO7xiRkbMcq9b7Sw@mail.gmail.com> (sfid-20180918_162652_056910_94DAB095)
+Subject: Re: [PATCH] mt76x0: run vco calibration for each channel configuration
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: sgruszka@redhat.com,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+mt76x0 isn't in 4.18 at all, it's being added in 4.19 isn't it?  I'm
+not sure you can call it a regression, but adding a new driver with a
+known bug that breaks an entire use case (monitor mode) seems silly
+when a small and tested fix is available.  Pretty please.
 
-For certain sounding frames, it may be useful to report them
-to userspace even though they don't have a PSDU in order to
-determine the PHY parameters (e.g. VHT rate/stream config.)
-Add support for this to mac80211.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/ieee80211_radiotap.h |  6 ++++++
- include/net/mac80211.h           |  7 +++++++
- net/mac80211/rx.c                | 12 +++++++++++-
- 3 files changed, 24 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 80d543902b8b..8014153bdd49 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -75,6 +75,7 @@ enum ieee80211_radiotap_presence {
- 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
- 	IEEE80211_RADIOTAP_HE = 23,
- 	IEEE80211_RADIOTAP_HE_MU = 24,
-+	IEEE80211_RADIOTAP_ZERO_LEN_PSDU = 26,
- 	IEEE80211_RADIOTAP_LSIG = 27,
- 
- 	/* valid in every it_present bitmap, even vendor namespaces */
-@@ -340,6 +341,11 @@ struct ieee80211_radiotap_lsig {
- 	__le16 data1, data2;
- };
- 
-+enum ieee80211_radiotap_zero_len_psdu_type {
-+	IEEE80211_RADIOTAP_ZERO_LEN_PSDU_SOUNDING		= 0,
-+	IEEE80211_RADIOTAP_ZERO_LEN_PSDU_VENDOR			= 0xff,
-+};
-+
- /**
-  * ieee80211_get_radiotap_len - get radiotap header length
-  */
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8c26d2d36cbe..50bf598abdfd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1142,6 +1142,10 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_RADIOTAP_HE_MU: HE MU radiotap data is present
-  *	(&struct ieee80211_radiotap_he_mu)
-  * @RX_FLAG_RADIOTAP_LSIG: L-SIG radiotap data is present
-+ * @RX_FLAG_NO_PSDU: use the frame only for radiotap reporting, with
-+ *	the "0-length PSDU" field included there.  The value for it is
-+ *	in &struct ieee80211_rx_status.  Note that if this value isn't
-+ *	known the frame shouldn't be reported.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -1173,6 +1177,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_RADIOTAP_HE		= BIT(26),
- 	RX_FLAG_RADIOTAP_HE_MU		= BIT(27),
- 	RX_FLAG_RADIOTAP_LSIG		= BIT(28),
-+	RX_FLAG_NO_PSDU			= BIT(29),
- };
- 
- /**
-@@ -1245,6 +1250,7 @@ enum mac80211_rx_encoding {
-  * @ampdu_reference: A-MPDU reference number, must be a different value for
-  *	each A-MPDU but the same for each subframe within one A-MPDU
-  * @ampdu_delimiter_crc: A-MPDU delimiter CRC
-+ * @zero_length_psdu_type: radiotap type of the 0-length PSDU
-  */
- struct ieee80211_rx_status {
- 	u64 mactime;
-@@ -1265,6 +1271,7 @@ struct ieee80211_rx_status {
- 	u8 chains;
- 	s8 chain_signal[IEEE80211_MAX_CHAINS];
- 	u8 ampdu_delimiter_crc;
-+	u8 zero_length_psdu_type;
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 66cc2590e88c..5c8eaac8592f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -115,7 +115,8 @@ static inline bool should_drop_frame(struct sk_buff *skb, int present_fcs_len,
- 
- 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
- 			    RX_FLAG_FAILED_PLCP_CRC |
--			    RX_FLAG_ONLY_MONITOR))
-+			    RX_FLAG_ONLY_MONITOR |
-+			    RX_FLAG_NO_PSDU))
- 		return true;
- 
- 	if (unlikely(skb->len < 16 + present_fcs_len + rtap_space))
-@@ -189,6 +190,9 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
- 		BUILD_BUG_ON(sizeof(struct ieee80211_radiotap_he_mu) != 12);
- 	}
- 
-+	if (status->flag & RX_FLAG_NO_PSDU)
-+		len += 1;
-+
- 	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
- 		len = ALIGN(len, 2);
- 		len += 4;
-@@ -642,6 +646,12 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 		pos += sizeof(he_mu);
- 	}
- 
-+	if (status->flag & RX_FLAG_NO_PSDU) {
-+		rthdr->it_present |=
-+			cpu_to_le32(1 << IEEE80211_RADIOTAP_ZERO_LEN_PSDU);
-+		*pos++ = status->zero_length_psdu_type;
-+	}
-+
- 	if (status->flag & RX_FLAG_RADIOTAP_LSIG) {
- 		/* ensure 2 byte alignment */
- 		while ((pos - (u8 *)rthdr) & 1)
--- 
-2.18.0
+Thanks,
+Zero
+On Tue, Sep 18, 2018 at 8:43 AM Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> Stanislaw Gruszka <sgruszka@redhat.com> writes:
+>
+> > On Tue, Sep 18, 2018 at 01:43:56PM +0200, Stanislaw Gruszka wrote:
+> >> On Fri, Sep 07, 2018 at 11:13:12PM +0200, Lorenzo Bianconi wrote:
+> >> > According to vendor sdk, vco calibration has to be executed
+> >> > for each channel configuration whereas mcu calibration has to be
+> >> > performed during channel scanning. This patch fixes the mt76x0
+> >> > monitor mode issue since in that configuration vco calibration
+> >> > was never executed
+> >> >
+> >> > Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
+> >> > Tested-by: Sid Hayn <sidhayn@gmail.com>
+> >> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> >>
+> >> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> >
+> > For the record this is 4.19 material.
+>
+> I really want to minimise conflicts and because of so many mt76 patches
+> conflicts are likely to happen, so I'm keeping the bar high for mt76
+> patches going 4.19. Is this a regression from 4.18? If not, I think this
+> should go to -next and cc stable. And besides, monitor mode isn't that
+> critical anyway.
+>
+> --
+> Kalle Valo
