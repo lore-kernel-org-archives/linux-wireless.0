@@ -1,173 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shell.v3.sk ([90.176.6.54]:58700 "EHLO shell.v3.sk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727786AbeIXPU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 11:20:29 -0400
-From: Lubomir Rintel <lkundrak@v3.sk>
-To: libertas-dev@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH] libertas: return errno from lbs_add_card()
-Date: Mon, 24 Sep 2018 11:18:53 +0200
-Message-Id: <20180924091853.452055-1-lkundrak@v3.sk> (sfid-20180924_111933_286369_71537961)
+Received: from smtp.codeaurora.org ([198.145.29.96]:46974 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726812AbeIRSMt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 14:12:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH] mt76x0: run vco calibration for each channel configuration
+References: <20180907211312.17918-1-lorenzo.bianconi@redhat.com>
+        <20180918114356.GB15285@redhat.com>
+        <20180918120234.GD15285@redhat.com>
+Date: Tue, 18 Sep 2018 15:40:19 +0300
+In-Reply-To: <20180918120234.GD15285@redhat.com> (Stanislaw Gruszka's message
+        of "Tue, 18 Sep 2018 14:02:35 +0200")
+Message-ID: <871s9r2d3g.fsf@kamboji.qca.qualcomm.com> (sfid-20180918_144027_080874_4D32DBAF)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes lbs_add_card() longer throw away the errno and lets its callers
-propagate it instead.
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Basicaly a cosmetical thing. Used to be a part of a patchset that I
-discarded, but it still make sense to apply this one, because it makes th=
-e
-error handling somewhat cleaner.
+> On Tue, Sep 18, 2018 at 01:43:56PM +0200, Stanislaw Gruszka wrote:
+>> On Fri, Sep 07, 2018 at 11:13:12PM +0200, Lorenzo Bianconi wrote:
+>> > According to vendor sdk, vco calibration has to be executed
+>> > for each channel configuration whereas mcu calibration has to be
+>> > performed during channel scanning. This patch fixes the mt76x0
+>> > monitor mode issue since in that configuration vco calibration
+>> > was never executed
+>> > 
+>> > Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
+>> > Tested-by: Sid Hayn <sidhayn@gmail.com>
+>> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> 
+>> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>
+> For the record this is 4.19 material.
 
-Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
----
- drivers/net/wireless/marvell/libertas/if_cs.c   |  4 ++--
- drivers/net/wireless/marvell/libertas/if_sdio.c |  4 ++--
- drivers/net/wireless/marvell/libertas/if_spi.c  |  4 ++--
- drivers/net/wireless/marvell/libertas/if_usb.c  |  5 ++++-
- drivers/net/wireless/marvell/libertas/main.c    | 17 ++++++++++-------
- 5 files changed, 20 insertions(+), 14 deletions(-)
+I really want to minimise conflicts and because of so many mt76 patches
+conflicts are likely to happen, so I'm keeping the bar high for mt76
+patches going 4.19. Is this a regression from 4.18? If not, I think this
+should go to -next and cc stable. And besides, monitor mode isn't that
+critical anyway.
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_cs.c b/drivers/net/=
-wireless/marvell/libertas/if_cs.c
-index 7d88223f890b..cebf03c6a622 100644
---- a/drivers/net/wireless/marvell/libertas/if_cs.c
-+++ b/drivers/net/wireless/marvell/libertas/if_cs.c
-@@ -900,8 +900,8 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
-=20
- 	/* Make this card known to the libertas driver */
- 	priv =3D lbs_add_card(card, &p_dev->dev);
--	if (!priv) {
--		ret =3D -ENOMEM;
-+	if (IS_ERR(priv)) {
-+		ret =3D PTR_ERR(priv);
- 		goto out2;
- 	}
-=20
-diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/ne=
-t/wireless/marvell/libertas/if_sdio.c
-index 43743c26c071..2fd54a0aeb5a 100644
---- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-+++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-@@ -1206,8 +1206,8 @@ static int if_sdio_probe(struct sdio_func *func,
-=20
-=20
- 	priv =3D lbs_add_card(card, &func->dev);
--	if (!priv) {
--		ret =3D -ENOMEM;
-+	if (IS_ERR(priv)) {
-+		ret =3D PTR_ERR(priv);
- 		goto free;
- 	}
-=20
-diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net=
-/wireless/marvell/libertas/if_spi.c
-index e9aec6cb1105..47cee494eb62 100644
---- a/drivers/net/wireless/marvell/libertas/if_spi.c
-+++ b/drivers/net/wireless/marvell/libertas/if_spi.c
-@@ -1146,8 +1146,8 @@ static int if_spi_probe(struct spi_device *spi)
- 	 * This will call alloc_etherdev.
- 	 */
- 	priv =3D lbs_add_card(card, &spi->dev);
--	if (!priv) {
--		err =3D -ENOMEM;
-+	if (IS_ERR(priv)) {
-+		ret =3D PTR_ERR(priv);
- 		goto free_card;
- 	}
- 	card->priv =3D priv;
-diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net=
-/wireless/marvell/libertas/if_usb.c
-index c67a8e7be310..66dc6aeeadbc 100644
---- a/drivers/net/wireless/marvell/libertas/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas/if_usb.c
-@@ -254,8 +254,11 @@ static int if_usb_probe(struct usb_interface *intf,
- 		goto dealloc;
- 	}
-=20
--	if (!(priv =3D lbs_add_card(cardp, &intf->dev)))
-+	priv =3D lbs_add_card(cardp, &intf->dev);
-+	if (IS_ERR(priv)) {
-+		ret =3D PTR_ERR(priv);
- 		goto err_add_card;
-+	}
-=20
- 	cardp->priv =3D priv;
-=20
-diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/w=
-ireless/marvell/libertas/main.c
-index f22e1c220cba..f7db60bc7c7f 100644
---- a/drivers/net/wireless/marvell/libertas/main.c
-+++ b/drivers/net/wireless/marvell/libertas/main.c
-@@ -907,25 +907,29 @@ struct lbs_private *lbs_add_card(void *card, struct=
- device *dmdev)
- 	struct net_device *dev;
- 	struct wireless_dev *wdev;
- 	struct lbs_private *priv =3D NULL;
-+	int err;
-=20
- 	/* Allocate an Ethernet device and register it */
- 	wdev =3D lbs_cfg_alloc(dmdev);
- 	if (IS_ERR(wdev)) {
-+		err =3D PTR_ERR(wdev);
- 		pr_err("cfg80211 init failed\n");
--		goto done;
-+		goto err_cfg;
- 	}
-=20
- 	wdev->iftype =3D NL80211_IFTYPE_STATION;
- 	priv =3D wdev_priv(wdev);
- 	priv->wdev =3D wdev;
-=20
--	if (lbs_init_adapter(priv)) {
-+	err =3D lbs_init_adapter(priv);
-+	if (err) {
- 		pr_err("failed to initialize adapter structure\n");
- 		goto err_wdev;
- 	}
-=20
- 	dev =3D alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, ether_setup);
- 	if (!dev) {
-+		err =3D -ENOMEM;
- 		dev_err(dmdev, "no memory for network device instance\n");
- 		goto err_adapter;
- 	}
-@@ -949,6 +953,7 @@ struct lbs_private *lbs_add_card(void *card, struct d=
-evice *dmdev)
- 	init_waitqueue_head(&priv->waitq);
- 	priv->main_thread =3D kthread_run(lbs_thread, dev, "lbs_main");
- 	if (IS_ERR(priv->main_thread)) {
-+		err =3D PTR_ERR(priv->main_thread);
- 		lbs_deb_thread("Error creating main thread.\n");
- 		goto err_ndev;
- 	}
-@@ -961,7 +966,7 @@ struct lbs_private *lbs_add_card(void *card, struct d=
-evice *dmdev)
- 	priv->wol_gap =3D 20;
- 	priv->ehs_remove_supported =3D true;
-=20
--	goto done;
-+	return priv;
-=20
-  err_ndev:
- 	free_netdev(dev);
-@@ -972,10 +977,8 @@ struct lbs_private *lbs_add_card(void *card, struct =
-device *dmdev)
-  err_wdev:
- 	lbs_cfg_free(priv);
-=20
--	priv =3D NULL;
--
--done:
--	return priv;
-+ err_cfg:
-+	return ERR_PTR(err);
- }
- EXPORT_SYMBOL_GPL(lbs_add_card);
-=20
---=20
-2.19.0
+-- 
+Kalle Valo
