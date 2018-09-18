@@ -1,86 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:32912 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726023AbeICQHU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726037AbeIRRhM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 12:07:20 -0400
-Message-ID: <1535975240.3437.61.camel@sipsolutions.net> (sfid-20180903_134735_886484_95FC4B57)
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
- chips
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Grant Grundler <grundler@google.com>, wgong@qti.qualcomm.com
-Cc: wgong@codeaurora.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Date: Mon, 03 Sep 2018 13:47:20 +0200
-In-Reply-To: <87in3m25uu.fsf@toke.dk>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
-         <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
-         <87sh3pdtpg.fsf@toke.dk>
-         <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
-         <87mutue4y8.fsf@toke.dk>
-         <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
-         <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
-         <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 18 Sep 2018 13:37:12 -0400
+From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Subject: [PATCHv2] ath10k: Advertize beacon_int_min_gcd as 100 while bring up multi vaps
+Date: Tue, 18 Sep 2018 17:37:26 +0530
+Message-Id: <1537272446-22329-1-git-send-email-mkenna@codeaurora.org> (sfid-20180918_140457_972291_D87E8720)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-09-03 at 13:11 +0200, Toke Høiland-Jørgensen wrote:
+With the latest firmware design, the beacon interval should be
+greater than 100 to bring the multiple vaps.
 
-> > 6 vs. 8, I think? But I didn't follow the full discussion.
+Set beacon_int_min_gcd to 100, when the wmi service
+WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT is enabled
+in the firmware. If not, beacon_int_min_gcd will be set
+to the default value 1.
 
-Err, I just realized that I was completely wrong - the default, of
-course, is 10. So smaller values mean more buffering.
+Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00015
+Tested in QCA9888 with firmware ver 10.4-3.5.1-0005
 
-Most of my argumentation was thus utter garbage :-)
+Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  9 +++++++++
+ 2 files changed, 34 insertions(+)
 
-> > I also think that we shouldn't necessarily restrict this to "for the
-> > ath10k". Is there any reason to think that this would be different for
-> > different chips?
-> 
-> No, I also think it should be possible to select a value that will work
-> for all drivers. There's a strong diminishing returns effect here after
-> a certain point, and I believe we should strongly push back against just
-> adding more buffering to chase (single-flow) throughput numbers; and I'm
-> not convinced that having different values for different drivers is
-> worth the complexity.
-
-I think I can see some point in it if the driver requires some buffering
-for some specific reason? But you'd have to be able to state that
-reason, I guess, I could imagine having a firmware limitation to need to
-build two aggregates, or something around MU-MIMO, etc.
-
-> As far as I'm concerned, just showing an increase in maximum throughput
-> under ideal conditions (as this initial patch submission did) is not
-> sufficient argument for adding more buffering. At a minimum, the
-> evaluation should also include:
-> 
-> - Impact on latency and throughput for competing flows in the same test.
-> - Impact on latency for the TCP flow itself.
-> - A full evaluation at low rates and in scenarios with more than one
->   client.
-
-That seems reasonable.
-
-> As far as the actual value, I *think* it may be that the default shift
-> should be 7 (8 ms) rather than 8 (4 ms) as it currently is. Going back
-> and looking at my data from when I submitted the original patch, it
-> looks like the point of diminishing returns is somewhere between those
-> two with ath9k (where I did most of my testing), and it seems reasonable
-> that it could be slightly higher (i.e., more buffering) for ath10k.
-
-Grant's data shows a significant difference between 6 and 7 for both
-latency and throughput:
-
- * median tpt
-   - ~241 vs ~201 (both 1 and 5 streams)
- * median latency
-   - 7.5 vs 6 (1 stream)
-   - 17.3 vs. 16.6 (5 streams)
-
-A 20% throughput improvement at <= 1.5ms latency cost seems like a
-pretty reasonable trade-off?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 97548f9..532fc5d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8163,6 +8163,24 @@ void ath10k_mac_destroy(struct ath10k *ar)
+ 	},
+ };
+ 
++static const struct
++ieee80211_iface_combination ath10k_10_4_bcn_int_if_comb[] = {
++	{
++		.limits = ath10k_10_4_if_limits,
++		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
++		.max_interfaces = 16,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.beacon_int_min_gcd = 100,
++#ifdef CONFIG_ATH10K_DFS_CERTIFIED
++		.radar_detect_widths =  BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40) |
++					BIT(NL80211_CHAN_WIDTH_80),
++#endif
++	},
++};
++
+ static void ath10k_get_arvif_iter(void *data, u8 *mac,
+ 				  struct ieee80211_vif *vif)
+ {
+@@ -8526,6 +8544,13 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(ath10k_10_4_if_comb);
++		if (test_bit(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
++			     ar->wmi.svc_map)) {
++			ar->hw->wiphy->iface_combinations =
++				ath10k_10_4_bcn_int_if_comb;
++			ar->hw->wiphy->n_iface_combinations =
++				ARRAY_SIZE(ath10k_10_4_bcn_int_if_comb);
++		}
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 1562294..93906e6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -204,6 +204,7 @@ enum wmi_service {
+ 	WMI_SERVICE_RESET_CHIP,
+ 	WMI_SERVICE_SPOOF_MAC_SUPPORT,
+ 	WMI_SERVICE_TX_DATA_ACK_RSSI,
++	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -353,6 +354,11 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_TPC_STATS_FINAL,
+ 	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
+ 	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
++	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LEGACY,
++	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
++	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
++	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
++	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -467,6 +473,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
+ 	SVCSTR(WMI_SERVICE_RESET_CHIP);
+ 	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
++	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -777,6 +784,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TPC_STATS_FINAL, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
+ 	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
++	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
++	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
+ }
+ 
+ #undef SVCMAP
+-- 
+1.9.1
