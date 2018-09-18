@@ -1,95 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:34869 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726943AbeIKW0u (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 18:26:50 -0400
-Received: by mail-ed1-f68.google.com with SMTP id y20-v6so19898042edq.2
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Sep 2018 10:26:30 -0700 (PDT)
-From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-Subject: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
-Date: Tue, 11 Sep 2018 20:26:18 +0300
-Message-Id: <20180911172618.13049-1-alimjalnasrawy@gmail.com> (sfid-20180911_192710_836113_0112FF69)
+Received: from mx1.redhat.com ([209.132.183.28]:57328 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726768AbeIRR2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 13:28:37 -0400
+Date: Tue, 18 Sep 2018 13:56:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Sid Hayn <sidhayn@gmail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-mediatek@lists.infradead.org, dcaratti@redhat.com
+Subject: Re: mt76x0 bug report
+Message-ID: <20180918115616.GC15285@redhat.com> (sfid-20180918_135625_393772_47671C69)
+References: <20180906093213.GB16539@redhat.com>
+ <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
+ <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
+ <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
+ <20180907082413.GC2725@localhost.localdomain>
+ <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
+ <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com>
+ <CAJ0CqmUDT44W7sb4qpmt6mPDZ5LwUDPgKCrhor_8POWpx_RaQA@mail.gmail.com>
+ <CAM0KTbDb4X7JZgYZa6-NmjD72_UHOqQ43Czv=HwWS3D0WcWrgQ@mail.gmail.com>
+ <CAM0KTbA0QE-5oTz-aeU9zmnCS-LrYZmHwmEv0afjR0yFWvTevA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAM0KTbA0QE-5oTz-aeU9zmnCS-LrYZmHwmEv0afjR0yFWvTevA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacons+TIM are created/updated for fw beaconing only when BSS_CHANGED_BEACON.
-This is not compliant with power-saving stations. 
-Fix it by updating beacon templates on mac80211 set_tim callback.
-Adresses the issue in:
-https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
+On Mon, Sep 17, 2018 at 11:18:57PM -0400, Sid Hayn wrote:
+> Sorry to bump the one thing that we both agreed was low priority but....
+> 
+> So was testing all of my dongles that use the driver you are working
+> on, and running them through my connect scripts.  I moved the AP to
+> maybe <5ft from the clients and something wierd happened.  The t1u
+> tried to connect to one of the 2.4GHz only networks.  It failed, but
+> it actually got enough scan data back to attempt authentication with a
+> valid 2.4GHz only bssid.  Which means in short, that the eeprom isn't
+> lying and your parsing of it is correct.  Something obviously makes
+> this a 5GHz only device, as the connection failed and most of the time
+> nothing at all is seen on 2.4GHz, but clearly it's some filter or
+> antenna or some other mechanism which makes it 5GHz only.  So probably
+> hardware lying to you is now even lower on your list since this safely
+> rules out the driver parsing the eeprom incorrectly.
 
-Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
----
- .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 23 +++++++++++++++++++
- .../broadcom/brcm80211/brcmsmac/main.h        |  2 ++
- 2 files changed, 25 insertions(+)
+First of all would be good to check if problem is not already solved,
+latest version of the driver can be found here:
+https://github.com/nbd168/wireless
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-index ddfdfe1..ee92bb5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-@@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	}
- 
- 	spin_lock_bh(&wl->lock);
-+	wl->wlc->vif = vif;
- 	wl->mute_tx = false;
- 	brcms_c_mute(wl->wlc, false);
- 	if (vif->type == NL80211_IFTYPE_STATION)
-@@ -937,6 +938,27 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&wl->lock);
- }
- 
-+static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
-+				 struct ieee80211_sta *sta, bool set)
-+{
-+	/*FIXME: this may be more efficiently handled by delegating
-+	 beacon upload to the beacon interrupt handler*/
-+	struct brcms_info *wl = hw->priv;
-+	struct sk_buff *beacon;
-+	u16 tim_offset = 0;
-+	
-+	beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
-+					  &tim_offset, NULL);
-+	if (beacon){
-+		spin_lock_bh(&wl->lock);
-+		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
-+				       wl->wlc->vif->bss_conf.dtim_period);
-+		spin_unlock_bh(&wl->lock);
-+	}
-+	
-+	return 0;
-+}
-+
- static const struct ieee80211_ops brcms_ops = {
- 	.tx = brcms_ops_tx,
- 	.start = brcms_ops_start,
-@@ -955,6 +977,7 @@ static const struct ieee80211_ops brcms_ops = {
- 	.flush = brcms_ops_flush,
- 	.get_tsf = brcms_ops_get_tsf,
- 	.set_tsf = brcms_ops_set_tsf,
-+	.set_tim = brcms_ops_beacon_set_tim,
- };
- 
- void brcms_dpc(unsigned long data)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-index c4d135c..e3939fc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-@@ -568,6 +568,8 @@ struct brcms_c_info {
- 	u16 beacon_tim_offset;
- 	u16 beacon_dtim_period;
- 	struct sk_buff *probe_resp;
-+	
-+	struct ieee80211_vif *vif;
- };
- 
- /* antsel module specific state */
--- 
-2.18.0
+Second, is there vendor driver available for this particular device?
+Perhaps there are some tweeks needed that are not provided by generic
+driver.
+
+Thanks
+Stanislaw 
