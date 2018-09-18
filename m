@@ -1,90 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46330 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725995AbeIDTGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 15:06:44 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 00/22] mt76 patches 2018-09-04
-Date: Tue,  4 Sep 2018 16:40:53 +0200
-Message-Id: <1536072075-6990-1-git-send-email-sgruszka@redhat.com> (sfid-20180904_164132_336098_232D40FD)
+Received: from smtp.codeaurora.org ([198.145.29.96]:50316 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726768AbeIRRet (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Sep 2018 13:34:49 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 18 Sep 2018 17:32:31 +0530
+From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Advertize beacon_int_min_gcd as 100 while bring
+ up multi vaps
+In-Reply-To: <00ea718a-2ccb-74ba-11c2-102071200743@candelatech.com>
+References: <1537252429-8655-1-git-send-email-mkenna@codeaurora.org>
+ <00ea718a-2ccb-74ba-11c2-102071200743@candelatech.com>
+Message-ID: <8353e4d02ebb2bae996aa184b65d2756@codeaurora.org> (sfid-20180918_140236_205268_FF289C98)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-More mt76x0/mt76x2 integration.
+On 2018-09-18 4:14 pm, Ben Greear wrote:
+> On 09/17/2018 11:33 PM, Maharaja Kennadyrajan wrote:
+>> With the latest firmware design, the beacon interval should be
+>> greater than 100 to bring the multiple vaps.
+>> 
+>> Set beacon_int_min_gcd to 100, when the wmi service
+>> WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT is enabled
+>> in the firmware. If not, beacon_int_min_gcd will be set
+>> to the default value 1.
+>> 
+>> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00015
+>> Tested in QCA9888 with firmware ver 10.4-3.5.1-0005
+>> 
+>> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
+>>  drivers/net/wireless/ath/ath10k/wmi.h |  9 +++++++++
+>>  2 files changed, 34 insertions(+)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 97548f9..532fc5d 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -8163,6 +8163,24 @@ void ath10k_mac_destroy(struct ath10k *ar)
+>>  	},
+>>  };
+>> 
+>> +static const struct
+>> +ieee80211_iface_combination ath10k_10_4_bcn_int_if_comb[] = {
+>> +	{
+>> +		.limits = ath10k_10_4_if_limits,
+>> +		.n_limits = ARRAY_SIZE(ath10k_10_4_if_limits),
+>> +		.max_interfaces = 16,
+>> +		.num_different_channels = 1,
+>> +		.beacon_int_infra_match = true,
+>> +		.beacon_int_min_gcd = 100,
+>> +#ifdef CONFIG_ATH10K_DFS_CERTIFIED
+>> +		.radar_detect_widths =  BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+>> +					BIT(NL80211_CHAN_WIDTH_20) |
+>> +					BIT(NL80211_CHAN_WIDTH_40) |
+>> +					BIT(NL80211_CHAN_WIDTH_80),
+>> +#endif
+>> +	},
+>> +};
+>> +
+>>  static void ath10k_get_arvif_iter(void *data, u8 *mac,
+>>  				  struct ieee80211_vif *vif)
+>>  {
+>> @@ -8526,6 +8544,13 @@ int ath10k_mac_register(struct ath10k *ar)
+>>  		ar->hw->wiphy->iface_combinations = ath10k_10_4_if_comb;
+>>  		ar->hw->wiphy->n_iface_combinations =
+>>  			ARRAY_SIZE(ath10k_10_4_if_comb);
+>> +		if (test_bit(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+>> +			     ar->wmi.svc_map)) {
+>> +			ar->hw->wiphy->iface_combinations =
+>> +				ath10k_10_4_bcn_int_if_comb;
+>> +			ar->hw->wiphy->n_iface_combinations =
+>> +				ARRAY_SIZE(ath10k_10_4_bcn_int_if_comb);
+>> +		}
+>>  		break;
+>>  	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+>>  	case ATH10K_FW_WMI_OP_VERSION_MAX:
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
+>> b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 1562294..126eb17 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -204,6 +204,7 @@ enum wmi_service {
+>>  	WMI_SERVICE_RESET_CHIP,
+>>  	WMI_SERVICE_SPOOF_MAC_SUPPORT,
+>>  	WMI_SERVICE_TX_DATA_ACK_RSSI,
+>> +	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+>> 
+>>  	/* keep last */
+>>  	WMI_SERVICE_MAX,
+>> @@ -353,6 +354,11 @@ enum wmi_10_4_service {
+>>  	WMI_10_4_SERVICE_TPC_STATS_FINAL,
+>>  	WMI_10_4_SERVICE_CFR_CAPTURE_SUPPORT,
+>>  	WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
+>> +	WMI_10_4_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_LAGACY,
+> 
+> That should end with "LEGACY" instead of "LAGACY" maybe?
 
-This set is quite big but I would like to move patches upstream
-from my github tree as fast as possible. I have there 42 more
-ready to post patches from me and Lorenzo.
-https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft-v3
+[Maha]: Thanks Ben for noticing it. I will take care it in v2 patch.
 
-Note this set include:
-"mt76x0: fix wrong usage of wcid_mask in remove_interface"
-patch with I posted as fix for 4.19 . I assume this will be
-auto (or manually?) merged when -next will go to 4.20.
-
-Stanislaw Gruszka (22):
-  mt76: move wcid fields to common mt76_dev struct
-  mt76: unify sta_add / sta_remove
-  mt76: pratially unify add_interface
-  mt76x0: fix wrong usage of wcid_mask in remove_interface
-  mt76: unify ampdu_action
-  mt76: unify set_key
-  mt76x0: remove empty sta_notify
-  mt76: unify AC to hw queue mapping
-  mt76: remove q->hw_idx
-  mt76: unify conf_tx
-  mt76x0: remove vif_mask
-  mt76: unify remove_interface
-  mt76: unify add_interface
-  mt76: unify sta_rate_tbl_update and related helpers
-  mt76: unify txwi and rxwi structures
-  mt76: unify load_tx_status
-  mt76: unify send_tx_status and related helpers
-  mt76: use mt76_rx_status in mt76x0
-  mt76: unify mac_process_rate
-  mt76x0: reserve enough space in mac80211
-  mt76: unify {insert/remove}_hdr_pad
-  mt76: partially unify filling txwi fields
-
- drivers/net/wireless/mediatek/mt76/mac80211.c      |   3 +-
- drivers/net/wireless/mediatek/mt76/mt76.h          |  23 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/Makefile |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/dma.c    |  14 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  24 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    | 310 +----------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    | 130 --------
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c   | 215 +-----------
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  26 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |  12 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     | 144 +-------
- drivers/net/wireless/mediatek/mt76/mt76x0/util.c   |  42 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 347 +++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   | 122 ++++++-
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c  | 325 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |  23 ++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        |  23 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c | 254 +-------------
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    |  17 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |   3 +-
- .../wireless/mediatek/mt76/mt76x2_init_common.c    |   4 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |  12 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 110 +-----
- .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 368 +--------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |  50 +--
- .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   6 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   3 +-
- .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |  21 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |  18 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |  22 +-
- drivers/net/wireless/mediatek/mt76/tx.c            |  16 +
- drivers/net/wireless/mediatek/mt76/usb.c           |   6 +-
- 33 files changed, 974 insertions(+), 1723 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+> 
+>> +	WMI_10_4_SERVICE_PER_PACKET_SW_ENCRYPT,
+>> +	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
+>> +	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
+>> +	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+>>  };
+>> 
+>>  static inline char *wmi_service_name(int service_id)
+>> @@ -467,6 +473,7 @@ static inline char *wmi_service_name(int 
+>> service_id)
+>>  	SVCSTR(WMI_SERVICE_TPC_STATS_FINAL);
+>>  	SVCSTR(WMI_SERVICE_RESET_CHIP);
+>>  	SVCSTR(WMI_SERVICE_TX_DATA_ACK_RSSI);
+>> +	SVCSTR(WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT);
+>>  	default:
+>>  		return NULL;
+>>  	}
+>> @@ -777,6 +784,8 @@ static inline void wmi_10_4_svc_map(const __le32 
+>> *in, unsigned long *out,
+>>  	       WMI_SERVICE_TPC_STATS_FINAL, len);
+>>  	SVCMAP(WMI_10_4_SERVICE_TX_DATA_ACK_RSSI,
+>>  	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
+>> +	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
+>> +	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
+>>  }
+>> 
+>>  #undef SVCMAP
+>> 
+> 
+> Thanks,
+> Ben
 
 -- 
-2.7.5
+Regards,
+Maha
