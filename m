@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:55360 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727240AbeICTvY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38236 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726523AbeIRG1b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 15:51:24 -0400
-Received: by mail-it0-f66.google.com with SMTP id d10-v6so1548827itj.5
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 08:30:44 -0700 (PDT)
+        Tue, 18 Sep 2018 02:27:31 -0400
 MIME-Version: 1.0
-References: <1535970381-5526-1-git-send-email-sgruszka@redhat.com> <87y3cisq5g.fsf@purkki.adurom.net>
-In-Reply-To: <87y3cisq5g.fsf@purkki.adurom.net>
-From: Sid Hayn <sidhayn@gmail.com>
-Date: Mon, 3 Sep 2018 15:30:33 +0000
-Message-ID: <CAM0KTbDXMkDJruOoD=rfGanUv9wKZLUvESm=7ZtRNxhpJ8wEGA@mail.gmail.com> (sfid-20180903_173048_225675_6EE59981)
-Subject: Re: [PATCH 4.19] mt76x0: fix remove_interface
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: sgruszka@redhat.com,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 17 Sep 2018 17:57:34 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
+In-Reply-To: <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk>
+References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
+ <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk>
+Message-ID: <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org> (sfid-20180918_025738_424858_4AEF4965)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Best I can say is that it seemed to happen after a failed connection.
-It would connect and disconnect a few times and work fine, but if it
-failed to connect for any reason (mostly mismatched settings between
-AP and wpa_supplicant.conf) then the bug would occur. So,
-wpa_supplicant would up the interface, try to connect, fail, down the
-interface and exit, then the next loop of my script (with a different
-conf file) would start and wpa_supplicant would be unable to up the
-interface.
+On 2018-09-16 10:42, Toke Høiland-Jørgensen wrote:
+> +/**
+> + * ieee80211_return_txq - return a TXQ previously acquired by
+> ieee80211_next_txq()
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from station or virtual interface
+> + *
+> + * Should only be called between calls to 
+> ieee80211_txq_schedule_start()
+> + * and ieee80211_txq_schedule_end().
+> + */
+> +void ieee80211_return_txq(struct ieee80211_hw *hw, struct 
+> ieee80211_txq *txq);
+> +
+> 
+return_txq() should return a bool to inform the driver that whether txq 
+is
+queued back or not. Otherwise the same txq will be served indefinitely
+until txq becomes empty. This problem occurs when the driver is running 
+out
+of hw descriptors or driver sends only N frames (< backlog_packets).
 
-Hope that made any sense, because it didn't to me :-)
+Also an option to add the node at head or tail would be preferred. If 
+return_txq
+adds node at head of list, then it is forcing the driver to serve same 
+txq until it
+becomes empty. Also this will not allow the driver to send N frames from 
+each txqs.
 
--Zero
-On Mon, Sep 3, 2018 at 12:48 PM Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
->
-> > We wrongly use wcid_mask instead of vif_mask
-> >
-> > Fixes: 95e444098a7b ("mt76x0: main file")
-> > Reported-and-tested-by: Sid Hayn <sidhayn@gmail.com>
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->
-> For bug fixes please always try to describe the bug and symptoms. I can
-> add it this time. From the other thread I saw that 'ifconfig up' failed
-> like this:
->
-> SIOCSIFFLAGS: No space left on device
->
-> But in what cases did that happen? (I assume not always)
->
-> --
-> Kalle Valo
+> +/**
+> + * ieee80211_txq_schedule_start - acquire locks for safe scheduling of 
+> an AC
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @ac: AC number to acquire locks for
+> + *
+> + * Acquire locks needed to schedule TXQs from the given AC. Should be 
+> called
+> + * before ieee80211_next_txq() or ieee80211_schedule_txq().
+> + */
+Typo error. s/schedule_txq()/return_txq()/.
+
+-Rajkumar
