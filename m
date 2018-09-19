@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46430 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726208AbeIDQFq (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2297 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726827AbeISLly (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:05:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  4 Sep 2018 14:40:46 +0300
-Message-Id: <20180904114055.1429-1-luca@coelho.fi> (sfid-20180904_134130_910410_D065E8E8)
-In-Reply-To: <20180831083130.15525-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
-Subject: [PATCH v2 0/9] cfg80211/mac80211: reworked patches from our internal tree 2018-08-31
+        Wed, 19 Sep 2018 07:41:54 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/29] staging: wilc1000: change return type to 'void' for wilc_wlan_set_bssid()
+Date: Wed, 19 Sep 2018 11:34:52 +0530
+Message-ID: <1537337119-14952-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080537_171600_92F654D3)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Cleanup patch to use 'void' return type for wilc_wlan_set_bssid(),
+as its always returns the same value.
 
-Hi,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 4 +---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-I'm resending the patches that came out corrupted, excluding patch 22
-that was already in and with 19 and 20 reworked.
-
-I've left 9 and 12 out for now, because they still need to be reworked
-according to your comments.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Andrei Otcheretianski (3):
-  cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
-  mac80211: Always report TX status
-  mac80211: Don't wake up from PS for offchannel TX
-
-Naftali Goldstein (1):
-  mac80211: fix saving a few HE values
-
-Sara Sharon (3):
-  mac80211: add an option for station management TXQ
-  mac80211: allow AMSDU size limitation per-TID
-  mac80211: add an option for drivers to check if packets can be
-    aggregated
-
-Shaul Triebitz (2):
-  mac80211: support reporting 0-length PSDU in radiotap
-  wireless: align to draft 11ax D3.0
-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 51 ++++++++----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 -
- drivers/net/wireless/mac80211_hwsim.c         | 18 ++---
- include/linux/ieee80211.h                     | 72 ++++++++++-------
- include/net/ieee80211_radiotap.h              |  6 ++
- include/net/mac80211.h                        | 21 +++++
- net/mac80211/debugfs.c                        |  1 +
- net/mac80211/debugfs_sta.c                    | 77 +++++++++++++------
- net/mac80211/driver-ops.h                     | 10 +++
- net/mac80211/mlme.c                           | 17 ++--
- net/mac80211/rx.c                             | 12 ++-
- net/mac80211/status.c                         |  7 +-
- net/mac80211/tx.c                             | 25 +++++-
- net/wireless/reg.c                            |  1 +
- 14 files changed, 227 insertions(+), 95 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 49afda6..d1d2c64 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -192,14 +192,12 @@ static struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
+ 	return NULL;
+ }
+ 
+-int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode)
++void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode)
+ {
+ 	struct wilc_vif *vif = netdev_priv(wilc_netdev);
+ 
+ 	memcpy(vif->bssid, bssid, 6);
+ 	vif->mode = mode;
+-
+-	return 0;
+ }
+ 
+ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 1837808..30151b2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -215,6 +215,6 @@ void wilc_netdev_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		     const struct wilc_hif_func *ops);
+ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+-int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
++void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
+ 
+ #endif
 -- 
-2.18.0
+2.7.4
