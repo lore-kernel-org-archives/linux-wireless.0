@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:49814 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727488AbeIJNQU (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33698 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731001AbeISLmi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 09:16:20 -0400
-Message-ID: <1536567800.3224.39.camel@sipsolutions.net> (sfid-20180910_102332_042865_558DC693)
-Subject: Re: [PATCH RFC v3 3/4] cfg80211: Add airtime statistics and settings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Date: Mon, 10 Sep 2018 10:23:20 +0200
-In-Reply-To: <153635897088.14170.10601367738164730253.stgit@alrua-x1> (sfid-20180908_002305_769585_4A855C77)
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
-         <153635897088.14170.10601367738164730253.stgit@alrua-x1>
-         (sfid-20180908_002305_769585_4A855C77)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 19 Sep 2018 07:42:38 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/29] staging: wilc1000: remove unused wid type values
+Date: Wed, 19 Sep 2018 11:35:04 +0530
+Message-ID: <1537337119-14952-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080630_262344_2F42DF15)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-09-08 at 00:22 +0200, Toke Høiland-Jørgensen wrote:
-> This adds airtime statistics to the cfg80211 station dump, and also adds a new
-> parameter to set the airtime weight of each station. The latter allows userspace
-> to implement policies for different stations by varying their weights.
+Cleanup patch to remove the wid type not used in the code.
 
-Maybe some documentation on the weights - both for other implementers as
-well as users - would be useful.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_if.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-> + * @NL80211_STA_INFO_AIRTIME_WEIGHT: current airtime weight for station
-> + *      (u16, usec)
-
-how could the weight be in usec? copy/paste issue?
-
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index b81a73b..ce2066b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -204,10 +204,6 @@ enum wid_type {
+ 	WID_STR			= 3,
+ 	WID_BIN_DATA		= 4,
+ 	WID_BIN			= 5,
+-	WID_IP			= 6,
+-	WID_ADR			= 7,
+-	WID_UNDEF		= 8,
+-	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
+ };
+ 
+ struct wid {
+-- 
+2.7.4
