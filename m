@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:54012 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727603AbeIEOwx (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33062 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727820AbeISRUa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 10:52:53 -0400
-Received: by mail-it0-f65.google.com with SMTP id p79-v6so9153644itp.3
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2018 03:23:19 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Subject: [PATCH] mac80211: fix pending queue hang due to TX_DROP
-Date: Wed,  5 Sep 2018 06:22:59 -0400
-Message-Id: <20180905102259.16089-1-me@bobcopeland.com> (sfid-20180905_122324_321631_0CE0198B)
+        Wed, 19 Sep 2018 13:20:30 -0400
+Received: by mail-wr1-f67.google.com with SMTP id v90-v6so5475216wrc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2018 04:42:58 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x0: pci: add mt7650 PCI ID
+Date: Wed, 19 Sep 2018 13:42:44 +0200
+Message-Id: <6015cdd8ec0bda955107f235487cb8a75fd4e04c.1537356982.git.lorenzo.bianconi@redhat.com> (sfid-20180919_134301_846532_9D7AAFF2)
+In-Reply-To: <cover.1537356982.git.lorenzo.bianconi@redhat.com>
+References: <cover.1537356982.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In our environment running lots of mesh nodes, we are seeing the
-pending queue hang periodically, with the debugfs queues file showing
-lines such as:
+Add mt7650 PCI id found on ASUS rt-51ac to pci_device_id table
 
-    00: 0x00000000/348
-
-i.e. there are a large number of frames but no stop reason set.
-
-One way this could happen is if queue processing from the pending
-tasklet exited early without processing all frames, and without having
-some future event (incoming frame, stop reason flag, ...) to reschedule
-it.
-
-Exactly this can occur today if ieee80211_tx() returns false due to
-packet drops or power-save buffering in the tx handlers.  In the
-past, this function would return true in such cases, and the change
-to false doesn't seem to be intentional.  Fix this case by reverting
-to the previous behavior.
-
-Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- net/mac80211/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch is based on top of Felix's pull request:
+https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-09-19
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e88547842239..6b83dc397c3e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1907,7 +1907,7 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index eb383f96ec9a..c5e47bc70202 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -65,6 +65,7 @@ mt76x0e_remove(struct pci_dev *pdev)
  
- 	if (invoke_tx_handlers_early(&tx))
--		return false;
-+		return true;
+ static const struct pci_device_id mt76x0e_device_table[] = {
+ 	{ PCI_DEVICE(0x14c3, 0x7630) },
++	{ PCI_DEVICE(0x14c3, 0x7650) },
+ 	{ },
+ };
  
- 	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb))
- 		return true;
 -- 
-2.11.0
+2.17.1
