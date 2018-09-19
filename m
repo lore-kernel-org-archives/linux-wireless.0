@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51632 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727993AbeIVW3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 18:29:45 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, cc@80211.de
-Subject: [PATCH v2] mac80211: allocate TXQs for active monitor interfaces
-Date: Sat, 22 Sep 2018 18:35:31 +0200
-Message-Id: <20180922163531.6542-1-nbd@nbd.name> (sfid-20180922_183726_829353_7AA507F5)
+Received: from s3.sipsolutions.net ([144.76.43.62]:56264 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728150AbeISWKC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 18:10:02 -0400
+Message-ID: <1537374671.10305.41.camel@sipsolutions.net> (sfid-20180919_183128_294861_F71AEB04)
+Subject: Re: [PATCH 3/7] netlink: set extack error message in nla_validate()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Ahern <dsahern@gmail.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Date: Wed, 19 Sep 2018 18:31:11 +0200
+In-Reply-To: <3e7aadff-5228-660a-537a-9b54c11fa5cc@gmail.com> (sfid-20180919_182023_809529_1EF8ED3D)
+References: <20180919120900.28708-1-johannes@sipsolutions.net>
+         <20180919120900.28708-4-johannes@sipsolutions.net>
+         <3e7aadff-5228-660a-537a-9b54c11fa5cc@gmail.com>
+         (sfid-20180919_182023_809529_1EF8ED3D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode interfaces with the active flag are passed down to the driver.
-Drivers using TXQ expect that all interfaces have allocated TXQs before
-they get added.
+On Wed, 2018-09-19 at 09:20 -0700, David Ahern wrote:
 
-Fixes: 79af1f866193d ("mac80211: avoid allocating TXQs that won't be used")
-Cc: stable@vger.kernel.org
-Reported-by: Catrinel Catrinescu <cc@80211.de>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/iface.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> >  	nla_for_each_attr(nla, head, len, rem) {
+> > -		int err = validate_nla(nla, maxtype, policy, NULL);
+> > +		static const char _msg[] = "Attribute failed policy validation";
+> > +		const char *msg = _msg;
+> > +		int err = validate_nla(nla, maxtype, policy, &msg);
+> >  
+> >  		if (err < 0) {
+> > +			if (extack)
+> > +				extack->_msg = msg;
+> >  			NL_SET_BAD_ATTR(extack, nla);
+> 
+> msg, NL_SET_BAD_ATTR and extack handling all can be done in validate_nla
+> removing the need for the same message ("Attribute failed policy
+> validation") to be declared twice and simplifying the extack setting.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5e6cf2cee965..5836ddeac9e3 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1756,7 +1756,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 		if (local->ops->wake_tx_queue &&
- 		    type != NL80211_IFTYPE_AP_VLAN &&
--		    type != NL80211_IFTYPE_MONITOR)
-+		    (type != NL80211_IFTYPE_MONITOR ||
-+		     (params->flags & MONITOR_FLAG_ACTIVE)))
- 			txq_size += sizeof(struct txq_info) +
- 				    local->hw.txq_data_size;
- 
--- 
-2.17.0
+Yeah, perhaps I should take another look at that. I didn't want to do
+that originally as validate_nla() has so many exit points, but perhaps
+it's better to put a goto label there.
+
+FWIW, in the next patch I'm getting rid of the duplication again - I
+wanted to have the patch that has an effect (this one, setting the
+message) more clearly separated.
+
+johannes
