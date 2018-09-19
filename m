@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:51019 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726587AbeIHTKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 8 Sep 2018 15:10:49 -0400
-From: zhong jiang <zhongjiang@huawei.com>
-To: <davem@davemloft.net>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] wireless: remove unnecessary condition check before kfree
-Date: Sat, 8 Sep 2018 22:12:35 +0800
-Message-ID: <1536415955-33776-1-git-send-email-zhongjiang@huawei.com> (sfid-20180908_162514_404097_5E7EC1C1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.62]:59446 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732757AbeITB2p (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 21:28:45 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: David Ahern <dsahern@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 1/5] netlink: remove NLA_NESTED_COMPAT
+Date: Wed, 19 Sep 2018 21:49:01 +0200
+Message-Id: <20180919194905.16462-2-johannes@sipsolutions.net> (sfid-20180919_214937_577138_4C32905B)
+In-Reply-To: <20180919194905.16462-1-johannes@sipsolutions.net>
+References: <20180919194905.16462-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kfree has taken the null pointer into account. Just remove the
-redundant condition check before kfree.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+This isn't used anywhere, so we might as well get rid of it.
+
+Reviewed-by: David Ahern <dsahern@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/reg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/netlink.h |  2 --
+ lib/nlattr.c          | 11 -----------
+ 2 files changed, 13 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5ad5b9f..dc87e3d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1086,7 +1086,7 @@ int reg_reload_regdb(void)
- 	}
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 318b1ded3833..b680fe365e91 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -172,7 +172,6 @@ enum {
+ 	NLA_FLAG,
+ 	NLA_MSECS,
+ 	NLA_NESTED,
+-	NLA_NESTED_COMPAT,
+ 	NLA_NUL_STRING,
+ 	NLA_BINARY,
+ 	NLA_S8,
+@@ -203,7 +202,6 @@ enum {
+  *    NLA_BINARY           Maximum length of attribute payload
+  *    NLA_NESTED           Don't use `len' field -- length verification is
+  *                         done by checking len of nested header (or empty)
+- *    NLA_NESTED_COMPAT    Minimum length of structure payload
+  *    NLA_U8, NLA_U16,
+  *    NLA_U32, NLA_U64,
+  *    NLA_S8, NLA_S16,
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index bb6fe5ed4ecf..120ad569e13d 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -140,17 +140,6 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			return -ERANGE;
+ 		break;
  
- 	rtnl_lock();
--	if (!IS_ERR_OR_NULL(regdb))
-+	if (!IS_ERR(regdb))
- 		kfree(regdb);
- 	regdb = db;
- 	rtnl_unlock();
-@@ -3920,7 +3920,7 @@ void regulatory_exit(void)
- 		kfree(reg_request);
- 	}
- 
--	if (!IS_ERR_OR_NULL(regdb))
-+	if (!IS_ERR(regdb))
- 		kfree(regdb);
- 
- 	free_regdb_keyring();
+-	case NLA_NESTED_COMPAT:
+-		if (attrlen < pt->len)
+-			return -ERANGE;
+-		if (attrlen < NLA_ALIGN(pt->len))
+-			break;
+-		if (attrlen < NLA_ALIGN(pt->len) + NLA_HDRLEN)
+-			return -ERANGE;
+-		nla = nla_data(nla) + NLA_ALIGN(pt->len);
+-		if (attrlen < NLA_ALIGN(pt->len) + NLA_HDRLEN + nla_len(nla))
+-			return -ERANGE;
+-		break;
+ 	case NLA_NESTED:
+ 		/* a nested attributes is allowed to be empty; if its not,
+ 		 * it must have a size of at least NLA_HDRLEN.
 -- 
-1.7.12.4
+2.14.4
