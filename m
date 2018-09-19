@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47490 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55778 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725825AbeIEHTR (ORCPT
+        with ESMTP id S1731368AbeISVqW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 03:19:17 -0400
+        Wed, 19 Sep 2018 17:46:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, arnd@arndb.de
+Subject: Re: [PATCH] net: wireless: mediatek: fix mt76 LEDS build error
+References: <563c7f90-1d9f-440c-4670-8fbebc9f76b0@infradead.org>
+        <20180907075612.GB2725@localhost.localdomain>
+        <87d0tp65km.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 19 Sep 2018 19:07:43 +0300
+In-Reply-To: <87d0tp65km.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Fri, 07 Sep 2018 12:05:13 +0300")
+Message-ID: <874lelsc6o.fsf@purkki.adurom.net> (sfid-20180919_180749_603989_1BAB776D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 05 Sep 2018 10:51:19 +0800
-From: Wen Gong <wgong@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Wen Gong <wgong@qti.qualcomm.com>, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v3] ath10k: support NET_DETECT WoWLAN feature
-In-Reply-To: <87zhwx7ajo.fsf@kamboji.qca.qualcomm.com>
-References: <1534402113-14337-1-git-send-email-wgong@codeaurora.org>
- <877ek18vyn.fsf@kamboji.qca.qualcomm.com>
- <b6d8ada015e04738b6b3cee95e485e14@aptaiexm02f.ap.qualcomm.com>
- <87zhwx7ajo.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <92bec84a762be7589b13274fb30dd649@codeaurora.org> (sfid-20180905_045128_166561_C73D7B6C)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-04 19:43, Kalle Valo wrote:
-> Wen Gong <wgong@qti.qualcomm.com> writes:
-> 
->>> > +enum wmi_nlo_cipher_algorithm {
->>> > +	WMI_NLO_CIPHER_ALGO_NONE           = 0x00,
->>> > +	WMI_NLO_CIPHER_ALGO_WEP40          = 0x01,
->>> > +	WMI_NLO_CIPHER_ALGO_TKIP           = 0x02,
->>> > +	WMI_NLO_CIPHER_ALGO_CCMP           = 0x04,
->>> > +	WMI_NLO_CIPHER_ALGO_WEP104         = 0x05,
->>> > +	WMI_NLO_CIPHER_ALGO_BIP            = 0x06,
->>> > +	WMI_NLO_CIPHER_ALGO_WPA_USE_GROUP  = 0x100,
->>> > +	WMI_NLO_CIPHER_ALGO_RSN_USE_GROUP  = 0x100,
+Kalle Valo <kvalo@codeaurora.org> writes:
+
+> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+>
+>>> From: Randy Dunlap <rdunlap@infradead.org>
 >>> 
->>> Two defines with the same value 0x100, is this really correct?
->> 
->> Yes, it is an interface between host driver /firmware.
-> 
-> Yeah, I know it's an interface between the host driver and the firmware
-> but it does not make any sense and is just confusing. Either of them
-> should be dropped.
-yes, either of them can be dropped.
+>>> All of the mt76 driver options use its mac80211.o component,
+>>> which uses led interfaces, so each of them should depend on
+>>> LEDS_CLASS.
+>>> 
+>>> Fixes this build error:
+>>> 
+>>> drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_led_init':
+>>> drivers/net/wireless/mediatek/mt76/mac80211.c:119: undefined
+>>> reference to `devm_of_led_classdev_register'
+>>> 
+>>> Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+>>> 
+>>
+>> Hi Randy,
+>>
+>> a fix for it has been already proposed by Arnd here:
+>> https://marc.info/?l=linux-wireless&m=151628136830540&w=2
+>> but it has not been applied yet
+>
+> Yet? Arnd's patch is not on my queue as it's from last January and Felix
+> had a comment for it:
+>
+> https://patchwork.kernel.org/patch/10173197/
+
+So what should we do? Arnd hasn't submitted a new patch so should we
+take this one instead?
+
+-- 
+Kalle Valo
