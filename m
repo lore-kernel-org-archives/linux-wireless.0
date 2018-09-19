@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:41077 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726037AbeIRRoa (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38694 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727992AbeITCMt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 13:44:30 -0400
-Received: by mail-wr1-f68.google.com with SMTP id z96-v6so1832187wrb.8
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 05:12:10 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: [PATCH] mt76: usb: remove WARN_ON in mt76u_get_rx_entry_len
-Date: Tue, 18 Sep 2018 14:12:05 +0200
-Message-Id: <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com> (sfid-20180918_141227_572635_3C019727)
-In-Reply-To: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
-References: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
+        Wed, 19 Sep 2018 22:12:49 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 7BDEC40A30A
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Sep 2018 13:33:11 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Problem with sending pkt on a monitor port
+Message-ID: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com> (sfid-20180919_223316_460674_F032A088)
+Date: Wed, 19 Sep 2018 13:33:11 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove not useful WARN_ON macros in mt76u_get_rx_entry_len routine
-since corrupted frames should just be silently discarded
+This is with a modified 4.16.18+ kernel, though the code in question
+is from 2011, so this is not new...
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/usb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I am attempting to use radiotap packet injection on a monitor port.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 7780b07543bb..81f036b3df86 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -326,9 +326,9 @@ static int mt76u_get_rx_entry_len(u8 *data, u32 data_len)
- 	min_len = MT_DMA_HDR_LEN + MT_RX_RXWI_LEN +
- 		  MT_FCE_INFO_LEN;
- 
--	if (data_len < min_len || WARN_ON(!dma_len) ||
--	    WARN_ON(dma_len + MT_DMA_HDR_LEN > data_len) ||
--	    WARN_ON(dma_len & 0x3))
-+	if (data_len < min_len || !dma_len ||
-+	    dma_len + MT_DMA_HDR_LEN > data_len ||
-+	    (dma_len & 0x3))
- 		return -EINVAL;
- 	return dma_len;
- }
+In the ieee80211_monitor_start_xmit method, before this code below
+runs, sdata is 'moni6a', my monitor port.  But, since I have a
+station wlan1 with the same MAC address, then when this code is
+completed, stdata becomes wlan1.
+
+Ath10k has all sorts of issues transmitting raw frames, and sending on
+the wrong vdev only makes it even more broken!
+
+If user-space binds a socket to a monitor vdev and transmits a frame,
+why would we want to change the vdev here?
+
+	list_for_each_entry_rcu(tmp_sdata, &local->interfaces, list) {
+		if (!ieee80211_sdata_running(tmp_sdata))
+			continue;
+		if (tmp_sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+		    tmp_sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+		    tmp_sdata->vif.type == NL80211_IFTYPE_WDS)
+			continue;
+		if (ether_addr_equal(tmp_sdata->vif.addr, hdr->addr2)) {
+			sdata = tmp_sdata;
+			break;
+		}
+	}
+
+Thanks,
+Ben
+
 -- 
-2.17.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
