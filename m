@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49008 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726342AbeIELwA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59558 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726718AbeITBc1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 07:52:00 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 05 Sep 2018 15:23:09 +0800
-From: Wen Gong <wgong@codeaurora.org>
-To: Grant Grundler <grundler@google.com>
-Cc: toke@toke.dk, Johannes Berg <johannes@sipsolutions.net>,
-        wgong@qti.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath10k: Set sk_pacing_shift to 6 for 11AC WiFi
- chips
-In-Reply-To: <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
-References: <1533724802-30944-1-git-send-email-wgong@codeaurora.org>
- <1533724802-30944-3-git-send-email-wgong@codeaurora.org>
- <87sh3pdtpg.fsf@toke.dk>
- <f185ab8722e84c959b375e606d25a29b@aptaiexm02f.ap.qualcomm.com>
- <87mutue4y8.fsf@toke.dk>
- <ef7b317006964c0fa72763bbfc5149e5@aptaiexm02f.ap.qualcomm.com>
- <CANEJEGvcj9gPT8yy++qvi3hz3t9pAXyeUves06gr+ADfn9Ouhg@mail.gmail.com>
- <1535967508.3437.31.camel@sipsolutions.net> <87in3m25uu.fsf@toke.dk>
- <1535975240.3437.61.camel@sipsolutions.net> <878t4i1z74.fsf@toke.dk>
- <CANEJEGsm_BKM6g2x0+a7_5dBy5jkROs+jEjHmrcneGrMdDK41g@mail.gmail.com>
-Message-ID: <d107bcfcff90bac041596dc61fd6a666@codeaurora.org> (sfid-20180905_092315_132166_A10285FC)
+        Wed, 19 Sep 2018 21:32:27 -0400
+Message-ID: <1537386768.10305.72.camel@sipsolutions.net> (sfid-20180919_215303_156242_DFA7E9C6)
+Subject: Re: [PATCH v2 3/5] netlink: move extack setting into validate_nla()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: David Ahern <dsahern@gmail.com>
+Date: Wed, 19 Sep 2018 21:52:48 +0200
+In-Reply-To: <20180919194905.16462-4-johannes@sipsolutions.net> (sfid-20180919_214938_218448_122CE2E9)
+References: <20180919194905.16462-1-johannes@sipsolutions.net>
+         <20180919194905.16462-4-johannes@sipsolutions.net>
+         (sfid-20180919_214938_218448_122CE2E9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-05 07:43, Grant Grundler wrote:
-> On Mon, Sep 3, 2018 at 6:35 AM Toke Høiland-Jørgensen <toke@toke.dk> 
-> wrote:
->> 
->> Johannes Berg <johannes@sipsolutions.net> writes:
-> ....
->> > Grant's data shows a significant difference between 6 and 7 for both
->> > latency and throughput:
+On Wed, 2018-09-19 at 21:49 +0200, Johannes Berg wrote:
 > 
-> Minor nit: this is wgong's data more thoughtfully processed.
+>  	case NLA_REJECT:
+> -		if (pt->validation_data && error_msg)
+> -			*error_msg = pt->validation_data;
+> +		NL_SET_BAD_ATTR(extack, nla);
+> +		if (extack && pt->validation_data)
+> +			 extack->_msg = pt->validation_data;
+>  		return -EINVAL;
 
-> 
-> wgong: can you confirm (a) I've entered the data correctly in the
-> spreadsheet and (b) you've labeled the data sets correctly when you
-> generated the data?
-> If either of us made a mistake, it would be good to know. :)
-> 
-yes, the data is the test result from flent tool.
+Damn. This of course needs to happen only if pt->validation_data is set,
+otherwise it needs to "goto out_err" to set the default message.
+
+I'll respin another day with that fixed, and any other comments that
+come in until then addressed.
+
+Sorry for the noise :-(
+
+johannes
