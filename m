@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:38311 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727136AbeIDSmZ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:39094 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727623AbeITC0l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 14:42:25 -0400
-Received: by mail-io0-f195.google.com with SMTP id y3-v6so3089238ioc.5
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Sep 2018 07:17:08 -0700 (PDT)
+        Wed, 19 Sep 2018 22:26:41 -0400
+Subject: Re: Problem with sending pkt on a monitor port
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
+ <1537389335.10305.92.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <d6f99a05-77a3-f18a-4e7a-083062119ce4@candelatech.com> (sfid-20180919_224705_761808_22A0D3C7)
+Date: Wed, 19 Sep 2018 13:47:00 -0700
 MIME-Version: 1.0
-References: <1535970381-5526-1-git-send-email-sgruszka@redhat.com>
- <87y3cisq5g.fsf@purkki.adurom.net> <CAM0KTbAgj==H9SkoFF7WeSrh=TJHKFtuubf06JKSKoHoa4xV5w@mail.gmail.com>
- <20180904102352.GA978@redhat.com>
-In-Reply-To: <20180904102352.GA978@redhat.com>
-From: Sid Hayn <sidhayn@gmail.com>
-Date: Tue, 4 Sep 2018 14:16:57 +0000
-Message-ID: <CAM0KTbBSC8EZB+40DsaPj-DJhrQCuRGH2=T=XvE+71bPtXFwbg@mail.gmail.com> (sfid-20180904_161711_116271_14F82A0F)
-Subject: Re: [PATCH 4.19] mt76x0: fix remove_interface
-To: sgruszka@redhat.com
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1537389335.10305.92.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-confirmed, I didn't intentionally remove the interface, but I do see
-something about the interface being removed in wpa_supplicant output.
+On 09/19/2018 01:35 PM, Johannes Berg wrote:
+> On Wed, 2018-09-19 at 13:33 -0700, Ben Greear wrote:
+>> This is with a modified 4.16.18+ kernel, though the code in question
+>> is from 2011, so this is not new...
+>>
+>> I am attempting to use radiotap packet injection on a monitor port.
+>>
+>> In the ieee80211_monitor_start_xmit method, before this code below
+>> runs, sdata is 'moni6a', my monitor port.  But, since I have a
+>> station wlan1 with the same MAC address, then when this code is
+>> completed, stdata becomes wlan1.
+>>
+>> Ath10k has all sorts of issues transmitting raw frames, and sending on
+>> the wrong vdev only makes it even more broken!
+>>
+>> If user-space binds a socket to a monitor vdev and transmits a frame,
+>> why would we want to change the vdev here?
+>
+> For one, the driver has no concept of the original vif, since monitor
+> vifs aren't added to it.
+
+ath10k does create a monitor vif, but maybe it is not mapped directly
+to mac80211.
+
+> Secondly, the old hostapd code before nl80211 injects frames that way,
+> and they need to go there.
+
+Ok, I agree we should not break backwards compat then.  I'll poke some more
+to see if I can get it working.
 
 Thanks,
-Zero
-On Tue, Sep 4, 2018 at 10:23 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> On Mon, Sep 03, 2018 at 09:36:37AM -0400, Sid Hayn wrote:
-> > Best I can say is that it seemed to happen after a failed connection.  It
-> > would connect and disconnect a few times and work fine, but if it failed to
-> > connect for any reason (mostly mismatched settings between AP and
-> > wpa_supplicant.conf) then the bug would occur. So, wpa_supplicant would up
-> > the interface, try to connect, fail, down the interface and exit, then the
-> > next loop of my script (with a different conf file) would start and
-> > wpa_supplicant would be unable to up the interface.
-> <snip>
-> > > For bug fixes please always try to describe the bug and symptoms. I can
-> > > add it this time. From the other thread I saw that 'ifconfig up' failed
-> > > like this:
-> > >
-> > > SIOCSIFFLAGS: No space left on device
-> > >
-> > > But in what cases did that happen? (I assume not always)
->
-> Problem will happen when we remove interface more than 8 times.
-> I'm not sure at how this can be triggerd execpt by doing:
->
-> iw dev <devname> interface add <name> type <type>
-> iw dev <name> del
->
-> but looks somehow this is triggerd by Sid scripts
-> by just by using wpa_supplicant and ifconfig.
->
-> Regards
-> Stanislaw
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
