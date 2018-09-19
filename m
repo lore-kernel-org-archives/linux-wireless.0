@@ -1,656 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:36971 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730835AbeISHqi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 03:46:38 -0400
-Received: by mail-pl1-f196.google.com with SMTP id f1-v6so1864168plt.4
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 19:11:10 -0700 (PDT)
-From: Kees Cook <keescook@chromium.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Kees Cook <keescook@chromium.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Eric Biggers <ebiggers@google.com>,
-        linux-crypto <linux-crypto@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH crypto-next 03/23] lib80211: Remove VLA usage of skcipher
-Date: Tue, 18 Sep 2018 19:10:40 -0700
-Message-Id: <20180919021100.3380-4-keescook@chromium.org> (sfid-20180919_041259_586291_76A25723)
-In-Reply-To: <20180919021100.3380-1-keescook@chromium.org>
-References: <20180919021100.3380-1-keescook@chromium.org>
+Received: from nbd.name ([46.4.11.11]:52478 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728059AbeISQTB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 12:19:01 -0400
+From: Felix Fietkau <nbd@nbd.name>
+Subject: pull request: mt76 2018-09-19
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <e184434e-04a0-18a9-0693-42eca0a45268@nbd.name> (sfid-20180919_124146_649766_E4727585)
+Date: Wed, 19 Sep 2018 12:41:40 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the quest to remove all stack VLA usage from the kernel[1], this
-replaces struct crypto_skcipher and SKCIPHER_REQUEST_ON_STACK() usage
-with struct crypto_sync_skcipher and SYNC_SKCIPHER_REQUEST_ON_STACK(),
-which uses a fixed stack size.
+Hi Kalle,
 
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
+Here's a large batch of mt76 code cleanup / deduplication / fixes,
+rebased to your latest wireless-drivers-next. This replaces the previous
+pull request.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/staging/rtl8192e/rtllib_crypt_tkip.c  | 34 +++++++++----------
- drivers/staging/rtl8192e/rtllib_crypt_wep.c   | 28 +++++++--------
- .../rtl8192u/ieee80211/ieee80211_crypt_tkip.c | 34 +++++++++----------
- .../rtl8192u/ieee80211/ieee80211_crypt_wep.c  | 26 +++++++-------
- net/wireless/lib80211_crypt_tkip.c            | 34 +++++++++----------
- net/wireless/lib80211_crypt_wep.c             | 28 +++++++--------
- 6 files changed, 89 insertions(+), 95 deletions(-)
+- Felix
 
-diff --git a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-index 9f18be14dda6..f38f1f74fcd6 100644
---- a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-+++ b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-@@ -49,9 +49,9 @@ struct rtllib_tkip_data {
- 	u32 dot11RSNAStatsTKIPLocalMICFailures;
- 
- 	int key_idx;
--	struct crypto_skcipher *rx_tfm_arc4;
-+	struct crypto_sync_skcipher *rx_tfm_arc4;
- 	struct crypto_shash *rx_tfm_michael;
--	struct crypto_skcipher *tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tx_tfm_arc4;
- 	struct crypto_shash *tx_tfm_michael;
- 	/* scratch buffers for virt_to_page() (crypto API) */
- 	u8 rx_hdr[16];
-@@ -66,8 +66,7 @@ static void *rtllib_tkip_init(int key_idx)
- 	if (priv == NULL)
- 		goto fail;
- 	priv->key_idx = key_idx;
--	priv->tx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm_arc4)) {
- 		pr_debug("Could not allocate crypto API arc4\n");
- 		priv->tx_tfm_arc4 = NULL;
-@@ -81,8 +80,7 @@ static void *rtllib_tkip_init(int key_idx)
- 		goto fail;
- 	}
- 
--	priv->rx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm_arc4)) {
- 		pr_debug("Could not allocate crypto API arc4\n");
- 		priv->rx_tfm_arc4 = NULL;
-@@ -100,9 +98,9 @@ static void *rtllib_tkip_init(int key_idx)
- fail:
- 	if (priv) {
- 		crypto_free_shash(priv->tx_tfm_michael);
--		crypto_free_skcipher(priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->tx_tfm_arc4);
- 		crypto_free_shash(priv->rx_tfm_michael);
--		crypto_free_skcipher(priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->rx_tfm_arc4);
- 		kfree(priv);
- 	}
- 
-@@ -116,9 +114,9 @@ static void rtllib_tkip_deinit(void *priv)
- 
- 	if (_priv) {
- 		crypto_free_shash(_priv->tx_tfm_michael);
--		crypto_free_skcipher(_priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->tx_tfm_arc4);
- 		crypto_free_shash(_priv->rx_tfm_michael);
--		crypto_free_skcipher(_priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->rx_tfm_arc4);
- 	}
- 	kfree(priv);
- }
-@@ -337,7 +335,7 @@ static int rtllib_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	*pos++ = (tkey->tx_iv32 >> 24) & 0xff;
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
- 
- 		icv = skb_put(skb, 4);
- 		crc = ~crc32_le(~0, pos, len);
-@@ -349,8 +347,8 @@ static int rtllib_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		sg_init_one(&sg, pos, len+4);
- 
- 
--		crypto_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
--		skcipher_request_set_tfm(req, tkey->tx_tfm_arc4);
-+		crypto_sync_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
-+		skcipher_request_set_sync_tfm(req, tkey->tx_tfm_arc4);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 		ret = crypto_skcipher_encrypt(req);
-@@ -420,7 +418,7 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (!tcb_desc->bHwSec || (skb->cb[0] == 1)) {
--		SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
- 
- 		if ((iv32 < tkey->rx_iv32 ||
- 		    (iv32 == tkey->rx_iv32 && iv16 <= tkey->rx_iv16)) &&
-@@ -447,8 +445,8 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 
- 		sg_init_one(&sg, pos, plen+4);
- 
--		crypto_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
--		skcipher_request_set_tfm(req, tkey->rx_tfm_arc4);
-+		crypto_sync_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
-+		skcipher_request_set_sync_tfm(req, tkey->rx_tfm_arc4);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 		err = crypto_skcipher_decrypt(req);
-@@ -664,9 +662,9 @@ static int rtllib_tkip_set_key(void *key, int len, u8 *seq, void *priv)
- 	struct rtllib_tkip_data *tkey = priv;
- 	int keyidx;
- 	struct crypto_shash *tfm = tkey->tx_tfm_michael;
--	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm2 = tkey->tx_tfm_arc4;
- 	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
--	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm4 = tkey->rx_tfm_arc4;
- 
- 	keyidx = tkey->key_idx;
- 	memset(tkey, 0, sizeof(*tkey));
-diff --git a/drivers/staging/rtl8192e/rtllib_crypt_wep.c b/drivers/staging/rtl8192e/rtllib_crypt_wep.c
-index b3343a5d0fd6..d11ec39171d5 100644
---- a/drivers/staging/rtl8192e/rtllib_crypt_wep.c
-+++ b/drivers/staging/rtl8192e/rtllib_crypt_wep.c
-@@ -27,8 +27,8 @@ struct prism2_wep_data {
- 	u8 key[WEP_KEY_LEN + 1];
- 	u8 key_len;
- 	u8 key_idx;
--	struct crypto_skcipher *tx_tfm;
--	struct crypto_skcipher *rx_tfm;
-+	struct crypto_sync_skcipher *tx_tfm;
-+	struct crypto_sync_skcipher *rx_tfm;
- };
- 
- 
-@@ -41,13 +41,13 @@ static void *prism2_wep_init(int keyidx)
- 		goto fail;
- 	priv->key_idx = keyidx;
- 
--	priv->tx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm)) {
- 		pr_debug("rtllib_crypt_wep: could not allocate crypto API arc4\n");
- 		priv->tx_tfm = NULL;
- 		goto fail;
- 	}
--	priv->rx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm)) {
- 		pr_debug("rtllib_crypt_wep: could not allocate crypto API arc4\n");
- 		priv->rx_tfm = NULL;
-@@ -61,8 +61,8 @@ static void *prism2_wep_init(int keyidx)
- 
- fail:
- 	if (priv) {
--		crypto_free_skcipher(priv->tx_tfm);
--		crypto_free_skcipher(priv->rx_tfm);
-+		crypto_free_sync_skcipher(priv->tx_tfm);
-+		crypto_free_sync_skcipher(priv->rx_tfm);
- 		kfree(priv);
- 	}
- 	return NULL;
-@@ -74,8 +74,8 @@ static void prism2_wep_deinit(void *priv)
- 	struct prism2_wep_data *_priv = priv;
- 
- 	if (_priv) {
--		crypto_free_skcipher(_priv->tx_tfm);
--		crypto_free_skcipher(_priv->rx_tfm);
-+		crypto_free_sync_skcipher(_priv->tx_tfm);
-+		crypto_free_sync_skcipher(_priv->rx_tfm);
- 	}
- 	kfree(priv);
- }
-@@ -135,7 +135,7 @@ static int prism2_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	memcpy(key + 3, wep->key, wep->key_len);
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
- 
- 		/* Append little-endian CRC32 and encrypt it to produce ICV */
- 		crc = ~crc32_le(~0, pos, len);
-@@ -146,8 +146,8 @@ static int prism2_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		icv[3] = crc >> 24;
- 
- 		sg_init_one(&sg, pos, len+4);
--		crypto_skcipher_setkey(wep->tx_tfm, key, klen);
--		skcipher_request_set_tfm(req, wep->tx_tfm);
-+		crypto_sync_skcipher_setkey(wep->tx_tfm, key, klen);
-+		skcipher_request_set_sync_tfm(req, wep->tx_tfm);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 		err = crypto_skcipher_encrypt(req);
-@@ -199,11 +199,11 @@ static int prism2_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	plen = skb->len - hdr_len - 8;
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
- 
- 		sg_init_one(&sg, pos, plen+4);
--		crypto_skcipher_setkey(wep->rx_tfm, key, klen);
--		skcipher_request_set_tfm(req, wep->rx_tfm);
-+		crypto_sync_skcipher_setkey(wep->rx_tfm, key, klen);
-+		skcipher_request_set_sync_tfm(req, wep->rx_tfm);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 		err = crypto_skcipher_decrypt(req);
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-index 1088fa0aee0e..829fa4bd253c 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-@@ -53,9 +53,9 @@ struct ieee80211_tkip_data {
- 
- 	int key_idx;
- 
--	struct crypto_skcipher *rx_tfm_arc4;
-+	struct crypto_sync_skcipher *rx_tfm_arc4;
- 	struct crypto_shash *rx_tfm_michael;
--	struct crypto_skcipher *tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tx_tfm_arc4;
- 	struct crypto_shash *tx_tfm_michael;
- 
- 	/* scratch buffers for virt_to_page() (crypto API) */
-@@ -71,8 +71,7 @@ static void *ieee80211_tkip_init(int key_idx)
- 		goto fail;
- 	priv->key_idx = key_idx;
- 
--	priv->tx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--			CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm_arc4)) {
- 		printk(KERN_DEBUG "ieee80211_crypt_tkip: could not allocate "
- 				"crypto API arc4\n");
-@@ -88,8 +87,7 @@ static void *ieee80211_tkip_init(int key_idx)
- 		goto fail;
- 	}
- 
--	priv->rx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--			CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm_arc4)) {
- 		printk(KERN_DEBUG "ieee80211_crypt_tkip: could not allocate "
- 				"crypto API arc4\n");
-@@ -110,9 +108,9 @@ static void *ieee80211_tkip_init(int key_idx)
- fail:
- 	if (priv) {
- 		crypto_free_shash(priv->tx_tfm_michael);
--		crypto_free_skcipher(priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->tx_tfm_arc4);
- 		crypto_free_shash(priv->rx_tfm_michael);
--		crypto_free_skcipher(priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->rx_tfm_arc4);
- 		kfree(priv);
- 	}
- 
-@@ -126,9 +124,9 @@ static void ieee80211_tkip_deinit(void *priv)
- 
- 	if (_priv) {
- 		crypto_free_shash(_priv->tx_tfm_michael);
--		crypto_free_skcipher(_priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->tx_tfm_arc4);
- 		crypto_free_shash(_priv->rx_tfm_michael);
--		crypto_free_skcipher(_priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->rx_tfm_arc4);
- 	}
- 	kfree(priv);
- }
-@@ -340,7 +338,7 @@ static int ieee80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	*pos++ = (tkey->tx_iv32 >> 24) & 0xff;
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
- 
- 		icv = skb_put(skb, 4);
- 		crc = ~crc32_le(~0, pos, len);
-@@ -348,9 +346,9 @@ static int ieee80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		icv[1] = crc >> 8;
- 		icv[2] = crc >> 16;
- 		icv[3] = crc >> 24;
--		crypto_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
-+		crypto_sync_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
- 		sg_init_one(&sg, pos, len+4);
--		skcipher_request_set_tfm(req, tkey->tx_tfm_arc4);
-+		skcipher_request_set_sync_tfm(req, tkey->tx_tfm_arc4);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 		ret = crypto_skcipher_encrypt(req);
-@@ -418,7 +416,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
- 
- 		if (iv32 < tkey->rx_iv32 ||
- 		(iv32 == tkey->rx_iv32 && iv16 <= tkey->rx_iv16)) {
-@@ -440,10 +438,10 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 
- 		plen = skb->len - hdr_len - 12;
- 
--		crypto_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
-+		crypto_sync_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
- 		sg_init_one(&sg, pos, plen+4);
- 
--		skcipher_request_set_tfm(req, tkey->rx_tfm_arc4);
-+		skcipher_request_set_sync_tfm(req, tkey->rx_tfm_arc4);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 
-@@ -663,9 +661,9 @@ static int ieee80211_tkip_set_key(void *key, int len, u8 *seq, void *priv)
- 	struct ieee80211_tkip_data *tkey = priv;
- 	int keyidx;
- 	struct crypto_shash *tfm = tkey->tx_tfm_michael;
--	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm2 = tkey->tx_tfm_arc4;
- 	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
--	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm4 = tkey->rx_tfm_arc4;
- 
- 	keyidx = tkey->key_idx;
- 	memset(tkey, 0, sizeof(*tkey));
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_wep.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_wep.c
-index b9f86be9e52b..d4a1bf0caa7a 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_wep.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_wep.c
-@@ -32,8 +32,8 @@ struct prism2_wep_data {
- 	u8 key[WEP_KEY_LEN + 1];
- 	u8 key_len;
- 	u8 key_idx;
--	struct crypto_skcipher *tx_tfm;
--	struct crypto_skcipher *rx_tfm;
-+	struct crypto_sync_skcipher *tx_tfm;
-+	struct crypto_sync_skcipher *rx_tfm;
- };
- 
- 
-@@ -46,10 +46,10 @@ static void *prism2_wep_init(int keyidx)
- 		return NULL;
- 	priv->key_idx = keyidx;
- 
--	priv->tx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm))
- 		goto free_priv;
--	priv->rx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm))
- 		goto free_tx;
- 
-@@ -58,7 +58,7 @@ static void *prism2_wep_init(int keyidx)
- 
- 	return priv;
- free_tx:
--	crypto_free_skcipher(priv->tx_tfm);
-+	crypto_free_sync_skcipher(priv->tx_tfm);
- free_priv:
- 	kfree(priv);
- 	return NULL;
-@@ -70,8 +70,8 @@ static void prism2_wep_deinit(void *priv)
- 	struct prism2_wep_data *_priv = priv;
- 
- 	if (_priv) {
--		crypto_free_skcipher(_priv->tx_tfm);
--		crypto_free_skcipher(_priv->rx_tfm);
-+		crypto_free_sync_skcipher(_priv->tx_tfm);
-+		crypto_free_sync_skcipher(_priv->rx_tfm);
- 	}
- 	kfree(priv);
- }
-@@ -128,7 +128,7 @@ static int prism2_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	memcpy(key + 3, wep->key, wep->key_len);
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
- 
- 		/* Append little-endian CRC32 and encrypt it to produce ICV */
- 		crc = ~crc32_le(~0, pos, len);
-@@ -138,10 +138,10 @@ static int prism2_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		icv[2] = crc >> 16;
- 		icv[3] = crc >> 24;
- 
--		crypto_skcipher_setkey(wep->tx_tfm, key, klen);
-+		crypto_sync_skcipher_setkey(wep->tx_tfm, key, klen);
- 		sg_init_one(&sg, pos, len+4);
- 
--		skcipher_request_set_tfm(req, wep->tx_tfm);
-+		skcipher_request_set_sync_tfm(req, wep->tx_tfm);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 
-@@ -193,12 +193,12 @@ static int prism2_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	plen = skb->len - hdr_len - 8;
- 
- 	if (!tcb_desc->bHwSec) {
--		SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
-+		SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
- 
--		crypto_skcipher_setkey(wep->rx_tfm, key, klen);
-+		crypto_sync_skcipher_setkey(wep->rx_tfm, key, klen);
- 		sg_init_one(&sg, pos, plen+4);
- 
--		skcipher_request_set_tfm(req, wep->rx_tfm);
-+		skcipher_request_set_sync_tfm(req, wep->rx_tfm);
- 		skcipher_request_set_callback(req, 0, NULL, NULL);
- 		skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 
-diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
-index e6bce1f130c9..346e19cbdf59 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -64,9 +64,9 @@ struct lib80211_tkip_data {
- 
- 	int key_idx;
- 
--	struct crypto_skcipher *rx_tfm_arc4;
-+	struct crypto_sync_skcipher *rx_tfm_arc4;
- 	struct crypto_shash *rx_tfm_michael;
--	struct crypto_skcipher *tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tx_tfm_arc4;
- 	struct crypto_shash *tx_tfm_michael;
- 
- 	/* scratch buffers for virt_to_page() (crypto API) */
-@@ -99,8 +99,7 @@ static void *lib80211_tkip_init(int key_idx)
- 
- 	priv->key_idx = key_idx;
- 
--	priv->tx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm_arc4)) {
- 		priv->tx_tfm_arc4 = NULL;
- 		goto fail;
-@@ -112,8 +111,7 @@ static void *lib80211_tkip_init(int key_idx)
- 		goto fail;
- 	}
- 
--	priv->rx_tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0,
--						  CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm_arc4 = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm_arc4)) {
- 		priv->rx_tfm_arc4 = NULL;
- 		goto fail;
-@@ -130,9 +128,9 @@ static void *lib80211_tkip_init(int key_idx)
-       fail:
- 	if (priv) {
- 		crypto_free_shash(priv->tx_tfm_michael);
--		crypto_free_skcipher(priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->tx_tfm_arc4);
- 		crypto_free_shash(priv->rx_tfm_michael);
--		crypto_free_skcipher(priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(priv->rx_tfm_arc4);
- 		kfree(priv);
- 	}
- 
-@@ -144,9 +142,9 @@ static void lib80211_tkip_deinit(void *priv)
- 	struct lib80211_tkip_data *_priv = priv;
- 	if (_priv) {
- 		crypto_free_shash(_priv->tx_tfm_michael);
--		crypto_free_skcipher(_priv->tx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->tx_tfm_arc4);
- 		crypto_free_shash(_priv->rx_tfm_michael);
--		crypto_free_skcipher(_priv->rx_tfm_arc4);
-+		crypto_free_sync_skcipher(_priv->rx_tfm_arc4);
- 	}
- 	kfree(priv);
- }
-@@ -344,7 +342,7 @@ static int lib80211_tkip_hdr(struct sk_buff *skb, int hdr_len,
- static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
--	SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
-+	SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->tx_tfm_arc4);
- 	int len;
- 	u8 rc4key[16], *pos, *icv;
- 	u32 crc;
-@@ -374,9 +372,9 @@ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	icv[2] = crc >> 16;
- 	icv[3] = crc >> 24;
- 
--	crypto_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
-+	crypto_sync_skcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
- 	sg_init_one(&sg, pos, len + 4);
--	skcipher_request_set_tfm(req, tkey->tx_tfm_arc4);
-+	skcipher_request_set_sync_tfm(req, tkey->tx_tfm_arc4);
- 	skcipher_request_set_callback(req, 0, NULL, NULL);
- 	skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 	err = crypto_skcipher_encrypt(req);
-@@ -400,7 +398,7 @@ static inline int tkip_replay_check(u32 iv32_n, u16 iv16_n,
- static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
--	SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
-+	SYNC_SKCIPHER_REQUEST_ON_STACK(req, tkey->rx_tfm_arc4);
- 	u8 rc4key[16];
- 	u8 keyidx, *pos;
- 	u32 iv32;
-@@ -463,9 +461,9 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 
- 	plen = skb->len - hdr_len - 12;
- 
--	crypto_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
-+	crypto_sync_skcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
- 	sg_init_one(&sg, pos, plen + 4);
--	skcipher_request_set_tfm(req, tkey->rx_tfm_arc4);
-+	skcipher_request_set_sync_tfm(req, tkey->rx_tfm_arc4);
- 	skcipher_request_set_callback(req, 0, NULL, NULL);
- 	skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 	err = crypto_skcipher_decrypt(req);
-@@ -660,9 +658,9 @@ static int lib80211_tkip_set_key(void *key, int len, u8 * seq, void *priv)
- 	struct lib80211_tkip_data *tkey = priv;
- 	int keyidx;
- 	struct crypto_shash *tfm = tkey->tx_tfm_michael;
--	struct crypto_skcipher *tfm2 = tkey->tx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm2 = tkey->tx_tfm_arc4;
- 	struct crypto_shash *tfm3 = tkey->rx_tfm_michael;
--	struct crypto_skcipher *tfm4 = tkey->rx_tfm_arc4;
-+	struct crypto_sync_skcipher *tfm4 = tkey->rx_tfm_arc4;
- 
- 	keyidx = tkey->key_idx;
- 	memset(tkey, 0, sizeof(*tkey));
-diff --git a/net/wireless/lib80211_crypt_wep.c b/net/wireless/lib80211_crypt_wep.c
-index d05f58b0fd04..bdadee497f57 100644
---- a/net/wireless/lib80211_crypt_wep.c
-+++ b/net/wireless/lib80211_crypt_wep.c
-@@ -35,8 +35,8 @@ struct lib80211_wep_data {
- 	u8 key[WEP_KEY_LEN + 1];
- 	u8 key_len;
- 	u8 key_idx;
--	struct crypto_skcipher *tx_tfm;
--	struct crypto_skcipher *rx_tfm;
-+	struct crypto_sync_skcipher *tx_tfm;
-+	struct crypto_sync_skcipher *rx_tfm;
- };
- 
- static void *lib80211_wep_init(int keyidx)
-@@ -48,13 +48,13 @@ static void *lib80211_wep_init(int keyidx)
- 		goto fail;
- 	priv->key_idx = keyidx;
- 
--	priv->tx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->tx_tfm)) {
- 		priv->tx_tfm = NULL;
- 		goto fail;
- 	}
- 
--	priv->rx_tfm = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm = crypto_alloc_sync_skcipher("ecb(arc4)", 0, 0);
- 	if (IS_ERR(priv->rx_tfm)) {
- 		priv->rx_tfm = NULL;
- 		goto fail;
-@@ -66,8 +66,8 @@ static void *lib80211_wep_init(int keyidx)
- 
-       fail:
- 	if (priv) {
--		crypto_free_skcipher(priv->tx_tfm);
--		crypto_free_skcipher(priv->rx_tfm);
-+		crypto_free_sync_skcipher(priv->tx_tfm);
-+		crypto_free_sync_skcipher(priv->rx_tfm);
- 		kfree(priv);
- 	}
- 	return NULL;
-@@ -77,8 +77,8 @@ static void lib80211_wep_deinit(void *priv)
- {
- 	struct lib80211_wep_data *_priv = priv;
- 	if (_priv) {
--		crypto_free_skcipher(_priv->tx_tfm);
--		crypto_free_skcipher(_priv->rx_tfm);
-+		crypto_free_sync_skcipher(_priv->tx_tfm);
-+		crypto_free_sync_skcipher(_priv->rx_tfm);
- 	}
- 	kfree(priv);
- }
-@@ -129,7 +129,7 @@ static int lib80211_wep_build_iv(struct sk_buff *skb, int hdr_len,
- static int lib80211_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_wep_data *wep = priv;
--	SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
-+	SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->tx_tfm);
- 	u32 crc, klen, len;
- 	u8 *pos, *icv;
- 	struct scatterlist sg;
-@@ -162,9 +162,9 @@ static int lib80211_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	icv[2] = crc >> 16;
- 	icv[3] = crc >> 24;
- 
--	crypto_skcipher_setkey(wep->tx_tfm, key, klen);
-+	crypto_sync_skcipher_setkey(wep->tx_tfm, key, klen);
- 	sg_init_one(&sg, pos, len + 4);
--	skcipher_request_set_tfm(req, wep->tx_tfm);
-+	skcipher_request_set_sync_tfm(req, wep->tx_tfm);
- 	skcipher_request_set_callback(req, 0, NULL, NULL);
- 	skcipher_request_set_crypt(req, &sg, &sg, len + 4, NULL);
- 	err = crypto_skcipher_encrypt(req);
-@@ -182,7 +182,7 @@ static int lib80211_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- static int lib80211_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_wep_data *wep = priv;
--	SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
-+	SYNC_SKCIPHER_REQUEST_ON_STACK(req, wep->rx_tfm);
- 	u32 crc, klen, plen;
- 	u8 key[WEP_KEY_LEN + 3];
- 	u8 keyidx, *pos, icv[4];
-@@ -208,9 +208,9 @@ static int lib80211_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	/* Apply RC4 to data and compute CRC32 over decrypted data */
- 	plen = skb->len - hdr_len - 8;
- 
--	crypto_skcipher_setkey(wep->rx_tfm, key, klen);
-+	crypto_sync_skcipher_setkey(wep->rx_tfm, key, klen);
- 	sg_init_one(&sg, pos, plen + 4);
--	skcipher_request_set_tfm(req, wep->rx_tfm);
-+	skcipher_request_set_sync_tfm(req, wep->rx_tfm);
- 	skcipher_request_set_callback(req, 0, NULL, NULL);
- 	skcipher_request_set_crypt(req, &sg, &sg, plen + 4, NULL);
- 	err = crypto_skcipher_decrypt(req);
--- 
-2.17.1
+The following changes since commit 43e2f2904160b9a95aad77df9cbc1622910b8598:
+
+  Merge wireless-drivers into wireless-drivers-next (2018-09-17 17:41:02 +0300)
+
+are available in the Git repository at:
+
+  https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-09-19
+
+for you to fetch changes up to bf3741ada33bb4fabec99538b8014c054854912b:
+
+  mt76x0: usb: remove mt76_fw definition (2018-09-19 12:31:49 +0200)
+
+----------------------------------------------------------------
+mt76 patches for 4.20
+
+* lots of mt76x0 cleanups / fixes
+* mt76x2u fixes
+* unify code between mt76x0, mt76x2e and mt76x2u
+* rename mt76x0 to mt76x0u
+* improve rx buffer allocation for all variants
+* prepare for adding mt76x0e (pci-e variant) support
+  add CONFIG_MT76x0E kconfig symbol
+
+----------------------------------------------------------------
+Felix Fietkau (1):
+      mt76: use a per rx queue page fragment cache
+
+Lorenzo Bianconi (58):
+      mt76x2: change mt76x2_tx_complete routine signature
+      mt76: move mt76x2_tx_complete routine in mt76x02-lib module
+      mt76: move mt76x2u_remove_dma_hdr in mt76x02-lib module
+      mt76: move mt76x2u_tx_complete_skb in mt76x02-lib moudule
+      mt76: move mt76_qsel definition in dma.h
+      mt76: move mt76x2u_set_txinfo in mt76x02-lib module
+      mt76x0: introduce mt76x0_tx_prepare_skb routine
+      mt76: move mt76x2u_tx_status_data in mt76x02-lib module
+      mt76x0: disable usb rx bulk aggregation
+      mt76x0: mark device as running in mt76x0_start
+      mt76x0: simplify mt76_mac_process_rx signature
+      mt76x0: add mt76x0_queue_rx_skb routine
+      mt76x0: init mt76_driver_ops callbacks
+      mt76x0: use mt76_alloc_device for device allocation
+      mt76x0: unify tx/rx datapath with mt76x2u driver
+      mt76x0: stop stat workqueue at hw stop
+      mt76x0: set max fragments size
+      mt76x0: remove unused dma.c source file
+      mt76x0: remove unused stat work_queue
+      mt76x0: remove unused {tx/rx}_queue definitions
+      mt76x0: remove unused mt76x0_tx_status routine
+      mt76x0: remove unused endpoint definitions
+      mt76x0: remove unused stat_work
+      mt76x0: enable per-sta tx queueing
+      mt76x0: init hw capabilities
+      mt76: remove unused MT76_MORE_STATS state
+      mt76x0: remove mt76x0_stop_hardware routine
+      mt76: move mt76 rate definitions in mt76x02-lib module
+      mt76x0: alloc mcu buffers first in mt76x0_mcu_cmd_init
+      mt76x0: fix memory leak during hw probe
+      mt76x0: move stop related routines in mt76x0_mac_stop
+      mt76x0: move mt76x0_init_hardware in mt76x0_register_device
+      mt76x0: do not free/alloc buffers during suspend/resume
+      mt76x0: remove has_{2,5}ghz fields of mt76x0_eeprom_params
+      mt76x0: use mt76_register_device for device registration
+      mt76x0: run vco calibration for each channel configuration
+      mt76: move mt76x0 and mt76x2 mcu shared defs in mt76x02_mcu.h
+      mt76: add mt76_mcu_ops data structure for mcu related pointers
+      mt76: usb: use common helpers for mcu_alloc_msg()/mcu_send_msg()
+      mt76: usb: move mt76x02 mcu code in mt76x02-usb module
+      mt76: usb: move mt76u_skb_dma_info in mt76x02_usb_core.c
+      mt76x02: move TXD/RXD/MCU definitions in mt76x02_dma.h
+      mt76x02: add static qualifier to mt76x02_remove_dma_hdr
+      mt76: usb: remove skb check in mt76x{0,2}u mcu routines
+      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_tx_queue_mcu
+      mt76x2: remove leftover mt76u_buf data structure in mt76x2_mcu
+      mt76: introduce mmio data structure in mt76_dev
+      mt76: move __iomem regs in mt76_mmio
+      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_mcu_msg_send
+      mt76x2: use common helpers for mcu_alloc_msg()/mcu_send_msg()
+      mt76: unify firmware header between mt76x0 and mt76x2
+      mt76: move mt76{0,2} mcu shared code in mt76x02_mcu.c
+      mt76x2: move mt76x2 mcu shared code in mt76x2_mcu_common.c
+      mt76: move shared mcu_calibrate routine in mt76x02-lib module
+      mt76x2: move mt76x2_phy_tssi_compensate in mt76x2-common module
+      mt76x0: remove mcu source file
+      mt76x0: remove unused usb header file
+      mt76x0: usb: remove mt76_fw definition
+
+Stanislaw Gruszka (30):
+      mt76: move wcid fields to common mt76_dev struct
+      mt76: unify sta_add / sta_remove
+      mt76: pratially unify add_interface
+      mt76: unify ampdu_action
+      mt76: unify set_key
+      mt76x0: remove empty sta_notify
+      mt76: unify AC to hw queue mapping
+      mt76: unify conf_tx
+      mt76x0: remove vif_mask
+      mt76: unify remove_interface
+      mt76: unify add_interface
+      mt76: unify sta_rate_tbl_update and related helpers
+      mt76: unify txwi and rxwi structures
+      mt76: unify load_tx_status
+      mt76: unify send_tx_status and related helpers
+      mt76: use mt76_rx_status in mt76x0
+      mt76: unify mac_process_rate
+      mt76x0: reserve enough space in mac80211
+      mt76: unify {insert/remove}_hdr_pad
+      mt76: partially unify filling txwi fields
+      mt76x0: trim rx skb to proper length
+      mt76x0: inital split between pci and usb
+      mt76x0: remove unused mt76x0_wcid
+      mt76x0: remove some usb specific code from mt76x0_register_device
+      mt76x0: make device allocation bus neutral
+      mt76: add usb implementation of {wr,rd}_rp
+      mt76: add rd_rp and wr_rp to bus_ops/mcu_ops
+      mt76x0: remove unused mt76x0_burst_read_regs
+      mt76x0: remove mt76x0_burst_write_regs()
+      mt76x0: usb: move firmware loading to usb.c
+
+ drivers/net/wireless/mediatek/mt76/Kconfig                         |  27 +++-
+ drivers/net/wireless/mediatek/mt76/Makefile                        |   9 +-
+ drivers/net/wireless/mediatek/mt76/dma.c                           |  16 +-
+ drivers/net/wireless/mediatek/mt76/dma.h                           |  41 +----
+ drivers/net/wireless/mediatek/mt76/mac80211.c                      |   3 +-
+ drivers/net/wireless/mediatek/mt76/mmio.c                          |  12 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h                          |  81 +++++++---
+ drivers/net/wireless/mediatek/mt76/mt76x0/Makefile                 |  13 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/dma.c                    | 524 ---------------------------------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c                 |  26 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.h                 |   3 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c                   | 378 ++++++++++++---------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c                    | 323 +++------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h                    | 132 +---------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c                   | 228 +++------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c                    | 395 -----------------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h                    |  60 +-------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h                 | 125 ++-------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c                    |  81 ++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c                    |  37 ++---
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h                  |  12 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c                     | 245 ++++++-----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c                    | 232 +++++++++++++++++++++++++---
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.h                    |  46 ------
+ drivers/net/wireless/mediatek/mt76/mt76x0/util.c                   |  42 -----
+ drivers/net/wireless/mediatek/mt76/mt76x02_dma.h                   |  60 ++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c                   | 347 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h                   | 122 ++++++++++++++-
+ drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c                   | 213 ++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h                   | 100 ++++++++++++
+ drivers/net/wireless/mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h} |  22 +--
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c              |  72 +++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c               | 359 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c                  | 401 ++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h                  |  29 ++++
+ drivers/net/wireless/mediatek/mt76/mt76x2.h                        |  42 +----
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c                 | 259 +------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c                    |  55 +------
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c                   |  12 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c            |  33 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c                    |  15 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h                    | 110 +-------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c             | 368 ++------------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c                   |  50 +-----
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c                    | 261 ++-----------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h                    |  68 +--------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu_common.c             | 124 +++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c                    |  65 ++------
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c             |  49 +++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c                     |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c              |  39 +----
+ drivers/net/wireless/mediatek/mt76/mt76x2_usb.c                    |   2 +
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h                       |  16 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c                  |  69 +--------
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c                  |  13 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c                  |  22 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c                   | 210 +++----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c                   |  67 ++------
+ drivers/net/wireless/mediatek/mt76/tx.c                            |  16 ++
+ drivers/net/wireless/mediatek/mt76/usb.c                           | 105 ++++++++-----
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c                       | 242 -----------------------------
+ 61 files changed, 2759 insertions(+), 4374 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h} (58%)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu_common.c
