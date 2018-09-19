@@ -1,65 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:43259 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725868AbeIEPhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 11:37:09 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
-In-Reply-To: <1536144985.3528.7.camel@sipsolutions.net>
-References: <20180905080036.9177-1-johannes@sipsolutions.net> <87in3k6zti.fsf@toke.dk> <1536141045.3528.4.camel@sipsolutions.net> <87d0ts6zeb.fsf@toke.dk> <1536144985.3528.7.camel@sipsolutions.net>
-Date: Wed, 05 Sep 2018 13:07:23 +0200
-Message-ID: <871sa86w44.fsf@toke.dk> (sfid-20180905_130728_083718_4EDA80B7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from packetmixer.de ([79.140.42.25]:49996 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731127AbeISQOj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 12:14:39 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 4/5] ath9k: FFT magnitude check: don't consider lower 3 data bits
+Date: Wed, 19 Sep 2018 12:37:10 +0200
+Message-Id: <20180919103711.19304-5-sw@simonwunderlich.de> (sfid-20180919_123724_220736_87E7DC96)
+In-Reply-To: <20180919103711.19304-1-sw@simonwunderlich.de>
+References: <20180919103711.19304-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+There were a lot of Magnitude Mismatch while getting FFT samples on my
+hardware (Atheros AR9462. I've compared the reported magnitude with
+the data in the FFT bin, and the FFT bin was less accurate:
 
-> On Wed, 2018-09-05 at 11:56 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->> > So basically this gets rid of a corner case that we shouldn't have.
->> > Either we should decide that using different TXQs is *always* correct
->> > for non-QoS, or - what I thought - that this isn't worth it, and then =
-we
->> > should *never* do it.
->>=20
->> Yeah, I agree that this is not worth it. The queue is already
->> FQ-CoDel'ed, which gives us most of the benefit of QoS anyway :)
->
-> So do I read that as a tentative ack? :)
+[ 5395.193030] ath: phy0: FFT HT20 frame: max mag 0x89,max_mag_idx 28,
+,magnitude 0x89 max_exp 0, data[28] = 0x88
+[ 5395.194525] ath: phy0: FFT HT20 frame: max mag 0x89,max_mag_idx 28,
+,magnitude 0x89 max_exp 0, data[28] = 0x88
+[ 5395.196012] ath: phy0: FFT HT20 frame: max mag 0x88,max_mag_idx 28,
+,magnitude 0x88 max_exp 0, data[28] = 0x88
+[ 5395.197509] ath: phy0: FFT HT20 frame: max mag 0x6C,max_mag_idx 28,
+,magnitude 0x6C max_exp 0, data[28] = 0x68
+[ 5395.199015] ath: phy0: FFT HT20 frame: max mag 0x78,max_mag_idx 28,
+,magnitude 0x78 max_exp 0, data[28] = 0x78
+[ 5395.200497] ath: phy0: FFT HT20 frame: max mag 0xA1,max_mag_idx 28,
+,magnitude 0xA1 max_exp 0, data[28] = 0xA0
+[ 5395.202011] ath: phy0: FFT HT20 frame: max mag 0x91,max_mag_idx 28,
+,magnitude 0x91 max_exp 0, data[28] = 0x90
+[ 5395.203482] ath: phy0: FFT HT20 frame: max mag 0x89,max_mag_idx 28,
+,magnitude 0x89 max_exp 0, data[28] = 0x88
+[ 5395.204999] ath: phy0: FFT HT20 frame: max mag 0x27,max_mag_idx 4,
+,magnitude 0x27 max_exp 0, data[4] = 0x20
+[ 5395.206461] ath: phy0: FFT HT20 frame: max mag 0x41,max_mag_idx 28,
+,magnitude 0x41 max_exp 0, data[28] = 0x40
+[ 5395.207977] ath: phy0: FFT HT20 frame: max mag 0x51,max_mag_idx 28,
+,magnitude 0x51 max_exp 0, data[28] = 0x50
+[ 5395.209454] ath: phy0: FFT HT20 frame: max mag 0x53,max_mag_idx 28,
+,magnitude 0x53 max_exp 0, data[28] = 0x50
+[ 5395.210940] ath: phy0: FFT HT20 frame: max mag 0x40,max_mag_idx 28,
+,magnitude 0x40 max_exp 0, data[28] = 0x40
+[ 5395.212441] ath: phy0: FFT HT20 frame: max mag 0x59,max_mag_idx 28,
+,magnitude 0x59 max_exp 0, data[28] = 0x58
+[ 5395.213932] ath: phy0: FFT HT20 frame: max mag 0x53,max_mag_idx 28,
+,magnitude 0x53 max_exp 0, data[28] = 0x50
+[ 5395.215428] ath: phy0: FFT HT20 frame: max mag 0x7D,max_mag_idx 28,
+,magnitude 0x7D max_exp 0, data[28] = 0x78
+[ 5395.216910] ath: phy0: FFT HT20 frame: max mag 0x8C,max_mag_idx 28,
+,magnitude 0x8C max_exp 0, data[28] = 0x88
+[ 5395.218413] ath: phy0: FFT HT20 frame: max mag 0x7B,max_mag_idx 28,
+,magnitude 0x7B max_exp 0, data[28] = 0x78
+[ 5395.219900] ath: phy0: FFT HT20 frame: max mag 0x43,max_mag_idx 28,
+,magnitude 0x43 max_exp 0, data[28] = 0x40
 
-Yeah, guess so :)
+It seems like the lower 3 bits on my hardware are always zeroed, but the
+magnitude matches otherwise. Therefore, let's not make the magnitude
+check so strict so we can get those samples released to userspace.
 
-> Felix wasn't really convinced, I think. He also pointed out some drivers
-> use skb->priority without checking anything, but I'm not sure we can
-> really squash all the cases of setting skb priority easily?
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-~/build/linux/drivers/net/wireless $ git grep 'skb->priority =3D '
-ath/ath9k/channel.c:		skb->priority =3D 7;
-broadcom/brcm80211/brcmfmac/core.c:		skb->priority =3D cfg80211_classify802=
-1d(skb, NULL);
-broadcom/brcm80211/brcmutil/utils.c:		skb->priority =3D 0;
-intel/ipw2x00/libipw_tx.c:		skb->priority =3D libipw_classify(skb);
-marvell/mwifiex/cfg80211.c:	skb->priority =3D LOW_PRIO_TID;
-marvell/mwifiex/main.c:	skb->priority =3D cfg80211_classify8021d(skb, NULL);
-marvell/mwifiex/tdls.c:		skb->priority =3D MWIFIEX_PRIO_BK;
-marvell/mwifiex/tdls.c:		skb->priority =3D MWIFIEX_PRIO_VI;
-marvell/mwifiex/tdls.c:	skb->priority =3D MWIFIEX_PRIO_VI;
-rsi/rsi_91x_core.c:		skb->priority =3D q_num;
-rsi/rsi_91x_core.c:			skb->priority =3D TID_TO_WME_AC(tid);
-rsi/rsi_91x_core.c:			skb->priority =3D BE_Q;
-rsi/rsi_91x_core.c:			skb->priority =3D q_num;
-rsi/rsi_91x_hal.c:			skb->priority =3D VO_Q;
-rsi/rsi_91x_mgmt.c:	skb->priority =3D MGMT_SOFT_Q;
-ti/wlcore/main.c:	skb->priority =3D WL1271_TID_MGMT;
-
-Doesn't seem *that* excessive? Obviously there could be other cases, and
-I haven't looked closer at any of those...
-
-Does it matter for the drivers that don't use TXQs?
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index d10e3f29c356..70ddaf6199a0 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -71,7 +71,7 @@ ath_cmn_max_idx_verify_ht20_fft(u8 *sample_end, int bytes_read)
+ 	if (bytes_read < SPECTRAL_HT20_SAMPLE_LEN && max_index < 1)
+ 		return -1;
+ 
+-	if (sample[max_index] != (max_magnitude >> max_exp))
++	if ((sample[max_index] & 0xf8) != ((max_magnitude >> max_exp) & 0xf8))
+ 		return -1;
+ 	else
+ 		return 0;
+@@ -114,8 +114,10 @@ ath_cmn_max_idx_verify_ht20_40_fft(u8 *sample_end, int bytes_read)
+ 	   ((upper_max_index < 1) || (lower_max_index < 1)))
+ 		return -1;
+ 
+-	if ((sample[upper_max_index + dc_pos] != (upper_mag >> max_exp)) ||
+-	   (sample[lower_max_index] != (lower_mag >> max_exp)))
++	if (((sample[upper_max_index + dc_pos] & 0xf8) !=
++	     ((upper_mag >> max_exp) & 0xf8)) ||
++	    ((sample[lower_max_index] & 0xf8) !=
++	     ((lower_mag >> max_exp) & 0xf8)))
+ 		return -1;
+ 	else
+ 		return 0;
+@@ -173,7 +175,8 @@ ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
+ 					magnitude >> max_exp,
+ 					max_index);
+ 
+-	if (fft_sample_20.data[max_index] != (magnitude >> max_exp)) {
++	if ((fft_sample_20.data[max_index] & 0xf8) !=
++	    ((magnitude >> max_exp) & 0xf8)) {
+ 		ath_dbg(common, SPECTRAL_SCAN, "Magnitude mismatch !\n");
+ 		ret = -1;
+ 	}
+@@ -317,10 +320,10 @@ ath_cmn_process_ht20_40_fft(struct ath_rx_status *rs,
+ 	/* Check if we got the expected magnitude values at
+ 	 * the expected bins
+ 	 */
+-	if ((fft_sample_40.data[upper_max_index + dc_pos]
+-	    != (upper_mag >> max_exp)) ||
+-	   (fft_sample_40.data[lower_max_index]
+-	    != (lower_mag >> max_exp))) {
++	if (((fft_sample_40.data[upper_max_index + dc_pos] & 0xf8)
++	    != ((upper_mag >> max_exp) & 0xf8)) ||
++	   ((fft_sample_40.data[lower_max_index] & 0xf8)
++	    != ((lower_mag >> max_exp) & 0xf8))) {
+ 		ath_dbg(common, SPECTRAL_SCAN, "Magnitude mismatch !\n");
+ 		ret = -1;
+ 	}
+-- 
+2.11.0
