@@ -1,76 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sesbmg22.ericsson.net ([193.180.251.48]:54319 "EHLO
-        sesbmg22.ericsson.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725866AbeICSlY (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2297 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726827AbeISLlx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 14:41:24 -0400
-From: Jakov Simunic <jakov.simunic@ericsson.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        Steve deRosier <derosier@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Build iw for 32bit ARM
-Date: Mon, 3 Sep 2018 14:20:55 +0000
-Message-ID: <HE1PR0702MB3804CF0523876027EFB383FE980C0@HE1PR0702MB3804.eurprd07.prod.outlook.com> (sfid-20180903_162105_083271_5B0519AD)
-References: <HE1PR0702MB38043B23810E618B01413959980F0@HE1PR0702MB3804.eurprd07.prod.outlook.com>
- <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com>
-In-Reply-To: <CALLGbRL+XDPk68LwBDoyVdibpNy314M81umexpUkHYn5TwA4RA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 19 Sep 2018 07:41:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/29] staging: wilc1000: change return type to 'void' for wilc_frame_register()
+Date: Wed, 19 Sep 2018 11:34:51 +0530
+Message-ID: <1537337119-14952-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080535_517380_FA868266)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgU3RldmUsDQpXZSBhcmUgYnVpbGRpbmcgd2l0aCBwdHhkaXN0LCB3ZSBoYXZlIGEgY29tcGls
-ZXIgZm9yIGFybSAoYXJtLWxpbnV4LWdudWVhYmloZi1nY2MpLCBJIGFtIG5vdCBhIHRvdGFsIG5v
-dmljZSBpbiB0aGlzLCBhbmQgaGF2ZSBhbHJlYWR5IHdyaXR0ZW4gc29tZSBwdHhkaXN0IHJ1bGVz
-LCBidXQgaGF2ZW4ndCBkb25lIGl0IHdpdGggbm9uLWF1dG9jb25maXp6ZWQgcGFja2FnZXMsIGJh
-c2ljYWxseSB0aGUgcHJvYmxlbSBpcyB0aGF0IGlmIEkgdXNlIHRoZSBkZWZhdWx0IGl3Lm1ha2Ug
-ZnJvbSB0aGUgcHR4ZGlzdCBtYXN0ZXIgYnJhbmNoLCBpdydzIE1ha2VmaWxlIHRyaWVzIHRvIGNv
-bXBpbGUgd2l0aCB0aGUgbmF0aXZlIGNvbXBpbGVyIGFuZCBuYXRpdmUgbGlibmwsIG5vIG1hdHRl
-ciB3aGF0IG9wdGlvbiBpIHN1cHBseSBpdCB3aXRoLCBJIGFsd2F5cyBnZXQgYSB4ODYtMzIgZXhl
-Y3V0YWJsZS4gV2hlbiBJIG1vZGlmeSB0aGUgaXcubWFrZSBydWxlIHdpdGggdGhlIGNvcnJlY3Qg
-Q0MgKGJ5IG1ha2luZyBhIGN1c3RvbSBjb21waWxlIHN0ZXApLCBpdCB0aGVuIGZhaWxzIHRvIGZp
-bmQgdGhlIGNvcnJlY3QgbGlibmwgdGhyb3VnaCBwa2ctY29uZmlnLiBUaGUgaXcgcGFja2FnZSBp
-cyBub3QgbW9kaWZpZWQgYXQgYWxsLiBDb3VsZCB5b3Ugc3VnZ2VzdCBob3cgdG8gaGFyZCBjb2Rl
-IHRoZSBDQyAob3IgdGhhdCBpdCBnZXRzIGl0IG5vcm1hbGx5IGZyb20gYSBDQyB2YXJpYWJsZSBz
-dXBwbGllZCB0byB0aGUgTWFrZWZpbGUpIG9yIGhvdyB0byBhdm9pZCBwa2ctY29uZmlnIGFuZCBz
-dXBwbHkgdGhlIG9wdGlvbnMgbmVlZGVkIG1hbnVhbGx5LiBJIGtub3cgdGhpcyBpcyBhIHN0ZXAg
-YmFjayBmcm9tIG11bHRpLXBsYXRmb3JtIGJ1aWxkIHByYWN0aWNlcywgYnV0IEkganVzdCBuZWVk
-IGl0IHRoYXQgd2F5Lg0KDQotLQ0KTGlqZXAgcG96ZHJhdiAvIEJlc3QgcmVnYXJkcw0KSmFrb3Yg
-xaBpbXVuacSHDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBTdGV2ZSBkZVJv
-c2llciA8ZGVyb3NpZXJAZ21haWwuY29tPiANClNlbnQ6IEZyaWRheSwgQXVndXN0IDMxLCAyMDE4
-IDU6MzEgUE0NClRvOiBKYWtvdiBTaW11bmljIDxqYWtvdi5zaW11bmljQGVyaWNzc29uLmNvbT4N
-CkNjOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PjsgbGludXgtd2ly
-ZWxlc3MgPGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZz4NClN1YmplY3Q6IFJlOiBCdWls
-ZCBpdyBmb3IgMzJiaXQgQVJNDQoNCkhpIEpha292LA0KDQpPbiBGcmksIEF1ZyAzMSwgMjAxOCBh
-dCA1OjU5IEFNIEpha292IFNpbXVuaWMgPGpha292LnNpbXVuaWNAZXJpY3Nzb24uY29tPiB3cm90
-ZToNCj4NCj4gSGVsbG8sDQo+IEkgYW0gd29ya2luZyBvbiBhbiBlbWJlZGRlZCBwcm9qZWN0IHdo
-aWNoIHVzZXMgYW4gYXJtdjdsIGFyY2hpdGVjdHVyZSwgd2hpY2ggaXMgYSAzMmJpdCBwbGF0Zm9y
-bSwgYW5kIEkgYW0gdHJ5aW5nIHRvIGNvbXBpbGUgaXctNC45IGZvciBpdCwgYW5kIEkgZG9uJ3Qg
-a25vdyBob3cgdG8gY29tcGlsZSBpdCBmb3IgMzJiaXQgYXJjaGVzLg0KDQpVbmxlc3MgeW91J3Jl
-IGJ1aWxkaW5nIHlvdXIgTGludXggc3lzdGVtIDEwMCUgZnJvbSBzY3JhdGNoLCB5b3Ugc2hvdWxk
-IGxldmVyYWdlIHRoZSBidWlsZCBzeXN0ZW0gZm9yIHlvdXIgcGxhdGZvcm0uIEl0IHdpbGwgYXV0
-b21hdGljYWxseSBkbyB0aGUgcmlnaHQgdGhpbmcuIFlvdSdyZSBsaWtlbHkgdXNpbmcgQnVpbGRy
-b290LCBPcGVuV1JULCBPcGVuRW1iZWRkZWQsIFlvY3RvIG9yIHNvbWUgb3RoZXIgcGxhdGZvcm0g
-dGhhdCBoYXMgY29tcGlsZXJzLCBidWlsZCBzeXN0ZW1zLCBwYWNrYWdlcyBhbmQgc28gb24uIEZp
-cnN0IG9mZiwgbW9zdCBsaWtlbHkgaXcgaXMgYWxyZWFkeSBpbmNsdWRlZC4gQW5kIGV2ZW4gaWYg
-eW91IHdhbnQgdG8gYnVpbGQgZnJvbSB5b3VyIG93biBtb2RpZmllZCB2ZXJzaW9uLCB0aGVyZXMg
-d2F5cyB0byBidWlsZCB1c2luZyB0aGUgc3lzdGVtcyBhYm92ZSB0byBqdXN0IGJ1aWxkIGl0IGlu
-LXRyZWUuIEFuZCBmaW5hbGx5LCBldmVuIGlmIG5vdCwgeW91IHNob3VsZCB1c2UgdGhlIHRhcmdl
-dCBsaWJyYXJpZXMgYW5kIHRoZSBjcm9zcy1jb21waWxlcnMgdGhhdCBhcmUgdXNlZCBieSB5b3Vy
-IHBsYXRmb3JtLg0KDQpTdGVwIG9uZSwgaWYgeW91IGhhdmVuJ3QgYWxyZWFkeSwgaXMgdG8gZ2V0
-IHRoZSBidWlsZCBzeXN0ZW0gZm9yIHlvdXIgcGxhdGZvcm0gYW5kIGNvbmZpZ3VyZSBhbmQgYnVp
-bGQgaXQuIFRoZW4gdHJ5IGJ1aWxkaW5nIHlvdXIgbW9kaWZpZWQgdmVyc2lvbiBvZiBpdyBpZiB0
-aGUgc3RvY2sgb25lIGlzbid0IGhlbHBmdWwgZm9yIHlvdS4gSSdkIGludGVncmF0ZSBpdCBpbnRv
-IHRoZSBwbGF0Zm9ybSBidWlsZCBzeXN0ZW0sIGJ1dCB5b3UgY291bGQgYnVpbGQgb3V0LW9mLXRy
-ZWUgYnkgc2V0dGluZyB1cCB0aGUgcmlnaHQgZmxhZ3MgYW5kIENST1NTX0NPTVBJTEVSIHRvIHBv
-aW50IHRvIHRoZSB0b29sY2hhaW4gdXNlZCBmb3IgeW91ciBwbGF0Zm9ybS4gSWYgSSB3ZXJlIGRv
-aW5nIHRoYXQsIEknZCBidWlsZCB0aGUgcGxhdGZvcm0gaW4gdmVyYm9zZSBvdXRwdXQgbW9kZSBh
-bmQgZXhhbWluZSB0aGUgY29tcGlsZXIgY29tbWFuZGxpbmVzIGZvciBoaW50cy4NCg0KPiBUcmll
-ZCBhZGRpbmcgLW0zMiB0byB0aGUgQ0ZMQUdTLCBldmVyeXRoaW5nIHBhc3NlcyB0aGUgYnVpbGQg
-ZXhjZXB0IHRoZSBpdyBiaW5hcnksIHdoaWNoIHNheXM6DQo+DQo+IGl3Lm86IGNvdWxkIG5vdCBy
-ZWFkIHN5bWJvbHM6IEZpbGUgaW4gd3JvbmcgZm9ybWF0DQo+IGNvbGxlY3QyOiBsZCByZXR1cm5l
-ZCAxIGV4aXQgc3RhdHVzDQo+IG1ha2U6ICoqKiBbaXddIEVycm9yIDENCj4NCg0KTW9zdCBsaWtl
-bHkgeW91ciBhcmNoaXRlY3R1cmUgZmxhZ3MgdG8gdGhlIGxpbmtlciBkb24ndCBtYXRjaCB3aGF0
-IHlvdSBnYXZlIGluIHRoZSBjb21waWxlciBzdGFnZS4gWW91IGNvdWxkIGFsd2F5cyBhbHNvIGNv
-bmZpcm0gdGhlIGZvcm1hdCBvZiBpdy5vIHdpdGggdGhlIGBmaWxlYCBjb21tYW5kLg0KDQotIFN0
-ZXZlDQo=
+Cleanup patch to use 'void' return type for wilc_frame_register(), as
+its return value is not used.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5388be9..7729f83 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3641,14 +3641,14 @@ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id)
+ 	return result;
+ }
+ 
+-int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
++void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ {
+ 	int result;
+ 	struct host_if_msg *msg;
+ 
+ 	msg = wilc_alloc_work(vif, handle_register_frame, false);
+ 	if (IS_ERR(msg))
+-		return PTR_ERR(msg);
++		return;
+ 
+ 	switch (frame_type) {
+ 	case ACTION:
+@@ -3670,8 +3670,6 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ 		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
+ 		kfree(msg);
+ 	}
+-
+-	return result;
+ }
+ 
+ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a48818f..15ffaeb 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -348,7 +348,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   wilc_remain_on_chan_ready ready,
+ 			   void *user_arg);
+ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
+-int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
++void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+ 			     u8 ifc_id);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+-- 
+2.7.4
