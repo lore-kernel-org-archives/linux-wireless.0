@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:43696 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727682AbeIFOWh (ORCPT
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:40003 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731362AbeISV7A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 10:22:37 -0400
-Message-ID: <1536227267.4015.2.camel@sipsolutions.net> (sfid-20180906_114841_098027_66B50F07)
-Subject: Re: [PATCH] mac80211: fix TX status reporting for ieee80211s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yuan-Chi Pang <fu3mo6goo@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 06 Sep 2018 11:47:47 +0200
-In-Reply-To: <1536227104.68915.5.camel@gmail.com> (sfid-20180906_114516_051319_173379BB)
-References: <1535963610.3437.10.camel@sipsolutions.net>
-         <1536224269-69350-1-git-send-email-fu3mo6goo@gmail.com>
-         <1536227104.68915.5.camel@gmail.com> (sfid-20180906_114516_051319_173379BB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 19 Sep 2018 17:59:00 -0400
+Subject: Re: [PATCH 3/7] netlink: set extack error message in nla_validate()
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+References: <20180919120900.28708-1-johannes@sipsolutions.net>
+ <20180919120900.28708-4-johannes@sipsolutions.net>
+From: David Ahern <dsahern@gmail.com>
+Message-ID: <3e7aadff-5228-660a-537a-9b54c11fa5cc@gmail.com> (sfid-20180919_182028_241875_01ED3F17)
+Date: Wed, 19 Sep 2018 09:20:19 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180919120900.28708-4-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-09-06 at 17:45 +0800, Yuan-Chi Pang wrote:
+On 9/19/18 5:08 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> I received the comment of my previous submission that I should fix
-> indentation. But if I use the same indentation as before, I got "line
-> over 80 characters" warning by checkpatch. What should I do?
+> In nla_parse() we already set this, but it makes sense to
+> also do it in nla_validate() which already also sets the
+> bad attribute pointer.
 > 
-> > diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> > index daf9db3..4286673 100644
-> > --- a/net/mac80211/mesh_hwmp.c
-> > +++ b/net/mac80211/mesh_hwmp.c
-> > @@ -295,15 +295,11 @@ int mesh_path_error_tx(struct
-> > ieee80211_sub_if_data *sdata,
-> >  }
-> >  
-> >  void ieee80211s_update_metric(struct ieee80211_local *local,
-> > -		struct sta_info *sta, struct sk_buff *skb)
-> > +		struct sta_info *sta, struct ieee80211_tx_status
-> > *st)
+> CC: David Ahern <dsahern@gmail.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  lib/nlattr.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/lib/nlattr.c b/lib/nlattr.c
+> index e2e5b38394d5..33404745bec4 100644
+> --- a/lib/nlattr.c
+> +++ b/lib/nlattr.c
+> @@ -180,9 +180,13 @@ int nla_validate(const struct nlattr *head, int len, int maxtype,
+>  	int rem;
+>  
+>  	nla_for_each_attr(nla, head, len, rem) {
+> -		int err = validate_nla(nla, maxtype, policy, NULL);
+> +		static const char _msg[] = "Attribute failed policy validation";
+> +		const char *msg = _msg;
+> +		int err = validate_nla(nla, maxtype, policy, &msg);
+>  
+>  		if (err < 0) {
+> +			if (extack)
+> +				extack->_msg = msg;
+>  			NL_SET_BAD_ATTR(extack, nla);
 
-Here? Seems easy - add a linebreak between sta and status?
+msg, NL_SET_BAD_ATTR and extack handling all can be done in validate_nla
+removing the need for the same message ("Attribute failed policy
+validation") to be declared twice and simplifying the extack setting.
 
-johannes
+>  			return err;
+>  		}
+> 
