@@ -1,73 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2315 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730915AbeISLmC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:60354 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727676AbeITCPX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:02 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 03/29] staging: wilc1000: change return type to 'void' for lock init & deinit functions
-Date: Wed, 19 Sep 2018 11:34:53 +0530
-Message-ID: <1537337119-14952-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080544_709439_E1B627AE)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 19 Sep 2018 22:15:23 -0400
+Message-ID: <1537389335.10305.92.camel@sipsolutions.net> (sfid-20180919_223550_345465_9AF09A96)
+Subject: Re: Problem with sending pkt on a monitor port
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 19 Sep 2018 22:35:35 +0200
+In-Reply-To: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com> (sfid-20180919_223316_460674_F032A088)
+References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
+         (sfid-20180919_223316_460674_F032A088)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use 'void' return type for wlan_deinit_locks() &
-wlan_init_locks(), as same value is return.
+On Wed, 2018-09-19 at 13:33 -0700, Ben Greear wrote:
+> This is with a modified 4.16.18+ kernel, though the code in question
+> is from 2011, so this is not new...
+> 
+> I am attempting to use radiotap packet injection on a monitor port.
+> 
+> In the ieee80211_monitor_start_xmit method, before this code below
+> runs, sdata is 'moni6a', my monitor port.  But, since I have a
+> station wlan1 with the same MAC address, then when this code is
+> completed, stdata becomes wlan1.
+> 
+> Ath10k has all sorts of issues transmitting raw frames, and sending on
+> the wrong vdev only makes it even more broken!
+> 
+> If user-space binds a socket to a monitor vdev and transmits a frame,
+> why would we want to change the vdev here?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+For one, the driver has no concept of the original vif, since monitor
+vifs aren't added to it.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index d1d2c64..e2669b9 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -525,7 +525,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
- 	return -1;
- }
- 
--static int wlan_deinit_locks(struct net_device *dev)
-+static void wlan_deinit_locks(struct net_device *dev)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wilc = vif->wilc;
-@@ -533,8 +533,6 @@ static int wlan_deinit_locks(struct net_device *dev)
- 	mutex_destroy(&wilc->hif_cs);
- 	mutex_destroy(&wilc->rxq_cs);
- 	mutex_destroy(&wilc->txq_add_to_head_cs);
--
--	return 0;
- }
- 
- static void wlan_deinitialize_threads(struct net_device *dev)
-@@ -588,7 +586,7 @@ static void wilc_wlan_deinitialize(struct net_device *dev)
- 	}
- }
- 
--static int wlan_init_locks(struct net_device *dev)
-+static void wlan_init_locks(struct net_device *dev)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wl = vif->wilc;
-@@ -604,8 +602,6 @@ static int wlan_init_locks(struct net_device *dev)
- 	init_completion(&wl->cfg_event);
- 	init_completion(&wl->sync_event);
- 	init_completion(&wl->txq_thread_started);
--
--	return 0;
- }
- 
- static int wlan_initialize_threads(struct net_device *dev)
--- 
-2.7.4
+Secondly, the old hostapd code before nl80211 injects frames that way,
+and they need to go there.
+
+johannes
