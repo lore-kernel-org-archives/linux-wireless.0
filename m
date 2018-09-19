@@ -1,163 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:34197 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387441AbeITOzK (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:35866 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727804AbeITAI7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 10:55:10 -0400
-Received: by mail-wm1-f65.google.com with SMTP id j25-v6so978445wmc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 02:12:40 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 15/20] mt76: move mt76x02_eeprom_parse_hw_cap in mt76x02-lib module
-Date: Thu, 20 Sep 2018 11:12:02 +0200
-Message-Id: <47b4bab5725f91f5c689fb079912a5435971eb62.1537433365.git.lorenzo.bianconi@redhat.com> (sfid-20180920_112417_831364_6215B132)
-In-Reply-To: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
-References: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
+        Wed, 19 Sep 2018 20:08:59 -0400
+Date: Wed, 19 Sep 2018 21:23:34 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: SAE authentication frames in client mode
+Message-ID: <20180919182334.GA15542@w1.fi> (sfid-20180919_202953_192490_58203D02)
+References: <CAFXAJYzsmhAzSFXjmB0biTBFnU7OSWF6tdqspSqgabvx4x1stg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFXAJYzsmhAzSFXjmB0biTBFnU7OSWF6tdqspSqgabvx4x1stg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76x02_eeprom_parse_hw_cap utility routine in mt76x02-lib
-module in order to be reused in mt76x0 driver
+On Wed, Sep 19, 2018 at 02:36:20PM +0200, Mathy Vanhoef wrote:
+> It seems that in client mode, the Linux kernel only accepts an
+> authentication frame after sending one itself. Is this interpretation
+> correct?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- .../wireless/mediatek/mt76/mt76x02_eeprom.c   | 19 +++++++++++++++++
- .../wireless/mediatek/mt76/mt76x02_eeprom.h   |  6 ++++++
- .../wireless/mediatek/mt76/mt76x2_eeprom.c    | 21 +------------------
- .../wireless/mediatek/mt76/mt76x2_eeprom.h    |  6 ------
- .../net/wireless/mediatek/mt76/mt76x2u_init.c |  2 +-
- 5 files changed, 27 insertions(+), 27 deletions(-)
+For infrastructure station case, yes.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-index 2377c758da5d..d3efeb8a72b7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
-@@ -71,6 +71,25 @@ int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
- }
- EXPORT_SYMBOL_GPL(mt76x02_get_efuse_data);
- 
-+void mt76x02_eeprom_parse_hw_cap(struct mt76_dev *dev)
-+{
-+	u16 val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
-+
-+	switch (FIELD_GET(MT_EE_NIC_CONF_0_BOARD_TYPE, val)) {
-+	case BOARD_TYPE_5GHZ:
-+		dev->cap.has_5ghz = true;
-+		break;
-+	case BOARD_TYPE_2GHZ:
-+		dev->cap.has_2ghz = true;
-+		break;
-+	default:
-+		dev->cap.has_2ghz = true;
-+		dev->cap.has_5ghz = true;
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_eeprom_parse_hw_cap);
-+
- bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band)
- {
- 	u16 conf0 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-index 995aebbcc194..119813960fe7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-@@ -132,6 +132,11 @@ enum mt76x02_eeprom_modes {
- 	MT_EE_PHYSICAL_READ,
- };
- 
-+enum mt76x02_board_type {
-+	BOARD_TYPE_2GHZ = 1,
-+	BOARD_TYPE_5GHZ = 2,
-+};
-+
- static inline bool mt76x02_field_valid(u8 val)
- {
- 	return val != 0 && val != 0xff;
-@@ -165,5 +170,6 @@ void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
- u8 mt76x02_get_lna_gain(struct mt76_dev *dev,
- 			s8 *lna_2g, s8 *lna_5g,
- 			struct ieee80211_channel *chan);
-+void mt76x02_eeprom_parse_hw_cap(struct mt76_dev *dev);
- 
- #endif /* __MT76x02_EEPROM_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index b9641e2408ee..d295851cf2f9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -40,25 +40,6 @@ mt76x2_eeprom_get_macaddr(struct mt76x2_dev *dev)
- 	return 0;
- }
- 
--void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
--{
--	u16 val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_0);
--
--	switch (FIELD_GET(MT_EE_NIC_CONF_0_BOARD_TYPE, val)) {
--	case BOARD_TYPE_5GHZ:
--		dev->mt76.cap.has_5ghz = true;
--		break;
--	case BOARD_TYPE_2GHZ:
--		dev->mt76.cap.has_2ghz = true;
--		break;
--	default:
--		dev->mt76.cap.has_2ghz = true;
--		dev->mt76.cap.has_5ghz = true;
--		break;
--	}
--}
--EXPORT_SYMBOL_GPL(mt76x2_eeprom_parse_hw_cap);
--
- static bool
- mt76x2_has_cal_free_data(struct mt76x2_dev *dev, u8 *efuse)
- {
-@@ -563,7 +544,7 @@ int mt76x2_eeprom_init(struct mt76x2_dev *dev)
- 	if (ret)
- 		return ret;
- 
--	mt76x2_eeprom_parse_hw_cap(dev);
-+	mt76x02_eeprom_parse_hw_cap(&dev->mt76);
- 	mt76x2_eeprom_get_macaddr(dev);
- 	mt76_eeprom_override(&dev->mt76);
- 	dev->mt76.macaddr[0] &= ~BIT(1);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-index da476aad65fb..ad98a52ec69f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-@@ -19,11 +19,6 @@
- 
- #include "mt76x02_eeprom.h"
- 
--enum mt76x2_board_type {
--	BOARD_TYPE_2GHZ = 1,
--	BOARD_TYPE_5GHZ = 2,
--};
--
- enum mt76x2_cal_channel_group {
- 	MT_CH_5G_JAPAN,
- 	MT_CH_5G_UNII_1,
-@@ -64,7 +59,6 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- 			   struct ieee80211_channel *chan);
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t);
- void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
--void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev);
- 
- static inline bool
- mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-index 89cfacfb276c..7a9ebc8985f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-@@ -129,7 +129,7 @@ static int mt76x2u_init_eeprom(struct mt76x2_dev *dev)
- 		put_unaligned_le32(val, dev->mt76.eeprom.data + i);
- 	}
- 
--	mt76x2_eeprom_parse_hw_cap(dev);
-+	mt76x02_eeprom_parse_hw_cap(&dev->mt76);
- 	return 0;
- }
- 
+> If that is the case, this would conflict with the SAE handshake as
+> defined in the 802.11-2016 standard. That's because when the AP
+> receives a Commit frame, the AP is allowed to send both a Commit and
+> Confirm frame (see 12.4.8.6.3). So according to the standard, the
+> client must accept a SAE Confirm authentication frame, even if it
+> hasn't yet transmitted its own Confirm frame. So this appears to be a
+> bug. Thoughts?
+
+While the SAE authentication exchange itself has such flexibility in the
+sequence of Commit/Confirm messages, there is a constraint in IEEE
+802.11 on how the Authentication frames are exchanged in an
+infrastructure BSS between a non-AP STA and an AP. For SAE, this is
+explicitly requiring the exchange proceed in the sequence shown in
+Figure 4-29 (Example using SAE authentication), i.e., with the Commit
+messages exchanged first and the first Confirm message coming from STA
+to AP and the exchange concluded with the Confirm message from AP to
+STA. This matches the Linux kernel implementation.
+
+For mesh BSS cases, the SAE Confirm message can be sent out immediately
+after having processed the Commit message, so the sequence there may end
+up being different. That's also supported in the Linux implementation,
+but this flexibility is not extended to the infrastructure case on
+purpose.
+
 -- 
-2.17.1
+Jouni Malinen                                            PGP id EFC895FA
