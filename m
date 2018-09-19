@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58837 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726722AbeIPPhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 11:37:15 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        Johannes Berg <johannes@sipsolutions.net>
-CC: Randy Dunlap <rdunlap@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: RE: [linuxwifi] [PATCH] fix iwlwifi on old cards in v4.19 was Re:
- 4.19-rc[23] iwlwifi: BUG in swiotlb
-Date: Sun, 16 Sep 2018 10:14:22 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301336B2111@HASMSX111.ger.corp.intel.com> (sfid-20180916_121505_432109_535F1E00)
-References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
- <1536651177.3224.106.camel@sipsolutions.net> <20180916093414.GA4299@amd>
- <20180916094142.GB4299@amd> <20180916095535.GA4245@amd>
- <20180916095935.GA4388@amd>
- <0BA3FCBA62E2DC44AF3030971E174FB301336B20F4@HASMSX111.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301336B20F4@HASMSX111.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33734 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731022AbeISLnZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 07:43:25 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 27/29] staging: wilc1000: use usleep_range() in place of udelay()
+Date: Wed, 19 Sep 2018 11:35:17 +0530
+Message-ID: <1537337119-14952-28-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080707_929213_365EAC25)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> >
-> >
-> > .max_tfd_queue_size was ommited for old cards, leading to oops in
-> swiotlb.
-> >
-> > Signed-off-by: Pavel Machek <pavel@ucw.cz>
-> >
-> 
-> I picked it up in our tree with minor commit message fixes.
-> I also added the Fixes tag for stable.
-> 
+Changes to avoid the below checkpatch warning:
 
-Ah, of course... not needed... Sorry...
+'usleep_range is preferred over udelay; see
+Documentation/timers/timers-howto.txt;'
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 0ec0d9b..a48c906 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -412,7 +412,7 @@ void chip_wakeup(struct wilc *wilc)
+ 		} while (wilc_get_chipid(wilc, true) == 0);
+ 	} else if ((wilc->io_type & 0x1) == HIF_SDIO) {
+ 		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
+-		udelay(200);
++		usleep_range(200, 400);
+ 		wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
+ 		do {
+ 			wilc->hif_func->hif_write_reg(wilc, 0xf0,
+-- 
+2.7.4
