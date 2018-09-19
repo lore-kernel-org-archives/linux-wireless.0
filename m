@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12390 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731675AbeITMGJ (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2391 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731022AbeISLn3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:09 -0400
+        Wed, 19 Sep 2018 07:43:29 -0400
 From: Ajay Singh <ajay.kathat@microchip.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -11,45 +11,38 @@ CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 09/29] staging: wilc1000: use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack()
-Date: Thu, 20 Sep 2018 11:53:20 +0530
-Message-ID: <1537424620-6982-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082458_351381_3E79381A)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 28/29] staging: wilc1000: avoid spaces preferred around checkpatch issue
+Date: Wed, 19 Sep 2018 11:35:18 +0530
+Message-ID: <1537337119-14952-29-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080710_997001_1E47A494)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack() as it always
-return value '1' and its not used by the caller.
+Cleanup patch to add extra spaces around the '/' to avoid the below
+checkpatch warning.
+
+'spaces preferred around that '/' (ctx:VxV)'
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 66ce29d..88808d9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -182,7 +182,7 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- }
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 695d5b2..29c1317 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -823,7 +823,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
  
--static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
-+static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wilc = vif->wilc;
-@@ -237,8 +237,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 					    msecs_to_jiffies(1));
- 		dropped--;
- 	}
--
--	return 1;
- }
- 
- void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
+ 	netdev_for_each_mc_addr(ha, dev) {
+ 		memcpy(mc_list + i, ha->addr, ETH_ALEN);
+-		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i/ETH_ALEN,
++		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i / ETH_ALEN,
+ 			   mc_list[i], mc_list[i + 1], mc_list[i + 2],
+ 			   mc_list[i + 3], mc_list[i + 4], mc_list[i + 5]);
+ 		i += ETH_ALEN;
 -- 
 2.7.4
