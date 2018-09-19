@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730278AbeIFUhB (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:49972 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731127AbeISQOh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 16:37:01 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH] wil6210: fix unsigned cid comparison with >= 0
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180829175018.GA3776@embeddedor.com>
-References: <20180829175018.GA3776@embeddedor.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Maya Erez <merez@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-Id: <20180906160050.C81F76044E@smtp.codeaurora.org> (sfid-20180906_180102_373234_017315CF)
-Date: Thu,  6 Sep 2018 16:00:50 +0000 (UTC)
+        Wed, 19 Sep 2018 12:14:37 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH 2/5] ath9k: return when short FFT frame was handled
+Date: Wed, 19 Sep 2018 12:37:08 +0200
+Message-Id: <20180919103711.19304-3-sw@simonwunderlich.de> (sfid-20180919_123722_412125_E01E2F42)
+In-Reply-To: <20180919103711.19304-1-sw@simonwunderlich.de>
+References: <20180919103711.19304-1-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+With the loop break like this, there are false "FFT report truncated"
+messages because the iterator is not advanced as the check expects.
 
-> The comparison of cid >= 0 is always true because cid is of type u8
-> (8 bits, unsigned).
-> 
-> Fix this by removing such comparison and updating the type of
-> variable cid to u8 in the caller function.
-> 
-> Addresses-Coverity-ID: 1473079 ("Unsigned compared against 0")
-> Fixes: b9010f105f21 ("wil6210: add FT roam support for AP and station")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Instead, just return, for a single frame there is nothing left to be
+done anyways.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-49925f247016 wil6210: fix unsigned cid comparison with >= 0
-
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index 0c5559009a28..f6dd0ecfbbf3 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -686,7 +686,7 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
+ 			 * loop.
+ 			 */
+ 			if (len <= fft_len + 2)
+-				break;
++				return 1;
+ 
+ 			sample_start = &vdata[i + 1];
+ 
 -- 
-https://patchwork.kernel.org/patch/10580739/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
