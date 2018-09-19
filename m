@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46944 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727597AbeIEJes (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:34:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Sep 2018 08:06:10 +0300
-Message-Id: <20180905050614.23273-6-luca@coelho.fi> (sfid-20180905_070633_316402_C16F53D7)
-In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180905050614.23273-1-luca@coelho.fi>
-Subject: [RESEND PATCH v2 5/9] mac80211: allow AMSDU size limitation per-TID
+Received: from mx1.redhat.com ([209.132.183.28]:56498 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731235AbeISSZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 14:25:08 -0400
+Date: Wed, 19 Sep 2018 14:47:18 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/5] rt2x00: set registers based on current band
+Message-ID: <20180919124717.GA26590@redhat.com> (sfid-20180919_144723_065648_7D99E52B)
+References: <20180919110540.GC22689@redhat.com>
+ <1537359450-8843-1-git-send-email-pozega.tomislav@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1537359450-8843-1-git-send-email-pozega.tomislav@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Wed, Sep 19, 2018 at 02:17:30PM +0200, Tomislav Požega wrote:
+> On Wed, 19 Sep 2018 13:05:41 +0200, Stanislaw Gruszka wrote:
+> 
+> >Driver should provide on what channels are supported to mac80211, but
+> >user space decide what channel to use and that imply band 2.4GHz or
+> >5GHz. ->curr_band is just shortcut for band of current channel. Is set 
+> >in rt2x00lib_config() after we call rt2x00dev->ops->lib->config()
+> >[rt2800_config() for rt2800] . So patch is wrong. Either ->curr_band 
+> >should be set before ->config call or we need to consistently use
+> >rf->channel <= 14 for band check in any rt2800_config() function and
+> >all it's subroutines. I prefer the second solution (i.e. rf->channel)
+> >and now I can see few places when we use ->curr_band, what is a bug.
+> 
+> Works fine, no any kind of regression, especially not performance ones.
+Did you test on dual band devices ?
 
-Some drivers may have AMSDU size limitation per TID, due to
-HW constrains. Add an option to set this limit.
+> So I don't see a reason to claim it is wrong or bug just because you
+> prefer current solution.
+It's not wrong bacause I prefer current solution. It's because 
+->curr_band is not updated when you call rt2800_config().
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h | 2 ++
- net/mac80211/tx.c      | 4 ++++
- 2 files changed, 6 insertions(+)
+> >It's because ->curr_band initialize to 0 and NL80211_BAND_2GHZ
+> >happen to be 0. Also problem will not trigger on single band
+> >2.4GHz devices.
+> 
+> Can you show us how will the problem trigger on dual band devices?
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index fe71cec8ba42..28da9e27ea70 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1853,6 +1853,7 @@ struct ieee80211_sta_rates {
-  *	unlimited.
-  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
-  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
-+ * @max_tid_amsdu_len: Maximum A-MSDU size in bytes for this TID
-  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction); note that
-  *	the last entry (%IEEE80211_NUM_TIDS) is used for non-data frames
-  */
-@@ -1894,6 +1895,7 @@ struct ieee80211_sta {
- 	u16 max_amsdu_len;
- 	bool support_p2p_ps;
- 	u16 max_rc_amsdu_len;
-+	u16 max_tid_amsdu_len[IEEE80211_NUM_TIDS];
- 
- 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6689492c9713..41eaa8e6a938 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3234,6 +3234,10 @@ static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
- 		max_amsdu_len = min_t(int, max_amsdu_len,
- 				      sta->sta.max_rc_amsdu_len);
- 
-+	if (sta->sta.max_tid_amsdu_len[tid])
-+		max_amsdu_len = min_t(int, max_amsdu_len,
-+				      sta->sta.max_tid_amsdu_len[tid]);
-+
- 	spin_lock_bh(&fq->lock);
- 
- 	/* TODO: Ideally aggregation should be done on dequeue to remain
--- 
-2.18.0
+When you switch from some 2.4GHz channel to 5GHz channel (or vice versa)
+->curr_band will point to old band not the new one. To fix that you 
+have to move curr_band assignemt before ->config() in
+rt2x00lib_config() i.e:
+
+rt2x00dev->curr_band = conf->chandef.chan->band; 
+rt2x00dev->ops->lib->config(rt2x00dev, &libconf, ieee80211_flags);
+
+However I do not see the point of replacyng rf->channel check 
+to ->curr_band check. What you can do is oposite thing, replace
+wrong usage of ->curr_band in very few places in rt2800_config()
+subroutines to rf->channel check.
+
+Also replacing spec->num_channels is wrong because this will
+stop reporting device support 5GHz band.
+
+Regards
+Stanislaw 
