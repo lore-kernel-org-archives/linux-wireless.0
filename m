@@ -1,126 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:38468 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726515AbeIVGoz (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33687 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730911AbeISLmX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 02:44:55 -0400
-Received: by mail-pl1-f193.google.com with SMTP id u11-v6so6646486plq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 17:53:31 -0700 (PDT)
-Date: Fri, 21 Sep 2018 17:53:27 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Carl Huang <cjhuang@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath10k: download firmware via diag Copy Engine for
- QCA6174 and QCA9377.
-Message-ID: <20180922005325.GA47003@ban.mtv.corp.google.com> (sfid-20180922_025557_643068_3E602B6C)
-References: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org>
- <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
+        Wed, 19 Sep 2018 07:42:23 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/29] staging: wilc1000: change return type to 'void' for wilc_wlan_cfg_indicate_rx()
+Date: Wed, 19 Sep 2018 11:35:00 +0530
+Message-ID: <1537337119-14952-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080606_848208_C06082E2)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again!
+Cleanup patch to use 'void' return type for wilc_wlan_cfg_indicate_rx(),
+as its return value is not used in caller. The value set in
+'rsp' argument is used to get the success status.
 
-One last (?) comment:
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 8 ++------
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-On Thu, Aug 30, 2018 at 10:29:42AM +0800, Carl Huang wrote:
-
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-> index 677535b..25ee1c6 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.c
-> +++ b/drivers/net/wireless/ath/ath10k/hw.c
-
-> @@ -918,6 +919,190 @@ static int ath10k_hw_qca6174_enable_pll_clock(struct ath10k *ar)
-
-> +static int ath10k_hw_diag_segment_download(struct ath10k *ar,
-> +					   const void *buffer,
-> +					   u32 address,
-> +					   u32 length)
-> +{
-> +	if (address >= DRAM_BASE_ADDRESS + REGION_ACCESS_SIZE_LIMIT)
-> +		/* Needs to change MSB for memory write */
-> +		return ath10k_hw_diag_segment_msb_download(ar, buffer,
-> +							   address, length);
-> +	else
-> +		return ath10k_hif_diag_write(ar, address, buffer, length);
-> +}
-> +
-> +int ath10k_hw_diag_fast_download(struct ath10k *ar,
-> +				 u32 address,
-> +				 const void *buffer,
-> +				 u32 length)
-> +{
-> +	const u8 *buf = buffer;
-> +	bool sgmt_end = false;
-> +	u32 base_addr = 0;
-> +	u32 base_len = 0;
-> +	u32 left = 0;
-> +	struct bmi_segmented_file_header *hdr;
-> +	struct bmi_segmented_metadata *metadata;
-> +	int ret = 0;
-> +
-> +	if (length < sizeof(*hdr))
-> +		return -EINVAL;
-> +
-> +	/* check firmware header. If it has no correct magic number
-> +	 * or it's compressed, returns error.
-> +	 */
-> +	hdr = (struct bmi_segmented_file_header *)buf;
-> +	if (hdr->magic_num != BMI_SGMTFILE_MAGIC_NUM) {
-> +		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-> +			   "Not a supported firmware, magic_num:0x%x\n",
-> +			   hdr->magic_num);
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (hdr->file_flags != 0) {
-> +		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-> +			   "Not a supported firmware, file_flags:0x%x\n",
-> +			   hdr->file_flags);
-> +		return -EINVAL;
-> +	}
-> +
-> +	metadata = (struct bmi_segmented_metadata *)hdr->data;
-> +	left = length - sizeof(*hdr);
-> +
-> +	while (left > 0) {
-> +		base_addr = metadata->addr;
-> +		base_len = metadata->length;
-> +		buf = metadata->data;
-> +		left -= sizeof(*metadata);
-> +
-> +		switch (base_len) {
-...
-> +		default:
-> +			if (base_len > left) {
-> +				/* sanity check */
-> +				ath10k_warn(ar,
-> +					    "firmware has invalid segment length, %d > %d\n",
-> +					    base_len, left);
-> +				ret = -EINVAL;
-> +				break;
-> +			}
-> +
-> +			ret = ath10k_hw_diag_segment_download(ar,
-> +							      buf,
-> +							      base_addr,
-> +							      base_len);
-
-This 'base_len' is determined by the firmware blob and in common cases
-is over 500K. The PCI implementation currently tries to
-dma_alloc_coherent() a bounce buffer for this. Many systems can't
-acquire that large of contiguous DMA memory reliably, so this is isn't
-very effective. Can we improve the strategy here? Do you lose a lot of
-speed if you do this in smaller (a few pages?) chunks instead?
-
-Brian
-
-> +
-> +			if (ret)
-> +				ath10k_warn(ar,
-> +					    "failed to download firmware via diag interface:%d\n",
-> +					    ret);
-> +			break;
-...
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 4215763..42c64ed 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -502,10 +502,9 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 	return ret;
+ }
+ 
+-int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+-			      struct wilc_cfg_rsp *rsp)
++void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
++			       struct wilc_cfg_rsp *rsp)
+ {
+-	int ret = 1;
+ 	u8 msg_type;
+ 	u8 msg_id;
+ 
+@@ -547,11 +546,8 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 	default:
+ 		rsp->type = 0;
+ 		rsp->seq_no = msg_id;
+-		ret = 0;
+ 		break;
+ 	}
+-
+-	return ret;
+ }
+ 
+ int wilc_wlan_cfg_init(void)
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index 0c649d1..189e617 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -31,8 +31,8 @@ struct wilc;
+ int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
+ int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
+ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
+-int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+-			      struct wilc_cfg_rsp *rsp);
++void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
++			       struct wilc_cfg_rsp *rsp);
+ int wilc_wlan_cfg_init(void);
+ 
+ #endif
+-- 
+2.7.4
