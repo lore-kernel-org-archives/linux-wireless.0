@@ -1,76 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49320 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726221AbeILOiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 10:38:50 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: "David S . Miller" <davem@davemloft.net>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Johannes Stezenbach <js@sig21.net>,
-        Carlo Caione <carlo@endlessm.com>, linux-clk@vger.kernel.org
-Subject: [PATCH v2 3/3] clk: x86: Stop marking clocks as CLK_IS_CRITICAL
-Date: Wed, 12 Sep 2018 11:34:56 +0200
-Message-Id: <20180912093456.23400-4-hdegoede@redhat.com> (sfid-20180912_113516_451820_2480E41A)
-In-Reply-To: <20180912093456.23400-1-hdegoede@redhat.com>
-References: <20180912093456.23400-1-hdegoede@redhat.com>
-MIME-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:49956 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731091AbeISQOg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 12:14:36 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 0/5] ath9k: FFT fixes and improvements
+Date: Wed, 19 Sep 2018 12:37:06 +0200
+Message-Id: <20180919103711.19304-1-sw@simonwunderlich.de> (sfid-20180919_123721_829348_316250C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit d31fd43c0f9a ("clk: x86: Do not gate clocks enabled by the
-firmware"), which added the code to mark clocks as CLK_IS_CRITICAL, causes
-all unclaimed PMC clocks on Cherry Trail devices to be on all the time,
-resulting on the device not being able to reach S0i3 when suspended.
+During FFT evaluation on an AR9462 adapter, we noticed that there were
+way less FFT samples received than we would expect. This patchset adds
+some counters to be able to check for received (and discarded) FFT
+samples, and fixes a variety of issues I found while debugging.
 
-The reason for this commit is that on some Bay Trail / Cherry Trail devices
-the r8169 ethernet controller uses pmc_plt_clk_4. Now that the clk-pmc-atom
-driver exports an "ether_clk" alias for pmc_plt_clk_4 and the r8169 driver
-has been modified to get and enable this clock (if present) the marking of
-the clocks as CLK_IS_CRITICAL is no longer necessary.
+Cheers,
+     Simon
 
-This commit removes the CLK_IS_CRITICAL marking, fixing Cherry Trail
-devices not being able to reach S0i3 greatly decreasing their battery
-drain when suspended.
+Simon Wunderlich (5):
+  ath9k: add counters for good and errorneous FFT/spectral frames
+  ath9k: return when short FFT frame was handled
+  ath9k: fix and simplify FFT max index retrieval
+  ath9k: FFT magnitude check: don't consider lower 3 data bits
+  ath9k: fix reporting calculated new FFT upper max
 
-Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=193891#c102
-Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=196861
-Cc: Johannes Stezenbach <js@sig21.net>
-Cc: Carlo Caione <carlo@endlessm.com>
-Reported-by: Johannes Stezenbach <js@sig21.net>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Stephen Boyd <sboyd@kernel.org>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
-Changes in v2:
--Tweaked the commit msg a bit
--Added: Stephen's Acked-by, Andy's Reviewed-by
----
- drivers/clk/x86/clk-pmc-atom.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/common-debug.c    |  2 +
+ drivers/net/wireless/ath/ath9k/common-debug.h    |  4 ++
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 83 +++++++++---------------
+ drivers/net/wireless/ath/ath9k/common-spectral.h | 17 +++++
+ 4 files changed, 55 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/clk/x86/clk-pmc-atom.c b/drivers/clk/x86/clk-pmc-atom.c
-index 75151901ff7d..d977193842df 100644
---- a/drivers/clk/x86/clk-pmc-atom.c
-+++ b/drivers/clk/x86/clk-pmc-atom.c
-@@ -187,13 +187,6 @@ static struct clk_plt *plt_clk_register(struct platform_device *pdev, int id,
- 	pclk->reg = base + PMC_CLK_CTL_OFFSET + id * PMC_CLK_CTL_SIZE;
- 	spin_lock_init(&pclk->lock);
- 
--	/*
--	 * If the clock was already enabled by the firmware mark it as critical
--	 * to avoid it being gated by the clock framework if no driver owns it.
--	 */
--	if (plt_clk_is_enabled(&pclk->hw))
--		init.flags |= CLK_IS_CRITICAL;
--
- 	ret = devm_clk_hw_register(&pdev->dev, &pclk->hw);
- 	if (ret) {
- 		pclk = ERR_PTR(ret);
 -- 
-2.19.0.rc0
+2.11.0
