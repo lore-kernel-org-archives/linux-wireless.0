@@ -1,131 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Gamera.Varna.Net ([217.145.80.8]:58364 "EHLO Gamera.varna.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726964AbeIISlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 14:41:20 -0400
-Received: from webmail.varna.net (localhost [127.0.0.1])
-        by Gamera.varna.net (8.15.2/8.15.2) with ESMTP id w89DpUvC001295
-        for <linux-wireless@vger.kernel.org>; Sun, 9 Sep 2018 16:51:30 +0300
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sun, 09 Sep 2018 15:51:30 +0200
-From: pavlin@varna.net
-To: linux-wireless@vger.kernel.org
-Subject: Troubleshooting compilation of hostapd
-Message-ID: <385bc6f25c5d82d2c36c518dbea8f76b@varna.net> (sfid-20180909_155404_335942_27CAA386)
+Received: from s3.sipsolutions.net ([144.76.43.62]:59452 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732759AbeITB2r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 21:28:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: David Ahern <dsahern@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 2/5] netlink: make validation_data const
+Date: Wed, 19 Sep 2018 21:49:02 +0200
+Message-Id: <20180919194905.16462-3-johannes@sipsolutions.net> (sfid-20180919_214940_368316_4C51BEF0)
+In-Reply-To: <20180919194905.16462-1-johannes@sipsolutions.net>
+References: <20180919194905.16462-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I work as a software tester who has general understanding of C++ 
-language.
-I experiment with simulated Wi-Fi access point and a station.
+The validation data is only used within the policy that
+should usually already be const, and isn't changed in any
+code that uses it. Therefore, make the validation_data
+pointer const.
 
-My Linux distribution is Fedora 27.
+While at it, remove the duplicate variable in the bitfield
+validation that I'd otherwise have to change to const.
 
-I try to compile hostap by following the steps from:
-https://wireless.wiki.kernel.org/en/users/documentation/hostapd#download_and_compile_hostapd
+Reviewed-by: David Ahern <dsahern@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/netlink.h | 2 +-
+ lib/nlattr.c          | 5 ++---
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-I get the source code from:
-git://w1.fi/srv/git/hostap.git
-
-I create a configuration:
-cp defconfig .config
-vi .config
-
-Parameter "CONFIG_DRIVER_NL80211=y" is already uncomented.
-
-make
-
-../src/drivers/driver_nl80211.c:17:10: fatal error: netlink/genl/genl.h: 
-No such file or directory
-  #include <netlink/genl/genl.h>
-           ^~~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-make: *** [Makefile:1251: ../src/drivers/driver_nl80211.o] Error 1
-
-When I search for file "genl.h"
-then I don't find it on my system.
-
-I search for package "libnl", but only "libnl3" is available.
-I install it:
-yum install libnl3 libnl3-devel
-
-
-I repeat the previous compilation.
-I receive the same error.
-
-When I search for "genl.h"
-then I find it in "/usr/include/libnl3/netlink/genl/genl.h".
-
-The source file "../src/drivers/driver_nl80211.c"
-includes "netlink/genl/genl.h".
-
-To satisfy that requirement I create a soft link:
-ln -s /usr/include/libnl3/netlink /usr/include/netlink
-
-When I rebegin the compilation:
-make clean
-make
-then I receive error:
-/usr/bin/ld: cannot find -lnl
-collect2: error: ld returned 1 exit status
-make: *** [Makefile:1278: hostapd] Error 1
-
-
-When I browse StackOverflow
-  and I search for "/usr/bin/ld: cannot find -lnl"
-then I find article 
-"https://stackoverflow.com/questions/16710047/usr-bin-ld-cannot-find-lnameofthelibrary".
-
-When I follow the steps from that article
-then I receive result:
-==================================================
-attempt to open //usr/x86_64-redhat-linux/lib64/libnl.so failed
-attempt to open //usr/x86_64-redhat-linux/lib64/libnl.a failed
-attempt to open //usr/lib64/libnl.so failed
-attempt to open //usr/lib64/libnl.a failed
-attempt to open //usr/local/lib64/libnl.so failed
-attempt to open //usr/local/lib64/libnl.a failed
-attempt to open //lib64/libnl.so failed
-attempt to open //lib64/libnl.a failed
-attempt to open //usr/x86_64-redhat-linux/lib/libnl.so failed
-attempt to open //usr/x86_64-redhat-linux/lib/libnl.a failed
-attempt to open //usr/local/lib/libnl.so failed
-attempt to open //usr/local/lib/libnl.a failed
-attempt to open //lib/libnl.so failed
-attempt to open //lib/libnl.a failed
-attempt to open //usr/lib/libnl.so failed
-attempt to open //usr/lib/libnl.a failed
-ld: cannot find -lnl
-
-
-QUESTIONS
-1. What steps to follow in order to compile hostap?
-2. Can you please update the documentation at 
-"https://wireless.wiki.kernel.org/en/users/documentation/hostapd#download_and_compile_hostapd" 
-to the latest release of Fedora?
-
-
-DETAILS
-kernel-4.13.16-302.fc27.x86_64
-gcc-7.3.1-6.fc27.x86_64
-rpm -qf $(which /usr/bin/ld)
-     binutils-2.29-6.fc27.x86_64
-     binutils-2.29-13.fc27.x86_64
-
-yum search libnl
-     ================== Name & Summary Matched: libnl ==================
-     libnl3-doc.x86_64 : API documentation for libnl3
-     python-libnl3.x86_64 : libnl3 binding for Python 2
-     python2-libnl3.x86_64 : libnl3 binding for Python 2
-     python3-libnl3.x86_64 : libnl3 binding for Python 3
-     libnl3-cli.x86_64 : Command line interface utils for libnl3
-     libnl3-cli.i686 : Command line interface utils for libnl3
-     libnl3-devel.x86_64 : Libraries and headers for using libnl3
-     libnl3-devel.i686 : Libraries and headers for using libnl3
-     ======================= Name Matched: libnl =======================
-     libnl3.x86_64 : Convenience library for kernel netlink sockets
-     libnl3.i686 : Convenience library for kernel netlink sockets
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index b680fe365e91..0d698215d4d9 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -237,7 +237,7 @@ enum {
+ struct nla_policy {
+ 	u16		type;
+ 	u16		len;
+-	void            *validation_data;
++	const void     *validation_data;
+ };
+ 
+ #define NLA_POLICY_EXACT_LEN(_len)	{ .type = NLA_EXACT_LEN, .len = _len }
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index 120ad569e13d..e2e5b38394d5 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -45,12 +45,11 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+ };
+ 
+ static int validate_nla_bitfield32(const struct nlattr *nla,
+-				   u32 *valid_flags_allowed)
++				   const u32 *valid_flags_mask)
+ {
+ 	const struct nla_bitfield32 *bf = nla_data(nla);
+-	u32 *valid_flags_mask = valid_flags_allowed;
+ 
+-	if (!valid_flags_allowed)
++	if (!valid_flags_mask)
+ 		return -EINVAL;
+ 
+ 	/*disallow invalid bit selector */
+-- 
+2.14.4
