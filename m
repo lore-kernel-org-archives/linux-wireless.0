@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:59452 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732759AbeITB2r (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33669 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730940AbeISLmF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 21:28:47 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: David Ahern <dsahern@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/5] netlink: make validation_data const
-Date: Wed, 19 Sep 2018 21:49:02 +0200
-Message-Id: <20180919194905.16462-3-johannes@sipsolutions.net> (sfid-20180919_214940_368316_4C51BEF0)
-In-Reply-To: <20180919194905.16462-1-johannes@sipsolutions.net>
-References: <20180919194905.16462-1-johannes@sipsolutions.net>
+        Wed, 19 Sep 2018 07:42:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 05/29] staging: wilc1000: change return type to 'void' for wilc_wfi_deinit_mon_interface()
+Date: Wed, 19 Sep 2018 11:34:55 +0530
+Message-ID: <1537337119-14952-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080548_618338_3DC89248)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Use 'void' return type for wilc_wfi_deinit_mon_interface(), as same
+value always return.
 
-The validation data is only used within the policy that
-should usually already be const, and isn't changed in any
-code that uses it. Therefore, make the validation_data
-pointer const.
-
-While at it, remove the duplicate variable in the bitfield
-validation that I'd otherwise have to change to const.
-
-Reviewed-by: David Ahern <dsahern@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/netlink.h | 2 +-
- lib/nlattr.c          | 5 ++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c              | 3 +--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index b680fe365e91..0d698215d4d9 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -237,7 +237,7 @@ enum {
- struct nla_policy {
- 	u16		type;
- 	u16		len;
--	void            *validation_data;
-+	const void     *validation_data;
- };
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 1afdb9e..a634468 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -253,7 +253,7 @@ struct net_device *wilc_wfi_init_mon_interface(const char *name,
+ 	return wilc_wfi_mon;
+ }
  
- #define NLA_POLICY_EXACT_LEN(_len)	{ .type = NLA_EXACT_LEN, .len = _len }
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 120ad569e13d..e2e5b38394d5 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -45,12 +45,11 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
- };
- 
- static int validate_nla_bitfield32(const struct nlattr *nla,
--				   u32 *valid_flags_allowed)
-+				   const u32 *valid_flags_mask)
+-int wilc_wfi_deinit_mon_interface(void)
++void wilc_wfi_deinit_mon_interface(void)
  {
- 	const struct nla_bitfield32 *bf = nla_data(nla);
--	u32 *valid_flags_mask = valid_flags_allowed;
+ 	bool rollback_lock = false;
  
--	if (!valid_flags_allowed)
-+	if (!valid_flags_mask)
- 		return -EINVAL;
- 
- 	/*disallow invalid bit selector */
+@@ -270,5 +270,4 @@ int wilc_wfi_deinit_mon_interface(void)
+ 		}
+ 		wilc_wfi_mon = NULL;
+ 	}
+-	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index 1858f56..4812c8e 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -14,7 +14,7 @@ void wilc_free_wiphy(struct net_device *net);
+ void wilc_deinit_host_int(struct net_device *net);
+ int wilc_init_host_int(struct net_device *net);
+ void wilc_wfi_monitor_rx(u8 *buff, u32 size);
+-int wilc_wfi_deinit_mon_interface(void);
++void wilc_wfi_deinit_mon_interface(void);
+ struct net_device *wilc_wfi_init_mon_interface(const char *name,
+ 					       struct net_device *real_dev);
+ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
 -- 
-2.14.4
+2.7.4
