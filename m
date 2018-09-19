@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36144 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728096AbeIFNyo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:44 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 28/42] mt76x0: remove mt76x0_stop_hardware routine
-Date: Thu,  6 Sep 2018 11:18:44 +0200
-Message-Id: <1536225538-16454-29-git-send-email-sgruszka@redhat.com> (sfid-20180906_112015_590648_EE51DF9E)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2337 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730911AbeISLm3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 07:42:29 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 11/29] staging: wilc1000: refactor wilc_wlan_parse_info_frame() function
+Date: Wed, 19 Sep 2018 11:35:01 +0530
+Message-ID: <1537337119-14952-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080611_675189_C9284D6F)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Return 'void' from wilc_wlan_parse_info_frame() as same constant value
+is returned always. Also removed the 'size' from input parameter as its
+not used in the function.
 
-Since it is actually used in a single place and it just
-runs mt76x0_chip_onoff routine, remove mt76x0_stop_hardware
-and use mt76x0_chip_onoff directly
-
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 418e1918086d..5b819a224d33 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -364,11 +364,6 @@ void mt76x0_mac_stop(struct mt76x0_dev *dev)
- 	mt76x0_mac_stop_hw(dev);
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 42c64ed..2b5471b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -350,22 +350,17 @@ static void wilc_wlan_parse_response_frame(u8 *info, int size)
+ 	}
  }
  
--static void mt76x0_stop_hardware(struct mt76x0_dev *dev)
--{
--	mt76x0_chip_onoff(dev, false, false);
--}
--
- int mt76x0_init_hardware(struct mt76x0_dev *dev)
+-static int wilc_wlan_parse_info_frame(u8 *info, int size)
++static void wilc_wlan_parse_info_frame(u8 *info)
  {
- 	static const u16 beacon_offsets[16] = {
-@@ -476,7 +471,7 @@ void mt76x0_cleanup(struct mt76x0_dev *dev)
- 	if (!test_and_clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state))
- 		return;
+ 	struct wilc_mac_cfg *pd = &g_mac;
+ 	u32 wid, len;
+-	int type = WILC_CFG_RSP_STATUS;
  
--	mt76x0_stop_hardware(dev);
-+	mt76x0_chip_onoff(dev, false, false);
- 	mt76u_queues_deinit(&dev->mt76);
- 	mt76u_mcu_deinit(&dev->mt76);
+ 	wid = info[0] | (info[1] << 8);
+ 
+ 	len = info[2];
+ 
+-	if (len == 1 && wid == WID_STATUS) {
++	if (len == 1 && wid == WID_STATUS)
+ 		pd->mac_status = info[3];
+-		type = WILC_CFG_RSP_STATUS;
+-	}
+-
+-	return type;
  }
+ 
+ /********************************************
+@@ -528,7 +523,8 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 		break;
+ 
+ 	case 'I':
+-		rsp->type = wilc_wlan_parse_info_frame(frame, size);
++		wilc_wlan_parse_info_frame(frame);
++		rsp->type = WILC_CFG_RSP_STATUS;
+ 		rsp->seq_no = msg_id;
+ 		/*call host interface info parse as well*/
+ 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
 -- 
-2.7.5
+2.7.4
