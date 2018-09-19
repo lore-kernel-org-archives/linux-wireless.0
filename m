@@ -1,118 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12568 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727665AbeIDLEL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728297AbeISLoW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 07:04:11 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 12/26] staging: wilc1000: move 'periodic_rssi' as part of 'wilc_vif' struct
-Date: Tue, 4 Sep 2018 12:09:28 +0530
-Message-ID: <1536043182-19735-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180904_084100_226255_5E7A6BBF)
-In-Reply-To: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
-References: <1536043182-19735-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 19 Sep 2018 07:44:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 18 Sep 2018 23:08:00 -0700
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        David Spinadel <david.spinadel@intel.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: support FTM responder
+ configuration/statistics
+In-Reply-To: <1537257137.2957.15.camel@sipsolutions.net>
+References: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
+ <1536702279-7643-2-git-send-email-pradeepc@codeaurora.org>
+ <1537257137.2957.15.camel@sipsolutions.net>
+Message-ID: <307689614226615033770517c9ed7632@codeaurora.org> (sfid-20180919_080804_024768_162A93BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor code to move 'periodic_rssi' as part of wilc_vif struct. Move
-'dummy_statistics' from 'wilc' struct to 'wilc_vif' to maintain for
-each interface separately.
+On 2018-09-18 00:52, Johannes Berg wrote:
+> Hi,
+> 
+> Sorry for the delay with this. I was a bit fed up by all the resends,
+> but I see the latest one did in fact finally make it to the list and
+> patchwork.
+> (As an aside - it would've helped to actually bump the version number
+> for every resend, even if it's identical - now I don't know which
+> version to reply to in my email so it goes to patchwork)
+Hi Johannes,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c     | 19 ++++++++-----------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
- 2 files changed, 10 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 6facffc..e79ef6c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -190,8 +190,6 @@ static struct host_if_drv *terminated_handle;
- static u8 p2p_listen_state;
- static struct completion hif_driver_comp;
- static struct mutex hif_deinit_lock;
--static struct timer_list periodic_rssi;
--static struct wilc_vif *periodic_rssi_vif;
- 
- static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
- 
-@@ -3422,9 +3420,9 @@ int wilc_hif_set_cfg(struct wilc_vif *vif,
- 	return result;
- }
- 
--static void get_periodic_rssi(struct timer_list *unused)
-+static void get_periodic_rssi(struct timer_list *t)
- {
--	struct wilc_vif *vif = periodic_rssi_vif;
-+	struct wilc_vif *vif = from_timer(vif, t, periodic_rssi);
- 
- 	if (!vif->hif_drv) {
- 		netdev_err(vif->ndev, "%s: hif driver is NULL", __func__);
-@@ -3432,9 +3430,9 @@ static void get_periodic_rssi(struct timer_list *unused)
- 	}
- 
- 	if (vif->hif_drv->hif_state == HOST_IF_CONNECTED)
--		wilc_get_statistics(vif, &vif->wilc->dummy_statistics, false);
-+		wilc_get_statistics(vif, &vif->dummy_statistics, false);
- 
--	mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
-+	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
- }
- 
- int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
-@@ -3468,12 +3466,11 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 			kfree(hif_drv);
- 			return -ENOMEM;
- 		}
--
--		periodic_rssi_vif = vif;
--		timer_setup(&periodic_rssi, get_periodic_rssi, 0);
--		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
- 	}
- 
-+	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
-+	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
-+
- 	timer_setup(&hif_drv->scan_timer, timer_scan_cb, 0);
- 	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
- 	timer_setup(&hif_drv->remain_on_ch_timer, listen_timer_cb, 0);
-@@ -3513,7 +3510,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 
- 	del_timer_sync(&hif_drv->scan_timer);
- 	del_timer_sync(&hif_drv->connect_timer);
--	del_timer_sync(&periodic_rssi);
-+	del_timer_sync(&vif->periodic_rssi);
- 	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
- 	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 77641eb..c103a07 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -120,6 +120,8 @@ struct wilc_vif {
- 	u8 ifc_id;
- 	struct timer_list during_ip_timer;
- 	bool obtaining_ip;
-+	struct timer_list periodic_rssi;
-+	struct rf_info dummy_statistics;
- };
- 
- struct wilc {
-@@ -169,7 +171,6 @@ struct wilc {
- 	struct device *dev;
- 	bool suspend_event;
- 
--	struct rf_info dummy_statistics;
- 	bool enable_ps;
- 	int clients_count;
- 	struct workqueue_struct *hif_workqueue;
--- 
-2.7.4
+Sorry for the trouble. Hopefully, there will not be any issues for 
+future
+patches, However, I will keep this in mind..
+> 
+> 
+>> + * @civic: CIVIC subelement content
+> 
+>> + * @civic_len: Civic data length
+> 
+> I was continuing work on the FTM initiator, and I think now that we
+> should call this "civicloc", otherwise we're missing the arguably more
+> important part of "civic location".
+Sure, I will make this change in next next version.
+> 
+>> + * @NL80211_ATTR_FTM_RESPONDER: attribute which user-space can 
+>> include in
+>> + *	%NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON to enable(1)
+>> + *	fine timing measurement (FTM) responder functionality.
+>> + * @NL80211_ATTR_LCI: The content of Measurement Report Element 
+>> (9.4.2.22
+>> + *	in 802.11-2016) with type 8 - LCI (9.4.2.22.10)
+>> + * @NL80211_ATTR_CIVIC: The content of Measurement Report Element 
+>> (9.4.2.22
+>> + *	in 802.11-2016) with type 11 - Civic (Section 9.4.2.22.13)
+> 
+> Again, thinking about the FTM initiator side code, I think we're
+> probably better off to nest these.
+> 
+> NL80211_ATTR_FTM_RESPONDER -> nested
+> 
+> enum nl80211_ftm_responder_attr {
+> 	NL80211_FTM_RESP_ATTR_INVALID,
+> 
+> 	NL80211_FTM_RESP_ATTR_ENABLED,
+> 	NL80211_FTM_RESP_ATTR_LCI,
+> 	NL80211_FTM_RESP_ATTR_CIVICLOC,
+> 
+> 	NUM/MAX...
+> };
+> 
+> That way we can extend this very easily in the future and don't need
+> these attributes at the top level.
+> 
+> The logic also makes sense in the beacon change command - if you don't
+> include the NL80211_ATTR_FTM_RESPONDER then it means no change; if you
+> do include it the new settings within it (which may be completely empty
+> to disable it) should take effect.
+> 
+>> +/**
+>> + * enum nl80211_ftm_responder_state - fine timing measurement 
+>> responder state
+>> + * @NL80211_FTM_RESP_DISABLED: FTM responder is disabled
+>> + * @NL80211_FTM_RESP_ENABLED: FTM responder is enabled
+>> + */
+>> +enum nl80211_ftm_responder_state {
+>> +	NL80211_FTM_RESP_DISABLED,
+>> +	NL80211_FTM_RESP_ENABLED,
+>> +};
+> 
+> We won't need this either then.
+> 
+>> +	[NL80211_ATTR_FTM_RESPONDER] = { .type = NLA_U8 },
+> 
+> And that of course becomes NLA_NESTED
+> 
+>> +	[NL80211_ATTR_LCI] = { .type = NLA_BINARY },
+>> +	[NL80211_ATTR_CIVIC] = { .type = NLA_BINARY },
+> 
+> with those moving to a separate policy.
+> 
+> What do you think?
+This makes sense.. I will make these changes and send next patch 
+version.
+> 
+> johannes
