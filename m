@@ -1,304 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36413 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726632AbeIJBXt (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2362 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731023AbeISLm4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 21:23:49 -0400
-Received: by mail-wm0-f67.google.com with SMTP id j192-v6so19387436wmj.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Sep 2018 13:32:55 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 01/11] mt76: move mt76x0 and mt76x2 mcu shared defs in mt76x02_mcu.h
-Date: Sun,  9 Sep 2018 22:32:36 +0200
-Message-Id: <20180909203246.21608-2-lorenzo.bianconi@redhat.com> (sfid-20180909_223259_040468_B6BFF2D0)
+        Wed, 19 Sep 2018 07:42:56 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 19/29] staging: wilc1000: avoid the use of 'hif_driver_comp' completion variable
+Date: Wed, 19 Sep 2018 11:35:09 +0530
+Message-ID: <1537337119-14952-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080639_152032_A399BE4A)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76x0 and mt76x2 mcu shared definition in mt76x02_mcu.h
-and remove duplicated code
+Instead of using extra completion variable to handle the sync call now
+using msg->is_sync flag to handle the sync call.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/mcu.c   |  8 +--
- .../net/wireless/mediatek/mt76/mt76x0/mcu.h   | 51 +------------
- .../net/wireless/mediatek/mt76/mt76x02_mcu.h  | 71 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x2_mcu.h   | 49 +------------
- .../net/wireless/mediatek/mt76/mt76x2u_mcu.c  |  2 -
- 5 files changed, 79 insertions(+), 102 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
+ drivers/staging/wilc1000/host_interface.c         | 23 +++++++++++------------
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/linux_wlan.c             |  3 ++-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
+ 4 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-index 29c0b3978af7..a9314753a2dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
-@@ -81,7 +81,7 @@ mt76x0_mcu_calibrate(struct mt76x0_dev *dev, enum mcu_calibrate cal, u32 val)
- int mt76x0_write_reg_pairs(struct mt76x0_dev *dev, u32 base,
- 			   const struct mt76_reg_pair *data, int n)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 237a098d..529390d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -187,7 +187,6 @@ struct join_bss_param {
+ };
+ 
+ static struct host_if_drv *terminated_handle;
+-static struct completion hif_driver_comp;
+ static struct mutex hif_deinit_lock;
+ 
+ /* 'msg' should be free by the caller for syc */
+@@ -310,10 +309,12 @@ static void handle_set_wfi_drv_handler(struct work_struct *work)
+ 	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ 
+-	complete(&hif_driver_comp);
+ 	kfree(buffer);
+ 
+ free_msg:
++	if (msg->is_sync)
++		complete(&msg->work_comp);
++
+ 	kfree(msg);
+ }
+ 
+@@ -333,9 +334,6 @@ static void handle_set_operation_mode(struct work_struct *work)
+ 	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				   wilc_get_vif_idx(vif));
+ 
+-	if (hif_op_mode->mode == IDLE_MODE)
+-		complete(&hif_driver_comp);
+-
+ 	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set operation mode\n");
+ 
+@@ -3118,12 +3116,12 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ }
+ 
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+-			     u8 ifc_id)
++			     u8 ifc_id, bool is_sync)
  {
--	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
-+	const int max_vals_per_cmd = MT_INBAND_PACKET_MAX_LEN / 8;
- 	struct sk_buff *skb;
- 	int cnt, i, ret;
+ 	int result;
+ 	struct host_if_msg *msg;
  
-@@ -111,7 +111,7 @@ int mt76x0_write_reg_pairs(struct mt76x0_dev *dev, u32 base,
- int mt76x0_read_reg_pairs(struct mt76x0_dev *dev, u32 base,
- 			  struct mt76_reg_pair *data, int n)
- {
--	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
-+	const int max_vals_per_cmd = MT_INBAND_PACKET_MAX_LEN / 8;
- 	struct mt76_usb *usb = &dev->mt76.usb;
- 	struct sk_buff *skb;
- 	int cnt, i, ret;
-@@ -154,7 +154,7 @@ int mt76x0_read_reg_pairs(struct mt76x0_dev *dev, u32 base,
- int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
- 			     const u32 *data, int n)
- {
--	const int max_regs_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
-+	const int max_regs_per_cmd = MT_INBAND_PACKET_MAX_LEN / 4 - 1;
- 	struct sk_buff *skb;
- 	int cnt, i, ret;
+-	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, false);
++	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, is_sync);
+ 	if (IS_ERR(msg))
+ 		return PTR_ERR(msg);
  
-@@ -185,7 +185,7 @@ int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
- static int mt76x0_burst_read_regs(struct mt76x0_dev *dev, u32 base,
- 				  struct mt76_reg_pair *data, int n)
- {
--	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
-+	const int max_vals_per_cmd = MT_INBAND_PACKET_MAX_LEN / 4 - 1;
- 	struct mt76_usb *usb = &dev->mt76.usb;
- 	struct sk_buff *skb;
- 	int cnt, ret;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-index 010a7f2bbae9..a551ad5e3af4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
-@@ -15,65 +15,18 @@
- #ifndef __MT76X0U_MCU_H
- #define __MT76X0U_MCU_H
+@@ -3135,8 +3133,12 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+ 	if (result) {
+ 		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
+ 		kfree(msg);
++		return result;
+ 	}
  
--struct mt76x0_dev;
-+#include "../mt76x02_mcu.h"
- 
--/* Register definitions */
--#define MT_MCU_RESET_CTL		0x070C
--#define MT_MCU_INT_LEVEL		0x0718
--#define MT_MCU_COM_REG0			0x0730
--#define MT_MCU_COM_REG1			0x0734
--#define MT_MCU_COM_REG2			0x0738
--#define MT_MCU_COM_REG3			0x073C
-+struct mt76x0_dev;
- 
- #define MT_MCU_IVB_SIZE			0x40
- #define MT_MCU_DLM_OFFSET		0x80000
- 
--#define MT_MCU_MEMMAP_WLAN		0x00410000
- /* We use same space for BBP as for MAC regs
-  * #define MT_MCU_MEMMAP_BBP		0x40000000
-  */
- #define MT_MCU_MEMMAP_RF		0x80000000
- 
--#define INBAND_PACKET_MAX_LEN		192
--
--enum mcu_cmd {
--	CMD_FUN_SET_OP = 1,
--	CMD_LOAD_CR = 2,
--	CMD_INIT_GAIN_OP = 3,
--	CMD_DYNC_VGA_OP = 6,
--	CMD_TDLS_CH_SW = 7,
--	CMD_BURST_WRITE = 8,
--	CMD_READ_MODIFY_WRITE = 9,
--	CMD_RANDOM_READ = 10,
--	CMD_BURST_READ = 11,
--	CMD_RANDOM_WRITE = 12,
--	CMD_LED_MODE_OP = 16,
--	CMD_POWER_SAVING_OP = 20,
--	CMD_WOW_CONFIG = 21,
--	CMD_WOW_QUERY = 22,
--	CMD_WOW_FEATURE = 24,
--	CMD_CARRIER_DETECT_OP = 28,
--	CMD_RADOR_DETECT_OP = 29,
--	CMD_SWITCH_CHANNEL_OP = 30,
--	CMD_CALIBRATION_OP = 31,
--	CMD_BEACON_OP = 32,
--	CMD_ANTENNA_OP = 33,
--};
--
--enum mcu_function {
--	Q_SELECT = 1,
--	BW_SETTING = 2,
--	ATOMIC_TSSI_SETTING = 5,
--};
--
--enum mcu_power_mode {
--	RADIO_OFF = 0x30,
--	RADIO_ON = 0x31,
--	RADIO_OFF_AUTO_WAKEUP = 0x32,
--	RADIO_OFF_ADVANCE = 0x33,
--	RADIO_ON_ADVANCE = 0x34,
--};
--
- enum mcu_calibrate {
- 	MCU_CAL_R = 1,
- 	MCU_CAL_RXDCOC,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-new file mode 100644
-index 000000000000..21181fddee98
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-@@ -0,0 +1,71 @@
-+/*
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
++	if (is_sync)
++		wait_for_completion(&msg->work_comp);
 +
-+#ifndef __MT76x02_MCU_H
-+#define __MT76x0x_MCU_H
-+
-+#define MT_MCU_RESET_CTL		0x070C
-+#define MT_MCU_INT_LEVEL		0x0718
-+#define MT_MCU_COM_REG0			0x0730
-+#define MT_MCU_COM_REG1			0x0734
-+#define MT_MCU_COM_REG2			0x0738
-+#define MT_MCU_COM_REG3			0x073C
-+
-+#define MT_INBAND_PACKET_MAX_LEN	192
-+#define MT_MCU_MEMMAP_WLAN		0x410000
-+
-+enum mcu_cmd {
-+	CMD_FUN_SET_OP = 1,
-+	CMD_LOAD_CR = 2,
-+	CMD_INIT_GAIN_OP = 3,
-+	CMD_DYNC_VGA_OP = 6,
-+	CMD_TDLS_CH_SW = 7,
-+	CMD_BURST_WRITE = 8,
-+	CMD_READ_MODIFY_WRITE = 9,
-+	CMD_RANDOM_READ = 10,
-+	CMD_BURST_READ = 11,
-+	CMD_RANDOM_WRITE = 12,
-+	CMD_LED_MODE_OP = 16,
-+	CMD_POWER_SAVING_OP = 20,
-+	CMD_WOW_CONFIG = 21,
-+	CMD_WOW_QUERY = 22,
-+	CMD_WOW_FEATURE = 24,
-+	CMD_CARRIER_DETECT_OP = 28,
-+	CMD_RADOR_DETECT_OP = 29,
-+	CMD_SWITCH_CHANNEL_OP = 30,
-+	CMD_CALIBRATION_OP = 31,
-+	CMD_BEACON_OP = 32,
-+	CMD_ANTENNA_OP = 33,
-+};
-+
-+enum mcu_power_mode {
-+	RADIO_OFF = 0x30,
-+	RADIO_ON = 0x31,
-+	RADIO_OFF_AUTO_WAKEUP = 0x32,
-+	RADIO_OFF_ADVANCE = 0x33,
-+	RADIO_ON_ADVANCE = 0x34,
-+};
-+
-+enum mcu_function {
-+	Q_SELECT = 1,
-+	BW_SETTING = 2,
-+	USB2_SW_DISCONNECT = 2,
-+	USB3_SW_DISCONNECT = 3,
-+	LOG_FW_DEBUG_MSG = 4,
-+	GET_FW_VERSION = 5,
-+};
-+
-+#endif /* __MT76x02_MCU_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-index e40293f21417..564bcac27401 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-@@ -17,15 +17,11 @@
- #ifndef __MT76x2_MCU_H
- #define __MT76x2_MCU_H
+ 	return result;
+ }
  
-+#include "mt76x02_mcu.h"
-+
- /* Register definitions */
- #define MT_MCU_CPU_CTL			0x0704
- #define MT_MCU_CLOCK_CTL		0x0708
--#define MT_MCU_RESET_CTL		0x070C
--#define MT_MCU_INT_LEVEL		0x0718
--#define MT_MCU_COM_REG0			0x0730
--#define MT_MCU_COM_REG1			0x0734
--#define MT_MCU_COM_REG2			0x0738
--#define MT_MCU_COM_REG3			0x073C
- #define MT_MCU_PCIE_REMAP_BASE1		0x0740
- #define MT_MCU_PCIE_REMAP_BASE2		0x0744
- #define MT_MCU_PCIE_REMAP_BASE3		0x0748
-@@ -69,47 +65,6 @@
- #define MT_MCU_DLM_ADDR			0x90000
- #define MT_MCU_DLM_ADDR_E3		0x90800
+@@ -3380,10 +3382,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
  
--enum mcu_cmd {
--	CMD_FUN_SET_OP = 1,
--	CMD_LOAD_CR = 2,
--	CMD_INIT_GAIN_OP = 3,
--	CMD_DYNC_VGA_OP = 6,
--	CMD_TDLS_CH_SW = 7,
--	CMD_BURST_WRITE = 8,
--	CMD_READ_MODIFY_WRITE = 9,
--	CMD_RANDOM_READ = 10,
--	CMD_BURST_READ = 11,
--	CMD_RANDOM_WRITE = 12,
--	CMD_LED_MODE_OP = 16,
--	CMD_POWER_SAVING_OP = 20,
--	CMD_WOW_CONFIG = 21,
--	CMD_WOW_QUERY = 22,
--	CMD_WOW_FEATURE = 24,
--	CMD_CARRIER_DETECT_OP = 28,
--	CMD_RADOR_DETECT_OP = 29,
--	CMD_SWITCH_CHANNEL_OP = 30,
--	CMD_CALIBRATION_OP = 31,
--	CMD_BEACON_OP = 32,
--	CMD_ANTENNA_OP = 33,
--};
--
--enum mcu_function {
--	Q_SELECT = 1,
--	BW_SETTING = 2,
--	USB2_SW_DISCONNECT = 2,
--	USB3_SW_DISCONNECT = 3,
--	LOG_FW_DEBUG_MSG = 4,
--	GET_FW_VERSION = 5,
--};
--
--enum mcu_power_mode {
--	RADIO_OFF = 0x30,
--	RADIO_ON = 0x31,
--	RADIO_OFF_AUTO_WAKEUP = 0x32,
--	RADIO_OFF_ADVANCE = 0x33,
--	RADIO_ON_ADVANCE = 0x34,
--};
--
- enum mcu_calibration {
- 	MCU_CAL_R = 1,
- 	MCU_CAL_TEMP_SENSOR,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-index 31677e898427..a4302457cf5c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
-@@ -20,8 +20,6 @@
- #include "mt76x2_eeprom.h"
+ 	vif->obtaining_ip = false;
  
- #define MT_CMD_HDR_LEN			4
--#define MT_INBAND_PACKET_MAX_LEN	192
--#define MT_MCU_MEMMAP_WLAN		0x410000
+-	if (wilc->clients_count == 0) {
+-		init_completion(&hif_driver_comp);
++	if (wilc->clients_count == 0)
+ 		mutex_init(&hif_deinit_lock);
+-	}
  
- #define MCU_FW_URB_MAX_PAYLOAD		0x3900
- #define MCU_ROM_PATCH_MAX_PAYLOAD	2048
+ 	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
+ 	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
+@@ -3430,8 +3430,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 	del_timer_sync(&vif->periodic_rssi);
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+-	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
+-	wait_for_completion(&hif_driver_comp);
++	wilc_set_wfi_drv_handler(vif, 0, 0, 0, true);
+ 
+ 	if (hif_drv->usr_scan_req.scan_result) {
+ 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 15ffaeb..4416f8f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -350,7 +350,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
+ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+-			     u8 ifc_id);
++			     u8 ifc_id, bool is_sync);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats,
+ 			bool is_sync);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8ecd664..b666e1e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -753,7 +753,8 @@ static int wilc_mac_open(struct net_device *ndev)
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+ 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+-						 vif->iftype, vif->ifc_id);
++						 vif->iftype, vif->ifc_id,
++						 false);
+ 			wilc_set_operation_mode(vif, vif->iftype);
+ 			break;
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 02a8846..76d017d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1779,7 +1779,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		if (wl->initialized) {
+ 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+-						 0, vif->ifc_id);
++						 0, vif->ifc_id, false);
+ 			wilc_set_operation_mode(vif, AP_MODE);
+ 			wilc_set_power_mgmt(vif, 0, 0);
+ 		}
 -- 
-2.18.0
+2.7.4
