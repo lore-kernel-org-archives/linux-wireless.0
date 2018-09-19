@@ -1,67 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46922 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727579AbeIEJep (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:59464 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732793AbeITB2s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 05:34:45 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Naftali Goldstein <naftali.goldstein@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  5 Sep 2018 08:06:07 +0300
-Message-Id: <20180905050614.23273-3-luca@coelho.fi> (sfid-20180905_070630_602019_33BAD3F4)
-In-Reply-To: <20180905050614.23273-1-luca@coelho.fi>
-References: <20180831083130.15525-1-luca@coelho.fi>
- <20180905050614.23273-1-luca@coelho.fi>
-Subject: [RESEND PATCH v2 2/9] mac80211: fix saving a few HE values
+        Wed, 19 Sep 2018 21:28:48 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: David Ahern <dsahern@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 4/5] netlink: allow NLA_NESTED to specify nested policy to validate
+Date: Wed, 19 Sep 2018 21:49:04 +0200
+Message-Id: <20180919194905.16462-5-johannes@sipsolutions.net> (sfid-20180919_214939_078471_A6BABBC9)
+In-Reply-To: <20180919194905.16462-1-johannes@sipsolutions.net>
+References: <20180919194905.16462-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Naftali Goldstein <naftali.goldstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-After masking the he_oper_params, to get the requested values as
-integers one must rshift and not lshift.  Fix that by using the
-le32_get_bits() macro.
+Now that we have a validation_data pointer, and the len field in
+the policy is unused for NLA_NESTED, we can allow using them both
+to have nested validation. This can be nice in code, although we
+still have to use nla_parse_nested() or similar which would also
+take a policy; however, it also serves as documentation in the
+policy without requiring a look at the code.
 
-Fixes: 41cbb0f5a295 ("mac80211: add support for HE")
-Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
-[converted to use le32_get_bits()]
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ include/net/netlink.h | 13 +++++++++++--
+ lib/nlattr.c          | 14 ++++++++++++++
+ 2 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1bd714376635..3b1b7a77fa7d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3173,19 +3173,16 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	}
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 0d698215d4d9..91907852da1c 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -200,8 +200,10 @@ enum {
+  *    NLA_NUL_STRING       Maximum length of string (excluding NUL)
+  *    NLA_FLAG             Unused
+  *    NLA_BINARY           Maximum length of attribute payload
+- *    NLA_NESTED           Don't use `len' field -- length verification is
+- *                         done by checking len of nested header (or empty)
++ *    NLA_NESTED           Length verification is done by checking len of
++ *                         nested header (or empty); len field is used if
++ *                         validation_data is also used, for the max attr
++ *                         number in the nested policy.
+  *    NLA_U8, NLA_U16,
+  *    NLA_U32, NLA_U64,
+  *    NLA_S8, NLA_S16,
+@@ -224,6 +226,10 @@ enum {
+  *    NLA_REJECT           This attribute is always rejected and validation data
+  *                         may point to a string to report as the error instead
+  *                         of the generic one in extended ACK.
++ *    NLA_NESTED           Points to a nested policy to validate, must also set
++ *                         `len' to the max attribute number.
++ *                         Note that nla_parse() will validate, but of course not
++ *                         parse, the nested sub-policies.
+  *    All other            Unused
+  *
+  * Example:
+@@ -247,6 +253,9 @@ struct nla_policy {
+ #define NLA_POLICY_ETH_ADDR		NLA_POLICY_EXACT_LEN(ETH_ALEN)
+ #define NLA_POLICY_ETH_ADDR_COMPAT	NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN)
  
- 	if (bss_conf->he_support) {
--		u32 he_oper_params =
--			le32_to_cpu(elems.he_operation->he_oper_params);
-+		bss_conf->bss_color =
-+			le32_get_bits(elems.he_operation->he_oper_params,
-+				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK);
- 
--		bss_conf->bss_color = he_oper_params &
--				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK;
- 		bss_conf->htc_trig_based_pkt_ext =
--			(he_oper_params &
--			 IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK) <<
--			IEEE80211_HE_OPERATION_DFLT_PE_DURATION_OFFSET;
-+			le32_get_bits(elems.he_operation->he_oper_params,
-+			      IEEE80211_HE_OPERATION_DFLT_PE_DURATION_MASK);
- 		bss_conf->frame_time_rts_th =
--			(he_oper_params &
--			 IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK) <<
--			IEEE80211_HE_OPERATION_RTS_THRESHOLD_OFFSET;
-+			le32_get_bits(elems.he_operation->he_oper_params,
-+			      IEEE80211_HE_OPERATION_RTS_THRESHOLD_MASK);
- 
- 		bss_conf->multi_sta_back_32bit =
- 			sta->sta.he_cap.he_cap_elem.mac_cap_info[2] &
++#define NLA_POLICY_NESTED(maxattr, policy) \
++	{ .type = NLA_NESTED, .validation_data = policy, .len = maxattr }
++
+ /**
+  * struct nl_info - netlink source information
+  * @nlh: Netlink message header of original request
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index ff6d48d7c19a..4cbfc64f6d10 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -152,6 +152,20 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 		 */
+ 		if (attrlen == 0)
+ 			break;
++		if (attrlen < NLA_HDRLEN)
++			goto out_err;
++		if (pt->validation_data) {
++			err = nla_validate(nla_data(nla), nla_len(nla), pt->len,
++					   pt->validation_data, extack);
++			if (err < 0) {
++				/*
++				 * return directly to preserve the inner
++				 * error message/attribute pointer
++				 */
++				return err;
++			}
++		}
++		break;
+ 	default:
+ 		if (pt->len)
+ 			minlen = pt->len;
 -- 
-2.18.0
+2.14.4
