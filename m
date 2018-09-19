@@ -1,57 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:42505 "EHLO
-        ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727112AbeICSgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 14:36:42 -0400
-Date: Mon, 3 Sep 2018 22:06:09 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-        John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rtlwifi: remove set but unused variables
-Message-ID: <20180903140609.GA63782@ns.kevlo.org> (sfid-20180903_161627_055895_F7AC33BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([144.76.43.62]:53246 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731478AbeISRqz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 13:46:55 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 7/7] netlink: add nested array policy validation
+Date: Wed, 19 Sep 2018 14:09:00 +0200
+Message-Id: <20180919120900.28708-8-johannes@sipsolutions.net> (sfid-20180919_140950_390965_6E7259F0)
+In-Reply-To: <20180919120900.28708-1-johannes@sipsolutions.net>
+References: <20180919120900.28708-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused variables from _rtl88ee_hw_configure() and
-_rtl8723e_hw_configure().
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Kevin Lo <kevlo.org>
+Sometimes nested netlink attributes are just used as arrays, with
+the nla_type() of each not being used; we have this in nl80211 and
+e.g. NFTA_SET_ELEM_LIST_ELEMENTS.
+
+Add the ability to validate this type of message directly in the
+policy, by adding the type NLA_NESTED_ARRAY which does exactly
+this: require a first level of nesting but ignore the attribute
+type, and then inside each require a second level of nested and
+validate those attributes against a given policy (if present).
+
+Note that some nested array types actually require that all of
+the entries have the same index, this is possible to express in
+a nested policy already, apart from the validation that only the
+one allowed type is used.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index 988d5ac57d02..cfc8762c55f4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -951,12 +951,8 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
- static void _rtl88ee_hw_configure(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 reg_bw_opmode;
--	u32 reg_ratr, reg_prsr;
-+	u32 reg_prsr;
+ include/net/netlink.h | 12 +++++++++++-
+ lib/nlattr.c          | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 91907852da1c..3698ca8ff92c 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -172,6 +172,7 @@ enum {
+ 	NLA_FLAG,
+ 	NLA_MSECS,
+ 	NLA_NESTED,
++	NLA_NESTED_ARRAY,
+ 	NLA_NUL_STRING,
+ 	NLA_BINARY,
+ 	NLA_S8,
+@@ -200,7 +201,8 @@ enum {
+  *    NLA_NUL_STRING       Maximum length of string (excluding NUL)
+  *    NLA_FLAG             Unused
+  *    NLA_BINARY           Maximum length of attribute payload
+- *    NLA_NESTED           Length verification is done by checking len of
++ *    NLA_NESTED,
++ *    NLA_NESTED_ARRAY     Length verification is done by checking len of
+  *                         nested header (or empty); len field is used if
+  *                         validation_data is also used, for the max attr
+  *                         number in the nested policy.
+@@ -230,6 +232,12 @@ enum {
+  *                         `len' to the max attribute number.
+  *                         Note that nla_parse() will validate, but of course not
+  *                         parse, the nested sub-policies.
++ *    NLA_NESTED_ARRAY     Points to a nested policy to validate, must also set
++ *                         `len' to the max attribute number. The difference to
++ *                         NLA_NESTED is the structure - NLA_NESTED has the
++ *                         nested attributes directly inside, while an array has
++ *                         the nested attributes at another level down and the
++ *                         attributes directly in the nesting don't matter.
+  *    All other            Unused
+  *
+  * Example:
+@@ -255,6 +263,8 @@ struct nla_policy {
  
--	reg_bw_opmode = BW_OPMODE_20MHZ;
--	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
--	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
- 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
+ #define NLA_POLICY_NESTED(maxattr, policy) \
+ 	{ .type = NLA_NESTED, .validation_data = policy, .len = maxattr }
++#define NLA_POLICY_NESTED_ARRAY(maxattr, policy) \
++	{ .type = NLA_NESTED_ARRAY, .validation_data = policy, .len = maxattr }
  
- 	rtl_write_dword(rtlpriv, REG_RRSR, reg_prsr);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 545115db507e..f783e4a8083d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -799,11 +799,9 @@ static void _rtl8723e_hw_configure(struct ieee80211_hw *hw)
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 reg_bw_opmode;
--	u32 reg_ratr, reg_prsr;
-+	u32 reg_prsr;
+ /**
+  * struct nl_info - netlink source information
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index c0ea8a78eda6..234763b41ab7 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -72,6 +72,35 @@ static int nla_validate_parse(const struct nlattr *head, int len, int maxtype,
+ 			      struct netlink_ext_ack *extack, bool *extack_set,
+ 			      struct nlattr **tb);
  
- 	reg_bw_opmode = BW_OPMODE_20MHZ;
--	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
--	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
- 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
- 
- 	rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, 0x8);
++static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
++			      const struct nla_policy *policy,
++			      struct netlink_ext_ack *extack, bool *extack_set)
++{
++	const struct nlattr *entry;
++	int rem;
++
++	nla_for_each_attr(entry, head, len, rem) {
++		int ret;
++
++		if (nla_len(entry) == 0)
++			continue;
++
++		if (nla_len(entry) < NLA_HDRLEN) {
++			NL_SET_ERR_MSG_ATTR(extack, entry,
++					    "Array element too short");
++			return -ERANGE;
++		}
++
++		ret = nla_validate_parse(nla_data(entry), nla_len(entry),
++					 maxtype, policy, extack, extack_set,
++					 NULL);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++
+ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			const struct nla_policy *policy,
+ 			struct netlink_ext_ack *extack, bool *extack_set)
+@@ -165,6 +194,24 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 				return err;
+ 		}
+ 		break;
++	case NLA_NESTED_ARRAY:
++		/* a nested array attribute is allowed to be empty; if its not,
++		 * it must have a size of at least NLA_HDRLEN.
++		 */
++		if (attrlen == 0)
++			break;
++		if (attrlen < NLA_HDRLEN)
++			return -ERANGE;
++		if (pt->validation_data) {
++			int err;
++
++			err = nla_validate_array(nla_data(nla), nla_len(nla),
++						 pt->len, pt->validation_data,
++						 extack, extack_set);
++			if (err < 0)
++				return err;
++		}
++		break;
+ 	default:
+ 		if (pt->len)
+ 			minlen = pt->len;
+-- 
+2.14.4
