@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:51920 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726354AbeIFH4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 03:56:40 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <davem@davemloft.net>, <johannes.berg@intel.com>,
-        <emmanuel.grumbach@intel.com>, <luciano.coelho@intel.com>,
-        <linuxwifi@intel.com>, <kvalo@codeaurora.org>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH v2] iwlwifi: Use kmemdup instead of duplicating it in iwl_parse_nvm_mcc_info
-Date: Thu, 6 Sep 2018 11:20:59 +0800
-Message-ID: <20180906032059.11160-1-yuehaibing@huawei.com> (sfid-20180906_052338_581299_356C6EF0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.62]:53220 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727772AbeISRqv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 13:46:51 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 0/7] netlink recursive policy validation
+Date: Wed, 19 Sep 2018 14:08:53 +0200
+Message-Id: <20180919120900.28708-1-johannes@sipsolutions.net> (sfid-20180919_140946_949394_5F70870F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace calls to kzalloc followed by a memcpy with a direct call to
-kmemdup.
+This series adds recursive policy validation, allowing you to specify
+complex policies involving nested attributes, both
+ * attributes that directly contain new nested attributes
+   (NLA_NESTED)
+ * attributes that have nested attributes used as an array, where the
+   type of each inner attribute is irrelevant/ignored but each of them
+   yet again contains nested attributes that should conform to a given
+   policy (the new NLA_NESTED_ARRAY)
 
-Patch found using coccinelle.
+This is useful for a more compact representation of the policy for the
+attributes, which - among other benefits - makes it more easily seen
+when reading the code, requiring reading just the policy instead of
+digging into all the usage/nested validation code.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
-v2: fix a typo 'reg' --> 'regd'
----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+In terms of code benefits, it means possibly some validation code can
+be removed.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 27db4a3..bd91657 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -1113,14 +1113,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 	regd_to_copy = sizeof(struct ieee80211_regdomain) +
- 		valid_rules * sizeof(struct ieee80211_reg_rule);
- 
--	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
-+	copy_rd = kmemdup(regd, regd_to_copy, GFP_KERNEL);
- 	if (!copy_rd) {
- 		copy_rd = ERR_PTR(-ENOMEM);
- 		goto out;
- 	}
- 
--	memcpy(copy_rd, regd, regd_to_copy);
--
- out:
- 	kfree(regdb_ptrs);
- 	kfree(regd);
--- 
-2.7.0
+One thing to be aware of: retrofitting this to existing policies may
+in fact break userspace - it might have been sending broken but ignored
+attributes, which global enforcement of the (nested) policy would now
+prevent.
+
+johannes
