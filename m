@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50840 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726170AbeIDIuB (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2328 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730968AbeISLmT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 04:50:01 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 19 Sep 2018 07:42:19 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/29] staging: wilc1000: use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack()
+Date: Wed, 19 Sep 2018 11:34:59 +0530
+Message-ID: <1537337119-14952-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080602_826665_03355F76)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] debug: use common debug for ack timeout output
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
-References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
-To: =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        ath9k_htc_fw@lists.infradead.org
-Message-Id: <20180904042646.48B6E601D3@smtp.codeaurora.org> (sfid-20180904_062651_364483_A8A1AA74)
-Date: Tue,  4 Sep 2018 04:26:46 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomislav Požega wrote:
+Use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack() as it always
+return value '1' and its not used by the caller.
 
-> Move ack debug code to common-debug and adjust
-> ath9k/ath9k_htc debug for common ack output.
-> 
-> Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Failed to build:
-
-drivers/net/wireless/ath/ath9k/debug.c: In function 'ath9k_init_debug':
-drivers/net/wireless/ath/ath9k/debug.c:1431:2: error: implicit declaration of function 'ath9k_cmn_dbg_ack_to'; did you mean 'ath9k_cmn_debug_ack_to'? [-Werror=implicit-function-declaration]
-  ath9k_cmn_dbg_ack_to(sc->debug.debugfs_phy, sc->sc_ah);
-  ^~~~~~~~~~~~~~~~~~~~
-  ath9k_cmn_debug_ack_to
-cc1: some warnings being treated as errors
-make[5]: *** [drivers/net/wireless/ath/ath9k/debug.o] Error 1
-make[5]: *** Waiting for unfinished jobs....
-make[5]: *** wait: No child processes.  Stop.
-make[4]: *** [drivers/net/wireless/ath/ath9k] Error 2
-make[3]: *** [drivers/net/wireless/ath] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
-
-3 patches set to Changes Requested.
-
-10586273 [1/3] debug: use common debug for ack timeout output
-10586277 [2/3] ath9k_htc: enable ANI debug output
-10586275 [3/3] ath9k_htc: increase number of configurable virtual interfaces
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 66ce29d..88808d9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -182,7 +182,7 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ }
+ 
+-static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
++static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ {
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	struct wilc *wilc = vif->wilc;
+@@ -237,8 +237,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 					    msecs_to_jiffies(1));
+ 		dropped--;
+ 	}
+-
+-	return 1;
+ }
+ 
+ void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
 -- 
-https://patchwork.kernel.org/patch/10586273/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
