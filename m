@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:33781 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391160AbeIVBXx (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:45354 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731219AbeISVvS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 21:23:53 -0400
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH v2] ath5k: Remove unused BUG_ON
-Date: Fri, 21 Sep 2018 12:32:36 -0700
-Message-Id: <20180921193235.1723-1-natechancellor@gmail.com> (sfid-20180921_213410_686480_327A865A)
+        Wed, 19 Sep 2018 17:51:18 -0400
+Subject: Re: [PATCH] net: wireless: mediatek: fix mt76 LEDS build error
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, arnd@arndb.de
+References: <563c7f90-1d9f-440c-4670-8fbebc9f76b0@infradead.org>
+ <20180907075612.GB2725@localhost.localdomain>
+ <87d0tp65km.fsf@kamboji.qca.qualcomm.com> <874lelsc6o.fsf@purkki.adurom.net>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <c5f28a00-3c53-6e0f-bce6-c702e8d8f219@infradead.org> (sfid-20180919_181244_779122_73C5C1ED)
+Date: Wed, 19 Sep 2018 09:12:35 -0700
 MIME-Version: 1.0
+In-Reply-To: <874lelsc6o.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clang warns that the address of a pointer will always evaluated as true
-in a boolean context:
+On 9/19/18 9:07 AM, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+>>
+>>>> From: Randy Dunlap <rdunlap@infradead.org>
+>>>>
+>>>> All of the mt76 driver options use its mac80211.o component,
+>>>> which uses led interfaces, so each of them should depend on
+>>>> LEDS_CLASS.
+>>>>
+>>>> Fixes this build error:
+>>>>
+>>>> drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_led_init':
+>>>> drivers/net/wireless/mediatek/mt76/mac80211.c:119: undefined
+>>>> reference to `devm_of_led_classdev_register'
+>>>>
+>>>> Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+>>>>
+>>>
+>>> Hi Randy,
+>>>
+>>> a fix for it has been already proposed by Arnd here:
+>>> https://marc.info/?l=linux-wireless&m=151628136830540&w=2
+>>> but it has not been applied yet
+>>
+>> Yet? Arnd's patch is not on my queue as it's from last January and Felix
+>> had a comment for it:
+>>
+>> https://patchwork.kernel.org/patch/10173197/
+> 
+> So what should we do? Arnd hasn't submitted a new patch so should we
+> take this one instead?
 
-drivers/net/wireless/ath/ath5k/debug.c:1031:14: warning: address of
-array 'ah->sbands' will always evaluate to 'true'
-[-Wpointer-bool-conversion]
-        BUG_ON(!ah->sbands);
-               ~~~~~^~~~~~
-./include/asm-generic/bug.h:61:45: note: expanded from macro 'BUG_ON'
-#define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
-                                            ^~~~~~~~~
-./include/linux/compiler.h:77:42: note: expanded from macro 'unlikely'
-# define unlikely(x)    __builtin_expect(!!(x), 0)
-                                            ^
-1 warning generated.
+No.  Arnd, can you resend your patch?
 
-Given that this condition is always false because of the logical not,
-just remove it.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/130
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
-
-v1 -> v2:
-
-* Fix incorrect link
-
- drivers/net/wireless/ath/ath5k/debug.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index e01faf641288..94f70047d3fc 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -1028,8 +1028,6 @@ ath5k_debug_dump_bands(struct ath5k_hw *ah)
- 	if (likely(!(ah->debug.level & ATH5K_DEBUG_DUMPBANDS)))
- 		return;
- 
--	BUG_ON(!ah->sbands);
--
- 	for (b = 0; b < NUM_NL80211_BANDS; b++) {
- 		struct ieee80211_supported_band *band = &ah->sbands[b];
- 		char bname[6];
+thanks,
 -- 
-2.19.0
+~Randy
