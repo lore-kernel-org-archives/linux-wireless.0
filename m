@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44314 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727013AbeIVTDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Sep 2018 15:03:31 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, cc@80211.de
-Subject: [PATCH] mac80211: allocate TXQs for active monitor interfaces
-Date: Sat, 22 Sep 2018 15:09:53 +0200
-Message-Id: <20180922130953.19581-1-nbd@nbd.name> (sfid-20180922_151207_448457_9552AEFA)
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:1289 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730974AbeISLnd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 07:43:33 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 29/29] staging: wilc1000: return exact error of register_netdev() from wilc_netdev_init()
+Date: Wed, 19 Sep 2018 11:35:19 +0530
+Message-ID: <1537337119-14952-30-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080723_874927_C97858E5)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode interfaces with the active flag are passed down to the driver.
-Drivers using TXQ expect that all interfaces have allocated TXQs before
-they get added.
+Modified wilc_netdev_init() to return the error code received from
+register_netdev() during the failure condition.
 
-Fixes: 79af1f866193d ("mac80211: avoid allocating TXQs that won't be used")
-Cc: stable@vger.kernel.org
-Reported-by: Catrinel Catrinescu <cc@80211.de>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Earlier discussion link
+[1]. https://www.spinics.net/lists/linux-wireless/msg177304.html
+
+Suggested-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/mac80211/iface.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5e6cf2cee965..cf93cd9b9205 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -729,7 +729,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 29c1317..75abaf9 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1056,14 +1056,14 @@ static const struct net_device_ops wilc_netdev_ops = {
+ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		     const struct wilc_hif_func *ops)
+ {
+-	int i, ret;
++	int i, ret = -ENOMEM;
+ 	struct wilc_vif *vif;
+ 	struct net_device *ndev;
+ 	struct wilc *wl;
  
- 	ieee80211_recalc_ps(local);
+ 	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+ 	if (!wl)
+-		return -ENOMEM;
++		return ret;
  
--	if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+	if ((sdata->vif.type == NL80211_IFTYPE_MONITOR &&
-+	    !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE)) ||
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 	    local->ops->wake_tx_queue) {
- 		/* XXX: for AP_VLAN, actually track AP queues */
+ 	if (wilc_wlan_cfg_init(wl))
+ 		goto free_wl;
+@@ -1151,7 +1151,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	wilc_wlan_cfg_deinit(wl);
+ free_wl:
+ 	kfree(wl);
+-	return -ENOMEM;
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(wilc_netdev_init);
+ 
 -- 
-2.17.0
+2.7.4
