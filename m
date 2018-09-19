@@ -1,205 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51226 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726433AbeIRN5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 09:57:36 -0400
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Subject: pull request: mt76 2018-09-18
-Message-ID: <d6299095-b62d-d291-df65-0cadd5d9ceb4@nbd.name> (sfid-20180918_102608_435797_EA72D956)
-Date: Tue, 18 Sep 2018 10:26:02 +0200
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2382 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729926AbeISLnS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Sep 2018 07:43:18 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 25/29] staging: wilc1000: remove wilc_debugfs.c file as its not used
+Date: Wed, 19 Sep 2018 11:35:15 +0530
+Message-ID: <1537337119-14952-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080701_042847_0948B582)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Deleted wilc_debugfs.c file as it's not used.
 
-Here's a large batch of mt76 code cleanup / deduplication / fixes,
-rebased to your latest wireless-drivers-next.
+Earlier discussion link:
+[1]. https://www.spinics.net/lists/linux-wireless/msg176076.html
 
-- Felix
+Suggested-by: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/Makefile       |   5 +-
+ drivers/staging/wilc1000/wilc_debugfs.c | 115 --------------------------------
+ 2 files changed, 2 insertions(+), 118 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
 
-The following changes since commit 43e2f2904160b9a95aad77df9cbc1622910b8598:
-
-  Merge wireless-drivers into wireless-drivers-next (2018-09-17 17:41:02 +0300)
-
-are available in the Git repository at:
-
-  https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-09-18
-
-for you to fetch changes up to faedbfa17bec060688a4615c5bc5dc3c681ddca3:
-
-  mt76x0: usb: remove mt76_fw definition (2018-09-17 17:39:12 +0200)
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mt76: use a per rx queue page fragment cache
-
-Lorenzo Bianconi (58):
-      mt76x2: change mt76x2_tx_complete routine signature
-      mt76: move mt76x2_tx_complete routine in mt76x02-lib module
-      mt76: move mt76x2u_remove_dma_hdr in mt76x02-lib module
-      mt76: move mt76x2u_tx_complete_skb in mt76x02-lib moudule
-      mt76: move mt76_qsel definition in dma.h
-      mt76: move mt76x2u_set_txinfo in mt76x02-lib module
-      mt76x0: introduce mt76x0_tx_prepare_skb routine
-      mt76: move mt76x2u_tx_status_data in mt76x02-lib module
-      mt76x0: init mt76_driver_ops callbacks
-      mt76x0: use mt76_alloc_device for device allocation
-      mt76x0: disable usb rx bulk aggregation
-      mt76x0: mark device as running in mt76x0_start
-      mt76x0: simplify mt76_mac_process_rx signature
-      mt76x0: add mt76x0_queue_rx_skb routine
-      mt76x0: unify tx/rx datapath with mt76x2u driver
-      mt76x0: stop stat workqueue at hw stop
-      mt76x0: set max fragments size
-      mt76x0: remove unused dma.c source file
-      mt76x0: remove unused stat work_queue
-      mt76x0: remove unused {tx/rx}_queue definitions
-      mt76x0: remove unused mt76x0_tx_status routine
-      mt76x0: remove unused endpoint definitions
-      mt76x0: remove unused stat_work
-      mt76x0: enable per-sta tx queueing
-      mt76x0: init hw capabilities
-      mt76: remove unused MT76_MORE_STATS state
-      mt76x0: remove mt76x0_stop_hardware routine
-      mt76: move mt76 rate definitions in mt76x02-lib module
-      mt76x0: alloc mcu buffers first in mt76x0_mcu_cmd_init
-      mt76x0: fix memory leak during hw probe
-      mt76x0: move stop related routines in mt76x0_mac_stop
-      mt76x0: move mt76x0_init_hardware in mt76x0_register_device
-      mt76x0: do not free/alloc buffers during suspend/resume
-      mt76x0: remove has_{2,5}ghz fields of mt76x0_eeprom_params
-      mt76x0: use mt76_register_device for device registration
-      mt76x0: run vco calibration for each channel configuration
-      mt76: move mt76x0 and mt76x2 mcu shared defs in mt76x02_mcu.h
-      mt76: add mt76_mcu_ops data structure for mcu related pointers
-      mt76: usb: use common helpers for mcu_alloc_msg()/mcu_send_msg()
-      mt76: usb: move mt76x02 mcu code in mt76x02-usb module
-      mt76: usb: move mt76u_skb_dma_info in mt76x02_usb_core.c
-      mt76x02: move TXD/RXD/MCU definitions in mt76x02_dma.h
-      mt76x02: add static qualifier to mt76x02_remove_dma_hdr
-      mt76: usb: remove skb check in mt76x{0,2}u mcu routines
-      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_tx_queue_mcu
-      mt76x2: remove leftover mt76u_buf data structure in mt76x2_mcu
-      mt76: introduce mmio data structure in mt76_dev
-      mt76: move __iomem regs in mt76_mmio
-      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_mcu_msg_send
-      mt76x2: use common helpers for mcu_alloc_msg()/mcu_send_msg()
-      mt76: unify firmware header between mt76x0 and mt76x2
-      mt76: move mt76{0,2} mcu shared code in mt76x02_mcu.c
-      mt76x2: move mt76x2 mcu shared code in mt76x2_mcu_common.c
-      mt76: move shared mcu_calibrate routine in mt76x02-lib module
-      mt76x2: move mt76x2_phy_tssi_compensate in mt76x2-common module
-      mt76x0: remove mcu source file
-      mt76x0: remove unused usb header file
-      mt76x0: usb: remove mt76_fw definition
-
-Stanislaw Gruszka (30):
-      mt76: move wcid fields to common mt76_dev struct
-      mt76: unify sta_add / sta_remove
-      mt76: pratially unify add_interface
-      mt76: unify ampdu_action
-      mt76: unify set_key
-      mt76x0: remove empty sta_notify
-      mt76: unify AC to hw queue mapping
-      mt76: unify conf_tx
-      mt76x0: remove vif_mask
-      mt76: unify remove_interface
-      mt76: unify add_interface
-      mt76: unify sta_rate_tbl_update and related helpers
-      mt76: unify txwi and rxwi structures
-      mt76: unify load_tx_status
-      mt76: unify send_tx_status and related helpers
-      mt76: use mt76_rx_status in mt76x0
-      mt76: unify mac_process_rate
-      mt76x0: reserve enough space in mac80211
-      mt76: unify {insert/remove}_hdr_pad
-      mt76: partially unify filling txwi fields
-      mt76x0: trim rx skb to proper length
-      mt76x0: inital split between pci and usb
-      mt76x0: remove unused mt76x0_wcid
-      mt76x0: remove some usb specific code from mt76x0_register_device
-      mt76x0: make device allocation bus neutral
-      mt76: add usb implementation of {wr,rd}_rp
-      mt76: add rd_rp and wr_rp to bus_ops/mcu_ops
-      mt76x0: remove unused mt76x0_burst_read_regs
-      mt76x0: remove mt76x0_burst_write_regs()
-      mt76x0: usb: move firmware loading to usb.c
-
- drivers/net/wireless/mediatek/mt76/Kconfig                         |  27 +++-
- drivers/net/wireless/mediatek/mt76/Makefile                        |   9 +-
- drivers/net/wireless/mediatek/mt76/dma.c                           |  16 +-
- drivers/net/wireless/mediatek/mt76/dma.h                           |  41 +----
- drivers/net/wireless/mediatek/mt76/mac80211.c                      |   3 +-
- drivers/net/wireless/mediatek/mt76/mmio.c                          |  12 +-
- drivers/net/wireless/mediatek/mt76/mt76.h                          |  81 +++++++---
- drivers/net/wireless/mediatek/mt76/mt76x0/Makefile                 |  13 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/dma.c                    | 524 ---------------------------------------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c                 |  26 ++--
- drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.h                 |   3 -
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c                   | 378 ++++++++++++---------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.c                    | 323 +++------------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mac.h                    | 132 +---------------
- drivers/net/wireless/mediatek/mt76/mt76x0/main.c                   | 228 +++------------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c                    | 395 -----------------------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h                    |  60 +-------
- drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h                 | 125 ++-------------
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c                    |  81 ++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c                    |  37 ++---
- drivers/net/wireless/mediatek/mt76/mt76x0/trace.h                  |  12 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/tx.c                     | 245 ++++++-----------------------
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c                    | 232 +++++++++++++++++++++++++---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.h                    |  46 ------
- drivers/net/wireless/mediatek/mt76/mt76x0/util.c                   |  42 -----
- drivers/net/wireless/mediatek/mt76/mt76x02_dma.h                   |  60 ++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c                   | 347 ++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h                   | 122 ++++++++++++++-
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c                   | 213 ++++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h                   | 100 ++++++++++++
- drivers/net/wireless/mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h} |  22 +--
- drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c              |  72 +++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c               | 359 +++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c                  | 401 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.h                  |  29 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h                        |  42 +----
- drivers/net/wireless/mediatek/mt76/mt76x2_common.c                 | 259 +------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c                    |  55 +------
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c                   |  12 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c            |  33 +---
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c                    |  15 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h                    | 110 +-------------
- drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c             | 368 ++------------------------------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c                   |  50 +-----
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c                    | 261 ++-----------------------------
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h                    |  68 +--------
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu_common.c             | 124 +++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c                    |  65 ++------
- drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c             |  49 +++++-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c                     |   5 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c              |  39 +----
- drivers/net/wireless/mediatek/mt76/mt76x2_usb.c                    |   2 +
- drivers/net/wireless/mediatek/mt76/mt76x2u.h                       |  16 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_core.c                  |  69 +--------
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c                  |  13 +-
- drivers/net/wireless/mediatek/mt76/mt76x2u_main.c                  |  22 +--
- drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c                   | 210 +++----------------------
- drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c                   |  67 ++------
- drivers/net/wireless/mediatek/mt76/tx.c                            |  16 ++
- drivers/net/wireless/mediatek/mt76/usb.c                           | 105 ++++++++-----
- drivers/net/wireless/mediatek/mt76/usb_mcu.c                       | 242 -----------------------------
- 61 files changed, 2759 insertions(+), 4374 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/util.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
- rename drivers/net/wireless/mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h} (58%)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu_common.c
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index ee7e26b..5718bc4 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -4,12 +4,11 @@ obj-$(CONFIG_WILC1000) += wilc1000.o
+ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
+ 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+ 
+-ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
++ccflags-y += -I$(src)/ -DWILC_ASIC_A0
+ 
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			coreconfigurator.o host_interface.o \
+-			wilc_wlan_cfg.o wilc_debugfs.o \
+-			wilc_wlan.o
++			wilc_wlan_cfg.o wilc_wlan.o
+ 
+ obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
+ wilc1000-sdio-objs += wilc_sdio.o
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+deleted file mode 100644
+index 8001df6..0000000
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ /dev/null
+@@ -1,115 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
+- * All rights reserved.
+- */
+-
+-#if defined(WILC_DEBUGFS)
+-#include <linux/module.h>
+-#include <linux/debugfs.h>
+-
+-#include "wilc_wlan_if.h"
+-
+-static struct dentry *wilc_dir;
+-
+-#define DEBUG           BIT(0)
+-#define INFO            BIT(1)
+-#define WRN             BIT(2)
+-#define ERR             BIT(3)
+-
+-#define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+-EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+-
+-static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+-				     size_t count, loff_t *ppos)
+-{
+-	char buf[128];
+-	int res = 0;
+-
+-	/* only allow read from start */
+-	if (*ppos > 0)
+-		return 0;
+-
+-	res = scnprintf(buf, sizeof(buf), "Debug Level: %x\n",
+-			atomic_read(&WILC_DEBUG_LEVEL));
+-
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+-}
+-
+-static ssize_t wilc_debug_level_write(struct file *filp,
+-				      const char __user *buf, size_t count,
+-				      loff_t *ppos)
+-{
+-	int flag = 0;
+-	int ret;
+-
+-	ret = kstrtouint_from_user(buf, count, 16, &flag);
+-	if (ret)
+-		return ret;
+-
+-	if (flag > DBG_LEVEL_ALL) {
+-		pr_info("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n",
+-			__func__, flag, atomic_read(&WILC_DEBUG_LEVEL));
+-		return -EINVAL;
+-	}
+-
+-	atomic_set(&WILC_DEBUG_LEVEL, (int)flag);
+-
+-	if (flag == 0)
+-		pr_info("Debug-level disabled\n");
+-	else
+-		pr_info("Debug-level enabled\n");
+-
+-	return count;
+-}
+-
+-#define FOPS(_open, _read, _write, _poll) { \
+-		.owner	= THIS_MODULE, \
+-		.open	= (_open), \
+-		.read	= (_read), \
+-		.write	= (_write), \
+-		.poll		= (_poll), \
+-}
+-
+-struct wilc_debugfs_info_t {
+-	const char *name;
+-	int perm;
+-	unsigned int data;
+-	const struct file_operations fops;
+-};
+-
+-static struct wilc_debugfs_info_t debugfs_info[] = {
+-	{
+-		"wilc_debug_level",
+-		0666,
+-		(DEBUG | ERR),
+-		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
+-	},
+-};
+-
+-static int __init wilc_debugfs_init(void)
+-{
+-	int i;
+-	struct wilc_debugfs_info_t *info;
+-
+-	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+-		info = &debugfs_info[i];
+-		debugfs_create_file(info->name,
+-				    info->perm,
+-				    wilc_dir,
+-				    &info->data,
+-				    &info->fops);
+-	}
+-	return 0;
+-}
+-module_init(wilc_debugfs_init);
+-
+-static void __exit wilc_debugfs_remove(void)
+-{
+-	debugfs_remove_recursive(wilc_dir);
+-}
+-module_exit(wilc_debugfs_remove);
+-
+-#endif
+-- 
+2.7.4
