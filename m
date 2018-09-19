@@ -1,145 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:40791 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388826AbeIULwP (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:33691 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730911AbeISLmb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 07:52:15 -0400
-From: <yhchuang@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
-        <pkshih@realtek.com>, <tehuang@realtek.com>
-Subject: [PATCH 12/12] rtwlan: Kconfig & Makefile
-Date: Fri, 21 Sep 2018 14:04:07 +0800
-Message-ID: <1537509847-21087-13-git-send-email-yhchuang@realtek.com> (sfid-20180921_080505_791909_96FA697B)
-In-Reply-To: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
-References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+        Wed, 19 Sep 2018 07:42:31 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/29] staging: wilc1000: set default value of cfg response type in wilc_wlan_cfg_indicate_rx()
+Date: Wed, 19 Sep 2018 11:35:02 +0530
+Message-ID: <1537337119-14952-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080613_790920_32D938E4)
+In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Handle the setting of default value for 'wilc_cfg_rsp' type for all
+cases in wilc_wlan_cfg_indicate_rx() as the caller make use of this
+value to know the type of the received message.
 
-Kconfig & Makefile for Realtek 802.11ac wireless network chips
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/realtek/Kconfig         |  1 +
- drivers/net/wireless/realtek/Makefile        |  1 +
- drivers/net/wireless/realtek/rtwlan/Kconfig  | 55 ++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtwlan/Makefile | 21 +++++++++++
- 4 files changed, 78 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtwlan/Kconfig
- create mode 100644 drivers/net/wireless/realtek/rtwlan/Makefile
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/Kconfig b/drivers/net/wireless/realtek/Kconfig
-index 3db988e..044f807 100644
---- a/drivers/net/wireless/realtek/Kconfig
-+++ b/drivers/net/wireless/realtek/Kconfig
-@@ -14,5 +14,6 @@ if WLAN_VENDOR_REALTEK
- source "drivers/net/wireless/realtek/rtl818x/Kconfig"
- source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
- source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
-+source "drivers/net/wireless/realtek/rtwlan/Kconfig"
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 2b5471b..2c463a3 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -507,6 +507,7 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 	msg_id = frame[1];      /* seq no */
+ 	frame += 4;
+ 	size -= 4;
++	rsp->type = 0;
  
- endif # WLAN_VENDOR_REALTEK
-diff --git a/drivers/net/wireless/realtek/Makefile b/drivers/net/wireless/realtek/Makefile
-index 9c78deb..d7bd304 100644
---- a/drivers/net/wireless/realtek/Makefile
-+++ b/drivers/net/wireless/realtek/Makefile
-@@ -6,4 +6,5 @@ obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
- obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
- obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
-+obj-$(CONFIG_RTWLAN)		+= rtwlan/
+ 	/*
+ 	 * The valid types of response messages are
+@@ -532,7 +533,6 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
  
-diff --git a/drivers/net/wireless/realtek/rtwlan/Kconfig b/drivers/net/wireless/realtek/rtwlan/Kconfig
-new file mode 100644
-index 0000000..93cefbf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtwlan/Kconfig
-@@ -0,0 +1,55 @@
-+menuconfig RTWLAN
-+	tristate "Realtek 802.11ac wireless chips support"
-+	depends on MAC80211
-+	default y
-+	help
-+	  This module adds support for mac80211-based wireless drivers that
-+	  enables Realtek IEEE 802.11ac wireless chipsets.
-+
-+	  If you choose to build a module, it'll be called rtwlan.
-+
-+if RTWLAN
-+
-+config RTWLAN_CORE
-+	tristate
-+	depends on RTWLAN
-+
-+config RTWLAN_PCI
-+	tristate
-+	depends on RTWLAN_CORE && PCI
-+
-+config RTWLAN_8822BE
-+	bool "Realtek 8822BE PCI wireless network adapter"
-+	select RTWLAN_CORE
-+	select RTWLAN_PCI
-+	help
-+	  Select this option will enable support for 8822BE chipset
-+
-+	  802.11ac PCIe wireless network adapter
-+
-+config RTWLAN_8822CE
-+	bool "Realtek 8822CE PCI wireless network adapter"
-+	select RTWLAN_CORE
-+	select RTWLAN_PCI
-+	help
-+	  Select this option will enable support for 8822CE chipset
-+
-+	  802.11ac PCIe wireless network adapter
-+
-+config RTWLAN_DEBUG
-+	bool "Realtek rtwlan debug support"
-+	depends on RTWLAN_CORE
-+	help
-+	  Enable debug support
-+
-+	  If unsure, say Y to simplify debug problems
-+
-+config RTWLAN_DEBUGFS
-+	bool "Realtek rtwlan debugfs support"
-+	depends on RTWLAN_CORE
-+	help
-+	  Enable debug support
-+
-+	  If unsure, say Y to simplify debug problems
-+
-+endif
-diff --git a/drivers/net/wireless/realtek/rtwlan/Makefile b/drivers/net/wireless/realtek/rtwlan/Makefile
-new file mode 100644
-index 0000000..dc6cd08a
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtwlan/Makefile
-@@ -0,0 +1,21 @@
-+# SPDX-License-Identifier: GPL-2.0
-+
-+obj-$(CONFIG_RTWLAN_CORE)	+= rtwlan.o
-+rtwlan-y += main.o \
-+	    mac80211.o \
-+	    debug.o \
-+	    tx.o \
-+	    rx.o \
-+	    mac.o \
-+	    phy.o \
-+	    efuse.o \
-+	    fw.o \
-+	    ps.o \
-+	    sec.o \
-+	    regd.o
-+
-+rtwlan-$(CONFIG_RTWLAN_8822BE)	+= rtw8822b.o rtw8822b_table.o
-+rtwlan-$(CONFIG_RTWLAN_8822CE)	+= rtw8822c.o rtw8822c_table.o
-+
-+obj-$(CONFIG_RTWLAN_PCI)	+= rtwpci.o
-+rtwpci-objs			:= pci.o
+ 	case 'N':
+ 		wilc_network_info_received(wilc, frame - 4, size + 4);
+-		rsp->type = 0;
+ 		break;
+ 
+ 	case 'S':
+@@ -540,7 +540,6 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 		break;
+ 
+ 	default:
+-		rsp->type = 0;
+ 		rsp->seq_no = msg_id;
+ 		break;
+ 	}
 -- 
 2.7.4
