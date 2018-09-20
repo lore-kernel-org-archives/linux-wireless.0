@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:65168 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726479AbeIUMd6 (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:42296 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730984AbeITRFC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 08:33:58 -0400
-Date: Fri, 21 Sep 2018 12:01:16 +0530
+        Thu, 20 Sep 2018 13:05:02 -0400
+Date: Thu, 20 Sep 2018 16:51:55 +0530
 From: Ajay Singh <ajay.kathat@microchip.com>
-To: Nathan Chancellor <natechancellor@gmail.com>
-CC: <valdis.kletnieks@vt.edu>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: wilc1000: Remove unnecessary pointer check
-Message-ID: <20180921120116.603b1de6@ajaysk-VirtualBox> (sfid-20180921_084640_169655_6BC0C7E7)
-In-Reply-To: <20180921053911.GA5170@flashbox>
-References: <20180920212648.25181-1-natechancellor@gmail.com>
-        <32473.1537507532@turing-police.cc.vt.edu>
-        <20180921053911.GA5170@flashbox>
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <aditya.shankar@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <claudiu.beznea@microchip.com>, <adham.abozaeid@microchip.com>
+Subject: Re: [PATCH v2 28/29] staging: wilc1000: avoid spaces preferred
+ around checkpatch issue
+Message-ID: <20180920165155.08f72ea0@ajaysk-VirtualBox> (sfid-20180920_132210_517004_C50A9CEF)
+In-Reply-To: <6e925b2021d5fbc59f1933d37a1deb1332ede752.camel@perches.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+        <1537424620-6982-29-git-send-email-ajay.kathat@microchip.com>
+        <6e925b2021d5fbc59f1933d37a1deb1332ede752.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+On Thu, 20 Sep 2018 02:57:21 -0700
+Joe Perches <joe@perches.com> wrote:
 
-On Thu, 20 Sep 2018 22:39:11 -0700
-Nathan Chancellor <natechancellor@gmail.com> wrote:
-
-> On Fri, Sep 21, 2018 at 01:25:32AM -0400, valdis.kletnieks@vt.edu
-> wrote:
-> > On Thu, 20 Sep 2018 14:26:49 -0700, Nathan Chancellor said:  
-> > > Clang warns that the address of a pointer will always evaluated
-> > > as true in a boolean context:
-> > >
-> > > drivers/staging/wilc1000/linux_wlan.c:267:20: warning: address of
-> > > 'vif->ndev->dev' will always evaluate to 'true'
-> > > [-Wpointer-bool-conversion]
-> > >         if (!(&vif->ndev->dev))
-> > >             ~  ~~~~~~~~~~~^~~
-> > > 1 warning generated.
-> > >
-> > > Since this statement always evaluates to false due to the logical
-> > > not, remove it.  
+> On Thu, 2018-09-20 at 11:53 +0530, Ajay Singh wrote:
+> > Cleanup patch to add extra spaces around the '/' to avoid the below
+> > checkpatch warning.
 > > 
-> > Often, "just nuke it because it's now dead code" isn't the best
-> > answer...
+> > 'spaces preferred around that '/' (ctx:VxV)'
 > > 
-> > At one time, that was likely intended to be checking whether ->dev
-> > was a null pointer, to make sure we don't pass request_firmware() a
-> > null pointer and oops the kernel, or other things that go
-> > pear-shaped....
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/linux_wlan.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
 > > 
-> > So the question becomes:   Is it safe to just remove it, or was it
-> > intended to test for something that could  legitimately be null if
-> > we've hit an error along the way (which means we should fix the
-> > condition to be proper and acceptable to both gcc and clang)?
-> > 
-> >   
+> > diff --git a/drivers/staging/wilc1000/linux_wlan.c
+> > b/drivers/staging/wilc1000/linux_wlan.c index 695d5b2..29c1317
+> > 100644 --- a/drivers/staging/wilc1000/linux_wlan.c
+> > +++ b/drivers/staging/wilc1000/linux_wlan.c
+> > @@ -823,7 +823,7 @@ static void wilc_set_multicast_list(struct
+> > net_device *dev) 
+> >  	netdev_for_each_mc_addr(ha, dev) {
+> >  		memcpy(mc_list + i, ha->addr, ETH_ALEN);
+> > -		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n",
+> > i/ETH_ALEN,
+> > +		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n",
+> > i / ETH_ALEN, mc_list[i], mc_list[i + 1], mc_list[i + 2],
+> >  			   mc_list[i + 3], mc_list[i + 4],
+> > mc_list[i + 5]); i += ETH_ALEN;  
 > 
-> I certainly considered whether or not removing the check versus fixing
-> it was the correct answer. Given that this check can be traced back to
-> the initial check in of the driver in 2015, I figured it was safe to
-> remove it (since a null pointer dereference would most likely have
-> been noticed by now).
+> Probably better using the vsprintf %pM extension:
 > 
-> Most patches addressing this warning just remove the check given that
-> it's not actually changing the code, such as commit a7dc662c6a7b
-> ("ASoC: codecs: PCM1789: unconditionally flush work"). However, if
-> the driver authors and/or maintainers think that this check should be
-> something else (maybe checking that the contents of dev is not null
-> versus the address, I'm perfectly happy to submit a v2 with this
-> change.
+> 	netdev_dbg(dev, Entry[%d]: %pM\n", i / ETH_ALEN, mc_list + i);
 > 
+> though I would also suggest using another temporary
+> pointer instead of an offset and divisions.
+> 
+> Something like:
+> 
+> o use kmalloc_array
+> o remove unnecessary res
+> o add u8 *cur_mc
+> o use i as index
 
-The 'if' condition was intended to check the validity of net_device
-structure, but i think its not required here.
-The device pointer used in request_firmware(), was received in
-the probe functions and different from the one checked in 'if'
-condition.
+Hi Joe,
 
-Thus its safe to remove the 'if (!(&vif->ndev->dev))' condition
-block.
-      
+Thanks for your suggestion and sharing the code changes.
+I agree, it looks better with your modification.
+
+
+Do I need to resend the updated patch series by including your
+changes or can this patch be applied from your mail ?
 
 Regards,
 Ajay
