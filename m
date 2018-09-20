@@ -1,157 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:53085 "EHLO mail.toke.dk"
+Received: from mail.toke.dk ([52.28.52.200]:43883 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727674AbeIJP4R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 11:56:17 -0400
+        id S1726128AbeITVyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 17:54:37 -0400
 From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH RFC v3 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <1536566666.3224.24.camel@sipsolutions.net>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1> <153635897010.14170.2992498632345986102.stgit@alrua-x1> <1536566666.3224.24.camel@sipsolutions.net>
-Date: Mon, 10 Sep 2018 13:02:44 +0200
-Message-ID: <87k1ntlinf.fsf@toke.dk> (sfid-20180910_130250_336542_670B7E27)
+To: Anilkumar Kolli <akolli@codeaurora.org>, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: Re: [RFCv3 1/2] mac80211: implement ieee80211_tx_rate_update to update rate
+In-Reply-To: <1537445116-10780-2-git-send-email-akolli@codeaurora.org>
+References: <1537445116-10780-1-git-send-email-akolli@codeaurora.org> <1537445116-10780-2-git-send-email-akolli@codeaurora.org>
+Date: Thu, 20 Sep 2018 18:10:24 +0200
+Message-ID: <87va706tfz.fsf@toke.dk> (sfid-20180920_181031_103696_9B4F0B06)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Anilkumar Kolli <akolli@codeaurora.org> writes:
 
-> On Sat, 2018-09-08 at 00:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+> Current mac80211 has provision to update tx status through
+> ieee80211_tx_status() and ieee80211_tx_status_ext(). But
+> drivers like ath10k updates the tx status from the skb except
+> txrate, txrate will be updated from a different path, peer stats.
 >
->> +/**
->> + * ieee80211_next_txq - get next tx queue to pull packets from
->> + *
->> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->> + * @ac: AC number to return packets from.
->> + * @first: Setting this to true signifies the start of a new scheduling=
- round.
->> + *         Each TXQ will only be returned at most exactly once in each =
-round.
->> + *
->> + * Returns the next txq if successful, %NULL if no queue is eligible. I=
-f a txq
->> + * is returned, it will have been removed from the scheduler queue and =
-needs to
->> + * be re-scheduled with ieee80211_schedule_txq() to continue to be acti=
-ve. Note
->> + * that the driver is responsible for locking to ensuring two different=
- threads
->> + * don't schedule the same AC simultaneously.
+> Using ieee80211_tx_status_ext() in two different paths
+>   - (one for the stats, one for the tx rate) will duplicate the stats.
 >
-> "Note that [...] to ensure [...]" would seem better to me?
+> To avoid this stats duplication, ieee80211_tx_rate_update() is implemented.
 >
->> + */
->> +struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
->> +					 bool first);
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+> ---
+> V3:
+>   - Added new API in mac80211 to update tx rate(Johannes)
 >
-> Why should "ac" be signed? Is there some (undocumented) behaviour that
-> allows for passing -1 for "don't care" or "pick highest with frames"?
+>  include/net/mac80211.h |   14 ++++++++++++++
+>  net/mac80211/status.c  |   24 ++++++++++++++++++++++++
+>  2 files changed, 38 insertions(+)
 >
-> You said "optionally" in the commit message, but I don't think that's
-> true, since you just use ac to index the array in the code.
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 8c26d2d36cbe..042186a21770 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -4331,6 +4331,20 @@ void ieee80211_sta_set_expected_throughput(struct ieee80211_sta *pubsta,
+>  					   u32 thr);
+>  
+>  /**
+> + * ieee80211_tx_rate_update - transmit rate update callback
+> + *
+> + * This function can be used in drivers that does not have provision
+> + * in updating the tx rate in data path.
+> + *
+> + * @hw: the hardware the frame was transmitted by
+> + * @status: tx status information
+> + * @pubsta: the station to update the tx rate for.
+> + */
+> +void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
+> +			      struct ieee80211_sta *pubsta,
+> +			      struct ieee80211_tx_info *info);
+> +
+> +/**
+>   * ieee80211_tx_status - transmit status callback
+>   *
+>   * Call this function for all transmitted frames after they have been
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 9a6d7208bf4f..232297ddaa02 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -988,6 +988,30 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+>  }
+>  EXPORT_SYMBOL(ieee80211_tx_status_ext);
+>  
+> +void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
+> +			      struct ieee80211_sta *pubsta,
+> +			      struct ieee80211_tx_info *info)
+> +{
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct ieee80211_supported_band *sband;
+> +	struct sta_info *sta;
+> +	struct ieee80211_tx_status status;
+> +
+> +	sband = hw->wiphy->bands[info->band];
+> +
+> +	if (pubsta) {
 
-There was in the previous version, but I removed that; guess I forgot to
-change the sign and the commit message ;)
-
->> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
->> +			    struct ieee80211_txq *txq)
->> +{
->> +	struct ieee80211_local *local =3D hw_to_local(hw);
->> +	struct txq_info *txqi =3D to_txq_info(txq);
->> +	bool ret =3D false;
->> +
->> +	spin_lock_bh(&local->active_txq_lock);
->> +
->> +	if (list_empty(&txqi->schedule_order)) {
->
-> Is there a case where it's allowed to call this while *not* empty? At
-> least for the drivers it seems not, so perhaps when called from the
-> driver it should WARN() here or so?
-
-Yeah, mac80211 calls this on wake_txq, where it will often be scheduled
-already. And since that can happen while drivers schedule stuff, it
-could also be the case that a driver re-schedules a queue that is
-already scheduled.
-
-> I'm just a bit worried that drivers will get this a bit wrong, and
-> we'll never know, but things won't work properly in some weird way.
-
-What, subtle bugs in the data path that causes hangs in hard-to-debug
-cases? Nah, that never happens ;)
-
->> +		list_add_tail(&txqi->schedule_order,
->> +			      &local->active_txqs[txq->ac]);
->> +		ret =3D true;
->> +	}
->> +
->> +	spin_unlock_bh(&local->active_txq_lock);
->> +
->> +	return ret;
->> +}
->> +EXPORT_SYMBOL(ieee80211_schedule_txq);
->
-> I'd remove the return value - the driver has no need to know that it
-> raced with potential rescheduling in mac80211 due to a new packet, and
-> you don't use the return value in mac80211 either.
-
-Yeah, good point; that was left over from when the call to wake_txq was
-conditional on this actually doing something...
-
-> It also seems to me that you forgot to say when it should be
-> rescheduled? As is, following the documentation would sort of makes it
-> seem you should take the queue and put it back at the end (without any
-> conditions), and that could lead to "scheduling loops" since empty
-> queues would always be put back when they shouldn't be?
->
-> Also, come to think of it, but I guess the next patch(es) solve(s) that
-> - if mac80211 adds a packet while you have this queue scheduled then you
-> would take that packet even if it's questionable it belongs to this
-> round?
->
-> From a driver perspective, I think I'd prefer an API called e.g.
->
-> 	ieee80211_return_txq()
->
-> that does the check internally if we need to schedule the queue (i.e.
-> there are packets on it). I was going to say we could even annotate with
-> sparse, but no - we can't because ieee80211_next_txq() may return NULL.
-> Still, it's easier to ensure that all cleanup paths call
-> ieee80211_return_txq() if it's not conditional, IMHO.
-
-Good idea, will do.
-
->> +struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, s8 ac,
->> +					 bool first)
->> +{
->> +	struct ieee80211_local *local =3D hw_to_local(hw);
->> +	struct txq_info *txqi =3D NULL;
->> +
->> +	spin_lock_bh(&local->active_txq_lock);
->> +
->> +	if (first)
->> +		local->schedule_round[ac]++;
->
-> (here - clearly ac must be 0 <=3D ac < IEEE80211_NUM_ACS)
->
->> +	if (list_empty(&local->active_txqs[ac]))
->> +		goto out;
->> +
->> +	txqi =3D list_first_entry(&local->active_txqs[ac],
->> +				struct txq_info,
->> +				schedule_order);
->> +
->> +	if (txqi->schedule_round =3D=3D local->schedule_round[ac])
->> +		txqi =3D NULL;
->
-> that assigment seems unnecessary? txqi defaults to NULL.
-
-No, this is an 'undo' of the previous line. I.e., we get the first txqi,
-check if we've already seen it this round, and if we have, unset txqi so
-the function returns NULL (causing the driver to stop looping).
+The function does nothing if pubsta is NULL; wouldn't it make more sense
+to just mandate that it isn't NULL rather than have this check?
 
 -Toke
