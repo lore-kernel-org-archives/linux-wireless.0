@@ -1,114 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56652 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728629AbeIFNxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:53:45 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 04/42] mt76: move mt76x2u_tx_complete_skb in mt76x02-lib moudule
-Date: Thu,  6 Sep 2018 11:18:20 +0200
-Message-Id: <1536225538-16454-5-git-send-email-sgruszka@redhat.com> (sfid-20180906_111927_271928_AB0CAD35)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12424 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732017AbeITMGr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 08:06:47 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 19/29] staging: wilc1000: avoid the use of 'hif_driver_comp' completion variable
+Date: Thu, 20 Sep 2018 11:53:30 +0530
+Message-ID: <1537424620-6982-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_085420_707357_2131C22C)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Instead of using extra completion variable to handle the sync call now
+using msg->is_sync flag to handle the sync call.
 
-Move mt76x2u_tx_complete_skb routine in mt76x02-lib module
-and rename it in mt76x02_tx_complete_skb in order to be reused
-in mt76x0 driver
-
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 8 ++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.h | 2 ++
- drivers/net/wireless/mediatek/mt76/mt76x2u.h      | 2 --
- drivers/net/wireless/mediatek/mt76/mt76x2u_core.c | 8 --------
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c | 3 ++-
- 5 files changed, 12 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 23 +++++++++++------------
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/linux_wlan.c             |  3 ++-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
+ 4 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index a8ad3088ad8b..e4cf4e934153 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -404,4 +404,12 @@ void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb)
- }
- EXPORT_SYMBOL_GPL(mt76x02_tx_complete);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 237a098d..529390d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -187,7 +187,6 @@ struct join_bss_param {
+ };
  
-+void mt76x02_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
-+			    struct mt76_queue_entry *e, bool flush)
-+{
-+	mt76x02_remove_dma_hdr(e->skb);
-+	mt76x02_tx_complete(mdev, e->skb);
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_tx_complete_skb);
+ static struct host_if_drv *terminated_handle;
+-static struct completion hif_driver_comp;
+ static struct mutex hif_deinit_lock;
+ 
+ /* 'msg' should be free by the caller for syc */
+@@ -310,10 +309,12 @@ static void handle_set_wfi_drv_handler(struct work_struct *work)
+ 	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ 
+-	complete(&hif_driver_comp);
+ 	kfree(buffer);
+ 
+ free_msg:
++	if (msg->is_sync)
++		complete(&msg->work_comp);
 +
- MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-index 6b6e963454c8..a7c20e6fb4ab 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-@@ -47,4 +47,6 @@ int mt76x02_insert_hdr_pad(struct sk_buff *skb);
- void mt76x02_remove_hdr_pad(struct sk_buff *skb, int len);
- void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb);
- void mt76x02_remove_dma_hdr(struct sk_buff *skb);
-+void mt76x02_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
-+			    struct mt76_queue_entry *e, bool flush);
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-index a83c17cb6be5..6946123820e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u.h
-@@ -74,8 +74,6 @@ int mt76x2u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
- 			   struct sk_buff *skb, struct mt76_queue *q,
- 			   struct mt76_wcid *wcid, struct ieee80211_sta *sta,
- 			   u32 *tx_info);
--void mt76x2u_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
--			     struct mt76_queue_entry *e, bool flush);
- int mt76x2u_skb_dma_info(struct sk_buff *skb, enum dma_msg_port port,
- 			 u32 flags);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_core.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_core.c
-index 01dcc5382798..7ba5e5c71dc3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_core.c
-@@ -86,11 +86,3 @@ int mt76x2u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
- 
- 	return mt76x2u_set_txinfo(skb, wcid, q2ep(*hwq_ptr));
+ 	kfree(msg);
  }
--
--void mt76x2u_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
--			     struct mt76_queue_entry *e, bool flush)
--{
--	mt76x02_remove_dma_hdr(e->skb);
--	mt76x02_tx_complete(mdev, e->skb);
--}
--
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-index 53ace9d21fc8..f166246da002 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-@@ -17,6 +17,7 @@
- #include <linux/delay.h>
  
- #include "mt76x2u.h"
-+#include "mt76x02_util.h"
- #include "mt76x2_eeprom.h"
+@@ -333,9 +334,6 @@ static void handle_set_operation_mode(struct work_struct *work)
+ 	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				   wilc_get_vif_idx(vif));
  
- static void mt76x2u_init_dma(struct mt76x2_dev *dev)
-@@ -136,7 +137,7 @@ struct mt76x2_dev *mt76x2u_alloc_device(struct device *pdev)
+-	if (hif_op_mode->mode == IDLE_MODE)
+-		complete(&hif_driver_comp);
+-
+ 	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set operation mode\n");
+ 
+@@ -3118,12 +3116,12 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ }
+ 
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+-			     u8 ifc_id)
++			     u8 ifc_id, bool is_sync)
  {
- 	static const struct mt76_driver_ops drv_ops = {
- 		.tx_prepare_skb = mt76x2u_tx_prepare_skb,
--		.tx_complete_skb = mt76x2u_tx_complete_skb,
-+		.tx_complete_skb = mt76x02_tx_complete_skb,
- 		.tx_status_data = mt76x2u_tx_status_data,
- 		.rx_skb = mt76x2_queue_rx_skb,
- 	};
+ 	int result;
+ 	struct host_if_msg *msg;
+ 
+-	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, false);
++	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, is_sync);
+ 	if (IS_ERR(msg))
+ 		return PTR_ERR(msg);
+ 
+@@ -3135,8 +3133,12 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+ 	if (result) {
+ 		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
+ 		kfree(msg);
++		return result;
+ 	}
+ 
++	if (is_sync)
++		wait_for_completion(&msg->work_comp);
++
+ 	return result;
+ }
+ 
+@@ -3380,10 +3382,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	vif->obtaining_ip = false;
+ 
+-	if (wilc->clients_count == 0) {
+-		init_completion(&hif_driver_comp);
++	if (wilc->clients_count == 0)
+ 		mutex_init(&hif_deinit_lock);
+-	}
+ 
+ 	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
+ 	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
+@@ -3430,8 +3430,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 	del_timer_sync(&vif->periodic_rssi);
+ 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+ 
+-	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
+-	wait_for_completion(&hif_driver_comp);
++	wilc_set_wfi_drv_handler(vif, 0, 0, 0, true);
+ 
+ 	if (hif_drv->usr_scan_req.scan_result) {
+ 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 15ffaeb..4416f8f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -350,7 +350,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
+ void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
+-			     u8 ifc_id);
++			     u8 ifc_id, bool is_sync);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats,
+ 			bool is_sync);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8ecd664..b666e1e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -753,7 +753,8 @@ static int wilc_mac_open(struct net_device *ndev)
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+ 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+-						 vif->iftype, vif->ifc_id);
++						 vif->iftype, vif->ifc_id,
++						 false);
+ 			wilc_set_operation_mode(vif, vif->iftype);
+ 			break;
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 02a8846..76d017d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1779,7 +1779,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		if (wl->initialized) {
+ 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
+-						 0, vif->ifc_id);
++						 0, vif->ifc_id, false);
+ 			wilc_set_operation_mode(vif, AP_MODE);
+ 			wilc_set_power_mgmt(vif, 0, 0);
+ 		}
 -- 
-2.7.5
+2.7.4
