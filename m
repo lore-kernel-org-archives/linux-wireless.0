@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62723 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726094AbeIDK3A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 06:29:00 -0400
-Message-ID: <339ef1c283fefd657d7a4b9ba2db067d52d9f7ef.camel@intel.com> (sfid-20180904_080609_161086_C4826EE6)
-Subject: Re: [PATCH] iwlwifi: mvm:  fix spelling mistake "Recieved" ->
- "Received"
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Colin King <colin.king@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Sep 2018 09:05:19 +0300
-In-Reply-To: <20180826223117.12892-1-colin.king@canonical.com>
-References: <20180826223117.12892-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.62]:38856 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732139AbeITPgq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 11:36:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: tracing: reuse wiphy_wdev_evt for rdev_get_txq_stats
+Date: Thu, 20 Sep 2018 11:53:55 +0200
+Message-Id: <20180920095355.14806-1-johannes@sipsolutions.net> (sfid-20180920_115410_371908_F75C39A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2018-08-26 at 23:31 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Trivial fix to spelling mistake in debug message.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> index b15b0d84bb7e..5f32d3131d62 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> @@ -3320,7 +3320,7 @@ static bool iwl_mvm_rx_aux_roc(struct iwl_notif_wait_data *notif_wait,
->  	resp = (void *)pkt->data;
->  
->  	IWL_DEBUG_TE(mvm,
-> -		     "Aux ROC: Recieved response from ucode: status=%d uid=%d\n",
-> +		     "Aux ROC: Received response from ucode: status=%d uid=%d\n",
->  		     resp->status, resp->event_unique_id);
->  
->  	te_data->uid = le32_to_cpu(resp->event_unique_id);
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks! Again I pushed this to our internal tree and it will reach the
-mainline following our normal process.
+A simple cleanup, reuse the event definition that we already have.
 
---
-Cheers,
-Luca.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/trace.h | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 5e7eec849200..e51348e24ff5 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3246,18 +3246,9 @@ TRACE_EVENT(rdev_set_multicast_to_unicast,
+ 		  BOOL_TO_STR(__entry->enabled))
+ );
+ 
+-TRACE_EVENT(rdev_get_txq_stats,
++DEFINE_EVENT(wiphy_wdev_evt, rdev_get_txq_stats,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
+-	TP_ARGS(wiphy, wdev),
+-	TP_STRUCT__entry(
+-		WIPHY_ENTRY
+-		WDEV_ENTRY
+-	),
+-	TP_fast_assign(
+-		WIPHY_ASSIGN;
+-		WDEV_ASSIGN;
+-	),
+-	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT, WIPHY_PR_ARG, WDEV_PR_ARG)
++	TP_ARGS(wiphy, wdev)
+ );
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+-- 
+2.14.4
