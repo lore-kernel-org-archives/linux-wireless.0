@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:53226 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731399AbeISRqw (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12456 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731240AbeITMHV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 13:46:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/7] netlink: make validation_data const
-Date: Wed, 19 Sep 2018 14:08:55 +0200
-Message-Id: <20180919120900.28708-3-johannes@sipsolutions.net> (sfid-20180919_140947_807720_76E9DEF5)
-In-Reply-To: <20180919120900.28708-1-johannes@sipsolutions.net>
-References: <20180919120900.28708-1-johannes@sipsolutions.net>
+        Thu, 20 Sep 2018 08:07:21 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 28/29] staging: wilc1000: avoid spaces preferred around checkpatch issue
+Date: Thu, 20 Sep 2018 11:53:39 +0530
+Message-ID: <1537424620-6982-29-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082630_755362_68FC93B9)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Cleanup patch to add extra spaces around the '/' to avoid the below
+checkpatch warning.
 
-The validation data is only used within the policy that
-should usually already be const, and isn't changed in any
-code that uses it. Therefore, make the validation_data
-pointer const.
+'spaces preferred around that '/' (ctx:VxV)'
 
-While at it, remove the duplicate variable in the bitfield
-validation that I'd otherwise have to change to const.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/netlink.h | 2 +-
- lib/nlattr.c          | 5 ++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index b680fe365e91..0d698215d4d9 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -237,7 +237,7 @@ enum {
- struct nla_policy {
- 	u16		type;
- 	u16		len;
--	void            *validation_data;
-+	const void     *validation_data;
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 695d5b2..29c1317 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -823,7 +823,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
  
- #define NLA_POLICY_EXACT_LEN(_len)	{ .type = NLA_EXACT_LEN, .len = _len }
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 120ad569e13d..e2e5b38394d5 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -45,12 +45,11 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
- };
- 
- static int validate_nla_bitfield32(const struct nlattr *nla,
--				   u32 *valid_flags_allowed)
-+				   const u32 *valid_flags_mask)
- {
- 	const struct nla_bitfield32 *bf = nla_data(nla);
--	u32 *valid_flags_mask = valid_flags_allowed;
- 
--	if (!valid_flags_allowed)
-+	if (!valid_flags_mask)
- 		return -EINVAL;
- 
- 	/*disallow invalid bit selector */
+ 	netdev_for_each_mc_addr(ha, dev) {
+ 		memcpy(mc_list + i, ha->addr, ETH_ALEN);
+-		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i/ETH_ALEN,
++		netdev_dbg(dev, "Entry[%d]: %x:%x:%x:%x:%x:%x\n", i / ETH_ALEN,
+ 			   mc_list[i], mc_list[i + 1], mc_list[i + 2],
+ 			   mc_list[i + 3], mc_list[i + 4], mc_list[i + 5]);
+ 		i += ETH_ALEN;
 -- 
-2.14.4
+2.7.4
