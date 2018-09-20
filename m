@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:35270 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726045AbeIJID3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 04:03:29 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <ath9k-devel@qca.qualcomm.com>, <kvalo@codeaurora.org>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] ath9k: debug: remove set but not used variable 'fops_dump_nfcal'
-Date: Mon, 10 Sep 2018 11:11:28 +0800
-Message-ID: <20180910031128.12164-1-yuehaibing@huawei.com> (sfid-20180910_051156_138082_6BF01F07)
+Received: from mail-wr1-f50.google.com ([209.85.221.50]:44514 "EHLO
+        mail-wr1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726990AbeITU3V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 16:29:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1b3e46335094bda8dfef48c74adf2d027e9417ca.camel@intel.com>
+References: <CA+icZUXxcxZvyo7ge33E_1PSnjUs7Lq=BdcX2rbB6pYka1S=cA@mail.gmail.com>
+ <1b3e46335094bda8dfef48c74adf2d027e9417ca.camel@intel.com>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Date: Thu, 20 Sep 2018 16:45:30 +0200
+Message-ID: <CA+icZUVUkLZxqqNocBg27_Q=xvtDbfuW7z1ZcDx+WNO0uDwuOA@mail.gmail.com> (sfid-20180920_164536_511222_532BBFD0)
+Subject: Re: acpi/iwlwifi: thermal thermal_zone3: failed to read out thermal
+ zone (-61)
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'fops_dump_nfcal' is not used since commit 4447d815fd0f ("ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries")
+On Thu, Sep 20, 2018 at 4:34 PM, Luciano Coelho
+<luciano.coelho@intel.com> wrote:
+> On Thu, 2018-09-20 at 15:42 +0200, Sedat Dilek wrote:
+>> Hi,
+>
+> Hi,
+>
+>
+>> I am seeing this with Linux v4.18.y and v4.19-rc4.
+>>
+>> Investigating thermal_zone3...
+>>
+>> # cat /sys/devices/virtual/thermal/thermal_zone3/type
+>> iwlwifi
+>>
+>> I have the following iwlwifi device and firmware installed...
+>>
+>> [   10.476589] iwlwifi 0000:04:00.0: loaded firmware version
+>> 36.e91976c0.0 op_mode iwlmvm
+>> [   10.519441] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+>> Wireless AC 8265, REV=0x230
+>>
+>> What informations do you need and how can I help?
+>
+> This is normal, though annoying, and was discussed before.  The thermal
+> framework is trying to read the temperature as soon as the zone is
+> registered and this causes that warning.  Our device only provides the
+> temperature when the device goes up, so reading before that will always
+> fail.
+>
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/ath/ath9k/debug.c | 13 -------------
- 1 file changed, 13 deletions(-)
+OK, I understand.
+Thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 0a6eb8a..c871b7e 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -990,19 +990,6 @@ static int read_file_dump_nfcal(struct seq_file *file, void *data)
- 	return 0;
- }
- 
--static int open_file_dump_nfcal(struct inode *inode, struct file *f)
--{
--	return single_open(f, read_file_dump_nfcal, inode->i_private);
--}
--
--static const struct file_operations fops_dump_nfcal = {
--	.read = seq_read,
--	.open = open_file_dump_nfcal,
--	.owner = THIS_MODULE,
--	.llseek = seq_lseek,
--	.release = single_release,
--};
--
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- static ssize_t read_file_btcoex(struct file *file, char __user *user_buf,
- 				size_t count, loff_t *ppos)
--- 
-2.7.0
+- Sedat -
