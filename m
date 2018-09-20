@@ -1,60 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io1-f65.google.com ([209.85.166.65]:41380 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728912AbeIRSHT (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40789 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731240AbeITMHY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:07:19 -0400
-Received: by mail-io1-f65.google.com with SMTP id q4-v6so1361892iob.8
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Sep 2018 05:34:55 -0700 (PDT)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: Re: [PATCH 1/2] netlink: add NLA_REJECT policy type
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
-        Michal Kubecek <mkubecek@suse.cz>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        jbenc@redhat.com
-References: <20180913084603.7979-1-johannes@sipsolutions.net>
- <20180913193004.GF4590@localhost.localdomain>
- <20180913212742.GC3876@unicorn.suse.cz>
- <20180913215839.GI27095@localhost.localdomain>
- <1537177132.2957.6.camel@sipsolutions.net>
-Message-ID: <847cc635-cb90-821d-5824-07e7f941db75@mojatatu.com> (sfid-20180918_143459_059354_D1CD8B32)
-Date: Tue, 18 Sep 2018 08:34:53 -0400
+        Thu, 20 Sep 2018 08:07:24 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 29/29] staging: wilc1000: return exact error of register_netdev() from wilc_netdev_init()
+Date: Thu, 20 Sep 2018 11:53:40 +0530
+Message-ID: <1537424620-6982-30-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082632_429298_D7DEAB89)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <1537177132.2957.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-17 5:38 a.m., Johannes Berg wrote:
-> On Thu, 2018-09-13 at 18:58 -0300, Marcelo Ricardo Leitner wrote:
-> 
+Refactor wilc_netdev_init() to return the error code received from
+register_netdev() during the failure condition.
 
-[..]
+Earlier discussion link
+[1]. https://www.spinics.net/lists/linux-wireless/msg177304.html
 
-> 
-> So in one case I was thinking of, there are some fields that simply
-> cannot be used for input, they're only used for output. > But it may not
-> always be obvious to somebody using the API. Thus, I think it makes
-> sense to instruct the kernel to reject that, so that whoever gets
-> confused has immediate feedback that their usage is wrong. If we ignore
-> that, they may not realize their error immediately.
-> 
-> I think the ethtool case is similar: you can read and write some fields,
-> and only read others - but if you try to write the read-only fields
-> would you prefer to be told "sorry, this is not possible" vs. it being
-> silently ignored? I'd definitely prefer the former.
-> 
->> Maybe it would be better to have NLA_IGNORE instead? </idea>
-> 
-> I don't think so, it doesn't give any feedback to the application author
-> that they're doing something wrong.
-> 
+Suggested-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Maybe time to introduce kernel side access-control flags?
-Read/Write permissions for example. Attrs marked as read only
-(in the kernel) cannot be written to.
-
-
-cheers,
-jamal
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 29c1317..b5e6765 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1065,7 +1065,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	if (!wl)
+ 		return -ENOMEM;
+ 
+-	if (wilc_wlan_cfg_init(wl))
++	ret = wilc_wlan_cfg_init(wl);
++	if (ret)
+ 		goto free_wl;
+ 
+ 	*wilc = wl;
+@@ -1077,8 +1078,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	INIT_LIST_HEAD(&wl->rxq_head.list);
+ 
+ 	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
+-	if (!wl->hif_workqueue)
++	if (!wl->hif_workqueue) {
++		ret = -ENOMEM;
+ 		goto free_cfg;
++	}
+ 
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+@@ -1086,8 +1089,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		struct wireless_dev *wdev;
+ 
+ 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
+-		if (!ndev)
++		if (!ndev) {
++			ret = -ENOMEM;
+ 			goto free_ndev;
++		}
+ 
+ 		vif = netdev_priv(ndev);
+ 		memset(vif, 0, sizeof(struct wilc_vif));
+@@ -1110,6 +1115,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		wdev = wilc_create_wiphy(ndev, dev);
+ 		if (!wdev) {
+ 			netdev_err(ndev, "Can't register WILC Wiphy\n");
++			ret = -ENOMEM;
+ 			goto free_ndev;
+ 		}
+ 
+@@ -1151,7 +1157,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	wilc_wlan_cfg_deinit(wl);
+ free_wl:
+ 	kfree(wl);
+-	return -ENOMEM;
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(wilc_netdev_init);
+ 
+-- 
+2.7.4
