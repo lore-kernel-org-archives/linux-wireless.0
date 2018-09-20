@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46564 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727126AbeIDQik (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:45708 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726786AbeITWvF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:38:40 -0400
-Message-ID: <819f7fda600ad1a2e0cca575b88ca0e97f5512b2.camel@coelho.fi> (sfid-20180904_141350_287184_DCED0943)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Sven Eckelmann <sven@narfation.org>
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Tue, 04 Sep 2018 15:13:44 +0300
-In-Reply-To: <1536063055.3940.10.camel@sipsolutions.net>
-References: <20180831083130.15525-1-luca@coelho.fi>
-         <20180904114055.1429-1-luca@coelho.fi>
-         <20180904114055.1429-10-luca@coelho.fi> <8536772.7SmJXvWjMu@bentobox>
-         <1536063055.3940.10.camel@sipsolutions.net>
+        Thu, 20 Sep 2018 18:51:05 -0400
+Message-ID: <1537463187.3874.34.camel@sipsolutions.net> (sfid-20180920_190752_845596_C5E9D81C)
+Subject: Re: [PATCH v2 1/5] netlink: remove NLA_NESTED_COMPAT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Laight <David.Laight@ACULAB.COM>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: David Ahern <dsahern@gmail.com>
+Date: Thu, 20 Sep 2018 19:06:27 +0200
+In-Reply-To: <1811E905-CD9B-4346-AF17-CE9DBEBBE4F6@sipsolutions.net>
+References: <20180919194905.16462-1-johannes@sipsolutions.net>
+         <20180919194905.16462-2-johannes@sipsolutions.net>
+         <15cc8087b97d4b8693fad397b27f4d10@AcuMS.aculab.com>
+         <1811E905-CD9B-4346-AF17-CE9DBEBBE4F6@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH v2 9/9] mac80211: Don't wake up from PS for offchannel TX
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-09-04 at 14:10 +0200, Johannes Berg wrote:
-> On Tue, 2018-09-04 at 14:07 +0200, Sven Eckelmann wrote:
-> > On Dienstag, 4. September 2018 14:40:55 CEST Luca Coelho wrote:
-> > > )
-> > > Sender: linux-wireless-owner@vger.kernel.org
-> > > Precedence: bulk
-> > > List-ID: <linux-wireless.vger.kernel.org>
-> > > X-Mailing-List: linux-wireless@vger.kernel.org
-> > 
-> > Looks like the SMTP headers are broken in all your patches. Here
-> > the 
-> > interesting part (as received by me):
+On Thu, 2018-09-20 at 16:56 +0200, Johannes Berg wrote:
 > 
-> And, perhaps because of this, only patches 1-3 ended up in
-> patchwork...
-> You'll have to resend again :)
+> 
+> > > @@ -172,7 +172,6 @@ enum {
+> > >  	NLA_FLAG,
+> > >  	NLA_MSECS,
+> > >  	NLA_NESTED,
+> > > -	NLA_NESTED_COMPAT,
+> > >  	NLA_NUL_STRING,
+> > >  	NLA_BINARY,
+> > >  	NLA_S8,
+> > 
+> > ...
+> > 
+> > Is it safe to remove an item from this emun ?
+> 
+> I believe it is, since it's not part of uapi. At least as long as you
+> recompile all netlink policies afterwards.
 
-Crap! This happened once before (i.e. the hostname where SA is running
-was corrupted), but it seemed to be working again (seems like I believe
-in magic).
+That came out confusing. It isn't UAPI, so the renumbering doesn't
+matter, at least as long as you don't try to load a module compiled with
+one version of the enum into a kernel compiled with the other, or
+something strange like that.
 
-Thanks for figuring it out! I'll take a look at my server config.
-
---
-Cheers,
-Luca.
+johannes
