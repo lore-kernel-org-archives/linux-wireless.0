@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36576 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60482 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725982AbeIXNfZ (ORCPT
+        with ESMTP id S1727986AbeITRp4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 09:35:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: Re: [PATCH 01/11] qtnfmac_pcie: do not store FW name in driver state structure
-References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
-        <20180924051246.13371-2-igor.mitsyanko.os@quantenna.com>
-Date: Mon, 24 Sep 2018 10:34:36 +0300
-In-Reply-To: <20180924051246.13371-2-igor.mitsyanko.os@quantenna.com> (Igor
-        Mitsyanko's message of "Mon, 24 Sep 2018 05:13:24 +0000")
-Message-ID: <87va6vqrg3.fsf@purkki.adurom.net> (sfid-20180924_093443_361782_2E5E7763)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 20 Sep 2018 13:45:56 -0400
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [RFCv3 0/2] ath10k: Add support to update tx rate to mac80211
+Date: Thu, 20 Sep 2018 17:35:14 +0530
+Message-Id: <1537445116-10780-1-git-send-email-akolli@codeaurora.org> (sfid-20180920_140250_443934_EB183848)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com> writes:
+Tx rate was updated to nl80211/user using sta_statistics callback.
+This rate can not be used for mac80211 mesh and ATF.
 
-> Firmware name is only needed at probe stage, no point in keeping it in
-> driver state structure.
->
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+This patch adds support to update tx rate to mac80211
 
-This is just cosmetics, but what's that "SO" in the From field? Do note
-that if I apply these patches as is that will be stored also to git.
+Anilkumar Kolli (2):
+  mac80211: implement ieee80211_tx_rate_update to update rate
+  ath10k: report tx rate using ieee80211_tx_rate_update()
+
+ drivers/net/wireless/ath/ath10k/core.h   |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   66 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
+ include/net/mac80211.h                   |   14 +++++++
+ net/mac80211/status.c                    |   24 +++++++++++
+ 5 files changed, 102 insertions(+), 4 deletions(-)
 
 -- 
-Kalle Valo
+1.7.9.5
