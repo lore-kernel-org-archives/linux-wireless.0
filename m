@@ -1,559 +1,514 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57514 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728027AbeILCq1 (ORCPT
+Received: from mail-it0-f41.google.com ([209.85.214.41]:51074 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727986AbeITRqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 22:46:27 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v4 1/3] cfg80211: support FTM responder configuration/statistics
-Date: Tue, 11 Sep 2018 14:44:37 -0700
-Message-Id: <1536702279-7643-2-git-send-email-pradeepc@codeaurora.org> (sfid-20180911_234602_115065_5BBFD29E)
-In-Reply-To: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
-References: <1536702279-7643-1-git-send-email-pradeepc@codeaurora.org>
+        Thu, 20 Sep 2018 13:46:16 -0400
+Received: by mail-it0-f41.google.com with SMTP id j81-v6so12760948ite.0
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 05:03:06 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAKMn2kT6+4iX72jLSnCrXWMJ+pBHrMpZtigqWjzFRLKWRoxrkA@mail.gmail.com>
+ <532c137e-729d-bf06-7103-e2c141bc0c0b@newmedia-net.de> <CAKMn2kTyyM1F1JLOi3sJ+_7emJG-JMm=gPjgqD0yFfcJLMuDnw@mail.gmail.com>
+ <2783b4e8-401a-876f-cce7-bf56723b423f@newmedia-net.de>
+In-Reply-To: <2783b4e8-401a-876f-cce7-bf56723b423f@newmedia-net.de>
+From: Bruno Rosset <bruno.rosset@gmail.com>
+Date: Thu, 20 Sep 2018 14:02:52 +0200
+Message-ID: <CAKMn2kRi-Ob-y8HKf_smgrmuq52m6XMZf_86tR__tiQu8nMQpg@mail.gmail.com> (sfid-20180920_140310_752057_C0848936)
+Subject: Re: Netgear R7800 - ath10k QCA 9984 firmware crash
+To: brainslayer666 <s.gottschall@newmedia-net.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow userspace to enable fine timing measurement responder
-functionality with configurable lci/civic parameters in AP mode.
-This can be done at AP start or changing beacon parameters.
+Hi Sebastian,
 
-A new EXT_FEATURE flag is introduced for drivers to advertise
-the capability.
+OK no problem. I can do that.
+Can you just tell me what you need ; I mean which commands to export data ?
+For nvram I guess you need 'nvram show' results ?
 
-Also nl80211 API support for retrieving statistics is added.
+How I can do a "full flash transfer" ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
-v3:
- - fixed ftm responder disabled case to be not supported.
- - changed ftm_responder param from bool to s8.
+As you're dd-wrt dev,  I add that I try last dd-wrt build  (this one :
+https://download1.dd-wrt.com/dd-wrtv2/downloads/betas/2018/08-22-2018-r3669=
+8/netgear-r7800/factory-to-ddwrt.img)
+which not even boot. Same with kong one (this one :
+http://www.desipro.de/ddwrt/K3-AC-IPQ806X/Test/R7800-factory-to-ddwrt.img)
 
- include/net/cfg80211.h       |  66 +++++++++++++++++++++++
- include/uapi/linux/nl80211.h |  81 ++++++++++++++++++++++++++++
- net/wireless/nl80211.c       | 124 +++++++++++++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h      |  15 ++++++
- net/wireless/trace.h         |  44 +++++++++++++++
- 5 files changed, 325 insertions(+), 5 deletions(-)
+What I made is that I extract the board-2.bin & fiurmware-5.bin from
+the ddwrt's squashfs image and try them on the openWRT install, but
+without success also.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9f3ed79c39d7..473087f04b2c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -775,6 +775,11 @@ struct cfg80211_crypto_settings {
-  * @assocresp_ies_len: length of assocresp_ies in octets
-  * @probe_resp_len: length of probe response template (@probe_resp)
-  * @probe_resp: probe response template (AP mode only)
-+ * @ftm_responder: enable FTM responder functionality
-+ * @lci: LCI subelement content
-+ * @civic: CIVIC subelement content
-+ * @lci_len: LCI data length
-+ * @civic_len: Civic data length
-  */
- struct cfg80211_beacon_data {
- 	const u8 *head, *tail;
-@@ -782,12 +787,17 @@ struct cfg80211_beacon_data {
- 	const u8 *proberesp_ies;
- 	const u8 *assocresp_ies;
- 	const u8 *probe_resp;
-+	const u8 *lci;
-+	const u8 *civic;
-+	s8 ftm_responder;
- 
- 	size_t head_len, tail_len;
- 	size_t beacon_ies_len;
- 	size_t proberesp_ies_len;
- 	size_t assocresp_ies_len;
- 	size_t probe_resp_len;
-+	size_t lci_len;
-+	size_t civic_len;
- };
- 
- struct mac_address {
-@@ -2797,6 +2807,55 @@ struct cfg80211_external_auth_params {
- };
- 
- /**
-+ * cfg80211_ftm_responder_params - FTM responder parameters
-+ *
-+ * @lci: LCI subelement content
-+ * @civic: CIVIC subelement content
-+ * @lci_len: LCI data length
-+ * @civic_len: Civic data length
-+ */
-+struct cfg80211_ftm_responder_params {
-+	const u8 *lci;
-+	const u8 *civic;
-+	size_t lci_len;
-+	size_t civic_len;
-+};
-+
-+/**
-+ * cfg80211_ftm_responder_stats - FTM responder statistics
-+ *
-+ * @filled: bitflag of flags using the bits of &enum nl80211_ftm_stats to
-+ *	indicate the relevant values in this struct for them
-+ * @success_num: number of FTM sessions in which all frames were successfully
-+ *	answered
-+ * @partial_num: number of FTM sessions in which part of frames were
-+ *	successfully answered
-+ * @failed_num: number of failed FTM sessions
-+ * @asap_num: number of ASAP FTM sessions
-+ * @non_asap_num: number of  non-ASAP FTM sessions
-+ * @total_duration_ms: total sessions durations - gives an indication
-+ *	of how much time the responder was busy
-+ * @unknown_triggers_num: number of unknown FTM triggers - triggers from
-+ *	initiators that didn't finish successfully the negotiation phase with
-+ *	the responder
-+ * @reschedule_requests_num: number of FTM reschedule requests - initiator asks
-+ *	for a new scheduling although it already has scheduled FTM slot
-+ * @out_of_window_triggers_num: total FTM triggers out of scheduled window
-+ */
-+struct cfg80211_ftm_responder_stats {
-+	u32 filled;
-+	u32 success_num;
-+	u32 partial_num;
-+	u32 failed_num;
-+	u32 asap_num;
-+	u32 non_asap_num;
-+	u64 total_duration_ms;
-+	u32 unknown_triggers_num;
-+	u32 reschedule_requests_num;
-+	u32 out_of_window_triggers_num;
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -3128,6 +3187,9 @@ struct cfg80211_external_auth_params {
-  *
-  * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
-  *	tells the driver that the frame should not be encrypted.
-+ *
-+ * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
-+ *	Statistics should be cumulative, currently no way to reset is provided.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3433,6 +3495,10 @@ struct cfg80211_ops {
- 				   const u8 *buf, size_t len,
- 				   const u8 *dest, const __be16 proto,
- 				   const bool noencrypt);
-+
-+	int	(*get_ftm_responder_stats)(struct wiphy *wiphy,
-+				struct net_device *dev,
-+				struct cfg80211_ftm_responder_stats *ftm_stats);
- };
- 
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index cfc94178d608..246416764623 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1033,6 +1033,9 @@
-  *	%NL80211_ATTR_CHANNEL_WIDTH,%NL80211_ATTR_NSS attributes with its
-  *	address(specified in %NL80211_ATTR_MAC).
-  *
-+ * @NL80211_CMD_GET_FTM_RESPONDER_STATS: Retrieve FTM responder statistics, in
-+ *	the %NL80211_ATTR_FTM_RESPONDER_STATS attribute.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1245,6 +1248,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CONTROL_PORT_FRAME,
- 
-+	NL80211_CMD_GET_FTM_RESPONDER_STATS,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2241,6 +2246,17 @@ enum nl80211_commands {
-  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
-  *	only if %NL80211_STA_FLAG_WME is set.
-  *
-+ * @NL80211_ATTR_FTM_RESPONDER: attribute which user-space can include in
-+ *	%NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON to enable(1)
-+ *	fine timing measurement (FTM) responder functionality.
-+ * @NL80211_ATTR_LCI: The content of Measurement Report Element (9.4.2.22
-+ *	in 802.11-2016) with type 8 - LCI (9.4.2.22.10)
-+ * @NL80211_ATTR_CIVIC: The content of Measurement Report Element (9.4.2.22
-+ *	in 802.11-2016) with type 11 - Civic (Section 9.4.2.22.13)
-+ *
-+ * @NL80211_ATTR_FTM_RESPONDER_STATS: Nested attribute with FTM responder
-+ *	statistics, see &enum nl80211_ftm_responder_stats.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2682,6 +2698,12 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_HE_CAPABILITY,
- 
-+	NL80211_ATTR_FTM_RESPONDER,
-+	NL80211_ATTR_LCI,
-+	NL80211_ATTR_CIVIC,
-+
-+	NL80211_ATTR_FTM_RESPONDER_STATS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -5225,6 +5247,8 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT: Driver/device can omit all data
-  *	except for supported rates from the probe request content if requested
-  *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
-+ * @NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER: Driver supports enabling fine
-+ *	timing measurement responder role.
-  *
-  * @NL80211_EXT_FEATURE_CAN_REPLACE_PTK0: Driver/device confirm that they are
-  *      able to rekey an in-use key correctly. Userspace must not rekey PTK keys
-@@ -5269,6 +5293,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
- 	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
- 	NL80211_EXT_FEATURE_CAN_REPLACE_PTK0,
-+	NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-@@ -5808,4 +5833,60 @@ enum nl80211_external_auth_action {
- 	NL80211_EXTERNAL_AUTH_ABORT,
- };
- 
-+/**
-+ * enum nl80211_ftm_responder_state - fine timing measurement responder state
-+ * @NL80211_FTM_RESP_DISABLED: FTM responder is disabled
-+ * @NL80211_FTM_RESP_ENABLED: FTM responder is enabled
-+ */
-+enum nl80211_ftm_responder_state {
-+	NL80211_FTM_RESP_DISABLED,
-+	NL80211_FTM_RESP_ENABLED,
-+};
-+
-+/*
-+ * enum nl80211_ftm_responder_stats - FTM responder statistics
-+ *
-+ * These attribute types are used with %NL80211_ATTR_FTM_RESPONDER_STATS
-+ * when getting FTM responder statistics.
-+ *
-+ * @__NL80211_FTM_STATS_INVALID: attribute number 0 is reserved
-+ * @NL80211_FTM_STATS_SUCCESS_NUM: number of FTM sessions in which all frames
-+ *	were ssfully answered (u32)
-+ * @NL80211_FTM_STATS_PARTIAL_NUM: number of FTM sessions in which part of the
-+ *	frames were successfully answered (u32)
-+ * @NL80211_FTM_STATS_FAILED_NUM: number of failed FTM sessions (u32)
-+ * @NL80211_FTM_STATS_ASAP_NUM: number of ASAP sessions (u32)
-+ * @NL80211_FTM_STATS_NON_ASAP_NUM: number of non-ASAP sessions (u32)
-+ * @NL80211_FTM_STATS_TOTAL_DURATION_MSEC: total sessions durations - gives an
-+ *	indication of how much time the responder was busy (u64, msec)
-+ * @NL80211_FTM_STATS_UNKNOWN_TRIGGERS_NUM: number of unknown FTM triggers -
-+ *	triggers from initiators that didn't finish successfully the negotiation
-+ *	phase with the responder (u32)
-+ * @NL80211_FTM_STATS_RESCHEDULE_REQUESTS_NUM: number of FTM reschedule requests
-+ *	- initiator asks for a new scheduling although it already has scheduled
-+ *	FTM slot (u32)
-+ * @NL80211_FTM_STATS_OUT_OF_WINDOW_TRIGGERS_NUM: number of FTM triggers out of
-+ *	scheduled window (u32)
-+ * @NL80211_FTM_STATS_PAD: used for padding, ignore
-+ * @__NL80211_TXQ_ATTR_AFTER_LAST: Internal
-+ * @NL80211_FTM_STATS_MAX: highest possible FTM responder stats attribute
-+ */
-+enum nl80211_ftm_responder_stats {
-+	__NL80211_FTM_STATS_INVALID,
-+	NL80211_FTM_STATS_SUCCESS_NUM,
-+	NL80211_FTM_STATS_PARTIAL_NUM,
-+	NL80211_FTM_STATS_FAILED_NUM,
-+	NL80211_FTM_STATS_ASAP_NUM,
-+	NL80211_FTM_STATS_NON_ASAP_NUM,
-+	NL80211_FTM_STATS_TOTAL_DURATION_MSEC,
-+	NL80211_FTM_STATS_UNKNOWN_TRIGGERS_NUM,
-+	NL80211_FTM_STATS_RESCHEDULE_REQUESTS_NUM,
-+	NL80211_FTM_STATS_OUT_OF_WINDOW_TRIGGERS_NUM,
-+	NL80211_FTM_STATS_PAD,
-+
-+	/* keep last */
-+	__NL80211_FTM_STATS_AFTER_LAST,
-+	NL80211_FTM_STATS_MAX = __NL80211_FTM_STATS_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d5f9b5235cdd..b7ec45d2387c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -430,6 +430,10 @@ enum nl80211_multicast_groups {
- 	[NL80211_ATTR_TXQ_QUANTUM] = { .type = NLA_U32 },
- 	[NL80211_ATTR_HE_CAPABILITY] = { .type = NLA_BINARY,
- 					 .len = NL80211_HE_MAX_CAPABILITY_LEN },
-+
-+	[NL80211_ATTR_FTM_RESPONDER] = { .type = NLA_U8 },
-+	[NL80211_ATTR_LCI] = { .type = NLA_BINARY },
-+	[NL80211_ATTR_CIVIC] = { .type = NLA_BINARY },
- };
- 
- /* policy for the key attributes */
-@@ -3997,7 +4001,8 @@ static int validate_beacon_tx_rate(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
--static int nl80211_parse_beacon(struct nlattr *attrs[],
-+static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
-+				struct nlattr *attrs[],
- 				struct cfg80211_beacon_data *bcn)
- {
- 	bool haveinfo = false;
-@@ -4051,6 +4056,38 @@ static int nl80211_parse_beacon(struct nlattr *attrs[],
- 		bcn->probe_resp_len = nla_len(attrs[NL80211_ATTR_PROBE_RESP]);
- 	}
- 
-+	if (attrs[NL80211_ATTR_FTM_RESPONDER]) {
-+		bcn->ftm_responder =
-+			nla_get_u8(attrs[NL80211_ATTR_FTM_RESPONDER]);
-+
-+		if (bcn->ftm_responder != NL80211_FTM_RESP_DISABLED &&
-+		    bcn->ftm_responder != NL80211_FTM_RESP_ENABLED)
-+			return -EINVAL;
-+
-+		if (bcn->ftm_responder == NL80211_FTM_RESP_DISABLED ||
-+		    !wiphy_ext_feature_isset(&rdev->wiphy,
-+					    NL80211_EXT_FEATURE_ENABLE_FTM_RESPONDER))
-+			return -EOPNOTSUPP;
-+	} else {
-+		bcn->ftm_responder = -1;
-+	}
-+
-+	if (attrs[NL80211_ATTR_LCI]) {
-+		if (nla_len(attrs[NL80211_ATTR_LCI]) > U8_MAX)
-+			return -EINVAL;
-+
-+		bcn->lci = nla_data(attrs[NL80211_ATTR_LCI]);
-+		bcn->lci_len = nla_len(attrs[NL80211_ATTR_LCI]);
-+	}
-+
-+	if (attrs[NL80211_ATTR_CIVIC]) {
-+		if (nla_len(attrs[NL80211_ATTR_CIVIC]) > U8_MAX)
-+			return -EINVAL;
-+
-+		bcn->civic = nla_data(attrs[NL80211_ATTR_CIVIC]);
-+		bcn->civic_len = nla_len(attrs[NL80211_ATTR_CIVIC]);
-+	}
-+
- 	return 0;
- }
- 
-@@ -4197,7 +4234,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	    !info->attrs[NL80211_ATTR_BEACON_HEAD])
- 		return -EINVAL;
- 
--	err = nl80211_parse_beacon(info->attrs, &params.beacon);
-+	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon);
- 	if (err)
- 		return err;
- 
-@@ -4381,7 +4418,7 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
- 	if (!wdev->beacon_interval)
- 		return -EINVAL;
- 
--	err = nl80211_parse_beacon(info->attrs, &params);
-+	err = nl80211_parse_beacon(rdev, info->attrs, &params);
- 	if (err)
- 		return err;
- 
-@@ -7943,7 +7980,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (!need_new_beacon)
- 		goto skip_beacons;
- 
--	err = nl80211_parse_beacon(info->attrs, &params.beacon_after);
-+	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon_after);
- 	if (err)
- 		return err;
- 
-@@ -7953,7 +7990,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
--	err = nl80211_parse_beacon(csa_attrs, &params.beacon_csa);
-+	err = nl80211_parse_beacon(rdev, csa_attrs, &params.beacon_csa);
- 	if (err)
- 		return err;
- 
-@@ -12993,6 +13030,76 @@ static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+static int nl80211_get_ftm_responder_stats(struct sk_buff *skb,
-+					   struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_ftm_responder_stats ftm_stats = {};
-+	struct sk_buff *msg;
-+	void *hdr;
-+	struct nlattr *ftm_stats_attr;
-+	int err;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_AP || !wdev->beacon_interval)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev_get_ftm_responder_stats(rdev, dev, &ftm_stats);
-+	if (err)
-+		return err;
-+
-+	if (!ftm_stats.filled)
-+		return -ENODATA;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
-+			     NL80211_CMD_GET_FTM_RESPONDER_STATS);
-+	if (!hdr)
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex))
-+		goto nla_put_failure;
-+
-+	ftm_stats_attr = nla_nest_start(msg, NL80211_ATTR_FTM_RESPONDER_STATS);
-+	if (!ftm_stats_attr)
-+		goto nla_put_failure;
-+
-+#define SET_FTM(field, name, type)					 \
-+	do { if ((ftm_stats.filled & BIT(NL80211_FTM_STATS_ ## name)) && \
-+	    nla_put_ ## type(msg, NL80211_FTM_STATS_ ## name,		 \
-+			     ftm_stats.field))				 \
-+		goto nla_put_failure; } while (0)
-+#define SET_FTM_U64(field, name)					 \
-+	do { if ((ftm_stats.filled & BIT(NL80211_FTM_STATS_ ## name)) && \
-+	    nla_put_u64_64bit(msg, NL80211_FTM_STATS_ ## name,		 \
-+			      ftm_stats.field, NL80211_FTM_STATS_PAD))	 \
-+		goto nla_put_failure; } while (0)
-+
-+	SET_FTM(success_num, SUCCESS_NUM, u32);
-+	SET_FTM(partial_num, PARTIAL_NUM, u32);
-+	SET_FTM(failed_num, FAILED_NUM, u32);
-+	SET_FTM(asap_num, ASAP_NUM, u32);
-+	SET_FTM(non_asap_num, NON_ASAP_NUM, u32);
-+	SET_FTM_U64(total_duration_ms, TOTAL_DURATION_MSEC);
-+	SET_FTM(unknown_triggers_num, UNKNOWN_TRIGGERS_NUM, u32);
-+	SET_FTM(reschedule_requests_num, RESCHEDULE_REQUESTS_NUM, u32);
-+	SET_FTM(out_of_window_triggers_num, OUT_OF_WINDOW_TRIGGERS_NUM, u32);
-+#undef SET_FTM
-+
-+	nla_nest_end(msg, ftm_stats_attr);
-+
-+	genlmsg_end(msg, hdr);
-+	return genlmsg_reply(msg, info);
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13904,6 +14011,13 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_GET_FTM_RESPONDER_STATS,
-+		.doit = nl80211_get_ftm_responder_stats,
-+		.policy = nl80211_policy,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 364f5d67f05b..51380b5c32f2 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1232,4 +1232,19 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int
-+rdev_get_ftm_responder_stats(struct cfg80211_registered_device *rdev,
-+			     struct net_device *dev,
-+			     struct cfg80211_ftm_responder_stats *ftm_stats)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_rdev_get_ftm_responder_stats(&rdev->wiphy, dev, ftm_stats);
-+	if (rdev->ops->get_ftm_responder_stats)
-+		ret = rdev->ops->get_ftm_responder_stats(&rdev->wiphy, dev,
-+							ftm_stats);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5e7eec849200..89bd1f7aa7ed 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3259,6 +3259,50 @@
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT, WIPHY_PR_ARG, WDEV_PR_ARG)
- );
-+
-+TRACE_EVENT(rdev_get_ftm_responder_stats,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 struct cfg80211_ftm_responder_stats *ftm_stats),
-+
-+	TP_ARGS(wiphy, netdev, ftm_stats),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		__field(u64, timestamp)
-+		__field(u32, success_num)
-+		__field(u32, partial_num)
-+		__field(u32, failed_num)
-+		__field(u32, asap_num)
-+		__field(u32, non_asap_num)
-+		__field(u64, duration)
-+		__field(u32, unknown_triggers)
-+		__field(u32, reschedule)
-+		__field(u32, out_of_window)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		__entry->success_num = ftm_stats->success_num;
-+		__entry->partial_num = ftm_stats->partial_num;
-+		__entry->failed_num = ftm_stats->failed_num;
-+		__entry->asap_num = ftm_stats->asap_num;
-+		__entry->non_asap_num = ftm_stats->non_asap_num;
-+		__entry->duration = ftm_stats->total_duration_ms;
-+		__entry->unknown_triggers = ftm_stats->unknown_triggers_num;
-+		__entry->reschedule = ftm_stats->reschedule_requests_num;
-+		__entry->out_of_window = ftm_stats->out_of_window_triggers_num;
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT "Ftm responder stats: success %u, partial %u, "
-+		"failed %u, asap %u, non asap %u, total duration %llu, unknown "
-+		"triggers %u, rescheduled %u, out of window %u", WIPHY_PR_ARG,
-+		__entry->success_num, __entry->partial_num, __entry->failed_num,
-+		__entry->asap_num, __entry->non_asap_num, __entry->duration,
-+		__entry->unknown_triggers, __entry->reschedule,
-+		__entry->out_of_window)
-+);
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.9.1
+Best regards,
+Bruno
+Le jeu. 20 sept. 2018 =C3=A0 13:07, Sebastian Gottschall
+<s.gottschall@newmedia-net.de> a =C3=A9crit :
+>
+> since i'm mainly the dd-wrt developer and you tested it as well with the
+> same reproduceable crash it would be nice if you could provide me a
+> nvram backup with a reproduceable crash (you should change passwords of
+> course) to my private email. so i can apply it to my device and to see
+> whats happen. if you have a beta device i just can guess that the
+> calibration data which is stored in flash memory has maybe a different
+> location, so openwrt as well as dd-wrt uses crap to initialize the
+> hardware. this is just a guess. but i have 2 r7800 factory models. you
+> can also send me a full flash backup of your device using wetransfer, so
+> i can compare the content with my device and check if there is a flash
+> layout specific different. this would help to track down the problem
+> cause and maybe find a specific workaround for such devices by detecting
+> them well
+>
+> Sebastian
+>
+> Am 20.09.2018 um 09:44 schrieb Bruno Rosset:
+> > HI Sebastian,
+> >
+> > I just flash the r7800 with the openwrt 18.06.1 factory image (here :
+> > https://downloads.openwrt.org/releases/18.06.1/targets/ipq806x/generic/=
+openwrt-18.06.1-ipq806x-netgear_r7800-squashfs-factory.img)
+> >
+> > I forgot to mention that I get a beta hardware of the R7800, perhaps
+> > there is something different in my hardware compared to the released
+> > one.
+> >
+> > Regards,
+> > Bruno
+> > Le jeu. 20 sept. 2018 =C3=A0 08:36, Sebastian Gottschall
+> > <s.gottschall@newmedia-net.de> a =C3=A9crit :
+> >> can you tell me how to reproduce this crash? i have 2 r7800 running wi=
+th
+> >> dd-wrt but no crashes
+> >>
+> >> Am 19.09.2018 um 22:37 schrieb Bruno Rosset:
+> >>> Hi all,
+> >>>
+> >>> I get a firmware crash using latest openwrt 18.06.1 on the Netgear
+> >>> R7800 with stock firmware
+> >>> Dmesg is :
+> >>> [   13.804366] ath10k_pci 0000:01:00.0: assign IRQ: got 67
+> >>> [   13.804805] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142=
+)
+> >>> [   13.804887] ath10k_pci 0000:01:00.0: enabling bus mastering
+> >>> [   13.805346] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2
+> >>> irq_mode 0 reset_mode 0
+> >>> [   13.974787] ath10k_pci 0000:01:00.0: Direct firmware load for
+> >>> ath10k/pre-cal-pci-0000:01:00.0.bin failed with error -2
+> >>> [   13.974827] ath10k_pci 0000:01:00.0: Falling back to user helper
+> >>> [   14.304794] ath10k_pci 0000:01:00.0: Direct firmware load for
+> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
+> >>> [   14.304857] ath10k_pci 0000:01:00.0: Falling back to user helper
+> >>> [   14.337111] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
+> >>> firmware_loading_store: map pages failed
+> >>> [   14.702947] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [   14.702997] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [   14.716459] ath10k_pci 0000:01:00.0: firmware ver 10.4-3.5.3-00053
+> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
+st,no-ps
+> >>> crc32 4c56a386
+> >>> [   15.973104] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [   19.753460] ath10k_pci 0000:01:00.0: firmware crashed! (guid
+> >>> ca7089d2-df9a-4f9d-8fa6-d1b908cf3220)
+> >>> [   19.753494] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [   19.761307] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [   19.773202] ath10k_pci 0000:01:00.0: firmware ver 10.4-3.5.3-00053
+> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
+st,no-ps
+> >>> crc32 4c56a386
+> >>> [   19.779887] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [   19.793511] ath10k_pci 0000:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
+> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
+> >>> [   19.803176] ath10k_pci 0000:01:00.0: firmware register dump:
+> >>> [   19.810956] ath10k_pci 0000:01:00.0: [00]: 0x01000000 0x000015B3
+> >>> 0x009CBB38 0x00975B31
+> >>> [   19.816861] ath10k_pci 0000:01:00.0: [04]: 0x009CBB38 0x00060530
+> >>> 0x00000011 0x00415760
+> >>> [   19.824587] ath10k_pci 0000:01:00.0: [08]: 0x00417E6C 0x00400000
+> >>> 0x00000001 0x00422990
+> >>> [   19.832485] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0xFFFFFFFF
+> >>> 0x00973B25 0x00973B47
+> >>> [   19.840384] ath10k_pci 0000:01:00.0: [16]: 0x009CBB38 0x000CEEA7
+> >>> 0x00000000 0x00000000
+> >>> [   19.848284] ath10k_pci 0000:01:00.0: [20]: 0x409CBB38 0x004068DC
+> >>> 0x00000001 0x00403628
+> >>> [   19.856183] ath10k_pci 0000:01:00.0: [24]: 0x809814EF 0x0040693C
+> >>> 0x00000049 0xC09CBB38
+> >>> [   19.864083] ath10k_pci 0000:01:00.0: [28]: 0x800DF216 0x004069AC
+> >>> 0x00000004 0x00415300
+> >>> [   19.871983] ath10k_pci 0000:01:00.0: [32]: 0x800C383A 0x004069DC
+> >>> 0x00415160 0x00400000
+> >>> [   19.879881] ath10k_pci 0000:01:00.0: [36]: 0x809800A3 0x00406A0C
+> >>> 0x00415170 0x009C41F8
+> >>> [   19.887781] ath10k_pci 0000:01:00.0: [40]: 0x8098003A 0x00406A5C
+> >>> 0x00400000 0x00400600
+> >>> [   19.895680] ath10k_pci 0000:01:00.0: [44]: 0x809607C1 0x00406A8C
+> >>> 0xD8400100 0x00406A9C
+> >>> [   19.903579] ath10k_pci 0000:01:00.0: [48]: 0x80960892 0x00406AAC
+> >>> 0x00000000 0x00000008
+> >>> [   19.911479] ath10k_pci 0000:01:00.0: [52]: 0x80960E39 0x00406ACC
+> >>> 0x00400000 0x00400600
+> >>> [   19.919378] ath10k_pci 0000:01:00.0: [56]: 0x80960E9D 0x00406AEC
+> >>> 0x00000000 0x00400600
+> >>> [   19.927277] ath10k_pci 0000:01:00.0: Copy Engine register dump:
+> >>> [   19.935181] ath10k_pci 0000:01:00.0: [00]: 0x0004a000  11  11  12 =
+ 11
+> >>> [   19.940994] ath10k_pci 0000:01:00.0: [01]: 0x0004a400  11  11  10 =
+ 11
+> >>> [   19.947590] ath10k_pci 0000:01:00.0: [02]: 0x0004a800   0   0  63 =
+  0
+> >>> [   19.954014] ath10k_pci 0000:01:00.0: [03]: 0x0004ac00   0   0   0 =
+  0
+> >>> [   19.960439] ath10k_pci 0000:01:00.0: [04]: 0x0004b000   0   0   0 =
+  0
+> >>> [   19.966862] ath10k_pci 0000:01:00.0: [05]: 0x0004b400   0   0   0 =
+  0
+> >>> [   19.973285] ath10k_pci 0000:01:00.0: [06]: 0x0004b800   0   0   0 =
+  0
+> >>> [   19.979709] ath10k_pci 0000:01:00.0: [07]: 0x0004bc00   1   1   1 =
+  1
+> >>> [   19.986132] ath10k_pci 0000:01:00.0: [08]: 0x0004c000   0   0 127 =
+  0
+> >>> [   19.992556] ath10k_pci 0000:01:00.0: [09]: 0x0004c400   1   1   1 =
+  1
+> >>> [   19.998980] ath10k_pci 0000:01:00.0: [10]: 0x0004c800   0   0   0 =
+  0
+> >>> [   20.005403] ath10k_pci 0000:01:00.0: [11]: 0x0004cc00   0   0   0 =
+  0
+> >>> [   20.795948] ath10k_pci 0000:01:00.0: failed to receive control
+> >>> response completion, polling..
+> >>> [   21.835766] ath10k_pci 0000:01:00.0: ctl_resp never came in (-110)
+> >>> [   21.835810] ath10k_pci 0000:01:00.0: failed to connect to HTC: -11=
+0
+> >>> [   21.915174] ath10k_pci 0000:01:00.0: could not init core (-110)
+> >>> [   21.915620] ath10k_pci 0000:01:00.0: could not probe fw (-110)
+> >>> [   21.920266] ath10k_pci 0001:01:00.0: assign IRQ: got 100
+> >>> [   21.921197] ath10k_pci 0001:01:00.0: enabling device (0140 -> 0142=
+)
+> >>> [   21.926032] ath10k_pci 0001:01:00.0: enabling bus mastering
+> >>> [   21.926715] ath10k_pci 0001:01:00.0: pci irq msi oper_irq_mode 2
+> >>> irq_mode 0 reset_mode 0
+> >>> [   21.962217] ath10k_pci 0000:01:00.0: cannot restart a device that
+> >>> hasn't been started
+> >>> [   22.104728] ath10k_pci 0001:01:00.0: Direct firmware load for
+> >>> ath10k/pre-cal-pci-0001:01:00.0.bin failed with error -2
+> >>> [   22.104769] ath10k_pci 0001:01:00.0: Falling back to user helper
+> >>> [   22.424677] ath10k_pci 0001:01:00.0: Direct firmware load for
+> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
+> >>> [   22.424736] ath10k_pci 0001:01:00.0: Falling back to user helper
+> >>> [   22.462387] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
+> >>> firmware_loading_store: map pages failed
+> >>> [   22.463844] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [   22.470250] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [   22.483627] ath10k_pci 0001:01:00.0: firmware ver 10.4-3.5.3-00053
+> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
+st,no-ps
+> >>> crc32 4c56a386
+> >>> [   23.743494] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [   27.528777] ath10k_pci 0001:01:00.0: firmware crashed! (guid
+> >>> 2112523e-3948-4925-b383-9e672937c6d5)
+> >>> [   27.528819] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [   27.536696] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [   27.548985] ath10k_pci 0001:01:00.0: firmware ver 10.4-3.5.3-00053
+> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
+st,no-ps
+> >>> crc32 4c56a386
+> >>> [   27.555303] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [   27.568835] ath10k_pci 0001:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
+> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
+> >>> [   27.578512] ath10k_pci 0001:01:00.0: firmware register dump:
+> >>> [   27.586281] ath10k_pci 0001:01:00.0: [00]: 0x01000000 0x000015B3
+> >>> 0x009CBB38 0x00975B31
+> >>> [   27.592186] ath10k_pci 0001:01:00.0: [04]: 0x009CBB38 0x00060530
+> >>> 0x00000011 0x00415760
+> >>> [   27.599910] ath10k_pci 0001:01:00.0: [08]: 0x00417E6C 0x00400000
+> >>> 0x00000001 0x00422990
+> >>> [   27.607809] ath10k_pci 0001:01:00.0: [12]: 0x00000009 0xFFFFFFFF
+> >>> 0x00973B25 0x00973B47
+> >>> [   27.615708] ath10k_pci 0001:01:00.0: [16]: 0x009CBB38 0x000CEEAC
+> >>> 0x00000000 0x00000000
+> >>> [   27.623608] ath10k_pci 0001:01:00.0: [20]: 0x409CBB38 0x004068DC
+> >>> 0x00000001 0x00403628
+> >>> [   27.631507] ath10k_pci 0001:01:00.0: [24]: 0x809814EF 0x0040693C
+> >>> 0x00000049 0xC09CBB38
+> >>> [   27.639405] ath10k_pci 0001:01:00.0: [28]: 0x800DF216 0x004069AC
+> >>> 0x00000004 0x00415300
+> >>> [   27.647305] ath10k_pci 0001:01:00.0: [32]: 0x800C383A 0x004069DC
+> >>> 0x00415160 0x00400000
+> >>> [   27.655205] ath10k_pci 0001:01:00.0: [36]: 0x809800A3 0x00406A0C
+> >>> 0x00415170 0x009C41F8
+> >>> [   27.663104] ath10k_pci 0001:01:00.0: [40]: 0x8098003A 0x00406A5C
+> >>> 0x00400000 0x00400600
+> >>> [   27.671004] ath10k_pci 0001:01:00.0: [44]: 0x809607C1 0x00406A8C
+> >>> 0xD8400100 0x00406A9C
+> >>> [   27.678902] ath10k_pci 0001:01:00.0: [48]: 0x80960892 0x00406AAC
+> >>> 0x00000000 0x00000008
+> >>> [   27.686801] ath10k_pci 0001:01:00.0: [52]: 0x80960E39 0x00406ACC
+> >>> 0x00400000 0x00400600
+> >>> [   27.694700] ath10k_pci 0001:01:00.0: [56]: 0x80960E9D 0x00406AEC
+> >>> 0x00000000 0x00400600
+> >>> [   27.702603] ath10k_pci 0001:01:00.0: Copy Engine register dump:
+> >>> [   27.710506] ath10k_pci 0001:01:00.0: [00]: 0x0004a000  11  11  12 =
+ 11
+> >>> [   27.716322] ath10k_pci 0001:01:00.0: [01]: 0x0004a400  11  11  10 =
+ 11
+> >>> [   27.722917] ath10k_pci 0001:01:00.0: [02]: 0x0004a800   0   0  63 =
+  0
+> >>> [   27.729340] ath10k_pci 0001:01:00.0: [03]: 0x0004ac00   0   0   0 =
+  0
+> >>> [   27.735764] ath10k_pci 0001:01:00.0: [04]: 0x0004b000   0   0   0 =
+  0
+> >>> [   27.742188] ath10k_pci 0001:01:00.0: [05]: 0x0004b400   0   0   0 =
+  0
+> >>> [   27.748611] ath10k_pci 0001:01:00.0: [06]: 0x0004b800   0   0   0 =
+  0
+> >>> [   27.755035] ath10k_pci 0001:01:00.0: [07]: 0x0004bc00   1   1   1 =
+  1
+> >>> [   27.761459] ath10k_pci 0001:01:00.0: [08]: 0x0004c000   0   0 127 =
+  0
+> >>> [   27.767884] ath10k_pci 0001:01:00.0: [09]: 0x0004c400   1   1   1 =
+  1
+> >>> [   27.774304] ath10k_pci 0001:01:00.0: [10]: 0x0004c800   0   0   0 =
+  0
+> >>> [   27.780731] ath10k_pci 0001:01:00.0: [11]: 0x0004cc00   0   0   0 =
+  0
+> >>> [   28.567840] ath10k_pci 0001:01:00.0: failed to receive control
+> >>> response completion, polling..
+> >>> [   29.616315] ath10k_pci 0001:01:00.0: ctl_resp never came in (-110)
+> >>> [   29.616341] ath10k_pci 0001:01:00.0: failed to connect to HTC: -11=
+0
+> >>> [   29.695567] ath10k_pci 0001:01:00.0: could not init core (-110)
+> >>> [   29.695988] ath10k_pci 0001:01:00.0: could not probe fw (-110)
+> >>> [   29.703824] kmodloader: done loading kernel modules from /etc/modu=
+les.d/*
+> >>> [   29.732245] ath10k_pci 0001:01:00.0: cannot restart a device that
+> >>> hasn't been started
+> >>>
+> >>> Replacing stock firmware with latest from kvalo github (here :
+> >>> https://github.com/kvalo/ath10k-firmware/tree/master/QCA9984/hw1.0/3.=
+6.0.1)
+> >>> I get the same result
+> >>> Dmesg is :
+> >>> [  235.442819] ath10k_pci 0001:01:00.0: disabling bus mastering
+> >>> [  235.482588] ath10k_pci 0000:01:00.0: disabling bus mastering
+> >>> [  260.586372] ath10k_pci 0000:01:00.0: assign IRQ: got 67
+> >>> [  260.586771] ath10k_pci 0000:01:00.0: enabling bus mastering
+> >>> [  260.587218] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2
+> >>> irq_mode 0 reset_mode 0
+> >>> [  260.754869] ath10k_pci 0000:01:00.0: Direct firmware load for
+> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
+> >>> [  260.754917] ath10k_pci 0000:01:00.0: Falling back to user helper
+> >>> [  260.786271] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
+> >>> firmware_loading_store: map pages failed
+> >>> [  260.787219] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [  260.794202] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [  260.806246] ath10k_pci 0000:01:00.0: firmware ver
+> >>> 10.4-3.6.0.1-00003 api 5 features
+> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
+> >>> 266d70b0
+> >>> [  262.065148] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [  265.858256] ath10k_pci 0000:01:00.0: firmware crashed! (guid
+> >>> 2b6addfc-915e-437a-a7fa-3691cbf4b39e)
+> >>> [  265.858347] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [  265.866136] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [  265.881167] ath10k_pci 0000:01:00.0: firmware ver
+> >>> 10.4-3.6.0.1-00003 api 5 features
+> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
+> >>> 266d70b0
+> >>> [  265.885460] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [  265.898696] ath10k_pci 0000:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
+> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
+> >>> [  265.908193] ath10k_pci 0000:01:00.0: firmware register dump:
+> >>> [  265.915961] ath10k_pci 0000:01:00.0: [00]: 0x01000000 0x000015B3
+> >>> 0x009CC074 0x00975B31
+> >>> [  265.921864] ath10k_pci 0000:01:00.0: [04]: 0x009CC074 0x00060530
+> >>> 0x00000011 0x004142FC
+> >>> [  265.929590] ath10k_pci 0000:01:00.0: [08]: 0x00416AFC 0x00400000
+> >>> 0x00000001 0x00421F90
+> >>> [  265.937488] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0xFFFFFFFF
+> >>> 0x00973B25 0x00973B47
+> >>> [  265.945389] ath10k_pci 0000:01:00.0: [16]: 0x009CC074 0x000CFE13
+> >>> 0x00000000 0x00000000
+> >>> [  265.953289] ath10k_pci 0000:01:00.0: [20]: 0x409CC074 0x004068DC
+> >>> 0x00000001 0x00403628
+> >>> [  265.961187] ath10k_pci 0000:01:00.0: [24]: 0x8098153B 0x0040693C
+> >>> 0x0000004E 0xC09CC074
+> >>> [  265.969087] ath10k_pci 0000:01:00.0: [28]: 0x800E026F 0x004069AC
+> >>> 0x00000004 0x00413E60
+> >>> [  265.976984] ath10k_pci 0000:01:00.0: [32]: 0x800C383A 0x004069DC
+> >>> 0x00413CB0 0x00400000
+> >>> [  265.984884] ath10k_pci 0000:01:00.0: [36]: 0x809800A3 0x00406A0C
+> >>> 0x00413CC0 0x009C4750
+> >>> [  265.992784] ath10k_pci 0000:01:00.0: [40]: 0x8098003A 0x00406A5C
+> >>> 0x00400000 0x00400600
+> >>> [  266.000684] ath10k_pci 0000:01:00.0: [44]: 0x809607C1 0x00406A8C
+> >>> 0xD8400100 0x00406A9C
+> >>> [  266.008582] ath10k_pci 0000:01:00.0: [48]: 0x80960892 0x00406AAC
+> >>> 0x00000000 0x00000008
+> >>> [  266.016482] ath10k_pci 0000:01:00.0: [52]: 0x80960E39 0x00406ACC
+> >>> 0x00400000 0x00400600
+> >>> [  266.024381] ath10k_pci 0000:01:00.0: [56]: 0x80960E9D 0x00406AEC
+> >>> 0x00000000 0x00400600
+> >>> [  266.032279] ath10k_pci 0000:01:00.0: Copy Engine register dump:
+> >>> [  266.040186] ath10k_pci 0000:01:00.0: [00]: 0x0004a000  12  12  29 =
+ 28
+> >>> [  266.045999] ath10k_pci 0000:01:00.0: [01]: 0x0004a400  11  11  10 =
+ 11
+> >>> [  266.052595] ath10k_pci 0000:01:00.0: [02]: 0x0004a800   0   0  63 =
+  0
+> >>> [  266.059018] ath10k_pci 0000:01:00.0: [03]: 0x0004ac00   0   0   0 =
+  0
+> >>> [  266.065441] ath10k_pci 0000:01:00.0: [04]: 0x0004b000   0   0   0 =
+  0
+> >>> [  266.071865] ath10k_pci 0000:01:00.0: [05]: 0x0004b400   0   0   0 =
+  0
+> >>> [  266.078289] ath10k_pci 0000:01:00.0: [06]: 0x0004b800   0   0   0 =
+  0
+> >>> [  266.084713] ath10k_pci 0000:01:00.0: [07]: 0x0004bc00   1   1   1 =
+  1
+> >>> [  266.091136] ath10k_pci 0000:01:00.0: [08]: 0x0004c000   0   0 127 =
+  0
+> >>> [  266.097559] ath10k_pci 0000:01:00.0: [09]: 0x0004c400   1   1   1 =
+  1
+> >>> [  266.103982] ath10k_pci 0000:01:00.0: [10]: 0x0004c800   0   0   0 =
+  0
+> >>> [  266.110408] ath10k_pci 0000:01:00.0: [11]: 0x0004cc00   0   0   0 =
+  0
+> >>> [  266.876609] ath10k_pci 0000:01:00.0: failed to receive control
+> >>> response completion, polling..
+> >>> [  267.915918] ath10k_pci 0000:01:00.0: ctl_resp never came in (-110)
+> >>> [  267.915970] ath10k_pci 0000:01:00.0: failed to connect to HTC: -11=
+0
+> >>> [  267.996406] ath10k_pci 0000:01:00.0: could not init core (-110)
+> >>> [  267.996972] ath10k_pci 0000:01:00.0: could not probe fw (-110)
+> >>> [  268.001578] ath10k_pci 0001:01:00.0: assign IRQ: got 100
+> >>> [  268.002612] ath10k_pci 0001:01:00.0: enabling bus mastering
+> >>> [  268.003292] ath10k_pci 0001:01:00.0: pci irq msi oper_irq_mode 2
+> >>> irq_mode 0 reset_mode 0
+> >>> [  268.032241] ath10k_pci 0000:01:00.0: cannot restart a device that
+> >>> hasn't been started
+> >>> [  268.174893] ath10k_pci 0001:01:00.0: Direct firmware load for
+> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
+> >>> [  268.174936] ath10k_pci 0001:01:00.0: Falling back to user helper
+> >>> [  268.206575] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
+> >>> firmware_loading_store: map pages failed
+> >>> [  268.207955] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [  268.214521] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [  268.227852] ath10k_pci 0001:01:00.0: firmware ver
+> >>> 10.4-3.6.0.1-00003 api 5 features
+> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
+> >>> 266d70b0
+> >>> [  269.485480] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [  273.282901] ath10k_pci 0001:01:00.0: firmware crashed! (guid
+> >>> 28f0a68b-f881-40cb-b515-f4320b412b7a)
+> >>> [  273.282982] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
+> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> >>> [  273.290780] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
+> >>> tracing 0 dfs 1 testmode 1
+> >>> [  273.306323] ath10k_pci 0001:01:00.0: firmware ver
+> >>> 10.4-3.6.0.1-00003 api 5 features
+> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
+> >>> 266d70b0
+> >>> [  273.310039] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
+> >>> crc32 dd6d039c
+> >>> [  273.323420] ath10k_pci 0001:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
+> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
+> >>> [  273.332841] ath10k_pci 0001:01:00.0: firmware register dump:
+> >>> [  273.340604] ath10k_pci 0001:01:00.0: [00]: 0x01000000 0x000015B3
+> >>> 0x009CC074 0x00975B31
+> >>> [  273.346508] ath10k_pci 0001:01:00.0: [04]: 0x009CC074 0x00060530
+> >>> 0x00000011 0x004142FC
+> >>> [  273.354234] ath10k_pci 0001:01:00.0: [08]: 0x00416AFC 0x00400000
+> >>> 0x00000001 0x00421F90
+> >>> [  273.362135] ath10k_pci 0001:01:00.0: [12]: 0x00000009 0xFFFFFFFF
+> >>> 0x00973B25 0x00973B47
+> >>> [  273.370033] ath10k_pci 0001:01:00.0: [16]: 0x009CC074 0x000CFE13
+> >>> 0x00000000 0x00000000
+> >>> [  273.377932] ath10k_pci 0001:01:00.0: [20]: 0x409CC074 0x004068DC
+> >>> 0x00000001 0x00403628
+> >>> [  273.385833] ath10k_pci 0001:01:00.0: [24]: 0x8098153B 0x0040693C
+> >>> 0x0000004E 0xC09CC074
+> >>> [  273.393732] ath10k_pci 0001:01:00.0: [28]: 0x800E026F 0x004069AC
+> >>> 0x00000004 0x00413E60
+> >>> [  273.401631] ath10k_pci 0001:01:00.0: [32]: 0x800C383A 0x004069DC
+> >>> 0x00413CB0 0x00400000
+> >>> [  273.409529] ath10k_pci 0001:01:00.0: [36]: 0x809800A3 0x00406A0C
+> >>> 0x00413CC0 0x009C4750
+> >>> [  273.417429] ath10k_pci 0001:01:00.0: [40]: 0x8098003A 0x00406A5C
+> >>> 0x00400000 0x00400600
+> >>> [  273.425329] ath10k_pci 0001:01:00.0: [44]: 0x809607C1 0x00406A8C
+> >>> 0xD8400100 0x00406A9C
+> >>> [  273.433227] ath10k_pci 0001:01:00.0: [48]: 0x80960892 0x00406AAC
+> >>> 0x00000000 0x00000008
+> >>> [  273.441127] ath10k_pci 0001:01:00.0: [52]: 0x80960E39 0x00406ACC
+> >>> 0x00400000 0x00400600
+> >>> [  273.449027] ath10k_pci 0001:01:00.0: [56]: 0x80960E9D 0x00406AEC
+> >>> 0x00000000 0x00400600
+> >>> [  273.456924] ath10k_pci 0001:01:00.0: Copy Engine register dump:
+> >>> [  273.464831] ath10k_pci 0001:01:00.0: [00]: 0x0004a000  12  12  29 =
+ 28
+> >>> [  273.470647] ath10k_pci 0001:01:00.0: [01]: 0x0004a400  11  11  10 =
+ 11
+> >>> [  273.477243] ath10k_pci 0001:01:00.0: [02]: 0x0004a800   0   0  63 =
+  0
+> >>> [  273.483664] ath10k_pci 0001:01:00.0: [03]: 0x0004ac00   0   0   0 =
+  0
+> >>> [  273.490088] ath10k_pci 0001:01:00.0: [04]: 0x0004b000   0   0   0 =
+  0
+> >>> [  273.496512] ath10k_pci 0001:01:00.0: [05]: 0x0004b400   0   0   0 =
+  0
+> >>> [  273.502936] ath10k_pci 0001:01:00.0: [06]: 0x0004b800   0   0   0 =
+  0
+> >>> [  273.509360] ath10k_pci 0001:01:00.0: [07]: 0x0004bc00   1   1   1 =
+  1
+> >>> [  273.515783] ath10k_pci 0001:01:00.0: [08]: 0x0004c000   0   0 127 =
+  0
+> >>> [  273.522208] ath10k_pci 0001:01:00.0: [09]: 0x0004c400   1   1   1 =
+  1
+> >>> [  273.528632] ath10k_pci 0001:01:00.0: [10]: 0x0004c800   0   0   0 =
+  0
+> >>> [  273.535054] ath10k_pci 0001:01:00.0: [11]: 0x0004cc00   0   0   0 =
+  0
+> >>> [  274.326491] ath10k_pci 0001:01:00.0: failed to receive control
+> >>> response completion, polling..
+> >>> [  275.356625] ath10k_pci 0001:01:00.0: ctl_resp never came in (-110)
+> >>> [  275.356672] ath10k_pci 0001:01:00.0: failed to connect to HTC: -11=
+0
+> >>> [  275.436389] ath10k_pci 0001:01:00.0: could not init core (-110)
+> >>> [  275.436925] ath10k_pci 0001:01:00.0: could not probe fw (-110)
+> >>> [  275.472295] ath10k_pci 0001:01:00.0: cannot restart a device that
+> >>> hasn't been started
+> >>>
+> >>> Various tests with others firmware from candelatech , stock LEDE 17.0=
+1
+> >>> or dd-wrt give me firmware crash also
+> >>>
+> >>> I already tried to enable debug info for firmware crash with 'rmmod
+> >>> ath10k_pci; rmmod ath10k_core; modprobe ath10k_core
+> >>> debug_mask=3D0xffffffff ; modprobe ath10k_pci ' but without success
+> >>>
+> >>> Flashing back netgear factory firmware is OK, and all is functionnal
+> >>>
+> >>> What can I do next ?
+> >>>
+> >>> Thanks all
+> >>>
