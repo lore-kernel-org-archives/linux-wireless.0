@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57652 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390281AbeIUVsj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42970 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730984AbeITSOE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Sep 2018 17:48:39 -0400
-Subject: Re: Netgear R7800 - ath10k QCA 9984 firmware crash
-To: Bruno Rosset <bruno.rosset@gmail.com>
-References: <CAKMn2kT6+4iX72jLSnCrXWMJ+pBHrMpZtigqWjzFRLKWRoxrkA@mail.gmail.com>
- <1f79c9f7-86e5-b70a-9e0d-c021124a5d09@candelatech.com>
- <CAKMn2kQ4mZ=5egvOeL4PWUZbX0JbVyGdfuqQjevpVu=_cHqRGg@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <d760b19a-2014-af1b-9a62-ee6031b23e39@candelatech.com> (sfid-20180921_175929_077650_2FD103CC)
-Date: Fri, 21 Sep 2018 08:59:02 -0700
+        Thu, 20 Sep 2018 14:14:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: <davem@davemloft.net>, <hante.meuleman@broadcom.com>,
+        <franky.lin@broadcom.com>, <arend.vanspriel@broadcom.com>,
+        <linux-wireless@vger.kernel.org>,
+        <brcm80211-dev-list.pdl@broadcom.com>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: remove redundant condition check before debugfs_remove_recursive
+References: <1536761412-24932-1-git-send-email-zhongjiang@huawei.com>
+        <20180920120709.5FE6960BF7@smtp.codeaurora.org>
+        <5BA391D4.20205@huawei.com>
+Date: Thu, 20 Sep 2018 15:30:42 +0300
+In-Reply-To: <5BA391D4.20205@huawei.com> (zhong jiang's message of "Thu, 20
+        Sep 2018 20:25:56 +0800")
+Message-ID: <877ejg1hcd.fsf@kamboji.qca.qualcomm.com> (sfid-20180920_143104_312739_45D46D1C)
 MIME-Version: 1.0
-In-Reply-To: <CAKMn2kQ4mZ=5egvOeL4PWUZbX0JbVyGdfuqQjevpVu=_cHqRGg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+zhong jiang <zhongjiang@huawei.com> writes:
 
-
-On 09/19/2018 01:56 PM, Bruno Rosset wrote:
-> Hi,
->
-> Done, thanks
-> Le mer. 19 sept. 2018 à 22:45, Ben Greear <greearb@candelatech.com> a écrit :
+> On 2018/9/20 20:07, Kalle Valo wrote:
+>> zhong jiang <zhongjiang@huawei.com> wrote:
 >>
->> On 09/19/2018 01:37 PM, Bruno Rosset wrote:
->>> Hi all,
+>>> debugfs_remove_recursive has taken IS_ERR_OR_NULL into account. So just
+>>> remove the condition check before debugfs_remove_recursive.
 >>>
+>>> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+>> It seems you already submitted an identical patch four days earlier:
 >>
->>> Various tests with others firmware from candelatech , stock LEDE 17.01
->>> or dd-wrt give me firmware crash also
-
-The crash in my firmware decodes to something that looks probably like
-the calibration data is wrong.
-
-This is probably some issue with how the board data is selected, or maybe
-the wrong board data is installed on the file system.
-
-Thanks,
-Ben
-
+>> https://patchwork.kernel.org/patch/10593061/
 >>
->> Please open a bug for the candela firmware crash, I might be able to figure
->> out why it crashes:
->>
->> https://github.com/greearb/ath10k-ct/issues
->>
->> https://www.candelatech.com/ath10k-bugs.php
->>
->> Thanks,
->> Ben
->>
->>
->> --
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
+>> Why the duplicate? Please ALWAYS add a changelog and increase the version number:
 >
+> I am sorry for that. Maybe I send the patch earlier, but I remeber I
+> should forget to cc to
+> netdev@vger.kernel.org and LMLK. So I repost it.  Plese ingore the current patch.
+
+Even then please increase the version number and mention in the change
+log why you sent a new version. Otherwise you will make maintainers
+confused and wasting time with asking what has changed.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
