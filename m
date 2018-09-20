@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34125 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbeIEPg3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:37304 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731305AbeITNNw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 11:36:29 -0400
-Received: by mail-wm0-f67.google.com with SMTP id j25-v6so13680561wmc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2018 04:06:44 -0700 (PDT)
-Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
- <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
- <5B30A85C.5080105@broadcom.com>
- <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Thu, 20 Sep 2018 09:13:52 -0400
+Message-ID: <1537428695.3874.1.camel@sipsolutions.net> (sfid-20180920_093150_146904_464DAB19)
+Subject: Re: Problem with sending pkt on a monitor port
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B8FB8C2.2040200@broadcom.com> (sfid-20180905_130647_950387_E38870A4)
-Date: Wed, 5 Sep 2018 13:06:42 +0200
-MIME-Version: 1.0
-In-Reply-To: <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Date: Thu, 20 Sep 2018 09:31:35 +0200
+In-Reply-To: <d6f99a05-77a3-f18a-4e7a-083062119ce4@candelatech.com>
+References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
+         <1537389335.10305.92.camel@sipsolutions.net>
+         <d6f99a05-77a3-f18a-4e7a-083062119ce4@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/29/2018 10:17 PM, Rafał Miłecki wrote:
-> Hi Arend,
->
-> On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 6/25/2018 6:40 AM, Rafał Miłecki wrote:
->>> On Sun, 24 Jun 2018 at 13:48, Rafał Miłecki <zajec5@gmail.com> wrote:
->>>> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
->>>> <arend.vanspriel@broadcom.com> wrote:
->>>>> Here a couple of patches in preparation of monitor mode support. It
->>>>> is mostly about querying firmware for support. While at it I stumbled
->>>>> upon the fact that 160MHz was not completely implemented in the driver
->>>>> so there is a patch for that as well.
->>>>>
->>>>> The first two patches are actually some changes to the patches that
->>>>> Rafal submitted. So this series depend on:
->>>>>
->>>>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
->>>>>
->>>>> These apply to the master branch of the wireless-drivers-next repository.
->>>>>
->>>>> [1] https://patchwork.kernel.org/patch/10474799/
->>>>
->>>> I find it pointless to submit fixes for patches that weren't accepted
->>>> yet. Let's work on improving original patches while they are still
->>>> pending.
->>>
->>> I sent V4 with changes pointed our by Arend. That obsoletes all (?)
->>> monitor patches from this patchset. I believe it was cleaner to
->>> improve original patchset (not pushed yet).
->>>
->>> My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
->>> related) and drop the others.
->>
->> Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit
->> the series addressing the issues you found.
->
-> Would you have a moment to resubmit these 2 patches or do you mind if I do that?
+On Wed, 2018-09-19 at 13:47 -0700, Ben Greear wrote:
 
-Found a moment. Should be in patchwork now.
+> > For one, the driver has no concept of the original vif, since monitor
+> > vifs aren't added to it.
+> 
+> ath10k does create a monitor vif, but maybe it is not mapped directly
+> to mac80211.
 
-Regards,
-Arend
+It's actually created by mac80211, but only once, and not directly
+mapped to each vif seen by userspace - it's an internal construction.
+
+> > Secondly, the old hostapd code before nl80211 injects frames that way,
+> > and they need to go there.
+> 
+> Ok, I agree we should not break backwards compat then.  I'll poke some more
+> to see if I can get it working.
+
+We might get away with doing this only for cooked monitor mode, which it
+used there ...
+
+However, thinking about it, that also breaks userspace in other ways -
+for example if you do injection this way you actually get encryption and
+other nice things if you use the local address that matches an existing
+interface.
+
+Perhaps you should just use a different address, and then nothing of the
+sort would happen?
+
+johannes
