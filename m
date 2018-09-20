@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38613 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727465AbeICWMD (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40727 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732027AbeITMGB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 18:12:03 -0400
-Received: by mail-wr1-f65.google.com with SMTP id w11-v6so1434261wrc.5
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Sep 2018 10:50:48 -0700 (PDT)
-From: =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        ath9k_htc_fw@lists.infradead.org
-Subject: [PATCH 3/3] ath9k_htc: increase number of configurable virtual interfaces
-Date: Mon,  3 Sep 2018 19:50:33 +0200
-Message-Id: <1535997033-16330-3-git-send-email-pozega.tomislav@gmail.com> (sfid-20180903_195104_263232_E0602B42)
-In-Reply-To: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
-References: <1535997033-16330-1-git-send-email-pozega.tomislav@gmail.com>
+        Thu, 20 Sep 2018 08:06:01 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 07/29] staging: wilc1000: use 'void' return for wilc_wlan_txq_add_to_head()
+Date: Thu, 20 Sep 2018 11:53:18 +0530
+Message-ID: <1537424620-6982-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082456_550102_442FB7FE)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Increase driver limit for various interface combinations.
-I was able to start 8 virtual APs and connect 5 clients to
-these. Frimware support is required too, see:
-https://github.com/qca/open-ath9k-htc-firmware/pull/149
+Use 'void' return for wilc_wlan_txq_add_to_head() as its always
+return '0' value.
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    8 ++++----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 +++---
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 5490c5f..b6c577b 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -197,8 +197,8 @@ struct ath9k_htc_target_rx_stats {
- 	__be32 host_done;
- } __packed;
- 
--#define ATH9K_HTC_MAX_VIF 2
--#define ATH9K_HTC_MAX_BCN_VIF 2
-+#define ATH9K_HTC_MAX_VIF 8
-+#define ATH9K_HTC_MAX_BCN_VIF 8
- 
- #define INC_VIF(_priv, _type) do {		\
- 		switch (_type) {		\
-@@ -251,8 +251,8 @@ struct ath9k_vif_iter_data {
- 	u8 mask[ETH_ALEN];
- };
- 
--#define ATH9K_HTC_MAX_STA 8
--#define ATH9K_HTC_MAX_TID 8
-+#define ATH9K_HTC_MAX_STA 128
-+#define ATH9K_HTC_MAX_TID 16
- 
- enum tid_aggr_state {
- 	AGGR_STOP = 0,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 214c682..fa13ba9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -697,9 +697,9 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 590a51c..8057db9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -71,8 +71,8 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+ 	complete(&wilc->txq_event);
  }
  
- static const struct ieee80211_iface_limit if_limits[] = {
--	{ .max = 2,	.types = BIT(NL80211_IFTYPE_STATION) |
-+	{ .max = 8,	.types = BIT(NL80211_IFTYPE_STATION) |
- 				 BIT(NL80211_IFTYPE_P2P_CLIENT) },
--	{ .max = 2,	.types = BIT(NL80211_IFTYPE_AP) |
-+	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) |
- #ifdef CONFIG_MAC80211_MESH
- 				 BIT(NL80211_IFTYPE_MESH_POINT) |
- #endif
-@@ -709,7 +709,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- static const struct ieee80211_iface_combination if_comb = {
- 	.limits = if_limits,
- 	.n_limits = ARRAY_SIZE(if_limits),
--	.max_interfaces = 2,
-+	.max_interfaces = 8,
- 	.num_different_channels = 1,
- };
+-static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+-				     struct txq_entry_t *tqe)
++static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
++				      struct txq_entry_t *tqe)
+ {
+ 	unsigned long flags;
+ 	struct wilc *wilc = vif->wilc;
+@@ -87,8 +87,6 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 	complete(&wilc->txq_event);
+-
+-	return 0;
+ }
  
+ #define NOT_TCP_ACK			(-1)
+@@ -275,10 +273,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
+ 	tqe->priv = NULL;
+ 	tqe->ack_idx = NOT_TCP_ACK;
+ 
+-	if (wilc_wlan_txq_add_to_head(vif, tqe)) {
+-		kfree(tqe);
+-		return 0;
+-	}
++	wilc_wlan_txq_add_to_head(vif, tqe);
+ 
+ 	return 1;
+ }
 -- 
-1.7.0.4
+2.7.4
