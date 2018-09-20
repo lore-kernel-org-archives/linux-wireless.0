@@ -1,61 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52930 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725982AbeIXRKD (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12390 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731675AbeITMGF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 13:10:03 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        wireless <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, tehuang@realtek.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac wireless network chips
-References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
-        <20180921131235.GA10556@redhat.com>
-        <CAP71bdW0P8xFeLfGgNeENJf_9+S+DTnK4S=tXZi1FPY7U-AL3A@mail.gmail.com>
-Date: Mon, 24 Sep 2018 14:08:25 +0300
-In-Reply-To: <CAP71bdW0P8xFeLfGgNeENJf_9+S+DTnK4S=tXZi1FPY7U-AL3A@mail.gmail.com>
-        (Larry Finger's message of "Sat, 22 Sep 2018 16:59:32 -0500")
-Message-ID: <87lg7r40gm.fsf@codeaurora.org> (sfid-20180924_130836_832059_D51DF3E2)
+        Thu, 20 Sep 2018 08:06:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 08/29] staging: wilc1000: change return type to 'void' tcp ack filter functions
+Date: Thu, 20 Sep 2018 11:53:19 +0530
+Message-ID: <1537424620-6982-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082457_222300_544C0382)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding greg)
+Use 'void' return type for below functions as they always return '0' and
+their return value is not used by caller.
+add_tcp_pending_ack()
+update_tcp_session()
+add_tcp_pending_ack()
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-> On Fri, Sep 21, 2018 at 8:12 AM Stanislaw Gruszka
-> <sgruszka@redhat.com> wrote:
->
->     On Fri, Sep 21, 2018 at 02:03:55PM +0800, yhchuang@realtek.com
->     wrote:
->     
->     I didn't do detailed review, but my general impression is very
->     very
->     positive. New driver looks great!
->     
->     Just 2 generic remarks:
->     - please add MAINTAINERS file entry
->     - please post a patch or request to remove staging/rtlwifi driver
->     since this one is replace for it (8822BE PCI-ID is the same)
->
-> Keep in mind that the new driver is going into wireless, and the old
-> one is in staging. With separate maintainers, doing this in a single
-> series of commits is very difficult to coordinate. One way would be to
-> submit the deletion patch to GregKH (or whomever is maintaining
-> staging) with a note that it should be held until rtwlan appears in
-> mainline, and then submitted directly to mainline as well as staging.
-> I'm sure there will be a solution, just that it cannot be handled as a
-> normal patch set.
-
-My guess is that Greg would be ok that we remove the staging driver via
-wireless-drivers-next at the same time as we apply the new driver to
-drivers/net/wireless. But let's coordinate that with Greg once this new
-driver is ready for commit, we are not quite there yet.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8057db9..66ce29d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -91,8 +91,8 @@ static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 
+ #define NOT_TCP_ACK			(-1)
+ 
+-static inline int add_tcp_session(struct wilc_vif *vif, u32 src_prt,
+-				  u32 dst_prt, u32 seq)
++static inline void add_tcp_session(struct wilc_vif *vif, u32 src_prt,
++				   u32 dst_prt, u32 seq)
+ {
+ 	struct tcp_ack_filter *f = &vif->ack_filter;
+ 
+@@ -103,22 +103,20 @@ static inline int add_tcp_session(struct wilc_vif *vif, u32 src_prt,
+ 		f->ack_session_info[f->tcp_session].dst_port = dst_prt;
+ 		f->tcp_session++;
+ 	}
+-	return 0;
+ }
+ 
+-static inline int update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
++static inline void update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
+ {
+ 	struct tcp_ack_filter *f = &vif->ack_filter;
+ 
+ 	if (index < 2 * MAX_TCP_SESSION &&
+ 	    ack > f->ack_session_info[index].bigger_ack_num)
+ 		f->ack_session_info[index].bigger_ack_num = ack;
+-	return 0;
+ }
+ 
+-static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
+-				      u32 session_index,
+-				      struct txq_entry_t *txqe)
++static inline void add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
++				       u32 session_index,
++				       struct txq_entry_t *txqe)
+ {
+ 	struct tcp_ack_filter *f = &vif->ack_filter;
+ 	u32 i = f->pending_base + f->pending_acks_idx;
+@@ -130,7 +128,6 @@ static inline int add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
+ 		txqe->ack_idx = i;
+ 		f->pending_acks_idx++;
+ 	}
+-	return 0;
+ }
+ 
+ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
 -- 
-Kalle Valo
+2.7.4
