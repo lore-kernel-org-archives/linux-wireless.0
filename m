@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60798 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727579AbeIXUZR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 16:25:17 -0400
-Date: Mon, 24 Sep 2018 16:19:33 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Felix Fietkau <nbd@nbd.name>, Sid Hayn <sidhayn@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: mt76x0 random crashes after c12128ce44b0
-Message-ID: <20180924141932.GA5031@redhat.com> (sfid-20180924_162313_163142_A14A28C6)
-References: <20180924140701.GA2089@redhat.com>
- <20180924141311.GI783@localhost.localdomain>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33192 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732593AbeITRrb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 13:47:31 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180924141311.GI783@localhost.localdomain>
+Subject: Re: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+To: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Message-Id: <20180920120421.B886360BE3@smtp.codeaurora.org> (sfid-20180920_140424_764657_96F10B3C)
+Date: Thu, 20 Sep 2018 12:04:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi
+Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com> wrote:
 
-On Mon, Sep 24, 2018 at 04:13:11PM +0200, Lorenzo Bianconi wrote:
-> On Sep 24, Stanislaw Gruszka wrote:
-> > Hi, after -next commit: 
-> > 
-> > commit c12128ce44b04a987c4eb0f733cc99c4dd50d45a
-> > Author: Felix Fietkau <nbd@nbd.name>
-> > Date:   Fri Jul 13 16:26:15 2018 +0200
-> > 
-> >     mt76: use a per rx queue page fragment cache
-> > 
-> > I have random crashes when load or unlod mt76x0u module.
-> > 
+> Beacons+TIM are created/updated for fw beaconing only when BSS_CHANGED_BEACON.
+> This is not compliant with power-saving stations. 
+> Fix it by updating beacon templates on mac80211 set_tim callback.
+> Adresses the issue in:
+> https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
 > 
-> Hi Stanislaw,
-> 
-> could you please try following patch (I am not 100% sure it fixes the issue)
+> Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
 
-Still crashes when module is unloaded.
+Arend, what do you think about this?
 
-Regards
-Stanislaw
+-- 
+https://patchwork.kernel.org/patch/10596025/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
