@@ -1,33 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io1-f48.google.com ([209.85.166.48]:36294 "EHLO
-        mail-io1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726295AbeIGTIE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 15:08:04 -0400
-Received: by mail-io1-f48.google.com with SMTP id q5-v6so1671543iop.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Sep 2018 07:26:53 -0700 (PDT)
+Received: from szxga06-in.huawei.com ([45.249.212.32]:55584 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387663AbeITSUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 14:20:32 -0400
+Message-ID: <5BA39477.7050908@huawei.com> (sfid-20180920_143735_122766_B857AB8C)
+Date: Thu, 20 Sep 2018 20:37:11 +0800
+From: zhong jiang <zhongjiang@huawei.com>
 MIME-Version: 1.0
-References: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com>
-In-Reply-To: <CABPxzYK=jmERyvryoy274gtDEBft-BUMjOBsDhjVd+xQu-tQLg@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 7 Sep 2018 19:56:40 +0530
-Message-ID: <CABPxzYKUEr1R8Bt+hVNVQr6CoHwSOiTi6-cMFwFiNwzG-VEZDA@mail.gmail.com> (sfid-20180907_162655_877853_0DF0C218)
-Subject: Re: ath10k: adding wlan to bridge causes WPA2-PSK to fail
-To: "Hostap@lists.infradead.org" <hostap@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: <davem@davemloft.net>, <hante.meuleman@broadcom.com>,
+        <franky.lin@broadcom.com>, <arend.vanspriel@broadcom.com>,
+        <linux-wireless@vger.kernel.org>,
+        <brcm80211-dev-list.pdl@broadcom.com>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: remove redundant condition check before debugfs_remove_recursive
+References: <1536761412-24932-1-git-send-email-zhongjiang@huawei.com> <20180920120709.5FE6960BF7@smtp.codeaurora.org> <5BA391D4.20205@huawei.com> <877ejg1hcd.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877ejg1hcd.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 9:47 PM Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
+On 2018/9/20 20:30, Kalle Valo wrote:
+> zhong jiang <zhongjiang@huawei.com> writes:
 >
-> Hi,
+>> On 2018/9/20 20:07, Kalle Valo wrote:
+>>> zhong jiang <zhongjiang@huawei.com> wrote:
+>>>
+>>>> debugfs_remove_recursive has taken IS_ERR_OR_NULL into account. So just
+>>>> remove the condition check before debugfs_remove_recursive.
+>>>>
+>>>> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+>>> It seems you already submitted an identical patch four days earlier:
+>>>
+>>> https://patchwork.kernel.org/patch/10593061/
+>>>
+>>> Why the duplicate? Please ALWAYS add a changelog and increase the version number:
+>> I am sorry for that. Maybe I send the patch earlier, but I remeber I
+>> should forget to cc to
+>> netdev@vger.kernel.org and LMLK. So I repost it.  Plese ingore the current patch.
+> Even then please increase the version number and mention in the change
+> log why you sent a new version. Otherwise you will make maintainers
+> confused and wasting time with asking what has changed.
 >
-> I am trying to connect ath10k interface to Linux bridge after enabling
-> of 4addr mode in WPA2-PSK mode, but EAPOL handshake fails, M1 is
-> not received by the wpa_supplicant.
-Did not pass "-b br0" to the wpa_supplicant so l2 bridge code is not
-initialized.
-After passing, it works fine. Thanks.
+Get it  and will keep it in mind . Thanks
+
+Sincerely,
+zhong jiang
