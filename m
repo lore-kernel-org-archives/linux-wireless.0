@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48038 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726787AbeIIO0h (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.62]:44260 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732257AbeITUkS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:37 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:54 +0300
-Message-Id: <20180909093656.10194-15-luca@coelho.fi> (sfid-20180909_113735_029095_A0FC87C7)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 14/16] iwlwifi: configure power scheme to balanced for 22560 devices
+        Thu, 20 Sep 2018 16:40:18 -0400
+Date: Thu, 20 Sep 2018 16:56:17 +0200
+In-Reply-To: <15cc8087b97d4b8693fad397b27f4d10@AcuMS.aculab.com>
+References: <20180919194905.16462-1-johannes@sipsolutions.net> <20180919194905.16462-2-johannes@sipsolutions.net> <15cc8087b97d4b8693fad397b27f4d10@AcuMS.aculab.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: RE: [PATCH v2 1/5] netlink: remove NLA_NESTED_COMPAT
+To: David Laight <David.Laight@ACULAB.COM>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: David Ahern <dsahern@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Message-ID: <1811E905-CD9B-4346-AF17-CE9DBEBBE4F6@sipsolutions.net> (sfid-20180920_165653_373770_E93F3AD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-As a temporary stage in the 22560 devices bring up, we disabled
-power save, to avoid bugs related to that domain.
-Now we would like to use power save so enable the balanced mode,
-and allow configuring the mode via module parameter.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 ----
- 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index d728b854be95..0599d323cbeb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -720,10 +720,6 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		trans_cfg.rx_buf_size = rb_size_default;
- 	}
- 
--	/* TODO: remove when balanced power mode is fw supported */
--	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
--		iwlmvm_mod_params.power_scheme = IWL_POWER_SCHEME_CAM;
--
- 	trans->wide_cmd_header = true;
- 	trans_cfg.bc_table_dword =
- 		mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560;
+>> @@ -172,7 +172,6 @@ enum {
+>>  	NLA_FLAG,
+>>  	NLA_MSECS,
+>>  	NLA_NESTED,
+>> -	NLA_NESTED_COMPAT,
+>>  	NLA_NUL_STRING,
+>>  	NLA_BINARY,
+>>  	NLA_S8,
+>...
+>
+>Is it safe to remove an item from this emun ?
+
+I believe it is, since it's not part of uapi. At least as long as you recompile all netlink policies afterwards.
+
+johannes 
 -- 
-2.18.0
+Sent from my phone. 
