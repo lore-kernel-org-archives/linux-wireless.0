@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:46152 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727364AbeIETUI (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12405 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731675AbeITMGZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 15:20:08 -0400
-Date: Wed, 05 Sep 2018 07:49:33 -0700 (PDT)
-Message-Id: <20180905.074933.1224053627421545015.davem@davemloft.net> (sfid-20180905_164953_269756_2A609566)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-09-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180905090542.21790-1-johannes@sipsolutions.net>
-References: <20180905090542.21790-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 20 Sep 2018 08:06:25 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 13/29] staging: wilc1000: changes 'val' type to u8 in wilc_cfg_byte struct
+Date: Thu, 20 Sep 2018 11:53:24 +0530
+Message-ID: <1537424620-6982-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082502_422306_6B895A26)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed,  5 Sep 2018 11:05:41 +0200
+Use the correct datatype for storing the byte value in 'wilc_cfg_byte'
+struct.
 
-> Here's a pull request for net-next. Thanks for including
-> net, that way I could include Stanislaw's patch to check
-> the regulatory WMM data.
-> 
-> Please pull and let me know if there's any problem.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Pulled, thanks!
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index 189e617..082093f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -9,7 +9,7 @@
+ 
+ struct wilc_cfg_byte {
+ 	u16 id;
+-	u16 val;
++	u8 val;
+ };
+ 
+ struct wilc_cfg_hword {
+-- 
+2.7.4
