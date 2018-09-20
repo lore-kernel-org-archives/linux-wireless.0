@@ -1,322 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:51789 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728233AbeIPXFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 19:05:52 -0400
-Subject: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Date: Sun, 16 Sep 2018 19:42:11 +0200
-Message-ID: <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk> (sfid-20180916_194320_375882_E529F232)
-In-Reply-To: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12429 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731240AbeITMGy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 08:06:54 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 21/29] staging: wilc1000: avoid use of 'g_sdio' static variable
+Date: Thu, 20 Sep 2018 11:53:32 +0530
+Message-ID: <1537424620-6982-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_085418_437221_512C1889)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds an API to mac80211 to handle scheduling of TXQs. The interface
-between driver and mac80211 for TXQ handling is changed by adding two new
-functions: ieee80211_next_txq(), which will return the next TXQ to schedule
-in the current round-robin rotation, and ieee80211_return_txq(), which the
-driver uses to indicate that it has finished scheduling a TXQ (which will
-then be put back in the scheduling rotation if it isn't empty).
+Instead of using static variable 'g_sdio' move it as part of 'wilc'
+struct. Also allocating the memory in the probe function and free during
+deinitialization.
 
-The driver must call ieee80211_txq_schedule_start() at the start of each
-scheduling session, and ieee80211_txq_schedule_end() at the end. The API
-then guarantees that the same TXQ is not returned twice in the same
-session (so a driver can loop on ieee80211_next_txq() without worrying
-about breaking the loop.
-
-Usage of the new API is optional, so drivers can be ported one at a time.
-In this patch, the actual scheduling performed by mac80211 is simple
-round-robin, but a subsequent commit adds airtime fairness awareness to the
-scheduler.
-
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/mac80211.h     |   62 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/agg-tx.c      |    2 +
- net/mac80211/driver-ops.h  |    9 ++++++
- net/mac80211/ieee80211_i.h |    9 ++++++
- net/mac80211/main.c        |    5 ++++
- net/mac80211/sta_info.c    |    2 +
- net/mac80211/tx.c          |   59 +++++++++++++++++++++++++++++++++++++++++-
- 7 files changed, 141 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         |  1 +
+ drivers/staging/wilc1000/wilc_sdio.c          | 54 +++++++++++++++++----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ 3 files changed, 36 insertions(+), 20 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c4fadbafbf21..5ca1484cba58 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -108,9 +108,16 @@
-  * The driver is expected to initialize its private per-queue data for stations
-  * and interfaces in the .add_interface and .sta_add ops.
-  *
-- * The driver can't access the queue directly. To dequeue a frame, it calls
-- * ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a queue, it
-- * calls the .wake_tx_queue driver op.
-+ * The driver can't access the queue directly. To dequeue a frame from a
-+ * txq, it calls ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a
-+ * queue, it calls the .wake_tx_queue driver op.
-+ *
-+ * Drivers can optionally delegate responsibility for scheduling queues to
-+ * mac80211, to take advantage of airtime fairness accounting. In this case, to
-+ * obtain the next queue to pull frames from, the driver calls
-+ * ieee80211_next_txq(). The driver is then expected to re-schedule the txq
-+ * using ieee80211_schedule_txq() if it is still active after the driver has
-+ * finished pulling packets from it.
-  *
-  * For AP powersave TIM handling, the driver only needs to indicate if it has
-  * buffered packets in the driver specific data structures by calling
-@@ -6045,13 +6052,60 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
-  * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-- * @txq: pointer obtained from station or virtual interface
-+ * @txq: pointer obtained from station or virtual interface, or from
-+ *       ieee80211_next_txq()
-  *
-  * Returns the skb if successful, %NULL if no frame was available.
-  */
- struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 				     struct ieee80211_txq *txq);
- 
-+/**
-+ * ieee80211_next_txq - get next tx queue to pull packets from
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @ac: AC number to return packets from.
-+ *
-+ * Should only be called between calls to ieee80211_txq_schedule_start()
-+ * and ieee80211_txq_schedule_end().
-+ * Returns the next txq if successful, %NULL if no queue is eligible. If a txq
-+ * is returned, it should be returned with ieee80211_return_txq() after the
-+ * driver has finished scheduling it.
-+ */
-+struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac);
-+
-+/**
-+ * ieee80211_return_txq - return a TXQ previously acquired by ieee80211_next_txq()
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @txq: pointer obtained from station or virtual interface
-+ *
-+ * Should only be called between calls to ieee80211_txq_schedule_start()
-+ * and ieee80211_txq_schedule_end().
-+ */
-+void ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
-+
-+/**
-+ * ieee80211_txq_schedule_start - acquire locks for safe scheduling of an AC
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @ac: AC number to acquire locks for
-+ *
-+ * Acquire locks needed to schedule TXQs from the given AC. Should be called
-+ * before ieee80211_next_txq() or ieee80211_schedule_txq().
-+ */
-+void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac);
-+
-+/**
-+ * ieee80211_txq_schedule_end - release locks for safe scheduling of an AC
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @ac: AC number to acquire locks for
-+ *
-+ * Release locks previously acquired by ieee80211_txq_schedule_end().
-+ */
-+void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac);
-+
- /**
-  * ieee80211_txq_get_depth - get pending frame/byte count of given txq
-  *
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 69e831bc317b..e94b1a0407af 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -229,7 +229,7 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
- 	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
- 	local_bh_disable();
- 	rcu_read_lock();
--	drv_wake_tx_queue(sta->sdata->local, txqi);
-+	schedule_and_wake_txq(sta->sdata->local, txqi);
- 	rcu_read_unlock();
- 	local_bh_enable();
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b666e1e..560c168 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1037,6 +1037,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 	flush_workqueue(wilc->hif_workqueue);
+ 	destroy_workqueue(wilc->hif_workqueue);
+ 	wilc_wlan_cfg_deinit(wilc);
++	kfree(wilc->bus_data);
+ 	kfree(wilc);
  }
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index e42c641b6190..0d47dadee747 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1173,6 +1173,15 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
- 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
- }
+ EXPORT_SYMBOL_GPL(wilc_netdev_cleanup);
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index b2080d8..7ef047c 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -30,7 +30,6 @@ struct wilc_sdio {
+ 	int has_thrpt_enh3;
+ };
  
-+static inline void schedule_and_wake_txq(struct ieee80211_local *local,
-+					 struct txq_info *txqi)
-+{
-+	spin_lock_bh(&local->active_txq_lock[txqi->txq.ac]);
-+	ieee80211_return_txq(&local->hw, &txqi->txq);
-+	spin_unlock_bh(&local->active_txq_lock[txqi->txq.ac]);
-+	drv_wake_tx_queue(local, txqi);
-+}
+-static struct wilc_sdio g_sdio;
+ static const struct wilc_hif_func wilc_hif_sdio;
+ 
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+@@ -109,6 +108,11 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 	struct wilc *wilc;
+ 	int ret;
+ 	struct gpio_desc *gpio = NULL;
++	struct wilc_sdio *sdio_priv;
 +
- static inline int drv_can_aggregate_in_amsdu(struct ieee80211_local *local,
- 					     struct sk_buff *head,
- 					     struct sk_buff *skb)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f40a2167935f..976531717902 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -829,6 +829,8 @@ enum txq_info_flags {
-  *	a fq_flow which is already owned by a different tin
-  * @def_cvars: codel vars for @def_flow
-  * @frags: used to keep fragments created after dequeue
-+ * @schedule_order: used with ieee80211_local->active_txqs
-+ * @schedule_round: counter to prevent infinite loops on TXQ scheduling
-  */
- struct txq_info {
- 	struct fq_tin tin;
-@@ -836,6 +838,8 @@ struct txq_info {
- 	struct codel_vars def_cvars;
- 	struct codel_stats cstats;
- 	struct sk_buff_head frags;
-+	struct list_head schedule_order;
-+	u16 schedule_round;
- 	unsigned long flags;
++	sdio_priv = kzalloc(sizeof(*sdio_priv), GFP_KERNEL);
++	if (!sdio_priv)
++		return -ENOMEM;
  
- 	/* keep last! */
-@@ -1127,6 +1131,11 @@ struct ieee80211_local {
- 	struct codel_vars *cvars;
- 	struct codel_params cparams;
+ 	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
+ 		gpio = gpiod_get(&func->dev, "irq", GPIOD_IN);
+@@ -124,9 +128,11 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, &wilc_hif_sdio);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Couldn't initialize netdev\n");
++		kfree(sdio_priv);
+ 		return ret;
+ 	}
+ 	sdio_set_drvdata(func, wilc);
++	wilc->bus_data = sdio_priv;
+ 	wilc->dev = &func->dev;
+ 	wilc->gpio_irq = gpio;
  
-+	/* protects active_txqs and txqi->schedule_order */
-+	spinlock_t active_txq_lock[IEEE80211_NUM_ACS];
-+	struct list_head active_txqs[IEEE80211_NUM_ACS];
-+	u16 schedule_round[IEEE80211_NUM_ACS];
-+
- 	const struct ieee80211_ops *ops;
+@@ -381,6 +387,7 @@ static int sdio_set_func1_block_size(struct wilc *wilc, u32 block_size)
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
  
- 	/*
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 77381017bac7..d9315de90b48 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -663,6 +663,11 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	spin_lock_init(&local->rx_path_lock);
- 	spin_lock_init(&local->queue_stop_reason_lock);
+ 	cpu_to_le32s(&data);
+@@ -415,7 +422,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		cmd.increment = 1;
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)&data;
+-		cmd.block_size = g_sdio.block_size;
++		cmd.block_size = sdio_priv->block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -434,7 +441,8 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-	u32 block_size = g_sdio.block_size;
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
++	u32 block_size = sdio_priv->block_size;
+ 	struct sdio_cmd53 cmd;
+ 	int nblk, nleft, ret;
  
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		INIT_LIST_HEAD(&local->active_txqs[i]);
-+		spin_lock_init(&local->active_txq_lock[i]);
-+	}
-+
- 	INIT_LIST_HEAD(&local->chanctx_list);
- 	mutex_init(&local->chanctx_mtx);
+@@ -523,6 +531,7 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
  
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index fb8c2252ac0e..c2f5cb7df54f 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1249,7 +1249,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 		if (!sta->sta.txq[i] || !txq_has_queue(sta->sta.txq[i]))
- 			continue;
+ 	if (addr >= 0xf0 && addr <= 0xff) {
+@@ -553,7 +562,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)data;
  
--		drv_wake_tx_queue(local, to_txq_info(sta->sta.txq[i]));
-+		schedule_and_wake_txq(local, to_txq_info(sta->sta.txq[i]));
+-		cmd.block_size = g_sdio.block_size;
++		cmd.block_size = sdio_priv->block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -574,7 +583,8 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-	u32 block_size = g_sdio.block_size;
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
++	u32 block_size = sdio_priv->block_size;
+ 	struct sdio_cmd53 cmd;
+ 	int nblk, nleft, ret;
+ 
+@@ -674,13 +684,14 @@ static int sdio_deinit(struct wilc *wilc)
+ static int sdio_init(struct wilc *wilc, bool resume)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	struct sdio_cmd52 cmd;
+ 	int loop, ret;
+ 	u32 chipid;
+ 
+ 	if (!resume) {
+-		memset(&g_sdio, 0, sizeof(struct wilc_sdio));
+-		g_sdio.irq_gpio = wilc->dev_irq_num;
++		memset(sdio_priv, 0, sizeof(struct wilc_sdio));
++		sdio_priv->irq_gpio = wilc->dev_irq_num;
  	}
  
- 	skb_queue_head_init(&pending);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c42bfa1dcd2c..1e071121cb44 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1445,6 +1445,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 	codel_vars_init(&txqi->def_cvars);
- 	codel_stats_init(&txqi->cstats);
- 	__skb_queue_head_init(&txqi->frags);
-+	INIT_LIST_HEAD(&txqi->schedule_order);
+ 	/**
+@@ -704,7 +715,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 		dev_err(&func->dev, "Fail cmd 52, set func 0 block size...\n");
+ 		goto fail;
+ 	}
+-	g_sdio.block_size = WILC_SDIO_BLOCK_SIZE;
++	sdio_priv->block_size = WILC_SDIO_BLOCK_SIZE;
  
- 	txqi->txq.vif = &sdata->vif;
+ 	/**
+ 	 *      enable func1 IO
+@@ -778,11 +789,11 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 		}
+ 		dev_err(&func->dev, "chipid (%08x)\n", chipid);
+ 		if ((chipid & 0xfff) > 0x2a0)
+-			g_sdio.has_thrpt_enh3 = 1;
++			sdio_priv->has_thrpt_enh3 = 1;
+ 		else
+-			g_sdio.has_thrpt_enh3 = 0;
++			sdio_priv->has_thrpt_enh3 = 0;
+ 		dev_info(&func->dev, "has_thrpt_enh3 = %d...\n",
+-			 g_sdio.has_thrpt_enh3);
++			 sdio_priv->has_thrpt_enh3);
+ 	}
  
-@@ -1485,6 +1486,9 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 	return 1;
+@@ -820,6 +831,7 @@ static int sdio_read_size(struct wilc *wilc, u32 *size)
+ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	u32 tmp;
+ 	struct sdio_cmd52 cmd;
  
- 	fq_tin_reset(fq, tin, fq_skb_free_func);
- 	ieee80211_purge_tx_queue(&local->hw, &txqi->frags);
-+	spin_lock_bh(&local->active_txq_lock[txqi->txq.ac]);
-+	list_del_init(&txqi->schedule_order);
-+	spin_unlock_bh(&local->active_txq_lock[txqi->txq.ac]);
- }
+@@ -828,7 +840,7 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ 	/**
+ 	 *      Read IRQ flags
+ 	 **/
+-	if (!g_sdio.irq_gpio) {
++	if (!sdio_priv->irq_gpio) {
+ 		int i;
  
- void ieee80211_txq_set_params(struct ieee80211_local *local)
-@@ -1601,7 +1605,7 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
- 	ieee80211_txq_enqueue(local, txqi, skb);
- 	spin_unlock_bh(&fq->lock);
+ 		cmd.function = 1;
+@@ -848,7 +860,7 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ 			tmp |= INT_4;
+ 		if (cmd.data & BIT(6))
+ 			tmp |= INT_5;
+-		for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++		for (i = sdio_priv->nint; i < MAX_NUM_INT; i++) {
+ 			if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
+ 				dev_err(&func->dev,
+ 					"Unexpected interrupt (1) : tmp=%x, data=%x\n",
+@@ -877,13 +889,14 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
+ 	int vmm_ctl;
  
--	drv_wake_tx_queue(local, txqi);
-+	schedule_and_wake_txq(local, txqi);
+-	if (g_sdio.has_thrpt_enh3) {
++	if (sdio_priv->has_thrpt_enh3) {
+ 		u32 reg;
  
- 	return true;
- }
-@@ -3623,6 +3627,59 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_tx_dequeue);
+-		if (g_sdio.irq_gpio) {
++		if (sdio_priv->irq_gpio) {
+ 			u32 flags;
  
-+struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct txq_info *txqi = NULL;
-+
-+	lockdep_assert_held(&local->active_txq_lock[ac]);
-+
-+	txqi = list_first_entry_or_null(&local->active_txqs[ac],
-+					struct txq_info,
-+					schedule_order);
-+
-+	if (!txqi || txqi->schedule_round == local->schedule_round[ac])
-+		return NULL;
-+
-+	list_del_init(&txqi->schedule_order);
-+	txqi->schedule_round = local->schedule_round[ac];
-+	return &txqi->txq;
-+}
-+EXPORT_SYMBOL(ieee80211_next_txq);
-+
-+void ieee80211_return_txq(struct ieee80211_hw *hw,
-+			    struct ieee80211_txq *txq)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct txq_info *txqi = to_txq_info(txq);
-+
-+	lockdep_assert_held(&local->active_txq_lock[txq->ac]);
-+
-+	if (list_empty(&txqi->schedule_order) &&
-+	    (!skb_queue_empty(&txqi->frags) || txqi->tin.backlog_packets))
-+		list_add_tail(&txqi->schedule_order,
-+			      &local->active_txqs[txq->ac]);
-+
-+}
-+EXPORT_SYMBOL(ieee80211_return_txq);
-+
-+void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	spin_lock_bh(&local->active_txq_lock[ac]);
-+	local->schedule_round[ac]++;
-+}
-+EXPORT_SYMBOL(ieee80211_txq_schedule_start);
-+
-+void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	spin_unlock_bh(&local->active_txq_lock[ac]);
-+}
-+EXPORT_SYMBOL(ieee80211_txq_schedule_end);
-+
- void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				  struct net_device *dev,
- 				  u32 info_flags)
+ 			flags = val & (BIT(MAX_NUN_INT_THRPT_ENH2) - 1);
+@@ -919,7 +932,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 		}
+ 		return 1;
+ 	}
+-	if (g_sdio.irq_gpio) {
++	if (sdio_priv->irq_gpio) {
+ 		/* has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+ 		/*
+ 		 * Cannot clear multiple interrupts.
+@@ -932,7 +945,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			int i;
+ 
+ 			ret = 1;
+-			for (i = 0; i < g_sdio.nint; i++) {
++			for (i = 0; i < sdio_priv->nint; i++) {
+ 				if (flags & 1) {
+ 					struct sdio_cmd52 cmd;
+ 
+@@ -956,7 +969,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			}
+ 			if (!ret)
+ 				goto fail;
+-			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++			for (i = sdio_priv->nint; i < MAX_NUM_INT; i++) {
+ 				if (flags & 1)
+ 					dev_err(&func->dev,
+ 						"Unexpected interrupt cleared %d...\n",
+@@ -1001,6 +1014,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	u32 reg;
+ 
+ 	if (nint > MAX_NUM_INT) {
+@@ -1013,7 +1027,7 @@ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ 		return 0;
+ 	}
+ 
+-	g_sdio.nint = nint;
++	sdio_priv->nint = nint;
+ 
+ 	/**
+ 	 *      Disable power sequencer
+@@ -1029,7 +1043,7 @@ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ 		return 0;
+ 	}
+ 
+-	if (g_sdio.irq_gpio) {
++	if (sdio_priv->irq_gpio) {
+ 		u32 reg;
+ 		int ret, i;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 484c265..4ba5887 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -205,6 +205,7 @@ struct wilc {
+ 	struct workqueue_struct *hif_workqueue;
+ 	enum chip_ps_states chip_ps_state;
+ 	struct wilc_cfg cfg;
++	void *bus_data;
+ };
+ 
+ struct wilc_wfi_mon_priv {
+-- 
+2.7.4
