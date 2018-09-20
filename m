@@ -1,116 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:37278 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731665AbeITOyy (ORCPT
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:38395 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387441AbeITOzF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 10:54:54 -0400
-Received: by mail-wr1-f67.google.com with SMTP id u12-v6so8580730wrr.4
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 02:12:25 -0700 (PDT)
+        Thu, 20 Sep 2018 10:55:05 -0400
+Received: by mail-wr1-f65.google.com with SMTP id j8-v6so4849683wrw.5
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 02:12:35 -0700 (PDT)
 From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH 01/20] mt76: move seq_put_array in mt76-core module
-Date: Thu, 20 Sep 2018 11:11:48 +0200
-Message-Id: <c908dfcaf7a0f5333e6ebd6fb5f7a9a58961c7a0.1537433365.git.lorenzo.bianconi@redhat.com> (sfid-20180920_111249_108761_15783A52)
+Subject: [PATCH 10/20] mt76: add mt76x02_get_rx_gain and mt76x02_get_lna_gain utility routines
+Date: Thu, 20 Sep 2018 11:11:57 +0200
+Message-Id: <4a7eb29d1cc6193b58a89de88c6b3b6af65c75f3.1537433365.git.lorenzo.bianconi@redhat.com> (sfid-20180920_112418_621396_C19F1418)
 In-Reply-To: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
 References: <cover.1537433365.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move seq_put_array utility routine in mt76-core module
-in order to be reused in mt76x0 driver
+Add mt76x02_get_rx_gain and mt76x02_get_lna_gain utility routines
+for rx gain parsing. mt76x02_get_rx_gain and mt76x02_get_lna_gain
+will be reused for eeprom parsing in mt76x0 driver
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/debugfs.c  | 12 +++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
- .../wireless/mediatek/mt76/mt76x2_debugfs.c   | 31 ++++++-------------
- 3 files changed, 24 insertions(+), 21 deletions(-)
+ .../wireless/mediatek/mt76/mt76x02_eeprom.c   | 54 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt76x02_eeprom.h   |  5 ++
+ .../wireless/mediatek/mt76/mt76x2_eeprom.c    | 47 ++--------------
+ 3 files changed, 63 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/debugfs.c b/drivers/net/wireless/mediatek/mt76/debugfs.c
-index a38d05dea599..03ce635334fa 100644
---- a/drivers/net/wireless/mediatek/mt76/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
-@@ -56,6 +56,18 @@ mt76_queues_read(struct seq_file *s, void *data)
- 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+index edb08863e4ba..2377c758da5d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+@@ -81,3 +81,57 @@ bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band)
+ 		return !(conf0 & MT_EE_NIC_CONF_0_PA_INT_2G);
  }
- 
-+void mt76_seq_puts_array(struct seq_file *file, const char *str,
-+			 s8 *val, int len)
+ EXPORT_SYMBOL_GPL(mt76x02_ext_pa_enabled);
++
++void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
++			 u16 *rssi_offset, s8 *lna_2g, s8 *lna_5g)
 +{
-+	int i;
++	u16 val;
 +
-+	seq_printf(file, "%10s:", str);
-+	for (i = 0; i < len; i++)
-+		seq_printf(file, " %2d", val[i]);
-+	seq_puts(file, "\n");
++	val = mt76x02_eeprom_get(dev, MT_EE_LNA_GAIN);
++	*lna_2g = val & 0xff;
++	lna_5g[0] = val >> 8;
++
++	val = mt76x02_eeprom_get(dev, MT_EE_RSSI_OFFSET_2G_1);
++	lna_5g[1] = val >> 8;
++
++	val = mt76x02_eeprom_get(dev, MT_EE_RSSI_OFFSET_5G_1);
++	lna_5g[2] = val >> 8;
++
++	if (!mt76x02_field_valid(lna_5g[1]))
++		lna_5g[1] = lna_5g[0];
++
++	if (!mt76x02_field_valid(lna_5g[2]))
++		lna_5g[2] = lna_5g[0];
++
++	if (band == NL80211_BAND_2GHZ)
++		*rssi_offset = mt76x02_eeprom_get(dev, MT_EE_RSSI_OFFSET_2G_0);
++	else
++		*rssi_offset = mt76x02_eeprom_get(dev, MT_EE_RSSI_OFFSET_5G_0);
 +}
-+EXPORT_SYMBOL_GPL(mt76_seq_puts_array);
++EXPORT_SYMBOL_GPL(mt76x02_get_rx_gain);
 +
- struct dentry *mt76_register_debugfs(struct mt76_dev *dev)
- {
- 	struct dentry *dir;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index dbda49243a10..b4980959efa7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -539,6 +539,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- void mt76_unregister_device(struct mt76_dev *dev);
++u8 mt76x02_get_lna_gain(struct mt76_dev *dev,
++			s8 *lna_2g, s8 *lna_5g,
++			struct ieee80211_channel *chan)
++{
++	u16 val;
++	u8 lna;
++
++	val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1);
++	if (val & MT_EE_NIC_CONF_1_LNA_EXT_2G)
++		*lna_2g = 0;
++	if (val & MT_EE_NIC_CONF_1_LNA_EXT_5G)
++		memset(lna_5g, 0, sizeof(s8) * 3);
++
++	if (chan->band == NL80211_BAND_2GHZ)
++		lna = *lna_2g;
++	else if (chan->hw_value <= 64)
++		lna = lna_5g[0];
++	else if (chan->hw_value <= 128)
++		lna = lna_5g[1];
++	else
++		lna = lna_5g[2];
++
++	return lna != 0xff ? lna : 0;
++}
++EXPORT_SYMBOL_GPL(mt76x02_get_lna_gain);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+index 70ca2729895c..c22ca507b418 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+@@ -154,5 +154,10 @@ mt76x02_eeprom_get(struct mt76_dev *dev,
+ bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band);
+ int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
+ 			   int len, enum mt76x02_eeprom_modes mode);
++void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
++			 u16 *rssi_offset, s8 *lna_2g, s8 *lna_5g);
++u8 mt76x02_get_lna_gain(struct mt76_dev *dev,
++			s8 *lna_2g, s8 *lna_5g,
++			struct ieee80211_channel *chan);
  
- struct dentry *mt76_register_debugfs(struct mt76_dev *dev);
-+void mt76_seq_puts_array(struct seq_file *file, const char *str,
-+			 s8 *val, int len);
+ #endif /* __MT76x02_EEPROM_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+index ab52a7f19611..b9641e2408ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+@@ -310,55 +310,16 @@ void mt76x2_read_rx_gain(struct mt76x2_dev *dev)
  
- int mt76_eeprom_init(struct mt76_dev *dev, int len);
- void mt76_eeprom_override(struct mt76_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-index 77b5ff1be05f..2cd0d8200a57 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-@@ -47,33 +47,22 @@ mt76x2_ampdu_stat_open(struct inode *inode, struct file *f)
- 	return single_open(f, mt76x2_ampdu_stat_read, inode->i_private);
- }
+ 	mt76x2_set_rx_gain_group(dev, val);
  
--static void
--seq_puts_array(struct seq_file *file, const char *str, s8 *val, int len)
--{
--	int i;
+-	if (chan->band == NL80211_BAND_2GHZ) {
+-		val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RSSI_OFFSET_2G_0);
+-		mt76x2_set_rssi_offset(dev, 0, val);
+-		mt76x2_set_rssi_offset(dev, 1, val >> 8);
+-	} else {
+-		val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RSSI_OFFSET_5G_0);
+-		mt76x2_set_rssi_offset(dev, 0, val);
+-		mt76x2_set_rssi_offset(dev, 1, val >> 8);
+-	}
 -
--	seq_printf(file, "%10s:", str);
--	for (i = 0; i < len; i++)
--		seq_printf(file, " %2d", val[i]);
--	seq_puts(file, "\n");
--}
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_LNA_GAIN);
+-	lna_2g = val & 0xff;
+-	lna_5g[0] = val >> 8;
 -
- static int read_txpower(struct seq_file *file, void *data)
- {
- 	struct mt76x2_dev *dev = dev_get_drvdata(file->private);
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RSSI_OFFSET_2G_1);
+-	lna_5g[1] = val >> 8;
+-
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RSSI_OFFSET_5G_1);
+-	lna_5g[2] = val >> 8;
+-
+-	if (!mt76x02_field_valid(lna_5g[1]))
+-		lna_5g[1] = lna_5g[0];
+-
+-	if (!mt76x02_field_valid(lna_5g[2]))
+-		lna_5g[2] = lna_5g[0];
++	mt76x02_get_rx_gain(&dev->mt76, chan->band, &val, &lna_2g, lna_5g);
++	mt76x2_set_rssi_offset(dev, 0, val);
++	mt76x2_set_rssi_offset(dev, 1, val >> 8);
  
- 	seq_printf(file, "Target power: %d\n", dev->target_power);
+ 	dev->cal.rx.mcu_gain =  (lna_2g & 0xff);
+ 	dev->cal.rx.mcu_gain |= (lna_5g[0] & 0xff) << 8;
+ 	dev->cal.rx.mcu_gain |= (lna_5g[1] & 0xff) << 16;
+ 	dev->cal.rx.mcu_gain |= (lna_5g[2] & 0xff) << 24;
  
--	seq_puts_array(file, "Delta", dev->target_power_delta,
--		       ARRAY_SIZE(dev->target_power_delta));
--	seq_puts_array(file, "CCK", dev->rate_power.cck,
--		       ARRAY_SIZE(dev->rate_power.cck));
--	seq_puts_array(file, "OFDM", dev->rate_power.ofdm,
--		       ARRAY_SIZE(dev->rate_power.ofdm));
--	seq_puts_array(file, "HT", dev->rate_power.ht,
--		       ARRAY_SIZE(dev->rate_power.ht));
--	seq_puts_array(file, "VHT", dev->rate_power.vht,
--		       ARRAY_SIZE(dev->rate_power.vht));
-+	mt76_seq_puts_array(file, "Delta", dev->target_power_delta,
-+			    ARRAY_SIZE(dev->target_power_delta));
-+	mt76_seq_puts_array(file, "CCK", dev->rate_power.cck,
-+			    ARRAY_SIZE(dev->rate_power.cck));
-+	mt76_seq_puts_array(file, "OFDM", dev->rate_power.ofdm,
-+			    ARRAY_SIZE(dev->rate_power.ofdm));
-+	mt76_seq_puts_array(file, "HT", dev->rate_power.ht,
-+			    ARRAY_SIZE(dev->rate_power.ht));
-+	mt76_seq_puts_array(file, "VHT", dev->rate_power.vht,
-+			    ARRAY_SIZE(dev->rate_power.vht));
- 	return 0;
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_1);
+-	if (val & MT_EE_NIC_CONF_1_LNA_EXT_2G)
+-		lna_2g = 0;
+-	if (val & MT_EE_NIC_CONF_1_LNA_EXT_5G)
+-		memset(lna_5g, 0, sizeof(lna_5g));
+-
+-	if (chan->band == NL80211_BAND_2GHZ)
+-		lna = lna_2g;
+-	else if (channel <= 64)
+-		lna = lna_5g[0];
+-	else if (channel <= 128)
+-		lna = lna_5g[1];
+-	else
+-		lna = lna_5g[2];
+-
+-	if (lna == 0xff)
+-		lna = 0;
+-
++	lna = mt76x02_get_lna_gain(&dev->mt76, &lna_2g, lna_5g, chan);
+ 	dev->cal.rx.lna_gain = mt76x02_sign_extend(lna, 8);
  }
- 
+ EXPORT_SYMBOL_GPL(mt76x2_read_rx_gain);
 -- 
 2.17.1
