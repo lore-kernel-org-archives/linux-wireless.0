@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:34584 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727659AbeILNxf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47266 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726128AbeIUDOu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 09:53:35 -0400
-Received: by mail-qt0-f172.google.com with SMTP id m13-v6so1053829qth.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Sep 2018 01:50:02 -0700 (PDT)
-Subject: Re: [RFC v2 2/2] netlink: add ethernet address policy types
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <20180912083610.20857-1-johannes@sipsolutions.net>
- <20180912083610.20857-2-johannes@sipsolutions.net>
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        Johannes Berg <johannes.berg@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B98D336.4090107@broadcom.com> (sfid-20180912_105009_979443_14993FF1)
-Date: Wed, 12 Sep 2018 10:49:58 +0200
+        Thu, 20 Sep 2018 23:14:50 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180912083610.20857-2-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 20 Sep 2018 14:29:19 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Kan Yan <kyan@google.com>
+Subject: Re: [PATCH RFC v4 0/4] Move TXQ scheduling into mac80211
+In-Reply-To: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
+References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
+Message-ID: <6f97d6300d514c0b6577c9c9376b98a8@codeaurora.org> (sfid-20180920_232922_845410_241C57AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/12/2018 10:36 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Commonly, ethernet addresses are just using a policy of
-> 	{ .len = ETH_ALEN }
-> which leaves userspace free to send more data than it should,
-> which may hide bugs.
->
-> Introduce NLA_ETH_ADDR which checks for exact size, and rejects
-> the attribute if the length isn't ETH_ALEN.
->
-> Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
-> policy above, but will, in addition, warn on an address that's
-> too long.
+On 2018-09-16 10:42, Toke Høiland-Jørgensen wrote:
+> Another update, addressing most of the concerns raised in the last 
+> round:
+> 
+> - Added schedule_start()/end() functions that adds locking around the
+>   whole scheduling operation, which means we can get rid of the 'first'
+>   parameter to ieee80211_next_txq().
+> 
+Toke,
 
-Not sure if this is correctly described here. It seems longer addresses 
-are not rejected, but only result in a warning message. I guess the 
-problem is in the reference to the "policy above" ;-)
+Wouldn't this start()/end() APIs cause deadlock if mac80211 tries to 
+acquire
+active_txq_lock[ac] again? Or am I missing?
 
-Regards,
-Arend
+schedule_start()
+while (next_txq()) {
+   push_txq -> tx_dequeue()
+   return_txq()
+}
+schedule_end()
+
+tx_dequeue()
+  ieee80211_free_txskb
+   -> ieee80211_report_used_skb
+    -> ieee80211_tdls_td_tx_handle
+     -> ieee80211_subif_start_xmit
+     -> __ieee80211_subif_start_xmit
+       -> ieee80211_xmit_fast
+         -> ieee80211_queue_skb
+          -> schedule_and_wake_txq
+
+-Rajkumar
