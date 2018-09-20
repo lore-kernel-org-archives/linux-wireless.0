@@ -1,50 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48658 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbeIDMl1 (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40789 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731240AbeITMHV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 08:41:27 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 20 Sep 2018 08:07:21 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 25/29] staging: wilc1000: remove wilc_debugfs.c file as its not used
+Date: Thu, 20 Sep 2018 11:53:36 +0530
+Message-ID: <1537424620-6982-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_082629_396590_FC2800C8)
+In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
+References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4] rsi: remove set but not used variables 'header_size'
- and 'tx_params'
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1535788107-171830-1-git-send-email-yuehaibing@huawei.com>
-References: <1535788107-171830-1-git-send-email-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: Pavani Muthyala <pavani.muthyala@redpinesignals.com>,
-        Kees Cook <keescook@chromium.org>,
-        Colin Ian King <colin.king@canonical.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Message-Id: <20180904081725.9B421603D2@smtp.codeaurora.org> (sfid-20180904_101729_436584_D372BFC9)
-Date: Tue,  4 Sep 2018 08:17:25 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Deleted wilc_debugfs.c file as it's not used.
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/rsi/rsi_91x_hal.c: In function 'rsi_send_data_pkt':
-> drivers/net/wireless/rsi/rsi_91x_hal.c:288:5: warning:
->  variable 'header_size' set but not used [-Wunused-but-set-variable]
-> 
-> 'tx_params' only used for 'header_size' dereferenced,so also
-> can be removed.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Earlier discussion link:
+[1]. https://www.spinics.net/lists/linux-wireless/msg176076.html
 
-Patch applied to wireless-drivers-next.git, thanks.
+Suggested-by: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/Makefile       |   5 +-
+ drivers/staging/wilc1000/wilc_debugfs.c | 115 --------------------------------
+ 2 files changed, 2 insertions(+), 118 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/wilc_debugfs.c
 
-ec7eccf7ad1c rsi: remove set but not used variables 'header_size' and 'tx_params'
-
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index ee7e26b..5718bc4 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -4,12 +4,11 @@ obj-$(CONFIG_WILC1000) += wilc1000.o
+ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
+ 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+ 
+-ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
++ccflags-y += -I$(src)/ -DWILC_ASIC_A0
+ 
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			coreconfigurator.o host_interface.o \
+-			wilc_wlan_cfg.o wilc_debugfs.o \
+-			wilc_wlan.o
++			wilc_wlan_cfg.o wilc_wlan.o
+ 
+ obj-$(CONFIG_WILC1000_SDIO) += wilc1000-sdio.o
+ wilc1000-sdio-objs += wilc_sdio.o
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+deleted file mode 100644
+index 8001df6..0000000
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ /dev/null
+@@ -1,115 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
+- * All rights reserved.
+- */
+-
+-#if defined(WILC_DEBUGFS)
+-#include <linux/module.h>
+-#include <linux/debugfs.h>
+-
+-#include "wilc_wlan_if.h"
+-
+-static struct dentry *wilc_dir;
+-
+-#define DEBUG           BIT(0)
+-#define INFO            BIT(1)
+-#define WRN             BIT(2)
+-#define ERR             BIT(3)
+-
+-#define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+-EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+-
+-static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf,
+-				     size_t count, loff_t *ppos)
+-{
+-	char buf[128];
+-	int res = 0;
+-
+-	/* only allow read from start */
+-	if (*ppos > 0)
+-		return 0;
+-
+-	res = scnprintf(buf, sizeof(buf), "Debug Level: %x\n",
+-			atomic_read(&WILC_DEBUG_LEVEL));
+-
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+-}
+-
+-static ssize_t wilc_debug_level_write(struct file *filp,
+-				      const char __user *buf, size_t count,
+-				      loff_t *ppos)
+-{
+-	int flag = 0;
+-	int ret;
+-
+-	ret = kstrtouint_from_user(buf, count, 16, &flag);
+-	if (ret)
+-		return ret;
+-
+-	if (flag > DBG_LEVEL_ALL) {
+-		pr_info("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n",
+-			__func__, flag, atomic_read(&WILC_DEBUG_LEVEL));
+-		return -EINVAL;
+-	}
+-
+-	atomic_set(&WILC_DEBUG_LEVEL, (int)flag);
+-
+-	if (flag == 0)
+-		pr_info("Debug-level disabled\n");
+-	else
+-		pr_info("Debug-level enabled\n");
+-
+-	return count;
+-}
+-
+-#define FOPS(_open, _read, _write, _poll) { \
+-		.owner	= THIS_MODULE, \
+-		.open	= (_open), \
+-		.read	= (_read), \
+-		.write	= (_write), \
+-		.poll		= (_poll), \
+-}
+-
+-struct wilc_debugfs_info_t {
+-	const char *name;
+-	int perm;
+-	unsigned int data;
+-	const struct file_operations fops;
+-};
+-
+-static struct wilc_debugfs_info_t debugfs_info[] = {
+-	{
+-		"wilc_debug_level",
+-		0666,
+-		(DEBUG | ERR),
+-		FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL),
+-	},
+-};
+-
+-static int __init wilc_debugfs_init(void)
+-{
+-	int i;
+-	struct wilc_debugfs_info_t *info;
+-
+-	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+-		info = &debugfs_info[i];
+-		debugfs_create_file(info->name,
+-				    info->perm,
+-				    wilc_dir,
+-				    &info->data,
+-				    &info->fops);
+-	}
+-	return 0;
+-}
+-module_init(wilc_debugfs_init);
+-
+-static void __exit wilc_debugfs_remove(void)
+-{
+-	debugfs_remove_recursive(wilc_dir);
+-}
+-module_exit(wilc_debugfs_remove);
+-
+-#endif
 -- 
-https://patchwork.kernel.org/patch/10584631/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
