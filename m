@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:11637 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725981AbeIFHug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 03:50:36 -0400
-Subject: Re: [PATCH] iwlwifi: Use kmemdup instead of duplicating it in
- iwl_parse_nvm_mcc_info
-To: <davem@davemloft.net>, <johannes.berg@intel.com>,
-        <emmanuel.grumbach@intel.com>, <luciano.coelho@intel.com>,
-        <linuxwifi@intel.com>, <kvalo@codeaurora.org>
-References: <20180906031322.17748-1-yuehaibing@huawei.com>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <353e1aff-1801-6b2f-d133-27d94a9a789c@huawei.com> (sfid-20180906_051742_453870_41A1F22F)
-Date: Thu, 6 Sep 2018 11:17:19 +0800
-MIME-Version: 1.0
-In-Reply-To: <20180906031322.17748-1-yuehaibing@huawei.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37532 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727986AbeITRzH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Sep 2018 13:55:07 -0400
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCH] brcmsmac: Use kvmalloc() for ucode allocations
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180913061517.26295-1-tiwai@suse.de>
+References: <20180913061517.26295-1-tiwai@suse.de>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Message-Id: <20180920121155.6B8EF60B73@smtp.codeaurora.org> (sfid-20180920_141203_155462_D5E274C2)
+Date: Thu, 20 Sep 2018 12:11:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sorry ,there is a typo. Pls ignore this.
+Takashi Iwai <tiwai@suse.de> wrote:
 
-On 2018/9/6 11:13, YueHaibing wrote:
-> Replace calls to kmalloc followed by a memcpy with a direct call to
-> kmemdup.
+> The ucode chunk might be relatively large and the allocation with
+> kmalloc() may fail occasionally.  Since the data isn't DMA-transferred
+> but by manual loops, we can use vmalloc instead of kmalloc.
+> For a better performance, though, kvmalloc() would be the best choice
+> in such a case, so let's replace with it.
 > 
-> Patch found using coccinelle.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-> index 27db4a3..bd91657 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-> @@ -1113,14 +1113,12 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
->  	regd_to_copy = sizeof(struct ieee80211_regdomain) +
->  		valid_rules * sizeof(struct ieee80211_reg_rule);
->  
-> -	copy_rd = kzalloc(regd_to_copy, GFP_KERNEL);
-> +	copy_rd = kmemdup(reg, regd_to_copy, GFP_KERNEL);
->  	if (!copy_rd) {
->  		copy_rd = ERR_PTR(-ENOMEM);
->  		goto out;
->  	}
->  
-> -	memcpy(copy_rd, regd, regd_to_copy);
-> -
->  out:
->  	kfree(regdb_ptrs);
->  	kfree(regd);
-> 
+> Bugzilla: https://bugzilla.suse.com/show_bug.cgi?id=1103431
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+6c3efbe77bc7 brcmsmac: Use kvmalloc() for ucode allocations
+
+-- 
+https://patchwork.kernel.org/patch/10598731/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
