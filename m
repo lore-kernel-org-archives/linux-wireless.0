@@ -1,96 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:40754 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732017AbeITMGn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60674 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727986AbeITRqR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 08:06:43 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 18/29] staging: wilc1000: rename 'wilc_mac_cfg' struct to 'wilc_cfg_str_vals'
-Date: Thu, 20 Sep 2018 11:53:29 +0530
-Message-ID: <1537424620-6982-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180920_085426_748067_9E431A17)
-In-Reply-To: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537424620-6982-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 20 Sep 2018 13:46:17 -0400
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [RFCv3 2/2] ath10k: report tx rate using ieee80211_tx_rate_update()
+Date: Thu, 20 Sep 2018 17:35:16 +0530
+Message-Id: <1537445116-10780-3-git-send-email-akolli@codeaurora.org> (sfid-20180920_140311_844622_400C313B)
+In-Reply-To: <1537445116-10780-1-git-send-email-akolli@codeaurora.org>
+References: <1537445116-10780-1-git-send-email-akolli@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename 'wilc_mac_cfg' struct to 'wilc_cfg_str_vals' as its more
-appropriate for structure to store the values of string configuration.
+Mesh path metric needs tx rate information from ieee80211_tx_status()
+call but in ath10k there is no mechanism to report tx rate information
+via ieee80211_tx_status(), the tx rate is only accessible via
+sta_statiscs() op.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Per peer tx stats has tx rate info available, Tx rate is available
+to ath10k driver after every 4 PPDU sent in the air. For each PPDU,
+ath10k driver updates rate informattion to mac80211 using
+ieee80211_tx_rate_update().
+
+Per peer txrate information is updated through per peer statistics
+and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+
+Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 ---
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 14 +++++++-------
- drivers/staging/wilc1000/wilc_wlan_cfg.h |  4 ++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
+V3:
+  - added new API to update tx rate alone.
+  - Tx rate is updated for each PPDUs sent
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 8f1e962..930a389 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -438,7 +438,7 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ drivers/net/wireless/ath/ath10k/core.h   |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   66 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
+ 3 files changed, 64 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index f6e5c29f74e7..abeed6cdc4ae 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -493,6 +493,7 @@ struct ath10k_sta {
+ 	u32 smps;
+ 	u16 peer_id;
+ 	struct rate_info txrate;
++	struct ieee80211_tx_info tx_info;
  
- int wilc_wlan_cfg_init(struct wilc *wl)
+ 	struct work_struct update_wk;
+ 	u64 rx_duration;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index f2405258a6d3..355c39a0486c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2753,8 +2753,11 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+ 				struct ath10k_per_peer_tx_stats *peer_stats)
  {
--	struct wilc_mac_cfg *mac_cfg;
-+	struct wilc_cfg_str_vals *str_vals;
- 	int i = 0;
+ 	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+-	u8 rate = 0, rate_idx = 0, sgi;
++	struct ieee80211_chanctx_conf *conf = NULL;
+ 	struct rate_info txrate;
++	u8 rate = 0, sgi;
++	int rate_idx = 0;
++	bool skip_auto_rate;
  
- 	wl->cfg.b = kmemdup(g_cfg_byte, sizeof(g_cfg_byte), GFP_KERNEL);
-@@ -457,20 +457,20 @@ int wilc_wlan_cfg_init(struct wilc *wl)
- 	if (!wl->cfg.s)
- 		goto out_w;
+ 	lockdep_assert_held(&ar->data_lock);
  
--	mac_cfg = kzalloc(sizeof(mac_cfg), GFP_KERNEL);
--	if (!mac_cfg)
-+	str_vals = kzalloc(sizeof(str_vals), GFP_KERNEL);
-+	if (!str_vals)
- 		goto out_s;
+@@ -2763,6 +2766,13 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+ 	txrate.nss = ATH10K_HW_NSS(peer_stats->ratecode);
+ 	txrate.mcs = ATH10K_HW_MCS_RATE(peer_stats->ratecode);
+ 	sgi = ATH10K_HW_GI(peer_stats->flags);
++	skip_auto_rate = ATH10K_FW_SKIPPED_RATE_CTRL(peer_stats->flags);
++
++	/* Firmware's rate control skips broadcast/management frames,
++	 * if host has configure fixed rates and in some other special cases.
++	 */
++	if (skip_auto_rate)
++		return;
  
--	wl->cfg.str_vals = mac_cfg;
-+	wl->cfg.str_vals = str_vals;
- 	/* store the string cfg parameters */
- 	wl->cfg.s[i].id = WID_FIRMWARE_VERSION;
--	wl->cfg.s[i].str = mac_cfg->firmware_version;
-+	wl->cfg.s[i].str = str_vals->firmware_version;
- 	i++;
- 	wl->cfg.s[i].id = WID_MAC_ADDR;
--	wl->cfg.s[i].str = mac_cfg->mac_address;
-+	wl->cfg.s[i].str = str_vals->mac_address;
- 	i++;
- 	wl->cfg.s[i].id = WID_ASSOC_RES_INFO;
--	wl->cfg.s[i].str = mac_cfg->assoc_rsp;
-+	wl->cfg.s[i].str = str_vals->assoc_rsp;
- 	i++;
- 	wl->cfg.s[i].id = WID_NIL;
- 	wl->cfg.s[i].str = NULL;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 176eef1..e5ca6ce 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -27,7 +27,7 @@ struct wilc_cfg_str {
- 	u8 *str;
- };
+ 	if (txrate.flags == WMI_RATE_PREAMBLE_VHT && txrate.mcs > 9) {
+ 		ath10k_warn(ar, "Invalid VHT mcs %hhd peer stats",  txrate.mcs);
+@@ -2777,7 +2787,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+ 	}
  
--struct wilc_mac_cfg {
-+struct wilc_cfg_str_vals {
- 	u8 mac_address[7];
- 	u8 firmware_version[129];
- 	u8 assoc_rsp[256];
-@@ -38,7 +38,7 @@ struct wilc_cfg {
- 	struct wilc_cfg_hword *hw;
- 	struct wilc_cfg_word *w;
- 	struct wilc_cfg_str *s;
--	struct wilc_mac_cfg *str_vals;
-+	struct wilc_cfg_str_vals *str_vals;
- };
+ 	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
+-
++	memset(&arsta->tx_info.status, 0, sizeof(arsta->tx_info.status));
+ 	if (txrate.flags == WMI_RATE_PREAMBLE_CCK ||
+ 	    txrate.flags == WMI_RATE_PREAMBLE_OFDM) {
+ 		rate = ATH10K_HW_LEGACY_RATE(peer_stats->ratecode);
+@@ -2796,11 +2806,59 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+ 		arsta->txrate.mcs = txrate.mcs;
+ 	}
  
- struct wilc;
+-	if (sgi)
+-		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++	switch (txrate.flags) {
++	case WMI_RATE_PREAMBLE_OFDM:
++		if (arsta->arvif && arsta->arvif->vif)
++			conf = rcu_dereference(arsta->arvif->vif->chanctx_conf);
++		if (conf && conf->def.chan->band == NL80211_BAND_5GHZ)
++			arsta->tx_info.status.rates[0].idx = rate_idx - 4;
++		break;
++	case WMI_RATE_PREAMBLE_CCK:
++		arsta->tx_info.status.rates[0].idx = rate_idx;
++		if (sgi)
++			arsta->tx_info.status.rates[0].flags |=
++				(IEEE80211_TX_RC_USE_SHORT_PREAMBLE |
++				 IEEE80211_TX_RC_SHORT_GI);
++		break;
++	case WMI_RATE_PREAMBLE_HT:
++		arsta->tx_info.status.rates[0].idx =
++				txrate.mcs + ((txrate.nss - 1) * 8);
++		if (sgi)
++			arsta->tx_info.status.rates[0].flags |=
++					IEEE80211_TX_RC_SHORT_GI;
++		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_MCS;
++		break;
++	case WMI_RATE_PREAMBLE_VHT:
++		ieee80211_rate_set_vht(&arsta->tx_info.status.rates[0],
++				       txrate.mcs, txrate.nss);
++		if (sgi)
++			arsta->tx_info.status.rates[0].flags |=
++						IEEE80211_TX_RC_SHORT_GI;
++		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_VHT_MCS;
++		break;
++	}
+ 
+ 	arsta->txrate.nss = txrate.nss;
+ 	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
++	if (sgi)
++		arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++	switch (arsta->txrate.bw) {
++	case RATE_INFO_BW_40:
++		arsta->tx_info.status.rates[0].flags |=
++				IEEE80211_TX_RC_40_MHZ_WIDTH;
++		break;
++	case RATE_INFO_BW_80:
++		arsta->tx_info.status.rates[0].flags |=
++				IEEE80211_TX_RC_80_MHZ_WIDTH;
++		break;
++	}
++
++	if (peer_stats->succ_pkts) {
++		arsta->tx_info.flags = IEEE80211_TX_STAT_ACK;
++		arsta->tx_info.status.rates[0].count = 1;
++		ieee80211_tx_rate_update(ar->hw, sta, &arsta->tx_info);
++	}
+ 
+ 	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
+ 		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 15622943a885..f6799f3939bd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4968,6 +4968,7 @@ enum wmi_rate_preamble {
+ 	(((preamble) << 6) | ((nss) << 4) | (rate))
+ #define ATH10K_HW_AMPDU(flags)		((flags) & 0x1)
+ #define ATH10K_HW_BA_FAIL(flags)	(((flags) >> 1) & 0x3)
++#define ATH10K_FW_SKIPPED_RATE_CTRL(flags)	(((flags) >> 6) & 0x1)
+ 
+ #define ATH10K_VHT_MCS_NUM	10
+ #define ATH10K_BW_NUM		4
 -- 
-2.7.4
+1.7.9.5
