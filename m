@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36902 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726151AbeIFONO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 10:13:14 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+Received: from s3.sipsolutions.net ([144.76.43.62]:33340 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728313AbeIUUBL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 16:01:11 -0400
+Message-ID: <1537539112.4584.2.camel@sipsolutions.net> (sfid-20180921_161209_519374_BE4A2BC1)
+Subject: Re: [RFC v2] mac80211: budget outstanding airtime for transmission
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
         Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] mt76: fix return value of mt76x02_wait_for_mac
-Date: Thu,  6 Sep 2018 11:38:34 +0200
-Message-Id: <1536226714-17201-1-git-send-email-sgruszka@redhat.com> (sfid-20180906_113840_702576_B1CA994B)
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Kan Yan <kyan@google.com>
+Date: Fri, 21 Sep 2018 16:11:52 +0200
+In-Reply-To: <87r2hnhv9q.fsf@toke.dk>
+References: <1537470331-6270-1-git-send-email-rmanohar@codeaurora.org>
+         <8d8e3775-4504-7b37-19b0-4a7fae054d12@nbd.name> <87r2hnhv9q.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to return bool value in mt76x02_wait_for_mac.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Fixes: 2735a6dd7df3 ("mt76: unify wait_for_mac")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 1. Make sure packets are not freed after dequeue (probably not
+> feasible).
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index 1a5da35702e6..a8bb3fede8d5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -165,7 +165,7 @@ static inline bool mt76x02_wait_for_mac(struct mt76_dev *dev)
- 
- 	for (i = 0; i < 500; i++) {
- 		if (test_bit(MT76_REMOVED, &dev->state))
--			return -EIO;
-+			return false;
- 
- 		switch (dev->bus->rr(dev, MAC_CSR0)) {
- 		case 0:
--- 
-2.7.5
+We already require you free via mac80211 after TX, so could tie into
+that for adjustment?
+
+johannes
