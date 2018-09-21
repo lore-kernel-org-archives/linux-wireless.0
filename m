@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:55584 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387663AbeITSUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 14:20:32 -0400
-Message-ID: <5BA39477.7050908@huawei.com> (sfid-20180920_143735_122766_B857AB8C)
-Date: Thu, 20 Sep 2018 20:37:11 +0800
-From: zhong jiang <zhongjiang@huawei.com>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45548 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391541AbeIVD73 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 23:59:29 -0400
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] rtlwifi: btcoex: Use proper enumerated types for Wi-Fi only interface
+Date: Fri, 21 Sep 2018 15:08:24 -0700
+Message-Id: <20180921220824.18344-1-natechancellor@gmail.com> (sfid-20180922_000851_500764_2F325A21)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: <davem@davemloft.net>, <hante.meuleman@broadcom.com>,
-        <franky.lin@broadcom.com>, <arend.vanspriel@broadcom.com>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcm80211: remove redundant condition check before debugfs_remove_recursive
-References: <1536761412-24932-1-git-send-email-zhongjiang@huawei.com> <20180920120709.5FE6960BF7@smtp.codeaurora.org> <5BA391D4.20205@huawei.com> <877ejg1hcd.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877ejg1hcd.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018/9/20 20:30, Kalle Valo wrote:
-> zhong jiang <zhongjiang@huawei.com> writes:
->
->> On 2018/9/20 20:07, Kalle Valo wrote:
->>> zhong jiang <zhongjiang@huawei.com> wrote:
->>>
->>>> debugfs_remove_recursive has taken IS_ERR_OR_NULL into account. So just
->>>> remove the condition check before debugfs_remove_recursive.
->>>>
->>>> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
->>> It seems you already submitted an identical patch four days earlier:
->>>
->>> https://patchwork.kernel.org/patch/10593061/
->>>
->>> Why the duplicate? Please ALWAYS add a changelog and increase the version number:
->> I am sorry for that. Maybe I send the patch earlier, but I remeber I
->> should forget to cc to
->> netdev@vger.kernel.org and LMLK. So I repost it.  Plese ingore the current patch.
-> Even then please increase the version number and mention in the change
-> log why you sent a new version. Otherwise you will make maintainers
-> confused and wasting time with asking what has changed.
->
-Get it  and will keep it in mind . Thanks
+Clang warns when one enumerated type is implicitly converted to another.
 
-Sincerely,
-zhong jiang
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1327:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_PCI;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1330:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_USB;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1333:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
+                                             ~ ^~~~~~~~~~~~~~~~
+3 warnings generated.
+
+Use the values from the correct enumerated type, wifionly_chip_interface.
+
+BTC_INTF_UNKNOWN = WIFIONLY_INTF_UNKNOWN = 0
+BTC_INTF_PCI = WIFIONLY_INTF_PCI = 0
+BTC_INTF_USB = WIFIONLY_INTF_USB = 0
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/135
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index b026e80940a4..6fbf8845a2ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -1324,13 +1324,13 @@ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
+ 
+ 	switch (rtlpriv->rtlhal.interface) {
+ 	case INTF_PCI:
+-		wifionly_cfg->chip_interface = BTC_INTF_PCI;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_PCI;
+ 		break;
+ 	case INTF_USB:
+-		wifionly_cfg->chip_interface = BTC_INTF_USB;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_USB;
+ 		break;
+ 	default:
+-		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
+ 		break;
+ 	}
+ 
+-- 
+2.19.0
