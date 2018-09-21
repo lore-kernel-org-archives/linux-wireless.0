@@ -1,86 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52934 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726417AbeIXPPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 11:15:35 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: include linux/module.h in files using MODULE_*
-Date: Mon, 24 Sep 2018 11:14:26 +0200
-Message-Id: <20180924091426.55318-1-nbd@nbd.name> (sfid-20180924_111433_557118_341A44EF)
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:65168 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726479AbeIUMd6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 08:33:58 -0400
+Date: Fri, 21 Sep 2018 12:01:16 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Nathan Chancellor <natechancellor@gmail.com>
+CC: <valdis.kletnieks@vt.edu>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging: wilc1000: Remove unnecessary pointer check
+Message-ID: <20180921120116.603b1de6@ajaysk-VirtualBox> (sfid-20180921_084640_169655_6BC0C7E7)
+In-Reply-To: <20180921053911.GA5170@flashbox>
+References: <20180920212648.25181-1-natechancellor@gmail.com>
+        <32473.1537507532@turing-police.cc.vt.edu>
+        <20180921053911.GA5170@flashbox>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix source files using MODULE_* macros without including linux/module.h
+Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c   | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c    | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c   | 1 +
- drivers/net/wireless/mediatek/mt76/usb.c             | 1 +
- 5 files changed, 5 insertions(+)
+On Thu, 20 Sep 2018 22:39:11 -0700
+Nathan Chancellor <natechancellor@gmail.com> wrote:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-index ef3b44202efe..18bd80adbb51 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-@@ -13,6 +13,7 @@
-  * GNU General Public License for more details.
-  */
- 
-+#include <linux/module.h>
- #include <linux/of.h>
- #include <linux/mtd/mtd.h>
- #include <linux/mtd/partitions.h>
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-index b39a4d7d71cc..cb5f073f08af 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/module.h>
- #include <linux/firmware.h>
- 
- #include "mt76.h"
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 4ecfb75f3f7d..310720f8b8d8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -15,6 +15,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/module.h>
- #include "mt76.h"
- #include "mt76x02_dma.h"
- #include "mt76x02_regs.h"
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index 8c8ba3ee6da5..136faa4066a5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/module.h>
- #include <asm/unaligned.h>
- #include "mt76x2.h"
- #include "mt76x2_eeprom.h"
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index b3edd645b3c0..03dee4762c69 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/module.h>
- #include "mt76.h"
- #include "usb_trace.h"
- #include "dma.h"
--- 
-2.17.0
+> On Fri, Sep 21, 2018 at 01:25:32AM -0400, valdis.kletnieks@vt.edu
+> wrote:
+> > On Thu, 20 Sep 2018 14:26:49 -0700, Nathan Chancellor said:  
+> > > Clang warns that the address of a pointer will always evaluated
+> > > as true in a boolean context:
+> > >
+> > > drivers/staging/wilc1000/linux_wlan.c:267:20: warning: address of
+> > > 'vif->ndev->dev' will always evaluate to 'true'
+> > > [-Wpointer-bool-conversion]
+> > >         if (!(&vif->ndev->dev))
+> > >             ~  ~~~~~~~~~~~^~~
+> > > 1 warning generated.
+> > >
+> > > Since this statement always evaluates to false due to the logical
+> > > not, remove it.  
+> > 
+> > Often, "just nuke it because it's now dead code" isn't the best
+> > answer...
+> > 
+> > At one time, that was likely intended to be checking whether ->dev
+> > was a null pointer, to make sure we don't pass request_firmware() a
+> > null pointer and oops the kernel, or other things that go
+> > pear-shaped....
+> > 
+> > So the question becomes:   Is it safe to just remove it, or was it
+> > intended to test for something that could  legitimately be null if
+> > we've hit an error along the way (which means we should fix the
+> > condition to be proper and acceptable to both gcc and clang)?
+> > 
+> >   
+> 
+> I certainly considered whether or not removing the check versus fixing
+> it was the correct answer. Given that this check can be traced back to
+> the initial check in of the driver in 2015, I figured it was safe to
+> remove it (since a null pointer dereference would most likely have
+> been noticed by now).
+> 
+> Most patches addressing this warning just remove the check given that
+> it's not actually changing the code, such as commit a7dc662c6a7b
+> ("ASoC: codecs: PCM1789: unconditionally flush work"). However, if
+> the driver authors and/or maintainers think that this check should be
+> something else (maybe checking that the contents of dev is not null
+> versus the address, I'm perfectly happy to submit a v2 with this
+> change.
+> 
+
+The 'if' condition was intended to check the validity of net_device
+structure, but i think its not required here.
+The device pointer used in request_firmware(), was received in
+the probe functions and different from the one checked in 'if'
+condition.
+
+Thus its safe to remove the 'if (!(&vif->ndev->dev))' condition
+block.
+      
+
+Regards,
+Ajay
