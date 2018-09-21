@@ -1,71 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:51774 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726826AbeIQPAz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Sep 2018 11:00:55 -0400
-Date: Mon, 17 Sep 2018 10:33:48 +0100
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <viro@zeniv.linux.org.uk>, <linux-fsdevel@vger.kernel.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        <devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>,
-        <qat-linux@intel.com>, <linux-crypto@vger.kernel.org>,
-        <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <linaro-mm-sig@lists.linaro.org>, <amd-gfx@lists.freedesktop.org>,
-        <linux-input@vger.kernel.org>, <linux-iio@vger.kernel.org>,
-        <linux-rdma@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <linux-remoteproc@vger.kernel.org>, <sparclinux@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-        <linux-fbdev@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-        <linux-btrfs@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20180917103348.00003f31@huawei.com> (sfid-20180917_113431_731233_57CD9E4B)
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-References: <20180912150142.157913-1-arnd@arndb.de>
-        <20180912151134.436719-1-arnd@arndb.de>
+Received: from rtits2.realtek.com ([211.75.126.72]:40791 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388826AbeIULwP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 07:52:15 -0400
+From: <yhchuang@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <pkshih@realtek.com>, <tehuang@realtek.com>
+Subject: [PATCH 12/12] rtwlan: Kconfig & Makefile
+Date: Fri, 21 Sep 2018 14:04:07 +0800
+Message-ID: <1537509847-21087-13-git-send-email-yhchuang@realtek.com> (sfid-20180921_080505_791909_96FA697B)
+In-Reply-To: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 12 Sep 2018 17:08:52 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-> The .ioctl and .compat_ioctl file operations have the same prototype so
-> they can both point to the same function, which works great almost all
-> the time when all the commands are compatible.
-> 
-> One exception is the s390 architecture, where a compat pointer is only
-> 31 bit wide, and converting it into a 64-bit pointer requires calling
-> compat_ptr(). Most drivers here will ever run in s390, but since we now
-> have a generic helper for it, it's easy enough to use it consistently.
-> 
-> I double-checked all these drivers to ensure that all ioctl arguments
-> are used as pointers or are ignored, but are not interpreted as integer
-> values.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+Kconfig & Makefile for Realtek 802.11ac wireless network chips
 
-For IIO part.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/Kconfig         |  1 +
+ drivers/net/wireless/realtek/Makefile        |  1 +
+ drivers/net/wireless/realtek/rtwlan/Kconfig  | 55 ++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtwlan/Makefile | 21 +++++++++++
+ 4 files changed, 78 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtwlan/Kconfig
+ create mode 100644 drivers/net/wireless/realtek/rtwlan/Makefile
 
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-
-Thanks,
-> diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-> index a062cfddc5af..22844b94b0e9 100644
-> --- a/drivers/iio/industrialio-core.c
-> +++ b/drivers/iio/industrialio-core.c
-> @@ -1630,7 +1630,7 @@ static const struct file_operations iio_buffer_fileops = {
->  	.owner = THIS_MODULE,
->  	.llseek = noop_llseek,
->  	.unlocked_ioctl = iio_ioctl,
-> -	.compat_ioctl = iio_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
+diff --git a/drivers/net/wireless/realtek/Kconfig b/drivers/net/wireless/realtek/Kconfig
+index 3db988e..044f807 100644
+--- a/drivers/net/wireless/realtek/Kconfig
++++ b/drivers/net/wireless/realtek/Kconfig
+@@ -14,5 +14,6 @@ if WLAN_VENDOR_REALTEK
+ source "drivers/net/wireless/realtek/rtl818x/Kconfig"
+ source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
+ source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
++source "drivers/net/wireless/realtek/rtwlan/Kconfig"
+ 
+ endif # WLAN_VENDOR_REALTEK
+diff --git a/drivers/net/wireless/realtek/Makefile b/drivers/net/wireless/realtek/Makefile
+index 9c78deb..d7bd304 100644
+--- a/drivers/net/wireless/realtek/Makefile
++++ b/drivers/net/wireless/realtek/Makefile
+@@ -6,4 +6,5 @@ obj-$(CONFIG_RTL8180)		+= rtl818x/
+ obj-$(CONFIG_RTL8187)		+= rtl818x/
+ obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
+ obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
++obj-$(CONFIG_RTWLAN)		+= rtwlan/
+ 
+diff --git a/drivers/net/wireless/realtek/rtwlan/Kconfig b/drivers/net/wireless/realtek/rtwlan/Kconfig
+new file mode 100644
+index 0000000..93cefbf
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtwlan/Kconfig
+@@ -0,0 +1,55 @@
++menuconfig RTWLAN
++	tristate "Realtek 802.11ac wireless chips support"
++	depends on MAC80211
++	default y
++	help
++	  This module adds support for mac80211-based wireless drivers that
++	  enables Realtek IEEE 802.11ac wireless chipsets.
++
++	  If you choose to build a module, it'll be called rtwlan.
++
++if RTWLAN
++
++config RTWLAN_CORE
++	tristate
++	depends on RTWLAN
++
++config RTWLAN_PCI
++	tristate
++	depends on RTWLAN_CORE && PCI
++
++config RTWLAN_8822BE
++	bool "Realtek 8822BE PCI wireless network adapter"
++	select RTWLAN_CORE
++	select RTWLAN_PCI
++	help
++	  Select this option will enable support for 8822BE chipset
++
++	  802.11ac PCIe wireless network adapter
++
++config RTWLAN_8822CE
++	bool "Realtek 8822CE PCI wireless network adapter"
++	select RTWLAN_CORE
++	select RTWLAN_PCI
++	help
++	  Select this option will enable support for 8822CE chipset
++
++	  802.11ac PCIe wireless network adapter
++
++config RTWLAN_DEBUG
++	bool "Realtek rtwlan debug support"
++	depends on RTWLAN_CORE
++	help
++	  Enable debug support
++
++	  If unsure, say Y to simplify debug problems
++
++config RTWLAN_DEBUGFS
++	bool "Realtek rtwlan debugfs support"
++	depends on RTWLAN_CORE
++	help
++	  Enable debug support
++
++	  If unsure, say Y to simplify debug problems
++
++endif
+diff --git a/drivers/net/wireless/realtek/rtwlan/Makefile b/drivers/net/wireless/realtek/rtwlan/Makefile
+new file mode 100644
+index 0000000..dc6cd08a
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtwlan/Makefile
+@@ -0,0 +1,21 @@
++# SPDX-License-Identifier: GPL-2.0
++
++obj-$(CONFIG_RTWLAN_CORE)	+= rtwlan.o
++rtwlan-y += main.o \
++	    mac80211.o \
++	    debug.o \
++	    tx.o \
++	    rx.o \
++	    mac.o \
++	    phy.o \
++	    efuse.o \
++	    fw.o \
++	    ps.o \
++	    sec.o \
++	    regd.o
++
++rtwlan-$(CONFIG_RTWLAN_8822BE)	+= rtw8822b.o rtw8822b_table.o
++rtwlan-$(CONFIG_RTWLAN_8822CE)	+= rtw8822c.o rtw8822c_table.o
++
++obj-$(CONFIG_RTWLAN_PCI)	+= rtwpci.o
++rtwpci-objs			:= pci.o
+-- 
+2.7.4
