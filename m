@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0089.outbound.protection.outlook.com ([104.47.38.89]:42816
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726761AbeIKR62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 13:58:28 -0400
-Date: Tue, 11 Sep 2018 15:58:54 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] qtnfmac: remove set but not used variable 'vif'
-Message-ID: <20180911125853.2j7cflclfhkbpgct@bars> (sfid-20180911_145922_314285_9047B8EE)
-References: <1536668904-13110-1-git-send-email-yuehaibing@huawei.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49984 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725898AbeIUO5V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 10:57:21 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, robh+dt@kernel.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 0/4] Enable ath10k wcn3990 wifi driver support on sdm845
+Date: Fri, 21 Sep 2018 14:39:03 +0530
+Message-Id: <20180921090907.25937-1-govinds@codeaurora.org> (sfid-20180921_110930_113598_1DC62700)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1536668904-13110-1-git-send-email-yuehaibing@huawei.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function 'qtnf_dump_survey':
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:694:19: warning:
->  variable 'vif' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+This series enables ath10k wifi driver support for WCN3990 target
+on sdm845 SOC. This series also updates the missing dt binding documentation
+and adds optional iommu property.
 
-Thanks !
+sdm845 dtsi changes in this series are based on top of
+https://patchwork.kernel.org/cover/10573121/ change.
 
-Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Govind Singh (4):
+  dt: bindings: add missing dt properties for WCN3990 wifi node
+  dts: arm64/sdm845: Add WCN3990 WLAN module device node
+  dt: bindings: add bindings for wifi iommu node
+  dts: arm64/sdm845: Enable iommu for WCN3990 wifi module device node
 
-Regards,
-Sergey
+ .../bindings/net/wireless/qcom,ath10k.txt     | 27 ++++++++++++++-----
+ arch/arm64/boot/dts/qcom/sdm845-mtp.dts       |  7 +++++
+ arch/arm64/boot/dts/qcom/sdm845.dtsi          | 26 ++++++++++++++++++
+ 3 files changed, 53 insertions(+), 7 deletions(-)
+
+-- 
+2.17.0
