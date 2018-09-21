@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726902AbeINU57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Sep 2018 16:57:59 -0400
-Message-ID: <cc038bb1e343b04f837af72f9ce9b815bf4c73ea.camel@redhat.com> (sfid-20180914_174258_756231_D25C3F32)
-Subject: Re: mt76x0 bug report
-From: Davide Caratti <dcaratti@redhat.com>
-To: Sid Hayn <sidhayn@gmail.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: sgruszka@redhat.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-In-Reply-To: <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com>
-References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
-         <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
-         <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
-         <20180906093213.GB16539@redhat.com>
-         <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
-         <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
-         <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
-         <20180907082413.GC2725@localhost.localdomain>
-         <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
-         <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 Sep 2018 17:42:50 +0200
-Mime-Version: 1.0
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:36597 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391251AbeIVCAk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 22:00:40 -0400
+Received: by mail-pg1-f193.google.com with SMTP id d1-v6so6528748pgo.3
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 13:10:13 -0700 (PDT)
+Date: Fri, 21 Sep 2018 13:10:09 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Carl Huang <cjhuang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: download firmware via diag Copy Engine for
+ QCA6174 and QCA9377.
+Message-ID: <20180921201008.GA233689@ban.mtv.corp.google.com> (sfid-20180921_221018_850082_4C1C96C0)
+References: <1535596182-18038-1-git-send-email-cjhuang@codeaurora.org>
+ <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1535596182-18038-4-git-send-email-cjhuang@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-09-14 at 11:32 -0400, Sid Hayn wrote:
-> Secondarily, ethtool still doesn't report firmware version and that
-> would be a very helpful thing to have before 4.19 hits.
+Hi,
 
-hello,
+I see this patch is already merged, but some small comments. Might be
+worth a follow-up patch eventually.
 
-I just tested a draft patch for mt76 addressing the missing FW version in
-ethtool, will send it to the ML in the next days.
+On Thu, Aug 30, 2018 at 10:29:42AM +0800, Carl Huang wrote:
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index c40cd12..78a0515 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
 
-regards,
--- 
-davide
+...
+
+> @@ -1135,14 +1149,24 @@ static int ath10k_download_fw(struct ath10k *ar)
+>  		   "boot uploading firmware image %pK len %d\n",
+>  		   data, data_len);
+>  
+> -	ret = ath10k_bmi_fast_download(ar, address, data, data_len);
+> -	if (ret) {
+> -		ath10k_err(ar, "failed to download firmware: %d\n",
+> -			   ret);
+> -		return ret;
+> +	/* Check if device supports to download firmware via
+> +	 * diag copy engine. Downloading firmware via diag CE
+> +	 * greatly reduces the time to download firmware.
+> +	 */
+> +	if (ar->hw_params.fw_diag_ce_download) {
+> +		ret = ath10k_hw_diag_fast_download(ar, address,
+> +						   data, data_len);
+> +		if (ret == 0)
+> +			/* firmware upload via diag ce was successful */
+> +			return 0;
+> +
+> +		ath10k_warn(ar,
+> +			    "failed to upload firmware via diag ce, trying BMI: %d",
+
+I believe ath10k_*() logging is still supposed to have '\n' newlines at
+the end. But then, the omission occurs all over the place, and it seems
+printk() still tends to give you newlines anyway. Seems like we should
+still be consistent though.
+
+> +			    ret);
+>  	}
+>  
+> -	return ret;
+> +	return ath10k_bmi_fast_download(ar, address,
+> +					data, data_len);
+
+You no longer have an error message for BMI failures here (you used to).
+
+>  }
+>  
+>  static void ath10k_core_free_board_files(struct ath10k *ar)
+
+Brian
