@@ -1,115 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:43076 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726850AbeILB6x (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50088 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725898AbeIUO5Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 21:58:53 -0400
-Subject: Re: 4.19-rc[23] iwlwifi: BUG in swiotlb
-To: Johannes Berg <johannes@sipsolutions.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi@intel.com
-References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
- <1536651177.3224.106.camel@sipsolutions.net>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <8bea4cfc-4b16-7c7c-3e9a-5b6684b47345@infradead.org> (sfid-20180911_225829_635281_A71D337B)
-Date: Tue, 11 Sep 2018 13:57:45 -0700
+        Fri, 21 Sep 2018 10:57:25 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, robh+dt@kernel.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 1/4] dt: bindings: add missing dt properties for WCN3990 wifi node
+Date: Fri, 21 Sep 2018 14:39:04 +0530
+Message-Id: <20180921090907.25937-2-govinds@codeaurora.org> (sfid-20180921_110933_170524_A68A2601)
+In-Reply-To: <20180921090907.25937-1-govinds@codeaurora.org>
+References: <20180921090907.25937-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1536651177.3224.106.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/11/18 12:32 AM, Johannes Berg wrote:
-> On Mon, 2018-09-10 at 19:17 -0700, Randy Dunlap wrote:
->> Hi,
->>
->> Any ideas?
-> 
-> Hmm. Is this new?
+Add missing optional properties in WCN3990 wifi node.
 
-I can't be sure.  I've been having problems booting this laptop for a few
-weeks now but haven't tracked it down yet.
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ .../bindings/net/wireless/qcom,ath10k.txt     | 22 +++++++++++++------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
->> 2018-09-10T18:47:54.532837-07:00 dragon kernel: [   31.472371] kernel BUG at ../kernel/dma/swiotlb.c:521!
-> 
->         nslots = ALIGN(size, 1 << IO_TLB_SHIFT) >> IO_TLB_SHIFT;
-> 	[...]
-> 	BUG_ON(!nslots)
-> 
->> 2018-09-10T18:47:54.613655-07:00 dragon kernel: [   31.490325]  swiotlb_alloc+0x88/0x170
->> 2018-09-10T18:47:54.613656-07:00 dragon kernel: [   31.490329]  ? __kmalloc+0x1cc/0x200
->> 2018-09-10T18:47:54.613657-07:00 dragon kernel: [   31.491652]  iwl_pcie_txq_alloc+0x1d4/0x3b0 [iwlwifi]
-> 
-> There are two calls to dma_alloc_coherent() here, should those even hit
-> swiotlb? The sizes of those should be
->  * 256 x 128 (32k)
->  * 32 x 256 (8k) [TFH, unlikely to be the case here]
->  * 256 x 256 (65k) [TFH]
->  * 32 x 64 (2k)
->  * 256 x 64 (16k)
-> 
-> 
-> IO_TLB_SHIFT is 11, so we get 2k alignment, so even the smallest size
-> (32*64) should result in nslots being 1?
-> 
-> In fact, unless the driver passed *ZERO* as the size, this should never
-> happen (hence the BUG_ON), since ALIGN() would take care of rounding up
-> any smaller allocation here.
-> 
-> Presumably you can reproduce this pretty easily (and I don't know what
-> specific model of NIC you have etc.), so perhaps you can do something
-> like this?
-
-The wireless NIC is Condor Peak:
-
-04:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000 [Condor Peak]
-	Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 31
-	Region 0: Memory at c2600000 (64-bit, non-prefetchable) [size=8K]
-	Capabilities: [c8] Power Management version 3
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-		Address: 00000000fee0800c  Data: 4162
-	Capabilities: [e0] Express (v1) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0.000W
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <128ns, L1 <32us
-			ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
-		LnkCtl:	ASPM L0s L1 Enabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
-			MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-		HeaderLog: 00000000 00000000 00000000 00000000
-	Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-2d-dc-28
-	Kernel driver in use: iwlwifi
-	Kernel modules: iwlwifi
-
-
-
-sigh.  I can reproduce it without the patch:
-
-> https://p.sipsolutions.net/aa0dccd7a60fe176.txt
-
-but with that patch, it just hangs after about 25 seconds of booting
-(slow hard drive, not SSD).
-
-I'll try some other ways.
-
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 7fd4e8ce4149..22dea7d83ee8 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -37,12 +37,14 @@ Optional properties:
+ - clocks: List of clock specifiers, must contain an entry for each required
+           entry in clock-names.
+ - clock-names: Should contain the clock names "wifi_wcss_cmd", "wifi_wcss_ref",
+-               "wifi_wcss_rtc".
+-- interrupts: List of interrupt lines. Must contain an entry
+-	      for each entry in the interrupt-names property.
++               "wifi_wcss_rtc", "cxo_ref_clk_pin", "smmu_aggre2_noc_clk".
++- interrupts: List of interrupt lines. Must contain interrupt-names property
++	      per entry for "qcom,ath10k", "qcom,ipq4019-wifi" compatible
++	      targets.
+ - interrupt-names: Must include the entries for MSI interrupt
+ 		   names ("msi0" to "msi15") and legacy interrupt
+-		   name ("legacy"),
++		   name ("legacy") for "qcom,ath10k", "qcom,ipq4019-wifi"
++		   compatible targets.
+ - qcom,msi_addr: MSI interrupt address.
+ - qcom,msi_base: Base value to add before writing MSI data into
+ 		MSI address register.
+@@ -55,7 +57,8 @@ Optional properties:
+ - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+ 				     the length can vary between hw versions.
+ - <supply-name>-supply: handle to the regulator device tree node
+-			   optional "supply-name" is "vdd-0.8-cx-mx".
++			   optional "supply-name" are "vdd-0.8-cx-mx",
++			   "vdd-1.8-xo", "vdd-1.3-rfa" and "vdd-3.3-ch0".
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -133,8 +136,10 @@ wifi@18000000 {
+ 		compatible = "qcom,wcn3990-wifi";
+ 		reg = <0x18800000 0x800000>;
+ 		reg-names = "membase";
+-		clocks = <&clock_gcc clk_aggre2_noc_clk>;
+-		clock-names = "smmu_aggre2_noc_clk"
++		clocks = <&clock_gcc clk_aggre2_noc_clk>,
++			 <&clock_gcc clk_rf_clk2_pin>;
++		clock-names = "smmu_aggre2_noc_clk",
++			      "cxo_ref_clk_pin";
+ 		interrupts =
+ 			   <0 130 0 /* CE0 */ >,
+ 			   <0 131 0 /* CE1 */ >,
+@@ -149,4 +154,7 @@ wifi@18000000 {
+ 			   <0 140 0 /* CE10 */ >,
+ 			   <0 141 0 /* CE11 */ >;
+ 		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++		vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
++		vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
++		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
+ };
 -- 
-~Randy
+2.17.0
