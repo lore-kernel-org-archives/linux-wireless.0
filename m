@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36486 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50166 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726670AbeIKSt1 (ORCPT
+        with ESMTP id S1725898AbeIUO52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 14:49:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, kbuild-all@01.org,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [linux-next:master 2211/3360] drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined reference to `mt76u_mcu_deinit'
-References: <201809112137.2sMVZb3I%fengguang.wu@intel.com>
-Date: Tue, 11 Sep 2018 16:49:56 +0300
-In-Reply-To: <201809112137.2sMVZb3I%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Tue, 11 Sep 2018 21:36:40 +0800")
-Message-ID: <875zzcuosb.fsf@codeaurora.org> (sfid-20180911_155006_383102_33079F43)
+        Fri, 21 Sep 2018 10:57:28 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, robh+dt@kernel.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 2/4] dts: arm64/sdm845: Add WCN3990 WLAN module device node
+Date: Fri, 21 Sep 2018 14:39:05 +0530
+Message-Id: <20180921090907.25937-3-govinds@codeaurora.org> (sfid-20180921_110936_260310_241D8902)
+In-Reply-To: <20180921090907.25937-1-govinds@codeaurora.org>
+References: <20180921090907.25937-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ felix, linux-wireless
+Add device node for the ath10k SNOC platform driver probe
+and add resources required for WCN3990 on SDM845 soc.
 
-kbuild test robot <lkp@intel.com> writes:
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ arch/arm64/boot/dts/qcom/sdm845-mtp.dts |  7 +++++++
+ arch/arm64/boot/dts/qcom/sdm845.dtsi    | 25 +++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> head:   43783a8f68478e81fe183f86162d3e7ca29ba923
-> commit: 6f4796b7063e334902049b0cc41514b6c3b52876 [2211/3360] mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
-> config: x86_64-randconfig-s5-09111320 (attached as .config)
-> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
-> reproduce:
->         git checkout 6f4796b7063e334902049b0cc41514b6c3b52876
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/mediatek/mt76/mt76x0/usb.o: In function `mt76x0_probe':
->    drivers/net/wireless/mediatek/mt76/mt76x0/usb.c:119: undefined reference to `mt76u_init'
->    drivers/net/wireless/mediatek/mt76/mt76x0/init.o: In function `mt76x0_init_hardware':
->>> drivers/net/wireless/mediatek/mt76/mt76x0/init.c:468: undefined
->>> reference to `mt76u_mcu_deinit'
-
-kbuild bot has been sending quite a few similar warnings during the last
-day. Lorenzo, I assume you are looking at these?
-
+diff --git a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
+index eedfaf8922e2..4de57f7df93c 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
++++ b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
+@@ -440,3 +440,10 @@
+ 		bias-pull-up;
+ 	};
+ };
++
++&wifi {
++	vdd-0.8-cx-mx-supply = <&vreg_l5a_0p8>;
++	vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
++	vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
++	vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
++};
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index e080072cdfdb..b0b107641e74 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -86,6 +86,11 @@
+ 			reg = <0 0x86200000 0 0x2d00000>;
+ 			no-map;
+ 		};
++
++		wlan_msa_mem: reserved-memory@96700000 {
++			no-map;
++			reg = <0 0x96700000 0 0x100000>;
++		};
+ 	};
+ 
+ 	cpus {
+@@ -1200,5 +1205,25 @@
+ 				status = "disabled";
+ 			};
+ 		};
++
++		qcom,wifi {
++			compatible = "qcom,wcn3990-wifi";
++			reg = <0x18800000 0x800000>;
++			reg-names = "membase";
++			memory-region = <&wlan_msa_mem>;
++			interrupts =
++				<0 413 0 /* CE0 */ >,
++				<0 414 0 /* CE1 */ >,
++				<0 415 0 /* CE2 */ >,
++				<0 416 0 /* CE3 */ >,
++				<0 417 0 /* CE4 */ >,
++				<0 418 0 /* CE5 */ >,
++				<0 420 0 /* CE6 */ >,
++				<0 421 0 /* CE7 */ >,
++				<0 422 0 /* CE8 */ >,
++				<0 423 0 /* CE9 */ >,
++				<0 424 0 /* CE10 */ >,
++				<0 425 0 /* CE11 */ >;
++		};
+ 	};
+ };
 -- 
-Kalle Valo
+2.17.0
