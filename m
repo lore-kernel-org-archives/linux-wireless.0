@@ -1,146 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56938 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60356 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726046AbeIEUXQ (ORCPT
+        with ESMTP id S1727391AbeIUPoT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 16:23:16 -0400
-From: Jouni Malinen <jouni@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH] cfg80211: Address some corner cases in scan result channel updating
-Date: Wed,  5 Sep 2018 18:52:22 +0300
-Message-Id: <1536162742-11154-1-git-send-email-jouni@codeaurora.org> (sfid-20180905_175232_651511_E58AA3F4)
+        Fri, 21 Sep 2018 11:44:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Kan Yan <kyan@google.com>
+Subject: Re: [RFC] mac80211: budget outstanding airtime for transmission
+References: <1537430613-16849-1-git-send-email-rmanohar@codeaurora.org>
+        <875zz08tah.fsf@toke.dk>
+        <3d06a48a76b2dc5905d8c5e76579b3cb@codeaurora.org>
+Date: Fri, 21 Sep 2018 12:56:09 +0300
+In-Reply-To: <3d06a48a76b2dc5905d8c5e76579b3cb@codeaurora.org> (Rajkumar
+        Manoharan's message of "Thu, 20 Sep 2018 11:46:48 -0700")
+Message-ID: <87zhwbqime.fsf@purkki.adurom.net> (sfid-20180921_115619_943676_730161A5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_get_bss_channel() is used to update the RX channel based on the
-available frame payload information (channel number from DSSS Parameter
-Set element or HT Operation element). This is needed on 2.4 GHz channels
-where frames may be received on neighboring channels due to overlapping
-frequency range.
+Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 
-This might of some use on the 5 GHz band in some corner cases, but
-things are more complex there since there is no n:1 or 1:n mapping
-between channel numbers and frequencies due to multiple different
-starting frequencies in different operating classes. This could result
-in ieee80211_channel_to_frequency() returning incorrect frequency and
-ieee80211_get_channel() returning incorrect channel information (or
-indication of no match). In the previous implementation, this could
-result in some scan results being dropped completely, e.g., for the 4.9
-GHz channels. That prevented connection to such BSSs.
+>>> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+>>> index b1b0fd6a2e21..ddc2c882c91c 100644
+>>> --- a/net/mac80211/sta_info.h
+>>> +++ b/net/mac80211/sta_info.h
+>>> @@ -135,6 +135,7 @@ struct airtime_info {
+>>>  	u64 rx_airtime;
+>>>  	u64 tx_airtime;
+>>>  	s64 deficit;
+>>> +	s32 budget;
+>>
+>> Why signed? This should never become negative unless something is wrong
+>> with the accounting somewhere?
+>>
+>> Related, are we sure there are no "leaks", i.e., packets that increase
+>> the budget on dequeue, but are never tx_completed?
+>
+> Just to avoid wraparound issue. Yeah... Irrespective of signedness if
+> there is mismatch in tx and tx-compl, it may stall tx. no? I was
+> worrying what if the driver is freeing skb silently instead of
+> free_txskb().
+>
+> Will change it to unsigned and add WARN_ON statement upon adjustment.
+> is it OK?
 
-Fix this by using the driver-provided channel pointer if
-ieee80211_get_channel() does not find matching channel data for the
-channel number in the frame payload and if the scan is done with 5 MHz
-or 10 MHz channel bandwidth. While doing this, also add comments
-describing what the function is trying to achieve to make it easier to
-understand what happens here and why.
+Just note that WARN_ON() is pretty dangerous, especially on data path,
+as it can kill the host with excessive spamming. WARN_ON_ONCE() or a
+ratelimited printk() variant are much safer choises.
 
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/wireless/scan.c | 58 ++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 49 insertions(+), 9 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d36c3eb..d0e7472 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1058,13 +1058,23 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 	return NULL;
- }
- 
-+/*
-+ * Update RX channel information based on the available frame payload
-+ * information. This is mainly for the 2.4 GHz band where frames can be received
-+ * from neighboring channels and the Beacon frames use the DSSS Parameter Set
-+ * element to indicate the current (transmitting) channel, but this might also
-+ * be needed on other bands if RX frequency does not match with the actual
-+ * operating channel of a BSS.
-+ */
- static struct ieee80211_channel *
- cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
--			 struct ieee80211_channel *channel)
-+			 struct ieee80211_channel *channel,
-+			 enum nl80211_bss_scan_width scan_width)
- {
- 	const u8 *tmp;
- 	u32 freq;
- 	int channel_number = -1;
-+	struct ieee80211_channel *alt_channel;
- 
- 	tmp = cfg80211_find_ie(WLAN_EID_DS_PARAMS, ie, ielen);
- 	if (tmp && tmp[1] == 1) {
-@@ -1078,16 +1088,45 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
- 		}
- 	}
- 
--	if (channel_number < 0)
-+	if (channel_number < 0) {
-+		/* No channel information in frame payload */
- 		return channel;
-+	}
- 
- 	freq = ieee80211_channel_to_frequency(channel_number, channel->band);
--	channel = ieee80211_get_channel(wiphy, freq);
--	if (!channel)
--		return NULL;
--	if (channel->flags & IEEE80211_CHAN_DISABLED)
-+	alt_channel = ieee80211_get_channel(wiphy, freq);
-+	if (!alt_channel) {
-+		if (channel->band == NL80211_BAND_2GHZ) {
-+			/*
-+			 * Better not allow unexpected channels when that could
-+			 * be going beyond the 1-11 range (e.g., discovering
-+			 * BSS on channel 12 when radio is configured for
-+			 * channel 11.
-+			 */
-+			return NULL;
-+		}
-+
-+		/* No match for the payload channel number - ignore it */
-+		return channel;
-+	}
-+
-+	if (scan_width == NL80211_BSS_CHAN_WIDTH_10 ||
-+	    scan_width == NL80211_BSS_CHAN_WIDTH_5) {
-+		/*
-+		 * Ignore channel number in 5 and 10 MHz channels where there
-+		 * may not be an n:1 or 1:n mapping between frequencies and
-+		 * channel numbers.
-+		 */
-+		return channel;
-+	}
-+
-+	/*
-+	 * Use the channel determined through the payload channel number
-+	 * instead of the RX channel reported by the driver.
-+	 */
-+	if (alt_channel->flags & IEEE80211_CHAN_DISABLED)
- 		return NULL;
--	return channel;
-+	return alt_channel;
- }
- 
- /* Returned bss is reference counted and must be cleaned up appropriately. */
-@@ -1112,7 +1151,8 @@ cfg80211_inform_bss_data(struct wiphy *wiphy,
- 		    (data->signal < 0 || data->signal > 100)))
- 		return NULL;
- 
--	channel = cfg80211_get_bss_channel(wiphy, ie, ielen, data->chan);
-+	channel = cfg80211_get_bss_channel(wiphy, ie, ielen, data->chan,
-+					   data->scan_width);
- 	if (!channel)
- 		return NULL;
- 
-@@ -1210,7 +1250,7 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
- 		return NULL;
- 
- 	channel = cfg80211_get_bss_channel(wiphy, mgmt->u.beacon.variable,
--					   ielen, data->chan);
-+					   ielen, data->chan, data->scan_width);
- 	if (!channel)
- 		return NULL;
- 
 -- 
-2.7.4
+Kalle Valo
