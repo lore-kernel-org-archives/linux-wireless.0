@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [12.131.200.82] ([12.131.200.82]:42714 "EHLO
-        fm-smtp01.quantenna.com" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1726417AbeIXOeD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50302 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725898AbeIUO5b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Sep 2018 10:34:03 -0400
-Subject: Re: [PATCH 01/11] qtnfmac_pcie: do not store FW name in driver state
- structure
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
- <20180924051246.13371-2-igor.mitsyanko.os@quantenna.com>
- <87va6vqrg3.fsf@purkki.adurom.net>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <f6dd6a7c-4823-a10b-6c02-76a081262abd@quantenna.com> (sfid-20180924_103310_167528_3F2F035E)
-Date: Mon, 24 Sep 2018 01:21:14 -0700
+        Fri, 21 Sep 2018 10:57:31 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, robh+dt@kernel.org,
+        andy.gross@linaro.org, devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 3/4] dt: bindings: add bindings for wifi iommu node
+Date: Fri, 21 Sep 2018 14:39:06 +0530
+Message-Id: <20180921090907.25937-4-govinds@codeaurora.org> (sfid-20180921_110939_123639_EF2C7ED9)
+In-Reply-To: <20180921090907.25937-1-govinds@codeaurora.org>
+References: <20180921090907.25937-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <87va6vqrg3.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2018 12:34 AM, Kalle Valo wrote:
-> 
-> 
-> Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com> writes:
-> 
->> Firmware name is only needed at probe stage, no point in keeping it in
->> driver state structure.
->>
->> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> 
-> This is just cosmetics, but what's that "SO" in the From field? Do note
-> that if I apply these patches as is that will be stored also to git.
+WCN3990 wifi module can optionally make use of the IOMMU.
+Add binding documentation for phandle to the IOMMU and
+the stream id of wifi iommu block.
 
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ .../devicetree/bindings/net/wireless/qcom,ath10k.txt         | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Looks like something new from my mail system.. Will get rid of that and 
-resend the series. Thanks!
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 22dea7d83ee8..07e58008c665 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -59,6 +59,10 @@ Optional properties:
+ - <supply-name>-supply: handle to the regulator device tree node
+ 			   optional "supply-name" are "vdd-0.8-cx-mx",
+ 			   "vdd-1.8-xo", "vdd-1.3-rfa" and "vdd-3.3-ch0".
++- iommus:
++	Usage: optional
++	Value type: <prop-encoded-array>
++	Definition: A list of phandle and IOMMU specifier pairs.
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -157,4 +161,5 @@ wifi@18000000 {
+ 		vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
+ 		vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
+ 		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
++		iommus = <&apps_smmu 0x0040 0x1>;
+ };
+-- 
+2.17.0
