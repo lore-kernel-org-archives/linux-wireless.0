@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:59927 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727234AbeIEPVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 11:21:53 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Bob Copeland <me@bobcopeland.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Subject: Re: [PATCH] mac80211: fix pending queue hang due to TX_DROP
-In-Reply-To: <20180905102259.16089-1-me@bobcopeland.com>
-References: <20180905102259.16089-1-me@bobcopeland.com>
-Date: Wed, 05 Sep 2018 12:52:11 +0200
-Message-ID: <874lf46wtg.fsf@toke.dk> (sfid-20180905_125214_865468_F09121F4)
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:46954 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391321AbeIVCd2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Sep 2018 22:33:28 -0400
+Received: by mail-pl1-f194.google.com with SMTP id t20-v6so3005783ply.13
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 13:42:54 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Carl Huang <cjhuang@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] ath10k: add missing sanity check on diag download
+Date: Fri, 21 Sep 2018 13:42:41 -0700
+Message-Id: <20180921204241.34316-1-briannorris@chromium.org> (sfid-20180921_224257_699002_D70B633E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+ath10k_hw_diag_fast_download() generally has good boundary checking, but
+it misses verifying that the next metadata header actually fits in the
+remaining buffer space. Add such a check.
 
-> In our environment running lots of mesh nodes, we are seeing the
-> pending queue hang periodically, with the debugfs queues file showing
-> lines such as:
->
->     00: 0x00000000/348
->
-> i.e. there are a large number of frames but no stop reason set.
->
-> One way this could happen is if queue processing from the pending
-> tasklet exited early without processing all frames, and without having
-> some future event (incoming frame, stop reason flag, ...) to reschedule
-> it.
->
-> Exactly this can occur today if ieee80211_tx() returns false due to
-> packet drops or power-save buffering in the tx handlers.  In the
-> past, this function would return true in such cases, and the change
-> to false doesn't seem to be intentional.
+Fixes: 39501ea64116 ("ath10k: download firmware via diag Copy Engine for QCA6174 and QCA9377.")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/hw.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Can confirm that this was not intentional; nice catch! :)
-
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 2c2870e3e84d..af8ae8117c62 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -1044,6 +1044,12 @@ int ath10k_hw_diag_fast_download(struct ath10k *ar,
+ 	left = length - sizeof(*hdr);
+ 
+ 	while (left > 0) {
++		if (left < sizeof(*metadata)) {
++			ath10k_warn(ar, "firmware segment is truncated: %d\n",
++				    left);
++			ret = -EINVAL;
++			break;
++		}
+ 		base_addr = __le32_to_cpu(metadata->addr);
+ 		base_len = __le32_to_cpu(metadata->length);
+ 		buf = metadata->data;
+-- 
+2.19.0.444.g18242da7ef-goog
