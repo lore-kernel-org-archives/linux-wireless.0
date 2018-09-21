@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:59174 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727617AbeICNxO (ORCPT
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:60384 "EHLO
+        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2389186AbeIULMu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Sep 2018 09:53:14 -0400
-Message-ID: <1535967225.3437.27.camel@sipsolutions.net> (sfid-20180903_113433_878460_E946C76F)
-Subject: Re: [PATCH v2 2/3] mac80211: support FTM responder
- configuration/statistics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        David Spinadel <david.spinadel@intel.com>
-Date: Mon, 03 Sep 2018 11:33:45 +0200
-In-Reply-To: <1535745418-31336-3-git-send-email-pradeepc@codeaurora.org>
-References: <1535745418-31336-1-git-send-email-pradeepc@codeaurora.org>
-         <1535745418-31336-3-git-send-email-pradeepc@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 21 Sep 2018 07:12:50 -0400
+Received: from mr1.cc.vt.edu (mail.ipv6.vt.edu [IPv6:2607:b400:92:9:0:9d:8fcb:4116])
+        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id w8L5PdDF019185
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 01:25:39 -0400
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+        by mr1.cc.vt.edu (8.14.7/8.14.7) with ESMTP id w8L5PY1D007895
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 01:25:39 -0400
+Received: by mail-qk1-f197.google.com with SMTP id z18-v6so10060027qki.22
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 22:25:39 -0700 (PDT)
+From: valdis.kletnieks@vt.edu
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: Remove unnecessary pointer check
+In-Reply-To: <20180920212648.25181-1-natechancellor@gmail.com>
+References: <20180920212648.25181-1-natechancellor@gmail.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1537507531_3004P";
+         micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Fri, 21 Sep 2018 01:25:32 -0400
+Message-ID: <32473.1537507532@turing-police.cc.vt.edu> (sfid-20180921_072546_395756_9B6E8A5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-08-31 at 12:56 -0700, Pradeep Kumar Chitrapu wrote:
-> 
-> + * @ftm_responder: whether to enable fine timing measurement FTM functionality
+--==_Exmh_1537507531_3004P
+Content-Type: text/plain; charset=us-ascii
 
-missing "responder" somewhere there :)
+On Thu, 20 Sep 2018 14:26:49 -0700, Nathan Chancellor said:
+> Clang warns that the address of a pointer will always evaluated as true
+> in a boolean context:
+>
+> drivers/staging/wilc1000/linux_wlan.c:267:20: warning: address of
+> 'vif->ndev->dev' will always evaluate to 'true'
+> [-Wpointer-bool-conversion]
+>         if (!(&vif->ndev->dev))
+>             ~  ~~~~~~~~~~~^~~
+> 1 warning generated.
+>
+> Since this statement always evaluates to false due to the logical not,
+> remove it.
 
-> + * @ftmr_params: configurable lci/civic parameter when enabling FTM responder.
+Often, "just nuke it because it's now dead code" isn't the best answer...
 
-Perhaps the *existence* of ftmr_params could indicate that it's enabled?
+At one time, that was likely intended to be checking whether ->dev was a null
+pointer, to make sure we don't pass request_firmware() a null pointer and oops
+the kernel, or other things that go pear-shaped....
 
-> @@ -865,6 +899,20 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
->  	if (err == 0)
->  		changed |= BSS_CHANGED_AP_PROBE_RESP;
->  
-> +	if (params->ftm_responder) {
+So the question becomes:   Is it safe to just remove it, or was it intended to
+test for something that could  legitimately be null if we've hit an error along
+the way (which means we should fix the condition to be proper and acceptable
+to both gcc and clang)?
 
-Here you immediately have the problem I talked about in the earlier
-patch ... yes, we don't have drivers that allow disabling it (so should
-probably reject that now), but without it you can *enable* it on the
-fly, but you cannot *disable*, in fact we assume saying "disable" means
-"no change" which is rather confusing.
 
-johannes
+
+--==_Exmh_1537507531_3004P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Exmh version 2.8.0 04/21/2017
+
+iQEVAwUBW6SAy40DS38y7CIcAQJHIggAmsE27bK1qtrpnn8vS0CpNAe8Il5BdTsU
+Ykt1ANM5C47PvWStiA/zTBFDXIvN9WEBj9rcH4x18tQltHu50Prsk83EmBPHQXmn
+d/8+xJiqoLbAd3cmCHajIvIBRfzyc6lw+Cq64PX8vgYXdcf5VBfIklQJ0e/2GsEA
+8gfunfMfDUNUf/28gMXhbmAs9I6se8oICtb9GRDlreVOeAlDwPyEMihgmU+kUD+2
+KYFDR65aHv6dE33145XLKivYqAaFaD/VGUWElbCAkjA5jGym9uILA3x8IurTZJML
+8DeDPWza1YRkzK/rYJNVSm+UGOHp4mEf1eZW1ITUMx1pJjE6VwzpMQ==
+=F6B6
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1537507531_3004P--
