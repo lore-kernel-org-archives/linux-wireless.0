@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2297 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726827AbeISLly (ORCPT
+Received: from mail-lf1-f43.google.com ([209.85.167.43]:43494 "EHLO
+        mail-lf1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728421AbeIVGpJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:41:54 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/29] staging: wilc1000: change return type to 'void' for wilc_wlan_set_bssid()
-Date: Wed, 19 Sep 2018 11:34:52 +0530
-Message-ID: <1537337119-14952-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080537_171600_92F654D3)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Sat, 22 Sep 2018 02:45:09 -0400
+Received: by mail-lf1-f43.google.com with SMTP id x24-v6so12456835lfe.10
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 17:53:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <ece4e4dcd2776413c8b297731df3c02c@codeaurora.org>
+References: <1537470331-6270-1-git-send-email-rmanohar@codeaurora.org>
+ <8d8e3775-4504-7b37-19b0-4a7fae054d12@nbd.name> <ece4e4dcd2776413c8b297731df3c02c@codeaurora.org>
+From: Kan Yan <kyan@google.com>
+Date: Fri, 21 Sep 2018 17:53:42 -0700
+Message-ID: <CA+iem5t7eHgX5EtePvvXFpHSfDNcUwmKefvDoYb-KO050OXJKQ@mail.gmail.com> (sfid-20180922_025558_298135_E9ABEC8D)
+Subject: Re: [RFC v2] mac80211: budget outstanding airtime for transmission
+To: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Cc: Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        linux-wireless-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use 'void' return type for wilc_wlan_set_bssid(),
-as its always returns the same value.
+Hi Rajkumar,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 4 +---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
- 2 files changed, 2 insertions(+), 4 deletions(-)
+It is great to see your patches and thank you for helping bring this
+to upstream.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 49afda6..d1d2c64 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -192,14 +192,12 @@ static struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
- 	return NULL;
- }
- 
--int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode)
-+void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode)
- {
- 	struct wilc_vif *vif = netdev_priv(wilc_netdev);
- 
- 	memcpy(vif->bssid, bssid, 6);
- 	vif->mode = mode;
--
--	return 0;
- }
- 
- int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 1837808..30151b2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -215,6 +215,6 @@ void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		     const struct wilc_hif_func *ops);
- void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
--int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
-+void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
- 
- #endif
--- 
-2.7.4
+> Why signed? This should never become negative unless something is wrong
+> with the accounting somewhere?
+
+It is signed because the "budget" is allowed to go negative.  In the
+original version,  as long as the budget is > 0, at least one packet
+is released even the budget is less than the airtime required for the
+packet.  One major issue I had when doing airtime based queue limit is
+how to prevent txq with very low data rate (e.g., 6 mbps) from getting
+stalled for too long. My solution is to allow budget to go negative
+for one packet, then reset budget to 0 when all frames from that txq
+has been completed and the inflight packets count reaches to 0.
+
+For the ieee80211_calc_airtime_budget(), although it is sufficient for
+the purpose of enforcing queue limit, the airtime overhead estimation
+in the original patch really crude and could use some improvement.
+Instead of using the last reported tx PHY rate and a guesstimate of
+overhead to calculate airtime,  one possible improvement is to
+calculate the estimated "real" tx rate from a windowed moving average
+of past tx_bytes/tx_airtime, if the firmware is capable of reporting
+tx airtime for each completed PPDU.
