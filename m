@@ -1,102 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54598 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46808 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726821AbeISDEn (ORCPT
+        with ESMTP id S2391686AbeIVGRV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 23:04:43 -0400
+        Sat, 22 Sep 2018 02:17:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
+Content-Type: text/plain; charset=US-ASCII;
  format=flowed
-Date: Tue, 18 Sep 2018 14:30:12 -0700
+Date: Fri, 21 Sep 2018 17:26:00 -0700
 From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <87efdq8rn0.fsf@toke.dk>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
- <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk>
- <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org> <87o9cvksiv.fsf@toke.dk>
- <efa33810860b2e5db789a76747bb826b@codeaurora.org> <87efdq8rn0.fsf@toke.dk>
-Message-ID: <5e2612cbd4ea9f560a63149c599f8587@codeaurora.org> (sfid-20180918_233016_974626_CEF29F52)
+To: Felix Fietkau <nbd@nbd.name>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Kan Yan <kyan@google.com>,
+        =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC v2] mac80211: budget outstanding airtime for transmission
+In-Reply-To: <8d8e3775-4504-7b37-19b0-4a7fae054d12@nbd.name>
+References: <1537470331-6270-1-git-send-email-rmanohar@codeaurora.org>
+ <8d8e3775-4504-7b37-19b0-4a7fae054d12@nbd.name>
+Message-ID: <ece4e4dcd2776413c8b297731df3c02c@codeaurora.org> (sfid-20180922_022646_214348_A64D67FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-18 13:41, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On 2018-09-21 04:13, Felix Fietkau wrote:
+> On 2018-09-20 21:05, Rajkumar Manoharan wrote:
+>> Per frame airtime estimation could be used to track outstanding 
+>> airtime
+>> of each txq and can be used to throttle ieee80211_tx_dequeue(). This
+>> mechanism on its own will get us the queue limiting and latency
+>> reduction goodness for firmwares with deep queues. And for that it can
+>> be completely independent of the airtime fairness scheduler, which can
+>> use the after-tx-compl airtime information to presumably get more
+>> accurate fairness which includes retransmissions etc.
+> What about packets that get dequeued from the txq, but get freed by
+> ieee80211_free_txskb?
+> I think this may be a bit fragile, since if for any reason accounting
+> isn't perfect here, tx queues might stall.
 > 
->>>> Also an option to add the node at head or tail would be preferred. 
->>>> If
->>>> return_txq adds node at head of list, then it is forcing the driver 
->>>> to
->>>> serve same txq until it becomes empty. Also this will not allow the
->>>> driver to send N frames from each txqs.
->>> 
->>> The whole point of this patch set is to move those kinds of decisions
->>> out of the driver and into mac80211. The airtime scheduler won't
->>> achieve
->>> fairness if it allows queues to be queued to the end of the rotation
->>> before its deficit turns negative. And obviously there's some lag in
->>> this since we're using after-the-fact airtime information.
->>> 
->> Hmm.. As you know ath10k kind of doing fairness by serving fixed 
->> frames
->> from each txq. This approach will be removed from ath10k.
+Good point. As Johannes mentioned, I will also handle free_txskb().
+
+>> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+>> index e4bc43904a8e..c9997a63e5cf 100644
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -3485,6 +3485,54 @@ static bool ieee80211_xmit_fast(struct 
+>> ieee80211_sub_if_data *sdata,
+>>  	return true;
+>>  }
 >> 
->>> For ath9k this has not really been a problem in my tests; if the lag
->>> turns out to be too great for ath10k (which I suppose is a 
->>> possibility
->>> since we don't get airtime information on every TX-compl), I figure 
->>> we
->>> can use the same estimated airtime value that is used for throttling
->>> the
->>> queues to adjust the deficit immediately...
->>> 
->> Thats true. I am porting Kan's changes of airtime estimation for each
->> msdu for firmware that does not report airtime.
+>> +/* The estimated airtime (in microseconds), which is calculated using 
+>> last
+>> + * reported TX rate is stored in info context buffer. The budget will 
+>> be
+>> + * adjusted upon tx completion.
+>> + */
+>> +#define IEEE80211_AIRTIME_BUDGET_MAX    4000 /* txq airtime limit: 
+>> 4ms */
+>> +#define IEEE80211_AIRTIME_OVERHEAD      100  /* IFS + some slot time 
+>> */
+>> +#define IEEE80211_AIRTIME_OVERHEAD_IFS  16   /* IFS only */
+>> +static void ieee80211_calc_airtime_budget(struct ieee80211_local 
+>> *local,
+>> +					  struct sta_info *sta,
+>> +					  struct sk_buff *skb, u8 ac)
+>> +{
+>> +	struct ieee80211_tx_info *info;
+>> +	struct ieee80211_hdr *hdr;
+>> +	struct rate_info rinfo;
+>> +	u32 pktlen, bitrate;
+>> +	u16 airtime = 0;
+>> +
+>> +	if (!wiphy_ext_feature_isset(local->hw.wiphy,
+>> +				     NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
+>> +		return;
+>> +
+>> +	lockdep_assert_held(&local->active_txq_lock[ac]);
+>> +
+>> +	hdr = (struct ieee80211_hdr *)skb->data;
+>> +	info = IEEE80211_SKB_CB(skb);
+>> +
+>> +	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
+>> +	bitrate = cfg80211_calculate_bitrate(&rinfo);
+> I think for drivers using software rate control, we should use the
+> primary rate from the last rate_control_set_rates() call.
+> In that case, we should calculate the bitrate value inside
+> rate_control_set_rates itself in order to avoid re-calculating it for
+> every single dequeued packet.
+> It might make sense to use similar caching on changes to
+> tx_stats.last_rate.
 > 
-> Right. My thinking with this was that we could put the per-frame 
-> airtime
-> estimation into ieee80211_tx_dequeue(), which could track the
-> outstanding airtime and just return NULL if it goes over the threshold.
-> I think this is fairly straight-forward to do on its own; the biggest
-> problem is probably finding the space in the mac80211 cb?
-> 
-> Is this what you are working on porting? Because then I'll wait for 
-> your
-> patch rather than starting to write this code myself :)
-> 
-Kind of.. something like below.
-
-tx_dequeue(){
-     compute airtime_est from last_tx_rate
-     if (sta->airtime[ac].deficit < airtime_est)
-         return NULL;
-     dequeue skb and store airtime_est in cb
-}
-
-Unfortunately ath10k is not reporting last_tx_rate in tx_status(). So I
-also applied this "ath10k: report tx rate using ieee80211_tx_status" 
-change.
-
-> This mechanism on its own will get us the queue limiting and latency
-> reduction goodness for firmwares with deep queues. And for that it can
-> be completely independent of the airtime fairness scheduler, which can
-> use the after-tx-compl airtime information to presumably get more
-> accurate fairness which includes retransmissions etc.
-> 
-> Now, we could *also* use the ahead-of-time airtime estimation for
-> fairness; either just as a fallback for drivers that can't get actual
-> airtime usage information for the hardware, or as an alternative in
-> cases where it works better for other reasons. But I think that
-> separating the two in the initial implementation makes more sense; that
-> will make it easier to experiment with different combinations of the
-> two.
-> 
-> Does that make sense? :)
-> 
-Completely agree. I was thinking of using this as fallback for devices
-that does not report airtime but tx rate.
+I thought of having common place for calculating bitrate for both
+software based and offloaded rate control. let me explore caching 
+option.
 
 -Rajkumar
