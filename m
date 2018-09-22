@@ -1,87 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45713 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726768AbeIRQBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 12:01:44 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:42510 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727634AbeIVTLJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Sep 2018 15:11:09 -0400
+Received: by mail-ed1-f68.google.com with SMTP id l5so12808991edw.9
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2018 06:17:35 -0700 (PDT)
+Date: Sat, 22 Sep 2018 16:17:26 +0300
+From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
 Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v4 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973109.9231.7094211814263758096.stgit@alrua-x1.karlstad.toke.dk> <13400b5f9bdb5e36c6afabd071cc7b0d@codeaurora.org>
-Date: Tue, 18 Sep 2018 12:29:44 +0200
-Message-ID: <87o9cvksiv.fsf@toke.dk> (sfid-20180918_122949_701246_BFC89227)
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
+Message-ID: <20180922161726.1711e766@manjaro> (sfid-20180922_151929_573729_C511DF84)
+In-Reply-To: <6feec186-5137-8827-8ade-6f8988144f78@broadcom.com>
+References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+ <6feec186-5137-8827-8ade-6f8988144f78@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On Sat, 22 Sep 2018 11:07:36 +0200
+Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-> On 2018-09-16 10:42, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> +/**
->> + * ieee80211_return_txq - return a TXQ previously acquired by
->> ieee80211_next_txq()
->> + *
->> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->> + * @txq: pointer obtained from station or virtual interface
->> + *
->> + * Should only be called between calls to=20
->> ieee80211_txq_schedule_start()
->> + * and ieee80211_txq_schedule_end().
->> + */
->> +void ieee80211_return_txq(struct ieee80211_hw *hw, struct=20
->> ieee80211_txq *txq);
->> +
->>=20
-> return_txq() should return a bool to inform the driver that whether
-> txq is queued back or not.
+> On 9/11/2018 7:26 PM, Ali MJ Al-Nasrawy wrote:
+> > Beacons+TIM are created/updated for fw beaconing only when
+> > BSS_CHANGED_BEACON. This is not compliant with power-saving
+> > stations. Fix it by updating beacon templates on mac80211 set_tim
+> > callback. Adresses the issue in:
+> > https://marc.info/?i=20180911163534.21312d08%20()%20manjaro  
+> 
+> A few remarks below but here is my ....
+> 
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-What would the driver do with that return value, exactly?
+Thank you for your review and I shall submit a second version fixing
+the issues below...
 
-> Otherwise the same txq will be served indefinitely until txq becomes
-> empty. This problem occurs when the driver is running out of hw
-> descriptors or driver sends only N frames (< backlog_packets).
+> > +static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
+> > +				 struct ieee80211_sta *sta, bool
+> > set) +{
+> > +	/*FIXME: this may be more efficiently handled by delegating
+> > +	 beacon upload to the beacon interrupt handler*/  
+> 
+> No sure what you mean by this remark. The code below looks ok to me,
+> ie. same as with bss update. So please drop the remark.
 
-No, if it's using next_txq(), the API guarantees that the same TXQ will
-not be returned more than once between a set of calls to
-schedule_start()/schedule_end() (by way of the seqno mechanism). I
-didn't add the same check to may_transmit(), because I assumed the
-driver would not be looping in this case. Is that not correct?
+TIM is updated much more frequently than bss updates and scales with
+number of client stations and a simple test shows that it takes ~120us
+to update the beacon templates on Core i3! So I think it may be more
+efficient to split set_tim handler to a fast bottom half that just
+schedules an interrupt for the next beacon and delegates the beacon
+upload to the interrupt handler so that beacon templates are not
+updated several times per beacon interval.
 
-> Also an option to add the node at head or tail would be preferred. If
-> return_txq adds node at head of list, then it is forcing the driver to
-> serve same txq until it becomes empty. Also this will not allow the
-> driver to send N frames from each txqs.
+But I agree that this should neither be part of the code nor titled
+FIXME-I might have exaggerated a little bit ;)
 
-The whole point of this patch set is to move those kinds of decisions
-out of the driver and into mac80211. The airtime scheduler won't achieve
-fairness if it allows queues to be queued to the end of the rotation
-before its deficit turns negative. And obviously there's some lag in
-this since we're using after-the-fact airtime information.
+> > a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h +++
+> > b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h @@ -568,6
+> > +568,8 @@ struct brcms_c_info { u16 beacon_tim_offset; u16
+> > beacon_dtim_period; struct sk_buff *probe_resp;
+> > +	  
+> 
+> Just get rid of the empty line (+TAB) above. I am not keen on storing 
+> the vif, but it seems there is no other way to get that.
 
-For ath9k this has not really been a problem in my tests; if the lag
-turns out to be too great for ath10k (which I suppose is a possibility
-since we don't get airtime information on every TX-compl), I figure we
-can use the same estimated airtime value that is used for throttling the
-queues to adjust the deficit immediately...
-
->> +/**
->> + * ieee80211_txq_schedule_start - acquire locks for safe scheduling of=
-=20
->> an AC
->> + *
->> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->> + * @ac: AC number to acquire locks for
->> + *
->> + * Acquire locks needed to schedule TXQs from the given AC. Should be=20
->> called
->> + * before ieee80211_next_txq() or ieee80211_schedule_txq().
->> + */
-> Typo error. s/schedule_txq()/return_txq()/.
-
-Yup, will fix :)
-
--Toke
+Okay.
