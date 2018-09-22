@@ -1,73 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2337 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730911AbeISLm3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:29 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/29] staging: wilc1000: refactor wilc_wlan_parse_info_frame() function
-Date: Wed, 19 Sep 2018 11:35:01 +0530
-Message-ID: <1537337119-14952-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080611_675189_C9284D6F)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+Received: from nbd.name ([46.4.11.11]:41786 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726022AbeIVR6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Sep 2018 13:58:11 -0400
+Subject: Re: [PATCH] mt76: usb: remove WARN_ON in mt76u_get_rx_entry_len
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+References: <cover.1537272524.git.lorenzo.bianconi@redhat.com>
+ <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <36091045-a13e-4287-4b8b-9a985ca91d14@nbd.name> (sfid-20180922_140524_716005_1BF3E3A8)
+Date: Sat, 22 Sep 2018 14:04:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <c9d8d73f3353c2ad953d8a298c52a32922ed2bcc.1537272524.git.lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return 'void' from wilc_wlan_parse_info_frame() as same constant value
-is returned always. Also removed the 'size' from input parameter as its
-not used in the function.
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 42c64ed..2b5471b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -350,22 +350,17 @@ static void wilc_wlan_parse_response_frame(u8 *info, int size)
- 	}
- }
- 
--static int wilc_wlan_parse_info_frame(u8 *info, int size)
-+static void wilc_wlan_parse_info_frame(u8 *info)
- {
- 	struct wilc_mac_cfg *pd = &g_mac;
- 	u32 wid, len;
--	int type = WILC_CFG_RSP_STATUS;
- 
- 	wid = info[0] | (info[1] << 8);
- 
- 	len = info[2];
- 
--	if (len == 1 && wid == WID_STATUS) {
-+	if (len == 1 && wid == WID_STATUS)
- 		pd->mac_status = info[3];
--		type = WILC_CFG_RSP_STATUS;
--	}
--
--	return type;
- }
- 
- /********************************************
-@@ -528,7 +523,8 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 		break;
- 
- 	case 'I':
--		rsp->type = wilc_wlan_parse_info_frame(frame, size);
-+		wilc_wlan_parse_info_frame(frame);
-+		rsp->type = WILC_CFG_RSP_STATUS;
- 		rsp->seq_no = msg_id;
- 		/*call host interface info parse as well*/
- 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
--- 
-2.7.4
+On 2018-09-18 14:12, Lorenzo Bianconi wrote:
+> Remove not useful WARN_ON macros in mt76u_get_rx_entry_len routine
+> since corrupted frames should just be silently discarded
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Merged, thanks.
