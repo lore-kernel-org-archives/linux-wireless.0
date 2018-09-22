@@ -1,50 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:58737 "EHLO mail.toke.dk"
+Received: from nbd.name ([46.4.11.11]:51264 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725862AbeIEOQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 10:16:49 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: use non-zero TID only for QoS frames
-In-Reply-To: <20180905080036.9177-1-johannes@sipsolutions.net>
-References: <20180905080036.9177-1-johannes@sipsolutions.net>
-Date: Wed, 05 Sep 2018 11:47:21 +0200
-Message-ID: <87in3k6zti.fsf@toke.dk> (sfid-20180905_114727_307468_A80B60B6)
+        id S1728390AbeIVWSq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Sep 2018 18:18:46 -0400
+Subject: Re: [PATCH] mac80211: allocate TXQs for active monitor interfaces
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, cc@80211.de
+References: <20180922130953.19581-1-nbd@nbd.name>
+Message-ID: <f4f5994d-008d-38af-5a4c-da39fc5f3aa3@nbd.name> (sfid-20180922_182446_646415_BC46216D)
+Date: Sat, 22 Sep 2018 18:24:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180922130953.19581-1-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On 2018-09-22 15:09, Felix Fietkau wrote:
+> Monitor mode interfaces with the active flag are passed down to the driver.
+> Drivers using TXQ expect that all interfaces have allocated TXQs before
+> they get added.
+> 
+> Fixes: 79af1f866193d ("mac80211: avoid allocating TXQs that won't be used")
+> Cc: stable@vger.kernel.org
+> Reported-by: Catrinel Catrinescu <cc@80211.de>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Sorry, wrong patch. Will resend.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Some frames may have a non-zero skb->priority assigned by
-> mac80211 internally, e.g. TDLS setup frames, regardless of
-> support for QoS.
->
-> Currently, we set skb->priority to 0 for all data frames.
-> Note that there's a comment that this is "required for
-> correct WPA/11i MIC", but that doesn't seem true as we use
->
->         if (ieee80211_is_data_qos(hdr->frame_control))
->                 qos_tid = ieee80211_get_tid(hdr);
->         else
->                 qos_tid = 0;
->
-> in the code there. We could therefore reconsider this, but
-> it seems like unnecessary complexity for the unlikely (and
-> not very useful) case of not having QoS on the connection.
->
-> This situation then causes something strange - most data
-> frames will go on TXQ for TID 0 for non-QoS connections,
-> but very few exceptions that are internally generated will
-> go on another TXQ, possibly causing confusion.
-
-What kind of confusion are you seeing? Reordering issues, or something
-else?
-
--Toke
+- Felix
