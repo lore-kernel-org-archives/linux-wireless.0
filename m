@@ -1,116 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:33895 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726902AbeINUr4 (ORCPT
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:43977 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726344AbeIVLVm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Sep 2018 16:47:56 -0400
-Received: by mail-it0-f65.google.com with SMTP id x79-v6so4987498ita.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Sep 2018 08:32:54 -0700 (PDT)
+        Sat, 22 Sep 2018 07:21:42 -0400
+Received: by mail-vs1-f66.google.com with SMTP id v14-v6so5771953vsv.10
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Sep 2018 22:29:27 -0700 (PDT)
 MIME-Version: 1.0
-References: <CAM0KTbBJuhuEyuZB_z_BcDSeXa-CJ+NwupssS2jLx0pJ0KXQGQ@mail.gmail.com>
- <CAJ0CqmWAqdB8Og7fabLDeZnzFO5Aw5Qd0cYGaLrs7Ls-zM_yQw@mail.gmail.com>
- <CAM0KTbAbjDYNOzivxMdLmYrV9QHgwkLp7zXpdCvn1Kf1uEcQTQ@mail.gmail.com>
- <20180906093213.GB16539@redhat.com> <CAM0KTbBRGqNAu1H0myVoWg6Qu1aMXMneSJ7bXQUKbJGZUFkC_A@mail.gmail.com>
- <CAJ0CqmXHHE2J5O4irPogrypL_H95EDm2y+1_6rpWG1v3ZHxzXA@mail.gmail.com>
- <CAM0KTbAF_ztZzFk_iECyPbiWY69xrcdT_93ypnuTzocjX_fRuQ@mail.gmail.com>
- <20180907082413.GC2725@localhost.localdomain> <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
-In-Reply-To: <CAM0KTbAputKNN3seOfN-1zhz5XmT6yg_pbKBnapOsR6Vigv1XQ@mail.gmail.com>
-From: Sid Hayn <sidhayn@gmail.com>
-Date: Fri, 14 Sep 2018 11:32:46 -0400
-Message-ID: <CAM0KTbAu-LJ2ThAHbmbrggMw_ttpQ8fXr0+HTjGBZF6PBPiD8Q@mail.gmail.com> (sfid-20180914_173258_094811_7BE599A2)
-Subject: Re: mt76x0 bug report
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: sgruszka@redhat.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
+References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
+ <1534246392.3547.26.camel@sipsolutions.net> <5B83C2FE.90000@redpinesignals.com>
+ <1535527450.5215.8.camel@sipsolutions.net> <CANGSkXTnEV7efC8nY9MRK1q2Ky-Ao_6rLoLp75oj4cvCkguZGw@mail.gmail.com>
+ <1535970059.3437.39.camel@sipsolutions.net> <CANGSkXTPejV11TVpauXn+t6g+rUQ8cYik8KAz7W1P-2Y-8XebA@mail.gmail.com>
+ <CANGSkXR11ZxFoiZ7sbKTu8BnXSpTsiAhH=DOD=e9Zh8bquDC0A@mail.gmail.com>
+ <1536668735.3224.145.camel@sipsolutions.net> <CANGSkXSD4dWKBLROMLT=oqCJLXV7R6HAWw9sfS=d1CBppAQhbw@mail.gmail.com>
+In-Reply-To: <CANGSkXSD4dWKBLROMLT=oqCJLXV7R6HAWw9sfS=d1CBppAQhbw@mail.gmail.com>
+From: Siva Rebbagondla <siva8118@gmail.com>
+Date: Sat, 22 Sep 2018 10:59:12 +0530
+Message-ID: <CANGSkXQ3Yo21vf+mqk+CpQ7z7rUtRi__eHoyFtbM3YBARuY8TQ@mail.gmail.com> (sfid-20180922_072931_586355_E2214442)
+Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
+        sushant kumar mishra <sushant2k1513@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*bump*
+On Tue, Sep 11, 2018 at 6:50 PM Siva Rebbagondla <siva8118@gmail.com> wrote:
+>
+> On Tue, Sep 11, 2018 at 5:55 PM Johannes Berg <johannes@sipsolutions.net> wrote:
+> >
+> > [re-adding the previous thread]
+> >
+> > > As discussed earlier, please find attached tar ball for driver logs,
+> > > traces and debug patches.
+> > > I have added a README for reference in attached folder, go through the
+> > > steps and let me know your feedback.
+> >
+> > Thanks! The tracing doesn't seem to have worked, but the logging helps a
+> > lot.
+> >
+> > So what happens, to summarize, is that we have hardware that doesn't
+> > support scanning on both bands at the same time, i.e.
+> > SINGLE_SCAN_ON_ALL_BANDS isn't set.
+Hi Johannes,
+Actually, we have missed this in code. Our module supports scanning on
+both bands at the same time.
+Thanks for the info.
+And also we ran the scan on our dual band module by setting
+"SINGLE_SCAN_ON_ALL_BANDS" flag in
+driver and removing SCAN_HW_CANCELLED bit in mac80211 stack. We didn't
+see any issues in scan and
+as i mentioned earlier, I didn't observe "scan aborted".
+Can i resubmit patch with these changes?.
 
-Been a few days, just a reminder that your monitor mode patch fixed
-all channels below 144 but something appears incorrect in regdomain
-handling as I cannot get channels 144 or higher working (my main AP
-being on channel 149.  Again, this works on mt76x2u but not on mt76x0.
-The patch I tested doesn't appear to have landed in wireless-testing
-yet, so if you haven't, please do push that up.
-
-Secondarily, ethtool still doesn't report firmware version and that
-would be a very helpful thing to have before 4.19 hits.
-
-Additionally, with much less severity, t1u still thinks it is dual
-band and I'm happy to run any command, test any patch, etc.  I
-honestly don't care about this at all short term, but it does slow the
-hardware down tuning to a bunch of channels which it cannot access so
-long term it should probably be fixed in some way.
-
-Thanks again for all your hard work, watching the mailing list it is
-obvious how much effort is going into this right now.
-
--Zero
-On Fri, Sep 7, 2018 at 3:55 PM Sid Hayn <sidhayn@gmail.com> wrote:
+Thanks
+Siva Rebbagondla
+> >
+> > This is with the patch to make -EPERM into "please do software scan" (we
+> > can debate whether that should be -EPERM or 1 or something, doesn't
+> > matter for this discussion).
+> >
+> > This logic only happens here:
+> >
+> >         if (local->ops->hw_scan) {
+> >                 WARN_ON(!ieee80211_prep_hw_scan(local));
+> >                 rc = drv_hw_scan(local, sdata, local->hw_scan_req);
+> >                 if (rc == -EPERM) {
+> >                         set_bit(SCAN_HW_CANCELLED, &local->scanning);
+> >                         __set_bit(SCAN_SW_SCANNING, &local->scanning);
+> >                         rc = ieee80211_start_sw_scan(local, sdata);
+> >                 }
+> > (in __ieee80211_start_scan).
+> >
+> > Next thing is that the software scan completes. This calls
+> > __ieee80211_scan_completed(), which assumes hardware scan is running,
+> > since
+> >         bool hw_scan = local->ops->hw_scan;
+> >
+> > This now again runs drv_hw_scan():
+> >
+> >         if (hw_scan && !aborted &&
+> >             !ieee80211_hw_check(&local->hw, SINGLE_SCAN_ON_ALL_BANDS) &&
+> >             ieee80211_prep_hw_scan(local)) {
+> >                 int rc;
+> >
+> >                 rc = drv_hw_scan(local,
+> >                         rcu_dereference_protected(local->scan_sdata,
+> >                                                   lockdep_is_held(&local->mtx)),
+> >                         local->hw_scan_req);
+> >
+> > which presumably again returns -EPERM (conditions didn't change), and
+> > thus we end up with scan abort.
+> >
+> > To work around this, you were setting and testing HW_SCAN_CANCELLED in
+> > two new places (you can see the setting above).
+> >
+> > Looking at this in more detail, I think we have multiple issues with the
+> > way the fallback is implemented.
+> >
+> > First of all, this issue at hand. That's worked around, and could be -
+> > more properly IMHO - worked around by setting a new bit
+> > (HW_SCAN_SW_FALLBACK or so).
+> >
+> > However, note that due to the way you implemented this, the software
+> > scan requests that happens as a fallback behaves differently from a
+> > regular software scan. This doesn't matter to you (right now) because
+> > you only fall back to software if you're not connected, but in the case
+> > that you _are_ connected, it would behave differently due to all the
+> > code in __ieee80211_start_scan() that handles a single-channel software
+> > scan differently if that matches the currently used channel.
+> >
+> >
+> > So ultimately, I think the (combined) problem is that the fallback is
+> > implemented badly.
+> >
+> > My suggestion would be to separate the decision of whether to do
+> > software or hardware scan from the hw_scan callback. This could be done
+> > by flags, e.g. hw->scanflags & IEEE80211_SW_SCAN_WHILE_UNASSOC, which
+> > would be your case IIRC, though TBD what that means for AP mode.
+> >
+> > Obviously, you'll have to change all the (four) things that are checking
+> > for "local->ops->hw_scan" to check something else. The three in
+> > __ieee80211_start_scan() obviously just check the result of the
+> > condition, and the one in __ieee80211_scan_completed() can already check
+> > local->scanning today since that's set by then (and the scanning==0 case
+> > is only valid with aborted, so not relevant for the hw_scan condition).
+> >
+> > Perhaps we can actually do the return value from drv_hw_scan(), but in
+> > that case I'd say it should look something like this:
+> >
+> > https://p.sipsolutions.net/6ca3554b24e09ffb.txt
+> >
+> > Yes, that's less efficient (due to the whole idle recalculation), but
+> > it's much easier to understand what's going on, IMHO.
+> >
+> > There's also a question about whether or not capabilities match, e.g. if
+> > we do software scan we report 4 SSIDs, low prio scan, AP scan, random
+> > scan, minimal scan content ... these are OK, but if there are ever
+> > features that mac80211 *doesn't* support, we'll be in trouble if
+> > somebody tries to use them.
+> >
+> > Hope this helps. If my patch actually works (I obviously haven't tested)
+> > then I can send it to the list with signed-off-by and all.
+> >
+> > johannes
 >
-> On Fri, Sep 7, 2018 at 4:24 AM Lorenzo Bianconi
-> <lorenzo.bianconi@redhat.com> wrote:
-> >
-> > > Actions like that have caused great problems in the past, as the
-> > > kernel won't allow channel control of a monitor interface at all when
-> > > there is a managed interface on the same phy (afaik).
-> > >
-> > > But just for fun and codepath testing here are two test scenarios:
-> > >
-> > > Test 1: "iwconfig t2u mode monitor"
-> > > Sees nothing on any channel, no packets reported
-> > >
-> > > Test 2(requested test): "iw phy phy11 interface add t2uhmon type monitor"
-> > > Sees nothing on any channel, no packets reported.
-> > > Despite having a monitor and managed interface on the same phy,
-> > > iwconfig is reporting that the channel is changing as requested.  So
-> > > perhaps my above "afaik" comment is partially outdated.
-> > >
-> > > For both tests the interface was not used to connect to any ap prior
-> > > to or during testing.
-> > >
-> >
-> > Could you please try following patch?
+> Hi Johannes,
+> Thanks for the brief explanation and As you mentioned above, we made
+> the changes w.r.t our module.
+> We will understand, what we missed here and will test with your patch
+> and update you.
 >
-> Excellent!  This seems to work for all channels up to 140, however,
-> not 144 or above.  "iw list" shows these are supported but I cannot
-> set them in monitor mode:
->
-> * 5720 MHz [144] (22.0 dBm) (no IR, radar detection)
-> * 5745 MHz [149] (22.0 dBm) (no IR)
-> * 5765 MHz [153] (22.0 dBm) (no IR)
-> * 5785 MHz [157] (22.0 dBm) (no IR)
-> * 5805 MHz [161] (22.0 dBm) (no IR)
-> * 5825 MHz [165] (22.0 dBm) (no IR)
->
-> remote2 ~ # iw dev t2uhmon set channel 140
-> remote2 ~ # iw dev t2uhmon set channel 144
-> command failed: Invalid argument (-22)
->
-> Thanks,
-> Zero
->
-> > Regards,
-> >
-> > Lorenzo
-> >
-> > --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> > @@ -756,11 +756,10 @@ __mt76x0_phy_set_channel(struct mt76x0_dev *dev,
-> >
-> >         /* Vendor driver don't do it */
-> >         /* mt76x0_phy_set_tx_power(dev, channel, rf_bw_band); */
-> > +       mt76x0_vco_cal(dev, channel);
-> >
-> >         if (scan)
-> > -               mt76x0_vco_cal(dev, channel);
-> > -
-> > -       mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
-> > +               mt76x0_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1);
-> >         mt76x0_phy_set_chan_pwr(dev, channel);
-> >
-> >         dev->mt76.chandef = *chandef;
+> Regards,
+> Siva Rebbagondla.
