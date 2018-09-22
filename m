@@ -1,88 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:35932 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726292AbeIDQln (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:41:43 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 9/9] mac80211: Don't wake up from PS for offchannel TX
-Date: Tue, 04 Sep 2018 14:16:47 +0200
-Message-ID: <2707426.UKz2r40yDP@bentobox> (sfid-20180904_141652_270747_8AD939E6)
-In-Reply-To: <8536772.7SmJXvWjMu@bentobox>
-References: <20180831083130.15525-1-luca@coelho.fi> <20180904114055.1429-10-luca@coelho.fi> <8536772.7SmJXvWjMu@bentobox>
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:34465 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725992AbeIVPA3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Sep 2018 11:00:29 -0400
+Received: by mail-ed1-f68.google.com with SMTP id e25so4069598edv.1
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Sep 2018 02:07:38 -0700 (PDT)
+Subject: Re: [PATCH] brcmsmac: ap mode: update beacon when TIM changes
+To: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6feec186-5137-8827-8ade-6f8988144f78@broadcom.com> (sfid-20180922_111057_165273_5B61C695)
+Date: Sat, 22 Sep 2018 11:07:36 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart7317677.BvZNnZgmtP"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7317677.BvZNnZgmtP
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+On 9/11/2018 7:26 PM, Ali MJ Al-Nasrawy wrote:
+> Beacons+TIM are created/updated for fw beaconing only when BSS_CHANGED_BEACON.
+> This is not compliant with power-saving stations.
+> Fix it by updating beacon templates on mac80211 set_tim callback.
+> Adresses the issue in:
+> https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
 
-On Dienstag, 4. September 2018 14:07:54 CEST Sven Eckelmann wrote:
-> On Dienstag, 4. September 2018 14:40:55 CEST Luca Coelho wrote:
-> > )
-> > Sender: linux-wireless-owner@vger.kernel.org
-> > Precedence: bulk
-> > List-ID: <linux-wireless.vger.kernel.org>
-> > X-Mailing-List: linux-wireless@vger.kernel.org
-> 
-> Looks like the SMTP headers are broken in all your patches. Here the 
-> interesting part (as received by me):
+A few remarks below but here is my ....
 
-I meant mail headers.
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+> ---
+>  .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 23 +++++++++++++++++++
+>  .../broadcom/brcm80211/brcmsmac/main.h        |  2 ++
+>  2 files changed, 25 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+> index ddfdfe1..ee92bb5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+> @@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+>  	}
+>
+>  	spin_lock_bh(&wl->lock);
+> +	wl->wlc->vif = vif;
+>  	wl->mute_tx = false;
+>  	brcms_c_mute(wl->wlc, false);
+>  	if (vif->type == NL80211_IFTYPE_STATION)
+> @@ -937,6 +938,27 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
+>  	spin_unlock_bh(&wl->lock);
+>  }
+>
+> +static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
+> +				 struct ieee80211_sta *sta, bool set)
+> +{
+> +	/*FIXME: this may be more efficiently handled by delegating
+> +	 beacon upload to the beacon interrupt handler*/
 
->     [...]
->     X-SA-Exim-Scanned: Yes (on 
->     
->     )
->     Sender: linux-wireless-owner@vger.kernel.org
->     Precedence: bulk
->     List-ID: <linux-wireless.vger.kernel.org>
->     X-Mailing-List: linux-wireless@vger.kernel.org
+No sure what you mean by this remark. The code below looks ok to me, ie. 
+same as with bss update. So please drop the remark.
 
-And just as additional info which I forgot: My mail setup is exim free. So 
-they were not added by me.
+> +	struct brcms_info *wl = hw->priv;
+> +	struct sk_buff *beacon;
+> +	u16 tim_offset = 0;
+> +	
+> +	beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
+> +					  &tim_offset, NULL);
+> +	if (beacon){
+> +		spin_lock_bh(&wl->lock);
+> +		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
+> +				       wl->wlc->vif->bss_conf.dtim_period);
+> +		spin_unlock_bh(&wl->lock);
+> +	}
+> +	
+> +	return 0;
+> +}
+> +
+>  static const struct ieee80211_ops brcms_ops = {
+>  	.tx = brcms_ops_tx,
+>  	.start = brcms_ops_start,
+> @@ -955,6 +977,7 @@ static const struct ieee80211_ops brcms_ops = {
+>  	.flush = brcms_ops_flush,
+>  	.get_tsf = brcms_ops_get_tsf,
+>  	.set_tsf = brcms_ops_set_tsf,
+> +	.set_tim = brcms_ops_beacon_set_tim,
+>  };
+>
+>  void brcms_dpc(unsigned long data)
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+> index c4d135c..e3939fc 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+> @@ -568,6 +568,8 @@ struct brcms_c_info {
+>  	u16 beacon_tim_offset;
+>  	u16 beacon_dtim_period;
+>  	struct sk_buff *probe_resp;
+> +	
 
-The only exim in the path seems to be:
+Just get rid of the empty line (+TAB) above. I am not keen on storing 
+the vif, but it seems there is no other way to get that.
 
-    Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-            by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-            (Exim 4.91)
-            (envelope-from <luca@coelho.fi>)
-            id 1fx9hf-00085m-4i; Tue, 04 Sep 2018 14:41:03 +0300
-
-But as Johannes pointed out, they look fine on patch 1-3.
-
-    [...]
-    X-SA-Exim-Scanned: Yes (on farmhouse.coelho.fi)
-    Sender: linux-wireless-owner@vger.kernel.org
-    Precedence: bulk
-    List-ID: <linux-wireless.vger.kernel.org>
-    X-Mailing-List: linux-wireless@vger.kernel.org
-
-Kind regards,
-	Sven
---nextPart7317677.BvZNnZgmtP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAluOd68ACgkQXYcKB8Em
-e0bWaw//UUcQyb3h9USNcdpACwKFKtR1G6Ybzzx13OPdxvjdyqQcmDO7T4YzpdUu
-gQsW1PaMCwcgfMpmWC2e3+k4Esqw9CNEloyCikRzkNptPu6Ueo7iNfK+ohHtukRA
-/OL3NC9My4ix+vhTJriennHxa7v7U5UzWneNsLasNJmG96kvj28ZjLCOE6uC6srZ
-fT67IMWxLGm1e2qXrlVG9zDu6RhNpn5K+/RWhU8XX1lJPNTNzHqubOnKK+q7+QVr
-ERStGSgivBHj0xmjcOyMM+MyRH1wQn3a/hvqk36hObS7O8PPcVbtCeaL4lCI2/j4
-BHaqqP4QqBs1pLAJrl+wQkccwOVEzG/QbvNWKg8Wk/vq9Tb4lvtuiCx6UiWlGSjj
-2WpzBuQobcwl8u5HFg9ayxWCqCV4aHJ27pb8OLLkThIn8idhe022rjjTuydzaRdV
-JnQdMWkYOxoGr9r1HFDqZGmcLWZwOBOQTyzCKb7gZTSmXuT9J5AZqsw74dyZMKlC
-0i4AMSXeAnRfLvgG5ynyDWiz8km/zUAInExvjZxzhybUQOzKaxUsOJERdvMSVA6G
-LAnIVxa8hES5ROORY4sRGKY2k50RPruNNyqp79ttblPoeTH3gc8ZnD0YNf6oVKxd
-dOD2aJQnKOkc+R/rgWSi1FCJDmJgv/ebkWfMeAOYPkAdh76hbwY=
-=YmqE
------END PGP SIGNATURE-----
-
---nextPart7317677.BvZNnZgmtP--
+> +	struct ieee80211_vif *vif;
+>  };
+>
+>  /* antsel module specific state */
+>
