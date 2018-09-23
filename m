@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56758 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728096AbeIFNyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:54:51 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 31/42] mt76x0: fix memory leak during hw probe
-Date: Thu,  6 Sep 2018 11:18:47 +0200
-Message-Id: <1536225538-16454-32-git-send-email-sgruszka@redhat.com> (sfid-20180906_112023_148703_0B7B7EFA)
-In-Reply-To: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
-References: <1536225538-16454-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:39164 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726011AbeIWM2X (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Sep 2018 08:28:23 -0400
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v2] rtlwifi: btcoex: Use proper enumerated types for Wi-Fi only interface
+Date: Sat, 22 Sep 2018 23:31:15 -0700
+Message-Id: <20180923063114.11446-1-natechancellor@gmail.com> (sfid-20180923_083220_230519_341C95DD)
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Clang warns when one enumerated type is implicitly converted to another.
 
-Fix memory leak during hw probe if mt76x0_register_device fails
-since MT76_STATE_INITIALIZED has not set yet and mt76x0_cleanup
-does not free tx/rx queues and mcu buffers
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1327:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_PCI;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1330:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_USB;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1333:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
+                                             ~ ^~~~~~~~~~~~~~~~
+3 warnings generated.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Use the values from the correct enumerated type, wifionly_chip_interface.
+
+BTC_INTF_UNKNOWN = WIFIONLY_INTF_UNKNOWN = 0
+BTC_INTF_PCI = WIFIONLY_INTF_PCI = 1
+BTC_INTF_USB = WIFIONLY_INTF_USB = 2
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/135
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index ca70b62442a1..d186f509b5a8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -468,9 +468,7 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
+v1 -> v2:
+
+* Fix enum values in commit message (previously all 0)
+
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index b026e80940a4..6fbf8845a2ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -1324,13 +1324,13 @@ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
  
- void mt76x0_cleanup(struct mt76x0_dev *dev)
- {
--	if (!test_and_clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state))
--		return;
--
-+	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
- 	mt76x0_chip_onoff(dev, false, false);
- 	mt76u_queues_deinit(&dev->mt76);
- 	mt76u_mcu_deinit(&dev->mt76);
+ 	switch (rtlpriv->rtlhal.interface) {
+ 	case INTF_PCI:
+-		wifionly_cfg->chip_interface = BTC_INTF_PCI;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_PCI;
+ 		break;
+ 	case INTF_USB:
+-		wifionly_cfg->chip_interface = BTC_INTF_USB;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_USB;
+ 		break;
+ 	default:
+-		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
+ 		break;
+ 	}
+ 
 -- 
-2.7.5
+2.19.0
