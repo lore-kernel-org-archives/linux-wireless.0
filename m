@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:55100 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726624AbeILNjw (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:33170 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726300AbeIXA5s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 09:39:52 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 2/2] netlink: add ethernet address policy types
-Date: Wed, 12 Sep 2018 10:36:10 +0200
-Message-Id: <20180912083610.20857-2-johannes@sipsolutions.net> (sfid-20180912_103626_323977_496053AC)
-In-Reply-To: <20180912083610.20857-1-johannes@sipsolutions.net>
-References: <20180912083610.20857-1-johannes@sipsolutions.net>
+        Sun, 23 Sep 2018 20:57:48 -0400
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] cfg80211: fix reg_query_regdb_wmm kernel-doc
+Message-ID: <cfbd4e00-0abc-f265-9e38-ce6655f09b83@infradead.org> (sfid-20180923_210000_145110_56694441)
+Date: Sun, 23 Sep 2018 11:59:13 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Commonly, ethernet addresses are just using a policy of
-	{ .len = ETH_ALEN }
-which leaves userspace free to send more data than it should,
-which may hide bugs.
+Drop @ptr from kernel-doc for function reg_query_regdb_wmm().
+This function parameter was recently removed so update the
+kernel-doc to match that and remove the kernel-doc warnings.
 
-Introduce NLA_ETH_ADDR which checks for exact size, and rejects
-the attribute if the length isn't ETH_ALEN.
+Removes 109 occurrences of this warning message:
+../include/net/cfg80211.h:4869: warning: Excess function parameter 'ptr' description in 'reg_query_regdb_wmm'
 
-Also add NLA_ETH_ADDR_COMPAT which can be used in place of the
-policy above, but will, in addition, warn on an address that's
-too long.
+Fixes: 38cb87ee47fb ("cfg80211: make wmm_rule part of the reg_rule structure")
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
 ---
- include/net/netlink.h | 4 ++++
- lib/nlattr.c          | 8 ++++++++
- 2 files changed, 12 insertions(+)
+ include/net/cfg80211.h |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 04e40fcc70d6..1139163c0db0 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -181,6 +181,8 @@ enum {
- 	NLA_S64,
- 	NLA_BITFIELD32,
- 	NLA_REJECT,
-+	NLA_ETH_ADDR,
-+	NLA_ETH_ADDR_COMPAT,
- 	__NLA_TYPE_MAX,
- };
- 
-@@ -213,6 +215,8 @@ enum {
-  *                         data must point to a u32 value of valid flags
-  *    NLA_REJECT           Reject this attribute, validation data may point
-  *                         to a string to report as the error in extended ACK.
-+ *    NLA_ETH_ADDR         Ethernet address, rejected if not exactly 6 octets.
-+ *    NLA_ETH_ADDR_COMPAT  Ethernet address, only warns if not exactly 6 octets.
-  *    All other            Minimum length of attribute payload
+--- lnx-419-rc5.orig/include/net/cfg80211.h
++++ lnx-419-rc5/include/net/cfg80211.h
+@@ -4852,8 +4852,6 @@ const char *reg_initiator_name(enum nl80
   *
-  * Example:
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 9ec0cc151148..3165b6d0baaa 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -29,6 +29,8 @@ static const u8 nla_attr_len[NLA_TYPE_MAX+1] = {
- 	[NLA_S16]	= sizeof(s16),
- 	[NLA_S32]	= sizeof(s32),
- 	[NLA_S64]	= sizeof(s64),
-+	[NLA_ETH_ADDR]	= ETH_ALEN,
-+	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
- };
- 
- static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
-@@ -42,6 +44,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
- 	[NLA_S16]	= sizeof(s16),
- 	[NLA_S32]	= sizeof(s32),
- 	[NLA_S64]	= sizeof(s64),
-+	[NLA_ETH_ADDR_COMPAT] = ETH_ALEN,
- };
- 
- static int validate_nla_bitfield32(const struct nlattr *nla,
-@@ -93,6 +96,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			extack->_msg = pt->validation_data;
- 		return -EINVAL;
- 
-+	case NLA_ETH_ADDR:
-+		if (attrlen != ETH_ALEN)
-+			return -ERANGE;
-+		break;
-+
- 	case NLA_FLAG:
- 		if (attrlen > 0)
- 			return -ERANGE;
--- 
-2.14.4
+  * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
+  * @freq: the freqency(in MHz) to be queried.
+- * @ptr: pointer where the regdb wmm data is to be stored (or %NULL if
+- *	irrelevant). This can be used later for deduplication.
+  * @rule: pointer to store the wmm rule from the regulatory db.
+  *
+  * Self-managed wireless drivers can use this function to  query
