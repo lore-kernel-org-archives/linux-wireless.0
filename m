@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.62]:51650 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727269AbeIJQSj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Sep 2018 12:18:39 -0400
-Message-ID: <1536578695.3224.67.camel@sipsolutions.net> (sfid-20180910_132546_028968_58A95B50)
-Subject: Re: [PATCH RFC v3 0/4] Move TXQ scheduling into mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net
-Cc: Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-Date: Mon, 10 Sep 2018 13:24:55 +0200
-In-Reply-To: <87bm95li0s.fsf@toke.dk>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
-         <1536565561.3224.10.camel@sipsolutions.net> <87bm95li0s.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:41744 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726088AbeIWU6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Sep 2018 16:58:18 -0400
+Subject: Re: [PATCH 0/9] unify tx power eeprom parsing for mt76x{0,2}
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180922114537.24004-1-lorenzo.bianconi@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <363fac97-7991-dc19-a3a4-c40212fc7688@nbd.name> (sfid-20180923_170036_335585_7DBDC089)
+Date: Sun, 23 Sep 2018 17:00:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180922114537.24004-1-lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-09-10 at 13:16 +0200, Toke Høiland-Jørgensen wrote:
-
-> > > - I didn't get rid of the register_airtime() callback. As far as I can tell,
-> > >   only iwlwifi uses the tx_time field in the struct tx_info. Which means that
-> > >   we *could* probably use it for this and just make the other drivers set it;
-> > >   but I'm not sure what effects that would have in relation to WMM-AC for
-> > >   those drivers, so I chickened out. Will have to try it out, I guess; but it
-> > >   also depends on whether ath10k needs to be able to report airtime
-> > >   asynchronously anyway. So I'll hold off on that for a bit more.
-> > 
-> > I don't think you need to be concerned, the reporting through this has
-> > no immediate effect as the driver would also have to set the feature
-> > flag (NL80211_FEATURE_SUPPORTS_WMM_ADMISSION) for userspace to be able
-> > to use WMM admission TSPECs, and getting tx_tspec->admitted_time to be
-> > non-zero in ieee80211_sta_tx_wmm_ac_notify().
+On 2018-09-22 13:45, Lorenzo Bianconi wrote:
+> This is the second of two series that unify eeprom code between
+> mt76x2 and mt76x0 drivers. In particular this series unifies
+> tx power eeprom parsing. That patchset will be used to properly
+> support mt76x0e chipsets without duplicating the code.
 > 
-> Great! In that case I'll try moving the reporting go through the tx_info
-> struct and check that it works for ath9k :)
+> Lorenzo Bianconi (9):
+>   mt76: move mt76_rate_power in mt76_dev
+>   mt76: add mt76x02_phy_set_txpower utility routine
+>   mt76: move rate_txpower handler in mt76 debugfs
+>   mt76: move mt76x02_rate_power_val in mt76x02-lib module
+>   mt76x0: remove mt76x0_phy_set_tx_power and mt76x0_extra_power_over_mac
+>   mt76x0: remove eeprom dependency from mt76x0_set_tx_power_per_rate
+>   mt76x0: remove eeprom dependency from mt76x0_get_power_info
+>   mt76x0: use shared debugfs implementation
+>   mt76x0: phy: introduce mt76x0_phy_set_txpower routine
+Merged, thanks.
 
-I'm not sure it would work for everyone (though I guess it should for
-ath9k), so it may well be necessary to report it out-of-band from
-frames. My objection wasn't so much to the out-of-band mechanism, but to
-the fact that we have two reporting mechanisms that are each tied to one
-feature, while reporting the same thing.
-
-So if you figure out that you need to keep the reporting out-of-band I'm
-perfectly fine with that, but I guess I'd argue the two should cross
-over: reporting in-band should feed back to this, reporting out-of-band
-should feed the admission mechanism.
-
-johannes
+- Felix
