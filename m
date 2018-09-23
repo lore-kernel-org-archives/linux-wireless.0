@@ -1,101 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57976 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725978AbeIFLoq (ORCPT
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:36335 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725971AbeIWMkF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 07:44:46 -0400
+        Sun, 23 Sep 2018 08:40:05 -0400
+Date: Sat, 22 Sep 2018 23:43:39 -0700
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: btcoex: Use proper enumerated types for Wi-Fi
+ only interface
+Message-ID: <20180923064339.GB12338@flashbox> (sfid-20180923_084433_457484_27AB1DD5)
+References: <20180921220824.18344-1-natechancellor@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 06 Sep 2018 12:40:45 +0530
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rge?= =?UTF-8?Q?nsen?=
-        <toke@toke.dk>
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-In-Reply-To: <1535969922.3437.37.camel@sipsolutions.net>
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
- <87k1o6d8hw.fsf@kamboji.qca.qualcomm.com>
- <1535969922.3437.37.camel@sipsolutions.net>
-Message-ID: <57c9d018e6c8bddc50871c88bddee3b7@codeaurora.org> (sfid-20180906_091048_391685_932A8210)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180921220824.18344-1-natechancellor@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-03 15:48, Johannes Berg wrote:
-> On Fri, 2018-08-31 at 15:29 +0300, Kalle Valo wrote:
+On Fri, Sep 21, 2018 at 03:08:24PM -0700, Nathan Chancellor wrote:
+> Clang warns when one enumerated type is implicitly converted to another.
 > 
->> Too me this feels like a bad idea but I'm not familiar enough with
->> mac80211 to really comment on this. What kind of implications does 
->> this
->> have for Mesh or ATF, for example? Adding Johannes and Toke to hear
->> about their opinion about this.
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1327:34:
+> warning: implicit conversion from enumeration type 'enum
+> btc_chip_interface' to different enumeration type 'enum
+> wifionly_chip_interface' [-Wenum-conversion]
+>                 wifionly_cfg->chip_interface = BTC_INTF_PCI;
+>                                              ~ ^~~~~~~~~~~~
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1330:34:
+> warning: implicit conversion from enumeration type 'enum
+> btc_chip_interface' to different enumeration type 'enum
+> wifionly_chip_interface' [-Wenum-conversion]
+>                 wifionly_cfg->chip_interface = BTC_INTF_USB;
+>                                              ~ ^~~~~~~~~~~~
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1333:34:
+> warning: implicit conversion from enumeration type 'enum
+> btc_chip_interface' to different enumeration type 'enum
+> wifionly_chip_interface' [-Wenum-conversion]
+>                 wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
+>                                              ~ ^~~~~~~~~~~~~~~~
+> 3 warnings generated.
 > 
-> The biggest implication is probably radiotap. Beyond that, it's using
-> this to report the "last rate" to nl80211, but that's not all super
-> useful anyway.
+> Use the values from the correct enumerated type, wifionly_chip_interface.
 > 
-> The retry count is also affected, and since you report "somewhat
-> liberally" that would lead to erroneous statistics.
+> BTC_INTF_UNKNOWN = WIFIONLY_INTF_UNKNOWN = 0
+> BTC_INTF_PCI = WIFIONLY_INTF_PCI = 0
+> BTC_INTF_USB = WIFIONLY_INTF_USB = 0
 > 
-> I'd recommend against doing this and disentangling the necessary code 
-> in
-> mac80211, e.g. with ieee80211_tx_status_ext() or adding similar APIs.
+
+I have sent a v2 making these values correct.
+
+I will make sure the '--in-reply-to' option in the future.
+
+Nathan
+
+> Link: https://github.com/ClangBuiltLinux/linux/issues/135
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>  .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> johannes
-
-Thanks for the review.
-
-Is this okay to implement a new API to update the tx rate alone?
-
-Code snippet:
-  /**
-  * ieee80211_tx_status_rate_upd - transmit rate update callback
-  *
-  * This function can be used in drivers that does not have provision
-  * in updating the tx rate in data path.
-  *
-  * @hw: the hardware the frame was transmitted by
-  * @status: tx status information
-  * @pubsta: the station to update the tx rate for.
-  */
-void ieee80211_tx_status_rate_upd(struct ieee80211_hw *hw,
-				  struct ieee80211_sta *pubsta,
-				  struct ieee80211_tx_info *info);
-
-
-Source:
-void ieee80211_tx_status_rate_upd(struct ieee80211_hw *hw,
-				  struct ieee80211_sta *pubsta,
-				  struct ieee80211_tx_info *info)
-{
-	struct ieee80211_local *local = hw_to_local(hw);
-	struct ieee80211_supported_band *sband;
-	int retry_count;
-	int rates_idx;
-	struct ieee80211_tx_status status = {
-		.skb = NULL,
-		.info = info,
-	};
-
-	ieee80211_tx_get_rates(hw, info, &retry_count);
-	sband = hw->wiphy->bands[info->band];
-
-	if (pubsta) {
-		struct sta_info *sta;
-
-		sta = container_of(pubsta, struct sta_info, sta);
-		status.sta = &sta->sta;
-		rate_control_tx_status(local, sband, &status);
-		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
-		    (rates_idx != -1))
-			sta->tx_stats.last_rate = info->status.rates[rates_idx];
-	}
-
-}
-EXPORT_SYMBOL(ieee80211_tx_status_rate_upd);
-
-
-Thanks
-Anil.
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index b026e80940a4..6fbf8845a2ab 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -1324,13 +1324,13 @@ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
+>  
+>  	switch (rtlpriv->rtlhal.interface) {
+>  	case INTF_PCI:
+> -		wifionly_cfg->chip_interface = BTC_INTF_PCI;
+> +		wifionly_cfg->chip_interface = WIFIONLY_INTF_PCI;
+>  		break;
+>  	case INTF_USB:
+> -		wifionly_cfg->chip_interface = BTC_INTF_USB;
+> +		wifionly_cfg->chip_interface = WIFIONLY_INTF_USB;
+>  		break;
+>  	default:
+> -		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
+> +		wifionly_cfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
+>  		break;
+>  	}
+>  
+> -- 
+> 2.19.0
+> 
