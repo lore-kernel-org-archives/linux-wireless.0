@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:1653 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728010AbeIGCmw (ORCPT
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:43754 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726051AbeIWPvp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 22:42:52 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v3 0/3] support ftm responder configuration/statistics
-Date: Thu,  6 Sep 2018 14:11:29 -0700
-Message-Id: <1536268292-3819-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180907_000522_144396_33D0F54D)
+        Sun, 23 Sep 2018 11:51:45 -0400
+Received: by mail-ed1-f67.google.com with SMTP id u23so4819217edx.10
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Sep 2018 02:54:49 -0700 (PDT)
+From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Kalle Valo <kvalo@codeaurora.org>,
+        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Subject: [PATCH v3] brcmsmac: AP mode: update beacon when TIM changes
+Date: Sun, 23 Sep 2018 12:54:25 +0300
+Message-Id: <20180923095425.10292-1-alimjalnasrawy@gmail.com> (sfid-20180923_115458_889786_62F8854A)
+In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+Beacons are not updated to reflect TIM changes. This is not compliant with
+power-saving client stations as the beacons do not have valid TIM and can cause
+the network to stall at random occasions with highly variable latencies.
+Fix it by updating beacon templates on mac80211 set_tim callback.
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+Addresses an issue described in:
+https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
+Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+---
 
-changes in V3:
- - fixed the ambiguous ftm responder disable case to be not supported
+v2 -> v3:
+	- removed tabs from blank lines
+	- extended the commit message to answer "Why"
 
-changes in V2:
-- updated version number
-- rebased patches
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 21 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmsmac/main.h        |  1 +
+ 2 files changed, 22 insertions(+)
 
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
-
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
-
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 ++++++++++++++++++
- include/net/mac80211.h                 |  13 ++++
- include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
- net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 +++++
- net/mac80211/trace.h                   |  23 ++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 ++++
- net/wireless/trace.h                   |  44 ++++++++++++
- 14 files changed, 508 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index ddfdfe1..c6b258f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	}
+ 
+ 	spin_lock_bh(&wl->lock);
++	wl->wlc->vif = vif;
+ 	wl->mute_tx = false;
+ 	brcms_c_mute(wl->wlc, false);
+ 	if (vif->type == NL80211_IFTYPE_STATION)
+@@ -937,6 +938,25 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&wl->lock);
+ }
+ 
++static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
++				 struct ieee80211_sta *sta, bool set)
++{
++	struct brcms_info *wl = hw->priv;
++	struct sk_buff *beacon;
++	u16 tim_offset = 0;
++
++	beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
++					  &tim_offset, NULL);
++	if (beacon){
++		spin_lock_bh(&wl->lock);
++		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
++				       wl->wlc->vif->bss_conf.dtim_period);
++		spin_unlock_bh(&wl->lock);
++	}
++
++	return 0;
++}
++
+ static const struct ieee80211_ops brcms_ops = {
+ 	.tx = brcms_ops_tx,
+ 	.start = brcms_ops_start,
+@@ -955,6 +975,7 @@ static const struct ieee80211_ops brcms_ops = {
+ 	.flush = brcms_ops_flush,
+ 	.get_tsf = brcms_ops_get_tsf,
+ 	.set_tsf = brcms_ops_set_tsf,
++	.set_tim = brcms_ops_beacon_set_tim,
+ };
+ 
+ void brcms_dpc(unsigned long data)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+index c4d135c..6ece25c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+@@ -568,6 +568,7 @@ struct brcms_c_info {
+ 	u16 beacon_tim_offset;
+ 	u16 beacon_dtim_period;
+ 	struct sk_buff *probe_resp;
++	struct ieee80211_vif *vif;
+ };
+ 
+ /* antsel module specific state */
 -- 
-1.9.1
+2.18.0
