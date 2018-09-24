@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:3661 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbeIGJJF (ORCPT
+Received: from mail-io1-f43.google.com ([209.85.166.43]:45520 "EHLO
+        mail-io1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725982AbeIXUae (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Sep 2018 05:09:05 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, david.spinadel@intel.com,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v3 0/3] support ftm responder configuration/statistics
-Date: Wed,  5 Sep 2018 18:01:37 -0700
-Message-Id: <1536195700-1351-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180907_063007_060415_85EAF2DE)
+        Mon, 24 Sep 2018 16:30:34 -0400
+Received: by mail-io1-f43.google.com with SMTP id e12-v6so17708479iok.12
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 07:28:10 -0700 (PDT)
+MIME-Version: 1.0
+References: <20180924140701.GA2089@redhat.com> <20180924141311.GI783@localhost.localdomain>
+ <20180924141932.GA5031@redhat.com>
+In-Reply-To: <20180924141932.GA5031@redhat.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Mon, 24 Sep 2018 16:27:59 +0200
+Message-ID: <CAJ0CqmW7KeuvYvyu3h6nY8z9X3Z1OknzW81iM4=gqLDY7XVzyw@mail.gmail.com> (sfid-20180924_162814_403542_B170BBD7)
+Subject: Re: mt76x0 random crashes after c12128ce44b0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Felix Fietkau <nbd@nbd.name>, Zero Chaos <sidhayn@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ftm_responder parameter in hostapd.conf is only used for fine
-timing measurement (FTM) capability advertisement and actual control of
-the functionality is with low-level device/driver. This leads to confusion
-to the user when the capability advertisement is different from actual FTM
-responder functionality.
+>
+> hi
+>
+> On Mon, Sep 24, 2018 at 04:13:11PM +0200, Lorenzo Bianconi wrote:
+> > On Sep 24, Stanislaw Gruszka wrote:
+> > > Hi, after -next commit:
+> > >
+> > > commit c12128ce44b04a987c4eb0f733cc99c4dd50d45a
+> > > Author: Felix Fietkau <nbd@nbd.name>
+> > > Date:   Fri Jul 13 16:26:15 2018 +0200
+> > >
+> > >     mt76: use a per rx queue page fragment cache
+> > >
+> > > I have random crashes when load or unlod mt76x0u module.
+> > >
+> >
+> > Hi Stanislaw,
+> >
+> > could you please try following patch (I am not 100% sure it fixes the issue)
+>
+> Still crashes when module is unloaded.
 
-For example, FTM responder capability advertisement is set to 'enabled',
-but the functionality is disabled or not supported by the driver.
+ok, what are the steps to reproduce it? rmmod mt76x0?
 
-The patch set allows userspace to enable FTM responder functionality
-with the addition of new Netlink flag attribute NL80211_ATTR_FTM_RESPONDER
-with configurable lci/civic ocation parameters. Also extended feature flag
-is added for the drivers to advertise the support. Setting the flag to
-enable FTM responder would imply that AP responds to all FTM requests.
-Default is considered to be disabled.
-
-changes in V3:
- - fixed the ambiguous ftm responder disable case to be not supported
-
-changes in V2:
-- updated version number
-- rebased patches
-
-Johannes Berg, Pradeep Kumar Chitrapu (1):
-  cfg80211: support FTM responder configuration/statistics
-
-David Spinadel, Johannes Berg, Pradeep Kumar Chitrapu (1):
-  mac80211: support FTM responder configuration/statistics
-
-Pradeep Kumar Chitrapu (1):
-  ath10k: Add support to configure ftm responder role
-
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  29 ++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   4 ++
- drivers/net/wireless/ath/ath10k/wmi.h  |  10 +++
- include/net/cfg80211.h                 |  66 ++++++++++++++++++
- include/net/mac80211.h                 |  13 ++++
- include/uapi/linux/nl80211.h           |  81 +++++++++++++++++++++
- net/mac80211/cfg.c                     |  84 ++++++++++++++++++++++
- net/mac80211/driver-ops.h              |  16 +++++
- net/mac80211/trace.h                   |  23 ++++++
- net/mac80211/util.c                    |   3 +
- net/wireless/nl80211.c                 | 124 +++++++++++++++++++++++++++++++--
- net/wireless/rdev-ops.h                |  15 ++++
- net/wireless/trace.h                   |  44 ++++++++++++
- 14 files changed, 508 insertions(+), 5 deletions(-)
-
--- 
-1.9.1
+>
+> Regards
+> Stanislaw
