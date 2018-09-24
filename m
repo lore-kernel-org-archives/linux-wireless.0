@@ -1,104 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50048 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727122AbeILV3G (ORCPT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:38517 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728976AbeIXWNf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Sep 2018 17:29:06 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 12 Sep 2018 09:23:49 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v3 2/4] mac80211: Add airtime accounting and
- scheduling to TXQs
-In-Reply-To: <87o9d3hsys.fsf@toke.dk>
-References: <153635803319.14170.10011969968767927187.stgit@alrua-x1>
- <153635897061.14170.17999956909203163571.stgit@alrua-x1>
- <1536567496.3224.36.camel@sipsolutions.net> <87h8ixli4s.fsf@toke.dk>
- <e90d3540e3c92c6e894217982cd77ff1@codeaurora.org> <87o9d3hsys.fsf@toke.dk>
-Message-ID: <c893c6ce87c8eeb82d97338d81c546b0@codeaurora.org> (sfid-20180912_182353_398127_09E6785D)
+        Mon, 24 Sep 2018 18:13:35 -0400
+Received: by mail-wr1-f67.google.com with SMTP id j8-v6so16539919wrw.5
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 09:10:42 -0700 (PDT)
+Received: from localhost.localdomain (din-110-176-227-77.ipcom.comunitel.net. [77.227.176.110])
+        by smtp.gmail.com with ESMTPSA id 94-v6sm46182488wrc.10.2018.09.24.09.10.40
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 24 Sep 2018 09:10:40 -0700 (PDT)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Fix a GET_KEY reply attribute
+Date: Mon, 24 Sep 2018 18:10:22 +0200
+Message-Id: <20180924161022.4332-1-andrew.zaborowski@intel.com> (sfid-20180924_181046_255472_F8EFA0AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-09-12 04:10, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->> On 2018-09-10 04:13, Toke Høiland-Jørgensen wrote:
->>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>>> -			       txqi->flags & (1<<IEEE80211_TXQ_STOP) ? "STOP" : "RUN",
->>>>> -			       txqi->flags & (1<<IEEE80211_TXQ_AMPDU) ? " AMPDU" : "",
->>>>> -			       txqi->flags & (1<<IEEE80211_TXQ_NO_AMSDU) ? " NO-AMSDU" 
->>>>> :
->>>>> "");
->>>>> +			       txqi->flags & (1 << IEEE80211_TXQ_STOP) ? "STOP" : 
->>>>> "RUN",
->>>>> +			       txqi->flags & (1 << IEEE80211_TXQ_AMPDU) ? " AMPDU" : 
->>>>> "",
->>>>> +			       txqi->flags & (1 << IEEE80211_TXQ_NO_AMSDU) ? " 
->>>>> NO-AMSDU"
->>>>> : "");
->>>> 
->>>> consider BIT() instead as a cleanup? :)
->>>> 
->>>> (or maybe this is just a leftover from merging some other patches?)
->>> 
->>> Yeah, this is a merging artifact; Rajkumar's patch added another 
->>> flag,
->>> that I removed again. Didn't notice that there was still a whitespace
->>> change in this patch...
->>> 
->> I added the flag based on our last discussion. The driver needs to 
->> check
->> txq status for each tx_dequeue(). One time txq check is not sufficient
->> as it allows the driver to dequeue all frames from txq.
->> 
->> drv_func() {
->>        while (ieee80211_airtime_may_transmit(txq) &&
->>                hw_has_space() &&
->>               (pkt = ieee80211_tx_dequeue(hw, txq)))
->>            push_to_hw(pkt);
->> }
-> 
-> Yeah, but with airtime only being recorded on TX completion, the odds 
-> of
-> the value changing within that loop are quite low; so it's not going to
-> work, which is why I removed it.
-> 
-> However, after reading Kan's patches I get where you're coming from; a
-> check in tx_dequeue() is needed for the BQL-style queue limiting. Will
-> try to incorporate a version of that in the next series so you can see
-> what I mean when I say it should be orthogonal; and I'm still not sure
-> it needs a flag :)
-> 
-Got it.. Will wait for next version.. thanks.
+Use the NL80211_KEY_IDX attribute inside the NL80211_ATTR_KEY in
+NL80211_CMD_GET_KEY responses to comply with nl80211_key_policy.
+This is unlikely to affect existing userspace.
 
->>>>> +bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
->>>>> +				struct ieee80211_txq *txq)
->>>>> +{
->>>>> +	struct ieee80211_local *local = hw_to_local(hw);
->>>>> +	struct txq_info *txqi = to_txq_info(txq);
->>>>> +	bool may_tx = false;
->>>>> +
->>>>> +	spin_lock_bh(&local->active_txq_lock);
->>>>> +
->>>>> +	if (ieee80211_txq_check_deficit(local, txqi)) {
->>>>> +		may_tx = true;
->>>>> +		list_del_init(&txqi->schedule_order);
->>>> 
->> 
->> To handle above case, may_transmit should remove the node only
->> when it is in list.
->> 
->> if (list_empty(&txqi->schedule_order))
->>         list_del_init(&txqi->schedule_order);
-> 
-> I assume you missed a ! in that if, right? :)
-> 
-Oops.. yes it should be ! :)
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--Rajkumar
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5fb9b7dd98..ac08ba5f0a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3359,7 +3359,7 @@ static void get_key_callback(void *c, struct key_params *params)
+ 			 params->cipher)))
+ 		goto nla_put_failure;
+ 
+-	if (nla_put_u8(cookie->msg, NL80211_ATTR_KEY_IDX, cookie->idx))
++	if (nla_put_u8(cookie->msg, NL80211_KEY_IDX, cookie->idx))
+ 		goto nla_put_failure;
+ 
+ 	nla_nest_end(cookie->msg, key);
+-- 
+2.17.1
