@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2328 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730968AbeISLmT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:19 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 09/29] staging: wilc1000: use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack()
-Date: Wed, 19 Sep 2018 11:34:59 +0530
-Message-ID: <1537337119-14952-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080602_826665_03355F76)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57542 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728838AbeIXUfo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 16:35:44 -0400
+Date: Mon, 24 Sep 2018 16:33:16 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: Felix Fietkau <nbd@nbd.name>, Zero Chaos <sidhayn@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mt76x0 random crashes after c12128ce44b0
+Message-ID: <20180924143315.GA2039@redhat.com> (sfid-20180924_163321_440531_5806609C)
+References: <20180924140701.GA2089@redhat.com>
+ <20180924141311.GI783@localhost.localdomain>
+ <20180924141932.GA5031@redhat.com>
+ <CAJ0CqmW7KeuvYvyu3h6nY8z9X3Z1OknzW81iM4=gqLDY7XVzyw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ0CqmW7KeuvYvyu3h6nY8z9X3Z1OknzW81iM4=gqLDY7XVzyw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'void' return for wilc_wlan_txq_filter_dup_tcp_ack() as it always
-return value '1' and its not used by the caller.
+On Mon, Sep 24, 2018 at 04:27:59PM +0200, Lorenzo Bianconi wrote:
+> >
+> > hi
+> >
+> > On Mon, Sep 24, 2018 at 04:13:11PM +0200, Lorenzo Bianconi wrote:
+> > > On Sep 24, Stanislaw Gruszka wrote:
+> > > > Hi, after -next commit:
+> > > >
+> > > > commit c12128ce44b04a987c4eb0f733cc99c4dd50d45a
+> > > > Author: Felix Fietkau <nbd@nbd.name>
+> > > > Date:   Fri Jul 13 16:26:15 2018 +0200
+> > > >
+> > > >     mt76: use a per rx queue page fragment cache
+> > > >
+> > > > I have random crashes when load or unlod mt76x0u module.
+> > > >
+> > >
+> > > Hi Stanislaw,
+> > >
+> > > could you please try following patch (I am not 100% sure it fixes the issue)
+> >
+> > Still crashes when module is unloaded.
+> 
+> ok, what are the steps to reproduce it? rmmod mt76x0?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+modprobe -r mt76x0u
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 66ce29d..88808d9 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -182,7 +182,7 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- }
- 
--static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
-+static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	struct wilc *wilc = vif->wilc;
-@@ -237,8 +237,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 					    msecs_to_jiffies(1));
- 		dropped--;
- 	}
--
--	return 1;
- }
- 
- void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
--- 
-2.7.4
+Not sure if that matter, but modprobe unload also other mt76 modules.
+
+But also sometimes crashes after first modprobe or when unplug/plug
+device .
+
+Thanks
+Stanislaw
