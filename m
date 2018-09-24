@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2315 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730919AbeISLmC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36576 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725982AbeIXNfZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:42:02 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/29] staging: wilc1000: change return type to 'void' for wilc_deinit_host_int()
-Date: Wed, 19 Sep 2018 11:34:54 +0530
-Message-ID: <1537337119-14952-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180919_080546_105936_35CA9308)
-In-Reply-To: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537337119-14952-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 24 Sep 2018 09:35:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: Re: [PATCH 01/11] qtnfmac_pcie: do not store FW name in driver state structure
+References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+        <20180924051246.13371-2-igor.mitsyanko.os@quantenna.com>
+Date: Mon, 24 Sep 2018 10:34:36 +0300
+In-Reply-To: <20180924051246.13371-2-igor.mitsyanko.os@quantenna.com> (Igor
+        Mitsyanko's message of "Mon, 24 Sep 2018 05:13:24 +0000")
+Message-ID: <87va6vqrg3.fsf@purkki.adurom.net> (sfid-20180924_093443_361782_2E5E7763)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use 'void' return type for wilc_deinit_host_int(),
-as its return value is not used in caller.
+Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 2 files changed, 2 insertions(+), 4 deletions(-)
+> Firmware name is only needed at probe stage, no point in keeping it in
+> driver state structure.
+>
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 37c26d4..02a8846 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2175,7 +2175,7 @@ int wilc_init_host_int(struct net_device *net)
- 	return ret;
- }
- 
--int wilc_deinit_host_int(struct net_device *net)
-+void wilc_deinit_host_int(struct net_device *net)
- {
- 	int ret;
- 	struct wilc_priv *priv = wdev_priv(net->ieee80211_ptr);
-@@ -2192,8 +2192,6 @@ int wilc_deinit_host_int(struct net_device *net)
- 
- 	if (ret)
- 		netdev_err(net, "Error while deinitializing host interface\n");
--
--	return ret;
- }
- 
- void wilc_free_wiphy(struct net_device *net)
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index be412b6..1858f56 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -11,7 +11,7 @@
- struct wireless_dev *wilc_create_wiphy(struct net_device *net,
- 				       struct device *dev);
- void wilc_free_wiphy(struct net_device *net);
--int wilc_deinit_host_int(struct net_device *net);
-+void wilc_deinit_host_int(struct net_device *net);
- int wilc_init_host_int(struct net_device *net);
- void wilc_wfi_monitor_rx(u8 *buff, u32 size);
- int wilc_wfi_deinit_mon_interface(void);
+This is just cosmetics, but what's that "SO" in the From field? Do note
+that if I apply these patches as is that will be stored also to git.
+
 -- 
-2.7.4
+Kalle Valo
