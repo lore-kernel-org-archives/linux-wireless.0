@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42088 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58070 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727035AbeIDQoU (ORCPT
+        with ESMTP id S1727229AbeIXNH7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Sep 2018 12:44:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] ath10k: average ack rssi support for data frames
-References: <1536062951-17955-1-git-send-email-bpothuno@codeaurora.org>
-Date: Tue, 04 Sep 2018 15:19:22 +0300
-In-Reply-To: <1536062951-17955-1-git-send-email-bpothuno@codeaurora.org>
-        (Balaji Pothunoori's message of "Tue, 4 Sep 2018 17:39:11 +0530")
-Message-ID: <87va7l78vp.fsf@kamboji.qca.qualcomm.com> (sfid-20180904_141928_921585_18CE625D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 24 Sep 2018 09:07:59 -0400
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [RFC v4 0/2]  ath10k: Add support to update tx rate to mac80211
+Date: Mon, 24 Sep 2018 12:39:58 +0530
+Message-Id: <1537773000-2587-1-git-send-email-akolli@codeaurora.org> (sfid-20180924_090722_566988_80DBD0EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Balaji Pothunoori <bpothuno@codeaurora.org> writes:
+Tx rate was updated to nl80211/user using sta_statistics callback.
+This rate can not be used for mac80211 mesh and ATF.
 
-> Average ack rssi value is weighted average of ack rssi for
-> no of msdu's has been sent.
-> This feature is enabled by the host driver if firmware is capable.
-> After receiving event from host, firmware allocates the necessary
-> memory to store the ack_rssi for data packets during the init time.
->
-> After each successful transmission, If tx completion status is OK
-> and 24th bit is set in HTT message header then host will fetch the
-> ack_rssi else host can ignore the ack_rssi field
->
-> Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
-> ---
-> v2:
->    Addressed ath10k-check warnings
-> v3:
->    cfg80211/mac80211 changes are already merged hence 
->    rebased ath10k patch alone.
+This patch adds support to update tx rate to mac80211
 
-Heh, we had a collision. Just 2 hours ago I rebased v2, fixed some
-conflicts and it's now in pending branch:
+Anilkumar Kolli (2):
+  mac80211: implement ieee80211_tx_rate_update to update rate
+  ath10k: report tx rate using ieee80211_tx_rate_update()
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ca376d236d335ccc9475ea1ab49df4643d8246b7
-
-So please check that, and if it's good most likely I'll drop this v3.
+ drivers/net/wireless/ath/ath10k/core.h   |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   66 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
+ include/net/mac80211.h                   |   15 +++++++
+ net/mac80211/status.c                    |   22 ++++++++++
+ 5 files changed, 101 insertions(+), 4 deletions(-)
 
 -- 
-Kalle Valo
+1.7.9.5
