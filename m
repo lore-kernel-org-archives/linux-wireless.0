@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47928 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726689AbeIIO0J (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Sep 2018 10:26:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun,  9 Sep 2018 12:36:41 +0300
-Message-Id: <20180909093656.10194-2-luca@coelho.fi> (sfid-20180909_113708_244604_D9DFDA1B)
-In-Reply-To: <20180909093656.10194-1-luca@coelho.fi>
-References: <20180909093656.10194-1-luca@coelho.fi>
-Subject: [PATCH 01/16] iwlwifi: pcie: gen2: build A-MSDU only for GSO
+Received: from nbd.name ([46.4.11.11]:52934 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726417AbeIXPPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 11:15:35 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: include linux/module.h in files using MODULE_*
+Date: Mon, 24 Sep 2018 11:14:26 +0200
+Message-Id: <20180924091426.55318-1-nbd@nbd.name> (sfid-20180924_111433_557118_341A44EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Fix source files using MODULE_* macros without including linux/module.h
 
-If the incoming frame should be an A-MSDU, it may already be one,
-for example in the case of NAN multicast being encapsulated in an
-A-MSDU. Thus, use the GSO algorithm to build A-MSDU only if the
-skb actually contains GSO data.
-
-Fixes: 6ffe5de35b05 ("iwlwifi: pcie: add AMSDU to gen2")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c   | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c    | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c   | 1 +
+ drivers/net/wireless/mediatek/mt76/usb.c             | 1 +
+ 5 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 943891a9d3e7..ba9d37bed4c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -539,7 +539,12 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+index ef3b44202efe..18bd80adbb51 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+@@ -13,6 +13,7 @@
+  * GNU General Public License for more details.
+  */
  
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++#include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+index b39a4d7d71cc..cb5f073f08af 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
  
--	if (amsdu)
-+	/*
-+	 * Only build A-MSDUs here if doing so by GSO, otherwise it may be
-+	 * an A-MSDU for other reasons, e.g. NAN or an A-MSDU having been
-+	 * built in the higher layers already.
-+	 */
-+	if (amsdu && skb_shinfo(skb)->gso_size)
- 		return iwl_pcie_gen2_build_tx_amsdu(trans, txq, dev_cmd, skb,
- 						    out_meta, hdr_len, len);
++#include <linux/module.h>
+ #include <linux/firmware.h>
  
+ #include "mt76.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 4ecfb75f3f7d..310720f8b8d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -15,6 +15,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/module.h>
+ #include "mt76.h"
+ #include "mt76x02_dma.h"
+ #include "mt76x02_regs.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+index 8c8ba3ee6da5..136faa4066a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/module.h>
+ #include <asm/unaligned.h>
+ #include "mt76x2.h"
+ #include "mt76x2_eeprom.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index b3edd645b3c0..03dee4762c69 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/module.h>
+ #include "mt76.h"
+ #include "usb_trace.h"
+ #include "dma.h"
 -- 
-2.18.0
+2.17.0
