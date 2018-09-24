@@ -1,234 +1,685 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:36010 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727391AbeIPO4f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Sep 2018 10:56:35 -0400
-Date: Sun, 16 Sep 2018 11:34:14 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi@intel.com
-Subject: Re: 4.19-rc[23] iwlwifi: BUG in swiotlb
-Message-ID: <20180916093414.GA4299@amd> (sfid-20180916_113424_947034_18C826C6)
-References: <0c5e53e5-2afa-8d38-0b48-272c670c4bc5@infradead.org>
- <1536651177.3224.106.camel@sipsolutions.net>
+Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726366AbeIXLNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 07:13:52 -0400
+From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH 03/11] qtnfmac_pcie: rename private Pearl PCIe state structure
+Date: Mon, 24 Sep 2018 05:13:26 +0000
+Message-ID: <20180924051246.13371-4-igor.mitsyanko.os@quantenna.com> (sfid-20180924_071405_046382_12E14164)
+References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
-In-Reply-To: <1536651177.3224.106.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation to extract common pcie driver state into a separate
+structure, rename Pearl-specific state to qtnf_pcie_pearl_state and move
+it directly to pearl-specific PCIe source file.
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 158 +++++++++++++++--=
+----
+ .../quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h   |  91 ------------
+ 2 files changed, 111 insertions(+), 138 deletions(-)
+ delete mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_=
+bus_priv.h
 
-Hi!
-
-> > Any ideas?
->=20
-> Hmm. Is this new?
->=20
-> > 2018-09-10T18:47:54.532837-07:00 dragon kernel: [   31.472371] kernel B=
-UG at ../kernel/dma/swiotlb.c:521!
->=20
->         nslots =3D ALIGN(size, 1 << IO_TLB_SHIFT) >> IO_TLB_SHIFT;
-> 	[...]
-> 	BUG_ON(!nslots)
->=20
-> > 2018-09-10T18:47:54.613655-07:00 dragon kernel: [   31.490325]  swiotlb=
-_alloc+0x88/0x170
-> > 2018-09-10T18:47:54.613656-07:00 dragon kernel: [   31.490329]  ? __kma=
-lloc+0x1cc/0x200
-> > 2018-09-10T18:47:54.613657-07:00 dragon kernel: [   31.491652]  iwl_pci=
-e_txq_alloc+0x1d4/0x3b0 [iwlwifi]
->=20
-> There are two calls to dma_alloc_coherent() here, should those even hit
-> swiotlb? The sizes of those should be
->  * 256 x 128 (32k)
->  * 32 x 256 (8k) [TFH, unlikely to be the case here]
->  * 256 x 256 (65k) [TFH]
->  * 32 x 64 (2k)
->  * 256 x 64 (16k)
->=20
->=20
-> IO_TLB_SHIFT is 11, so we get 2k alignment, so even the smallest size
-> (32*64) should result in nslots being 1?
->=20
-> In fact, unless the driver passed *ZERO* as the size, this should never
-> happen (hence the BUG_ON), since ALIGN() would take care of rounding up
-> any smaller allocation here.
->=20
-> Presumably you can reproduce this pretty easily (and I don't know what
-> specific model of NIC you have etc.), so perhaps you can do something
-> like this?
->=20
-> https://p.sipsolutions.net/aa0dccd7a60fe176.txt
-
-That results in: ... if I'm not mistaken. Tested on top of today's
-mainline. (-rc3.95 :-)
-
-[    9.318335] e1000e: eth2 NIC Link is Up 100 Mbps Full Duplex, Flow Contr=
-ol: Rx/Tx
-[    9.318342] e1000e 0000:00:19.0 eth2: 10/100 speed: disabling TSO
-[   10.078165] random: crng init done
-[   10.078170] random: 7 urandom warning(s) missed due to ratelimiting
-[   89.607425] iwlwifi 0000:03:00.0: RF_KILL bit toggled to enable radio.
-[   89.609870] iwlwifi 0000:03:00.0: reporting RF_KILL (radio enabled)
-[   89.634418] iwlwifi 0000:03:00.0: Radio type=3D0x0-0x0-0x3
-[   89.635668] ------------[ cut here ]------------
-[   89.636445] kernel BUG at kernel/dma/swiotlb.c:521!
-[   89.637220] invalid opcode: 0000 [#1] SMP PTI
-[   89.637937] CPU: 1 PID: 3126 Comm: NetworkManager Not tainted 4.19.0-rc3=
- #7
-[   89.638665] Hardware name: LENOVO 42872WU/42872WU, BIOS 8DET74WW (1.44 )=
- 03/13/2018
-[   89.639415] RIP: 0010:swiotlb_tbl_map_single+0x17f/0x2c0
-[   89.640147] Code: 21 c6 49 89 f5 49 81 c5 ff 07 00 00 49 c1 ed 0b 48 83 =
-f8 ff 0f 84 f2 fe ff ff 48 8d 90 00 08 00 00 48 c1 ea 0b e9 e2 fe ff ff <0f=
-> 0b 42 8d 0c 3b 89 d8 39 cb 7d 12 48 63 d0 83 c0 01 39 c8 41 c7
-[   89.641746] RSP: 0000:ffffc9000092f070 EFLAGS: 00010246
-[   89.642560] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 00000000000=
-00000
-[   89.643399] RDX: 0000000000200000 RSI: 00000000d699f000 RDI: ffff8801970=
-960a8
-[   89.644235] RBP: ffffc9000092f0c8 R08: 0000000000000002 R09: 00000000000=
-00000
-[   89.645080] R10: 0000000000000034 R11: 0000000000000000 R12: 00000000000=
-00001
-[   89.645917] R13: 00000000001ad33e R14: 0000000000000000 R15: 00000000000=
-00000
-[   89.646750] FS:  0000000000000000(0000) GS:ffff88019e240000(0063) knlGS:=
-00000000f70437c0
-[   89.647599] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
-[   89.648442] CR2: 0000000056767120 CR3: 00000001938fa003 CR4: 00000000000=
-606a0
-[   89.649302] Call Trace:
-[   89.650150]  ? dma_direct_alloc+0x6f/0x140
-[   89.651001]  swiotlb_alloc+0x88/0x170
-[   89.651838]  iwl_pcie_txq_alloc+0x205/0x420
-[   89.652669]  ? iwl_pcie_tx_init+0x28d/0x390
-[   89.653502]  iwl_pcie_tx_init+0x325/0x390
-[   89.654338]  iwl_trans_pcie_start_fw+0x267/0x590
-[   89.655185]  iwl_load_ucode_wait_alive+0xde/0x1b0
-[   89.656024]  ? iwl_init_notification_wait+0x78/0x90
-[   89.656865]  ? iwl_alloc_all+0x30/0x30
-[   89.657701]  iwl_run_init_ucode+0xa3/0x130
-[   89.658528]  ? iwl_run_init_ucode+0xa3/0x130
-[   89.659352]  ? iwl_alive_notify+0x1b0/0x1b0
-[   89.660167]  ? mutex_unlock+0xd/0x10
-[   89.660975]  iwlagn_mac_start+0x112/0x200
-[   89.661785]  ? iwlagn_mac_start+0x112/0x200
-[   89.662600]  drv_start+0x2e/0x50
-[   89.663424]  ieee80211_do_open+0x356/0x920
-[   89.664230]  ? mutex_unlock+0xd/0x10
-[   89.665027]  ieee80211_open+0x4e/0x60
-[   89.665809]  __dev_open+0xba/0x130
-[   89.666572]  __dev_change_flags+0x19c/0x200
-[   89.667330]  ? __switch_to_asm+0x34/0x70
-[   89.668070]  ? __switch_to_asm+0x40/0x70
-[   89.668800]  dev_change_flags+0x24/0x60
-[   89.669518]  do_setlink+0x2f4/0xce0
-[   89.670216]  ? _raw_spin_unlock_irq+0x22/0x30
-[   89.670933]  ? finish_task_switch+0xa3/0x250
-[   89.671631]  ? finish_task_switch+0x76/0x250
-[   89.672322]  ? __schedule+0x36c/0x830
-[   89.673006]  ? blk_flush_plug_list+0xdd/0x250
-[   89.673694]  ? nla_parse+0x36/0x130
-[   89.674374]  rtnl_newlink+0x483/0x770
-[   89.675061]  ? update_group_capacity+0x27/0x2f0
-[   89.675735]  ? find_busiest_group+0x141/0xad0
-[   89.676398]  ? find_held_lock+0x39/0xb0
-[   89.677044]  ? load_balance+0x709/0xb80
-[   89.677647]  ? find_held_lock+0x39/0xb0
-[   89.678200]  ? cache_alloc_refill+0x4c1/0xc80
-[   89.678735]  ? find_held_lock+0x39/0xb0
-[   89.679265]  ? __lock_acquire.isra.25+0x39e/0xa50
-[   89.679786]  rtnetlink_rcv_msg+0x316/0x3e0
-[   89.680290]  ? rtnl_calcit.isra.40+0x140/0x140
-[   89.680792]  netlink_rcv_skb+0xcd/0x100
-[   89.681291]  rtnetlink_rcv+0x10/0x20
-[   89.681779]  netlink_unicast+0x179/0x210
-[   89.682253]  netlink_sendmsg+0x307/0x3a0
-[   89.682713]  sock_sendmsg+0x18/0x30
-[   89.683168]  ___sys_sendmsg+0x2a5/0x2c0
-[   89.683619]  ? find_held_lock+0x39/0xb0
-[   89.684071]  ? find_held_lock+0x39/0xb0
-[   89.684511]  ? __fget+0x8a/0xd0
-[   89.684947]  ? __fget+0xa2/0xd0
-[   89.685377]  __sys_sendmsg+0x63/0xa0
-[   89.685804]  ? __sys_sendmsg+0x63/0xa0
-[   89.686232]  __ia32_compat_sys_socketcall+0xde/0x220
-[   89.686660]  do_int80_syscall_32+0x50/0x100
-[   89.687099]  entry_INT80_compat+0x7d/0x82
-[   89.687527] RIP: 0023:0xf7f98c42
-[   89.687950] Code: 65 8b 15 04 00 00 00 8b 0e 8b 0c ca 83 f9 ff 75 0c 89 =
-04 24 89 f0 e8 b3 fe ff ff eb 05 8b 46 04 01 c8 83 c4 14 5b 5e c3 cd 80 <c3=
-> 8d b6 00 00 00 00 8d bc 27 00 00 00 00 8b 1c 24 c3 8d b6 00 00
-[   89.688990] RSP: 002b:00000000ff933894 EFLAGS: 00200293 ORIG_RAX: 000000=
-0000000066
-[   89.689535] RAX: ffffffffffffffda RBX: 0000000000000010 RCX: 00000000ff9=
-338a0
-[   89.690093] RDX: 00000000f7c09000 RSI: 0000000000000000 RDI: 00000000081=
-ae170
-[   89.690653] RBP: 0000000008248118 R08: 0000000000000000 R09: 00000000000=
-00000
-[   89.691226] R10: 0000000000000000 R11: 0000000000000000 R12: 00000000000=
-00000
-[   89.691792] R13: 0000000000000000 R14: 0000000000000000 R15: 00000000000=
-00000
-[   89.692354] Modules linked in:
-[   89.692929] ---[ end trace 3906e4f171da79b4 ]---
-[   89.693651] RIP: 0010:swiotlb_tbl_map_single+0x17f/0x2c0
-[   89.693653] Code: 21 c6 49 89 f5 49 81 c5 ff 07 00 00 49 c1 ed 0b 48 83 =
-f8 ff 0f 84 f2 fe ff ff 48 8d 90 00 08 00 00 48 c1 ea 0b e9 e2 fe ff ff <0f=
-> 0b 42 8d 0c 3b 89 d8 39 cb 7d 12 48 63 d0 83 c0 01 39 c8 41 c7
-[   89.693654] RSP: 0000:ffffc9000092f070 EFLAGS: 00010246
-[   89.693656] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 00000000000=
-00000
-[   89.693657] RDX: 0000000000200000 RSI: 00000000d699f000 RDI: ffff8801970=
-960a8
-[   89.693666] RBP: ffffc9000092f0c8 R08: 0000000000000002 R09: 00000000000=
-00000
-[   89.693667] R10: 0000000000000034 R11: 0000000000000000 R12: 00000000000=
-00001
-[   89.693668] R13: 00000000001ad33e R14: 0000000000000000 R15: 00000000000=
-00000
-[   89.693670] FS:  0000000000000000(0000) GS:ffff88019e240000(0063) knlGS:=
-00000000f70437c0
-[   89.693671] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
-[   89.693672] CR2: 0000000056767120 CR3: 00000001938fa003 CR4: 00000000000=
-606a0
-[   90.235267] usb 1-1.4: new full-speed USB device number 5 using ehci-pci
-[   90.349748] usb 1-1.4: New USB device found, idVendor=3D0a5c, idProduct=
-=3D217f, bcdDevice=3D 7.48
-[   90.351888] usb 1-1.4: New USB device strings: Mfr=3D1, Product=3D2, Ser=
-ialNumber=3D3
-[   90.353967] usb 1-1.4: Product: Broadcom Bluetooth Device
-[   90.356097] usb 1-1.4: Manufacturer: Broadcom Corp
-[   90.356794] usb 1-1.4: SerialNumber: 7CE9D3B855AA
-
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/dri=
+vers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+index 269a6e4..ab06eca 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+@@ -28,10 +28,12 @@
+ #include <linux/circ_buf.h>
+ #include <linux/log2.h>
+=20
++#include "pearl_pcie_regs.h"
++#include "pearl_pcie_ipc.h"
+ #include "qtn_hw_ids.h"
+-#include "pearl_pcie_bus_priv.h"
+ #include "core.h"
+ #include "bus.h"
++#include "shm_ipc.h"
+ #include "debug.h"
+=20
+ static bool use_msi =3D true;
+@@ -52,6 +54,68 @@ MODULE_PARM_DESC(flashboot, "set to 0 to use FW binary f=
+ile on FS");
+=20
+ #define DRV_NAME	"qtnfmac_pearl_pcie"
+=20
++struct qtnf_pcie_pearl_state {
++	struct pci_dev  *pdev;
++
++	/* lock for irq configuration changes */
++	spinlock_t irq_lock;
++
++	/* lock for tx reclaim operations */
++	spinlock_t tx_reclaim_lock;
++	/* lock for tx0 operations */
++	spinlock_t tx0_lock;
++	u8 msi_enabled;
++	u8 tx_stopped;
++	int mps;
++
++	struct workqueue_struct *workqueue;
++	struct tasklet_struct reclaim_tq;
++
++	void __iomem *sysctl_bar;
++	void __iomem *epmem_bar;
++	void __iomem *dmareg_bar;
++
++	struct qtnf_shm_ipc shm_ipc_ep_in;
++	struct qtnf_shm_ipc shm_ipc_ep_out;
++
++	struct qtnf_pcie_bda __iomem *bda;
++	void __iomem *pcie_reg_base;
++
++	u16 tx_bd_num;
++	u16 rx_bd_num;
++
++	struct sk_buff **tx_skb;
++	struct sk_buff **rx_skb;
++
++	struct qtnf_tx_bd *tx_bd_vbase;
++	dma_addr_t tx_bd_pbase;
++
++	struct qtnf_rx_bd *rx_bd_vbase;
++	dma_addr_t rx_bd_pbase;
++
++	dma_addr_t bd_table_paddr;
++	void *bd_table_vaddr;
++	u32 bd_table_len;
++
++	u32 rx_bd_w_index;
++	u32 rx_bd_r_index;
++
++	u32 tx_bd_w_index;
++	u32 tx_bd_r_index;
++
++	u32 pcie_irq_mask;
++
++	/* diagnostics stats */
++	u32 pcie_irq_count;
++	u32 pcie_irq_rx_count;
++	u32 pcie_irq_tx_count;
++	u32 pcie_irq_uf_count;
++	u32 tx_full_count;
++	u32 tx_done_count;
++	u32 tx_reclaim_done;
++	u32 tx_reclaim_req;
++};
++
+ static inline void qtnf_non_posted_write(u32 val, void __iomem *basereg)
+ {
+ 	writel(val, basereg);
+@@ -60,7 +124,7 @@ static inline void qtnf_non_posted_write(u32 val, void _=
+_iomem *basereg)
+ 	readl(basereg);
+ }
+=20
+-static inline void qtnf_init_hdp_irqs(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_init_hdp_irqs(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	unsigned long flags;
+=20
+@@ -69,7 +133,7 @@ static inline void qtnf_init_hdp_irqs(struct qtnf_pcie_b=
+us_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_enable_hdp_irqs(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_enable_hdp_irqs(struct qtnf_pcie_pearl_state *priv=
+)
+ {
+ 	unsigned long flags;
+=20
+@@ -78,7 +142,7 @@ static inline void qtnf_enable_hdp_irqs(struct qtnf_pcie=
+_bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_disable_hdp_irqs(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_disable_hdp_irqs(struct qtnf_pcie_pearl_state *pri=
+v)
+ {
+ 	unsigned long flags;
+=20
+@@ -87,7 +151,7 @@ static inline void qtnf_disable_hdp_irqs(struct qtnf_pci=
+e_bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_en_rxdone_irq(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_en_rxdone_irq(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	unsigned long flags;
+=20
+@@ -97,7 +161,7 @@ static inline void qtnf_en_rxdone_irq(struct qtnf_pcie_b=
+us_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_dis_rxdone_irq(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_dis_rxdone_irq(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	unsigned long flags;
+=20
+@@ -107,7 +171,7 @@ static inline void qtnf_dis_rxdone_irq(struct qtnf_pcie=
+_bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_en_txdone_irq(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_en_txdone_irq(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	unsigned long flags;
+=20
+@@ -117,7 +181,7 @@ static inline void qtnf_en_txdone_irq(struct qtnf_pcie_=
+bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static inline void qtnf_dis_txdone_irq(struct qtnf_pcie_bus_priv *priv)
++static inline void qtnf_dis_txdone_irq(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	unsigned long flags;
+=20
+@@ -127,7 +191,7 @@ static inline void qtnf_dis_txdone_irq(struct qtnf_pcie=
+_bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->irq_lock, flags);
+ }
+=20
+-static void qtnf_pcie_init_irq(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_pcie_init_irq(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct pci_dev *pdev =3D priv->pdev;
+=20
+@@ -150,7 +214,7 @@ static void qtnf_pcie_init_irq(struct qtnf_pcie_bus_pri=
+v *priv)
+ 	}
+ }
+=20
+-static void qtnf_deassert_intx(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_deassert_intx(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	void __iomem *reg =3D priv->sysctl_bar + PEARL_PCIE_CFG0_OFFSET;
+ 	u32 cfg;
+@@ -160,7 +224,7 @@ static void qtnf_deassert_intx(struct qtnf_pcie_bus_pri=
+v *priv)
+ 	qtnf_non_posted_write(cfg, reg);
+ }
+=20
+-static void qtnf_reset_card(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_reset_card(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	const u32 data =3D QTN_PEARL_IPC_IRQ_WORD(QTN_PEARL_LHOST_EP_RESET);
+ 	void __iomem *reg =3D priv->sysctl_bar +
+@@ -173,7 +237,7 @@ static void qtnf_reset_card(struct qtnf_pcie_bus_priv *=
+priv)
+=20
+ static void qtnf_ipc_gen_ep_int(void *arg)
+ {
+-	const struct qtnf_pcie_bus_priv *priv =3D arg;
++	const struct qtnf_pcie_pearl_state *priv =3D arg;
+ 	const u32 data =3D QTN_PEARL_IPC_IRQ_WORD(QTN_PEARL_LHOST_IPC_IRQ);
+ 	void __iomem *reg =3D priv->sysctl_bar +
+ 			    QTN_PEARL_SYSCTL_LHOST_IRQ_OFFSET;
+@@ -181,7 +245,7 @@ static void qtnf_ipc_gen_ep_int(void *arg)
+ 	qtnf_non_posted_write(data, reg);
+ }
+=20
+-static void __iomem *qtnf_map_bar(struct qtnf_pcie_bus_priv *priv, u8 inde=
+x)
++static void __iomem *qtnf_map_bar(struct qtnf_pcie_pearl_state *priv, u8 i=
+ndex)
+ {
+ 	void __iomem *vaddr;
+ 	dma_addr_t busaddr;
+@@ -206,7 +270,7 @@ static void __iomem *qtnf_map_bar(struct qtnf_pcie_bus_=
+priv *priv, u8 index)
+=20
+ static void qtnf_pcie_control_rx_callback(void *arg, const u8 *buf, size_t=
+ len)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D arg;
++	struct qtnf_pcie_pearl_state *priv =3D arg;
+ 	struct qtnf_bus *bus =3D pci_get_drvdata(priv->pdev);
+ 	struct sk_buff *skb;
+=20
+@@ -227,7 +291,7 @@ static void qtnf_pcie_control_rx_callback(void *arg, co=
+nst u8 *buf, size_t len)
+ 	qtnf_trans_handle_rx_ctl_packet(bus, skb);
+ }
+=20
+-static int qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_pcie_init_shm_ipc(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct qtnf_shm_ipc_region __iomem *ipc_tx_reg;
+ 	struct qtnf_shm_ipc_region __iomem *ipc_rx_reg;
+@@ -248,13 +312,13 @@ static int qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bu=
+s_priv *priv)
+ 	return 0;
+ }
+=20
+-static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	qtnf_shm_ipc_free(&priv->shm_ipc_ep_in);
+ 	qtnf_shm_ipc_free(&priv->shm_ipc_ep_out);
+ }
+=20
+-static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_pcie_init_memory(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	int ret =3D -ENOMEM;
+=20
+@@ -283,7 +347,7 @@ static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_p=
+riv *priv)
+ 	return 0;
+ }
+=20
+-static void qtnf_tune_pcie_mps(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_tune_pcie_mps(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct pci_dev *pdev =3D priv->pdev;
+ 	struct pci_dev *parent;
+@@ -355,7 +419,7 @@ static int qtnf_poll_state(__le32 __iomem *reg, u32 sta=
+te, u32 delay_in_ms)
+ 	return 0;
+ }
+=20
+-static int alloc_skb_array(struct qtnf_pcie_bus_priv *priv)
++static int alloc_skb_array(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct sk_buff **vaddr;
+ 	int len;
+@@ -375,7 +439,7 @@ static int alloc_skb_array(struct qtnf_pcie_bus_priv *p=
+riv)
+ 	return 0;
+ }
+=20
+-static int alloc_bd_table(struct qtnf_pcie_bus_priv *priv)
++static int alloc_bd_table(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	dma_addr_t paddr;
+ 	void *vaddr;
+@@ -426,7 +490,7 @@ static int alloc_bd_table(struct qtnf_pcie_bus_priv *pr=
+iv)
+ 	return 0;
+ }
+=20
+-static int skb2rbd_attach(struct qtnf_pcie_bus_priv *priv, u16 index)
++static int skb2rbd_attach(struct qtnf_pcie_pearl_state *priv, u16 index)
+ {
+ 	struct qtnf_rx_bd *rxbd;
+ 	struct sk_buff *skb;
+@@ -469,7 +533,7 @@ static int skb2rbd_attach(struct qtnf_pcie_bus_priv *pr=
+iv, u16 index)
+ 	return 0;
+ }
+=20
+-static int alloc_rx_buffers(struct qtnf_pcie_bus_priv *priv)
++static int alloc_rx_buffers(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	u16 i;
+ 	int ret =3D 0;
+@@ -487,7 +551,7 @@ static int alloc_rx_buffers(struct qtnf_pcie_bus_priv *=
+priv)
+ }
+=20
+ /* all rx/tx activity should have ceased before calling this function */
+-static void qtnf_free_xfer_buffers(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_free_xfer_buffers(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct qtnf_tx_bd *txbd;
+ 	struct qtnf_rx_bd *rxbd;
+@@ -524,7 +588,7 @@ static void qtnf_free_xfer_buffers(struct qtnf_pcie_bus=
+_priv *priv)
+ 	}
+ }
+=20
+-static int qtnf_hhbm_init(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_hhbm_init(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	u32 val;
+=20
+@@ -542,7 +606,7 @@ static int qtnf_hhbm_init(struct qtnf_pcie_bus_priv *pr=
+iv)
+ 	return 0;
+ }
+=20
+-static int qtnf_pcie_init_xfer(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_pcie_init_xfer(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	int ret;
+ 	u32 val;
+@@ -605,7 +669,7 @@ static int qtnf_pcie_init_xfer(struct qtnf_pcie_bus_pri=
+v *priv)
+ 	return ret;
+ }
+=20
+-static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_bus_priv *priv)
++static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	struct qtnf_tx_bd *txbd;
+ 	struct sk_buff *skb;
+@@ -656,7 +720,7 @@ static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_=
+bus_priv *priv)
+ 	spin_unlock_irqrestore(&priv->tx_reclaim_lock, flags);
+ }
+=20
+-static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_tx_queue_ready(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
+ 			priv->tx_bd_num)) {
+@@ -675,7 +739,7 @@ static int qtnf_tx_queue_ready(struct qtnf_pcie_bus_pri=
+v *priv)
+=20
+ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	dma_addr_t txbd_paddr, skb_paddr;
+ 	struct qtnf_tx_bd *txbd;
+ 	unsigned long flags;
+@@ -750,7 +814,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
+ct sk_buff *skb)
+=20
+ static int qtnf_pcie_control_tx(struct qtnf_bus *bus, struct sk_buff *skb)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	int ret;
+=20
+ 	ret =3D qtnf_shm_ipc_send(&priv->shm_ipc_ep_in, skb->data, skb->len);
+@@ -766,7 +830,7 @@ static int qtnf_pcie_control_tx(struct qtnf_bus *bus, s=
+truct sk_buff *skb)
+ static irqreturn_t qtnf_interrupt(int irq, void *data)
+ {
+ 	struct qtnf_bus *bus =3D (struct qtnf_bus *)data;
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	u32 status;
+=20
+ 	priv->pcie_irq_count++;
+@@ -807,7 +871,7 @@ static irqreturn_t qtnf_interrupt(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+=20
+-static int qtnf_rx_data_ready(struct qtnf_pcie_bus_priv *priv)
++static int qtnf_rx_data_ready(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	u16 index =3D priv->rx_bd_r_index;
+ 	struct qtnf_rx_bd *rxbd;
+@@ -825,7 +889,7 @@ static int qtnf_rx_data_ready(struct qtnf_pcie_bus_priv=
+ *priv)
+ static int qtnf_rx_poll(struct napi_struct *napi, int budget)
+ {
+ 	struct qtnf_bus *bus =3D container_of(napi, struct qtnf_bus, mux_napi);
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	struct net_device *ndev =3D NULL;
+ 	struct sk_buff *skb =3D NULL;
+ 	int processed =3D 0;
+@@ -930,14 +994,14 @@ static int qtnf_rx_poll(struct napi_struct *napi, int=
+ budget)
+ static void
+ qtnf_pcie_data_tx_timeout(struct qtnf_bus *bus, struct net_device *ndev)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+=20
+ 	tasklet_hi_schedule(&priv->reclaim_tq);
+ }
+=20
+ static void qtnf_pcie_data_rx_start(struct qtnf_bus *bus)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+=20
+ 	qtnf_enable_hdp_irqs(priv);
+ 	napi_enable(&bus->mux_napi);
+@@ -945,7 +1009,7 @@ static void qtnf_pcie_data_rx_start(struct qtnf_bus *b=
+us)
+=20
+ static void qtnf_pcie_data_rx_stop(struct qtnf_bus *bus)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+=20
+ 	napi_disable(&bus->mux_napi);
+ 	qtnf_disable_hdp_irqs(priv);
+@@ -965,7 +1029,7 @@ static const struct qtnf_bus_ops qtnf_pcie_bus_ops =3D=
+ {
+ static int qtnf_dbg_mps_show(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D get_bus_priv(bus);
+=20
+ 	seq_printf(s, "%d\n", priv->mps);
+=20
+@@ -975,7 +1039,7 @@ static int qtnf_dbg_mps_show(struct seq_file *s, void =
+*data)
+ static int qtnf_dbg_msi_show(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D get_bus_priv(bus);
+=20
+ 	seq_printf(s, "%u\n", priv->msi_enabled);
+=20
+@@ -985,7 +1049,7 @@ static int qtnf_dbg_msi_show(struct seq_file *s, void =
+*data)
+ static int qtnf_dbg_irq_stats(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D get_bus_priv(bus);
+ 	u32 reg =3D readl(PCIE_HDP_INT_EN(priv->pcie_reg_base));
+ 	u32 status;
+=20
+@@ -1009,7 +1073,7 @@ static int qtnf_dbg_irq_stats(struct seq_file *s, voi=
+d *data)
+ static int qtnf_dbg_hdp_stats(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D get_bus_priv(bus);
+=20
+ 	seq_printf(s, "tx_full_count(%u)\n", priv->tx_full_count);
+ 	seq_printf(s, "tx_done_count(%u)\n", priv->tx_done_count);
+@@ -1040,7 +1104,7 @@ static int qtnf_dbg_hdp_stats(struct seq_file *s, voi=
+d *data)
+ static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
+ {
+ 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
+-	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D get_bus_priv(bus);
+=20
+ 	seq_printf(s, "shm_ipc_ep_in.tx_packet_count(%zu)\n",
+ 		   priv->shm_ipc_ep_in.tx_packet_count);
+@@ -1054,7 +1118,7 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, voi=
+d *data)
+ 	return 0;
+ }
+=20
+-static int qtnf_ep_fw_send(struct qtnf_pcie_bus_priv *priv, uint32_t size,
++static int qtnf_ep_fw_send(struct qtnf_pcie_pearl_state *priv, uint32_t si=
+ze,
+ 			   int blk, const u8 *pblk, const u8 *fw)
+ {
+ 	struct pci_dev *pdev =3D priv->pdev;
+@@ -1103,7 +1167,7 @@ static int qtnf_ep_fw_send(struct qtnf_pcie_bus_priv =
+*priv, uint32_t size,
+ }
+=20
+ static int
+-qtnf_ep_fw_load(struct qtnf_pcie_bus_priv *priv, const u8 *fw, u32 fw_size=
+)
++qtnf_ep_fw_load(struct qtnf_pcie_pearl_state *priv, const u8 *fw, u32 fw_s=
+ize)
+ {
+ 	int blk_size =3D QTN_PCIE_FW_BUFSZ - sizeof(struct qtnf_pcie_fw_hdr);
+ 	int blk_count =3D fw_size / blk_size + ((fw_size % blk_size) ? 1 : 0);
+@@ -1172,7 +1236,7 @@ qtnf_ep_fw_load(struct qtnf_pcie_bus_priv *priv, cons=
+t u8 *fw, u32 fw_size)
+ static void qtnf_fw_work_handler(struct work_struct *work)
+ {
+ 	struct qtnf_bus *bus =3D container_of(work, struct qtnf_bus, fw_work);
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	struct pci_dev *pdev =3D priv->pdev;
+ 	const struct firmware *fw;
+ 	int ret;
+@@ -1256,7 +1320,7 @@ static void qtnf_fw_work_handler(struct work_struct *=
+work)
+=20
+ static void qtnf_bringup_fw_async(struct qtnf_bus *bus)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	struct pci_dev *pdev =3D priv->pdev;
+=20
+ 	get_device(&pdev->dev);
+@@ -1266,7 +1330,7 @@ static void qtnf_bringup_fw_async(struct qtnf_bus *bu=
+s)
+=20
+ static void qtnf_reclaim_tasklet_fn(unsigned long data)
+ {
+-	struct qtnf_pcie_bus_priv *priv =3D (void *)data;
++	struct qtnf_pcie_pearl_state *priv =3D (void *)data;
+=20
+ 	qtnf_pcie_data_tx_reclaim(priv);
+ 	qtnf_en_txdone_irq(priv);
+@@ -1274,7 +1338,7 @@ static void qtnf_reclaim_tasklet_fn(unsigned long dat=
+a)
+=20
+ static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_i=
+d *id)
+ {
+-	struct qtnf_pcie_bus_priv *pcie_priv;
++	struct qtnf_pcie_pearl_state *pcie_priv;
+ 	struct qtnf_bus *bus;
+ 	int ret;
+=20
+@@ -1407,7 +1471,7 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, cons=
+t struct pci_device_id *id)
+=20
+ static void qtnf_pcie_remove(struct pci_dev *pdev)
+ {
+-	struct qtnf_pcie_bus_priv *priv;
++	struct qtnf_pcie_pearl_state *priv;
+ 	struct qtnf_bus *bus;
+=20
+ 	bus =3D pci_get_drvdata(pdev);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_pri=
+v.h b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h
+deleted file mode 100644
+index 986b957..0000000
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_bus_priv.h
++++ /dev/null
+@@ -1,91 +0,0 @@
+-/*
+- * Copyright (c) 2015-2016 Quantenna Communications, Inc.
+- * All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- */
+-
+-#ifndef _QTN_FMAC_PCIE_H_
+-#define _QTN_FMAC_PCIE_H_
+-
+-#include <linux/dma-mapping.h>
+-#include <linux/io.h>
+-
+-#include "pearl_pcie_regs.h"
+-#include "pearl_pcie_ipc.h"
+-#include "shm_ipc.h"
+-
+-struct bus;
+-
+-struct qtnf_pcie_bus_priv {
+-	struct pci_dev  *pdev;
+-
+-	/* lock for irq configuration changes */
+-	spinlock_t irq_lock;
+-
+-	/* lock for tx reclaim operations */
+-	spinlock_t tx_reclaim_lock;
+-	/* lock for tx0 operations */
+-	spinlock_t tx0_lock;
+-	u8 msi_enabled;
+-	u8 tx_stopped;
+-	int mps;
+-
+-	struct workqueue_struct *workqueue;
+-	struct tasklet_struct reclaim_tq;
+-
+-	void __iomem *sysctl_bar;
+-	void __iomem *epmem_bar;
+-	void __iomem *dmareg_bar;
+-
+-	struct qtnf_shm_ipc shm_ipc_ep_in;
+-	struct qtnf_shm_ipc shm_ipc_ep_out;
+-
+-	struct qtnf_pcie_bda __iomem *bda;
+-	void __iomem *pcie_reg_base;
+-
+-	u16 tx_bd_num;
+-	u16 rx_bd_num;
+-
+-	struct sk_buff **tx_skb;
+-	struct sk_buff **rx_skb;
+-
+-	struct qtnf_tx_bd *tx_bd_vbase;
+-	dma_addr_t tx_bd_pbase;
+-
+-	struct qtnf_rx_bd *rx_bd_vbase;
+-	dma_addr_t rx_bd_pbase;
+-
+-	dma_addr_t bd_table_paddr;
+-	void *bd_table_vaddr;
+-	u32 bd_table_len;
+-
+-	u32 rx_bd_w_index;
+-	u32 rx_bd_r_index;
+-
+-	u32 tx_bd_w_index;
+-	u32 tx_bd_r_index;
+-
+-	u32 pcie_irq_mask;
+-
+-	/* diagnostics stats */
+-	u32 pcie_irq_count;
+-	u32 pcie_irq_rx_count;
+-	u32 pcie_irq_tx_count;
+-	u32 pcie_irq_uf_count;
+-	u32 tx_full_count;
+-	u32 tx_done_count;
+-	u32 tx_reclaim_done;
+-	u32 tx_reclaim_req;
+-};
+-
+-#endif /* _QTN_FMAC_PCIE_H_ */
 --=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---y0ulUmNC+osPPQO6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlueI5UACgkQMOfwapXb+vJYDACgxAz+24cPahXrHtrd6Zj7Rget
-k6YAoL0rqTyUyIRUPs+GbVl6HsNhkRwt
-=OwZ4
------END PGP SIGNATURE-----
-
---y0ulUmNC+osPPQO6--
+2.9.5
