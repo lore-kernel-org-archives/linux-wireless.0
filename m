@@ -1,90 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:44442 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726476AbeIKNs3 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:42026 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729351AbeIXXM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Sep 2018 09:48:29 -0400
-Date: Mon, 10 Sep 2018 18:12:59 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: gregkh <gregkh@linuxfoundation.org>
-CC: Arnd Bergmann <arnd@arndb.de>,
-        driverdevel <devel@driverdev.osuosl.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH] staging: wilc1000: revert "fix TODO to compile spi and
- sdio components in single module"
-Message-ID: <20180910181259.2cbe6b8d@ajaysk-VirtualBox> (sfid-20180911_105023_482866_CB8486A7)
-In-Reply-To: <20180911082110.GB17267@kroah.com>
-References: <20180813212108.2442868-1-arnd@arndb.de>
-        <20180814105237.64b01528@ajaysk-VirtualBox>
-        <CAK8P3a3bk7urG9zO=F1NtH8hTnGQQ_Hk0qq=o8fmeYY_nEyy5w@mail.gmail.com>
-        <20180814084335.GB7208@kroah.com>
-        <20180910160836.24efb0b9@ajaysk-VirtualBox>
-        <20180911082110.GB17267@kroah.com>
+        Mon, 24 Sep 2018 19:12:58 -0400
+Received: by mail-oi0-f68.google.com with SMTP id v198-v6so17502851oif.9
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 10:09:51 -0700 (PDT)
+Subject: Re: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac wireless
+ network chips
+To: yhchuang@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        tehuang@realtek.com
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <052723dc-c8b9-1a40-90a4-7c8ae2b29299@lwfinger.net> (sfid-20180924_190954_615123_CF8F07CA)
+Date: Mon, 24 Sep 2018 12:09:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 11 Sep 2018 10:21:10 +0200
-gregkh <gregkh@linuxfoundation.org> wrote:
-
-> On Mon, Sep 10, 2018 at 04:08:36PM +0530, Ajay Singh wrote:
-> > Hi Greg,
-> > 
-> > On Tue, 14 Aug 2018 10:43:35 +0200
-> > gregkh <gregkh@linuxfoundation.org> wrote:
-> >   
-> > > On Tue, Aug 14, 2018 at 10:34:27AM +0200, Arnd Bergmann wrote:  
-> > > > On Tue, Aug 14, 2018 at 7:22 AM Ajay Singh
-> > > > <ajay.kathat@microchip.com> wrote:  
-> > > > >
-> > > > > Hi Arnd,
-> > > > >
-> > > > > On Mon, 13 Aug 2018 23:20:33 +0200
-> > > > > Arnd Bergmann <arnd@arndb.de> wrote:
-> > > > >  
-> > > > > > The TODO item named "make spi and sdio components coexist
-> > > > > > in one build" was apparently addressed a long time ago, but
-> > > > > > never removed from the TODO file. However, the new patch
-> > > > > > that tries to address it actually makes it worse again by
-> > > > > > duplicating the common parts of the driver into two
-> > > > > > separate modules rather than sharing them. This also
-> > > > > > introduces a build regression when one of the two is
-> > > > > > built-in while the other is a loadable module:  
-> > > > >
-> > > > > Thanks for sharing your inputs and submitting patch.
-> > > > > I have also submitted a patch to address the compilation
-> > > > > error[1]. We can ignore my patch and proceed with your
-> > > > > changes.
-> > > > >
-> > > > > [1].https://patchwork.kernel.org/patch/10563873/  
-> > > > 
-> > > > That patch seems useful regardless, as it removes dead code,
-> > > > but I'd still prefer to revert staging-linusthe 9abc44ba4e2f
-> > > > ("staging: wilc1000: fix TODO to compile spi and sdio
-> > > > components in single module") commit for the other reasons I
-> > > > explained.  
-> > > 
-> > > I agree, I'll queue it up soon, I have other patches to get to
-> > > Linus first.
-> > >   
-> > 
-> > This patch is applied only to 'staging-linus' in commit f45b893 and
-> > it's not applied to 'staging-testing/next' tree. 
-> > Please apply this patch to 'staging-next' tree also. Because I have
-> > one patch to submit on top of these changes to delete the
-> > 'wilc_debug.c' unused file.  
+On 9/21/18 1:03 AM, yhchuang@realtek.com wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 > 
-> I will merge the staging-linus branch into staging-testing once Linus
-> pulls them in.  Should happen next Monday or so.  You can send me
-> patches that build on top of this now, I'll just wait until then to
-> apply them to my tree.
+> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+> rtwlan supports 8822BE and 8822CE chips, and will be able to support
+> multi-vif combinations in run-time.
+> 
+> For now, only PCI bus is supported, but rtwlan was originally designed
+> to optionally support three buses includes USB & SDIO. USB & SDIO modules
+> will soon be supported by rtwlan, with configurable core module to fit
+> with different bus modules in the same time.
+> 
+> For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+> be selected, built, loaded into kernel. This is one of the major
+> difference from rtlwifi, which can only support specific combinations.
+> 
+> Another difference from rtlwifi is that rtwlan is designed to support
+> the latest Realtek 802.11ac wireless network chips like 8822B and
+> 8822C series. Compared to the earlier chips supported by rtlwifi like
+> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+> have different MAC & PHY settings, such as new multi-port feature for the
+> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+> 
+> Multi-Port feature is also supported under rtwlan's software architecture.
+> rtlwifi can only support one vif in the same time, most because of the
+> hardware limitations for early chips, hence the original design of it
+> also restricts the usage of multi-vif support, so latest chipset seems not
+> take advantages from its new MAC engine.
+> 
+> However, rtwlan can run multiple vifs concurrently by holding them on
+> hardware ports provided by MAC engine, so we can easily start different
+> roles on a single device.
+> 
+> Based on the reasons mentioned before, we implemented rtwlan. It had many
+> authors, they are listed here alphabetically:
 
-Thanks Greg.
+I have found two problems with the initial code:
 
-Sure, I will send the patch set build on top of this.
+1. There is a missing zero entry at the end of the struct pci_device_id.
+2. You have no MODULE_DEVICE_TABLE macro call.
 
-Regards,
-Ajay
+The effect is that the device is not autoloaded on boot. The fix is
+
+diff --git a/drivers/net/wireless/realtek/rtwlan/pci.c 
+b/drivers/net/wireless/realtek/rtwlan/pci.c
+index 2ff5a152d77b..f8b1267520a7 100644
+--- a/drivers/net/wireless/realtek/rtwlan/pci.c
++++ b/drivers/net/wireless/realtek/rtwlan/pci.c
+@@ -1184,6 +1184,7 @@ static const struct pci_device_id rtw_pci_id_table[] = {
+  #ifdef CONFIG_RTWLAN_8822CE
+         { RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822, rtw8822c_hw_spec) },
+  #endif
++       {},
+  };
+
+  static struct pci_driver rtw_pci_driver = {
+@@ -1210,6 +1211,8 @@ struct rtw_hci_ops rtw_pci_ops = {
+         .check_avail_desc = rtw_pci_check_avail_desc,
+  };
+
++MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
++
+  module_pci_driver(rtw_pci_driver);
+
+  MODULE_AUTHOR("Realtek Corporation");
+
+Larry
