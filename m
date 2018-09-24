@@ -1,514 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:51074 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727986AbeITRqQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Sep 2018 13:46:16 -0400
-Received: by mail-it0-f41.google.com with SMTP id j81-v6so12760948ite.0
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Sep 2018 05:03:06 -0700 (PDT)
+Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726400AbeIXLNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 07:13:55 -0400
+From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH 04/11] qtnfmac_pcie: indicate pearl-specific structures by
+ their names
+Date: Mon, 24 Sep 2018 05:13:27 +0000
+Message-ID: <20180924051246.13371-5-igor.mitsyanko.os@quantenna.com> (sfid-20180924_071405_667453_24C43FE0)
+References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-References: <CAKMn2kT6+4iX72jLSnCrXWMJ+pBHrMpZtigqWjzFRLKWRoxrkA@mail.gmail.com>
- <532c137e-729d-bf06-7103-e2c141bc0c0b@newmedia-net.de> <CAKMn2kTyyM1F1JLOi3sJ+_7emJG-JMm=gPjgqD0yFfcJLMuDnw@mail.gmail.com>
- <2783b4e8-401a-876f-cce7-bf56723b423f@newmedia-net.de>
-In-Reply-To: <2783b4e8-401a-876f-cce7-bf56723b423f@newmedia-net.de>
-From: Bruno Rosset <bruno.rosset@gmail.com>
-Date: Thu, 20 Sep 2018 14:02:52 +0200
-Message-ID: <CAKMn2kRi-Ob-y8HKf_smgrmuq52m6XMZf_86tR__tiQu8nMQpg@mail.gmail.com> (sfid-20180920_140310_752057_C0848936)
-Subject: Re: Netgear R7800 - ath10k QCA 9984 firmware crash
-To: brainslayer666 <s.gottschall@newmedia-net.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+In preparation to extract common PCIe driver state, indicate
+PEARL-specific structures by their name and move them to pearl-specific
+source file.
 
-OK no problem. I can do that.
-Can you just tell me what you need ; I mean which commands to export data ?
-For nvram I guess you need 'nvram show' results ?
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 89 +++++++++++++++++-=
+----
+ .../quantenna/qtnfmac/pcie/pearl_pcie_ipc.h        | 47 ------------
+ 2 files changed, 68 insertions(+), 68 deletions(-)
 
-How I can do a "full flash transfer" ?
-
-As you're dd-wrt dev,  I add that I try last dd-wrt build  (this one :
-https://download1.dd-wrt.com/dd-wrtv2/downloads/betas/2018/08-22-2018-r3669=
-8/netgear-r7800/factory-to-ddwrt.img)
-which not even boot. Same with kong one (this one :
-http://www.desipro.de/ddwrt/K3-AC-IPQ806X/Test/R7800-factory-to-ddwrt.img)
-
-What I made is that I extract the board-2.bin & fiurmware-5.bin from
-the ddwrt's squashfs image and try them on the openWRT install, but
-without success also.
-
-Best regards,
-Bruno
-Le jeu. 20 sept. 2018 =C3=A0 13:07, Sebastian Gottschall
-<s.gottschall@newmedia-net.de> a =C3=A9crit :
->
-> since i'm mainly the dd-wrt developer and you tested it as well with the
-> same reproduceable crash it would be nice if you could provide me a
-> nvram backup with a reproduceable crash (you should change passwords of
-> course) to my private email. so i can apply it to my device and to see
-> whats happen. if you have a beta device i just can guess that the
-> calibration data which is stored in flash memory has maybe a different
-> location, so openwrt as well as dd-wrt uses crap to initialize the
-> hardware. this is just a guess. but i have 2 r7800 factory models. you
-> can also send me a full flash backup of your device using wetransfer, so
-> i can compare the content with my device and check if there is a flash
-> layout specific different. this would help to track down the problem
-> cause and maybe find a specific workaround for such devices by detecting
-> them well
->
-> Sebastian
->
-> Am 20.09.2018 um 09:44 schrieb Bruno Rosset:
-> > HI Sebastian,
-> >
-> > I just flash the r7800 with the openwrt 18.06.1 factory image (here :
-> > https://downloads.openwrt.org/releases/18.06.1/targets/ipq806x/generic/=
-openwrt-18.06.1-ipq806x-netgear_r7800-squashfs-factory.img)
-> >
-> > I forgot to mention that I get a beta hardware of the R7800, perhaps
-> > there is something different in my hardware compared to the released
-> > one.
-> >
-> > Regards,
-> > Bruno
-> > Le jeu. 20 sept. 2018 =C3=A0 08:36, Sebastian Gottschall
-> > <s.gottschall@newmedia-net.de> a =C3=A9crit :
-> >> can you tell me how to reproduce this crash? i have 2 r7800 running wi=
-th
-> >> dd-wrt but no crashes
-> >>
-> >> Am 19.09.2018 um 22:37 schrieb Bruno Rosset:
-> >>> Hi all,
-> >>>
-> >>> I get a firmware crash using latest openwrt 18.06.1 on the Netgear
-> >>> R7800 with stock firmware
-> >>> Dmesg is :
-> >>> [   13.804366] ath10k_pci 0000:01:00.0: assign IRQ: got 67
-> >>> [   13.804805] ath10k_pci 0000:01:00.0: enabling device (0140 -> 0142=
-)
-> >>> [   13.804887] ath10k_pci 0000:01:00.0: enabling bus mastering
-> >>> [   13.805346] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2
-> >>> irq_mode 0 reset_mode 0
-> >>> [   13.974787] ath10k_pci 0000:01:00.0: Direct firmware load for
-> >>> ath10k/pre-cal-pci-0000:01:00.0.bin failed with error -2
-> >>> [   13.974827] ath10k_pci 0000:01:00.0: Falling back to user helper
-> >>> [   14.304794] ath10k_pci 0000:01:00.0: Direct firmware load for
-> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
-> >>> [   14.304857] ath10k_pci 0000:01:00.0: Falling back to user helper
-> >>> [   14.337111] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
-> >>> firmware_loading_store: map pages failed
-> >>> [   14.702947] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [   14.702997] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [   14.716459] ath10k_pci 0000:01:00.0: firmware ver 10.4-3.5.3-00053
-> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
-st,no-ps
-> >>> crc32 4c56a386
-> >>> [   15.973104] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [   19.753460] ath10k_pci 0000:01:00.0: firmware crashed! (guid
-> >>> ca7089d2-df9a-4f9d-8fa6-d1b908cf3220)
-> >>> [   19.753494] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [   19.761307] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [   19.773202] ath10k_pci 0000:01:00.0: firmware ver 10.4-3.5.3-00053
-> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
-st,no-ps
-> >>> crc32 4c56a386
-> >>> [   19.779887] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [   19.793511] ath10k_pci 0000:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
-> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
-> >>> [   19.803176] ath10k_pci 0000:01:00.0: firmware register dump:
-> >>> [   19.810956] ath10k_pci 0000:01:00.0: [00]: 0x01000000 0x000015B3
-> >>> 0x009CBB38 0x00975B31
-> >>> [   19.816861] ath10k_pci 0000:01:00.0: [04]: 0x009CBB38 0x00060530
-> >>> 0x00000011 0x00415760
-> >>> [   19.824587] ath10k_pci 0000:01:00.0: [08]: 0x00417E6C 0x00400000
-> >>> 0x00000001 0x00422990
-> >>> [   19.832485] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0xFFFFFFFF
-> >>> 0x00973B25 0x00973B47
-> >>> [   19.840384] ath10k_pci 0000:01:00.0: [16]: 0x009CBB38 0x000CEEA7
-> >>> 0x00000000 0x00000000
-> >>> [   19.848284] ath10k_pci 0000:01:00.0: [20]: 0x409CBB38 0x004068DC
-> >>> 0x00000001 0x00403628
-> >>> [   19.856183] ath10k_pci 0000:01:00.0: [24]: 0x809814EF 0x0040693C
-> >>> 0x00000049 0xC09CBB38
-> >>> [   19.864083] ath10k_pci 0000:01:00.0: [28]: 0x800DF216 0x004069AC
-> >>> 0x00000004 0x00415300
-> >>> [   19.871983] ath10k_pci 0000:01:00.0: [32]: 0x800C383A 0x004069DC
-> >>> 0x00415160 0x00400000
-> >>> [   19.879881] ath10k_pci 0000:01:00.0: [36]: 0x809800A3 0x00406A0C
-> >>> 0x00415170 0x009C41F8
-> >>> [   19.887781] ath10k_pci 0000:01:00.0: [40]: 0x8098003A 0x00406A5C
-> >>> 0x00400000 0x00400600
-> >>> [   19.895680] ath10k_pci 0000:01:00.0: [44]: 0x809607C1 0x00406A8C
-> >>> 0xD8400100 0x00406A9C
-> >>> [   19.903579] ath10k_pci 0000:01:00.0: [48]: 0x80960892 0x00406AAC
-> >>> 0x00000000 0x00000008
-> >>> [   19.911479] ath10k_pci 0000:01:00.0: [52]: 0x80960E39 0x00406ACC
-> >>> 0x00400000 0x00400600
-> >>> [   19.919378] ath10k_pci 0000:01:00.0: [56]: 0x80960E9D 0x00406AEC
-> >>> 0x00000000 0x00400600
-> >>> [   19.927277] ath10k_pci 0000:01:00.0: Copy Engine register dump:
-> >>> [   19.935181] ath10k_pci 0000:01:00.0: [00]: 0x0004a000  11  11  12 =
- 11
-> >>> [   19.940994] ath10k_pci 0000:01:00.0: [01]: 0x0004a400  11  11  10 =
- 11
-> >>> [   19.947590] ath10k_pci 0000:01:00.0: [02]: 0x0004a800   0   0  63 =
-  0
-> >>> [   19.954014] ath10k_pci 0000:01:00.0: [03]: 0x0004ac00   0   0   0 =
-  0
-> >>> [   19.960439] ath10k_pci 0000:01:00.0: [04]: 0x0004b000   0   0   0 =
-  0
-> >>> [   19.966862] ath10k_pci 0000:01:00.0: [05]: 0x0004b400   0   0   0 =
-  0
-> >>> [   19.973285] ath10k_pci 0000:01:00.0: [06]: 0x0004b800   0   0   0 =
-  0
-> >>> [   19.979709] ath10k_pci 0000:01:00.0: [07]: 0x0004bc00   1   1   1 =
-  1
-> >>> [   19.986132] ath10k_pci 0000:01:00.0: [08]: 0x0004c000   0   0 127 =
-  0
-> >>> [   19.992556] ath10k_pci 0000:01:00.0: [09]: 0x0004c400   1   1   1 =
-  1
-> >>> [   19.998980] ath10k_pci 0000:01:00.0: [10]: 0x0004c800   0   0   0 =
-  0
-> >>> [   20.005403] ath10k_pci 0000:01:00.0: [11]: 0x0004cc00   0   0   0 =
-  0
-> >>> [   20.795948] ath10k_pci 0000:01:00.0: failed to receive control
-> >>> response completion, polling..
-> >>> [   21.835766] ath10k_pci 0000:01:00.0: ctl_resp never came in (-110)
-> >>> [   21.835810] ath10k_pci 0000:01:00.0: failed to connect to HTC: -11=
-0
-> >>> [   21.915174] ath10k_pci 0000:01:00.0: could not init core (-110)
-> >>> [   21.915620] ath10k_pci 0000:01:00.0: could not probe fw (-110)
-> >>> [   21.920266] ath10k_pci 0001:01:00.0: assign IRQ: got 100
-> >>> [   21.921197] ath10k_pci 0001:01:00.0: enabling device (0140 -> 0142=
-)
-> >>> [   21.926032] ath10k_pci 0001:01:00.0: enabling bus mastering
-> >>> [   21.926715] ath10k_pci 0001:01:00.0: pci irq msi oper_irq_mode 2
-> >>> irq_mode 0 reset_mode 0
-> >>> [   21.962217] ath10k_pci 0000:01:00.0: cannot restart a device that
-> >>> hasn't been started
-> >>> [   22.104728] ath10k_pci 0001:01:00.0: Direct firmware load for
-> >>> ath10k/pre-cal-pci-0001:01:00.0.bin failed with error -2
-> >>> [   22.104769] ath10k_pci 0001:01:00.0: Falling back to user helper
-> >>> [   22.424677] ath10k_pci 0001:01:00.0: Direct firmware load for
-> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
-> >>> [   22.424736] ath10k_pci 0001:01:00.0: Falling back to user helper
-> >>> [   22.462387] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
-> >>> firmware_loading_store: map pages failed
-> >>> [   22.463844] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [   22.470250] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [   22.483627] ath10k_pci 0001:01:00.0: firmware ver 10.4-3.5.3-00053
-> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
-st,no-ps
-> >>> crc32 4c56a386
-> >>> [   23.743494] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [   27.528777] ath10k_pci 0001:01:00.0: firmware crashed! (guid
-> >>> 2112523e-3948-4925-b383-9e672937c6d5)
-> >>> [   27.528819] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [   27.536696] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [   27.548985] ath10k_pci 0001:01:00.0: firmware ver 10.4-3.5.3-00053
-> >>> api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bca=
-st,no-ps
-> >>> crc32 4c56a386
-> >>> [   27.555303] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [   27.568835] ath10k_pci 0001:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
-> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
-> >>> [   27.578512] ath10k_pci 0001:01:00.0: firmware register dump:
-> >>> [   27.586281] ath10k_pci 0001:01:00.0: [00]: 0x01000000 0x000015B3
-> >>> 0x009CBB38 0x00975B31
-> >>> [   27.592186] ath10k_pci 0001:01:00.0: [04]: 0x009CBB38 0x00060530
-> >>> 0x00000011 0x00415760
-> >>> [   27.599910] ath10k_pci 0001:01:00.0: [08]: 0x00417E6C 0x00400000
-> >>> 0x00000001 0x00422990
-> >>> [   27.607809] ath10k_pci 0001:01:00.0: [12]: 0x00000009 0xFFFFFFFF
-> >>> 0x00973B25 0x00973B47
-> >>> [   27.615708] ath10k_pci 0001:01:00.0: [16]: 0x009CBB38 0x000CEEAC
-> >>> 0x00000000 0x00000000
-> >>> [   27.623608] ath10k_pci 0001:01:00.0: [20]: 0x409CBB38 0x004068DC
-> >>> 0x00000001 0x00403628
-> >>> [   27.631507] ath10k_pci 0001:01:00.0: [24]: 0x809814EF 0x0040693C
-> >>> 0x00000049 0xC09CBB38
-> >>> [   27.639405] ath10k_pci 0001:01:00.0: [28]: 0x800DF216 0x004069AC
-> >>> 0x00000004 0x00415300
-> >>> [   27.647305] ath10k_pci 0001:01:00.0: [32]: 0x800C383A 0x004069DC
-> >>> 0x00415160 0x00400000
-> >>> [   27.655205] ath10k_pci 0001:01:00.0: [36]: 0x809800A3 0x00406A0C
-> >>> 0x00415170 0x009C41F8
-> >>> [   27.663104] ath10k_pci 0001:01:00.0: [40]: 0x8098003A 0x00406A5C
-> >>> 0x00400000 0x00400600
-> >>> [   27.671004] ath10k_pci 0001:01:00.0: [44]: 0x809607C1 0x00406A8C
-> >>> 0xD8400100 0x00406A9C
-> >>> [   27.678902] ath10k_pci 0001:01:00.0: [48]: 0x80960892 0x00406AAC
-> >>> 0x00000000 0x00000008
-> >>> [   27.686801] ath10k_pci 0001:01:00.0: [52]: 0x80960E39 0x00406ACC
-> >>> 0x00400000 0x00400600
-> >>> [   27.694700] ath10k_pci 0001:01:00.0: [56]: 0x80960E9D 0x00406AEC
-> >>> 0x00000000 0x00400600
-> >>> [   27.702603] ath10k_pci 0001:01:00.0: Copy Engine register dump:
-> >>> [   27.710506] ath10k_pci 0001:01:00.0: [00]: 0x0004a000  11  11  12 =
- 11
-> >>> [   27.716322] ath10k_pci 0001:01:00.0: [01]: 0x0004a400  11  11  10 =
- 11
-> >>> [   27.722917] ath10k_pci 0001:01:00.0: [02]: 0x0004a800   0   0  63 =
-  0
-> >>> [   27.729340] ath10k_pci 0001:01:00.0: [03]: 0x0004ac00   0   0   0 =
-  0
-> >>> [   27.735764] ath10k_pci 0001:01:00.0: [04]: 0x0004b000   0   0   0 =
-  0
-> >>> [   27.742188] ath10k_pci 0001:01:00.0: [05]: 0x0004b400   0   0   0 =
-  0
-> >>> [   27.748611] ath10k_pci 0001:01:00.0: [06]: 0x0004b800   0   0   0 =
-  0
-> >>> [   27.755035] ath10k_pci 0001:01:00.0: [07]: 0x0004bc00   1   1   1 =
-  1
-> >>> [   27.761459] ath10k_pci 0001:01:00.0: [08]: 0x0004c000   0   0 127 =
-  0
-> >>> [   27.767884] ath10k_pci 0001:01:00.0: [09]: 0x0004c400   1   1   1 =
-  1
-> >>> [   27.774304] ath10k_pci 0001:01:00.0: [10]: 0x0004c800   0   0   0 =
-  0
-> >>> [   27.780731] ath10k_pci 0001:01:00.0: [11]: 0x0004cc00   0   0   0 =
-  0
-> >>> [   28.567840] ath10k_pci 0001:01:00.0: failed to receive control
-> >>> response completion, polling..
-> >>> [   29.616315] ath10k_pci 0001:01:00.0: ctl_resp never came in (-110)
-> >>> [   29.616341] ath10k_pci 0001:01:00.0: failed to connect to HTC: -11=
-0
-> >>> [   29.695567] ath10k_pci 0001:01:00.0: could not init core (-110)
-> >>> [   29.695988] ath10k_pci 0001:01:00.0: could not probe fw (-110)
-> >>> [   29.703824] kmodloader: done loading kernel modules from /etc/modu=
-les.d/*
-> >>> [   29.732245] ath10k_pci 0001:01:00.0: cannot restart a device that
-> >>> hasn't been started
-> >>>
-> >>> Replacing stock firmware with latest from kvalo github (here :
-> >>> https://github.com/kvalo/ath10k-firmware/tree/master/QCA9984/hw1.0/3.=
-6.0.1)
-> >>> I get the same result
-> >>> Dmesg is :
-> >>> [  235.442819] ath10k_pci 0001:01:00.0: disabling bus mastering
-> >>> [  235.482588] ath10k_pci 0000:01:00.0: disabling bus mastering
-> >>> [  260.586372] ath10k_pci 0000:01:00.0: assign IRQ: got 67
-> >>> [  260.586771] ath10k_pci 0000:01:00.0: enabling bus mastering
-> >>> [  260.587218] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2
-> >>> irq_mode 0 reset_mode 0
-> >>> [  260.754869] ath10k_pci 0000:01:00.0: Direct firmware load for
-> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
-> >>> [  260.754917] ath10k_pci 0000:01:00.0: Falling back to user helper
-> >>> [  260.786271] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
-> >>> firmware_loading_store: map pages failed
-> >>> [  260.787219] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [  260.794202] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [  260.806246] ath10k_pci 0000:01:00.0: firmware ver
-> >>> 10.4-3.6.0.1-00003 api 5 features
-> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
-> >>> 266d70b0
-> >>> [  262.065148] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [  265.858256] ath10k_pci 0000:01:00.0: firmware crashed! (guid
-> >>> 2b6addfc-915e-437a-a7fa-3691cbf4b39e)
-> >>> [  265.858347] ath10k_pci 0000:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [  265.866136] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [  265.881167] ath10k_pci 0000:01:00.0: firmware ver
-> >>> 10.4-3.6.0.1-00003 api 5 features
-> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
-> >>> 266d70b0
-> >>> [  265.885460] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [  265.898696] ath10k_pci 0000:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
-> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
-> >>> [  265.908193] ath10k_pci 0000:01:00.0: firmware register dump:
-> >>> [  265.915961] ath10k_pci 0000:01:00.0: [00]: 0x01000000 0x000015B3
-> >>> 0x009CC074 0x00975B31
-> >>> [  265.921864] ath10k_pci 0000:01:00.0: [04]: 0x009CC074 0x00060530
-> >>> 0x00000011 0x004142FC
-> >>> [  265.929590] ath10k_pci 0000:01:00.0: [08]: 0x00416AFC 0x00400000
-> >>> 0x00000001 0x00421F90
-> >>> [  265.937488] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0xFFFFFFFF
-> >>> 0x00973B25 0x00973B47
-> >>> [  265.945389] ath10k_pci 0000:01:00.0: [16]: 0x009CC074 0x000CFE13
-> >>> 0x00000000 0x00000000
-> >>> [  265.953289] ath10k_pci 0000:01:00.0: [20]: 0x409CC074 0x004068DC
-> >>> 0x00000001 0x00403628
-> >>> [  265.961187] ath10k_pci 0000:01:00.0: [24]: 0x8098153B 0x0040693C
-> >>> 0x0000004E 0xC09CC074
-> >>> [  265.969087] ath10k_pci 0000:01:00.0: [28]: 0x800E026F 0x004069AC
-> >>> 0x00000004 0x00413E60
-> >>> [  265.976984] ath10k_pci 0000:01:00.0: [32]: 0x800C383A 0x004069DC
-> >>> 0x00413CB0 0x00400000
-> >>> [  265.984884] ath10k_pci 0000:01:00.0: [36]: 0x809800A3 0x00406A0C
-> >>> 0x00413CC0 0x009C4750
-> >>> [  265.992784] ath10k_pci 0000:01:00.0: [40]: 0x8098003A 0x00406A5C
-> >>> 0x00400000 0x00400600
-> >>> [  266.000684] ath10k_pci 0000:01:00.0: [44]: 0x809607C1 0x00406A8C
-> >>> 0xD8400100 0x00406A9C
-> >>> [  266.008582] ath10k_pci 0000:01:00.0: [48]: 0x80960892 0x00406AAC
-> >>> 0x00000000 0x00000008
-> >>> [  266.016482] ath10k_pci 0000:01:00.0: [52]: 0x80960E39 0x00406ACC
-> >>> 0x00400000 0x00400600
-> >>> [  266.024381] ath10k_pci 0000:01:00.0: [56]: 0x80960E9D 0x00406AEC
-> >>> 0x00000000 0x00400600
-> >>> [  266.032279] ath10k_pci 0000:01:00.0: Copy Engine register dump:
-> >>> [  266.040186] ath10k_pci 0000:01:00.0: [00]: 0x0004a000  12  12  29 =
- 28
-> >>> [  266.045999] ath10k_pci 0000:01:00.0: [01]: 0x0004a400  11  11  10 =
- 11
-> >>> [  266.052595] ath10k_pci 0000:01:00.0: [02]: 0x0004a800   0   0  63 =
-  0
-> >>> [  266.059018] ath10k_pci 0000:01:00.0: [03]: 0x0004ac00   0   0   0 =
-  0
-> >>> [  266.065441] ath10k_pci 0000:01:00.0: [04]: 0x0004b000   0   0   0 =
-  0
-> >>> [  266.071865] ath10k_pci 0000:01:00.0: [05]: 0x0004b400   0   0   0 =
-  0
-> >>> [  266.078289] ath10k_pci 0000:01:00.0: [06]: 0x0004b800   0   0   0 =
-  0
-> >>> [  266.084713] ath10k_pci 0000:01:00.0: [07]: 0x0004bc00   1   1   1 =
-  1
-> >>> [  266.091136] ath10k_pci 0000:01:00.0: [08]: 0x0004c000   0   0 127 =
-  0
-> >>> [  266.097559] ath10k_pci 0000:01:00.0: [09]: 0x0004c400   1   1   1 =
-  1
-> >>> [  266.103982] ath10k_pci 0000:01:00.0: [10]: 0x0004c800   0   0   0 =
-  0
-> >>> [  266.110408] ath10k_pci 0000:01:00.0: [11]: 0x0004cc00   0   0   0 =
-  0
-> >>> [  266.876609] ath10k_pci 0000:01:00.0: failed to receive control
-> >>> response completion, polling..
-> >>> [  267.915918] ath10k_pci 0000:01:00.0: ctl_resp never came in (-110)
-> >>> [  267.915970] ath10k_pci 0000:01:00.0: failed to connect to HTC: -11=
-0
-> >>> [  267.996406] ath10k_pci 0000:01:00.0: could not init core (-110)
-> >>> [  267.996972] ath10k_pci 0000:01:00.0: could not probe fw (-110)
-> >>> [  268.001578] ath10k_pci 0001:01:00.0: assign IRQ: got 100
-> >>> [  268.002612] ath10k_pci 0001:01:00.0: enabling bus mastering
-> >>> [  268.003292] ath10k_pci 0001:01:00.0: pci irq msi oper_irq_mode 2
-> >>> irq_mode 0 reset_mode 0
-> >>> [  268.032241] ath10k_pci 0000:01:00.0: cannot restart a device that
-> >>> hasn't been started
-> >>> [  268.174893] ath10k_pci 0001:01:00.0: Direct firmware load for
-> >>> ath10k/QCA9984/hw1.0/firmware-6.bin failed with error -2
-> >>> [  268.174936] ath10k_pci 0001:01:00.0: Falling back to user helper
-> >>> [  268.206575] firmware ath10k!QCA9984!hw1.0!firmware-6.bin:
-> >>> firmware_loading_store: map pages failed
-> >>> [  268.207955] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [  268.214521] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [  268.227852] ath10k_pci 0001:01:00.0: firmware ver
-> >>> 10.4-3.6.0.1-00003 api 5 features
-> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
-> >>> 266d70b0
-> >>> [  269.485480] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [  273.282901] ath10k_pci 0001:01:00.0: firmware crashed! (guid
-> >>> 28f0a68b-f881-40cb-b515-f4320b412b7a)
-> >>> [  273.282982] ath10k_pci 0001:01:00.0: qca9984/qca9994 hw1.0 target
-> >>> 0x01000000 chip_id 0x00000000 sub 168c:cafe
-> >>> [  273.290780] ath10k_pci 0001:01:00.0: kconfig debug 0 debugfs 1
-> >>> tracing 0 dfs 1 testmode 1
-> >>> [  273.306323] ath10k_pci 0001:01:00.0: firmware ver
-> >>> 10.4-3.6.0.1-00003 api 5 features
-> >>> no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast,no-ps crc32
-> >>> 266d70b0
-> >>> [  273.310039] ath10k_pci 0001:01:00.0: board_file api 2 bmi_id 0:31
-> >>> crc32 dd6d039c
-> >>> [  273.323420] ath10k_pci 0001:01:00.0: htt-ver 0.0 wmi-op 6 htt-op 4
-> >>> cal pre-cal-file max-sta 32 raw 0 hwcrypto 1
-> >>> [  273.332841] ath10k_pci 0001:01:00.0: firmware register dump:
-> >>> [  273.340604] ath10k_pci 0001:01:00.0: [00]: 0x01000000 0x000015B3
-> >>> 0x009CC074 0x00975B31
-> >>> [  273.346508] ath10k_pci 0001:01:00.0: [04]: 0x009CC074 0x00060530
-> >>> 0x00000011 0x004142FC
-> >>> [  273.354234] ath10k_pci 0001:01:00.0: [08]: 0x00416AFC 0x00400000
-> >>> 0x00000001 0x00421F90
-> >>> [  273.362135] ath10k_pci 0001:01:00.0: [12]: 0x00000009 0xFFFFFFFF
-> >>> 0x00973B25 0x00973B47
-> >>> [  273.370033] ath10k_pci 0001:01:00.0: [16]: 0x009CC074 0x000CFE13
-> >>> 0x00000000 0x00000000
-> >>> [  273.377932] ath10k_pci 0001:01:00.0: [20]: 0x409CC074 0x004068DC
-> >>> 0x00000001 0x00403628
-> >>> [  273.385833] ath10k_pci 0001:01:00.0: [24]: 0x8098153B 0x0040693C
-> >>> 0x0000004E 0xC09CC074
-> >>> [  273.393732] ath10k_pci 0001:01:00.0: [28]: 0x800E026F 0x004069AC
-> >>> 0x00000004 0x00413E60
-> >>> [  273.401631] ath10k_pci 0001:01:00.0: [32]: 0x800C383A 0x004069DC
-> >>> 0x00413CB0 0x00400000
-> >>> [  273.409529] ath10k_pci 0001:01:00.0: [36]: 0x809800A3 0x00406A0C
-> >>> 0x00413CC0 0x009C4750
-> >>> [  273.417429] ath10k_pci 0001:01:00.0: [40]: 0x8098003A 0x00406A5C
-> >>> 0x00400000 0x00400600
-> >>> [  273.425329] ath10k_pci 0001:01:00.0: [44]: 0x809607C1 0x00406A8C
-> >>> 0xD8400100 0x00406A9C
-> >>> [  273.433227] ath10k_pci 0001:01:00.0: [48]: 0x80960892 0x00406AAC
-> >>> 0x00000000 0x00000008
-> >>> [  273.441127] ath10k_pci 0001:01:00.0: [52]: 0x80960E39 0x00406ACC
-> >>> 0x00400000 0x00400600
-> >>> [  273.449027] ath10k_pci 0001:01:00.0: [56]: 0x80960E9D 0x00406AEC
-> >>> 0x00000000 0x00400600
-> >>> [  273.456924] ath10k_pci 0001:01:00.0: Copy Engine register dump:
-> >>> [  273.464831] ath10k_pci 0001:01:00.0: [00]: 0x0004a000  12  12  29 =
- 28
-> >>> [  273.470647] ath10k_pci 0001:01:00.0: [01]: 0x0004a400  11  11  10 =
- 11
-> >>> [  273.477243] ath10k_pci 0001:01:00.0: [02]: 0x0004a800   0   0  63 =
-  0
-> >>> [  273.483664] ath10k_pci 0001:01:00.0: [03]: 0x0004ac00   0   0   0 =
-  0
-> >>> [  273.490088] ath10k_pci 0001:01:00.0: [04]: 0x0004b000   0   0   0 =
-  0
-> >>> [  273.496512] ath10k_pci 0001:01:00.0: [05]: 0x0004b400   0   0   0 =
-  0
-> >>> [  273.502936] ath10k_pci 0001:01:00.0: [06]: 0x0004b800   0   0   0 =
-  0
-> >>> [  273.509360] ath10k_pci 0001:01:00.0: [07]: 0x0004bc00   1   1   1 =
-  1
-> >>> [  273.515783] ath10k_pci 0001:01:00.0: [08]: 0x0004c000   0   0 127 =
-  0
-> >>> [  273.522208] ath10k_pci 0001:01:00.0: [09]: 0x0004c400   1   1   1 =
-  1
-> >>> [  273.528632] ath10k_pci 0001:01:00.0: [10]: 0x0004c800   0   0   0 =
-  0
-> >>> [  273.535054] ath10k_pci 0001:01:00.0: [11]: 0x0004cc00   0   0   0 =
-  0
-> >>> [  274.326491] ath10k_pci 0001:01:00.0: failed to receive control
-> >>> response completion, polling..
-> >>> [  275.356625] ath10k_pci 0001:01:00.0: ctl_resp never came in (-110)
-> >>> [  275.356672] ath10k_pci 0001:01:00.0: failed to connect to HTC: -11=
-0
-> >>> [  275.436389] ath10k_pci 0001:01:00.0: could not init core (-110)
-> >>> [  275.436925] ath10k_pci 0001:01:00.0: could not probe fw (-110)
-> >>> [  275.472295] ath10k_pci 0001:01:00.0: cannot restart a device that
-> >>> hasn't been started
-> >>>
-> >>> Various tests with others firmware from candelatech , stock LEDE 17.0=
-1
-> >>> or dd-wrt give me firmware crash also
-> >>>
-> >>> I already tried to enable debug info for firmware crash with 'rmmod
-> >>> ath10k_pci; rmmod ath10k_core; modprobe ath10k_core
-> >>> debug_mask=3D0xffffffff ; modprobe ath10k_pci ' but without success
-> >>>
-> >>> Flashing back netgear factory firmware is OK, and all is functionnal
-> >>>
-> >>> What can I do next ?
-> >>>
-> >>> Thanks all
-> >>>
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/dri=
+vers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+index ab06eca..4e9eb46 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+@@ -54,6 +54,53 @@ MODULE_PARM_DESC(flashboot, "set to 0 to use FW binary f=
+ile on FS");
+=20
+ #define DRV_NAME	"qtnfmac_pearl_pcie"
+=20
++struct qtnf_pearl_bda {
++	__le16 bda_len;
++	__le16 bda_version;
++	__le32 bda_pci_endian;
++	__le32 bda_ep_state;
++	__le32 bda_rc_state;
++	__le32 bda_dma_mask;
++	__le32 bda_msi_addr;
++	__le32 bda_flashsz;
++	u8 bda_boardname[PCIE_BDA_NAMELEN];
++	__le32 bda_rc_msi_enabled;
++	u8 bda_hhbm_list[PCIE_HHBM_MAX_SIZE];
++	__le32 bda_dsbw_start_index;
++	__le32 bda_dsbw_end_index;
++	__le32 bda_dsbw_total_bytes;
++	__le32 bda_rc_tx_bd_base;
++	__le32 bda_rc_tx_bd_num;
++	u8 bda_pcie_mac[QTN_ENET_ADDR_LENGTH];
++	struct qtnf_shm_ipc_region bda_shm_reg1 __aligned(4096); /* host TX */
++	struct qtnf_shm_ipc_region bda_shm_reg2 __aligned(4096); /* host RX */
++} __packed;
++
++struct qtnf_pearl_tx_bd {
++	__le32 addr;
++	__le32 addr_h;
++	__le32 info;
++	__le32 info_h;
++} __packed;
++
++struct qtnf_pearl_rx_bd {
++	__le32 addr;
++	__le32 addr_h;
++	__le32 info;
++	__le32 info_h;
++	__le32 next_ptr;
++	__le32 next_ptr_h;
++} __packed;
++
++struct qtnf_pearl_fw_hdr {
++	u8 boardflg[8];
++	__le32 fwsize;
++	__le32 seqnum;
++	__le32 type;
++	__le32 pktlen;
++	__le32 crc;
++} __packed;
++
+ struct qtnf_pcie_pearl_state {
+ 	struct pci_dev  *pdev;
+=20
+@@ -78,7 +125,7 @@ struct qtnf_pcie_pearl_state {
+ 	struct qtnf_shm_ipc shm_ipc_ep_in;
+ 	struct qtnf_shm_ipc shm_ipc_ep_out;
+=20
+-	struct qtnf_pcie_bda __iomem *bda;
++	struct qtnf_pearl_bda __iomem *bda;
+ 	void __iomem *pcie_reg_base;
+=20
+ 	u16 tx_bd_num;
+@@ -87,10 +134,10 @@ struct qtnf_pcie_pearl_state {
+ 	struct sk_buff **tx_skb;
+ 	struct sk_buff **rx_skb;
+=20
+-	struct qtnf_tx_bd *tx_bd_vbase;
++	struct qtnf_pearl_tx_bd *tx_bd_vbase;
+ 	dma_addr_t tx_bd_pbase;
+=20
+-	struct qtnf_rx_bd *rx_bd_vbase;
++	struct qtnf_pearl_rx_bd *rx_bd_vbase;
+ 	dma_addr_t rx_bd_pbase;
+=20
+ 	dma_addr_t bd_table_paddr;
+@@ -445,8 +492,8 @@ static int alloc_bd_table(struct qtnf_pcie_pearl_state =
+*priv)
+ 	void *vaddr;
+ 	int len;
+=20
+-	len =3D priv->tx_bd_num * sizeof(struct qtnf_tx_bd) +
+-		priv->rx_bd_num * sizeof(struct qtnf_rx_bd);
++	len =3D priv->tx_bd_num * sizeof(struct qtnf_pearl_tx_bd) +
++		priv->rx_bd_num * sizeof(struct qtnf_pearl_rx_bd);
+=20
+ 	vaddr =3D dmam_alloc_coherent(&priv->pdev->dev, len, &paddr, GFP_KERNEL);
+ 	if (!vaddr)
+@@ -470,8 +517,8 @@ static int alloc_bd_table(struct qtnf_pcie_pearl_state =
+*priv)
+=20
+ 	/* rx bd */
+=20
+-	vaddr =3D ((struct qtnf_tx_bd *)vaddr) + priv->tx_bd_num;
+-	paddr +=3D priv->tx_bd_num * sizeof(struct qtnf_tx_bd);
++	vaddr =3D ((struct qtnf_pearl_tx_bd *)vaddr) + priv->tx_bd_num;
++	paddr +=3D priv->tx_bd_num * sizeof(struct qtnf_pearl_tx_bd);
+=20
+ 	priv->rx_bd_vbase =3D vaddr;
+ 	priv->rx_bd_pbase =3D paddr;
+@@ -482,7 +529,7 @@ static int alloc_bd_table(struct qtnf_pcie_pearl_state =
+*priv)
+ #endif
+ 	writel(QTN_HOST_LO32(paddr),
+ 	       PCIE_HDP_TX_HOST_Q_BASE_L(priv->pcie_reg_base));
+-	writel(priv->rx_bd_num | (sizeof(struct qtnf_rx_bd)) << 16,
++	writel(priv->rx_bd_num | (sizeof(struct qtnf_pearl_rx_bd)) << 16,
+ 	       PCIE_HDP_TX_HOST_Q_SZ_CTRL(priv->pcie_reg_base));
+=20
+ 	pr_debug("RX descriptor table: vaddr=3D0x%p paddr=3D%pad\n", vaddr, &padd=
+r);
+@@ -492,7 +539,7 @@ static int alloc_bd_table(struct qtnf_pcie_pearl_state =
+*priv)
+=20
+ static int skb2rbd_attach(struct qtnf_pcie_pearl_state *priv, u16 index)
+ {
+-	struct qtnf_rx_bd *rxbd;
++	struct qtnf_pearl_rx_bd *rxbd;
+ 	struct sk_buff *skb;
+ 	dma_addr_t paddr;
+=20
+@@ -539,7 +586,7 @@ static int alloc_rx_buffers(struct qtnf_pcie_pearl_stat=
+e *priv)
+ 	int ret =3D 0;
+=20
+ 	memset(priv->rx_bd_vbase, 0x0,
+-	       priv->rx_bd_num * sizeof(struct qtnf_rx_bd));
++	       priv->rx_bd_num * sizeof(struct qtnf_pearl_rx_bd));
+=20
+ 	for (i =3D 0; i < priv->rx_bd_num; i++) {
+ 		ret =3D skb2rbd_attach(priv, i);
+@@ -553,8 +600,8 @@ static int alloc_rx_buffers(struct qtnf_pcie_pearl_stat=
+e *priv)
+ /* all rx/tx activity should have ceased before calling this function */
+ static void qtnf_free_xfer_buffers(struct qtnf_pcie_pearl_state *priv)
+ {
+-	struct qtnf_tx_bd *txbd;
+-	struct qtnf_rx_bd *rxbd;
++	struct qtnf_pearl_tx_bd *txbd;
++	struct qtnf_pearl_rx_bd *rxbd;
+ 	struct sk_buff *skb;
+ 	dma_addr_t paddr;
+ 	int i;
+@@ -622,7 +669,7 @@ static int qtnf_pcie_init_xfer(struct qtnf_pcie_pearl_s=
+tate *priv)
+ 		return -EINVAL;
+ 	}
+=20
+-	val =3D priv->tx_bd_num * sizeof(struct qtnf_tx_bd);
++	val =3D priv->tx_bd_num * sizeof(struct qtnf_pearl_tx_bd);
+ 	if (val > PCIE_HHBM_MAX_SIZE) {
+ 		pr_err("tx_bd_size_param %u is too large\n",
+ 		       priv->tx_bd_num);
+@@ -671,7 +718,7 @@ static int qtnf_pcie_init_xfer(struct qtnf_pcie_pearl_s=
+tate *priv)
+=20
+ static void qtnf_pcie_data_tx_reclaim(struct qtnf_pcie_pearl_state *priv)
+ {
+-	struct qtnf_tx_bd *txbd;
++	struct qtnf_pearl_tx_bd *txbd;
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
+ 	dma_addr_t paddr;
+@@ -741,7 +788,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
+ct sk_buff *skb)
+ {
+ 	struct qtnf_pcie_pearl_state *priv =3D (void *)get_bus_priv(bus);
+ 	dma_addr_t txbd_paddr, skb_paddr;
+-	struct qtnf_tx_bd *txbd;
++	struct qtnf_pearl_tx_bd *txbd;
+ 	unsigned long flags;
+ 	int len, i;
+ 	u32 info;
+@@ -782,7 +829,7 @@ static int qtnf_pcie_data_tx(struct qtnf_bus *bus, stru=
+ct sk_buff *skb)
+ 	dma_wmb();
+=20
+ 	/* write new TX descriptor to PCIE_RX_FIFO on EP */
+-	txbd_paddr =3D priv->tx_bd_pbase + i * sizeof(struct qtnf_tx_bd);
++	txbd_paddr =3D priv->tx_bd_pbase + i * sizeof(struct qtnf_pearl_tx_bd);
+=20
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 	writel(QTN_HOST_HI32(txbd_paddr),
+@@ -874,7 +921,7 @@ static irqreturn_t qtnf_interrupt(int irq, void *data)
+ static int qtnf_rx_data_ready(struct qtnf_pcie_pearl_state *priv)
+ {
+ 	u16 index =3D priv->rx_bd_r_index;
+-	struct qtnf_rx_bd *rxbd;
++	struct qtnf_pearl_rx_bd *rxbd;
+ 	u32 descw;
+=20
+ 	rxbd =3D &priv->rx_bd_vbase[index];
+@@ -893,7 +940,7 @@ static int qtnf_rx_poll(struct napi_struct *napi, int b=
+udget)
+ 	struct net_device *ndev =3D NULL;
+ 	struct sk_buff *skb =3D NULL;
+ 	int processed =3D 0;
+-	struct qtnf_rx_bd *rxbd;
++	struct qtnf_pearl_rx_bd *rxbd;
+ 	dma_addr_t skb_paddr;
+ 	int consume;
+ 	u32 descw;
+@@ -1124,7 +1171,7 @@ static int qtnf_ep_fw_send(struct qtnf_pcie_pearl_sta=
+te *priv, uint32_t size,
+ 	struct pci_dev *pdev =3D priv->pdev;
+ 	struct qtnf_bus *bus =3D pci_get_drvdata(pdev);
+=20
+-	struct qtnf_pcie_fw_hdr *hdr;
++	struct qtnf_pearl_fw_hdr *hdr;
+ 	u8 *pdata;
+=20
+ 	int hds =3D sizeof(*hdr);
+@@ -1139,7 +1186,7 @@ static int qtnf_ep_fw_send(struct qtnf_pcie_pearl_sta=
+te *priv, uint32_t size,
+ 	skb->len =3D QTN_PCIE_FW_BUFSZ;
+ 	skb->dev =3D NULL;
+=20
+-	hdr =3D (struct qtnf_pcie_fw_hdr *)skb->data;
++	hdr =3D (struct qtnf_pearl_fw_hdr *)skb->data;
+ 	memcpy(hdr->boardflg, QTN_PCIE_BOARDFLG, strlen(QTN_PCIE_BOARDFLG));
+ 	hdr->fwsize =3D cpu_to_le32(size);
+ 	hdr->seqnum =3D cpu_to_le32(blk);
+@@ -1169,7 +1216,7 @@ static int qtnf_ep_fw_send(struct qtnf_pcie_pearl_sta=
+te *priv, uint32_t size,
+ static int
+ qtnf_ep_fw_load(struct qtnf_pcie_pearl_state *priv, const u8 *fw, u32 fw_s=
+ize)
+ {
+-	int blk_size =3D QTN_PCIE_FW_BUFSZ - sizeof(struct qtnf_pcie_fw_hdr);
++	int blk_size =3D QTN_PCIE_FW_BUFSZ - sizeof(struct qtnf_pearl_fw_hdr);
+ 	int blk_count =3D fw_size / blk_size + ((fw_size % blk_size) ? 1 : 0);
+ 	const u8 *pblk =3D fw;
+ 	int threshold =3D 0;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h b=
+/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h
+index 00bb21a..af528b8 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie_ipc.h
+@@ -101,44 +101,6 @@ enum qtnf_pcie_bda_ipc_flags {
+ 	QTN_PCIE_IPC_FLAG_SHM_PIO	=3D BIT(1),
+ };
+=20
+-struct qtnf_pcie_bda {
+-	__le16 bda_len;
+-	__le16 bda_version;
+-	__le32 bda_pci_endian;
+-	__le32 bda_ep_state;
+-	__le32 bda_rc_state;
+-	__le32 bda_dma_mask;
+-	__le32 bda_msi_addr;
+-	__le32 bda_flashsz;
+-	u8 bda_boardname[PCIE_BDA_NAMELEN];
+-	__le32 bda_rc_msi_enabled;
+-	u8 bda_hhbm_list[PCIE_HHBM_MAX_SIZE];
+-	__le32 bda_dsbw_start_index;
+-	__le32 bda_dsbw_end_index;
+-	__le32 bda_dsbw_total_bytes;
+-	__le32 bda_rc_tx_bd_base;
+-	__le32 bda_rc_tx_bd_num;
+-	u8 bda_pcie_mac[QTN_ENET_ADDR_LENGTH];
+-	struct qtnf_shm_ipc_region bda_shm_reg1 __aligned(4096); /* host TX */
+-	struct qtnf_shm_ipc_region bda_shm_reg2 __aligned(4096); /* host RX */
+-} __packed;
+-
+-struct qtnf_tx_bd {
+-	__le32 addr;
+-	__le32 addr_h;
+-	__le32 info;
+-	__le32 info_h;
+-} __packed;
+-
+-struct qtnf_rx_bd {
+-	__le32 addr;
+-	__le32 addr_h;
+-	__le32 info;
+-	__le32 info_h;
+-	__le32 next_ptr;
+-	__le32 next_ptr_h;
+-} __packed;
+-
+ enum qtnf_fw_loadtype {
+ 	QTN_FW_DBEGIN,
+ 	QTN_FW_DSUB,
+@@ -146,13 +108,4 @@ enum qtnf_fw_loadtype {
+ 	QTN_FW_CTRL
+ };
+=20
+-struct qtnf_pcie_fw_hdr {
+-	u8 boardflg[8];
+-	__le32 fwsize;
+-	__le32 seqnum;
+-	__le32 type;
+-	__le32 pktlen;
+-	__le32 crc;
+-} __packed;
+-
+ #endif /* _QTN_FMAC_PCIE_IPC_H_ */
+--=20
+2.9.5
