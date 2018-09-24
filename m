@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47350 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725981AbeIFNS4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Sep 2018 09:18:56 -0400
-Message-ID: <aa36d7cb91ef0aea757b46623c8d5bef8d61bc40.camel@coelho.fi> (sfid-20180906_104436_949074_E49308E0)
-From: Luca Coelho <luca@coelho.fi>
-To: Hao Wei Tee <angelsl@in04.sg>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>
-Date: Thu, 06 Sep 2018 11:44:30 +0300
-In-Reply-To: <2ee6e4d9-d555-c29b-815d-3e66890189bc@in04.sg>
-References: <20180821063657.30071-1-luca@coelho.fi>
-         <20180821063657.30071-15-luca@coelho.fi>
-         <2ee6e4d9-d555-c29b-815d-3e66890189bc@in04.sg>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 14/15] iwlwifi: mvm: Send LQ command as async when
- necessary
+Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727441AbeIXLOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 07:14:15 -0400
+From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH 10/11] qtnfmac: wait for FW load work to finish at PCIe remove
+Date: Mon, 24 Sep 2018 05:13:32 +0000
+Message-ID: <20180924051246.13371-11-igor.mitsyanko.os@quantenna.com> (sfid-20180924_071410_140875_3ED2F1CB)
+References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-09-06 at 16:22 +0800, Hao Wei Tee wrote:
-> Hi,
+Waiting for "completion" to be set in FW load thread can not be used
+in case PCIe remove is called before FW load work was scheduled.
+Just wait for work completion instead to avoid problems.
 
-Hi Hao Wei,
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/bus.h       | 1 -
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 4 +---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-
-> On 21/8/18 2:36 PM, Luca Coelho wrote:
-> > From: Avraham Stern <avraham.stern@intel.com>
-> > 
-> > The parameter that indicated whether the LQ command should be sent
-> > as sync or async was removed, causing the LQ command to be sent as
-> > sync from interrupt context (e.g. from the RX path). This resulted
-> > in a kernel warning: "scheduling while atomic" and failing to send
-> > the LQ command, which ultimately leads to a queue hang.
-> > 
-> > Fix it by adding back the required parameter to send the command as
-> > sync only when it is allowed.
-> > 
-> > Fixes: d94c5a820d10 ("iwlwifi: mvm: open BA session only when sta is authorized")
-> > Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> I'm not sure whether you guys normally send fixes to stable, but this
-> really should go to stable. I run into this bug as often as a few times
-> an hour and sometimes it leads to IRQs from other devices being dropped
-> (e.g. touchpad, in turn causing the driver to timeout and quit, and the
-> touchpad dies).
-
-We do send things for stable and the "Fixes" tag included in this patch
-will cause it to be automatically considered for the stable releases
-that contain the commit it points to.  So we should be fine here.
-
-If you notice that, for some reason, this doesn't end up applied in the
-specific stable kernel you need it on, please let us know and we'll
-check it out.  Also note that anyone can suggest any patch to stable
-releases, there's a process[1] in place for that.
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst
-
-Thanks for your contribution!
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/bus.h b/drivers/net/wir=
+eless/quantenna/qtnfmac/bus.h
+index 7c4f856..528ca7f 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/bus.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/bus.h
+@@ -62,7 +62,6 @@ struct qtnf_bus {
+ 	struct qtnf_hw_info hw_info;
+ 	struct napi_struct mux_napi;
+ 	struct net_device mux_dev;
+-	struct completion firmware_init_complete;
+ 	struct workqueue_struct *workqueue;
+ 	struct work_struct fw_work;
+ 	struct work_struct event_work;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/n=
+et/wireless/quantenna/qtnfmac/pcie/pcie.c
+index ab42d11..fd2f1a1 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+@@ -143,7 +143,6 @@ void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool =
+boot_success,
+ 		bus->fw_state =3D QTNF_FW_STATE_DETACHED;
+ 	}
+=20
+-	complete(&bus->firmware_init_complete);
+ 	put_device(&pdev->dev);
+ }
+=20
+@@ -317,7 +316,6 @@ int qtnf_pcie_probe(struct pci_dev *pdev, size_t priv_s=
+ize,
+ 	pcie_priv->pdev =3D pdev;
+ 	pcie_priv->tx_stopped =3D 0;
+=20
+-	init_completion(&bus->firmware_init_complete);
+ 	mutex_init(&bus->bus_lock);
+ 	spin_lock_init(&pcie_priv->tx_lock);
+ 	spin_lock_init(&pcie_priv->tx_reclaim_lock);
+@@ -389,7 +387,7 @@ static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bus=
+_priv *priv)
+=20
+ void qtnf_pcie_remove(struct qtnf_bus *bus, struct qtnf_pcie_bus_priv *pri=
+v)
+ {
+-	wait_for_completion(&bus->firmware_init_complete);
++	cancel_work_sync(&bus->fw_work);
+=20
+ 	if (bus->fw_state =3D=3D QTNF_FW_STATE_ACTIVE ||
+ 	    bus->fw_state =3D=3D QTNF_FW_STATE_EP_DEAD)
+--=20
+2.9.5
