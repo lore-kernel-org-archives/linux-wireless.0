@@ -1,80 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:55277 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbeIESWK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Sep 2018 14:22:10 -0400
-Received: by mail-wm0-f65.google.com with SMTP id c14-v6so8082988wmb.4
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Sep 2018 06:51:50 -0700 (PDT)
+Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727430AbeIXLOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 07:14:16 -0400
+From: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH 11/11] qtnfmac_pcie: check for correct CHIP ID at pcie probe
+Date: Mon, 24 Sep 2018 05:13:33 +0000
+Message-ID: <20180924051246.13371-12-igor.mitsyanko.os@quantenna.com> (sfid-20180924_072419_476668_1DDB07FC)
+References: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+In-Reply-To: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
- <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
- <5B30A85C.5080105@broadcom.com> <CACna6ryvEmgo6LKHsOGj_kcjZcFrFqTOV1EDtCN=oRd5BO5uWw@mail.gmail.com>
- <5B8FB8C2.2040200@broadcom.com>
-In-Reply-To: <5B8FB8C2.2040200@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 5 Sep 2018 15:51:37 +0200
-Message-ID: <CACna6rye_PFFKvYF4xQtLb2YaT2S7zH2TSg2gj9+xd7Yw7ucmA@mail.gmail.com> (sfid-20180905_155154_669575_E9139C69)
-Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 5 Sep 2018 at 13:06, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 8/29/2018 10:17 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > Hi Arend,
-> >
-> > On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
-> > <arend.vanspriel@broadcom.com> wrote:
-> >> On 6/25/2018 6:40 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> >>> On Sun, 24 Jun 2018 at 13:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.c=
-om> wrote:
-> >>>> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
-> >>>> <arend.vanspriel@broadcom.com> wrote:
-> >>>>> Here a couple of patches in preparation of monitor mode support. It
-> >>>>> is mostly about querying firmware for support. While at it I stumbl=
-ed
-> >>>>> upon the fact that 160MHz was not completely implemented in the dri=
-ver
-> >>>>> so there is a patch for that as well.
-> >>>>>
-> >>>>> The first two patches are actually some changes to the patches that
-> >>>>> Rafal submitted. So this series depend on:
-> >>>>>
-> >>>>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
-> >>>>>
-> >>>>> These apply to the master branch of the wireless-drivers-next repos=
-itory.
-> >>>>>
-> >>>>> [1] https://patchwork.kernel.org/patch/10474799/
-> >>>>
-> >>>> I find it pointless to submit fixes for patches that weren't accepte=
-d
-> >>>> yet. Let's work on improving original patches while they are still
-> >>>> pending.
-> >>>
-> >>> I sent V4 with changes pointed our by Arend. That obsoletes all (?)
-> >>> monitor patches from this patchset. I believe it was cleaner to
-> >>> improve original patchset (not pushed yet).
-> >>>
-> >>> My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
-> >>> related) and drop the others.
-> >>
-> >> Well. Given that Kalle prefers applying "all-or-nothing" I will resubm=
-it
-> >> the series addressing the issues you found.
-> >
-> > Would you have a moment to resubmit these 2 patches or do you mind if I=
- do that?
->
-> Found a moment. Should be in patchwork now.
+Make sure that wifi device is of supported variant by checking it's CHIP ID
+before completing a probe sequence.
 
-Thank you! :)
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 24 ++++++++++++++++++=
+++++
+ .../net/wireless/quantenna/qtnfmac/qtn_hw_ids.h    | 14 +++++++++++++
+ 2 files changed, 38 insertions(+)
 
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/dri=
+vers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+index 424e367..d7a8d20 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+@@ -1090,6 +1090,26 @@ static void qtnf_pearl_reclaim_tasklet_fn(unsigned l=
+ong data)
+ 	qtnf_en_txdone_irq(ps);
+ }
+=20
++static int qtnf_pearl_check_chip_id(struct qtnf_pcie_pearl_state *ps)
++{
++	unsigned int chipid;
++
++	chipid =3D qtnf_chip_id_get(ps->base.sysctl_bar);
++
++	switch (chipid) {
++	case QTN_CHIP_ID_PEARL:
++	case QTN_CHIP_ID_PEARL_B:
++	case QTN_CHIP_ID_PEARL_C:
++		pr_info("chip ID is 0x%x\n", chipid);
++		break;
++	default:
++		pr_err("incorrect chip ID 0x%x\n", chipid);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
+ static int qtnf_pcie_pearl_probe(struct pci_dev *pdev, const struct pci_de=
+vice_id *id)
+ {
+ 	struct qtnf_shm_ipc_int ipc_int;
+@@ -1129,6 +1149,10 @@ static int qtnf_pcie_pearl_probe(struct pci_dev *pde=
+v, const struct pci_device_i
+ 	qtnf_pcie_init_shm_ipc(&ps->base, &ps->bda->bda_shm_reg1,
+ 			       &ps->bda->bda_shm_reg2, &ipc_int);
+=20
++	ret =3D qtnf_pearl_check_chip_id(ps);
++	if (ret)
++		goto error;
++
+ 	ret =3D qtnf_pcie_pearl_init_xfer(ps);
+ 	if (ret) {
+ 		pr_err("PCIE xfer init failed\n");
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h b/drivers/=
+net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+index c4ad40d..1fe798a 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+@@ -25,8 +25,22 @@
+=20
+ #define	PCIE_DEVICE_ID_QTN_PEARL	(0x0008)
+=20
++#define QTN_REG_SYS_CTRL_CSR		0x14
++#define QTN_CHIP_ID_MASK		0xF0
++#define QTN_CHIP_ID_TOPAZ		0x40
++#define QTN_CHIP_ID_PEARL		0x50
++#define QTN_CHIP_ID_PEARL_B		0x60
++#define QTN_CHIP_ID_PEARL_C		0x70
++
+ /* FW names */
+=20
+ #define QTN_PCI_PEARL_FW_NAME		"qtn/fmac_qsr10g.img"
+=20
++static inline unsigned int qtnf_chip_id_get(const void __iomem *regs_base)
++{
++	u32 board_rev =3D readl(regs_base + QTN_REG_SYS_CTRL_CSR);
++
++	return board_rev & QTN_CHIP_ID_MASK;
++}
++
+ #endif	/* _QTN_HW_IDS_H_ */
 --=20
-Rafa=C5=82
+2.9.5
