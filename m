@@ -1,318 +1,141 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727229AbeIRMDC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Sep 2018 08:03:02 -0400
-From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH] ath10k: Add debugfs support to get power save state change  of STA
-Date: Tue, 18 Sep 2018 12:04:27 +0530
-Message-Id: <1537252467-17353-1-git-send-email-mkenna@codeaurora.org> (sfid-20180918_083158_251494_AC844DF4)
+Return-Path: <SRS0=DN1r=MG=vger.kernel.org=linux-wireless-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
+Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 204F4C433F4
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Sep 2018 05:13:58 +0000 (UTC)
+Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
+	by mail.kernel.org (Postfix) with ESMTP id 8E1A121480
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Sep 2018 05:13:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="nz/foppe"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E1A121480
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
+Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S1726711AbeIXLNt (ORCPT
+        <rfc822;linux-wireless@archiver.kernel.org>);
+        Mon, 24 Sep 2018 07:13:49 -0400
+Received: from mail-eopbgr700066.outbound.protection.outlook.com ([40.107.70.66]:28567
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726366AbeIXLNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Sep 2018 07:13:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sVm1H3CmJdHU3d8rl216UDLDep1aWG5EPewFYypD3dk=;
+ b=nz/foppebUhXxThXooRAwtfThqp18dnD9OnbTdp0nSCPlFOUqdo1L1JFObQ6OSt0wlIYaQaafCA2OzKyzT7FoBXSCX2GdhTX8fWphWfzD2fniyMhTcOg8Zat2ralByswtGjp8HUiEuP3JLnX6Kh/oLSJbO6xcIwr6hs1Ts7WprQ=
+Received: from MWHPR05MB3326.namprd05.prod.outlook.com (10.174.174.165) by
+ MWHPR05MB2975.namprd05.prod.outlook.com (10.168.246.17) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1143.11; Mon, 24 Sep 2018 05:13:24 +0000
+Received: from MWHPR05MB3326.namprd05.prod.outlook.com
+ ([fe80::6d10:24a9:2432:b2dc]) by MWHPR05MB3326.namprd05.prod.outlook.com
+ ([fe80::6d10:24a9:2432:b2dc%2]) with mapi id 15.20.1164.017; Mon, 24 Sep 2018
+ 05:13:24 +0000
+From:   Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     Igor Mitsyanko SO <igor.mitsyanko.os@quantenna.com>,
+        Sergey Matyukevich OS <sergey.matyukevich.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH 00/11] qtnfmac_pcie: extract device-independent PCIe driver
+ code
+Thread-Topic: [PATCH 00/11] qtnfmac_pcie: extract device-independent PCIe
+ driver code
+Thread-Index: AQHUU8VR492UWB0PQU6HIWNieV+XpA==
+Date:   Mon, 24 Sep 2018 05:13:24 +0000
+Message-ID: <20180924051246.13371-1-igor.mitsyanko.os@quantenna.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BYAPR07CA0002.namprd07.prod.outlook.com
+ (2603:10b6:a02:bc::15) To MWHPR05MB3326.namprd05.prod.outlook.com
+ (2603:10b6:301:3d::37)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [12.131.200.68]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;MWHPR05MB2975;6:+wxnUCmXHibZsN6Rdw/lJ+UcbN60BbvYWoNvX+Oin4t9AQjhX213ZveF9QHU3z8kJciqKfKeJhkKINrH0xUPIGH6w6JdOcEOSIL8bEBrZhgJSUQxL60wmfuJkTxCsuvQBVSAvSxMxxspWBywDAMwKZJOSYf/W4EcY6KyGQNMX5Z6P0abxxt4d3kllYN04xEqSyK8aJV+powkXgJOmQSIA11FXZs0ov0RFhHBn3UDLMq0l7akYEyRUF1Q1zwteYUJC+84YFIGucbr2lZ4x27dRyGmGRgfelWjOYwZvaKYisfpEH6v31PYGAzO1SsQjDkZ3h455fX4edIB2mYW08JwObqONTIstdQN8d2qdC9RNJHWkhSR0ZPNr42segjc+0LzCZN/GO43xEE0PmXlcZUo0MqimP4o69kmwt9AOeqFLTwx3n8izUTJ7FXxnp4loA6HU+Hr7mg/VFZilBSFxPZExw==;5:w8eL/7YLy6zheYM40278mQ6P+sSh3tKvT25Y2tMOpcMdasNiVI7c4KxNIt1mP6i9e7J9x1lrWdbShQiKPdr/HWAWHz++wCF3KEVtWKt5VOEoEQRiFVAXbOP+6Ux4h1iyDgL5W+5Dls/20gWzEyWEW073ijt8CWLAcEcA1zyICa4=;7:BtrVc/RtpZpiZ3p9H3Yx7PnB1gR8cPX2LxW+Lzlpvrl5NBfGFjExvt69b6pEkw8BV5B3jVgVzaCW6TqLO5dfJpi/49jj+NG5EgkuKrDGTSxZNJgX0B/3clo2VaJKDPDvFzd6rCZxcihbEOih279Y7Ltc3G+ndLflQn+XDsBUubZN3Mrqz+fLy6SkLfbHRl4415OlDuiZ3M4CaxCqmRFBBz6om2hZEASubEVQ5rOU3Fsb6Pqa/ffiR5pnwkLqPVcP
+x-ms-office365-filtering-correlation-id: 3ab91952-971a-443a-e55b-08d621dc73b5
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR05MB2975;
+x-ms-traffictypediagnostic: MWHPR05MB2975:
+x-microsoft-antispam-prvs: <MWHPR05MB2975D290572A50A68963E881B0170@MWHPR05MB2975.namprd05.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3231355)(944501410)(52105095)(3002001)(10201501046)(149062)(150027)(6041310)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123558120)(201708071742011)(7699051)(76991041);SRVR:MWHPR05MB2975;BCL:0;PCL:0;RULEID:;SRVR:MWHPR05MB2975;
+x-forefront-prvs: 0805EC9467
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(136003)(366004)(396003)(39840400004)(199004)(189003)(86362001)(68736007)(81166006)(52116002)(2900100001)(6916009)(99286004)(486006)(36756003)(316002)(2616005)(305945005)(71200400001)(71190400001)(6512007)(105586002)(106356001)(7736002)(107886003)(103116003)(8936002)(14444005)(14454004)(54906003)(81156014)(5250100002)(25786009)(478600001)(6486002)(97736004)(6116002)(1076002)(2501003)(5660300001)(3846002)(256004)(66066001)(102836004)(6346003)(2906002)(5640700003)(26005)(53936002)(386003)(6506007)(6436002)(476003)(4326008)(186003)(8676002)(2351001);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR05MB2975;H:MWHPR05MB3326.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=igor.mitsyanko.os@quantenna.com; 
+x-microsoft-antispam-message-info: 06qjix7+CRwRDOlrLzpviZGZzURBDwjC0J0KYEdOguprApgOz6MWKgSUfNHnuPXWPHYaF4B/scfSS7/egrIZacqPShBMGNkoZvNvaAWU/MldAjy+pBWgNfhGJQeb9kVXGip+9G5N+qNIaAqK/DEB1FZ8W1xdWQ+Yr3FbAOhYEHXheQhiiwJJGMh9bfAHsfPAgUFnOW+s6LZ9zo3y0YryOgz4ZEZ37xp0buNn4rrzQErh+xdM4QP5Z/1MDcpTgO/TuibR815ab91pT9ZbO3dSCbOfNxkELsbD4EMl9avJs3q/W25QEl8WxSpwvJqW5SHmHN87AqlAncuULMV1qSECoX7wnkKV42eX6OJyQO5ImVQ=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ab91952-971a-443a-e55b-08d621dc73b5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Sep 2018 05:13:24.0508
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR05MB2975
 Sender: linux-wireless-owner@vger.kernel.org
+Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: linux-wireless@vger.kernel.org
+Message-ID: <20180924051324.7qABsEadByU7sl6-XZLvdXkz0HmxECsi3vcCsQnVWUo@z>
 
-This patch helps to get the power save state change of each peer
-connected to the AP. With WMI_10_4_PEER_STA_PS_STATECHG_EVENTID
-event, ps state of each peer is reported to user space via
-debugfs.
+Purpose of the patch series is to extract a portion of PCIe driver sources
+that is common among Quantenna wifi devices. It will later be used to add
+support for additional wifi card.
 
-Use the below command to get the ps state of each sta:
-cat /sys/kernel/debug/ieee80211/phyX/netdev::wlanX/stations/
-XX:XX:XX:XX:XX:XX/peer_ps_state
+As a result, majority of changes here are moving code blocks around and
+renaming without functional changes + several minor improvements.
 
-If STA is in power save state, we get the peer_ps_state value as 1.
-if STA is not in power save state, we get the peer_ps_state value as 0.
-If ps_state event is disabled, we get the peer_ps_state value as 2.
+Igor Mitsyanko (11):
+  qtnfmac_pcie: do not store FW name in driver state structure
+  qtnfmac_pcie: move Pearl pcie sources to pcie-specific directory
+  qtnfmac_pcie: rename private Pearl PCIe state structure
+  qtnfmac_pcie: indicate pearl-specific structures by their names
+  qtnfmac_pcie: pearl: rename spinlock tx0_lock to tx_lock
+  qtnfmac_pcie: separate platform-independent PCIe structure
+  qtnfmac_pcie: rename platform-specific functions
+  qtnfmac: add missing header includes to bus.h
+  qtnfmac_pcie: extract platform-independent PCIe code
+  qtnfmac: wait for FW load work to finish at PCIe remove
+  qtnfmac_pcie: check for correct CHIP ID at pcie probe
 
-We can enable/disable the ps_state events using the debugfs flag
-"ps_state_enable"
+ drivers/net/wireless/quantenna/qtnfmac/Makefile    |    3 +-
+ drivers/net/wireless/quantenna/qtnfmac/bus.h       |    5 +-
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |  404 ++++++
+ .../{pearl/pcie_bus_priv.h =3D> pcie/pcie_priv.h}    |   71 +-
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 1261 ++++++++++++++++=
++
+ .../{pearl/pcie_ipc.h =3D> pcie/pearl_pcie_ipc.h}    |   58 -
+ .../pcie_regs_pearl.h =3D> pcie/pearl_pcie_regs.h}   |    0
+ .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 1494 ----------------=
+----
+ .../net/wireless/quantenna/qtnfmac/qtn_hw_ids.h    |   14 +
+ 9 files changed, 1723 insertions(+), 1587 deletions(-)
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+ rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_bus_priv.h =3D> =
+pcie/pcie_priv.h} (51%)
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.=
+c
+ rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_ipc.h =3D> pcie/=
+pearl_pcie_ipc.h} (68%)
+ rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_regs_pearl.h =3D=
+> pcie/pearl_pcie_regs.h} (100%)
+ delete mode 100644 drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
 
-echo Y > /sys/kernel/debug/ieee80211/phyX/ath10k/ps_state_enable
+--=20
+2.9.5
 
-Y = 1 to enable and Y = 0 to disable
-
-Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
-
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.h        |  4 ++
- drivers/net/wireless/ath/ath10k/debug.c       | 82 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 29 ++++++++++
- drivers/net/wireless/ath/ath10k/mac.c         |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c         | 39 ++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h         |  7 +++
- 6 files changed, 161 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f6e5c29..66f50f3 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -505,6 +505,8 @@ struct ath10k_sta {
- 	/* Protected with ar->data_lock */
- 	struct ath10k_sta_tid_stats tid_stats[IEEE80211_NUM_TIDS + 1];
- #endif
-+	/* Protected with ar->data_lock */
-+	u32 peer_ps_state;
- };
- 
- #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5 * HZ)
-@@ -946,6 +948,8 @@ struct ath10k {
- 	u32 low_5ghz_chan;
- 	u32 high_5ghz_chan;
- 	bool ani_enabled;
-+	/* protected by conf_mutex */
-+	u8 ps_state_enable;
- 
- 	bool p2p;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index ada29a4..2c0cb67 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2398,6 +2398,85 @@ static ssize_t ath10k_write_warm_hw_reset(struct file *file,
- 	.llseek = default_llseek,
- };
- 
-+static void ath10k_peer_ps_state_disable(void *data,
-+					 struct ieee80211_sta *sta)
-+{
-+	struct ath10k *ar = data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	arsta->peer_ps_state = WMI_PEER_PS_STATE_DISABLED;
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
-+static ssize_t ath10k_write_ps_state_enable(struct file *file,
-+					    const char __user *user_buf,
-+					    size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	int ret;
-+	u32 param;
-+	u8 ps_state_enable;
-+
-+	if (kstrtou8_from_user(user_buf, count, 0, &ps_state_enable))
-+		return -EINVAL;
-+
-+	if (ps_state_enable > 1 || ps_state_enable < 0)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->ps_state_enable == ps_state_enable) {
-+		ret = count;
-+		goto exit;
-+	}
-+
-+	param = ar->wmi.pdev_param->peer_sta_ps_statechg_enable;
-+	ret = ath10k_wmi_pdev_set_param(ar, param, ps_state_enable);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to enable ps_state_enable: %d\n",
-+			    ret);
-+		goto exit;
-+	}
-+	ar->ps_state_enable = ps_state_enable;
-+
-+	if (!ar->ps_state_enable)
-+		ieee80211_iterate_stations_atomic(ar->hw,
-+						  ath10k_peer_ps_state_disable,
-+						  ar);
-+
-+	ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static ssize_t ath10k_read_ps_state_enable(struct file *file,
-+					   char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	int len = 0;
-+	char buf[32];
-+
-+	mutex_lock(&ar->conf_mutex);
-+	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-+			ar->ps_state_enable);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_ps_state_enable = {
-+	.read = ath10k_read_ps_state_enable,
-+	.write = ath10k_write_ps_state_enable,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath10k_debug_create(struct ath10k *ar)
- {
- 	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
-@@ -2534,6 +2613,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("warm_hw_reset", 0600, ar->debug.debugfs_phy, ar,
- 			    &fops_warm_hw_reset);
- 
-+	debugfs_create_file("ps_state_enable", 0600, ar->debug.debugfs_phy, ar,
-+			    &fops_ps_state_enable);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index 929f2f6..b09cdc69 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -460,6 +460,33 @@ static ssize_t ath10k_dbg_sta_read_peer_debug_trigger(struct file *file,
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_dbg_sta_read_peer_ps_state(struct file *file,
-+						 char __user *user_buf,
-+						 size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	char buf[20];
-+	int len = 0;
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-+			arsta->peer_ps_state);
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_peer_ps_state = {
-+	.open = simple_open,
-+	.read = ath10k_dbg_sta_read_peer_ps_state,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static char *get_err_str(enum ath10k_pkt_rx_err i)
- {
- 	switch (i) {
-@@ -738,4 +765,6 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	    ath10k_debug_is_extd_tx_stats_enabled(ar))
- 		debugfs_create_file("tx_stats", 0400, dir, sta,
- 				    &fops_tx_stats);
-+	debugfs_create_file("peer_ps_state", 0400, dir, sta,
-+			    &fops_peer_ps_state);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 532fc5d..60489c2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6216,6 +6216,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 	    new_state == IEEE80211_STA_NONE) {
- 		memset(arsta, 0, sizeof(*arsta));
- 		arsta->arvif = arvif;
-+		arsta->peer_ps_state = WMI_PEER_PS_STATE_DISABLED;
- 		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
- 
- 		for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0f9fccc..182717e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1307,7 +1307,8 @@
- 	.set_mcast2ucast_mode = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.set_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.remove_mcast2ucast_buffer = WMI_PDEV_PARAM_UNSUPPORTED,
--	.peer_sta_ps_statechg_enable = WMI_PDEV_PARAM_UNSUPPORTED,
-+	.peer_sta_ps_statechg_enable =
-+				WMI_10X_PDEV_PARAM_PEER_STA_PS_STATECHG_ENABLE,
- 	.igmpmld_ac_override = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.block_interbss = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.set_disable_reset_cmdid = WMI_PDEV_PARAM_UNSUPPORTED,
-@@ -5030,6 +5031,36 @@ void ath10k_wmi_event_tpc_final_table(struct ath10k *ar, struct sk_buff *skb)
- 	}
- }
- 
-+void
-+ath10k_wmi_event_peer_sta_ps_state_chg(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	struct wmi_peer_sta_ps_state_chg_event *ev;
-+	struct ieee80211_sta *sta;
-+	struct ath10k_sta *arsta;
-+	u8 peer_addr[ETH_ALEN];
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	ev = (struct wmi_peer_sta_ps_state_chg_event *)skb->data;
-+	ether_addr_copy(peer_addr, ev->peer_macaddr.addr);
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer_addr, NULL);
-+
-+	if (!sta) {
-+		ath10k_warn(ar, "failed to find station entry %pM\n",
-+			    peer_addr);
-+		goto exit;
-+	}
-+
-+	arsta = (struct ath10k_sta *)sta->drv_priv;
-+	arsta->peer_ps_state = __le32_to_cpu(ev->peer_ps_state);
-+
-+exit:
-+	rcu_read_unlock();
-+}
-+
- void ath10k_wmi_event_pdev_ftm_intg(struct ath10k *ar, struct sk_buff *skb)
- {
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_PDEV_FTM_INTG_EVENTID\n");
-@@ -5960,6 +5991,9 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_dbg(ar, ATH10K_DBG_WMI,
- 			   "received event id %d not implemented\n", id);
- 		break;
-+	case WMI_10_2_PEER_STA_PS_STATECHG_EVENTID:
-+		ath10k_wmi_event_peer_sta_ps_state_chg(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -6077,6 +6111,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_DFS_STATUS_CHECK_EVENTID:
- 		ath10k_wmi_event_dfs_status_check(ar, skb);
- 		break;
-+	case WMI_10_4_PEER_STA_PS_STATECHG_EVENTID:
-+		ath10k_wmi_event_peer_sta_ps_state_chg(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 126eb17..36f80ae 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4170,6 +4170,13 @@ enum wmi_tpc_pream_5ghz {
- 	WMI_TPC_PREAM_5GHZ_HTCUP,
- };
- 
-+#define	WMI_PEER_PS_STATE_DISABLED	2
-+
-+struct wmi_peer_sta_ps_state_chg_event {
-+	struct wmi_mac_addr peer_macaddr;
-+	__le32 peer_ps_state;
-+} __packed;
-+
- struct wmi_pdev_chanlist_update_event {
- 	/* number of channels */
- 	__le32 num_chan;
--- 
-1.9.1
