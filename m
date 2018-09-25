@@ -2,162 +2,121 @@ Return-Path: <SRS0=9L0z=MH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0075ECE561
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D0BC43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:10:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4636E20858
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:09:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4636E20858
+	by mail.kernel.org (Postfix) with ESMTP id 568B020843
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:10:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 568B020843
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728702AbeIYRQ0 convert rfc822-to-8bit (ORCPT
+        id S1728721AbeIYRRr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 13:16:26 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:56504 "EHLO
+        Tue, 25 Sep 2018 13:17:47 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:58930 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727570AbeIYRQ0 (ORCPT
+        with ESMTP id S1728619AbeIYRRr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 13:16:26 -0400
+        Tue, 25 Sep 2018 13:17:47 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w8PB97Ut006510, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w8PBAZLV006857, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w8PB97Ut006510
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w8PBAZLV006857
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Tue, 25 Sep 2018 19:09:08 +0800
+        Tue, 25 Sep 2018 19:10:35 +0800
 Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
  RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 25 Sep
- 2018 19:09:07 +0800
+ 2018 19:10:34 +0800
 From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-CC:     "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
 Subject: RE: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac wireless network chips
 Thread-Topic: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac
  wireless network chips
-Thread-Index: AQHUU/Z6fShZef+yIU+HHwSs/fcbMKUA0ulw
-Date:   Tue, 25 Sep 2018 11:09:06 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D08D7F89@RTITMBSVM01.realtek.com.tw>
+Thread-Index: AQHUVClmfShZef+yIU+HHwSs/fcbMKUA2DbA
+Date:   Tue, 25 Sep 2018 11:10:33 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D08D7FB8@RTITMBSVM01.realtek.com.tw>
 References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
-        <20180921131235.GA10556@redhat.com> <87pnx340lt.fsf@codeaurora.org>
-In-Reply-To: <87pnx340lt.fsf@codeaurora.org>
+ <052723dc-c8b9-1a40-90a4-7c8ae2b29299@lwfinger.net>
+In-Reply-To: <052723dc-c8b9-1a40-90a4-7c8ae2b29299@lwfinger.net>
 Accept-Language: zh-TW, en-US
 Content-Language: zh-TW
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-originating-ip: [172.21.68.123]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Monday, September 24, 2018 7:05 PM
-> To: Stanislaw Gruszka
-> Cc: Tony Chuang; Larry.Finger@lwfinger.net; linux-wireless@vger.kernel.org;
-> Pkshih; Andy Huang
-> Subject: Re: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac
-> wireless network chips
-> 
-> Stanislaw Gruszka <sgruszka@redhat.com> writes:
-> 
-> > On Fri, Sep 21, 2018 at 02:03:55PM +0800, yhchuang@realtek.com wrote:
-> >> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> >>
-> >> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
-> >> rtwlan supports 8822BE and 8822CE chips, and will be able to support
-> >> multi-vif combinations in run-time.
-> >>
-> >> For now, only PCI bus is supported, but rtwlan was originally designed
-> >> to optionally support three buses includes USB & SDIO. USB & SDIO
-> modules
-> >> will soon be supported by rtwlan, with configurable core module to fit
-> >> with different bus modules in the same time.
-> >>
-> >> For example, if we choose 8822BE and 8822CU, only PCI & USB modules
-> will
-> >> be selected, built, loaded into kernel. This is one of the major
-> >> difference from rtlwifi, which can only support specific combinations.
-> >>
-> >> Another difference from rtlwifi is that rtwlan is designed to support
-> >> the latest Realtek 802.11ac wireless network chips like 8822B and
-> >> 8822C series. Compared to the earlier chips supported by rtlwifi like
-> >> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
-> >> have different MAC & PHY settings, such as new multi-port feature for the
-> >> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
-> >>
-> >> Multi-Port feature is also supported under rtwlan's software architecture.
-> >> rtlwifi can only support one vif in the same time, most because of the
-> >> hardware limitations for early chips, hence the original design of it
-> >> also restricts the usage of multi-vif support, so latest chipset seems not
-> >> take advantages from its new MAC engine.
-> >>
-> >> However, rtwlan can run multiple vifs concurrently by holding them on
-> >> hardware ports provided by MAC engine, so we can easily start different
-> >> roles on a single device.
-> >>
-> >> Based on the reasons mentioned before, we implemented rtwlan. It had
-> many
-> >> authors, they are listed here alphabetically:
-> >>
-> >> Ping-Ke Shih <pkshih@realtek.com>
-> >> Tzu-En Huang <tehuang@realtek.com>
-> >> Yan-Hsuan Chuang <yhchuang@realtek.com>
-> >
-> > I didn't do detailed review, but my general impression is very very
-> > positive. New driver looks great!
-> 
-> I also did a quick 10 min look at the driver and indeed in general it
-> looks good.
-> 
-> > Just 2 generic remarks:
-> > - please add MAINTAINERS file entry
-> > - please post a patch or request to remove staging/rtlwifi driver
-> >   since this one is replace for it (8822BE PCI-ID is the same)
-> 
-> Something I noticed:
-> 
-> o Magic numbers (BIT(1) etc) in quite a few places.
-> 
-> o Personally not really fond of "#ifdef LITTLE_ENDIAN" usage, but I
->   guess we can live with that?
-> 
-> o To me the name "rtwlan" sounds confusing when one compares it with
->   "rtlwifi". And how would the possible next generation 11ax driver be
->   then called? As a good example I really like the driver name mt76,
->   could this one have something similar to make it more descriptive?
-> 
-> I also pushed this to the pending branch on wireless-drivers-next so
-> that kbuild bot can extensively test it.
-> 
-> --
-> Kalle Valo
-> 
-
-Yes, we will add MAINTAINER files entry after this driver.
-got accepted into the kernel, or should we include the entry in this patch?
-And thanks for Kvalo doing coordination with GregKH for us.
-Just remove rtlwifi in driver/staging, since this driver is a replace for that.
-
-For the magic numbers, I can work on it to reduce them,
-but I am not sure I can fix all of them, will try my best to.
-
-I do admit that "rtwlan" is confused, after we reduce the magic number,
-also add MODULE_DEVICE_TABLE that suggested by Larry, we will send
-a new RFC with a new name for the driver.
-
-Besides, should we send another RFC for it or send RFC v2 and just
-rename the driver?
-
-Yan-Hsuan, Chuang
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IExhcnJ5IEZpbmdlciBbbWFp
+bHRvOmxhcnJ5LmZpbmdlckBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZiBMYXJyeSBGaW5nZXINCj4g
+U2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDI1LCAyMDE4IDE6MTAgQU0NCj4gVG86IFRvbnkgQ2h1
+YW5nOyBrdmFsb0Bjb2RlYXVyb3JhLm9yZw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnOyBQa3NoaWg7IEFuZHkgSHVhbmcNCj4gU3ViamVjdDogUmU6IFtSRkMgMDAvMTJdIHJ0
+d2xhbjogbWFjODAyMTEgZHJpdmVyIGZvciBSZWFsdGVrIDgwMi4xMWFjDQo+IHdpcmVsZXNzIG5l
+dHdvcmsgY2hpcHMNCj4gDQo+IE9uIDkvMjEvMTggMTowMyBBTSwgeWhjaHVhbmdAcmVhbHRlay5j
+b20gd3JvdGU6DQo+ID4gRnJvbTogWWFuLUhzdWFuIENodWFuZyA8eWhjaHVhbmdAcmVhbHRlay5j
+b20+DQo+ID4NCj4gPiBUaGlzIGlzIGEgbmV3IG1hYzgwMjExIGRyaXZlciBmb3IgUmVhbHRlayA4
+MDIuMTFhYyB3aXJlbGVzcyBuZXR3b3JrIGNoaXBzLg0KPiA+IHJ0d2xhbiBzdXBwb3J0cyA4ODIy
+QkUgYW5kIDg4MjJDRSBjaGlwcywgYW5kIHdpbGwgYmUgYWJsZSB0byBzdXBwb3J0DQo+ID4gbXVs
+dGktdmlmIGNvbWJpbmF0aW9ucyBpbiBydW4tdGltZS4NCj4gPg0KPiA+IEZvciBub3csIG9ubHkg
+UENJIGJ1cyBpcyBzdXBwb3J0ZWQsIGJ1dCBydHdsYW4gd2FzIG9yaWdpbmFsbHkgZGVzaWduZWQN
+Cj4gPiB0byBvcHRpb25hbGx5IHN1cHBvcnQgdGhyZWUgYnVzZXMgaW5jbHVkZXMgVVNCICYgU0RJ
+Ty4gVVNCICYgU0RJTyBtb2R1bGVzDQo+ID4gd2lsbCBzb29uIGJlIHN1cHBvcnRlZCBieSBydHds
+YW4sIHdpdGggY29uZmlndXJhYmxlIGNvcmUgbW9kdWxlIHRvIGZpdA0KPiA+IHdpdGggZGlmZmVy
+ZW50IGJ1cyBtb2R1bGVzIGluIHRoZSBzYW1lIHRpbWUuDQo+ID4NCj4gPiBGb3IgZXhhbXBsZSwg
+aWYgd2UgY2hvb3NlIDg4MjJCRSBhbmQgODgyMkNVLCBvbmx5IFBDSSAmIFVTQiBtb2R1bGVzIHdp
+bGwNCj4gPiBiZSBzZWxlY3RlZCwgYnVpbHQsIGxvYWRlZCBpbnRvIGtlcm5lbC4gVGhpcyBpcyBv
+bmUgb2YgdGhlIG1ham9yDQo+ID4gZGlmZmVyZW5jZSBmcm9tIHJ0bHdpZmksIHdoaWNoIGNhbiBv
+bmx5IHN1cHBvcnQgc3BlY2lmaWMgY29tYmluYXRpb25zLg0KPiA+DQo+ID4gQW5vdGhlciBkaWZm
+ZXJlbmNlIGZyb20gcnRsd2lmaSBpcyB0aGF0IHJ0d2xhbiBpcyBkZXNpZ25lZCB0byBzdXBwb3J0
+DQo+ID4gdGhlIGxhdGVzdCBSZWFsdGVrIDgwMi4xMWFjIHdpcmVsZXNzIG5ldHdvcmsgY2hpcHMg
+bGlrZSA4ODIyQiBhbmQNCj4gPiA4ODIyQyBzZXJpZXMuIENvbXBhcmVkIHRvIHRoZSBlYXJsaWVy
+IGNoaXBzIHN1cHBvcnRlZCBieSBydGx3aWZpIGxpa2UNCj4gPiB0aGUgODAyLjExbiA4MTkyRUUg
+Y2hpcHNldCBvciA4MDIuMTFhYyA4ODIxQUUvODgxMkFFIGNoaXBzLCBuZXdlciBJQ3MNCj4gPiBo
+YXZlIGRpZmZlcmVudCBNQUMgJiBQSFkgc2V0dGluZ3MsIHN1Y2ggYXMgbmV3IG11bHRpLXBvcnQg
+ZmVhdHVyZSBmb3IgdGhlDQo+ID4gTUFDIGxheWVyIGRlc2lnbiBhbmQgSmFndWFyMi9KYWd1YXIz
+IFBIWSBsYXllciBJUHMuDQo+ID4NCj4gPiBNdWx0aS1Qb3J0IGZlYXR1cmUgaXMgYWxzbyBzdXBw
+b3J0ZWQgdW5kZXIgcnR3bGFuJ3Mgc29mdHdhcmUgYXJjaGl0ZWN0dXJlLg0KPiA+IHJ0bHdpZmkg
+Y2FuIG9ubHkgc3VwcG9ydCBvbmUgdmlmIGluIHRoZSBzYW1lIHRpbWUsIG1vc3QgYmVjYXVzZSBv
+ZiB0aGUNCj4gPiBoYXJkd2FyZSBsaW1pdGF0aW9ucyBmb3IgZWFybHkgY2hpcHMsIGhlbmNlIHRo
+ZSBvcmlnaW5hbCBkZXNpZ24gb2YgaXQNCj4gPiBhbHNvIHJlc3RyaWN0cyB0aGUgdXNhZ2Ugb2Yg
+bXVsdGktdmlmIHN1cHBvcnQsIHNvIGxhdGVzdCBjaGlwc2V0IHNlZW1zIG5vdA0KPiA+IHRha2Ug
+YWR2YW50YWdlcyBmcm9tIGl0cyBuZXcgTUFDIGVuZ2luZS4NCj4gPg0KPiA+IEhvd2V2ZXIsIHJ0
+d2xhbiBjYW4gcnVuIG11bHRpcGxlIHZpZnMgY29uY3VycmVudGx5IGJ5IGhvbGRpbmcgdGhlbSBv
+bg0KPiA+IGhhcmR3YXJlIHBvcnRzIHByb3ZpZGVkIGJ5IE1BQyBlbmdpbmUsIHNvIHdlIGNhbiBl
+YXNpbHkgc3RhcnQgZGlmZmVyZW50DQo+ID4gcm9sZXMgb24gYSBzaW5nbGUgZGV2aWNlLg0KPiA+
+DQo+ID4gQmFzZWQgb24gdGhlIHJlYXNvbnMgbWVudGlvbmVkIGJlZm9yZSwgd2UgaW1wbGVtZW50
+ZWQgcnR3bGFuLiBJdCBoYWQNCj4gbWFueQ0KPiA+IGF1dGhvcnMsIHRoZXkgYXJlIGxpc3RlZCBo
+ZXJlIGFscGhhYmV0aWNhbGx5Og0KPiANCj4gSSBoYXZlIGZvdW5kIHR3byBwcm9ibGVtcyB3aXRo
+IHRoZSBpbml0aWFsIGNvZGU6DQo+IA0KPiAxLiBUaGVyZSBpcyBhIG1pc3NpbmcgemVybyBlbnRy
+eSBhdCB0aGUgZW5kIG9mIHRoZSBzdHJ1Y3QgcGNpX2RldmljZV9pZC4NCj4gMi4gWW91IGhhdmUg
+bm8gTU9EVUxFX0RFVklDRV9UQUJMRSBtYWNybyBjYWxsLg0KPiANCj4gVGhlIGVmZmVjdCBpcyB0
+aGF0IHRoZSBkZXZpY2UgaXMgbm90IGF1dG9sb2FkZWQgb24gYm9vdC4gVGhlIGZpeCBpcw0KPiAN
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3bGFuL3BjaS5j
+DQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHdsYW4vcGNpLmMNCj4gaW5kZXgg
+MmZmNWExNTJkNzdiLi5mOGIxMjY3NTIwYTcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JlYWx0ZWsvcnR3bGFuL3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3JlYWx0ZWsvcnR3bGFuL3BjaS5jDQo+IEBAIC0xMTg0LDYgKzExODQsNyBAQCBzdGF0aWMgY29u
+c3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgcnR3X3BjaV9pZF90YWJsZVtdDQo+ID0gew0KPiAgICNp
+ZmRlZiBDT05GSUdfUlRXTEFOXzg4MjJDRQ0KPiAgICAgICAgICB7IFJUS19QQ0lfREVWSUNFKFBD
+SV9WRU5ET1JfSURfUkVBTFRFSywgMHhDODIyLA0KPiBydHc4ODIyY19od19zcGVjKSB9LA0KPiAg
+ICNlbmRpZg0KPiArICAgICAgIHt9LA0KPiAgIH07DQo+IA0KPiAgIHN0YXRpYyBzdHJ1Y3QgcGNp
+X2RyaXZlciBydHdfcGNpX2RyaXZlciA9IHsNCj4gQEAgLTEyMTAsNiArMTIxMSw4IEBAIHN0cnVj
+dCBydHdfaGNpX29wcyBydHdfcGNpX29wcyA9IHsNCj4gICAgICAgICAgLmNoZWNrX2F2YWlsX2Rl
+c2MgPSBydHdfcGNpX2NoZWNrX2F2YWlsX2Rlc2MsDQo+ICAgfTsNCj4gDQo+ICtNT0RVTEVfREVW
+SUNFX1RBQkxFKHBjaSwgcnR3X3BjaV9pZF90YWJsZSk7DQo+ICsNCj4gICBtb2R1bGVfcGNpX2Ry
+aXZlcihydHdfcGNpX2RyaXZlcik7DQo+IA0KPiAgIE1PRFVMRV9BVVRIT1IoIlJlYWx0ZWsgQ29y
+cG9yYXRpb24iKTsNCj4gDQo+IExhcnJ5DQo+IA0KDQpUaGFua3MsIHdpbGwgYWRkIHRoZW0gaW50
+byB0aGUgbmV4dCBSRkMuDQoNCllhbi1Ic3VhbiwgQ2h1YW5nDQo=
