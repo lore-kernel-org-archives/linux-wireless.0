@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95798C43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C610CC43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5861721480
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5861721480
+	by mail.kernel.org (Postfix) with ESMTP id 8810421480
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8810421480
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728227AbeIYMbH (ORCPT
+        id S1728238AbeIYMbH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 25 Sep 2018 08:31:07 -0400
 Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12212 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726125AbeIYMbG (ORCPT
+        with ESMTP id S1728214AbeIYMbH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 08:31:06 -0400
+        Tue, 25 Sep 2018 08:31:07 -0400
 X-IronPort-AV: E=Sophos;i="5.54,301,1534834800"; 
-   d="scan'208";a="20543232"
+   d="scan'208";a="20543233"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:07 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:08 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  chn-sv-exch03.mchp-main.com (10.10.76.49) with Microsoft SMTP Server id
- 14.3.352.0; Mon, 24 Sep 2018 23:24:58 -0700
+ 14.3.352.0; Mon, 24 Sep 2018 23:25:01 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 19/29] staging: wilc1000: avoid the use of 'hif_driver_comp' completion variable
-Date:   Tue, 25 Sep 2018 11:53:34 +0530
-Message-ID: <1537856624-22157-20-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH v3 20/29] staging: wilc1000: remove use of unnecessary 'wilc_connected_ssid' variable
+Date:   Tue, 25 Sep 2018 11:53:35 +0530
+Message-ID: <1537856624-22157-21-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,143 +50,166 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Instead of using extra completion variable to handle the sync call now
-using msg->is_sync flag to handle the sync call.
+'wilc_connected_ssid' actually used to store the BSSID information for
+connected BSSID. 'wilc_vif' already has 'bssid' variable to store the
+same information. So refactor code to remove 'wilc_connected_ssid' and
+instead used 'wilc_vif' struct 'bssid' element.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 23 +++++++++++------------
- drivers/staging/wilc1000/host_interface.h         |  2 +-
- drivers/staging/wilc1000/linux_wlan.c             |  3 ++-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
- 4 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/host_interface.c         | 24 -----------------------
+ drivers/staging/wilc1000/host_interface.h         |  2 --
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 ++++++++++++++---------
+ 3 files changed, 15 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 237a098d..529390d 100644
+index 529390d..01db899 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -187,7 +187,6 @@ struct join_bss_param {
- };
- 
- static struct host_if_drv *terminated_handle;
--static struct completion hif_driver_comp;
- static struct mutex hif_deinit_lock;
- 
- /* 'msg' should be free by the caller for syc */
-@@ -310,10 +309,12 @@ static void handle_set_wfi_drv_handler(struct work_struct *work)
- 	if (ret)
- 		netdev_err(vif->ndev, "Failed to set driver handler\n");
- 
--	complete(&hif_driver_comp);
- 	kfree(buffer);
- 
- free_msg:
-+	if (msg->is_sync)
-+		complete(&msg->work_comp);
-+
+@@ -813,7 +813,6 @@ static void handle_scan(struct work_struct *work)
  	kfree(msg);
  }
  
-@@ -333,9 +334,6 @@ static void handle_set_operation_mode(struct work_struct *work)
- 	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				   wilc_get_vif_idx(vif));
- 
--	if (hif_op_mode->mode == IDLE_MODE)
--		complete(&hif_driver_comp);
--
- 	if (ret)
- 		netdev_err(vif->ndev, "Failed to set operation mode\n");
- 
-@@ -3118,12 +3116,12 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
- }
- 
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
--			     u8 ifc_id)
-+			     u8 ifc_id, bool is_sync)
+-u8 wilc_connected_ssid[6] = {0};
+ static void handle_connect(struct work_struct *work)
  {
- 	int result;
- 	struct host_if_msg *msg;
- 
--	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, false);
-+	msg = wilc_alloc_work(vif, handle_set_wfi_drv_handler, is_sync);
- 	if (IS_ERR(msg))
- 		return PTR_ERR(msg);
- 
-@@ -3135,8 +3133,12 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
- 	if (result) {
- 		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
- 		kfree(msg);
-+		return result;
+ 	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
+@@ -835,11 +834,6 @@ static void handle_connect(struct work_struct *work)
+ 		return;
  	}
  
-+	if (is_sync)
-+		wait_for_completion(&msg->work_comp);
-+
- 	return result;
- }
- 
-@@ -3380,10 +3382,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	vif->obtaining_ip = false;
- 
--	if (wilc->clients_count == 0) {
--		init_completion(&hif_driver_comp);
-+	if (wilc->clients_count == 0)
- 		mutex_init(&hif_deinit_lock);
+-	if (memcmp(conn_attr->bssid, wilc_connected_ssid, ETH_ALEN) == 0) {
+-		netdev_err(vif->ndev, "Discard connect request\n");
+-		goto error;
 -	}
+-
+ 	bss_param = conn_attr->params;
+ 	if (!bss_param) {
+ 		netdev_err(vif->ndev, "Required BSSID not found\n");
+@@ -1019,10 +1013,6 @@ static void handle_connect(struct work_struct *work)
+ 	cur_byte = wid_list[wid_cnt].val;
+ 	wid_cnt++;
  
- 	timer_setup(&vif->periodic_rssi, get_periodic_rssi, 0);
- 	mod_timer(&vif->periodic_rssi, jiffies + msecs_to_jiffies(5000));
-@@ -3430,8 +3430,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 	del_timer_sync(&vif->periodic_rssi);
- 	del_timer_sync(&hif_drv->remain_on_ch_timer);
+-	if (conn_attr->bssid)
+-		memcpy(wilc_connected_ssid,
+-		       conn_attr->bssid, ETH_ALEN);
+-
+ 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
+ 				      wid_cnt,
+ 				      wilc_get_vif_idx(vif));
+@@ -1145,8 +1135,6 @@ static void handle_connect_timeout(struct work_struct *work)
+ 	kfree(hif_drv->usr_conn_req.ies);
+ 	hif_drv->usr_conn_req.ies = NULL;
  
--	wilc_set_wfi_drv_handler(vif, 0, 0, 0);
--	wait_for_completion(&hif_driver_comp);
-+	wilc_set_wfi_drv_handler(vif, 0, 0, 0, true);
+-	eth_zero_addr(wilc_connected_ssid);
+-
+ out:
+ 	kfree(msg);
+ }
+@@ -1452,16 +1440,6 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 		}
+ 	}
  
- 	if (hif_drv->usr_scan_req.scan_result) {
- 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
+-	if (mac_status == MAC_STATUS_CONNECTED &&
+-	    conn_info.status != WLAN_STATUS_SUCCESS) {
+-		netdev_err(vif->ndev,
+-			   "Received MAC status is MAC_STATUS_CONNECTED, Assoc Resp is not SUCCESS\n");
+-		eth_zero_addr(wilc_connected_ssid);
+-	} else if (mac_status == MAC_STATUS_DISCONNECTED)    {
+-		netdev_err(vif->ndev, "Received MAC status is MAC_STATUS_DISCONNECTED\n");
+-		eth_zero_addr(wilc_connected_ssid);
+-	}
+-
+ 	if (hif_drv->usr_conn_req.bssid) {
+ 		memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
+ 
+@@ -1874,8 +1852,6 @@ static void handle_disconnect(struct work_struct *work)
+ 	vif->obtaining_ip = false;
+ 	wilc_set_power_mgmt(vif, 0, 0);
+ 
+-	eth_zero_addr(wilc_connected_ssid);
+-
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 
 diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 15ffaeb..4416f8f 100644
+index 4416f8f..33fb731 100644
 --- a/drivers/staging/wilc1000/host_interface.h
 +++ b/drivers/staging/wilc1000/host_interface.h
-@@ -350,7 +350,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
- void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
--			     u8 ifc_id);
-+			     u8 ifc_id, bool is_sync);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
- int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats,
- 			bool is_sync);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 8ecd664..b666e1e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -753,7 +753,8 @@ static int wilc_mac_open(struct net_device *ndev)
- 	for (i = 0; i < wl->vif_num; i++) {
- 		if (ndev == wl->vif[i]->ndev) {
- 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
--						 vif->iftype, vif->ifc_id);
-+						 vif->iftype, vif->ifc_id,
-+						 false);
- 			wilc_set_operation_mode(vif, vif->iftype);
- 			break;
- 		}
+@@ -359,6 +359,4 @@ int wilc_get_vif_idx(struct wilc_vif *vif);
+ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
+ int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+ 
+-extern u8 wilc_connected_ssid[6];
+-
+ #endif
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 02a8846..76d017d 100644
+index 76d017d..1a4d262 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1779,7 +1779,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+@@ -478,7 +478,6 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+ 			wilc_wlan_set_bssid(priv->dev, null_bssid,
+ 					    STATION_MODE);
+-			eth_zero_addr(wilc_connected_ssid);
  
- 		if (wl->initialized) {
- 			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
--						 0, vif->ifc_id);
-+						 0, vif->ifc_id, false);
- 			wilc_set_operation_mode(vif, AP_MODE);
- 			wilc_set_power_mgmt(vif, 0, 0);
+ 			if (!wfi_drv->p2p_connect)
+ 				wlan_channel = INVALID_CHANNEL;
+@@ -521,7 +520,6 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 		wilc_ie = false;
+ 		eth_zero_addr(priv->associated_bss);
+ 		wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
+-		eth_zero_addr(wilc_connected_ssid);
+ 
+ 		if (!wfi_drv->p2p_connect)
+ 			wlan_channel = INVALID_CHANNEL;
+@@ -696,8 +694,12 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		nw_info = &priv->scanned_shadow[sel_bssi_idx];
+ 	} else {
+ 		ret = -ENOENT;
+-		vif->connecting = false;
+-		return ret;
++		goto out_error;
++	}
++
++	if (ether_addr_equal_unaligned(vif->bssid, nw_info->bssid)) {
++		ret = -EALREADY;
++		goto out_error;
+ 	}
+ 
+ 	memset(priv->wep_key, 0, sizeof(priv->wep_key));
+@@ -739,8 +741,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 			ret = -ENOTSUPP;
+ 			netdev_err(dev, "%s: Unsupported cipher\n",
+ 				   __func__);
+-			vif->connecting = false;
+-			return ret;
++			goto out_error;
  		}
+ 	}
+ 
+@@ -787,13 +788,18 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 				security, auth_type,
+ 				nw_info->ch,
+ 				nw_info->join_params);
+-	if (ret != 0) {
++	if (ret) {
++		u8 null_bssid[ETH_ALEN] = {0};
++
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		ret = -ENOENT;
+-		vif->connecting = false;
+-		return ret;
++		wilc_wlan_set_bssid(dev, null_bssid, STATION_MODE);
++		goto out_error;
+ 	}
++	return 0;
+ 
++out_error:
++	vif->connecting = false;
+ 	return ret;
+ }
+ 
 -- 
 2.7.4
 
