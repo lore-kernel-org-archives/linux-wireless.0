@@ -7,88 +7,116 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF9FC43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 02:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE4AFC43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 02:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 451A42083A
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 02:15:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91C1B2083A
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 02:15:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iM+99vVO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 451A42083A
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tf+9xwFd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 91C1B2083A
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726318AbeIYIU2 (ORCPT
+        id S1726464AbeIYIUa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 04:20:28 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:46935 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726200AbeIYIU1 (ORCPT
+        Tue, 25 Sep 2018 04:20:30 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:34457 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbeIYIUa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 04:20:27 -0400
-Received: by mail-pg1-f195.google.com with SMTP id b129-v6so10278418pga.13
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 19:15:19 -0700 (PDT)
+        Tue, 25 Sep 2018 04:20:30 -0400
+Received: by mail-pg1-f193.google.com with SMTP id d19-v6so10309240pgv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Sep 2018 19:15:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=4aX9RqGYEOpUqmN/JMdMOVPkrGv1L6UeKT+wuh3HtjA=;
-        b=iM+99vVOPCxQto8A8NoH9mB88niLecNbHP6QPLtYSKH8PLVLRg2Y0zljeXNoEJvV01
-         raknAfZbrqppIS+r84/yBHKF1qRkAhK1M5xci6KhGc1Y8dyVx3PFIKyPky4djRtQUR00
-         gpXRYXh6OxcbZnrZmn+5jcnutCIZ7cETwhAOquRMyH2AUatsB3qqEjme/LAojAGQRt/5
-         aiMl2WVG4J1+Zo/tX47fdIu/9SJZEoJGLJiHYgeLJAmWgx10H26s3U+3EcI82UARZojW
-         LFsmmXUJ/BW/FqI4ntBkm4IxV6ycAupAZU4BCja+PYx9VJsI52Yn8txYgCU3S9U8aGem
-         m3/A==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=S4r2w47U4hSg7f0YOro933X13/jRs2Sf+BpqxJzhBas=;
+        b=Tf+9xwFdWV8JBNAXGEMtJmxqNNBZQHzaMjwhd551S2Lmi30V0iFin4azC/FceznbhS
+         +FNFq75+ZMiRM51+aF+exZ6V0gS31HzWwjW+3X5AY9Yb404BFlC8qzWDhjjO5eZl7mzH
+         ag723CTrqsbKB9eW741r5TFevmiQ9iOLHuUEgAaJRRgGL3asaE12CVXJbqrHir9BeWO2
+         YnyyW8HAT856Vkq1bLAO/8ayI3LGDk6QutPw6I79HTAK+YWW6c69AamTHSVujOlFnFKN
+         Dku+llWz8G+S01ntkDpYa+r0RwaSHX0N1w2/lcMPGiygA4d9s1hlHIjfW3cvM+5zZ0OY
+         Lujg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=4aX9RqGYEOpUqmN/JMdMOVPkrGv1L6UeKT+wuh3HtjA=;
-        b=WNmvbl5HFRqVY0Hm4yS30ykF/eAgFLxfvZ4kITBp3Cxg4YouVFqtRavqf6oIPE7jjn
-         VXp5ZSIFcBb1rDRTQdRunNpSeRNbBidPRgSeE/gEqsANjENtFHvfZhlzMv70k91WdPQJ
-         tP+zH1W0bwfqwK8Bo0vTQtFLX7PWmTp6rLHQxmBDBbVInBeUf6jjm+VTSMKLUJ3DgHGJ
-         xo5T/dnq3Yz20NGZKkH08jvGTj3z1pWgO6n9FtiJFT0fq6Lz7fwgWXc8RSiva6qznkk5
-         mBYiC3hZMfc/N7TWxYG3oHrFyux/gmInRH9Nrc9aw3w0vmmVYQIpd1fZMlBq89bXQnh3
-         Qr1w==
-X-Gm-Message-State: ABuFfohrvwkRJrXxPRSw1LJJUxwDRFAHOgP+6V0NXeeAB6pGErSt03+2
-        8Wb5J7jUimrKD+O91zb2cXfWV1l2
-X-Google-Smtp-Source: ACcGV62xtF+riTwmINUXnnaJKr0w9MBqMz3I+TXwld1mV5pI9ORa9syRPUovP7gcTT2lGjeOLC7puA==
-X-Received: by 2002:a17:902:3a5:: with SMTP id d34-v6mr1277156pld.98.1537841719196;
-        Mon, 24 Sep 2018 19:15:19 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=S4r2w47U4hSg7f0YOro933X13/jRs2Sf+BpqxJzhBas=;
+        b=SO8HozqRvF+ELF3VRrD3xi40smDxkWN73t3mxTulUyMJnoQRebvbTLyr95XY5I4O+q
+         1LVcl2Sm9tSXtgZoLv2zGPBbaPS9rmR0EunB4ozxqZM9b/e1SL74Asw142pEiYpDqm0W
+         piolRLrdZGXV/LLsp376o7pwu2xB7ZfVqzgR8ByIrjLDGSWSNvYT2STsIiWeTU32w6Lz
+         06BGh10ABFNB2If1gcg6+UsIMAsXEGjiwKMuBK8N2Dr2ItgGTWEKTo//MhTNeYJCHF+Y
+         PkaQ6yijHPpyVWVZ60W04+yATLrbuyqmkxKOMpat4+HwQA8Z6qSoEIEXhOPJyLlmztSU
+         c1Uw==
+X-Gm-Message-State: ABuFfog6Qnc2CDbdekdx1VRVJSuusI+OD07MSa0SM0dNvJiosoaS6wf8
+        JJhgokZChjeHLA1Bni2XByo=
+X-Google-Smtp-Source: ACcGV62kPtB+Y0K/lESL0ax1Fob0dNRwBB2rNKApwTVG/ZaIPC7hSYMeHDjqk1aaY+Npx5HQGprOXg==
+X-Received: by 2002:a65:560a:: with SMTP id l10-v6mr1249143pgs.130.1537841721221;
+        Mon, 24 Sep 2018 19:15:21 -0700 (PDT)
 Received: from corei7.flets-east.jp ([2409:11:321:2100:1e:7de8:2e95:9a06])
-        by smtp.gmail.com with ESMTPSA id p19-v6sm684865pgh.60.2018.09.24.19.15.17
+        by smtp.gmail.com with ESMTPSA id p19-v6sm684865pgh.60.2018.09.24.19.15.19
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Mon, 24 Sep 2018 19:15:18 -0700 (PDT)
+        Mon, 24 Sep 2018 19:15:20 -0700 (PDT)
 From:   Masashi Honma <masashi.honma@gmail.com>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH 1/2] nl80211: Fix possible Spectre-v1 for NL80211_TXRATE_HT
-Date:   Tue, 25 Sep 2018 11:15:00 +0900
-Message-Id: <1537841701-3092-1-git-send-email-masashi.honma@gmail.com>
+Subject: [PATCH 2/2] nl80211: Fix possible Spectre-v1 for CQM RSSI thresholds
+Date:   Tue, 25 Sep 2018 11:15:01 +0900
+Message-Id: <1537841701-3092-2-git-send-email-masashi.honma@gmail.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1537841701-3092-1-git-send-email-masashi.honma@gmail.com>
+References: <1537841701-3092-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use array_index_nospec() to sanitize ridx with respect to speculation.
+Use array_index_nospec() to sanitize i with respect to speculation.
 
 Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
 ---
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/nl80211.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0827cbd..3c469c1 100644
+index 3c469c1..4f47502 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3748,6 +3748,7 @@ static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
- 			return false;
+@@ -10227,7 +10227,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	s32 last, low, high;
+ 	u32 hyst;
+-	int i, n;
++	int i, n, low_index;
+ 	int err;
  
- 		/* check availability */
-+		ridx = array_index_nospec(ridx, IEEE80211_HT_MCS_MASK_LEN);
- 		if (sband->ht_cap.mcs.rx_mask[ridx] & rbit)
- 			mcs[ridx] |= rbit;
- 		else
+ 	/* RSSI reporting disabled? */
+@@ -10264,10 +10264,19 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
+ 		if (last < wdev->cqm_config->rssi_thresholds[i])
+ 			break;
+ 
+-	low = i > 0 ?
+-		(wdev->cqm_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
+-	high = i < n ?
+-		(wdev->cqm_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
++	low_index = i - 1;
++	if (low_index >= 0) {
++		low_index = array_index_nospec(low_index, n);
++		low = wdev->cqm_config->rssi_thresholds[low_index] - hyst;
++	} else {
++		low = S32_MIN;
++	}
++	if (i < n) {
++		i = array_index_nospec(i, n);
++		high = wdev->cqm_config->rssi_thresholds[i] + hyst - 1;
++	} else {
++		high = S32_MAX;
++	}
+ 
+ 	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
+ }
 -- 
 2.7.4
 
