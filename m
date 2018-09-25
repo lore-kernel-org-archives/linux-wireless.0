@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9F5FC43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B15C43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6C0E21480
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A6C0E21480
+	by mail.kernel.org (Postfix) with ESMTP id 9B5A720685
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B5A720685
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727588AbeIYMbM (ORCPT
+        id S1727613AbeIYMbQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 08:31:12 -0400
+        Tue, 25 Sep 2018 08:31:16 -0400
 Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12212 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727320AbeIYMbM (ORCPT
+        with ESMTP id S1726507AbeIYMbQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 08:31:12 -0400
+        Tue, 25 Sep 2018 08:31:16 -0400
 X-IronPort-AV: E=Sophos;i="5.54,301,1534834800"; 
-   d="scan'208";a="20543241"
+   d="scan'208";a="20543246"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:13 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:17 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  chn-sv-exch03.mchp-main.com (10.10.76.49) with Microsoft SMTP Server id
- 14.3.352.0; Mon, 24 Sep 2018 23:25:12 -0700
+ 14.3.352.0; Mon, 24 Sep 2018 23:25:15 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 23/29] staging: wilc1000: remove unnecessary memset in sdio_init() & wilc_spi_init()
-Date:   Tue, 25 Sep 2018 11:53:38 +0530
-Message-ID: <1537856624-22157-24-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH v3 24/29] staging: wilc1000: remove p2p related static variables to wilc_vif struct
+Date:   Tue, 25 Sep 2018 11:53:39 +0530
+Message-ID: <1537856624-22157-25-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,48 +50,215 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Cleanup changes to avoid unnecessary setting 'wilc->bus_data' value to
-zero as the buffer was allocated using kzalloc().
+Avoid use of static variable and move them as part of private
+data(wilc_priv) struct.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 4 +---
- drivers/staging/wilc1000/wilc_spi.c  | 3 ---
- 2 files changed, 1 insertion(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             |  2 +
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 60 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  7 +++
+ 3 files changed, 38 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 7ef047c..ca351c9 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -689,10 +689,8 @@ static int sdio_init(struct wilc *wilc, bool resume)
- 	int loop, ret;
- 	u32 chipid;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 560c168..695d5b2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -729,6 +729,7 @@ static int wilc_mac_open(struct net_device *ndev)
+ {
+ 	struct wilc_vif *vif = netdev_priv(ndev);
+ 	struct wilc *wl = vif->wilc;
++	struct wilc_priv *priv = wdev_priv(vif->ndev->ieee80211_ptr);
+ 	unsigned char mac_add[ETH_ALEN] = {0};
+ 	int ret = 0;
+ 	int i = 0;
+@@ -782,6 +783,7 @@ static int wilc_mac_open(struct net_device *ndev)
+ 				 vif->frame_reg[1].reg);
+ 	netif_wake_queue(ndev);
+ 	wl->open_ifcs++;
++	priv->p2p.local_random = 0x01;
+ 	vif->mac_opened = 1;
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1a4d262..4fbbbbd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -137,10 +137,7 @@ struct p2p_mgmt_data {
+ static u8 wlan_channel = INVALID_CHANNEL;
+ static u8 curr_channel;
+ static u8 p2p_oui[] = {0x50, 0x6f, 0x9A, 0x09};
+-static u8 p2p_local_random = 0x01;
+-static u8 p2p_recv_random;
+ static u8 p2p_vendor_spec[] = {0xdd, 0x05, 0x00, 0x08, 0x40, 0x03};
+-static bool wilc_ie;
  
--	if (!resume) {
--		memset(sdio_priv, 0, sizeof(struct wilc_sdio));
-+	if (!resume)
- 		sdio_priv->irq_gpio = wilc->dev_irq_num;
--	}
+ static struct ieee80211_supported_band wilc_band_2ghz = {
+ 	.channels = ieee80211_2ghz_channels,
+@@ -515,9 +512,9 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 					GFP_KERNEL);
+ 	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF) {
+ 		vif->obtaining_ip = false;
+-		p2p_local_random = 0x01;
+-		p2p_recv_random = 0x00;
+-		wilc_ie = false;
++		priv->p2p.local_random = 0x01;
++		priv->p2p.recv_random = 0x00;
++		priv->p2p.is_wilc_ie = false;
+ 		eth_zero_addr(priv->associated_bss);
+ 		wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
  
- 	/**
- 	 *      function 0 csa enable
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 2559cf0..cef127b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -838,12 +838,9 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
- 		return 1;
+@@ -829,9 +826,9 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev,
+ 		wlan_channel = INVALID_CHANNEL;
+ 	wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
+ 
+-	p2p_local_random = 0x01;
+-	p2p_recv_random = 0x00;
+-	wilc_ie = false;
++	priv->p2p.local_random = 0x01;
++	priv->p2p.recv_random = 0x00;
++	priv->p2p.is_wilc_ie = false;
+ 	wfi_drv->p2p_timeout = 0;
+ 
+ 	ret = wilc_disconnect(vif, reason_code);
+@@ -1330,20 +1327,21 @@ static void wilc_wfi_cfg_parse_rx_vendor_spec(struct wilc_priv *priv, u8 *buff,
+ 	struct wilc_vif *vif = netdev_priv(priv->dev);
+ 
+ 	subtype = buff[P2P_PUB_ACTION_SUBTYPE];
+-	if ((subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) && !wilc_ie) {
++	if ((subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) &&
++	    !priv->p2p.is_wilc_ie) {
+ 		for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++) {
+ 			if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
+-				p2p_recv_random = buff[i + 6];
+-				wilc_ie = true;
++				priv->p2p.recv_random = buff[i + 6];
++				priv->p2p.is_wilc_ie = true;
+ 				break;
+ 			}
+ 		}
  	}
  
--	memset(spi_priv, 0, sizeof(struct wilc_spi));
--
- 	/*
- 	 * configure protocol
- 	 */
--	spi_priv->crc_off = 0;
+-	if (p2p_local_random <= p2p_recv_random) {
++	if (priv->p2p.local_random <= priv->p2p.recv_random) {
+ 		netdev_dbg(vif->ndev,
+ 			   "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n",
+-			   p2p_local_random, p2p_recv_random);
++			   priv->p2p.local_random, priv->p2p.recv_random);
+ 		return;
+ 	}
  
- 	/*
- 	 * TODO: We can remove the CRC trials if there is a definite
+@@ -1411,7 +1409,7 @@ void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
+ 								  size);
+ 
+ 			if ((subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) &&
+-			    wilc_ie)
++			    priv->p2p.is_wilc_ie)
+ 				size -= 7;
+ 
+ 			break;
+@@ -1503,7 +1501,8 @@ static int cancel_remain_on_channel(struct wiphy *wiphy,
+ 			priv->remain_on_ch_params.listen_session_id);
+ }
+ 
+-static void wilc_wfi_cfg_tx_vendor_spec(struct p2p_mgmt_data *mgmt_tx,
++static void wilc_wfi_cfg_tx_vendor_spec(struct wilc_priv *priv,
++					struct p2p_mgmt_data *mgmt_tx,
+ 					struct cfg80211_mgmt_tx_params *params,
+ 					u8 iftype, u32 buf_len)
+ {
+@@ -1513,17 +1512,16 @@ static void wilc_wfi_cfg_tx_vendor_spec(struct p2p_mgmt_data *mgmt_tx,
+ 	u8 subtype = buf[P2P_PUB_ACTION_SUBTYPE];
+ 
+ 	if (subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) {
+-		if (p2p_local_random == 1 &&
+-		    p2p_recv_random < p2p_local_random) {
+-			get_random_bytes(&p2p_local_random, 1);
+-			p2p_local_random++;
++		if (priv->p2p.local_random == 1 &&
++		    priv->p2p.recv_random < priv->p2p.local_random) {
++			get_random_bytes(&priv->p2p.local_random, 1);
++			priv->p2p.local_random++;
+ 		}
+ 	}
+ 
+-	if (p2p_local_random <= p2p_recv_random || !(subtype == GO_NEG_REQ ||
+-						     subtype == GO_NEG_RSP ||
+-						     subtype == P2P_INV_REQ ||
+-						     subtype == P2P_INV_RSP))
++	if (priv->p2p.local_random <= priv->p2p.recv_random ||
++	    !(subtype == GO_NEG_REQ || subtype == GO_NEG_RSP ||
++	      subtype == P2P_INV_REQ || subtype == P2P_INV_RSP))
+ 		return;
+ 
+ 	for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
+@@ -1547,7 +1545,7 @@ static void wilc_wfi_cfg_tx_vendor_spec(struct p2p_mgmt_data *mgmt_tx,
+ 
+ 		memcpy(&mgmt_tx->buff[len], p2p_vendor_spec,
+ 		       vendor_spec_len);
+-		mgmt_tx->buff[len + vendor_spec_len] = p2p_local_random;
++		mgmt_tx->buff[len + vendor_spec_len] = priv->p2p.local_random;
+ 		mgmt_tx->size = buf_len;
+ 	}
+ }
+@@ -1566,7 +1564,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 	struct wilc_priv *priv = wiphy_priv(wiphy);
+ 	struct host_if_drv *wfi_drv = priv->hif_drv;
+ 	struct wilc_vif *vif = netdev_priv(wdev->netdev);
+-	u32 buf_len = len + sizeof(p2p_vendor_spec) + sizeof(p2p_local_random);
++	u32 buf_len = len + sizeof(p2p_vendor_spec) + sizeof(priv->p2p.local_random);
+ 	int ret = 0;
+ 
+ 	*cookie = (unsigned long)buf;
+@@ -1614,8 +1612,8 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 
+ 		case PUBLIC_ACT_VENDORSPEC:
+ 			if (!memcmp(p2p_oui, &buf[ACTION_SUBTYPE_ID + 1], 4))
+-				wilc_wfi_cfg_tx_vendor_spec(mgmt_tx, params,
+-							    vif->iftype,
++				wilc_wfi_cfg_tx_vendor_spec(priv, mgmt_tx,
++							    params, vif->iftype,
+ 							    buf_len);
+ 			else
+ 				netdev_dbg(vif->ndev,
+@@ -1743,9 +1741,9 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	struct wilc_vif *vif = netdev_priv(dev);
+ 	struct wilc *wl = vif->wilc;
+ 
+-	p2p_local_random = 0x01;
+-	p2p_recv_random = 0x00;
+-	wilc_ie = false;
++	priv->p2p.local_random = 0x01;
++	priv->p2p.recv_random = 0x00;
++	priv->p2p.is_wilc_ie = false;
+ 	vif->obtaining_ip = false;
+ 	del_timer(&vif->during_ip_timer);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 4ba5887..4f05a16 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -69,6 +69,12 @@ struct wilc_wfi_p2p_listen_params {
+ 	u32 listen_session_id;
+ };
+ 
++struct wilc_p2p_var {
++	u8 local_random;
++	u8 recv_random;
++	bool is_wilc_ie;
++};
++
+ struct wilc_priv {
+ 	struct wireless_dev *wdev;
+ 	struct cfg80211_scan_request *scan_req;
+@@ -98,6 +104,7 @@ struct wilc_priv {
+ 	struct timer_list aging_timer;
+ 	struct network_info scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+ 	int scanned_cnt;
++	struct wilc_p2p_var p2p;
+ };
+ 
+ struct frame_reg {
 -- 
 2.7.4
 
