@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B21C43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C925C43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8B5621480
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:24:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C8B5621480
+	by mail.kernel.org (Postfix) with ESMTP id 3EE9B21480
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:24:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3EE9B21480
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728158AbeIYMal (ORCPT
+        id S1728179AbeIYMao (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 08:30:41 -0400
+        Tue, 25 Sep 2018 08:30:44 -0400
 Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12155 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726125AbeIYMal (ORCPT
+        with ESMTP id S1726125AbeIYMao (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 08:30:41 -0400
+        Tue, 25 Sep 2018 08:30:44 -0400
 X-IronPort-AV: E=Sophos;i="5.54,301,1534834800"; 
-   d="scan'208";a="20543209"
+   d="scan'208";a="20543211"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:24:42 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:24:45 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  chn-sv-exch03.mchp-main.com (10.10.76.49) with Microsoft SMTP Server id
- 14.3.352.0; Mon, 24 Sep 2018 23:24:41 -0700
+ 14.3.352.0; Mon, 24 Sep 2018 23:24:45 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 14/29] staging: wilc1000: remove unused wid type values
-Date:   Tue, 25 Sep 2018 11:53:29 +0530
-Message-ID: <1537856624-22157-15-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH v3 15/29] staging: wilc1000: remove unused wid from cfg struct
+Date:   Tue, 25 Sep 2018 11:53:30 +0530
+Message-ID: <1537856624-22157-16-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,28 +50,179 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Cleanup patch to remove the wid type not used in the code.
+Cleanup patch to remove the unused element stored in cfg struct.
+Removed those wid from the cfg variables whose value is not
+fetched(GET_CFG) from the code. In case the wid is only set to the
+firmware then there is need to store them as part of cfg variables, so
+removed the unused code.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 107 -------------------------------
+ 1 file changed, 107 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index b81a73b..ce2066b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -204,10 +204,6 @@ enum wid_type {
- 	WID_STR			= 3,
- 	WID_BIN_DATA		= 4,
- 	WID_BIN			= 5,
--	WID_IP			= 6,
--	WID_ADR			= 7,
--	WID_UNDEF		= 8,
--	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 2c463a3..541251b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -20,131 +20,36 @@ enum cfg_cmd_type {
+ struct wilc_mac_cfg {
+ 	int mac_status;
+ 	u8 mac_address[7];
+-	u8 ip_address[5];
+-	u8 bssid[7];
+-	u8 ssid[34];
+ 	u8 firmware_version[129];
+-	u8 supp_rate[24];
+-	u8 wep_key[28];
+-	u8 i_psk[66];
+-	u8 hw_product_version[33];
+-	u8 phyversion[17];
+-	u8 supp_username[21];
+-	u8 supp_password[64];
+-	u8 assoc_req[256];
+ 	u8 assoc_rsp[256];
+-	u8 firmware_info[8];
+-	u8 scan_result[256];
+-	u8 scan_result1[256];
  };
  
- struct wid {
+ static struct wilc_mac_cfg g_mac;
+ 
+ static struct wilc_cfg_byte g_cfg_byte[] = {
+-	{WID_BSS_TYPE, 0},
+-	{WID_CURRENT_TX_RATE, 0},
+-	{WID_CURRENT_CHANNEL, 0},
+-	{WID_PREAMBLE, 0},
+-	{WID_11G_OPERATING_MODE, 0},
+ 	{WID_STATUS, 0},
+-	{WID_SCAN_TYPE, 0},
+-	{WID_KEY_ID, 0},
+-	{WID_QOS_ENABLE, 0},
+-	{WID_POWER_MANAGEMENT, 0},
+-	{WID_11I_MODE, 0},
+-	{WID_AUTH_TYPE, 0},
+-	{WID_SITE_SURVEY, 0},
+-	{WID_LISTEN_INTERVAL, 0},
+-	{WID_DTIM_PERIOD, 0},
+-	{WID_ACK_POLICY, 0},
+-	{WID_BCAST_SSID, 0},
+-	{WID_REKEY_POLICY, 0},
+-	{WID_SHORT_SLOT_ALLOWED, 0},
+-	{WID_START_SCAN_REQ, 0},
+ 	{WID_RSSI, 0},
+ 	{WID_LINKSPEED, 0},
+-	{WID_AUTO_RX_SENSITIVITY, 0},
+-	{WID_DATAFLOW_CONTROL, 0},
+-	{WID_SCAN_FILTER, 0},
+-	{WID_11N_PROT_MECH, 0},
+-	{WID_11N_ERP_PROT_TYPE, 0},
+-	{WID_11N_ENABLE, 0},
+-	{WID_11N_OPERATING_MODE, 0},
+-	{WID_11N_OBSS_NONHT_DETECTION, 0},
+-	{WID_11N_HT_PROT_TYPE, 0},
+-	{WID_11N_RIFS_PROT_ENABLE, 0},
+-	{WID_11N_SMPS_MODE, 0},
+-	{WID_11N_CURRENT_TX_MCS, 0},
+-	{WID_11N_SHORT_GI_ENABLE, 0},
+-	{WID_RIFS_MODE, 0},
+-	{WID_TX_ABORT_CONFIG, 0},
+-	{WID_11N_IMMEDIATE_BA_ENABLED, 0},
+-	{WID_11N_TXOP_PROT_DISABLE, 0},
+ 	{WID_NIL, 0}
+ };
+ 
+ static struct wilc_cfg_hword g_cfg_hword[] = {
+-	{WID_LINK_LOSS_THRESHOLD, 0},
+-	{WID_RTS_THRESHOLD, 0},
+-	{WID_FRAG_THRESHOLD, 0},
+-	{WID_SHORT_RETRY_LIMIT, 0},
+-	{WID_LONG_RETRY_LIMIT, 0},
+-	{WID_BEACON_INTERVAL, 0},
+-	{WID_RX_SENSE, 0},
+-	{WID_ACTIVE_SCAN_TIME, 0},
+-	{WID_PASSIVE_SCAN_TIME, 0},
+-	{WID_SITE_SURVEY_SCAN_TIME, 0},
+-	{WID_JOIN_START_TIMEOUT, 0},
+-	{WID_AUTH_TIMEOUT, 0},
+-	{WID_ASOC_TIMEOUT, 0},
+-	{WID_11I_PROTOCOL_TIMEOUT, 0},
+-	{WID_EAPOL_RESPONSE_TIMEOUT, 0},
+-	{WID_11N_SIG_QUAL_VAL, 0},
+-	{WID_CCA_THRESHOLD, 0},
+ 	{WID_NIL, 0}
+ };
+ 
+ static struct wilc_cfg_word g_cfg_word[] = {
+ 	{WID_FAILED_COUNT, 0},
+-	{WID_RETRY_COUNT, 0},
+-	{WID_MULTIPLE_RETRY_COUNT, 0},
+-	{WID_FRAME_DUPLICATE_COUNT, 0},
+-	{WID_ACK_FAILURE_COUNT, 0},
+ 	{WID_RECEIVED_FRAGMENT_COUNT, 0},
+-	{WID_MCAST_RECEIVED_FRAME_COUNT, 0},
+-	{WID_FCS_ERROR_COUNT, 0},
+ 	{WID_SUCCESS_FRAME_COUNT, 0},
+-	{WID_TX_FRAGMENT_COUNT, 0},
+-	{WID_TX_MULTICAST_FRAME_COUNT, 0},
+-	{WID_RTS_SUCCESS_COUNT, 0},
+-	{WID_RTS_FAILURE_COUNT, 0},
+-	{WID_WEP_UNDECRYPTABLE_COUNT, 0},
+-	{WID_REKEY_PERIOD, 0},
+-	{WID_REKEY_PACKET_COUNT, 0},
+-	{WID_HW_RX_COUNT, 0},
+ 	{WID_GET_INACTIVE_TIME, 0},
+ 	{WID_NIL, 0}
+ 
+ };
+ 
+ static struct wilc_cfg_str g_cfg_str[] = {
+-	{WID_SSID, g_mac.ssid},	/* 33 + 1 bytes */
+ 	{WID_FIRMWARE_VERSION, g_mac.firmware_version},
+-	{WID_OPERATIONAL_RATE_SET, g_mac.supp_rate},
+-	{WID_BSSID, g_mac.bssid},	/* 6 bytes */
+-	{WID_WEP_KEY_VALUE, g_mac.wep_key},	/* 27 bytes */
+-	{WID_11I_PSK, g_mac.i_psk},	/* 65 bytes */
+-	{WID_HARDWARE_VERSION, g_mac.hw_product_version},
+ 	{WID_MAC_ADDR, g_mac.mac_address},
+-	{WID_PHY_VERSION, g_mac.phyversion},
+-	{WID_SUPP_USERNAME, g_mac.supp_username},
+-	{WID_SUPP_PASSWORD, g_mac.supp_password},
+-	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result},
+-	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result1},
+-	{WID_ASSOC_REQ_INFO, g_mac.assoc_req},
+ 	{WID_ASSOC_RES_INFO, g_mac.assoc_rsp},
+-	{WID_FIRMWARE_INFO, g_mac.firmware_version},
+-	{WID_IP_ADDRESS, g_mac.ip_address},
+ 	{WID_NIL, NULL}
+ };
+ 
+@@ -327,12 +232,6 @@ static void wilc_wlan_parse_response_frame(u8 *info, int size)
+ 					break;
+ 
+ 				if (g_cfg_str[i].id == wid) {
+-					if (wid == WID_SITE_SURVEY_RESULTS) {
+-						static int toggle;
+-
+-						i += toggle;
+-						toggle ^= 1;
+-					}
+ 					memcpy(g_cfg_str[i].str, &info[2],
+ 					       (info[2] + 2));
+ 					break;
+@@ -478,12 +377,6 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 						(g_cfg_str[i].str[1] << 8);
+ 
+ 				if (buffer_size >= size) {
+-					if (id == WID_SITE_SURVEY_RESULTS) {
+-						static int toggle;
+-
+-						i += toggle;
+-						toggle ^= 1;
+-					}
+ 					memcpy(buffer,  &g_cfg_str[i].str[2],
+ 					       size);
+ 					ret = size;
 -- 
 2.7.4
 
