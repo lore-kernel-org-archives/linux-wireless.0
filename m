@@ -2,121 +2,169 @@ Return-Path: <SRS0=9L0z=MH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	T_DKIM_INVALID,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D0BC43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:10:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F26C43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 12:08:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 568B020843
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 11:10:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 568B020843
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+	by mail.kernel.org (Postfix) with ESMTP id 1ED6A20867
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 12:08:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iEui60kQ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Qp0VIfQd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1ED6A20867
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728721AbeIYRRr (ORCPT
+        id S1728881AbeIYSPv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 13:17:47 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:58930 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728619AbeIYRRr (ORCPT
+        Tue, 25 Sep 2018 14:15:51 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33140 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726926AbeIYSPv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 13:17:47 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w8PBAZLV006857, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w8PBAZLV006857
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Tue, 25 Sep 2018 19:10:35 +0800
-Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
- RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 25 Sep
- 2018 19:10:34 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
-Subject: RE: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac wireless network chips
-Thread-Topic: [RFC 00/12] rtwlan: mac80211 driver for Realtek 802.11ac
- wireless network chips
-Thread-Index: AQHUVClmfShZef+yIU+HHwSs/fcbMKUA2DbA
-Date:   Tue, 25 Sep 2018 11:10:33 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D08D7FB8@RTITMBSVM01.realtek.com.tw>
-References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
- <052723dc-c8b9-1a40-90a4-7c8ae2b29299@lwfinger.net>
-In-Reply-To: <052723dc-c8b9-1a40-90a4-7c8ae2b29299@lwfinger.net>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.123]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Tue, 25 Sep 2018 14:15:51 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 239276081A; Tue, 25 Sep 2018 12:08:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1537877316;
+        bh=1uuWVhlAuyMd56AaPAjlob/yQIn5YNj4XC+aFsSafB8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=iEui60kQYJkKcT1+Ly51+2fVy4OCbT/1ekS3ScKNFxAkpwaJHdf1tOpo8QY3gdV4D
+         /v7KKHvS4ERbBbOGolnVpYgecgUvb321duBu64G5Zgl0yZKHCXlJzpCmVEZ47dIbWj
+         18S3TGaKfoDt6oT5J+Qq+GPgZvHZvBKHQocF5kRw=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 36EC860128;
+        Tue, 25 Sep 2018 12:08:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1537877315;
+        bh=1uuWVhlAuyMd56AaPAjlob/yQIn5YNj4XC+aFsSafB8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Qp0VIfQdoseKBFOHDp6xVDL+berJbdVx6KW3ayz0JPsanMxkGsBnGV3RjE+EJ6lbk
+         gU73+nhHpS/XLZKhimhcU+enoBb5gGpTXvJY1IzxKA/rzOnPn5tW9t3DUtgrOeYrqJ
+         skzBaTx3opVWvGHF+3Y1LC8mRZweLC0+FceUVM+Q=
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 25 Sep 2018 17:38:35 +0530
+From:   Govind Singh <govinds@codeaurora.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     ath10k@lists.infradead.org, andy.gross@linaro.org,
+        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        briannorris@chromium.org
+Subject: Re: [PATCH 1/4] dt: bindings: add missing dt properties for WCN3990
+ wifi node
+In-Reply-To: <5baa1b0a.1c69fb81.c0b19.4038@mx.google.com>
+References: <20180921090907.25937-1-govinds@codeaurora.org>
+ <20180921090907.25937-2-govinds@codeaurora.org>
+ <5baa1b0a.1c69fb81.c0b19.4038@mx.google.com>
+Message-ID: <f4785e79ccea53e0b696bdaaf2aa9ffb@codeaurora.org>
+X-Sender: govinds@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IExhcnJ5IEZpbmdlciBbbWFp
-bHRvOmxhcnJ5LmZpbmdlckBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZiBMYXJyeSBGaW5nZXINCj4g
-U2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDI1LCAyMDE4IDE6MTAgQU0NCj4gVG86IFRvbnkgQ2h1
-YW5nOyBrdmFsb0Bjb2RlYXVyb3JhLm9yZw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnOyBQa3NoaWg7IEFuZHkgSHVhbmcNCj4gU3ViamVjdDogUmU6IFtSRkMgMDAvMTJdIHJ0
-d2xhbjogbWFjODAyMTEgZHJpdmVyIGZvciBSZWFsdGVrIDgwMi4xMWFjDQo+IHdpcmVsZXNzIG5l
-dHdvcmsgY2hpcHMNCj4gDQo+IE9uIDkvMjEvMTggMTowMyBBTSwgeWhjaHVhbmdAcmVhbHRlay5j
-b20gd3JvdGU6DQo+ID4gRnJvbTogWWFuLUhzdWFuIENodWFuZyA8eWhjaHVhbmdAcmVhbHRlay5j
-b20+DQo+ID4NCj4gPiBUaGlzIGlzIGEgbmV3IG1hYzgwMjExIGRyaXZlciBmb3IgUmVhbHRlayA4
-MDIuMTFhYyB3aXJlbGVzcyBuZXR3b3JrIGNoaXBzLg0KPiA+IHJ0d2xhbiBzdXBwb3J0cyA4ODIy
-QkUgYW5kIDg4MjJDRSBjaGlwcywgYW5kIHdpbGwgYmUgYWJsZSB0byBzdXBwb3J0DQo+ID4gbXVs
-dGktdmlmIGNvbWJpbmF0aW9ucyBpbiBydW4tdGltZS4NCj4gPg0KPiA+IEZvciBub3csIG9ubHkg
-UENJIGJ1cyBpcyBzdXBwb3J0ZWQsIGJ1dCBydHdsYW4gd2FzIG9yaWdpbmFsbHkgZGVzaWduZWQN
-Cj4gPiB0byBvcHRpb25hbGx5IHN1cHBvcnQgdGhyZWUgYnVzZXMgaW5jbHVkZXMgVVNCICYgU0RJ
-Ty4gVVNCICYgU0RJTyBtb2R1bGVzDQo+ID4gd2lsbCBzb29uIGJlIHN1cHBvcnRlZCBieSBydHds
-YW4sIHdpdGggY29uZmlndXJhYmxlIGNvcmUgbW9kdWxlIHRvIGZpdA0KPiA+IHdpdGggZGlmZmVy
-ZW50IGJ1cyBtb2R1bGVzIGluIHRoZSBzYW1lIHRpbWUuDQo+ID4NCj4gPiBGb3IgZXhhbXBsZSwg
-aWYgd2UgY2hvb3NlIDg4MjJCRSBhbmQgODgyMkNVLCBvbmx5IFBDSSAmIFVTQiBtb2R1bGVzIHdp
-bGwNCj4gPiBiZSBzZWxlY3RlZCwgYnVpbHQsIGxvYWRlZCBpbnRvIGtlcm5lbC4gVGhpcyBpcyBv
-bmUgb2YgdGhlIG1ham9yDQo+ID4gZGlmZmVyZW5jZSBmcm9tIHJ0bHdpZmksIHdoaWNoIGNhbiBv
-bmx5IHN1cHBvcnQgc3BlY2lmaWMgY29tYmluYXRpb25zLg0KPiA+DQo+ID4gQW5vdGhlciBkaWZm
-ZXJlbmNlIGZyb20gcnRsd2lmaSBpcyB0aGF0IHJ0d2xhbiBpcyBkZXNpZ25lZCB0byBzdXBwb3J0
-DQo+ID4gdGhlIGxhdGVzdCBSZWFsdGVrIDgwMi4xMWFjIHdpcmVsZXNzIG5ldHdvcmsgY2hpcHMg
-bGlrZSA4ODIyQiBhbmQNCj4gPiA4ODIyQyBzZXJpZXMuIENvbXBhcmVkIHRvIHRoZSBlYXJsaWVy
-IGNoaXBzIHN1cHBvcnRlZCBieSBydGx3aWZpIGxpa2UNCj4gPiB0aGUgODAyLjExbiA4MTkyRUUg
-Y2hpcHNldCBvciA4MDIuMTFhYyA4ODIxQUUvODgxMkFFIGNoaXBzLCBuZXdlciBJQ3MNCj4gPiBo
-YXZlIGRpZmZlcmVudCBNQUMgJiBQSFkgc2V0dGluZ3MsIHN1Y2ggYXMgbmV3IG11bHRpLXBvcnQg
-ZmVhdHVyZSBmb3IgdGhlDQo+ID4gTUFDIGxheWVyIGRlc2lnbiBhbmQgSmFndWFyMi9KYWd1YXIz
-IFBIWSBsYXllciBJUHMuDQo+ID4NCj4gPiBNdWx0aS1Qb3J0IGZlYXR1cmUgaXMgYWxzbyBzdXBw
-b3J0ZWQgdW5kZXIgcnR3bGFuJ3Mgc29mdHdhcmUgYXJjaGl0ZWN0dXJlLg0KPiA+IHJ0bHdpZmkg
-Y2FuIG9ubHkgc3VwcG9ydCBvbmUgdmlmIGluIHRoZSBzYW1lIHRpbWUsIG1vc3QgYmVjYXVzZSBv
-ZiB0aGUNCj4gPiBoYXJkd2FyZSBsaW1pdGF0aW9ucyBmb3IgZWFybHkgY2hpcHMsIGhlbmNlIHRo
-ZSBvcmlnaW5hbCBkZXNpZ24gb2YgaXQNCj4gPiBhbHNvIHJlc3RyaWN0cyB0aGUgdXNhZ2Ugb2Yg
-bXVsdGktdmlmIHN1cHBvcnQsIHNvIGxhdGVzdCBjaGlwc2V0IHNlZW1zIG5vdA0KPiA+IHRha2Ug
-YWR2YW50YWdlcyBmcm9tIGl0cyBuZXcgTUFDIGVuZ2luZS4NCj4gPg0KPiA+IEhvd2V2ZXIsIHJ0
-d2xhbiBjYW4gcnVuIG11bHRpcGxlIHZpZnMgY29uY3VycmVudGx5IGJ5IGhvbGRpbmcgdGhlbSBv
-bg0KPiA+IGhhcmR3YXJlIHBvcnRzIHByb3ZpZGVkIGJ5IE1BQyBlbmdpbmUsIHNvIHdlIGNhbiBl
-YXNpbHkgc3RhcnQgZGlmZmVyZW50DQo+ID4gcm9sZXMgb24gYSBzaW5nbGUgZGV2aWNlLg0KPiA+
-DQo+ID4gQmFzZWQgb24gdGhlIHJlYXNvbnMgbWVudGlvbmVkIGJlZm9yZSwgd2UgaW1wbGVtZW50
-ZWQgcnR3bGFuLiBJdCBoYWQNCj4gbWFueQ0KPiA+IGF1dGhvcnMsIHRoZXkgYXJlIGxpc3RlZCBo
-ZXJlIGFscGhhYmV0aWNhbGx5Og0KPiANCj4gSSBoYXZlIGZvdW5kIHR3byBwcm9ibGVtcyB3aXRo
-IHRoZSBpbml0aWFsIGNvZGU6DQo+IA0KPiAxLiBUaGVyZSBpcyBhIG1pc3NpbmcgemVybyBlbnRy
-eSBhdCB0aGUgZW5kIG9mIHRoZSBzdHJ1Y3QgcGNpX2RldmljZV9pZC4NCj4gMi4gWW91IGhhdmUg
-bm8gTU9EVUxFX0RFVklDRV9UQUJMRSBtYWNybyBjYWxsLg0KPiANCj4gVGhlIGVmZmVjdCBpcyB0
-aGF0IHRoZSBkZXZpY2UgaXMgbm90IGF1dG9sb2FkZWQgb24gYm9vdC4gVGhlIGZpeCBpcw0KPiAN
-Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3bGFuL3BjaS5j
-DQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHdsYW4vcGNpLmMNCj4gaW5kZXgg
-MmZmNWExNTJkNzdiLi5mOGIxMjY3NTIwYTcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL3JlYWx0ZWsvcnR3bGFuL3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L3JlYWx0ZWsvcnR3bGFuL3BjaS5jDQo+IEBAIC0xMTg0LDYgKzExODQsNyBAQCBzdGF0aWMgY29u
-c3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgcnR3X3BjaV9pZF90YWJsZVtdDQo+ID0gew0KPiAgICNp
-ZmRlZiBDT05GSUdfUlRXTEFOXzg4MjJDRQ0KPiAgICAgICAgICB7IFJUS19QQ0lfREVWSUNFKFBD
-SV9WRU5ET1JfSURfUkVBTFRFSywgMHhDODIyLA0KPiBydHc4ODIyY19od19zcGVjKSB9LA0KPiAg
-ICNlbmRpZg0KPiArICAgICAgIHt9LA0KPiAgIH07DQo+IA0KPiAgIHN0YXRpYyBzdHJ1Y3QgcGNp
-X2RyaXZlciBydHdfcGNpX2RyaXZlciA9IHsNCj4gQEAgLTEyMTAsNiArMTIxMSw4IEBAIHN0cnVj
-dCBydHdfaGNpX29wcyBydHdfcGNpX29wcyA9IHsNCj4gICAgICAgICAgLmNoZWNrX2F2YWlsX2Rl
-c2MgPSBydHdfcGNpX2NoZWNrX2F2YWlsX2Rlc2MsDQo+ICAgfTsNCj4gDQo+ICtNT0RVTEVfREVW
-SUNFX1RBQkxFKHBjaSwgcnR3X3BjaV9pZF90YWJsZSk7DQo+ICsNCj4gICBtb2R1bGVfcGNpX2Ry
-aXZlcihydHdfcGNpX2RyaXZlcik7DQo+IA0KPiAgIE1PRFVMRV9BVVRIT1IoIlJlYWx0ZWsgQ29y
-cG9yYXRpb24iKTsNCj4gDQo+IExhcnJ5DQo+IA0KDQpUaGFua3MsIHdpbGwgYWRkIHRoZW0gaW50
-byB0aGUgbmV4dCBSRkMuDQoNCllhbi1Ic3VhbiwgQ2h1YW5nDQo=
+Hi Rob,
+
+On 2018-09-25 04:21, Rob Herring wrote:
+> On Fri, Sep 21, 2018 at 02:39:04PM +0530, Govind Singh wrote:
+>> Add missing optional properties in WCN3990 wifi node.
+>> 
+>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>> ---
+>>  .../bindings/net/wireless/qcom,ath10k.txt     | 22 
+>> +++++++++++++------
+>>  1 file changed, 15 insertions(+), 7 deletions(-)
+>> 
+>> diff --git 
+>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt 
+>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> index 7fd4e8ce4149..22dea7d83ee8 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> @@ -37,12 +37,14 @@ Optional properties:
+>>  - clocks: List of clock specifiers, must contain an entry for each 
+>> required
+>>            entry in clock-names.
+>>  - clock-names: Should contain the clock names "wifi_wcss_cmd", 
+>> "wifi_wcss_ref",
+>> -               "wifi_wcss_rtc".
+>> -- interrupts: List of interrupt lines. Must contain an entry
+>> -	      for each entry in the interrupt-names property.
+>> +               "wifi_wcss_rtc", "cxo_ref_clk_pin", 
+>> "smmu_aggre2_noc_clk".
+>> +- interrupts: List of interrupt lines. Must contain interrupt-names 
+>> property
+>> +	      per entry for "qcom,ath10k", "qcom,ipq4019-wifi" compatible
+>> +	      targets.
+> 
+> It would be clearer to list how many interrupts for each set of
+> compatibles.
+> 
+
+Sure, I will address this in next revision.
+
+>>  - interrupt-names: Must include the entries for MSI interrupt
+>>  		   names ("msi0" to "msi15") and legacy interrupt
+>> -		   name ("legacy"),
+>> +		   name ("legacy") for "qcom,ath10k", "qcom,ipq4019-wifi"
+>> +		   compatible targets.
+> 
+> So no legacy interrupt for wcn3990?
+> 
+
+Yes, no legacy interrupt for wcn3990.
+
+>>  - qcom,msi_addr: MSI interrupt address.
+>>  - qcom,msi_base: Base value to add before writing MSI data into
+>>  		MSI address register.
+>> @@ -55,7 +57,8 @@ Optional properties:
+>>  - qcom,ath10k-pre-calibration-data : pre calibration data as an 
+>> array,
+>>  				     the length can vary between hw versions.
+>>  - <supply-name>-supply: handle to the regulator device tree node
+>> -			   optional "supply-name" is "vdd-0.8-cx-mx".
+>> +			   optional "supply-name" are "vdd-0.8-cx-mx",
+>> +			   "vdd-1.8-xo", "vdd-1.3-rfa" and "vdd-3.3-ch0".
+>> 
+>>  Example (to supply the calibration data alone):
+>> 
+>> @@ -133,8 +136,10 @@ wifi@18000000 {
+>>  		compatible = "qcom,wcn3990-wifi";
+>>  		reg = <0x18800000 0x800000>;
+>>  		reg-names = "membase";
+>> -		clocks = <&clock_gcc clk_aggre2_noc_clk>;
+>> -		clock-names = "smmu_aggre2_noc_clk"
+>> +		clocks = <&clock_gcc clk_aggre2_noc_clk>,
+>> +			 <&clock_gcc clk_rf_clk2_pin>;
+>> +		clock-names = "smmu_aggre2_noc_clk",
+>> +			      "cxo_ref_clk_pin";
+> 
+> The binding now says there should be 5 clocks...
+> 
+
+Only 2 clocks are applicable for wcn3990. I will list no of clocks for 
+each set of compatible for more clarity.
+
+>>  		interrupts =
+>>  			   <0 130 0 /* CE0 */ >,
+>>  			   <0 131 0 /* CE1 */ >,
+>> @@ -149,4 +154,7 @@ wifi@18000000 {
+>>  			   <0 140 0 /* CE10 */ >,
+>>  			   <0 141 0 /* CE11 */ >;
+>>  		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+>> +		vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
+>> +		vdd-1.3-rfa-supply = <&vreg_l17a_1p3>;
+>> +		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
+>>  };
+>> --
+>> 2.17.0
+>> 
+
+Thanks,
+Govind
