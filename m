@@ -2,95 +2,117 @@ Return-Path: <SRS0=9L0z=MH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E975BC43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 09:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128E5C43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 09:55:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A191920C0A
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 09:53:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FC1E20C0A
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 09:55:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZRR9yq0m"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A191920C0A
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LFDPVYbw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8FC1E20C0A
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728549AbeIYQA1 (ORCPT
+        id S1726927AbeIYQCg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 12:00:27 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:40495 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727617AbeIYQAZ (ORCPT
+        Tue, 25 Sep 2018 12:02:36 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:46128 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726201AbeIYQCg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 12:00:25 -0400
-Received: by mail-pg1-f196.google.com with SMTP id n31-v6so4263348pgm.7
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2018 02:53:41 -0700 (PDT)
+        Tue, 25 Sep 2018 12:02:36 -0400
+Received: by mail-ed1-f66.google.com with SMTP id k14-v6so18775126edr.13
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Sep 2018 02:55:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:references:cc:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=FqqzYDCMWwwwb9oZ7hF8oS5tzRSrxTybuH34jfGNzZE=;
-        b=ZRR9yq0mCrvncCqdwD/VpvUrzzJ5iUXoXj96+Rcy7cCdGi0WQ4LWlI9yXaFLuCdZ+3
-         y4Av1qZS3s/i/k81QoO6nV/yl697UX7GK0Zjt+ocFXA4aTi4IxfCIcwAGjg7pv3AIjSA
-         hZEqcUhEUcbBZYar737j9ee7UX4kRfO+vRKpw=
+        bh=/X6WN0rM9jLzgBwncpo6+HoVyQ1L0F0YZ/dRzU8LjLM=;
+        b=LFDPVYbw/aF5XixIvuId+0dKDD9eDN/p9Yd9ToxqRruFpwGWSOWLybsBuoSRN87rjo
+         DzrgnCl2tr9+iPbSjbRQoOXEFo7rFqzb8G86098lOEQ+/XBfcC/yissPDjaM15PXL9ak
+         7wQC/Y5jhqMPeqP8I0bOfGQTfiQvi5axyb/GI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:cc:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=FqqzYDCMWwwwb9oZ7hF8oS5tzRSrxTybuH34jfGNzZE=;
-        b=muig3FMq+qzjCjGWFJ+U3wBJmaXgqLXREI3UWovVwykhN1imLSzTyUuz+m5gJCsasN
-         mbMy+psdNly4ImmnHkqUKGLRttmd94n6Z1hHpJ8bco5+krgNP4Lt/Xoq/xFOOMUO3Rah
-         NihAdCL9hmA1jf4YttcW68uJgC2JzquQU6ZNJkZTxmcCXZGwj8rpUiFSq7WHjVPVCh07
-         Zv1frI5OSwi99Pjtv3gOekU8V24KM/LWm4tTGtztSpLiJLrTYfJX4MWME+kBwk5KDKi+
-         iDXQHwX6TTcthrLL/Ays0Nov+B/SK+VMhUq4sJ5WzHimn6GZntnM68vjrAOfhu3bj+MH
-         BPxg==
-X-Gm-Message-State: ABuFfohm5I3pwlnfOTWKoIi2dgJJJERbQ469xBm+ws7RtvwBqTfIyZGB
-        v6NtBruu7LN2uIVu6xNhTRmdMQ==
-X-Google-Smtp-Source: ACcGV63S11Efmqvv2KcPmFT6qiQRhbJXHjEWt5e4vccjPMkSInnGash6ZS+CuEgIxBdP/J1jd7JPZg==
-X-Received: by 2002:a63:ef4f:: with SMTP id c15-v6mr268980pgk.368.1537869220737;
-        Tue, 25 Sep 2018 02:53:40 -0700 (PDT)
+        bh=/X6WN0rM9jLzgBwncpo6+HoVyQ1L0F0YZ/dRzU8LjLM=;
+        b=kmltNBp+l3yE9aQSzpzn+NFDj1NF+D7czXyY3hqeyiiVvYbB/dBrZetqe7MzQdUyV3
+         9vWXb63+7fGEvyrvHnkDcDh/xzjvYDhJsiEp2Kxdpdnf9ahT1GSpE//Q1UJpOl9ZoNzN
+         jjbfd7eh2GP9maeiIk0qvsC0gKgYi7RN/F1UVEb/IjbOKzLSEhvXaWJEznOdk58zsUjF
+         b8iDlOg1KgKw6sT0mwC7M58CqhX6Y9Lf53CrywBfuH5dqEzW8ML7alZb+m8ZJe78WmHn
+         9ciVGQFUjvXCt4r5KTDwofqYPqLWvdQf7uYwy+DBoS+Q24A73+pv3go8iOANIH1mIXbw
+         HpAw==
+X-Gm-Message-State: ABuFfohtBzH6/vrT6jmds2iiZR5KU1hMAI+/+Yx7AC397v7dZObxLKWB
+        RRm+svnUt725y1xOf7Tx3WKe6Q==
+X-Google-Smtp-Source: ACcGV61Faqkv8P6NZL0H4ePGTBWAzHWRhLKHWC/iGN7Lw9nJ71/oH+OJpNq2l1uswost7hrlR/Pi6Q==
+X-Received: by 2002:a50:e40d:: with SMTP id d13-v6mr1496500edm.263.1537869350056;
+        Tue, 25 Sep 2018 02:55:50 -0700 (PDT)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id u65-v6sm1046117pfb.144.2018.09.25.02.53.37
+        by smtp.gmail.com with ESMTPSA id h19-v6sm122976edq.23.2018.09.25.02.55.48
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Sep 2018 02:53:39 -0700 (PDT)
-Subject: Re: [PATCH] New functionality for aborting ongoing CAC.
-To:     Enrique Giraldo <hgiraldos@gmail.com>
-References: <20180925081933.28553-1-enrique.giraldo@galgus.net>
- <57143da1-1569-bd98-70e9-91cdcd89d1b8@broadcom.com>
- <CAEbaMQ+N=hUwXta9NbrBpF3YcoCyUNWB=s3cynp4pzFLuFrmDA@mail.gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Enrique Giraldo <enrique.giraldo@galgus.net>
+        Tue, 25 Sep 2018 02:55:49 -0700 (PDT)
+Subject: Re: [PATCH] mt76x0: add quirk to disable 2.4GHz band for Archer T1U
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1537858188-7815-1-git-send-email-sgruszka@redhat.com>
+ <20180925075445.GA3872@localhost.localdomain>
+ <f3c1e576-4756-7a3e-4bfe-3abaf3e1107d@nbd.name>
+ <20180925090746.GC3872@localhost.localdomain>
+ <20180925094837.GD2029@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        Sid Hayn <sidhayn@gmail.com>
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <1ff1f335-6962-4ace-6b25-562dab939893@broadcom.com>
-Date:   Tue, 25 Sep 2018 11:53:34 +0200
+Message-ID: <8bcdd4fc-4dc6-f098-073e-83feb09a117f@broadcom.com>
+Date:   Tue, 25 Sep 2018 11:55:48 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAEbaMQ+N=hUwXta9NbrBpF3YcoCyUNWB=s3cynp4pzFLuFrmDA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20180925094837.GD2029@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/25/2018 11:28 AM, Enrique Giraldo wrote:
-> The main reason is to be able to stop the CAC when you want to make a
-> channel switch and the CAC is ongoing. It's true that the radio would
-> not pass to the next phase, the behavior is the same as when during
-> the CAC a radar event is detected. In the case of aborting, a later
-> action is expected, for example, switch to the desired new channel.
+On 9/25/2018 11:48 AM, Stanislaw Gruszka wrote:
+> On Tue, Sep 25, 2018 at 11:07:47AM +0200, Lorenzo Bianconi wrote:
+>> On Sep 25, Felix Fietkau wrote:
+>>> On 2018-09-25 09:54, Lorenzo Bianconi wrote:
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+>>>>> index 76d607f73758..b7a1069ecd0e 100644
+>>>>> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+>>>>> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+>>>>> @@ -45,7 +45,8 @@
+>>>>>  	{ USB_DEVICE(0x20f4, 0x806b) },	/* TRENDnet TEW-806UBH  */
+>>>>>  	{ USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
+>>>>>  	{ USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
+>>>>> -	{ USB_DEVICE(0x2357, 0x0105) }, /* TP-LINK Archer T1U */
+>>>>> +	{ USB_DEVICE(0x2357, 0x0105),
+>>>>> +	  .driver_info = 1,	     }, /* TP-LINK Archer T1U */
+>>>>
+>>>> Hi Stanislaw,
+>>>>
+>>>> what about using 'ieee80211-freq-limit' OF property to limit available wireless
+>>>> band? In this way we can take into account even the opposite case (no 5GHz).
+>>> That doesn't make sense for USB devices, which can be plugged into any
+>>> machine.
+>>
+>> Ack, right.
+>> What about a more general solution like adding an enum { NO_5GHz = 1, NO_2GHz }?
+>> Does it worth to implement it now?
+>
+> I do not see reason for that. Basically band information should be
+> read from EEPROM, I do not expect need for more quirks like this.
 
-So for mac80211 the function ieee80211_dfs_cancel_cac() indeed seems to 
-just abort. So what is the scenario here? If user-space sends 
-NL80211_CMD_START_AP with DFS channel, a CAC period is started. So you 
-are saying you want to do a channel switch? Does it not make sense to 
-issue a NL80211_CMD_STOP_AP and then NL80211_CMD_START_AP for the 
-desired channel? Maybe the use-case you are looking at is not AP mode, 
-but there is no context whatsoever in the commit message so I can only 
-guess.
+Well. Never say never :-p And the phrase "quirks like this" does seem to 
+leave the door open for other quirks. Or did you mean "quirks using 
+driver_info"?
 
 Regards,
 Arend
