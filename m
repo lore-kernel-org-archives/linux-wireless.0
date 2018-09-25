@@ -2,121 +2,114 @@ Return-Path: <SRS0=9L0z=MH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A493FC43382
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEFE8C43382
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:49:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66C3720685
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 66C3720685
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	by mail.kernel.org (Postfix) with ESMTP id 36EAE214C5
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:49:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 36EAE214C5
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728317AbeIYMbd (ORCPT
+        id S1727562AbeIYMz4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 08:31:33 -0400
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12212 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726927AbeIYMbd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 08:31:33 -0400
-X-IronPort-AV: E=Sophos;i="5.54,301,1534834800"; 
-   d="scan'208";a="20543261"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:33 -0700
-Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
- chn-sv-exch03.mchp-main.com (10.10.76.49) with Microsoft SMTP Server id
- 14.3.352.0; Mon, 24 Sep 2018 23:25:32 -0700
-From:   Ajay Singh <ajay.kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 29/29] staging: wilc1000: return exact error of register_netdev() from wilc_netdev_init()
-Date:   Tue, 25 Sep 2018 11:53:44 +0530
-Message-ID: <1537856624-22157-30-git-send-email-ajay.kathat@microchip.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
-References: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 25 Sep 2018 08:55:56 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56850 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727114AbeIYMz4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Sep 2018 08:55:56 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 905C8308FB86;
+        Tue, 25 Sep 2018 06:49:52 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.84])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 47C5B1077D48;
+        Tue, 25 Sep 2018 06:49:50 +0000 (UTC)
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Sid Hayn <sidhayn@gmail.com>
+Subject: [PATCH] mt76x0: add quirk to disable 2.4GHz band for Archer T1U
+Date:   Tue, 25 Sep 2018 08:49:48 +0200
+Message-Id: <1537858188-7815-1-git-send-email-sgruszka@redhat.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Tue, 25 Sep 2018 06:49:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Refactor wilc_netdev_init() to return the error code received from
-register_netdev() during the failure condition.
+TP-LINK Archer T1U do not support 2.4GHz band despite EEPROM
+reports that. Add quirk to mask out 2.4GHz support.
 
-Earlier discussion link
-[1]. https://www.spinics.net/lists/linux-wireless/msg177304.html
-
-Suggested-by: Claudiu Beznea <claudiu.beznea@microchip.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reported-by: Sid Hayn <sidhayn@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c | 5 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    | 7 ++++++-
+ 3 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 3ac82a1..9ee04ea 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1065,7 +1065,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	if (!wl)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+index 18bd80adbb51..3d712f6d7078 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+@@ -62,6 +62,11 @@ static void mt76x0_set_chip_cap(struct mt76x0_dev *dev)
+ 	dev_dbg(dev->mt76.dev, "2GHz %d 5GHz %d\n",
+ 		dev->mt76.cap.has_2ghz, dev->mt76.cap.has_5ghz);
+ 
++	if (dev->no_2ghz) {
++		dev->mt76.cap.has_2ghz = false;
++		dev_dbg(dev->mt76.dev, "mask out 2GHz support\n");
++	}
++
+ 	if (!mt76x02_field_valid(nic_conf1 & 0xff))
+ 		nic_conf1 &= 0xff00;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 7e131241344b..242abab69cdb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -108,6 +108,8 @@ struct mt76x0_dev {
+ 	u8 agc_save;
+ 	u16 chainmask;
+ 
++	bool no_2ghz;
++
+ 	struct mac_stats stats;
+ };
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index 76d607f73758..b7a1069ecd0e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -45,7 +45,8 @@
+ 	{ USB_DEVICE(0x20f4, 0x806b) },	/* TRENDnet TEW-806UBH  */
+ 	{ USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
+ 	{ USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
+-	{ USB_DEVICE(0x2357, 0x0105) }, /* TP-LINK Archer T1U */
++	{ USB_DEVICE(0x2357, 0x0105),
++	  .driver_info = 1,	     }, /* TP-LINK Archer T1U */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7630, 0xff, 0x2, 0xff)}, /* MT7630U */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7650, 0xff, 0x2, 0xff)}, /* MT7650U */
+ 	{ 0, }
+@@ -222,6 +223,10 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
+ 	if (!dev)
  		return -ENOMEM;
  
--	if (wilc_wlan_cfg_init(wl))
-+	ret = wilc_wlan_cfg_init(wl);
-+	if (ret)
- 		goto free_wl;
- 
- 	*wilc = wl;
-@@ -1077,8 +1078,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	INIT_LIST_HEAD(&wl->rxq_head.list);
- 
- 	wl->hif_workqueue = create_singlethread_workqueue("WILC_wq");
--	if (!wl->hif_workqueue)
-+	if (!wl->hif_workqueue) {
-+		ret = -ENOMEM;
- 		goto free_cfg;
-+	}
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-@@ -1086,8 +1089,10 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		struct wireless_dev *wdev;
- 
- 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
--		if (!ndev)
-+		if (!ndev) {
-+			ret = -ENOMEM;
- 			goto free_ndev;
-+		}
- 
- 		vif = netdev_priv(ndev);
- 		memset(vif, 0, sizeof(struct wilc_vif));
-@@ -1110,6 +1115,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		wdev = wilc_create_wiphy(ndev, dev);
- 		if (!wdev) {
- 			netdev_err(ndev, "Can't register WILC Wiphy\n");
-+			ret = -ENOMEM;
- 			goto free_ndev;
- 		}
- 
-@@ -1151,7 +1157,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	wilc_wlan_cfg_deinit(wl);
- free_wl:
- 	kfree(wl);
--	return -ENOMEM;
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(wilc_netdev_init);
++	/* Quirk for Archer T1U */
++	if (id->driver_info)
++		dev->no_2ghz = true;
++
+ 	usb_dev = usb_get_dev(usb_dev);
+ 	usb_reset_device(usb_dev);
  
 -- 
-2.7.4
+1.9.3
 
