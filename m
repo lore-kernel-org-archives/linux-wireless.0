@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C610CC43382
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3534ECE561
 	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8810421480
+	by mail.kernel.org (Postfix) with ESMTP id B4D36214AB
 	for <linux-wireless@archiver.kernel.org>; Tue, 25 Sep 2018 06:25:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8810421480
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B4D36214AB
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728238AbeIYMbH (ORCPT
+        id S1728263AbeIYMbI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Sep 2018 08:31:07 -0400
+        Tue, 25 Sep 2018 08:31:08 -0400
 Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12212 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728214AbeIYMbH (ORCPT
+        with ESMTP id S1728214AbeIYMbI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Sep 2018 08:31:07 -0400
+        Tue, 25 Sep 2018 08:31:08 -0400
 X-IronPort-AV: E=Sophos;i="5.54,301,1534834800"; 
-   d="scan'208";a="20543233"
+   d="scan'208";a="20543235"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:08 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 24 Sep 2018 23:25:09 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  chn-sv-exch03.mchp-main.com (10.10.76.49) with Microsoft SMTP Server id
- 14.3.352.0; Mon, 24 Sep 2018 23:25:01 -0700
+ 14.3.352.0; Mon, 24 Sep 2018 23:25:05 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v3 20/29] staging: wilc1000: remove use of unnecessary 'wilc_connected_ssid' variable
-Date:   Tue, 25 Sep 2018 11:53:35 +0530
-Message-ID: <1537856624-22157-21-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH v3 21/29] staging: wilc1000: avoid use of 'g_sdio' static variable
+Date:   Tue, 25 Sep 2018 11:53:36 +0530
+Message-ID: <1537856624-22157-22-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537856624-22157-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,166 +50,268 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-'wilc_connected_ssid' actually used to store the BSSID information for
-connected BSSID. 'wilc_vif' already has 'bssid' variable to store the
-same information. So refactor code to remove 'wilc_connected_ssid' and
-instead used 'wilc_vif' struct 'bssid' element.
+Instead of using static variable 'g_sdio' move it as part of 'wilc'
+struct. Also allocating the memory in the probe function and free during
+deinitialization.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 24 -----------------------
- drivers/staging/wilc1000/host_interface.h         |  2 --
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 24 ++++++++++++++---------
- 3 files changed, 15 insertions(+), 35 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         |  1 +
+ drivers/staging/wilc1000/wilc_sdio.c          | 54 +++++++++++++++++----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ 3 files changed, 36 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 529390d..01db899 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -813,7 +813,6 @@ static void handle_scan(struct work_struct *work)
- 	kfree(msg);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b666e1e..560c168 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1037,6 +1037,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 	flush_workqueue(wilc->hif_workqueue);
+ 	destroy_workqueue(wilc->hif_workqueue);
+ 	wilc_wlan_cfg_deinit(wilc);
++	kfree(wilc->bus_data);
+ 	kfree(wilc);
  }
+ EXPORT_SYMBOL_GPL(wilc_netdev_cleanup);
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index b2080d8..7ef047c 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -30,7 +30,6 @@ struct wilc_sdio {
+ 	int has_thrpt_enh3;
+ };
  
--u8 wilc_connected_ssid[6] = {0};
- static void handle_connect(struct work_struct *work)
+-static struct wilc_sdio g_sdio;
+ static const struct wilc_hif_func wilc_hif_sdio;
+ 
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+@@ -109,6 +108,11 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 	struct wilc *wilc;
+ 	int ret;
+ 	struct gpio_desc *gpio = NULL;
++	struct wilc_sdio *sdio_priv;
++
++	sdio_priv = kzalloc(sizeof(*sdio_priv), GFP_KERNEL);
++	if (!sdio_priv)
++		return -ENOMEM;
+ 
+ 	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
+ 		gpio = gpiod_get(&func->dev, "irq", GPIOD_IN);
+@@ -124,9 +128,11 @@ static int linux_sdio_probe(struct sdio_func *func,
+ 	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, &wilc_hif_sdio);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Couldn't initialize netdev\n");
++		kfree(sdio_priv);
+ 		return ret;
+ 	}
+ 	sdio_set_drvdata(func, wilc);
++	wilc->bus_data = sdio_priv;
+ 	wilc->dev = &func->dev;
+ 	wilc->gpio_irq = gpio;
+ 
+@@ -381,6 +387,7 @@ static int sdio_set_func1_block_size(struct wilc *wilc, u32 block_size)
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
  {
- 	struct host_if_msg *msg = container_of(work, struct host_if_msg, work);
-@@ -835,11 +834,6 @@ static void handle_connect(struct work_struct *work)
- 		return;
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
+ 
+ 	cpu_to_le32s(&data);
+@@ -415,7 +422,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		cmd.increment = 1;
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)&data;
+-		cmd.block_size = g_sdio.block_size;
++		cmd.block_size = sdio_priv->block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -434,7 +441,8 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-	u32 block_size = g_sdio.block_size;
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
++	u32 block_size = sdio_priv->block_size;
+ 	struct sdio_cmd53 cmd;
+ 	int nblk, nleft, ret;
+ 
+@@ -523,6 +531,7 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
+ 
+ 	if (addr >= 0xf0 && addr <= 0xff) {
+@@ -553,7 +562,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		cmd.count = 4;
+ 		cmd.buffer = (u8 *)data;
+ 
+-		cmd.block_size = g_sdio.block_size;
++		cmd.block_size = sdio_priv->block_size;
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+@@ -574,7 +583,8 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+-	u32 block_size = g_sdio.block_size;
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
++	u32 block_size = sdio_priv->block_size;
+ 	struct sdio_cmd53 cmd;
+ 	int nblk, nleft, ret;
+ 
+@@ -674,13 +684,14 @@ static int sdio_deinit(struct wilc *wilc)
+ static int sdio_init(struct wilc *wilc, bool resume)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	struct sdio_cmd52 cmd;
+ 	int loop, ret;
+ 	u32 chipid;
+ 
+ 	if (!resume) {
+-		memset(&g_sdio, 0, sizeof(struct wilc_sdio));
+-		g_sdio.irq_gpio = wilc->dev_irq_num;
++		memset(sdio_priv, 0, sizeof(struct wilc_sdio));
++		sdio_priv->irq_gpio = wilc->dev_irq_num;
  	}
  
--	if (memcmp(conn_attr->bssid, wilc_connected_ssid, ETH_ALEN) == 0) {
--		netdev_err(vif->ndev, "Discard connect request\n");
--		goto error;
--	}
--
- 	bss_param = conn_attr->params;
- 	if (!bss_param) {
- 		netdev_err(vif->ndev, "Required BSSID not found\n");
-@@ -1019,10 +1013,6 @@ static void handle_connect(struct work_struct *work)
- 	cur_byte = wid_list[wid_cnt].val;
- 	wid_cnt++;
+ 	/**
+@@ -704,7 +715,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 		dev_err(&func->dev, "Fail cmd 52, set func 0 block size...\n");
+ 		goto fail;
+ 	}
+-	g_sdio.block_size = WILC_SDIO_BLOCK_SIZE;
++	sdio_priv->block_size = WILC_SDIO_BLOCK_SIZE;
  
--	if (conn_attr->bssid)
--		memcpy(wilc_connected_ssid,
--		       conn_attr->bssid, ETH_ALEN);
--
- 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
- 				      wid_cnt,
- 				      wilc_get_vif_idx(vif));
-@@ -1145,8 +1135,6 @@ static void handle_connect_timeout(struct work_struct *work)
- 	kfree(hif_drv->usr_conn_req.ies);
- 	hif_drv->usr_conn_req.ies = NULL;
- 
--	eth_zero_addr(wilc_connected_ssid);
--
- out:
- 	kfree(msg);
- }
-@@ -1452,16 +1440,6 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 	/**
+ 	 *      enable func1 IO
+@@ -778,11 +789,11 @@ static int sdio_init(struct wilc *wilc, bool resume)
  		}
+ 		dev_err(&func->dev, "chipid (%08x)\n", chipid);
+ 		if ((chipid & 0xfff) > 0x2a0)
+-			g_sdio.has_thrpt_enh3 = 1;
++			sdio_priv->has_thrpt_enh3 = 1;
+ 		else
+-			g_sdio.has_thrpt_enh3 = 0;
++			sdio_priv->has_thrpt_enh3 = 0;
+ 		dev_info(&func->dev, "has_thrpt_enh3 = %d...\n",
+-			 g_sdio.has_thrpt_enh3);
++			 sdio_priv->has_thrpt_enh3);
  	}
  
--	if (mac_status == MAC_STATUS_CONNECTED &&
--	    conn_info.status != WLAN_STATUS_SUCCESS) {
--		netdev_err(vif->ndev,
--			   "Received MAC status is MAC_STATUS_CONNECTED, Assoc Resp is not SUCCESS\n");
--		eth_zero_addr(wilc_connected_ssid);
--	} else if (mac_status == MAC_STATUS_DISCONNECTED)    {
--		netdev_err(vif->ndev, "Received MAC status is MAC_STATUS_DISCONNECTED\n");
--		eth_zero_addr(wilc_connected_ssid);
--	}
--
- 	if (hif_drv->usr_conn_req.bssid) {
- 		memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
+ 	return 1;
+@@ -820,6 +831,7 @@ static int sdio_read_size(struct wilc *wilc, u32 *size)
+ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	u32 tmp;
+ 	struct sdio_cmd52 cmd;
  
-@@ -1874,8 +1852,6 @@ static void handle_disconnect(struct work_struct *work)
- 	vif->obtaining_ip = false;
- 	wilc_set_power_mgmt(vif, 0, 0);
+@@ -828,7 +840,7 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ 	/**
+ 	 *      Read IRQ flags
+ 	 **/
+-	if (!g_sdio.irq_gpio) {
++	if (!sdio_priv->irq_gpio) {
+ 		int i;
  
--	eth_zero_addr(wilc_connected_ssid);
--
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
+ 		cmd.function = 1;
+@@ -848,7 +860,7 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ 			tmp |= INT_4;
+ 		if (cmd.data & BIT(6))
+ 			tmp |= INT_5;
+-		for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++		for (i = sdio_priv->nint; i < MAX_NUM_INT; i++) {
+ 			if ((tmp >> (IRG_FLAGS_OFFSET + i)) & 0x1) {
+ 				dev_err(&func->dev,
+ 					"Unexpected interrupt (1) : tmp=%x, data=%x\n",
+@@ -877,13 +889,14 @@ static int sdio_read_int(struct wilc *wilc, u32 *int_status)
+ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	int ret;
+ 	int vmm_ctl;
  
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4416f8f..33fb731 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -359,6 +359,4 @@ int wilc_get_vif_idx(struct wilc_vif *vif);
- int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
- int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
+-	if (g_sdio.has_thrpt_enh3) {
++	if (sdio_priv->has_thrpt_enh3) {
+ 		u32 reg;
  
--extern u8 wilc_connected_ssid[6];
--
- #endif
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 76d017d..1a4d262 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -478,7 +478,6 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
- 			wilc_wlan_set_bssid(priv->dev, null_bssid,
- 					    STATION_MODE);
--			eth_zero_addr(wilc_connected_ssid);
+-		if (g_sdio.irq_gpio) {
++		if (sdio_priv->irq_gpio) {
+ 			u32 flags;
  
- 			if (!wfi_drv->p2p_connect)
- 				wlan_channel = INVALID_CHANNEL;
-@@ -521,7 +520,6 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 		wilc_ie = false;
- 		eth_zero_addr(priv->associated_bss);
- 		wilc_wlan_set_bssid(priv->dev, null_bssid, STATION_MODE);
--		eth_zero_addr(wilc_connected_ssid);
- 
- 		if (!wfi_drv->p2p_connect)
- 			wlan_channel = INVALID_CHANNEL;
-@@ -696,8 +694,12 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		nw_info = &priv->scanned_shadow[sel_bssi_idx];
- 	} else {
- 		ret = -ENOENT;
--		vif->connecting = false;
--		return ret;
-+		goto out_error;
-+	}
-+
-+	if (ether_addr_equal_unaligned(vif->bssid, nw_info->bssid)) {
-+		ret = -EALREADY;
-+		goto out_error;
- 	}
- 
- 	memset(priv->wep_key, 0, sizeof(priv->wep_key));
-@@ -739,8 +741,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			ret = -ENOTSUPP;
- 			netdev_err(dev, "%s: Unsupported cipher\n",
- 				   __func__);
--			vif->connecting = false;
--			return ret;
-+			goto out_error;
+ 			flags = val & (BIT(MAX_NUN_INT_THRPT_ENH2) - 1);
+@@ -919,7 +932,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
  		}
+ 		return 1;
+ 	}
+-	if (g_sdio.irq_gpio) {
++	if (sdio_priv->irq_gpio) {
+ 		/* has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
+ 		/*
+ 		 * Cannot clear multiple interrupts.
+@@ -932,7 +945,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			int i;
+ 
+ 			ret = 1;
+-			for (i = 0; i < g_sdio.nint; i++) {
++			for (i = 0; i < sdio_priv->nint; i++) {
+ 				if (flags & 1) {
+ 					struct sdio_cmd52 cmd;
+ 
+@@ -956,7 +969,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			}
+ 			if (!ret)
+ 				goto fail;
+-			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
++			for (i = sdio_priv->nint; i < MAX_NUM_INT; i++) {
+ 				if (flags & 1)
+ 					dev_err(&func->dev,
+ 						"Unexpected interrupt cleared %d...\n",
+@@ -1001,6 +1014,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++	struct wilc_sdio *sdio_priv = wilc->bus_data;
+ 	u32 reg;
+ 
+ 	if (nint > MAX_NUM_INT) {
+@@ -1013,7 +1027,7 @@ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ 		return 0;
  	}
  
-@@ -787,13 +788,18 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 				security, auth_type,
- 				nw_info->ch,
- 				nw_info->join_params);
--	if (ret != 0) {
-+	if (ret) {
-+		u8 null_bssid[ETH_ALEN] = {0};
-+
- 		netdev_err(dev, "wilc_set_join_req(): Error\n");
- 		ret = -ENOENT;
--		vif->connecting = false;
--		return ret;
-+		wilc_wlan_set_bssid(dev, null_bssid, STATION_MODE);
-+		goto out_error;
+-	g_sdio.nint = nint;
++	sdio_priv->nint = nint;
+ 
+ 	/**
+ 	 *      Disable power sequencer
+@@ -1029,7 +1043,7 @@ static int sdio_sync_ext(struct wilc *wilc, int nint)
+ 		return 0;
  	}
-+	return 0;
  
-+out_error:
-+	vif->connecting = false;
- 	return ret;
- }
+-	if (g_sdio.irq_gpio) {
++	if (sdio_priv->irq_gpio) {
+ 		u32 reg;
+ 		int ret, i;
  
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 484c265..4ba5887 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -205,6 +205,7 @@ struct wilc {
+ 	struct workqueue_struct *hif_workqueue;
+ 	enum chip_ps_states chip_ps_state;
+ 	struct wilc_cfg cfg;
++	void *bus_data;
+ };
+ 
+ struct wilc_wfi_mon_priv {
 -- 
 2.7.4
 
