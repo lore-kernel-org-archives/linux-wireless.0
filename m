@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50967C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDAF6C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:25:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0701A214C5
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:25:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0701A214C5
+	by mail.kernel.org (Postfix) with ESMTP id 83DF1214C5
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:25:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 83DF1214C5
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727421AbeIZQhx (ORCPT
+        id S1727442AbeIZQh5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 12:37:53 -0400
+        Wed, 26 Sep 2018 12:37:57 -0400
 Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39495 "EHLO
         esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727157AbeIZQhx (ORCPT
+        with ESMTP id S1727157AbeIZQh5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 12:37:53 -0400
+        Wed, 26 Sep 2018 12:37:57 -0400
 X-IronPort-AV: E=Sophos;i="5.54,306,1534834800"; 
-   d="scan'208";a="21366768"
+   d="scan'208";a="21366771"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 26 Sep 2018 03:25:37 -0700
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 26 Sep 2018 03:25:40 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  CHN-SV-EXCH01.mchp-main.com (10.10.76.37) with Microsoft SMTP Server id
- 14.3.352.0; Wed, 26 Sep 2018 03:25:36 -0700
+ 14.3.352.0; Wed, 26 Sep 2018 03:25:40 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <kvalo@codeaurora.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <kvalo@codeaurora.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/19] wilc: add coreconfigurator.c
-Date:   Wed, 26 Sep 2018 15:55:08 +0530
-Message-ID: <1537957525-11467-3-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 03/19] wilc: add host_interface.h
+Date:   Wed, 26 Sep 2018 15:55:09 +0530
+Message-ID: <1537957525-11467-4-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,308 +50,383 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Moved '/driver/staging/wilc1000/coreconfigurator.c' to
+Moved '/driver/staging/wilc1000/host_interface.h' to
 'drivers/net/wireless/microchip/wilc/'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/microchip/wilc/coreconfigurator.c | 287 +++++++++++++++++++++
- 1 file changed, 287 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc/coreconfigurator.c
+ .../net/wireless/microchip/wilc/host_interface.h   | 362 +++++++++++++++++++++
+ 1 file changed, 362 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc/host_interface.h
 
-diff --git a/drivers/net/wireless/microchip/wilc/coreconfigurator.c b/drivers/net/wireless/microchip/wilc/coreconfigurator.c
+diff --git a/drivers/net/wireless/microchip/wilc/host_interface.h b/drivers/net/wireless/microchip/wilc/host_interface.h
 new file mode 100644
-index 0000000..d6d3a97
+index 0000000..33fb731
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc/coreconfigurator.c
-@@ -0,0 +1,287 @@
-+// SPDX-License-Identifier: GPL-2.0
++++ b/drivers/net/wireless/microchip/wilc/host_interface.h
+@@ -0,0 +1,362 @@
++/* SPDX-License-Identifier: GPL-2.0 */
 +/*
-+ * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
++ * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries
 + * All rights reserved.
 + */
 +
++#ifndef HOST_INT_H
++#define HOST_INT_H
 +#include <linux/ieee80211.h>
-+
 +#include "coreconfigurator.h"
 +
-+#define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
-+				 BEACON_INTERVAL_LEN + CAP_INFO_LEN)
++#define IDLE_MODE	0x00
++#define AP_MODE		0x01
++#define STATION_MODE	0x02
++#define GO_MODE		0x03
++#define CLIENT_MODE	0x04
++#define ACTION		0xD0
++#define PROBE_REQ	0x40
++#define PROBE_RESP	0x50
 +
-+enum sub_frame_type {
-+	ASSOC_REQ             = 0x00,
-+	ASSOC_RSP             = 0x10,
-+	REASSOC_REQ           = 0x20,
-+	REASSOC_RSP           = 0x30,
-+	PROBE_REQ             = 0x40,
-+	PROBE_RSP             = 0x50,
-+	BEACON                = 0x80,
-+	ATIM                  = 0x90,
-+	DISASOC               = 0xA0,
-+	AUTH                  = 0xB0,
-+	DEAUTH                = 0xC0,
-+	ACTION                = 0xD0,
-+	PS_POLL               = 0xA4,
-+	RTS                   = 0xB4,
-+	CTS                   = 0xC4,
-+	ACK                   = 0xD4,
-+	CFEND                 = 0xE4,
-+	CFEND_ACK             = 0xF4,
-+	DATA                  = 0x08,
-+	DATA_ACK              = 0x18,
-+	DATA_POLL             = 0x28,
-+	DATA_POLL_ACK         = 0x38,
-+	NULL_FRAME            = 0x48,
-+	CFACK                 = 0x58,
-+	CFPOLL                = 0x68,
-+	CFPOLL_ACK            = 0x78,
-+	QOS_DATA              = 0x88,
-+	QOS_DATA_ACK          = 0x98,
-+	QOS_DATA_POLL         = 0xA8,
-+	QOS_DATA_POLL_ACK     = 0xB8,
-+	QOS_NULL_FRAME        = 0xC8,
-+	QOS_CFPOLL            = 0xE8,
-+	QOS_CFPOLL_ACK        = 0xF8,
-+	BLOCKACK_REQ          = 0x84,
-+	BLOCKACK              = 0x94,
-+	FRAME_SUBTYPE_FORCE_32BIT  = 0xFFFFFFFF
++#define ACTION_FRM_IDX				0
++#define PROBE_REQ_IDX				1
++#define MAX_NUM_STA				9
++#define ACTIVE_SCAN_TIME			10
++#define PASSIVE_SCAN_TIME			1200
++#define MIN_SCAN_TIME				10
++#define MAX_SCAN_TIME				1200
++#define DEFAULT_SCAN				0
++#define USER_SCAN				BIT(0)
++#define OBSS_PERIODIC_SCAN			BIT(1)
++#define OBSS_ONETIME_SCAN			BIT(2)
++#define GTK_RX_KEY_BUFF_LEN			24
++#define ADDKEY					0x1
++#define REMOVEKEY				0x2
++#define DEFAULTKEY				0x4
++#define ADDKEY_AP				0x8
++#define MAX_NUM_SCANNED_NETWORKS		100
++#define MAX_NUM_SCANNED_NETWORKS_SHADOW		130
++#define MAX_NUM_PROBED_SSID			10
++#define CHANNEL_SCAN_TIME			250
++
++#define TX_MIC_KEY_LEN				8
++#define RX_MIC_KEY_LEN				8
++#define PTK_KEY_LEN				16
++
++#define TX_MIC_KEY_MSG_LEN			26
++#define RX_MIC_KEY_MSG_LEN			48
++#define PTK_KEY_MSG_LEN				39
++
++#define PMKSA_KEY_LEN				22
++#define ETH_ALEN				6
++#define PMKID_LEN				16
++#define WILC_MAX_NUM_PMKIDS			16
++#define WILC_ADD_STA_LENGTH			40
++#define NUM_CONCURRENT_IFC			2
++#define DRV_HANDLER_SIZE			5
++#define DRV_HANDLER_MASK			0x000000FF
++
++struct rf_info {
++	u8 link_speed;
++	s8 rssi;
++	u32 tx_cnt;
++	u32 rx_cnt;
++	u32 tx_fail_cnt;
 +};
 +
-+static inline u16 get_beacon_period(u8 *data)
-+{
-+	u16 bcn_per;
++enum host_if_state {
++	HOST_IF_IDLE			= 0,
++	HOST_IF_SCANNING		= 1,
++	HOST_IF_CONNECTING		= 2,
++	HOST_IF_WAITING_CONN_RESP	= 3,
++	HOST_IF_CONNECTED		= 4,
++	HOST_IF_P2P_LISTEN		= 5,
++	HOST_IF_FORCE_32BIT		= 0xFFFFFFFF
++};
 +
-+	bcn_per  = data[0];
-+	bcn_per |= (data[1] << 8);
++struct host_if_pmkid {
++	u8 bssid[ETH_ALEN];
++	u8 pmkid[PMKID_LEN];
++};
 +
-+	return bcn_per;
-+}
++struct host_if_pmkid_attr {
++	u8 numpmkid;
++	struct host_if_pmkid pmkidlist[WILC_MAX_NUM_PMKIDS];
++};
 +
-+static inline u32 get_beacon_timestamp_lo(u8 *data)
-+{
-+	u32 time_stamp = 0;
-+	u32 index    = MAC_HDR_LEN;
++enum current_tx_rate {
++	AUTORATE	= 0,
++	MBPS_1		= 1,
++	MBPS_2		= 2,
++	MBPS_5_5	= 5,
++	MBPS_11		= 11,
++	MBPS_6		= 6,
++	MBPS_9		= 9,
++	MBPS_12		= 12,
++	MBPS_18		= 18,
++	MBPS_24		= 24,
++	MBPS_36		= 36,
++	MBPS_48		= 48,
++	MBPS_54		= 54
++};
 +
-+	time_stamp |= data[index++];
-+	time_stamp |= (data[index++] << 8);
-+	time_stamp |= (data[index++] << 16);
-+	time_stamp |= (data[index]   << 24);
++struct cfg_param_attr {
++	u32 flag;
++	u8 ht_enable;
++	u8 bss_type;
++	u8 auth_type;
++	u16 auth_timeout;
++	u8 power_mgmt_mode;
++	u16 short_retry_limit;
++	u16 long_retry_limit;
++	u16 frag_threshold;
++	u16 rts_threshold;
++	u16 preamble_type;
++	u8 short_slot_allowed;
++	u8 txop_prot_disabled;
++	u16 beacon_interval;
++	u16 dtim_period;
++	enum site_survey site_survey_enabled;
++	u16 site_survey_scan_time;
++	u8 scan_source;
++	u16 active_scan_time;
++	u16 passive_scan_time;
++	enum current_tx_rate curr_tx_rate;
 +
-+	return time_stamp;
-+}
++};
 +
-+static inline u32 get_beacon_timestamp_hi(u8 *data)
-+{
-+	u32 time_stamp = 0;
-+	u32 index    = (MAC_HDR_LEN + 4);
++enum cfg_param {
++	RETRY_SHORT		= BIT(0),
++	RETRY_LONG		= BIT(1),
++	FRAG_THRESHOLD		= BIT(2),
++	RTS_THRESHOLD		= BIT(3),
++	BSS_TYPE		= BIT(4),
++	AUTH_TYPE		= BIT(5),
++	AUTHEN_TIMEOUT		= BIT(6),
++	POWER_MANAGEMENT	= BIT(7),
++	PREAMBLE		= BIT(8),
++	SHORT_SLOT_ALLOWED	= BIT(9),
++	TXOP_PROT_DISABLE	= BIT(10),
++	BEACON_INTERVAL		= BIT(11),
++	DTIM_PERIOD		= BIT(12),
++	SITE_SURVEY		= BIT(13),
++	SITE_SURVEY_SCAN_TIME	= BIT(14),
++	ACTIVE_SCANTIME		= BIT(15),
++	PASSIVE_SCANTIME	= BIT(16),
++	CURRENT_TX_RATE		= BIT(17),
++	HT_ENABLE		= BIT(18),
++};
 +
-+	time_stamp |= data[index++];
-+	time_stamp |= (data[index++] << 8);
-+	time_stamp |= (data[index++] << 16);
-+	time_stamp |= (data[index]   << 24);
++struct found_net_info {
++	u8 bssid[6];
++	s8 rssi;
++};
 +
-+	return time_stamp;
-+}
++enum scan_event {
++	SCAN_EVENT_NETWORK_FOUND	= 0,
++	SCAN_EVENT_DONE			= 1,
++	SCAN_EVENT_ABORTED		= 2,
++	SCAN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
++};
 +
-+static inline enum sub_frame_type get_sub_type(u8 *header)
-+{
-+	return ((enum sub_frame_type)(header[0] & 0xFC));
-+}
++enum conn_event {
++	CONN_DISCONN_EVENT_CONN_RESP		= 0,
++	CONN_DISCONN_EVENT_DISCONN_NOTIF	= 1,
++	CONN_DISCONN_EVENT_FORCE_32BIT		= 0xFFFFFFFF
++};
 +
-+static inline u8 get_to_ds(u8 *header)
-+{
-+	return (header[1] & 0x01);
-+}
++enum KEY_TYPE {
++	WEP,
++	WPA_RX_GTK,
++	WPA_PTK,
++	PMKSA,
++};
 +
-+static inline u8 get_from_ds(u8 *header)
-+{
-+	return ((header[1] & 0x02) >> 1);
-+}
++typedef void (*wilc_scan_result)(enum scan_event, struct network_info *,
++				 void *, void *);
 +
-+static inline void get_address1(u8 *msa, u8 *addr)
-+{
-+	memcpy(addr, msa + 4, 6);
-+}
++typedef void (*wilc_connect_result)(enum conn_event,
++				     struct connect_info *,
++				     u8,
++				     struct disconnect_info *,
++				     void *);
 +
-+static inline void get_address2(u8 *msa, u8 *addr)
-+{
-+	memcpy(addr, msa + 10, 6);
-+}
++typedef void (*wilc_remain_on_chan_expired)(void *, u32);
++typedef void (*wilc_remain_on_chan_ready)(void *);
 +
-+static inline void get_address3(u8 *msa, u8 *addr)
-+{
-+	memcpy(addr, msa + 16, 6);
-+}
++struct rcvd_net_info {
++	u8 *buffer;
++	u32 len;
++};
 +
-+static inline void get_bssid(u8 *data, u8 *bssid)
-+{
-+	if (get_from_ds(data) == 1)
-+		get_address2(data, bssid);
-+	else if (get_to_ds(data) == 1)
-+		get_address1(data, bssid);
-+	else
-+		get_address3(data, bssid);
-+}
++struct hidden_net_info {
++	u8  *ssid;
++	u8 ssid_len;
++};
 +
-+static inline void get_ssid(u8 *data, u8 *ssid, u8 *p_ssid_len)
-+{
-+	u8 i, j, len;
++struct hidden_network {
++	struct hidden_net_info *net_info;
++	u8 n_ssids;
++};
 +
-+	len = data[TAG_PARAM_OFFSET + 1];
-+	j   = TAG_PARAM_OFFSET + 2;
++struct user_scan_req {
++	wilc_scan_result scan_result;
++	void *arg;
++	u32 ch_cnt;
++	struct found_net_info net_info[MAX_NUM_SCANNED_NETWORKS];
++};
 +
-+	if (len >= MAX_SSID_LEN)
-+		len = 0;
-+
-+	for (i = 0; i < len; i++, j++)
-+		ssid[i] = data[j];
-+
-+	ssid[len] = '\0';
-+
-+	*p_ssid_len = len;
-+}
-+
-+static inline u16 get_cap_info(u8 *data)
-+{
-+	u16 cap_info = 0;
-+	u16 index    = MAC_HDR_LEN;
-+	enum sub_frame_type st;
-+
-+	st = get_sub_type(data);
-+
-+	if (st == BEACON || st == PROBE_RSP)
-+		index += TIME_STAMP_LEN + BEACON_INTERVAL_LEN;
-+
-+	cap_info  = data[index];
-+	cap_info |= (data[index + 1] << 8);
-+
-+	return cap_info;
-+}
-+
-+static inline u16 get_asoc_status(u8 *data)
-+{
-+	u16 asoc_status;
-+
-+	asoc_status = data[3];
-+	return (asoc_status << 8) | data[2];
-+}
-+
-+static u8 *get_tim_elm(u8 *msa, u16 rx_len, u16 tag_param_offset)
-+{
-+	u16 index;
-+
-+	index = tag_param_offset;
-+
-+	while (index < (rx_len - FCS_LEN)) {
-+		if (msa[index] == WLAN_EID_TIM)
-+			return &msa[index];
-+		index += (IE_HDR_LEN + msa[index + 1]);
-+	}
-+
-+	return NULL;
-+}
-+
-+static u8 get_current_channel_802_11n(u8 *msa, u16 rx_len)
-+{
-+	u16 index;
-+
-+	index = TAG_PARAM_OFFSET;
-+	while (index < (rx_len - FCS_LEN)) {
-+		if (msa[index] == WLAN_EID_DS_PARAMS)
-+			return msa[index + 2];
-+		index += msa[index + 1] + IE_HDR_LEN;
-+	}
-+
-+	return 0;
-+}
-+
-+s32 wilc_parse_network_info(u8 *msg_buffer,
-+			    struct network_info **ret_network_info)
-+{
-+	struct network_info *network_info;
-+	u8 *wid_val, *msa, *tim_elm, *ies;
-+	u32 tsf_lo, tsf_hi;
-+	u16 wid_len, rx_len, ies_len;
-+	u8 msg_type, index;
-+
-+	msg_type = msg_buffer[0];
-+
-+	if ('N' != msg_type)
-+		return -EFAULT;
-+
-+	wid_len = MAKE_WORD16(msg_buffer[6], msg_buffer[7]);
-+	wid_val = &msg_buffer[8];
-+
-+	network_info = kzalloc(sizeof(*network_info), GFP_KERNEL);
-+	if (!network_info)
-+		return -ENOMEM;
-+
-+	network_info->rssi = wid_val[0];
-+
-+	msa = &wid_val[1];
-+
-+	rx_len = wid_len - 1;
-+	network_info->cap_info = get_cap_info(msa);
-+	network_info->tsf_lo = get_beacon_timestamp_lo(msa);
-+
-+	tsf_lo = get_beacon_timestamp_lo(msa);
-+	tsf_hi = get_beacon_timestamp_hi(msa);
-+
-+	network_info->tsf_hi = tsf_lo | ((u64)tsf_hi << 32);
-+
-+	get_ssid(msa, network_info->ssid, &network_info->ssid_len);
-+	get_bssid(msa, network_info->bssid);
-+
-+	network_info->ch = get_current_channel_802_11n(msa, rx_len
-+						       + FCS_LEN);
-+
-+	index = MAC_HDR_LEN + TIME_STAMP_LEN;
-+
-+	network_info->beacon_period = get_beacon_period(msa + index);
-+
-+	index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
-+
-+	tim_elm = get_tim_elm(msa, rx_len + FCS_LEN, index);
-+	if (tim_elm)
-+		network_info->dtim_period = tim_elm[3];
-+	ies = &msa[TAG_PARAM_OFFSET];
-+	ies_len = rx_len - TAG_PARAM_OFFSET;
-+
-+	if (ies_len > 0) {
-+		network_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
-+		if (!network_info->ies) {
-+			kfree(network_info);
-+			return -ENOMEM;
-+		}
-+	}
-+	network_info->ies_len = ies_len;
-+
-+	*ret_network_info = network_info;
-+
-+	return 0;
-+}
-+
-+s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
-+			       struct connect_info *ret_conn_info)
-+{
++struct user_conn_req {
++	u8 *bssid;
++	u8 *ssid;
++	u8 security;
++	enum authtype auth_type;
++	size_t ssid_len;
 +	u8 *ies;
-+	u16 ies_len;
++	size_t ies_len;
++	wilc_connect_result conn_result;
++	bool ht_capable;
++	void *arg;
++};
 +
-+	ret_conn_info->status = get_asoc_status(buffer);
-+	if (ret_conn_info->status == WLAN_STATUS_SUCCESS) {
-+		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
-+		ies_len = buffer_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
-+					AID_LEN);
++struct drv_handler {
++	u32 handler;
++	u8 mode;
++	u8 name;
++};
 +
-+		ret_conn_info->resp_ies = kmemdup(ies, ies_len, GFP_KERNEL);
-+		if (!ret_conn_info->resp_ies)
-+			return -ENOMEM;
++struct op_mode {
++	u32 mode;
++};
 +
-+		ret_conn_info->resp_ies_len = ies_len;
-+	}
++struct get_mac_addr {
++	u8 *mac_addr;
++};
 +
-+	return 0;
-+}
++struct ba_session_info {
++	u8 bssid[ETH_ALEN];
++	u8 tid;
++	u16 buf_size;
++	u16 time_out;
++};
++
++struct remain_ch {
++	u16 ch;
++	u32 duration;
++	wilc_remain_on_chan_expired expired;
++	wilc_remain_on_chan_ready ready;
++	void *arg;
++	u32 id;
++};
++
++struct reg_frame {
++	bool reg;
++	u16 frame_type;
++	u8 reg_id;
++};
++
++struct wilc;
++struct host_if_drv {
++	struct user_scan_req usr_scan_req;
++	struct user_conn_req usr_conn_req;
++	struct remain_ch remain_on_ch;
++	u8 remain_on_ch_pending;
++	u64 p2p_timeout;
++	u8 p2p_connect;
++
++	enum host_if_state hif_state;
++
++	u8 assoc_bssid[ETH_ALEN];
++	struct cfg_param_attr cfg_values;
++	/*lock to protect concurrent setting of cfg params*/
++	struct mutex cfg_values_lock;
++
++	struct timer_list scan_timer;
++	struct wilc_vif *scan_timer_vif;
++
++	struct timer_list connect_timer;
++	struct wilc_vif *connect_timer_vif;
++
++	struct timer_list remain_on_ch_timer;
++	struct wilc_vif *remain_on_ch_timer_vif;
++
++	bool ifc_up;
++	int driver_handler_id;
++	u8 assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
++};
++
++struct add_sta_param {
++	u8 bssid[ETH_ALEN];
++	u16 aid;
++	u8 rates_len;
++	const u8 *rates;
++	bool ht_supported;
++	struct ieee80211_ht_cap ht_capa;
++	u16 flags_mask;
++	u16 flags_set;
++};
++
++struct wilc_vif;
++int wilc_remove_wep_key(struct wilc_vif *vif, u8 index);
++int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index);
++int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
++			     u8 index);
++int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
++			    u8 index, u8 mode, enum authtype auth_type);
++int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
++		 const u8 *mac_addr, const u8 *rx_mic, const u8 *tx_mic,
++		 u8 mode, u8 cipher_mode, u8 index);
++s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
++			   u32 *out_val);
++int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
++		    u8 index, u32 key_rsc_len, const u8 *key_rsc,
++		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
++		    u8 cipher_mode);
++int wilc_set_pmkid_info(struct wilc_vif *vif,
++			struct host_if_pmkid_attr *pmkid);
++int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
++int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
++		      size_t ssid_len, const u8 *ies, size_t ies_len,
++		      wilc_connect_result connect_result, void *user_arg,
++		      u8 security, enum authtype auth_type,
++		      u8 channel, void *join_params);
++int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
++int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
++int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
++int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
++	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
++	      size_t ies_len, wilc_scan_result scan_result, void *user_arg,
++	      struct hidden_network *hidden_network);
++int wilc_hif_set_cfg(struct wilc_vif *vif,
++		     struct cfg_param_attr *cfg_param);
++int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler);
++int wilc_deinit(struct wilc_vif *vif);
++int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
++		    u32 head_len, u8 *head, u32 tail_len, u8 *tail);
++int wilc_del_beacon(struct wilc_vif *vif);
++int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
++int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN]);
++int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
++int wilc_edit_station(struct wilc_vif *vif,
++		      struct add_sta_param *sta_param);
++int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled, u32 count,
++				u8 *mc_list);
++int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
++			   u32 duration, u16 chan,
++			   wilc_remain_on_chan_expired expired,
++			   wilc_remain_on_chan_ready ready,
++			   void *user_arg);
++int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
++void wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
++int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mode,
++			     u8 ifc_id, bool is_sync);
++int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
++int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats,
++			bool is_sync);
++void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
++int wilc_get_vif_idx(struct wilc_vif *vif);
++int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power);
++int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power);
++
++#endif
 -- 
 2.7.4
 
