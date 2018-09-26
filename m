@@ -4,71 +4,76 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE9BC43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 12:08:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88617C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 12:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 268C8208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 12:08:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 268C8208E4
+	by mail.kernel.org (Postfix) with ESMTP id 4BBD12082C
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 12:43:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4BBD12082C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727201AbeIZSU4 (ORCPT
+        id S1726880AbeIZS4K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 14:20:56 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:13149 "EHLO huawei.com"
+        Wed, 26 Sep 2018 14:56:10 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13127 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726593AbeIZSU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 14:20:56 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id AC75060820C9A;
-        Wed, 26 Sep 2018 20:08:11 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.399.0; Wed, 26 Sep 2018 20:08:06 +0800
-From:   Wei Yongjun <weiyongjun1@huawei.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     Wei Yongjun <weiyongjun1@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH net-next] mac80211: fix error handling in ieee80211_register_hw()
-Date:   Wed, 26 Sep 2018 12:17:17 +0000
-Message-ID: <1537964237-169158-1-git-send-email-weiyongjun1@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+        id S1726315AbeIZS4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Sep 2018 14:56:10 -0400
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 25E947D989FAC;
+        Wed, 26 Sep 2018 20:43:17 +0800 (CST)
+Received: from linux-ibm.site (10.175.102.37) by
+ DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
+ 14.3.399.0; Wed, 26 Sep 2018 20:43:17 +0800
+From:   zhong jiang <zhongjiang@huawei.com>
+To:     <gregkh@linuxfoundation.org>, <sameo@linux.intel.com>
+CC:     <andriy.shevchenko@linux.intel.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] NFC: st-nci: remove a redundant null pointer check
+Date:   Wed, 26 Sep 2018 20:30:50 +0800
+Message-ID: <1537965050-16579-1-git-send-email-zhongjiang@huawei.com>
+X-Mailer: git-send-email 1.7.12.4
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
+Content-Type: text/plain
+X-Originating-IP: [10.175.102.37]
 X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix to return a negative error code -ENOMEM from the kmemdup
-error handling case instead of 0.
+The dev is impossible is NULL. hence the check is redundant. We
+never will hit it.
 
-Fixes: 09b4a4faf9d0 ("mac80211: introduce capability flags for VHT EXT NSS support")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
 ---
- net/mac80211/main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+v1->v2:
+ -  According to Greg's suggestion. just remove the null pointer will be better.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7738101..e6375d0 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1203,8 +1203,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 			continue;
+ drivers/nfc/st-nci/spi.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/nfc/st-nci/spi.c b/drivers/nfc/st-nci/spi.c
+index 1470559..864fd90 100644
+--- a/drivers/nfc/st-nci/spi.c
++++ b/drivers/nfc/st-nci/spi.c
+@@ -233,13 +233,6 @@ static int st_nci_spi_probe(struct spi_device *dev)
+ 	dev_dbg(&dev->dev, "%s\n", __func__);
+ 	dev_dbg(&dev->dev, "IRQ: %d\n", dev->irq);
  
- 		sband = kmemdup(sband, sizeof(*sband), GFP_KERNEL);
--		if (!sband)
-+		if (!sband) {
-+			result = -ENOMEM;
- 			goto fail_rate;
-+		}
- 
- 		wiphy_dbg(hw->wiphy, "copying sband (band %d) due to VHT EXT NSS BW flag\n",
- 			  band);
+-	/* Check SPI platform functionnalities */
+-	if (!dev) {
+-		pr_debug("%s: dev is NULL. Device is not accessible.\n",
+-			__func__);
+-		return -ENODEV;
+-	}
+-
+ 	phy = devm_kzalloc(&dev->dev, sizeof(struct st_nci_spi_phy),
+ 			   GFP_KERNEL);
+ 	if (!phy)
+-- 
+1.7.12.4
 
