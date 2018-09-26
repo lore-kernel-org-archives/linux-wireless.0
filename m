@@ -3,35 +3,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF09C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AABC43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:25:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37A052150C
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:18:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 37A052150C
+	by mail.kernel.org (Postfix) with ESMTP id 9E8CF2147D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:24:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9E8CF2147D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726727AbeI0Ccn (ORCPT
+        id S1726934AbeI0Cjg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 22:32:43 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:46102 "EHLO
+        Wed, 26 Sep 2018 22:39:36 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:46180 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726421AbeI0Ccn (ORCPT
+        with ESMTP id S1726453AbeI0Cjg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 22:32:43 -0400
+        Wed, 26 Sep 2018 22:39:36 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g5GFy-00045x-Du; Wed, 26 Sep 2018 22:17:58 +0200
-Message-ID: <1537993066.28767.29.camel@sipsolutions.net>
+        id 1g5GMh-0004CB-2J; Wed, 26 Sep 2018 22:24:55 +0200
+Message-ID: <1537993482.28767.34.camel@sipsolutions.net>
 Subject: Re: [PATCH] netlink: add policy attribute range validation
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date:   Wed, 26 Sep 2018 22:17:46 +0200
+Date:   Wed, 26 Sep 2018 22:24:42 +0200
 In-Reply-To: <20180926200630.23399-1-johannes@sipsolutions.net> (sfid-20180926_220654_781731_7A389A4D)
 References: <20180926200630.23399-1-johannes@sipsolutions.net>
          (sfid-20180926_220654_781731_7A389A4D)
@@ -44,30 +43,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-09-26 at 22:06 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Without further bloating the policy structs, we can overload
-> the `validation_data' pointer with a struct of s16 min, max
-> and use those to validate ranges in NLA_{U,S}{8,16,32,64}
-> attributes.
-> 
-> It may sound strange to validate NLA_U32 with a s16 max, but
-> in many cases NLA_U32 is used for enums etc. since there's no
-> size benefit in using a smaller attribute width anyway, due
-> to netlink attribute alignment; in cases like that it's still
-> useful, particularly when the attribute really transports an
-> enum value.
+Another thing to note:
 
-That said, I did find a few places where we could benefit from a larger
-type here - e.g. having a NLA_U16 that must be non-zero cannot be
-represented in the policy as is, since you can't set max to 65535.
+Given the union of validation_data pointer and min/max, we'll always get
+into this:
 
-However, I don't think we want to push the policy struct to 12 bytes on
-32-bit platforms? It's currently 16 bytes on 64-bit due to the pointer
-(and alignment), but only 8 bytes on 32-bit.
+> +	/* validate range */
+> +	if (pt->min || pt->max) {
 
-Keeping the few places that needed this validation is unlikely to be a
-larger win than the policy size increase due to the larger type.
+if validation_data is set, but of course end up taking the default case,
+where nothing further happens:
+
+> +		default:
+> +			/* no further validation */
+> +			validate = false;
+> +			break;
+> +		}
+> +
+> +		if (validate && (value < pt->min || value > pt->max)) {
+> +			NL_SET_ERR_MSG_ATTR(extack, nla,
+> +					    "integer out of range");
+> +			return -ERANGE;
+> +		}
+> +	}
+> +
+>  	return 0;
+
+I'm not *entirely* happy with this, but I haven't been able to come up
+with a way that doesn't do this, doesn't duplicate the nla types list
+(NLA_{U,S}{8,16,32,64}) in the code, and also loads the attribute value
+only if validation is needed.
 
 johannes
