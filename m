@@ -2,109 +2,131 @@ Return-Path: <SRS0=mZ/2=MI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2B3C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 14:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E47C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:28:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C637920843
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 14:12:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD79F2086E
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:28:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oGzER0UV";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hzdzcExs"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C637920843
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Dh2HkZ/6"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DD79F2086E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727582AbeIZUZR (ORCPT
+        id S1727201AbeIZVlg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 16:25:17 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:51202 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727017AbeIZUZR (ORCPT
+        Wed, 26 Sep 2018 17:41:36 -0400
+Received: from mail-ot1-f48.google.com ([209.85.210.48]:39018 "EHLO
+        mail-ot1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726994AbeIZVlf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 16:25:17 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 3026060C83; Wed, 26 Sep 2018 14:12:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1537971128;
-        bh=sZow61VKqeDHhG41Zf69iA2RVyOFJvJcifNxVHLyDf0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=oGzER0UVMkc1YkXUY9fIU15IY7AI9odHd2Au06bSCrzsDP28UHFyaydOs49UC9vL0
-         EHQJjJ+P+DcilSI7kM/MID4fOMcZt6wE25eP0Ln3DF1Tjs27YkeVb/pRI/9Vcdchic
-         rAi70Ph+SR+/rHRzKpdSWbzPQGHQA7rXjYpTj0xQ=
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2CECE60134;
-        Wed, 26 Sep 2018 14:12:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1537971123;
-        bh=sZow61VKqeDHhG41Zf69iA2RVyOFJvJcifNxVHLyDf0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=hzdzcExs9hqKqWId0HN32CM+nodtM27G3L6OfAE43XM1cRBjTksDTmQy8lGEjKX3n
-         Kb6yGFaaacmSB858kGtQi9r8PNjbny02AjQpEkKnvUS5ypTpQDo8snlC9XfI0nN7W2
-         LN9zHadOFkUmgJLTad/0gB9oOGHcsyhEzlKXeyWY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2CECE60134
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Wed, 26 Sep 2018 17:41:35 -0400
+Received: by mail-ot1-f48.google.com with SMTP id c12-v6so28582886otl.6
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Sep 2018 08:28:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:references:from:cc:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=WaFcSWOuVNYEiMeGKRgP4iPjZ1DLS0L1WJDpef42VAQ=;
+        b=Dh2HkZ/6Mibu6XIIy9nSrg7nL+gf0hHPUGr/uR334KPuoLhGvMnvklUoS103dnJgkT
+         H4jMSqCwrkSC2nk4yE0aCtD/56bfvrdnaayz0PNxwaaNkI53y7RSBllXKvd7fGOKDcEq
+         ogjM4LNcGwe49W89pFrJPDIWTQNRyi1sLEWHXu5HqNnd2BzZ3kuesleFi5xLajL/Dx+x
+         Xz0bSD5cFLqdcUTGfTb1hk3ifh5/Jfmk4JRmrZEzSMBSCVdKQJ+B5iLoa1JzBcaodTMA
+         IPHxayLTIcasxtbJbY7sOuf9PPEoONcLcsGMQuP9ZsEVfZm3l0tIYEV2EHJHQhKywqI0
+         YuFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:references:from:cc:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=WaFcSWOuVNYEiMeGKRgP4iPjZ1DLS0L1WJDpef42VAQ=;
+        b=k5z9upI4bAOZv/Y5HR0NyBn1lXdR/Ke1MXQyVvyRkv7gJ3I0H/aqZaAVLRW97Ptonc
+         CqSTsuvqscF4zR33etawHmta3KSnoR8/ova/QM9hNu+SvDE42ImUiUTkR9l4SRndF6ac
+         dJ5jaegadsyzx5UzF+pt+LesWsisJ7kfEEX6+hfCTwmdk5yrdKSn2jZLYHW8KxKbUm17
+         9vjxzXDE73HUxNTos7C0OilyZ2BM5DwQJVNu/C5tI4Ryn8w6MO8yi9VKU7SKiOg0hlNB
+         0bTYNhttCnVYTohGDcEbRCAMS7p0bwmdAGpAuRUKj2rIwK+sH14Z1RXKomNfOKOWgPiH
+         jqug==
+X-Gm-Message-State: ABuFfojk2tHfbVgP+SjRgdcSyh8+6SGzCA+SVyTBami0Tk7YBcd2HGa+
+        fRCHDDXYPtN7VRFXWprgS+wLascs
+X-Google-Smtp-Source: ACcGV61TnRnCLNqN4fx/zMhfppoCrfLBN+UWluhEvPaKljAspPOU5cYiGy1bCHlI3XrVPFU2BdXyVQ==
+X-Received: by 2002:a9d:37a1:: with SMTP id x30-v6mr4688728otb.55.1537975687000;
+        Wed, 26 Sep 2018 08:28:07 -0700 (PDT)
+Received: from [192.168.1.107] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id x61-v6sm2072681ota.39.2018.09.26.08.28.04
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 26 Sep 2018 08:28:05 -0700 (PDT)
+Subject: Re: Problems and suggestions to the kernel module r8723bs
+To:     Simon Beginn <simonmicro@simonmicro.de>,
+        Bastien Nocera <hadess@hadess.net>,
+        Hans de Goede <hdegoede@redhat.com>
+References: <83c86a2a-0d2a-8119-2831-e9cfab7a43d7@simonmicro.de>
+ <f0b67da4-747a-08e3-9744-fce2c74aaddc@lwfinger.net>
+ <6e27de67-739f-ee17-eb5f-efb079d1f37f@simonmicro.de>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <7a47d05c-2f3b-e4d5-ccf1-5c2106d3c93d@lwfinger.net>
+Date:   Wed, 26 Sep 2018 10:28:04 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
+In-Reply-To: <6e27de67-739f-ee17-eb5f-efb079d1f37f@simonmicro.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: Add debugfs support to get power save state
- change of STA
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1537252467-17353-1-git-send-email-mkenna@codeaurora.org>
-References: <1537252467-17353-1-git-send-email-mkenna@codeaurora.org>
-To:     Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20180926141208.3026060C83@smtp.codeaurora.org>
-Date:   Wed, 26 Sep 2018 14:12:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Maharaja Kennadyrajan <mkenna@codeaurora.org> wrote:
+On 9/26/18 3:54 AM, Simon Beginn wrote:
+>>
+>> The convention has long been to use rnnnnxx for the Realtek drivers in 
+>> staging, and rtlnnnnxx when they are moved to the regular wireless tree. If 
+>> you want it renamed, then you need to do the work to get the driver into the 
+>> condition necessary for it to be in the regular tree.
+> I'll see what I can do...
+> 
+>> Module parameter ant_sel for rtl8723be and rtl8723de was created because some 
+>> vendors saved a few pennies by only supplying one antenna. The problem is that 
+>> they encoded the WRONG value into the EFUSE, thus code that uses that setting 
+>> (Linux) essentially has no antenna attached. The simple measure of opening the 
+>> case and moving the antenna to the other connector was not viable for warranty 
+>> conditions. In addition, it broke the Windows driver. Do you have a case where 
+>> there is a single antenna for the rtl8723bs, and the PROM shows the wrong 
+>> value? If not, then any antenna number option is not needed. 
+> Hmm. I cant answer this for sure. The symptoms on my tablet are that the wifi 
+> chip works OK using Windows (10) and is slow as **** under Linux. Under Linux 
+> the system also didn't connect directly to my router (or any other of its 
+> guest-networks) and prefers a far away adapter - which are all spread over my 
+> house. And I think the chip does select the wrong antenna, because my router 
+> (which the tablet doesn't like) discard all connection attempts if they are too 
+> weak. The, as mentioned before, other adapters doesn't have such a feature AND 
+> the wifi works only well if I stand directly beside the "i-take-everything" 
+> adapters. To make this analysis stand on something: How can I read the PROM 
+> values? The tablets BIOS is not the key - it only provides the EFI selection.
 
-> This patch helps to get the power save state change of each peer
-> connected to the AP. With WMI_10_4_PEER_STA_PS_STATECHG_EVENTID
-> event, ps state of each peer is reported to user space via
-> debugfs.
-> 
-> Use the below command to get the ps state of each sta:
-> cat /sys/kernel/debug/ieee80211/phyX/netdev::wlanX/stations/
-> XX:XX:XX:XX:XX:XX/peer_ps_state
-> 
-> If STA is in power save state, we get the peer_ps_state value as 1.
-> if STA is not in power save state, we get the peer_ps_state value as 0.
-> If ps_state event is disabled, we get the peer_ps_state value as 2.
-> 
-> We can enable/disable the ps_state events using the debugfs flag
-> "ps_state_enable"
-> 
-> echo Y > /sys/kernel/debug/ieee80211/phyX/ath10k/ps_state_enable
-> 
-> Y = 1 to enable and Y = 0 to disable
-> 
-> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
-> 
-> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This driver is not reading any PROM data. It sets the antenna to 1 unless it is 
+overridden by the rtw_ant_num option. We need to use signal strengths to decide 
+if using ant_num 2 would be better. Use the following command to get the 
+baseline values:
 
-This introduced a new warning:
+sudo iw dev wlan0 scan | egrep "SSID|signal"
 
-drivers/net/wireless/ath/ath10k/wmi.c:5061:1: warning: symbol 'ath10k_wmi_event_peer_sta_ps_state_chg' was not declared. Should it be static?
+Change the wlan0 to the actual device name on your system.
 
-I fixed this in the pending branch.
+Next, do the command sequence
 
--- 
-https://patchwork.kernel.org/patch/10603779/
+sudo modprobe -rv r8723bs
+sudo modprobe -v r8723bs rtw_ant_num=2
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Then repeat the iw command.
+
+If the second set of signals is something like 30 dBm greater, then prepare an 
+options file to force antenna #2. Post all the scan data for the AP you want to use.
+
+Larry
 
