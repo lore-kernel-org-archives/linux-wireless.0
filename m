@@ -2,103 +2,67 @@ Return-Path: <SRS0=mZ/2=MI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B486C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD68C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:23:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADFD621480
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:22:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="XS69LDGZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ADFD621480
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	by mail.kernel.org (Postfix) with ESMTP id C22A121480
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:23:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C22A121480
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727260AbeIZPei (ORCPT
+        id S1727410AbeIZPfT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 11:34:38 -0400
-Received: from mail.toke.dk ([52.28.52.200]:42571 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726404AbeIZPeh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 11:34:37 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1537953755; bh=kVEyBNxjXCiEhRnJtO363TPunYLUfKSE1UDeWPc1L7E=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=XS69LDGZqgBAq9OzOA/5Vjj1gZi0bhzsOkVfdEDpVnDxBEzB64ooa+7xslDV6Hbdf
-         /kXeWSZB5LzG18RPeVypkXeAZE7ObnN2TVW9yhYChYDVBVj3ZRRmplc+H6V/wZ4UGs
-         fgyPqwHQVNJTOysIOE/x5WOk7U5h4ZRXOCqjQNKqRG7bztYXOJuFnPFlMyX8tCvoBr
-         V/ZqTBjR3c+moE8yBpaUHCG9zwI0SlUKd5m5T24gaXXiHXH/sHNFh82kCrYVQ3ze4b
-         hURgdX4X/bNwWFc6l3RETzmrop0K7+TwTpVSnKrHDjFajELYL21EQV1s7E+XWBjnL8
-         e9JOqfGQttIEA==
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v4 3/4] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973134.9231.18038849900399644494.stgit@alrua-x1.karlstad.toke.dk> <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org>
-Date:   Wed, 26 Sep 2018 11:22:34 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87pnx0haud.fsf@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+        Wed, 26 Sep 2018 11:35:19 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:38782 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727263AbeIZPfT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Sep 2018 11:35:19 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1g562O-00014H-9g; Wed, 26 Sep 2018 11:23:16 +0200
+Message-ID: <1537953785.28767.7.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/2] nl80211: Fix possible Spectre-v1 for CQM RSSI
+ thresholds
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Masashi Honma <masashi.honma@gmail.com>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 26 Sep 2018 11:23:05 +0200
+In-Reply-To: <1537841701-3092-2-git-send-email-masashi.honma@gmail.com> (sfid-20180925_041523_318542_824D1A43)
+References: <1537841701-3092-1-git-send-email-masashi.honma@gmail.com>
+         <1537841701-3092-2-git-send-email-masashi.honma@gmail.com>
+         (sfid-20180925_041523_318542_824D1A43)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On Tue, 2018-09-25 at 11:15 +0900, Masashi Honma wrote:
+> Use array_index_nospec() to sanitize i with respect to speculation.
 
-> On 2018-09-16 10:42, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> This adds airtime accounting and scheduling to the mac80211 TXQ
->> scheduler. A new callback, ieee80211_sta_register_airtime(), is added
->> that drivers can call to report airtime usage for stations.
->>=20
->> +bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
->> +				struct ieee80211_txq *txq)
->> +{
->
-> [...]
->
->> +	if (ret) {
->> +		clear_bit(IEEE80211_TXQ_AIRTIME_THROTTLE, &txqi->flags);
->> +		list_del_init(&txqi->schedule_order);
->> +	} else
->> +		set_bit(IEEE80211_TXQ_AIRTIME_THROTTLE, &txqi->flags);
->> +
->>=20
-> This looks wrong to me. txqi->flags are protected by fq->lock but here
-> it is by active_txq_lock. no?
+I applied the first patch in the seies, but I don't understand why this
+patch should be necessary.
 
-Both set_bit() and clear_bit() are atomic operations, so they don't need
-separate locking. See Documentation/atomic_bitops.txt
+The value of i isn't controlled by the user, so it shouldn't need to be
+sanitized?
 
->> @@ -3677,6 +3751,7 @@ void ieee80211_txq_schedule_end(struct
->> ieee80211_hw *hw, u8 ac)
->>  	struct ieee80211_local *local =3D hw_to_local(hw);
->>=20
->>  	spin_unlock_bh(&local->active_txq_lock[ac]);
->> +	tasklet_schedule(&local->wake_txqs_tasklet);
->>  }
->>=20
-> It is an overload to schedule wake_txqs_tasklet for each txq unlock.
-> Instead I would prefer to call __ieee80211_kick_airtime from=20
-> schedule_end.
-> Thoughts?
+The context was *just* missing, added by me:
 
-Yeah, I realise scheduling the whole wake_txqs_tasklet is maybe a bit
-heavy-handed here. However just calling into __ieee80211_kick_airtime()
-means we'll end up recursing back to the same place, which is not good
-either (we could in theory flip-flop between two queues until we run out
-of stack space).
+        for (i = 0; i < n; i++)
+>  		if (last < wdev->cqm_config->rssi_thresholds[i])
+>  			break;
 
-My "backup plan" if the wake_txqs_tasklet turns out to be too heavy was
-to define a new tasklet just for this use; but wanted to see if this
-actually turned out to be a problem first...
+This loop determines i, and the user doesn't even control "last", but
+even if they did, the possible values of i could only end up being in
+the range 0..n-1, so no problems?
 
--Toke
+johannes
