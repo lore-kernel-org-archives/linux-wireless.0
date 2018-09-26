@@ -2,43 +2,43 @@ Return-Path: <SRS0=mZ/2=MI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 907FDC43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:35:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8224C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF7F320652
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:35:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EF262151D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 15:42:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tXtxjdws"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF7F320652
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jelmAZRw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7EF262151D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728244AbeIZVsu (ORCPT
+        id S1727782AbeIZVz5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 17:48:50 -0400
-Received: from nbd.name ([46.4.11.11]:48768 "EHLO nbd.name"
+        Wed, 26 Sep 2018 17:55:57 -0400
+Received: from nbd.name ([46.4.11.11]:49030 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727184AbeIZVst (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 17:48:49 -0400
+        id S1727067AbeIZVz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Sep 2018 17:55:57 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=QxoVyNUBZRPTo2t+wO7URjx82dRgkstOkXsvnmzXpMY=; b=tXtxjdwszd8jp2W/T8bE+nxcaV
-        3gD9LjUJpb7zken1Q5lfDSiHISFxUJJPTZmKJCTos6kyJKoNBGhJXl2vI+7d3tVzaBOqOgJfspA13
-        kNndbMr98FKG2C7Sidk8v7uAfkRH2QsKViTBUAqrffB8o8ULzbLcss8wDThxRoqwSmlQ=;
-Subject: Re: [PATCH] mt76: use skb_pad() instead of __skb_pad()
-To:     Hauke Mehrtens <hauke@hauke-m.de>, kvalo@codeaurora.org,
-        lorenzo.bianconi@redhat.com
-Cc:     linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
-        matthias.bgg@gmail.com
-References: <20180925195251.10568-1-hauke@hauke-m.de>
+        bh=OppGSsdACtrsaimmtFdek2TGcZnRD5NG/jHggNx7WdA=; b=jelmAZRwME0JaQfOcJddKYsDNq
+        RalRF+Ky5S7RrV2qrJ6LbtwsVSpPap5gPZ+vDJr0HNVZ6m9twbaFyyhYBuMnQ6Rr6Fhx/8KyuO77B
+        bPYd88PUSjdnF06jJ2B6AtnX+q3OA7qbrk07CuZnrsAVTT40voLe5qGdRC1Myufrbsis=;
+Subject: Re: [PATCH] mt76x0: add quirk to disable 2.4GHz band for Archer T1U
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Sid Hayn <sidhayn@gmail.com>
+References: <1537858188-7815-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -64,12 +64,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <dd3960e5-2731-52fd-d575-26582fde111b@nbd.name>
-Date:   Wed, 26 Sep 2018 17:35:17 +0200
+Message-ID: <b6f4303b-1320-359e-68d0-8bd70aed6ddf@nbd.name>
+Date:   Wed, 26 Sep 2018 17:42:23 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <20180925195251.10568-1-hauke@hauke-m.de>
+In-Reply-To: <1537858188-7815-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,15 +78,12 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-09-25 21:52, Hauke Mehrtens wrote:
-> mt76 uses __skb_pad() with free_on_error set to true, this is the same
-> as calling skb_pad().
-> This patch does not change any functionality, but it makes it easier to
-> backport this driver in backports, because skb_pad() is also available
-> in older kernel versions.
+On 2018-09-25 08:49, Stanislaw Gruszka wrote:
+> TP-LINK Archer T1U do not support 2.4GHz band despite EEPROM
+> reports that. Add quirk to mask out 2.4GHz support.
 > 
-> Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Reported-by: Sid Hayn <sidhayn@gmail.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Merged, thanks.
 
 - Felix
