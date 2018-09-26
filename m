@@ -5,38 +5,37 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD68C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9F44C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:27:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C22A121480
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:23:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C22A121480
+	by mail.kernel.org (Postfix) with ESMTP id 6091E2086E
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 09:27:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6091E2086E
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727410AbeIZPfT (ORCPT
+        id S1727624AbeIZPjD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 11:35:19 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:38782 "EHLO
+        Wed, 26 Sep 2018 11:39:03 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:38852 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727263AbeIZPfT (ORCPT
+        with ESMTP id S1727157AbeIZPjC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 11:35:19 -0400
+        Wed, 26 Sep 2018 11:39:02 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g562O-00014H-9g; Wed, 26 Sep 2018 11:23:16 +0200
-Message-ID: <1537953785.28767.7.camel@sipsolutions.net>
-Subject: Re: [PATCH 2/2] nl80211: Fix possible Spectre-v1 for CQM RSSI
- thresholds
+        id 1g565z-00019J-3p; Wed, 26 Sep 2018 11:26:59 +0200
+Message-ID: <1537954007.28767.10.camel@sipsolutions.net>
+Subject: Re: [PATCH] New functionality for aborting ongoing CAC.
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Masashi Honma <masashi.honma@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 26 Sep 2018 11:23:05 +0200
-In-Reply-To: <1537841701-3092-2-git-send-email-masashi.honma@gmail.com> (sfid-20180925_041523_318542_824D1A43)
-References: <1537841701-3092-1-git-send-email-masashi.honma@gmail.com>
-         <1537841701-3092-2-git-send-email-masashi.honma@gmail.com>
-         (sfid-20180925_041523_318542_824D1A43)
+To:     Enrique Giraldo <hgiraldos@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Enrique Giraldo <enrique.giraldo@galgus.net>
+Date:   Wed, 26 Sep 2018 11:26:47 +0200
+In-Reply-To: <20180925081933.28553-1-enrique.giraldo@galgus.net> (sfid-20180925_103015_233939_9CC2DC4E)
+References: <20180925081933.28553-1-enrique.giraldo@galgus.net>
+         (sfid-20180925_103015_233939_9CC2DC4E)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
 Mime-Version: 1.0
@@ -46,23 +45,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2018-09-25 at 11:15 +0900, Masashi Honma wrote:
-> Use array_index_nospec() to sanitize i with respect to speculation.
+On Tue, 2018-09-25 at 10:19 +0200, Enrique Giraldo wrote:
+> Add NL80211_CMD_ABORT_CAC to the nl80211 interface.
 
-I applied the first patch in the seies, but I don't understand why this
-patch should be necessary.
+As Arend pointed out, this really needs a much better commit message.
 
-The value of i isn't controlled by the user, so it shouldn't need to be
-sanitized?
+Please also adjust the subject to have a proper prefix etc. See
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+for some help with that.
 
-The context was *just* missing, added by me:
+> @@ -3227,6 +3228,7 @@ struct cfg80211_ops {
+>  	int	(*scan)(struct wiphy *wiphy,
+>  			struct cfg80211_scan_request *request);
+>  	void	(*abort_scan)(struct wiphy *wiphy, struct wireless_dev *wdev);
+> +	void	(*abort_cac)(struct wiphy *wiphy, struct wireless_dev *wdev);
 
-        for (i = 0; i < n; i++)
->  		if (last < wdev->cqm_config->rssi_thresholds[i])
->  			break;
+This is fine, you can add in the middle of the struct.
 
-This loop determines i, and the user doesn't even control "last", but
-even if they did, the possible values of i could only end up being in
-the range 0..n-1, so no problems?
+> 
+> @@ -1220,6 +1223,7 @@ enum nl80211_commands {
+>  	NL80211_CMD_WIPHY_REG_CHANGE,
+>  
+>  	NL80211_CMD_ABORT_SCAN,
+> +	NL80211_CMD_ABORT_CAC,
+>  
+>  	NL80211_CMD_START_NAN,
+
+This is *not* OK, as the comments here indicate, we must never add
+anything in the middle of this enum, doing so breaks userspace ABI.
 
 johannes
