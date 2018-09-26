@@ -2,92 +2,319 @@ Return-Path: <SRS0=mZ/2=MI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD6EDC43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA18FC43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:57:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8029220652
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:35:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8029220652
+	by mail.kernel.org (Postfix) with ESMTP id 7A2292154D
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:57:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A2292154D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727260AbeI0CuX (ORCPT
+        id S1727020AbeI0DMk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 22:50:23 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:46282 "EHLO
+        Wed, 26 Sep 2018 23:12:40 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:46630 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726107AbeI0CuX (ORCPT
+        with ESMTP id S1726536AbeI0DMj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 22:50:23 -0400
+        Wed, 26 Sep 2018 23:12:39 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g5GX5-0004M5-FS; Wed, 26 Sep 2018 22:35:39 +0200
-Message-ID: <1537994127.28767.39.camel@sipsolutions.net>
-Subject: Re: [PATCH] netlink: add policy attribute range validation
+        id 1g5GsW-0004iF-IG; Wed, 26 Sep 2018 22:57:48 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date:   Wed, 26 Sep 2018 22:35:27 +0200
-In-Reply-To: <1537993066.28767.29.camel@sipsolutions.net> (sfid-20180926_221836_321005_FEBFE2B4)
-References: <20180926200630.23399-1-johannes@sipsolutions.net>
-         (sfid-20180926_220654_781731_7A389A4D) <1537993066.28767.29.camel@sipsolutions.net>
-         (sfid-20180926_221836_321005_FEBFE2B4)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] netlink: add policy validation function for binary attributes
+Date:   Wed, 26 Sep 2018 22:57:34 +0200
+Message-Id: <20180926205734.11216-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.14.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-09-26 at 22:17 +0200, Johannes Berg wrote:
-> On Wed, 2018-09-26 at 22:06 +0200, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Without further bloating the policy structs, we can overload
-> > the `validation_data' pointer with a struct of s16 min, max
-> > and use those to validate ranges in NLA_{U,S}{8,16,32,64}
-> > attributes.
-> > 
-> > It may sound strange to validate NLA_U32 with a s16 max, but
-> > in many cases NLA_U32 is used for enums etc. since there's no
-> > size benefit in using a smaller attribute width anyway, due
-> > to netlink attribute alignment; in cases like that it's still
-> > useful, particularly when the attribute really transports an
-> > enum value.
-> 
-> That said, I did find a few places where we could benefit from a larger
-> type here - e.g. having a NLA_U16 that must be non-zero cannot be
-> represented in the policy as is, since you can't set max to 65535.
+From: Johannes Berg <johannes.berg@intel.com>
 
-We could also fix that, btw, by taking two bits out of the "type" field,
-and letting those indicate "check_min" and "check_max". That would also
-fix the other thing I noted regarding the union, I suppose.
+Add the ability to have an arbitrary validation function attached
+to NLA_BINARY.
 
-I didn't really like that too much because it makes the whole thing far
-more complex, but perhaps if we hide it behind macros like
+NOTE: obviously, the nl80211 part should be split off, that's just
+      to show how it might be used - saves ~1.2KiB there (x86-64)
 
-#define NLA_POLICY_RANGE(tp, _min, _max) {
-	.type = tp,
-	.min = _min, .check_min = 1,
-	.max = _max, .check_max = 1,
-}
+NOTE: should probably allow this for the exact length fields, and
+      perhaps even provide a general NLA_POLICY_VALID_ETH_ADDR define
+      and similar?
+---
+ include/net/netlink.h  |  6 +++++
+ lib/nlattr.c           |  6 +++++
+ net/wireless/nl80211.c | 67 ++++++++++++++------------------------------------
+ 3 files changed, 31 insertions(+), 48 deletions(-)
 
-#define NLA_POLICY_MIN(tp, _min) {
-	.type = tp,
-	.min = _min, .check_min = 1,
-}
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index ddabc832febc..ff80ccbfc6b0 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -256,6 +256,10 @@ enum {
+  *                         of s16 - do that as usual in the code instead.
+  *    All other            Unused - but note that it's a union
+  *
++ * Meaning of `validate' field:
++ *    NLA_BINARY           Validation function called for the binary attribute
++ *    All other            Unused - but note that it's a union
++ *
+  * Example:
+  * static const struct nla_policy my_policy[ATTR_MAX+1] = {
+  * 	[ATTR_FOO] = { .type = NLA_U16 },
+@@ -272,6 +276,8 @@ struct nla_policy {
+ 		struct {
+ 			s16 min, max;
+ 		};
++		int (*validate)(const struct nlattr *attr,
++				struct netlink_ext_ack *extack);
+ 	};
+ };
+ 
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index dd8d34c1ae19..4f003da28918 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -175,6 +175,12 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 	case NLA_BINARY:
+ 		if (pt->len && attrlen > pt->len)
+ 			goto out_err;
++
++		if (pt->len && pt->validate) {
++			err = pt->validate(nla, extack);
++			if (err)
++				return err;
++		}
+ 		break;
+ 
+ 	case NLA_NESTED:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 551310d5965e..a09066896f64 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -200,6 +200,9 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
+ 	return __cfg80211_rdev_from_attrs(netns, info->attrs);
+ }
+ 
++static int validate_ie_attr(const struct nlattr *attr,
++			    struct netlink_ext_ack *extack);
++
+ /* policy for the attributes */
+ static const struct nla_policy
+ nl80211_pmsr_ftm_req_attr_policy[NL80211_PMSR_FTM_REQ_ATTR_MAX + 1] = {
+@@ -311,7 +314,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_BEACON_HEAD] = { .type = NLA_BINARY,
+ 				       .len = IEEE80211_MAX_DATA_LEN },
+ 	[NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY,
+-				       .len = IEEE80211_MAX_DATA_LEN },
++				       .len = IEEE80211_MAX_DATA_LEN,
++				       .validate = validate_ie_attr },
+ 	[NL80211_ATTR_STA_AID] = {
+ 		.type = NLA_U16,
+ 		.min = 1,
+@@ -348,7 +352,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 
+ 	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_IE] = { .type = NLA_BINARY,
+-			      .len = IEEE80211_MAX_DATA_LEN },
++			      .len = IEEE80211_MAX_DATA_LEN,
++			      .validate = validate_ie_attr },
+ 	[NL80211_ATTR_SCAN_FREQUENCIES] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_SCAN_SSIDS] = { .type = NLA_NESTED },
+ 
+@@ -417,9 +422,11 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 		.max = NL80211_HIDDEN_SSID_ZERO_CONTENTS,
+ 	},
+ 	[NL80211_ATTR_IE_PROBE_RESP] = { .type = NLA_BINARY,
+-					 .len = IEEE80211_MAX_DATA_LEN },
++					 .len = IEEE80211_MAX_DATA_LEN,
++					 .validate = validate_ie_attr },
+ 	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
+-					 .len = IEEE80211_MAX_DATA_LEN },
++					 .len = IEEE80211_MAX_DATA_LEN,
++					 .validate = validate_ie_attr },
+ 	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_SCHED_SCAN_MATCH] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_TX_NO_CCK_RATE] = { .type = NLA_FLAG },
+@@ -738,14 +745,12 @@ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
+ }
+ 
+ /* IE validation */
+-static bool is_valid_ie_attr(const struct nlattr *attr)
++static int validate_ie_attr(const struct nlattr *attr,
++			    struct netlink_ext_ack *extack)
+ {
+ 	const u8 *pos;
+ 	int len;
+ 
+-	if (!attr)
+-		return true;
+-
+ 	pos = nla_data(attr);
+ 	len = nla_len(attr);
+ 
+@@ -753,18 +758,18 @@ static bool is_valid_ie_attr(const struct nlattr *attr)
+ 		u8 elemlen;
+ 
+ 		if (len < 2)
+-			return false;
++			return -EINVAL;
+ 		len -= 2;
+ 
+ 		elemlen = pos[1];
+ 		if (elemlen > len)
+-			return false;
++			return -EINVAL;
+ 
+ 		len -= elemlen;
+ 		pos += 2 + elemlen;
+ 	}
+ 
+-	return true;
++	return 0;
+ }
+ 
+ /* message building helper */
+@@ -4191,12 +4196,6 @@ static int nl80211_parse_beacon(struct nlattr *attrs[],
+ {
+ 	bool haveinfo = false;
+ 
+-	if (!is_valid_ie_attr(attrs[NL80211_ATTR_BEACON_TAIL]) ||
+-	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE]) ||
+-	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE_PROBE_RESP]) ||
+-	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE_ASSOC_RESP]))
+-		return -EINVAL;
+-
+ 	memset(bcn, 0, sizeof(*bcn));
+ 
+ 	if (attrs[NL80211_ATTR_BEACON_HEAD]) {
+@@ -6326,7 +6325,8 @@ static const struct nla_policy
+ 	[NL80211_MESH_SETUP_AUTH_PROTOCOL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
+ 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+-				    .len = IEEE80211_MAX_DATA_LEN },
++				    .len = IEEE80211_MAX_DATA_LEN,
++				    .validate = validate_ie_attr },
+ 	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
+ };
+ 
+@@ -6527,8 +6527,6 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 	if (tb[NL80211_MESH_SETUP_IE]) {
+ 		struct nlattr *ieattr =
+ 			tb[NL80211_MESH_SETUP_IE];
+-		if (!is_valid_ie_attr(ieattr))
+-			return -EINVAL;
+ 		setup->ie = nla_data(ieattr);
+ 		setup->ie_len = nla_len(ieattr);
+ 	}
+@@ -7161,9 +7159,6 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	int err, tmp, n_ssids = 0, n_channels, i;
+ 	size_t ie_len;
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	wiphy = &rdev->wiphy;
+ 
+ 	if (wdev->iftype == NL80211_IFTYPE_NAN)
+@@ -7517,9 +7512,6 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
+ 	s32 default_match_rssi = NL80211_SCAN_RSSI_THOLD_OFF;
+ 
+-	if (!is_valid_ie_attr(attrs[NL80211_ATTR_IE]))
+-		return ERR_PTR(-EINVAL);
+-
+ 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
+ 		n_channels = validate_scan_freqs(
+ 				attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
+@@ -8487,9 +8479,6 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
+ 	struct key_parse key;
+ 	bool local_state_change;
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -8728,9 +8717,6 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
+ 		return -EPERM;
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_MAC] ||
+ 	    !info->attrs[NL80211_ATTR_SSID] ||
+ 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
+@@ -8854,9 +8840,6 @@ static int nl80211_deauthenticate(struct sk_buff *skb, struct genl_info *info)
+ 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
+ 		return -EPERM;
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -8905,9 +8888,6 @@ static int nl80211_disassociate(struct sk_buff *skb, struct genl_info *info)
+ 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
+ 		return -EPERM;
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -8982,9 +8962,6 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	memset(&ibss, 0, sizeof(ibss));
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_SSID] ||
+ 	    !nla_len(info->attrs[NL80211_ATTR_SSID]))
+ 		return -EINVAL;
+@@ -9422,9 +9399,6 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	memset(&connect, 0, sizeof(connect));
+ 
+-	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-		return -EINVAL;
+-
+ 	if (!info->attrs[NL80211_ATTR_SSID] ||
+ 	    !nla_len(info->attrs[NL80211_ATTR_SSID]))
+ 		return -EINVAL;
+@@ -9655,8 +9629,6 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
+ 		return -EOPNOTSUPP;
+ 
+ 	if (info->attrs[NL80211_ATTR_IE]) {
+-		if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+-			return -EINVAL;
+ 		connect.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+ 		connect.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 		changed |= UPDATE_ASSOC_IES;
+@@ -12308,8 +12280,7 @@ static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!info->attrs[NL80211_ATTR_MDID] ||
+-	    !info->attrs[NL80211_ATTR_IE] ||
+-	    !is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
++	    !info->attrs[NL80211_ATTR_IE])
+ 		return -EINVAL;
+ 
+ 	memset(&ft_params, 0, sizeof(ft_params));
+-- 
+2.14.4
 
-#define NLA_POLICY_MAX(tp, _max) {
-	.type = tp,
-	.max = _max, .check_max = 1,
-}
-
-it becomes more palatable?
-
-johannes
