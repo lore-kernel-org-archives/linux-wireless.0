@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 805E5C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:26:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2EB7ECE562
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:26:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FC7C214C5
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:26:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2FC7C214C5
+	by mail.kernel.org (Postfix) with ESMTP id A30C8214C5
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 10:26:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A30C8214C5
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727390AbeIZQij (ORCPT
+        id S1727794AbeIZQiU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 12:38:39 -0400
+        Wed, 26 Sep 2018 12:38:20 -0400
 Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39495 "EHLO
         esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727259AbeIZQii (ORCPT
+        with ESMTP id S1726880AbeIZQiS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 12:38:38 -0400
+        Wed, 26 Sep 2018 12:38:18 -0400
 X-IronPort-AV: E=Sophos;i="5.54,306,1534834800"; 
-   d="scan'208";a="21366808"
+   d="scan'208";a="21366788"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 26 Sep 2018 03:26:22 -0700
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 26 Sep 2018 03:26:01 -0700
 Received: from ajaysk-VirtualBox.microchip.com (10.10.76.4) by
  CHN-SV-EXCH01.mchp-main.com (10.10.76.37) with Microsoft SMTP Server id
- 14.3.352.0; Wed, 26 Sep 2018 03:26:21 -0700
+ 14.3.352.0; Wed, 26 Sep 2018 03:26:00 -0700
 From:   Ajay Singh <ajay.kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <kvalo@codeaurora.org>, <gregkh@linuxfoundation.org>,
@@ -37,9 +37,9 @@ CC:     <kvalo@codeaurora.org>, <gregkh@linuxfoundation.org>,
         <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
         <adham.abozaeid@microchip.com>,
         Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 15/19] wilc: add wilc_spi.c
-Date:   Wed, 26 Sep 2018 15:55:21 +0530
-Message-ID: <1537957525-11467-16-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 09/19] wilc: add wilc_wlan.c
+Date:   Wed, 26 Sep 2018 15:55:15 +0530
+Message-ID: <1537957525-11467-10-git-send-email-ajay.kathat@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
 References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
@@ -50,1158 +50,1371 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Moved '/driver/staging/wilc1000/wilc_spi.c' to
+Moved '/driver/staging/wilc1000/wilc_wlan.c' to
 'drivers/net/wireless/microchip/wilc/'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/microchip/wilc/wilc_spi.c | 1137 ++++++++++++++++++++++++
- 1 file changed, 1137 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc/wilc_spi.c
+ drivers/net/wireless/microchip/wilc/wilc_wlan.c | 1350 +++++++++++++++++++++++
+ 1 file changed, 1350 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc/wilc_wlan.c
 
-diff --git a/drivers/net/wireless/microchip/wilc/wilc_spi.c b/drivers/net/wireless/microchip/wilc/wilc_spi.c
+diff --git a/drivers/net/wireless/microchip/wilc/wilc_wlan.c b/drivers/net/wireless/microchip/wilc/wilc_wlan.c
 new file mode 100644
-index 0000000..cef127b
+index 0000000..a48c906
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc/wilc_spi.c
-@@ -0,0 +1,1137 @@
++++ b/drivers/net/wireless/microchip/wilc/wilc_wlan.c
+@@ -0,0 +1,1350 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiaries.
 + * All rights reserved.
 + */
 +
-+#include <linux/spi/spi.h>
-+
++#include <linux/if_ether.h>
++#include <linux/ip.h>
 +#include "wilc_wfi_netdevice.h"
++#include "wilc_wlan_cfg.h"
 +
-+struct wilc_spi {
-+	int crc_off;
-+	int nint;
-+	int has_thrpt_enh;
-+};
-+
-+static const struct wilc_hif_func wilc_hif_spi;
-+
-+/********************************************
-+ *
-+ *      Crc7
-+ *
-+ ********************************************/
-+
-+static const u8 crc7_syndrome_table[256] = {
-+	0x00, 0x09, 0x12, 0x1b, 0x24, 0x2d, 0x36, 0x3f,
-+	0x48, 0x41, 0x5a, 0x53, 0x6c, 0x65, 0x7e, 0x77,
-+	0x19, 0x10, 0x0b, 0x02, 0x3d, 0x34, 0x2f, 0x26,
-+	0x51, 0x58, 0x43, 0x4a, 0x75, 0x7c, 0x67, 0x6e,
-+	0x32, 0x3b, 0x20, 0x29, 0x16, 0x1f, 0x04, 0x0d,
-+	0x7a, 0x73, 0x68, 0x61, 0x5e, 0x57, 0x4c, 0x45,
-+	0x2b, 0x22, 0x39, 0x30, 0x0f, 0x06, 0x1d, 0x14,
-+	0x63, 0x6a, 0x71, 0x78, 0x47, 0x4e, 0x55, 0x5c,
-+	0x64, 0x6d, 0x76, 0x7f, 0x40, 0x49, 0x52, 0x5b,
-+	0x2c, 0x25, 0x3e, 0x37, 0x08, 0x01, 0x1a, 0x13,
-+	0x7d, 0x74, 0x6f, 0x66, 0x59, 0x50, 0x4b, 0x42,
-+	0x35, 0x3c, 0x27, 0x2e, 0x11, 0x18, 0x03, 0x0a,
-+	0x56, 0x5f, 0x44, 0x4d, 0x72, 0x7b, 0x60, 0x69,
-+	0x1e, 0x17, 0x0c, 0x05, 0x3a, 0x33, 0x28, 0x21,
-+	0x4f, 0x46, 0x5d, 0x54, 0x6b, 0x62, 0x79, 0x70,
-+	0x07, 0x0e, 0x15, 0x1c, 0x23, 0x2a, 0x31, 0x38,
-+	0x41, 0x48, 0x53, 0x5a, 0x65, 0x6c, 0x77, 0x7e,
-+	0x09, 0x00, 0x1b, 0x12, 0x2d, 0x24, 0x3f, 0x36,
-+	0x58, 0x51, 0x4a, 0x43, 0x7c, 0x75, 0x6e, 0x67,
-+	0x10, 0x19, 0x02, 0x0b, 0x34, 0x3d, 0x26, 0x2f,
-+	0x73, 0x7a, 0x61, 0x68, 0x57, 0x5e, 0x45, 0x4c,
-+	0x3b, 0x32, 0x29, 0x20, 0x1f, 0x16, 0x0d, 0x04,
-+	0x6a, 0x63, 0x78, 0x71, 0x4e, 0x47, 0x5c, 0x55,
-+	0x22, 0x2b, 0x30, 0x39, 0x06, 0x0f, 0x14, 0x1d,
-+	0x25, 0x2c, 0x37, 0x3e, 0x01, 0x08, 0x13, 0x1a,
-+	0x6d, 0x64, 0x7f, 0x76, 0x49, 0x40, 0x5b, 0x52,
-+	0x3c, 0x35, 0x2e, 0x27, 0x18, 0x11, 0x0a, 0x03,
-+	0x74, 0x7d, 0x66, 0x6f, 0x50, 0x59, 0x42, 0x4b,
-+	0x17, 0x1e, 0x05, 0x0c, 0x33, 0x3a, 0x21, 0x28,
-+	0x5f, 0x56, 0x4d, 0x44, 0x7b, 0x72, 0x69, 0x60,
-+	0x0e, 0x07, 0x1c, 0x15, 0x2a, 0x23, 0x38, 0x31,
-+	0x46, 0x4f, 0x54, 0x5d, 0x62, 0x6b, 0x70, 0x79
-+};
-+
-+static u8 crc7_byte(u8 crc, u8 data)
++static inline bool is_wilc1000(u32 id)
 +{
-+	return crc7_syndrome_table[(crc << 1) ^ data];
++	return ((id & 0xfffff000) == 0x100000 ? true : false);
 +}
 +
-+static u8 crc7(u8 crc, const u8 *buffer, u32 len)
++static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
 +{
-+	while (len--)
-+		crc = crc7_byte(crc, *buffer++);
-+	return crc;
++	mutex_lock(&wilc->hif_cs);
++	if (acquire == ACQUIRE_AND_WAKEUP)
++		chip_wakeup(wilc);
 +}
 +
-+/********************************************
-+ *
-+ *      Spi protocol Function
-+ *
-+ ********************************************/
-+
-+#define CMD_DMA_WRITE				0xc1
-+#define CMD_DMA_READ				0xc2
-+#define CMD_INTERNAL_WRITE			0xc3
-+#define CMD_INTERNAL_READ			0xc4
-+#define CMD_TERMINATE				0xc5
-+#define CMD_REPEAT				0xc6
-+#define CMD_DMA_EXT_WRITE			0xc7
-+#define CMD_DMA_EXT_READ			0xc8
-+#define CMD_SINGLE_WRITE			0xc9
-+#define CMD_SINGLE_READ				0xca
-+#define CMD_RESET				0xcf
-+
-+#define N_OK					1
-+#define N_FAIL					0
-+#define N_RESET					-1
-+#define N_RETRY					-2
-+
-+#define DATA_PKT_SZ_256				256
-+#define DATA_PKT_SZ_512				512
-+#define DATA_PKT_SZ_1K				1024
-+#define DATA_PKT_SZ_4K				(4 * 1024)
-+#define DATA_PKT_SZ_8K				(8 * 1024)
-+#define DATA_PKT_SZ				DATA_PKT_SZ_8K
-+
-+#define USE_SPI_DMA				0
-+
-+static int wilc_bus_probe(struct spi_device *spi)
++static inline void release_bus(struct wilc *wilc, enum bus_release release)
 +{
-+	int ret;
-+	struct wilc *wilc;
-+	struct gpio_desc *gpio;
-+	struct wilc_spi *spi_priv;
++	if (release == RELEASE_ALLOW_SLEEP)
++		chip_allow_sleep(wilc);
++	mutex_unlock(&wilc->hif_cs);
++}
 +
-+	spi_priv = kzalloc(sizeof(*spi_priv), GFP_KERNEL);
-+	if (!spi_priv)
-+		return -ENOMEM;
++static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tqe)
++{
++	list_del(&tqe->list);
++	wilc->txq_entries -= 1;
++}
 +
-+	gpio = gpiod_get(&spi->dev, "irq", GPIOD_IN);
-+	if (IS_ERR(gpio)) {
-+		/* get the GPIO descriptor from hardcode GPIO number */
-+		gpio = gpio_to_desc(GPIO_NUM);
-+		if (!gpio)
-+			dev_err(&spi->dev, "failed to get the irq gpio\n");
++static struct txq_entry_t *
++wilc_wlan_txq_remove_from_head(struct net_device *dev)
++{
++	struct txq_entry_t *tqe = NULL;
++	unsigned long flags;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list)) {
++		tqe = list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++		list_del(&tqe->list);
++		wilc->txq_entries -= 1;
++	}
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	return tqe;
++}
++
++static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add_tail(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries += 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	complete(&wilc->txq_event);
++}
++
++static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc *wilc = vif->wilc;
++
++	mutex_lock(&wilc->txq_add_to_head_cs);
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries += 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++	complete(&wilc->txq_event);
++}
++
++#define NOT_TCP_ACK			(-1)
++
++static inline void add_tcp_session(struct wilc_vif *vif, u32 src_prt,
++				   u32 dst_prt, u32 seq)
++{
++	struct tcp_ack_filter *f = &vif->ack_filter;
++
++	if (f->tcp_session < 2 * MAX_TCP_SESSION) {
++		f->ack_session_info[f->tcp_session].seq_num = seq;
++		f->ack_session_info[f->tcp_session].bigger_ack_num = 0;
++		f->ack_session_info[f->tcp_session].src_port = src_prt;
++		f->ack_session_info[f->tcp_session].dst_port = dst_prt;
++		f->tcp_session++;
++	}
++}
++
++static inline void update_tcp_session(struct wilc_vif *vif, u32 index, u32 ack)
++{
++	struct tcp_ack_filter *f = &vif->ack_filter;
++
++	if (index < 2 * MAX_TCP_SESSION &&
++	    ack > f->ack_session_info[index].bigger_ack_num)
++		f->ack_session_info[index].bigger_ack_num = ack;
++}
++
++static inline void add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
++				       u32 session_index,
++				       struct txq_entry_t *txqe)
++{
++	struct tcp_ack_filter *f = &vif->ack_filter;
++	u32 i = f->pending_base + f->pending_acks_idx;
++
++	if (i < MAX_PENDING_ACKS) {
++		f->pending_acks[i].ack_num = ack;
++		f->pending_acks[i].txqe = txqe;
++		f->pending_acks[i].session_index = session_index;
++		txqe->ack_idx = i;
++		f->pending_acks_idx++;
++	}
++}
++
++static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
++{
++	void *buffer = tqe->buffer;
++	const struct ethhdr *eth_hdr_ptr = buffer;
++	int i;
++	unsigned long flags;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++	struct tcp_ack_filter *f = &vif->ack_filter;
++	const struct iphdr *ip_hdr_ptr;
++	const struct tcphdr *tcp_hdr_ptr;
++	u32 ihl, total_length, data_offset;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (eth_hdr_ptr->h_proto != htons(ETH_P_IP))
++		goto out;
++
++	ip_hdr_ptr = buffer + ETH_HLEN;
++
++	if (ip_hdr_ptr->protocol != IPPROTO_TCP)
++		goto out;
++
++	ihl = ip_hdr_ptr->ihl << 2;
++	tcp_hdr_ptr = buffer + ETH_HLEN + ihl;
++	total_length = ntohs(ip_hdr_ptr->tot_len);
++
++	data_offset = tcp_hdr_ptr->doff << 2;
++	if (total_length == (ihl + data_offset)) {
++		u32 seq_no, ack_no;
++
++		seq_no = ntohl(tcp_hdr_ptr->seq);
++		ack_no = ntohl(tcp_hdr_ptr->ack_seq);
++		for (i = 0; i < f->tcp_session; i++) {
++			u32 j = f->ack_session_info[i].seq_num;
++
++			if (i < 2 * MAX_TCP_SESSION &&
++			    j == seq_no) {
++				update_tcp_session(vif, i, ack_no);
++				break;
++			}
++		}
++		if (i == f->tcp_session)
++			add_tcp_session(vif, 0, 0, seq_no);
++
++		add_tcp_pending_ack(vif, ack_no, i, tqe);
 +	}
 +
-+	ret = wilc_netdev_init(&wilc, NULL, HIF_SPI, &wilc_hif_spi);
-+	if (ret) {
-+		kfree(spi_priv);
-+		return ret;
-+	}
-+
-+	spi_set_drvdata(spi, wilc);
-+	wilc->dev = &spi->dev;
-+	wilc->bus_data = spi_priv;
-+	wilc->gpio_irq = gpio;
-+
-+	return 0;
++out:
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
 +}
 +
-+static int wilc_bus_remove(struct spi_device *spi)
++static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
 +{
-+	struct wilc *wilc = spi_get_drvdata(spi);
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++	struct tcp_ack_filter *f = &vif->ack_filter;
++	u32 i = 0;
++	u32 dropped = 0;
++	unsigned long flags;
 +
-+	/* free the GPIO in module remove */
-+	if (wilc->gpio_irq)
-+		gpiod_put(wilc->gpio_irq);
-+	wilc_netdev_cleanup(wilc);
-+	return 0;
-+}
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++	for (i = f->pending_base;
++	     i < (f->pending_base + f->pending_acks_idx); i++) {
++		u32 index;
++		u32 bigger_ack_num;
 +
-+static const struct of_device_id wilc_of_match[] = {
-+	{ .compatible = "microchip,wilc1000-spi", },
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, wilc_of_match);
++		if (i >= MAX_PENDING_ACKS)
++			break;
 +
-+static struct spi_driver wilc_spi_driver = {
-+	.driver = {
-+		.name = MODALIAS,
-+		.of_match_table = wilc_of_match,
-+	},
-+	.probe =  wilc_bus_probe,
-+	.remove = wilc_bus_remove,
-+};
-+module_spi_driver(wilc_spi_driver);
-+MODULE_LICENSE("GPL");
++		index = f->pending_acks[i].session_index;
 +
-+static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+	struct spi_message msg;
++		if (index >= 2 * MAX_TCP_SESSION)
++			break;
 +
-+	if (len > 0 && b) {
-+		struct spi_transfer tr = {
-+			.tx_buf = b,
-+			.len = len,
-+			.delay_usecs = 0,
-+		};
-+		char *r_buffer = kzalloc(len, GFP_KERNEL);
++		bigger_ack_num = f->ack_session_info[index].bigger_ack_num;
 +
-+		if (!r_buffer)
-+			return -ENOMEM;
++		if (f->pending_acks[i].ack_num < bigger_ack_num) {
++			struct txq_entry_t *tqe;
 +
-+		tr.rx_buf = r_buffer;
-+		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+
-+		kfree(r_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't write data with the following length: %d\n",
-+			len);
-+		ret = -EINVAL;
++			tqe = f->pending_acks[i].txqe;
++			if (tqe) {
++				wilc_wlan_txq_remove(wilc, tqe);
++				tqe->status = 1;
++				if (tqe->tx_complete_func)
++					tqe->tx_complete_func(tqe->priv,
++							      tqe->status);
++				kfree(tqe);
++				dropped++;
++			}
++		}
 +	}
++	f->pending_acks_idx = 0;
++	f->tcp_session = 0;
 +
-+	return ret;
-+}
-+
-+static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.len = rlen,
-+			.delay_usecs = 0,
-+
-+		};
-+		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
-+
-+		if (!t_buffer)
-+			return -ENOMEM;
-+
-+		tr.tx_buf = t_buffer;
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+		spi_message_add_tail(&tr, &msg);
-+
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+		kfree(t_buffer);
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int ret;
-+
-+	if (rlen > 0) {
-+		struct spi_message msg;
-+		struct spi_transfer tr = {
-+			.rx_buf = rb,
-+			.tx_buf = wb,
-+			.len = rlen,
-+			.bits_per_word = 8,
-+			.delay_usecs = 0,
-+
-+		};
-+
-+		memset(&msg, 0, sizeof(msg));
-+		spi_message_init(&msg);
-+		msg.spi = spi;
-+		msg.is_dma_mapped = USE_SPI_DMA;
-+
-+		spi_message_add_tail(&tr, &msg);
-+		ret = spi_sync(spi, &msg);
-+		if (ret < 0)
-+			dev_err(&spi->dev, "SPI transaction failed\n");
-+	} else {
-+		dev_err(&spi->dev,
-+			"can't read data with the following length: %u\n",
-+			rlen);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
-+			    u8 clockless)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	u8 wb[32], rb[32];
-+	u8 wix, rix;
-+	u32 len2;
-+	u8 rsp;
-+	int len = 0;
-+	int result = N_OK;
-+	int retry;
-+	u8 crc[2];
-+
-+	wb[0] = cmd;
-+	switch (cmd) {
-+	case CMD_SINGLE_READ: /* single word (4 bytes) read */
-+		wb[1] = (u8)(adr >> 16);
-+		wb[2] = (u8)(adr >> 8);
-+		wb[3] = (u8)adr;
-+		len = 5;
-+		break;
-+
-+	case CMD_INTERNAL_READ: /* internal register read */
-+		wb[1] = (u8)(adr >> 8);
-+		if (clockless == 1)
-+			wb[1] |= BIT(7);
-+		wb[2] = (u8)adr;
-+		wb[3] = 0x00;
-+		len = 5;
-+		break;
-+
-+	case CMD_TERMINATE:
-+		wb[1] = 0x00;
-+		wb[2] = 0x00;
-+		wb[3] = 0x00;
-+		len = 5;
-+		break;
-+
-+	case CMD_REPEAT:
-+		wb[1] = 0x00;
-+		wb[2] = 0x00;
-+		wb[3] = 0x00;
-+		len = 5;
-+		break;
-+
-+	case CMD_RESET:
-+		wb[1] = 0xff;
-+		wb[2] = 0xff;
-+		wb[3] = 0xff;
-+		len = 5;
-+		break;
-+
-+	case CMD_DMA_WRITE: /* dma write */
-+	case CMD_DMA_READ:  /* dma read */
-+		wb[1] = (u8)(adr >> 16);
-+		wb[2] = (u8)(adr >> 8);
-+		wb[3] = (u8)adr;
-+		wb[4] = (u8)(sz >> 8);
-+		wb[5] = (u8)(sz);
-+		len = 7;
-+		break;
-+
-+	case CMD_DMA_EXT_WRITE: /* dma extended write */
-+	case CMD_DMA_EXT_READ:  /* dma extended read */
-+		wb[1] = (u8)(adr >> 16);
-+		wb[2] = (u8)(adr >> 8);
-+		wb[3] = (u8)adr;
-+		wb[4] = (u8)(sz >> 16);
-+		wb[5] = (u8)(sz >> 8);
-+		wb[6] = (u8)(sz);
-+		len = 8;
-+		break;
-+
-+	case CMD_INTERNAL_WRITE: /* internal register write */
-+		wb[1] = (u8)(adr >> 8);
-+		if (clockless == 1)
-+			wb[1] |= BIT(7);
-+		wb[2] = (u8)(adr);
-+		wb[3] = b[3];
-+		wb[4] = b[2];
-+		wb[5] = b[1];
-+		wb[6] = b[0];
-+		len = 8;
-+		break;
-+
-+	case CMD_SINGLE_WRITE: /* single word write */
-+		wb[1] = (u8)(adr >> 16);
-+		wb[2] = (u8)(adr >> 8);
-+		wb[3] = (u8)(adr);
-+		wb[4] = b[3];
-+		wb[5] = b[2];
-+		wb[6] = b[1];
-+		wb[7] = b[0];
-+		len = 9;
-+		break;
-+
-+	default:
-+		result = N_FAIL;
-+		break;
-+	}
-+
-+	if (result != N_OK)
-+		return result;
-+
-+	if (!spi_priv->crc_off)
-+		wb[len - 1] = (crc7(0x7f, (const u8 *)&wb[0], len - 1)) << 1;
++	if (f->pending_base == 0)
++		f->pending_base = MAX_TCP_SESSION;
 +	else
-+		len -= 1;
++		f->pending_base = 0;
 +
-+#define NUM_SKIP_BYTES (1)
-+#define NUM_RSP_BYTES (2)
-+#define NUM_DATA_HDR_BYTES (1)
-+#define NUM_DATA_BYTES (4)
-+#define NUM_CRC_BYTES (2)
-+#define NUM_DUMMY_BYTES (3)
-+	if (cmd == CMD_RESET ||
-+	    cmd == CMD_TERMINATE ||
-+	    cmd == CMD_REPEAT) {
-+		len2 = len + (NUM_SKIP_BYTES + NUM_RSP_BYTES + NUM_DUMMY_BYTES);
-+	} else if (cmd == CMD_INTERNAL_READ || cmd == CMD_SINGLE_READ) {
-+		int tmp = NUM_RSP_BYTES + NUM_DATA_HDR_BYTES + NUM_DATA_BYTES
-+			+ NUM_DUMMY_BYTES;
-+		if (!spi_priv->crc_off)
-+			len2 = len + tmp + NUM_CRC_BYTES;
-+		else
-+			len2 = len + tmp;
-+	} else {
-+		len2 = len + (NUM_RSP_BYTES + NUM_DUMMY_BYTES);
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	while (dropped > 0) {
++		wait_for_completion_timeout(&wilc->txq_event,
++					    msecs_to_jiffies(1));
++		dropped--;
 +	}
-+#undef NUM_DUMMY_BYTES
++}
 +
-+	if (len2 > ARRAY_SIZE(wb)) {
-+		dev_err(&spi->dev, "spi buffer size too small (%d) (%zu)\n",
-+			len2, ARRAY_SIZE(wb));
-+		return N_FAIL;
-+	}
-+	/* zero spi write buffers. */
-+	for (wix = len; wix < len2; wix++)
-+		wb[wix] = 0;
-+	rix = len;
++void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
++{
++	vif->ack_filter.enabled = value;
++}
 +
-+	if (wilc_spi_tx_rx(wilc, wb, rb, len2)) {
-+		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
-+		return N_FAIL;
++static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
++				     u32 buffer_size)
++{
++	struct txq_entry_t *tqe;
++	struct wilc *wilc = vif->wilc;
++
++	netdev_dbg(vif->ndev, "Adding config packet ...\n");
++	if (wilc->quit) {
++		netdev_dbg(vif->ndev, "Return due to clear function\n");
++		complete(&wilc->cfg_event);
++		return 0;
 +	}
 +
-+	/*
-+	 * Command/Control response
-+	 */
-+	if (cmd == CMD_RESET || cmd == CMD_TERMINATE || cmd == CMD_REPEAT)
-+		rix++; /* skip 1 byte */
++	tqe = kmalloc(sizeof(*tqe), GFP_ATOMIC);
++	if (!tqe)
++		return 0;
 +
-+	rsp = rb[rix++];
++	tqe->type = WILC_CFG_PKT;
++	tqe->buffer = buffer;
++	tqe->buffer_size = buffer_size;
++	tqe->tx_complete_func = NULL;
++	tqe->priv = NULL;
++	tqe->ack_idx = NOT_TCP_ACK;
 +
-+	if (rsp != cmd) {
-+		dev_err(&spi->dev,
-+			"Failed cmd response, cmd (%02x), resp (%02x)\n",
-+			cmd, rsp);
-+		return N_FAIL;
++	wilc_wlan_txq_add_to_head(vif, tqe);
++
++	return 1;
++}
++
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			      u32 buffer_size, wilc_tx_complete_func_t func)
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc = vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe = kmalloc(sizeof(*tqe), GFP_ATOMIC);
++
++	if (!tqe)
++		return 0;
++	tqe->type = WILC_NET_PKT;
++	tqe->buffer = buffer;
++	tqe->buffer_size = buffer_size;
++	tqe->tx_complete_func = func;
++	tqe->priv = priv;
++
++	tqe->ack_idx = NOT_TCP_ACK;
++	if (vif->ack_filter.enabled)
++		tcp_process(dev, tqe);
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return wilc->txq_entries;
++}
++
++int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
++			       u32 buffer_size, wilc_tx_complete_func_t func)
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc = vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe = kmalloc(sizeof(*tqe), GFP_KERNEL);
++
++	if (!tqe)
++		return 0;
++	tqe->type = WILC_MGMT_PKT;
++	tqe->buffer = buffer;
++	tqe->buffer_size = buffer_size;
++	tqe->tx_complete_func = func;
++	tqe->priv = priv;
++	tqe->ack_idx = NOT_TCP_ACK;
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return 1;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_first(struct wilc *wilc)
++{
++	struct txq_entry_t *tqe = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list))
++		tqe = list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_next(struct wilc *wilc,
++						  struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_is_last(&tqe->list, &wilc->txq_head.list))
++		tqe = list_next_entry(tqe, list);
++	else
++		tqe = NULL;
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static void wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
++{
++	if (wilc->quit)
++		return;
++
++	mutex_lock(&wilc->rxq_cs);
++	list_add_tail(&rqe->list, &wilc->rxq_head.list);
++	mutex_unlock(&wilc->rxq_cs);
++}
++
++static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
++{
++	struct rxq_entry_t *rqe = NULL;
++
++	mutex_lock(&wilc->rxq_cs);
++	if (!list_empty(&wilc->rxq_head.list)) {
++		rqe = list_first_entry(&wilc->rxq_head.list, struct rxq_entry_t,
++				       list);
++		list_del(&rqe->list);
 +	}
++	mutex_unlock(&wilc->rxq_cs);
++	return rqe;
++}
 +
-+	/*
-+	 * State response
-+	 */
-+	rsp = rb[rix++];
-+	if (rsp != 0x00) {
-+		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
-+			rsp);
-+		return N_FAIL;
-+	}
++void chip_allow_sleep(struct wilc *wilc)
++{
++	u32 reg = 0;
 +
-+	if (cmd == CMD_INTERNAL_READ || cmd == CMD_SINGLE_READ ||
-+	    cmd == CMD_DMA_READ || cmd == CMD_DMA_EXT_READ) {
-+		/*
-+		 * Data Respnose header
-+		 */
-+		retry = 100;
++	wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
++
++	wilc->hif_func->hif_write_reg(wilc, 0xf0, reg & ~BIT(0));
++	wilc->hif_func->hif_write_reg(wilc, 0xfa, 0);
++}
++EXPORT_SYMBOL_GPL(chip_allow_sleep);
++
++void chip_wakeup(struct wilc *wilc)
++{
++	u32 reg, clk_status_reg;
++
++	if ((wilc->io_type & 0x1) == HIF_SPI) {
 +		do {
-+			/*
-+			 * ensure there is room in buffer later
-+			 * to read data and crc
-+			 */
-+			if (rix < len2) {
-+				rsp = rb[rix++];
-+			} else {
-+				retry = 0;
-+				break;
-+			}
-+			if (((rsp >> 4) & 0xf) == 0xf)
-+				break;
-+		} while (retry--);
++			wilc->hif_func->hif_read_reg(wilc, 1, &reg);
++			wilc->hif_func->hif_write_reg(wilc, 1, reg | BIT(1));
++			wilc->hif_func->hif_write_reg(wilc, 1, reg & ~BIT(1));
 +
-+		if (retry <= 0) {
-+			dev_err(&spi->dev,
-+				"Error, data read response (%02x)\n", rsp);
-+			return N_RESET;
-+		}
-+	}
-+
-+	if (cmd == CMD_INTERNAL_READ || cmd == CMD_SINGLE_READ) {
-+		/*
-+		 * Read bytes
-+		 */
-+		if ((rix + 3) < len2) {
-+			b[0] = rb[rix++];
-+			b[1] = rb[rix++];
-+			b[2] = rb[rix++];
-+			b[3] = rb[rix++];
-+		} else {
-+			dev_err(&spi->dev,
-+				"buffer overrun when reading data.\n");
-+			return N_FAIL;
-+		}
-+
-+		if (!spi_priv->crc_off) {
-+			/*
-+			 * Read Crc
-+			 */
-+			if ((rix + 1) < len2) {
-+				crc[0] = rb[rix++];
-+				crc[1] = rb[rix++];
-+			} else {
-+				dev_err(&spi->dev,
-+					"buffer overrun when reading crc.\n");
-+				return N_FAIL;
-+			}
-+		}
-+	} else if ((cmd == CMD_DMA_READ) || (cmd == CMD_DMA_EXT_READ)) {
-+		int ix;
-+
-+		/* some data may be read in response to dummy bytes. */
-+		for (ix = 0; (rix < len2) && (ix < sz); )
-+			b[ix++] = rb[rix++];
-+
-+		sz -= ix;
-+
-+		if (sz > 0) {
-+			int nbytes;
-+
-+			if (sz <= (DATA_PKT_SZ - ix))
-+				nbytes = sz;
-+			else
-+				nbytes = DATA_PKT_SZ - ix;
-+
-+			/*
-+			 * Read bytes
-+			 */
-+			if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
-+				dev_err(&spi->dev,
-+					"Failed block read, bus err\n");
-+				return N_FAIL;
-+			}
-+
-+			/*
-+			 * Read Crc
-+			 */
-+			if (!spi_priv->crc_off && wilc_spi_rx(wilc, crc, 2)) {
-+				dev_err(&spi->dev,
-+					"Failed block crc read, bus err\n");
-+				return N_FAIL;
-+			}
-+
-+			ix += nbytes;
-+			sz -= nbytes;
-+		}
-+
-+		/*
-+		 * if any data in left unread,
-+		 * then read the rest using normal DMA code.
-+		 */
-+		while (sz > 0) {
-+			int nbytes;
-+
-+			if (sz <= DATA_PKT_SZ)
-+				nbytes = sz;
-+			else
-+				nbytes = DATA_PKT_SZ;
-+
-+			/*
-+			 * read data response only on the next DMA cycles not
-+			 * the first DMA since data response header is already
-+			 * handled above for the first DMA.
-+			 */
-+			/*
-+			 * Data Respnose header
-+			 */
-+			retry = 10;
 +			do {
-+				if (wilc_spi_rx(wilc, &rsp, 1)) {
-+					dev_err(&spi->dev,
-+						"Failed resp read, bus err\n");
-+					result = N_FAIL;
-+					break;
-+				}
-+				if (((rsp >> 4) & 0xf) == 0xf)
-+					break;
-+			} while (retry--);
++				usleep_range(2 * 1000, 2 * 1000);
++				wilc_get_chipid(wilc, true);
++			} while (wilc_get_chipid(wilc, true) == 0);
++		} while (wilc_get_chipid(wilc, true) == 0);
++	} else if ((wilc->io_type & 0x1) == HIF_SDIO) {
++		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
++		usleep_range(200, 400);
++		wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
++		do {
++			wilc->hif_func->hif_write_reg(wilc, 0xf0,
++						      reg | BIT(0));
++			wilc->hif_func->hif_read_reg(wilc, 0xf1,
++						     &clk_status_reg);
 +
-+			if (result == N_FAIL)
-+				break;
++			while ((clk_status_reg & 0x1) == 0) {
++				usleep_range(2 * 1000, 2 * 1000);
 +
-+			/*
-+			 * Read bytes
-+			 */
-+			if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
-+				dev_err(&spi->dev,
-+					"Failed block read, bus err\n");
-+				result = N_FAIL;
-+				break;
++				wilc->hif_func->hif_read_reg(wilc, 0xf1,
++							     &clk_status_reg);
 +			}
-+
-+			/*
-+			 * Read Crc
-+			 */
-+			if (!spi_priv->crc_off && wilc_spi_rx(wilc, crc, 2)) {
-+				dev_err(&spi->dev,
-+					"Failed block crc read, bus err\n");
-+				result = N_FAIL;
-+				break;
++			if ((clk_status_reg & 0x1) == 0) {
++				wilc->hif_func->hif_write_reg(wilc, 0xf0,
++							      reg & (~BIT(0)));
 +			}
++		} while ((clk_status_reg & 0x1) == 0);
++	}
 +
-+			ix += nbytes;
-+			sz -= nbytes;
++	if (wilc->chip_ps_state == CHIP_SLEEPING_MANUAL) {
++		if (wilc_get_chipid(wilc, false) < 0x1002b0) {
++			u32 val32;
++
++			wilc->hif_func->hif_read_reg(wilc, 0x1e1c, &val32);
++			val32 |= BIT(6);
++			wilc->hif_func->hif_write_reg(wilc, 0x1e1c, val32);
++
++			wilc->hif_func->hif_read_reg(wilc, 0x1e9c, &val32);
++			val32 |= BIT(6);
++			wilc->hif_func->hif_write_reg(wilc, 0x1e9c, val32);
 +		}
 +	}
-+	return result;
++	wilc->chip_ps_state = CHIP_WAKEDUP;
 +}
++EXPORT_SYMBOL_GPL(chip_wakeup);
 +
-+static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
++void wilc_chip_sleep_manually(struct wilc *wilc)
 +{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	int ix, nbytes;
-+	int result = 1;
-+	u8 cmd, order, crc[2] = {0};
++	if (wilc->chip_ps_state != CHIP_WAKEDUP)
++		return;
++	acquire_bus(wilc, ACQUIRE_ONLY);
 +
-+	/*
-+	 * Data
-+	 */
-+	ix = 0;
-+	do {
-+		if (sz <= DATA_PKT_SZ) {
-+			nbytes = sz;
-+			order = 0x3;
-+		} else {
-+			nbytes = DATA_PKT_SZ;
-+			if (ix == 0)
-+				order = 0x1;
-+			else
-+				order = 0x02;
-+		}
++	chip_allow_sleep(wilc);
++	wilc->hif_func->hif_write_reg(wilc, 0x10a8, 1);
 +
-+		/*
-+		 * Write command
-+		 */
-+		cmd = 0xf0;
-+		cmd |= order;
-+
-+		if (wilc_spi_tx(wilc, &cmd, 1)) {
-+			dev_err(&spi->dev,
-+				"Failed data block cmd write, bus error...\n");
-+			result = N_FAIL;
-+			break;
-+		}
-+
-+		/*
-+		 * Write data
-+		 */
-+		if (wilc_spi_tx(wilc, &b[ix], nbytes)) {
-+			dev_err(&spi->dev,
-+				"Failed data block write, bus error...\n");
-+			result = N_FAIL;
-+			break;
-+		}
-+
-+		/*
-+		 * Write Crc
-+		 */
-+		if (!spi_priv->crc_off) {
-+			if (wilc_spi_tx(wilc, crc, 2)) {
-+				dev_err(&spi->dev, "Failed data block crc write, bus error...\n");
-+				result = N_FAIL;
-+				break;
-+			}
-+		}
-+
-+		/*
-+		 * No need to wait for response
-+		 */
-+		ix += nbytes;
-+		sz -= nbytes;
-+	} while (sz);
-+
-+	return result;
++	wilc->chip_ps_state = CHIP_SLEEPING_MANUAL;
++	release_bus(wilc, RELEASE_ONLY);
 +}
++EXPORT_SYMBOL_GPL(wilc_chip_sleep_manually);
 +
-+/********************************************
-+ *
-+ *      Spi Internal Read/Write Function
-+ *
-+ ********************************************/
-+
-+static int spi_internal_write(struct wilc *wilc, u32 adr, u32 dat)
++void host_wakeup_notify(struct wilc *wilc)
 +{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result;
-+
-+	cpu_to_le32s(&dat);
-+	result = spi_cmd_complete(wilc, CMD_INTERNAL_WRITE, adr, (u8 *)&dat, 4,
-+				  0);
-+	if (result != N_OK)
-+		dev_err(&spi->dev, "Failed internal write cmd...\n");
-+
-+	return result;
++	acquire_bus(wilc, ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, 0x10b0, 1);
++	release_bus(wilc, RELEASE_ONLY);
 +}
++EXPORT_SYMBOL_GPL(host_wakeup_notify);
 +
-+static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
++void host_sleep_notify(struct wilc *wilc)
 +{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result;
-+
-+	result = spi_cmd_complete(wilc, CMD_INTERNAL_READ, adr, (u8 *)data, 4,
-+				  0);
-+	if (result != N_OK) {
-+		dev_err(&spi->dev, "Failed internal read cmd...\n");
-+		return 0;
-+	}
-+
-+	le32_to_cpus(data);
-+
-+	return 1;
++	acquire_bus(wilc, ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, 0x10ac, 1);
++	release_bus(wilc, RELEASE_ONLY);
 +}
++EXPORT_SYMBOL_GPL(host_sleep_notify);
 +
-+/********************************************
-+ *
-+ *      Spi interfaces
-+ *
-+ ********************************************/
-+
-+static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
++int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
 +{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result = N_OK;
-+	u8 cmd = CMD_SINGLE_WRITE;
-+	u8 clockless = 0;
-+
-+	cpu_to_le32s(&data);
-+	if (addr < 0x30) {
-+		/* Clockless register */
-+		cmd = CMD_INTERNAL_WRITE;
-+		clockless = 1;
-+	}
-+
-+	result = spi_cmd_complete(wilc, cmd, addr, (u8 *)&data, 4, clockless);
-+	if (result != N_OK)
-+		dev_err(&spi->dev, "Failed cmd, write reg (%08x)...\n", addr);
-+
-+	return result;
-+}
-+
-+static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result;
-+
-+	/*
-+	 * has to be greated than 4
-+	 */
-+	if (size <= 4)
-+		return 0;
-+
-+	result = spi_cmd_complete(wilc, CMD_DMA_EXT_WRITE, addr, NULL, size, 0);
-+	if (result != N_OK) {
-+		dev_err(&spi->dev,
-+			"Failed cmd, write block (%08x)...\n", addr);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Data
-+	 */
-+	result = spi_data_write(wilc, buf, size);
-+	if (result != N_OK)
-+		dev_err(&spi->dev, "Failed block data write...\n");
-+
-+	return 1;
-+}
-+
-+static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result = N_OK;
-+	u8 cmd = CMD_SINGLE_READ;
-+	u8 clockless = 0;
-+
-+	if (addr < 0x30) {
-+		/* Clockless register */
-+		cmd = CMD_INTERNAL_READ;
-+		clockless = 1;
-+	}
-+
-+	result = spi_cmd_complete(wilc, cmd, addr, (u8 *)data, 4, clockless);
-+	if (result != N_OK) {
-+		dev_err(&spi->dev, "Failed cmd, read reg (%08x)...\n", addr);
-+		return 0;
-+	}
-+
-+	le32_to_cpus(data);
-+
-+	return 1;
-+}
-+
-+static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	int result;
-+
-+	if (size <= 4)
-+		return 0;
-+
-+	result = spi_cmd_complete(wilc, CMD_DMA_EXT_READ, addr, buf, size, 0);
-+	if (result != N_OK) {
-+		dev_err(&spi->dev, "Failed cmd, read block (%08x)...\n", addr);
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+/********************************************
-+ *
-+ *      Bus interfaces
-+ *
-+ ********************************************/
-+
-+static int _wilc_spi_deinit(struct wilc *wilc)
-+{
-+	/*
-+	 * TODO:
-+	 */
-+	return 1;
-+}
-+
-+static int wilc_spi_init(struct wilc *wilc, bool resume)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
++	int i, entries = 0;
++	u32 sum;
 +	u32 reg;
-+	u32 chipid;
-+	static int isinit;
++	u32 offset = 0;
++	int vmm_sz = 0;
++	struct txq_entry_t *tqe;
++	int ret = 0;
++	int counter;
++	int timeout;
++	u32 vmm_table[WILC_VMM_TBL_SIZE];
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++	const struct wilc_hif_func *func;
++	u8 *txb = wilc->tx_buffer;
 +
-+	if (isinit) {
-+		if (!wilc_spi_read_reg(wilc, 0x1000, &chipid)) {
-+			dev_err(&spi->dev, "Fail cmd read chip id...\n");
-+			return 0;
-+		}
-+		return 1;
-+	}
++	if (wilc->quit)
++		goto out;
 +
-+	/*
-+	 * configure protocol
-+	 */
-+
-+	/*
-+	 * TODO: We can remove the CRC trials if there is a definite
-+	 * way to reset
-+	 */
-+	/* the SPI to it's initial value. */
-+	if (!spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg)) {
-+		/*
-+		 * Read failed. Try with CRC off. This might happen when module
-+		 * is removed but chip isn't reset
-+		 */
-+		spi_priv->crc_off = 1;
-+		dev_err(&spi->dev,
-+			"Failed read with CRC on, retrying with CRC off\n");
-+		if (!spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg)) {
-+			/*
-+			 * Read failed with both CRC on and off,
-+			 * something went bad
-+			 */
-+			dev_err(&spi->dev, "Failed internal read protocol\n");
-+			return 0;
-+		}
-+	}
-+	if (spi_priv->crc_off == 0) {
-+		reg &= ~0xc; /* disable crc checking */
-+		reg &= ~0x70;
-+		reg |= (0x5 << 4);
-+		if (!spi_internal_write(wilc, WILC_SPI_PROTOCOL_OFFSET, reg)) {
-+			dev_err(&spi->dev,
-+				"[wilc spi %d]: Failed internal write reg\n",
-+				__LINE__);
-+			return 0;
-+		}
-+		spi_priv->crc_off = 1;
-+	}
-+
-+	/*
-+	 * make sure can read back chip id correctly
-+	 */
-+	if (!wilc_spi_read_reg(wilc, 0x1000, &chipid)) {
-+		dev_err(&spi->dev, "Fail cmd read chip id...\n");
-+		return 0;
-+	}
-+
-+	spi_priv->has_thrpt_enh = 1;
-+
-+	isinit = 1;
-+
-+	return 1;
-+}
-+
-+static int wilc_spi_read_size(struct wilc *wilc, u32 *size)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	int ret;
-+
-+	if (spi_priv->has_thrpt_enh) {
-+		ret = spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
-+					size);
-+		*size = *size  & IRQ_DMA_WD_CNT_MASK;
-+	} else {
-+		u32 tmp;
-+		u32 byte_cnt;
-+
-+		ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE,
-+					&byte_cnt);
-+		if (!ret) {
-+			dev_err(&spi->dev,
-+				"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
-+			return ret;
-+		}
-+		tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
-+		*size = tmp;
-+	}
-+
-+	return ret;
-+}
-+
-+static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	int ret;
-+	u32 tmp;
-+	u32 byte_cnt;
-+	int happened, j;
-+	u32 unknown_mask;
-+	u32 irq_flags;
-+	int k = IRG_FLAGS_OFFSET + 5;
-+
-+	if (spi_priv->has_thrpt_enh) {
-+		ret = spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
-+					int_status);
-+		return ret;
-+	}
-+	ret = wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE, &byte_cnt);
-+	if (!ret) {
-+		dev_err(&spi->dev,
-+			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
-+		return ret;
-+	}
-+	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
-+
-+	j = 0;
++	mutex_lock(&wilc->txq_add_to_head_cs);
++	wilc_wlan_txq_filter_dup_tcp_ack(dev);
++	tqe = wilc_wlan_txq_get_first(wilc);
++	i = 0;
++	sum = 0;
 +	do {
-+		happened = 0;
++		if (tqe && (i < (WILC_VMM_TBL_SIZE - 1))) {
++			if (tqe->type == WILC_CFG_PKT)
++				vmm_sz = ETH_CONFIG_PKT_HDR_OFFSET;
 +
-+		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
-+		tmp |= ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
++			else if (tqe->type == WILC_NET_PKT)
++				vmm_sz = ETH_ETHERNET_HDR_OFFSET;
 +
-+		if (spi_priv->nint > 5) {
-+			wilc_spi_read_reg(wilc, 0x1a94, &irq_flags);
-+			tmp |= (((irq_flags >> 0) & 0x7) << k);
++			else
++				vmm_sz = HOST_HDR_OFFSET;
++
++			vmm_sz += tqe->buffer_size;
++
++			if (vmm_sz & 0x3)
++				vmm_sz = (vmm_sz + 4) & ~0x3;
++
++			if ((sum + vmm_sz) > LINUX_TX_SIZE)
++				break;
++
++			vmm_table[i] = vmm_sz / 4;
++			if (tqe->type == WILC_CFG_PKT)
++				vmm_table[i] |= BIT(10);
++			cpu_to_le32s(&vmm_table[i]);
++
++			i++;
++			sum += vmm_sz;
++			tqe = wilc_wlan_txq_get_next(wilc, tqe);
++		} else {
++			break;
 +		}
++	} while (1);
 +
-+		unknown_mask = ~((1ul << spi_priv->nint) - 1);
++	if (i == 0)
++		goto out;
++	vmm_table[i] = 0x0;
 +
-+		if ((tmp >> IRG_FLAGS_OFFSET) & unknown_mask) {
-+			dev_err(&spi->dev,
-+				"Unexpected interrupt(2):j=%d,tmp=%x,mask=%x\n",
-+				j, tmp, unknown_mask);
-+				happened = 1;
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
++	counter = 0;
++	func = wilc->hif_func;
++	do {
++		ret = func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++		if (!ret)
++			break;
++
++		if ((reg & 0x1) == 0)
++			break;
++
++		counter++;
++		if (counter > 200) {
++			counter = 0;
++			ret = func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, 0);
++			break;
 +		}
++	} while (!wilc->quit);
 +
-+		j++;
-+	} while (happened);
++	if (!ret)
++		goto out_release_bus;
 +
-+	*int_status = tmp;
++	timeout = 200;
++	do {
++		ret = func->hif_block_tx(wilc,
++					 WILC_VMM_TBL_RX_SHADOW_BASE,
++					 (u8 *)vmm_table,
++					 ((i + 1) * 4));
++		if (!ret)
++			break;
 +
-+	return ret;
-+}
++		ret = func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x2);
++		if (!ret)
++			break;
 +
-+static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
-+{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	int ret;
-+	u32 flags;
-+	u32 tbl_ctl;
-+
-+	if (spi_priv->has_thrpt_enh) {
-+		ret = spi_internal_write(wilc, 0xe844 - WILC_SPI_REG_BASE,
-+					 val);
-+		return ret;
-+	}
-+
-+	flags = val & (BIT(MAX_NUM_INT) - 1);
-+	if (flags) {
-+		int i;
-+
-+		ret = 1;
-+		for (i = 0; i < spi_priv->nint; i++) {
-+			/*
-+			 * No matter what you write 1 or 0,
-+			 * it will clear interrupt.
-+			 */
-+			if (flags & 1)
-+				ret = wilc_spi_write_reg(wilc,
-+							 0x10c8 + i * 4, 1);
++		do {
++			ret = func->hif_read_reg(wilc, WILC_HOST_VMM_CTL, &reg);
 +			if (!ret)
 +				break;
-+			flags >>= 1;
++			if ((reg >> 2) & 0x1) {
++				entries = ((reg >> 3) & 0x3f);
++				break;
++			}
++			release_bus(wilc, RELEASE_ALLOW_SLEEP);
++		} while (--timeout);
++		if (timeout <= 0) {
++			ret = func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x0);
++			break;
 +		}
-+		if (!ret) {
-+			dev_err(&spi->dev,
-+				"Failed wilc_spi_write_reg, set reg %x ...\n",
-+				0x10c8 + i * 4);
-+			return ret;
++
++		if (!ret)
++			break;
++
++		if (entries == 0) {
++			ret = func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++			if (!ret)
++				break;
++			reg &= ~BIT(0);
++			ret = func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, reg);
++			if (!ret)
++				break;
++			break;
 +		}
-+		for (i = spi_priv->nint; i < MAX_NUM_INT; i++) {
-+			if (flags & 1)
-+				dev_err(&spi->dev,
-+					"Unexpected interrupt cleared %d...\n",
-+					i);
-+			flags >>= 1;
-+		}
++		break;
++	} while (1);
++
++	if (!ret)
++		goto out_release_bus;
++
++	if (entries == 0) {
++		ret = WILC_TX_ERR_NO_BUF;
++		goto out_release_bus;
 +	}
 +
-+	tbl_ctl = 0;
-+	/* select VMM table 0 */
-+	if (val & SEL_VMM_TBL0)
-+		tbl_ctl |= BIT(0);
-+	/* select VMM table 1 */
-+	if (val & SEL_VMM_TBL1)
-+		tbl_ctl |= BIT(1);
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
 +
-+	ret = wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL, tbl_ctl);
++	offset = 0;
++	i = 0;
++	do {
++		u32 header, buffer_offset;
++		char *bssid;
++
++		tqe = wilc_wlan_txq_remove_from_head(dev);
++		if (!tqe)
++			break;
++
++		if (vmm_table[i] == 0)
++			break;
++
++		le32_to_cpus(&vmm_table[i]);
++		vmm_sz = (vmm_table[i] & 0x3ff);
++		vmm_sz *= 4;
++		header = (tqe->type << 31) |
++			 (tqe->buffer_size << 15) |
++			 vmm_sz;
++		if (tqe->type == WILC_MGMT_PKT)
++			header |= BIT(30);
++		else
++			header &= ~BIT(30);
++
++		cpu_to_le32s(&header);
++		memcpy(&txb[offset], &header, 4);
++		if (tqe->type == WILC_CFG_PKT) {
++			buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
++		} else if (tqe->type == WILC_NET_PKT) {
++			bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
++
++			buffer_offset = ETH_ETHERNET_HDR_OFFSET;
++			memcpy(&txb[offset + 8], bssid, 6);
++		} else {
++			buffer_offset = HOST_HDR_OFFSET;
++		}
++
++		memcpy(&txb[offset + buffer_offset],
++		       tqe->buffer, tqe->buffer_size);
++		offset += vmm_sz;
++		i++;
++		tqe->status = 1;
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, tqe->status);
++		if (tqe->ack_idx != NOT_TCP_ACK &&
++		    tqe->ack_idx < MAX_PENDING_ACKS)
++			vif->ack_filter.pending_acks[tqe->ack_idx].txqe = NULL;
++		kfree(tqe);
++	} while (--entries);
++
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
++
++	ret = func->hif_clear_int_ext(wilc, ENABLE_TX_VMM);
++	if (!ret)
++		goto out_release_bus;
++
++	ret = func->hif_block_tx_ext(wilc, 0, txb, offset);
++
++out_release_bus:
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
++
++out:
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++
++	*txq_count = wilc->txq_entries;
++	return ret;
++}
++
++static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
++{
++	int offset = 0;
++	u32 header;
++	u32 pkt_len, pkt_offset, tp_len;
++	int is_cfg_packet;
++	u8 *buff_ptr;
++
++	do {
++		buff_ptr = buffer + offset;
++		memcpy(&header, buff_ptr, 4);
++		le32_to_cpus(&header);
++
++		is_cfg_packet = (header >> 31) & 0x1;
++		pkt_offset = (header >> 22) & 0x1ff;
++		tp_len = (header >> 11) & 0x7ff;
++		pkt_len = header & 0x7ff;
++
++		if (pkt_len == 0 || tp_len == 0)
++			break;
++
++		if (pkt_offset & IS_MANAGMEMENT) {
++			pkt_offset &= ~(IS_MANAGMEMENT |
++					IS_MANAGMEMENT_CALLBACK |
++					IS_MGMT_STATUS_SUCCES);
++			buff_ptr += HOST_HDR_OFFSET;
++			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len);
++		} else {
++			if (!is_cfg_packet) {
++				if (pkt_len > 0) {
++					wilc_frmw_to_linux(wilc, buff_ptr,
++							   pkt_len,
++							   pkt_offset);
++				}
++			} else {
++				struct wilc_cfg_rsp rsp;
++
++				buff_ptr += pkt_offset;
++
++				wilc_wlan_cfg_indicate_rx(wilc, buff_ptr,
++							  pkt_len,
++							  &rsp);
++				if (rsp.type == WILC_CFG_RSP) {
++					if (wilc->cfg_seq_no == rsp.seq_no)
++						complete(&wilc->cfg_event);
++				} else if (rsp.type == WILC_CFG_RSP_STATUS) {
++					wilc_mac_indicate(wilc);
++				}
++			}
++		}
++		offset += tp_len;
++		if (offset >= size)
++			break;
++	} while (1);
++}
++
++static void wilc_wlan_handle_rxq(struct wilc *wilc)
++{
++	int size;
++	u8 *buffer;
++	struct rxq_entry_t *rqe;
++
++	do {
++		if (wilc->quit) {
++			complete(&wilc->cfg_event);
++			break;
++		}
++		rqe = wilc_wlan_rxq_remove(wilc);
++		if (!rqe)
++			break;
++
++		buffer = rqe->buffer;
++		size = rqe->buffer_size;
++		wilc_wlan_handle_rx_buff(wilc, buffer, size);
++
++		kfree(rqe);
++	} while (1);
++}
++
++static void wilc_unknown_isr_ext(struct wilc *wilc)
++{
++	wilc->hif_func->hif_clear_int_ext(wilc, 0);
++}
++
++static void wilc_pllupdate_isr_ext(struct wilc *wilc, u32 int_stats)
++{
++	int trials = 10;
++
++	wilc->hif_func->hif_clear_int_ext(wilc, PLL_INT_CLR);
++
++	if (wilc->io_type == HIF_SDIO)
++		mdelay(WILC_PLL_TO_SDIO);
++	else
++		mdelay(WILC_PLL_TO_SPI);
++
++	while (!(is_wilc1000(wilc_get_chipid(wilc, true)) && --trials))
++		mdelay(1);
++}
++
++static void wilc_sleeptimer_isr_ext(struct wilc *wilc, u32 int_stats1)
++{
++	wilc->hif_func->hif_clear_int_ext(wilc, SLEEP_INT_CLR);
++}
++
++static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
++{
++	u32 offset = wilc->rx_buffer_offset;
++	u8 *buffer = NULL;
++	u32 size;
++	u32 retries = 0;
++	int ret = 0;
++	struct rxq_entry_t *rqe;
++
++	size = (int_status & 0x7fff) << 2;
++
++	while (!size && retries < 10) {
++		wilc->hif_func->hif_read_size(wilc, &size);
++		size = (size & 0x7fff) << 2;
++		retries++;
++	}
++
++	if (size <= 0)
++		return;
++
++	if (LINUX_RX_SIZE - offset < size)
++		offset = 0;
++
++	buffer = &wilc->rx_buffer[offset];
++
++	wilc->hif_func->hif_clear_int_ext(wilc, DATA_INT_CLR | ENABLE_RX_VMM);
++	ret = wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
++	if (!ret)
++		return;
++
++	offset += size;
++	wilc->rx_buffer_offset = offset;
++	rqe = kmalloc(sizeof(*rqe), GFP_KERNEL);
++	if (!rqe)
++		return;
++
++	rqe->buffer = buffer;
++	rqe->buffer_size = size;
++	wilc_wlan_rxq_add(wilc, rqe);
++	wilc_wlan_handle_rxq(wilc);
++}
++
++void wilc_handle_isr(struct wilc *wilc)
++{
++	u32 int_status;
++
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
++	wilc->hif_func->hif_read_int(wilc, &int_status);
++
++	if (int_status & PLL_INT_EXT)
++		wilc_pllupdate_isr_ext(wilc, int_status);
++
++	if (int_status & DATA_INT_EXT)
++		wilc_wlan_handle_isr_ext(wilc, int_status);
++
++	if (int_status & SLEEP_INT_EXT)
++		wilc_sleeptimer_isr_ext(wilc, int_status);
++
++	if (!(int_status & (ALL_INT_EXT)))
++		wilc_unknown_isr_ext(wilc);
++
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
++}
++EXPORT_SYMBOL_GPL(wilc_handle_isr);
++
++int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
++				u32 buffer_size)
++{
++	u32 offset;
++	u32 addr, size, size2, blksz;
++	u8 *dma_buffer;
++	int ret = 0;
++
++	blksz = BIT(12);
++
++	dma_buffer = kmalloc(blksz, GFP_KERNEL);
++	if (!dma_buffer)
++		return -EIO;
++
++	offset = 0;
++	do {
++		memcpy(&addr, &buffer[offset], 4);
++		memcpy(&size, &buffer[offset + 4], 4);
++		le32_to_cpus(&addr);
++		le32_to_cpus(&size);
++		acquire_bus(wilc, ACQUIRE_ONLY);
++		offset += 8;
++		while (((int)size) && (offset < buffer_size)) {
++			if (size <= blksz)
++				size2 = size;
++			else
++				size2 = blksz;
++
++			memcpy(dma_buffer, &buffer[offset], size2);
++			ret = wilc->hif_func->hif_block_tx(wilc, addr,
++							   dma_buffer, size2);
++			if (!ret)
++				break;
++
++			addr += size2;
++			offset += size2;
++			size -= size2;
++		}
++		release_bus(wilc, RELEASE_ONLY);
++
++		if (!ret) {
++			ret = -EIO;
++			goto fail;
++		}
++	} while (offset < buffer_size);
++
++fail:
++
++	kfree(dma_buffer);
++
++	return (ret < 0) ? ret : 0;
++}
++
++int wilc_wlan_start(struct wilc *wilc)
++{
++	u32 reg = 0;
++	int ret;
++	u32 chipid;
++
++	if (wilc->io_type == HIF_SDIO) {
++		reg = 0;
++		reg |= BIT(3);
++	} else if (wilc->io_type == HIF_SPI) {
++		reg = 1;
++	}
++	acquire_bus(wilc, ACQUIRE_ONLY);
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_VMM_CORE_CFG, reg);
 +	if (!ret) {
-+		dev_err(&spi->dev, "fail write reg vmm_tbl_ctl...\n");
++		release_bus(wilc, RELEASE_ONLY);
++		return -EIO;
++	}
++	reg = 0;
++	if (wilc->io_type == HIF_SDIO && wilc->dev_irq_num)
++		reg |= WILC_HAVE_SDIO_IRQ_GPIO;
++
++#ifdef WILC_DISABLE_PMU
++#else
++	reg |= WILC_HAVE_USE_PMU;
++#endif
++
++#ifdef WILC_SLEEP_CLK_SRC_XO
++	reg |= WILC_HAVE_SLEEP_CLK_SRC_XO;
++#elif defined WILC_SLEEP_CLK_SRC_RTC
++	reg |= WILC_HAVE_SLEEP_CLK_SRC_RTC;
++#endif
++
++#ifdef WILC_EXT_PA_INV_TX_RX
++	reg |= WILC_HAVE_EXT_PA_INV_TX_RX;
++#endif
++	reg |= WILC_HAVE_USE_IRQ_AS_HOST_WAKE;
++	reg |= WILC_HAVE_LEGACY_RF_SETTINGS;
++#ifdef XTAL_24
++	reg |= WILC_HAVE_XTAL_24;
++#endif
++#ifdef DISABLE_WILC_UART
++	reg |= WILC_HAVE_DISABLE_WILC_UART;
++#endif
++
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_1, reg);
++	if (!ret) {
++		release_bus(wilc, RELEASE_ONLY);
++		return -EIO;
++	}
++
++	wilc->hif_func->hif_sync_ext(wilc, NUM_INT_EXT);
++
++	ret = wilc->hif_func->hif_read_reg(wilc, 0x1000, &chipid);
++	if (!ret) {
++		release_bus(wilc, RELEASE_ONLY);
++		return -EIO;
++	}
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	if ((reg & BIT(10)) == BIT(10)) {
++		reg &= ~BIT(10);
++		wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++		wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	}
++
++	reg |= BIT(10);
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	release_bus(wilc, RELEASE_ONLY);
++
++	return (ret < 0) ? ret : 0;
++}
++
++int wilc_wlan_stop(struct wilc *wilc)
++{
++	u32 reg = 0;
++	int ret;
++	u8 timeout = 10;
++
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
++
++	ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	if (!ret) {
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
 +		return ret;
 +	}
 +
-+	if (val & EN_VMM) {
-+		/*
-+		 * enable vmm transfer.
-+		 */
-+		ret = wilc_spi_write_reg(wilc, WILC_VMM_CORE_CTL, 1);
++	reg &= ~BIT(10);
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	if (!ret) {
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	do {
++		ret = wilc->hif_func->hif_read_reg(wilc,
++						   WILC_GLB_RESET_0, &reg);
 +		if (!ret) {
-+			dev_err(&spi->dev, "fail write reg vmm_core_ctl...\n");
++			release_bus(wilc, RELEASE_ALLOW_SLEEP);
 +			return ret;
++		}
++
++		if ((reg & BIT(10))) {
++			reg &= ~BIT(10);
++			ret = wilc->hif_func->hif_write_reg(wilc,
++							    WILC_GLB_RESET_0,
++							    reg);
++			timeout--;
++		} else {
++			ret = wilc->hif_func->hif_read_reg(wilc,
++							   WILC_GLB_RESET_0,
++							   &reg);
++			if (!ret) {
++				release_bus(wilc, RELEASE_ALLOW_SLEEP);
++				return ret;
++			}
++			break;
++		}
++
++	} while (timeout);
++	reg = (BIT(0) | BIT(1) | BIT(2) | BIT(3) | BIT(8) | BIT(9) | BIT(26) |
++	       BIT(29) | BIT(30) | BIT(31));
++
++	wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	reg = (u32)~BIT(10);
++
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
++
++	return ret;
++}
++
++void wilc_wlan_cleanup(struct net_device *dev)
++{
++	struct txq_entry_t *tqe;
++	struct rxq_entry_t *rqe;
++	u32 reg = 0;
++	int ret;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
++
++	wilc->quit = 1;
++	do {
++		tqe = wilc_wlan_txq_remove_from_head(dev);
++		if (!tqe)
++			break;
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, 0);
++		kfree(tqe);
++	} while (1);
++
++	do {
++		rqe = wilc_wlan_rxq_remove(wilc);
++		if (!rqe)
++			break;
++		kfree(rqe);
++	} while (1);
++
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer = NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer = NULL;
++
++	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
++
++	ret = wilc->hif_func->hif_read_reg(wilc, WILC_GP_REG_0, &reg);
++	if (!ret)
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
++
++	ret = wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_0,
++					(reg | ABORT_INT));
++	if (!ret)
++		release_bus(wilc, RELEASE_ALLOW_SLEEP);
++
++	release_bus(wilc, RELEASE_ALLOW_SLEEP);
++	wilc->hif_func->hif_deinit(NULL);
++}
++
++static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
++				u32 drv_handler)
++{
++	struct wilc *wilc = vif->wilc;
++	struct wilc_cfg_frame *cfg = &wilc->cfg_frame;
++	int total_len = wilc->cfg_frame_offset + 4 + DRIVER_HANDLER_SIZE;
++	int seq_no = wilc->cfg_seq_no % 256;
++	int driver_handler = (u32)drv_handler;
++
++	if (type == WILC_CFG_SET)
++		cfg->wid_header[0] = 'W';
++	else
++		cfg->wid_header[0] = 'Q';
++	cfg->wid_header[1] = seq_no;
++	cfg->wid_header[2] = (u8)total_len;
++	cfg->wid_header[3] = (u8)(total_len >> 8);
++	cfg->wid_header[4] = (u8)driver_handler;
++	cfg->wid_header[5] = (u8)(driver_handler >> 8);
++	cfg->wid_header[6] = (u8)(driver_handler >> 16);
++	cfg->wid_header[7] = (u8)(driver_handler >> 24);
++	wilc->cfg_seq_no = seq_no;
++
++	if (!wilc_wlan_txq_add_cfg_pkt(vif, &cfg->wid_header[0], total_len))
++		return -1;
++
++	return 0;
++}
++
++int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
++		      u32 buffer_size, int commit, u32 drv_handler)
++{
++	u32 offset;
++	int ret_size;
++	struct wilc *wilc = vif->wilc;
++
++	if (wilc->cfg_frame_in_use)
++		return 0;
++
++	if (start)
++		wilc->cfg_frame_offset = 0;
++
++	offset = wilc->cfg_frame_offset;
++	ret_size = wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
++					 wid, buffer, buffer_size);
++	offset += ret_size;
++	wilc->cfg_frame_offset = offset;
++
++	if (!commit)
++		return ret_size;
++
++	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
++	wilc->cfg_frame_in_use = 1;
++
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
++		ret_size = 0;
++
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size = 0;
++	}
++
++	wilc->cfg_frame_in_use = 0;
++	wilc->cfg_frame_offset = 0;
++	wilc->cfg_seq_no += 1;
++
++	return ret_size;
++}
++
++int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
++		      u32 drv_handler)
++{
++	u32 offset;
++	int ret_size;
++	struct wilc *wilc = vif->wilc;
++
++	if (wilc->cfg_frame_in_use)
++		return 0;
++
++	if (start)
++		wilc->cfg_frame_offset = 0;
++
++	offset = wilc->cfg_frame_offset;
++	ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
++	offset += ret_size;
++	wilc->cfg_frame_offset = offset;
++
++	if (!commit)
++		return ret_size;
++
++	wilc->cfg_frame_in_use = 1;
++
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
++		ret_size = 0;
++
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 msecs_to_jiffies(CFG_PKTS_TIMEOUT))) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size = 0;
++	}
++	wilc->cfg_frame_in_use = 0;
++	wilc->cfg_frame_offset = 0;
++	wilc->cfg_seq_no += 1;
++
++	return ret_size;
++}
++
++int wilc_wlan_cfg_get_val(struct wilc *wl, u16 wid, u8 *buffer, u32 buffer_size)
++{
++	return wilc_wlan_cfg_get_wid_value(wl, wid, buffer, buffer_size);
++}
++
++int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
++			 u32 count, u32 drv)
++{
++	int i;
++	int ret = 0;
++
++	if (mode == GET_CFG) {
++		for (i = 0; i < count; i++) {
++			if (!wilc_wlan_cfg_get(vif, !i,
++					       wids[i].id,
++					       (i == count - 1),
++					       drv)) {
++				ret = -ETIMEDOUT;
++				break;
++			}
++		}
++		for (i = 0; i < count; i++) {
++			wids[i].size = wilc_wlan_cfg_get_val(vif->wilc,
++							     wids[i].id,
++							     wids[i].val,
++							     wids[i].size);
++		}
++	} else if (mode == SET_CFG) {
++		for (i = 0; i < count; i++) {
++			if (!wilc_wlan_cfg_set(vif, !i,
++					       wids[i].id,
++					       wids[i].val,
++					       wids[i].size,
++					       (i == count - 1),
++					       drv)) {
++				ret = -ETIMEDOUT;
++				break;
++			}
 +		}
 +	}
 +
 +	return ret;
 +}
 +
-+static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
++static u32 init_chip(struct net_device *dev)
 +{
-+	struct spi_device *spi = to_spi_device(wilc->dev);
-+	struct wilc_spi *spi_priv = wilc->bus_data;
-+	u32 reg;
-+	int ret, i;
++	u32 chipid;
++	u32 reg, ret = 0;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc = vif->wilc;
 +
-+	if (nint > MAX_NUM_INT) {
-+		dev_err(&spi->dev, "Too many interrupts (%d)...\n", nint);
-+		return 0;
-+	}
++	acquire_bus(wilc, ACQUIRE_ONLY);
 +
-+	spi_priv->nint = nint;
++	chipid = wilc_get_chipid(wilc, true);
 +
-+	/*
-+	 * interrupt pin mux select
-+	 */
-+	ret = wilc_spi_read_reg(wilc, WILC_PIN_MUX_0, &reg);
-+	if (!ret) {
-+		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+			WILC_PIN_MUX_0);
-+		return 0;
-+	}
-+	reg |= BIT(8);
-+	ret = wilc_spi_write_reg(wilc, WILC_PIN_MUX_0, reg);
-+	if (!ret) {
-+		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+			WILC_PIN_MUX_0);
-+		return 0;
-+	}
-+
-+	/*
-+	 * interrupt enable
-+	 */
-+	ret = wilc_spi_read_reg(wilc, WILC_INTR_ENABLE, &reg);
-+	if (!ret) {
-+		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+			WILC_INTR_ENABLE);
-+		return 0;
-+	}
-+
-+	for (i = 0; (i < 5) && (nint > 0); i++, nint--)
-+		reg |= (BIT((27 + i)));
-+
-+	ret = wilc_spi_write_reg(wilc, WILC_INTR_ENABLE, reg);
-+	if (!ret) {
-+		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+			WILC_INTR_ENABLE);
-+		return 0;
-+	}
-+	if (nint) {
-+		ret = wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
++	if ((chipid & 0xfff) != 0xa0) {
++		ret = wilc->hif_func->hif_read_reg(wilc, 0x1118, &reg);
 +		if (!ret) {
-+			dev_err(&spi->dev, "Failed read reg (%08x)...\n",
-+				WILC_INTR2_ENABLE);
-+			return 0;
++			netdev_err(dev, "fail read reg 0x1118\n");
++			return ret;
++		}
++		reg |= BIT(0);
++		ret = wilc->hif_func->hif_write_reg(wilc, 0x1118, reg);
++		if (!ret) {
++			netdev_err(dev, "fail write reg 0x1118\n");
++			return ret;
++		}
++		ret = wilc->hif_func->hif_write_reg(wilc, 0xc0000, 0x71);
++		if (!ret) {
++			netdev_err(dev, "fail write reg 0xc0000\n");
++			return ret;
++		}
++	}
++
++	release_bus(wilc, RELEASE_ONLY);
++
++	return ret;
++}
++
++u32 wilc_get_chipid(struct wilc *wilc, bool update)
++{
++	static u32 chipid;
++	u32 tempchipid = 0;
++	u32 rfrevid = 0;
++
++	if (chipid == 0 || update) {
++		wilc->hif_func->hif_read_reg(wilc, 0x1000, &tempchipid);
++		wilc->hif_func->hif_read_reg(wilc, 0x13f4, &rfrevid);
++		if (!is_wilc1000(tempchipid)) {
++			chipid = 0;
++			return chipid;
++		}
++		if (tempchipid == 0x1002a0) {
++			if (rfrevid != 0x1)
++				tempchipid = 0x1002a1;
++		} else if (tempchipid == 0x1002b0) {
++			if (rfrevid == 0x4)
++				tempchipid = 0x1002b1;
++			else if (rfrevid != 0x3)
++				tempchipid = 0x1002b2;
 +		}
 +
-+		for (i = 0; (i < 3) && (nint > 0); i++, nint--)
-+			reg |= BIT(i);
++		chipid = tempchipid;
++	}
++	return chipid;
++}
 +
-+		ret = wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
-+		if (!ret) {
-+			dev_err(&spi->dev, "Failed write reg (%08x)...\n",
-+				WILC_INTR2_ENABLE);
-+			return 0;
-+		}
++int wilc_wlan_init(struct net_device *dev)
++{
++	int ret = 0;
++	struct wilc_vif *vif = netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc = vif->wilc;
++
++	wilc->quit = 0;
++
++	if (!wilc->hif_func->hif_init(wilc, false)) {
++		ret = -EIO;
++		goto fail;
++	}
++
++	if (!wilc->tx_buffer)
++		wilc->tx_buffer = kmalloc(LINUX_TX_SIZE, GFP_KERNEL);
++
++	if (!wilc->tx_buffer) {
++		ret = -ENOBUFS;
++		goto fail;
++	}
++
++	if (!wilc->rx_buffer)
++		wilc->rx_buffer = kmalloc(LINUX_RX_SIZE, GFP_KERNEL);
++
++	if (!wilc->rx_buffer) {
++		ret = -ENOBUFS;
++		goto fail;
++	}
++
++	if (!init_chip(dev)) {
++		ret = -EIO;
++		goto fail;
 +	}
 +
 +	return 1;
-+}
 +
-+/* Global spi HIF function table */
-+static const struct wilc_hif_func wilc_hif_spi = {
-+	.hif_init = wilc_spi_init,
-+	.hif_deinit = _wilc_spi_deinit,
-+	.hif_read_reg = wilc_spi_read_reg,
-+	.hif_write_reg = wilc_spi_write_reg,
-+	.hif_block_rx = wilc_spi_read,
-+	.hif_block_tx = wilc_spi_write,
-+	.hif_read_int = wilc_spi_read_int,
-+	.hif_clear_int_ext = wilc_spi_clear_int_ext,
-+	.hif_read_size = wilc_spi_read_size,
-+	.hif_block_tx_ext = wilc_spi_write,
-+	.hif_block_rx_ext = wilc_spi_read,
-+	.hif_sync_ext = wilc_spi_sync_ext,
-+};
++fail:
++
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer = NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer = NULL;
++
++	return ret;
++}
 -- 
 2.7.4
 
