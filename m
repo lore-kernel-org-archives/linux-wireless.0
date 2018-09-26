@@ -2,319 +2,105 @@ Return-Path: <SRS0=mZ/2=MI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA18FC43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2EE8C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 22:21:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A2292154D
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:57:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A2292154D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id 9658E2154B
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 22:21:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9658E2154B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727020AbeI0DMk (ORCPT
+        id S1727268AbeI0Egc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 23:12:40 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:46630 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726536AbeI0DMj (ORCPT
+        Thu, 27 Sep 2018 00:36:32 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:36076 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726192AbeI0Egc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 23:12:39 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g5GsW-0004iF-IG; Wed, 26 Sep 2018 22:57:48 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] netlink: add policy validation function for binary attributes
-Date:   Wed, 26 Sep 2018 22:57:34 +0200
-Message-Id: <20180926205734.11216-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        Thu, 27 Sep 2018 00:36:32 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id A204D40A955;
+        Wed, 26 Sep 2018 15:21:23 -0700 (PDT)
+Subject: Re: How many null-data probes on connection loss?
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <9a1447d9-9a61-dc2d-0101-33c6bdeb946f@candelatech.com>
+ <1537951137.28767.5.camel@sipsolutions.net>
+ <fc564b2e-b6f2-75db-a2d9-99ea55a63c4a@candelatech.com>
+ <1537986415.28767.17.camel@sipsolutions.net>
+ <7ed031b0-19d9-46db-33d9-082999e5ed22@candelatech.com>
+ <1537987703.28767.22.camel@sipsolutions.net>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
+Date:   Wed, 26 Sep 2018 15:21:23 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.0
+MIME-Version: 1.0
+In-Reply-To: <1537987703.28767.22.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/26/2018 11:48 AM, Johannes Berg wrote:
+> On Wed, 2018-09-26 at 11:47 -0700, Ben Greear wrote:
+>
+>>>> I think I'll start by making sure the firmware does not do software retransmits
+>>>> for frames from the driver (self-gen frames are OK to be retransmitted I guess).
+>>>
+>>> You do want it to be doing retries for frames from the driver, since you
+>>> want it to recover from temporary collisions with a microwave and
+>>> whatnot ... just not *that many*, I guess.
+>>
+>>  From what I can tell so far, my firmware has this sort of logic:
+>>
+>> frame from stack to the driver
+>>    -> send to firmware
+>>    -> in firmware, hardware will do up to X retries (maybe 16 or so, need to check)
+>>    -> On failure, the firmware may re-queue the packet (firmware-software retry)
+>>    -> back to hardware retries (~32 frames on air at this point)
+>>    ...
+>>    Eventually tx-fail notification is sent back to the driver one way or another.
+>>
+>> I am thinking it would be best to have the software retry in the firmware
+>> disabled.
+>>
+>> Then, when mac80211 sends a null-data frame, you would see at most about
+>> 16 of them on air, every 500ms or so until it recovers or considers the
+>> connection lost.
+>
+> Yes, that seems reasonable. In fact, I'd argue that such software-retry
+> should just be disabled completely - it's better to lose the occasional
+> frame than to keep using airtime for it forever ...
+>
+> Toke is probably getting nightmares reading this - sweet dreams ;-)
 
-Add the ability to have an arbitrary validation function attached
-to NLA_BINARY.
+I fixed the firmware....
 
-NOTE: obviously, the nl80211 part should be split off, that's just
-      to show how it might be used - saves ~1.2KiB there (x86-64)
+Now only 4 retries per frame, but it seems mac80211 is all 5 of its
+null-data probes within a few miliseconds.  Is that expected, or should
+there be a bit more pause between each of the probe requests to better
+weather periodic network glitches?
 
-NOTE: should probably allow this for the exact length fields, and
-      perhaps even provide a general NLA_POLICY_VALID_ETH_ADDR define
-      and similar?
----
- include/net/netlink.h  |  6 +++++
- lib/nlattr.c           |  6 +++++
- net/wireless/nl80211.c | 67 ++++++++++++++------------------------------------
- 3 files changed, 31 insertions(+), 48 deletions(-)
+Thanks,
+Ben
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index ddabc832febc..ff80ccbfc6b0 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -256,6 +256,10 @@ enum {
-  *                         of s16 - do that as usual in the code instead.
-  *    All other            Unused - but note that it's a union
-  *
-+ * Meaning of `validate' field:
-+ *    NLA_BINARY           Validation function called for the binary attribute
-+ *    All other            Unused - but note that it's a union
-+ *
-  * Example:
-  * static const struct nla_policy my_policy[ATTR_MAX+1] = {
-  * 	[ATTR_FOO] = { .type = NLA_U16 },
-@@ -272,6 +276,8 @@ struct nla_policy {
- 		struct {
- 			s16 min, max;
- 		};
-+		int (*validate)(const struct nlattr *attr,
-+				struct netlink_ext_ack *extack);
- 	};
- };
- 
-diff --git a/lib/nlattr.c b/lib/nlattr.c
-index dd8d34c1ae19..4f003da28918 100644
---- a/lib/nlattr.c
-+++ b/lib/nlattr.c
-@@ -175,6 +175,12 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 	case NLA_BINARY:
- 		if (pt->len && attrlen > pt->len)
- 			goto out_err;
-+
-+		if (pt->len && pt->validate) {
-+			err = pt->validate(nla, extack);
-+			if (err)
-+				return err;
-+		}
- 		break;
- 
- 	case NLA_NESTED:
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 551310d5965e..a09066896f64 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -200,6 +200,9 @@ cfg80211_get_dev_from_info(struct net *netns, struct genl_info *info)
- 	return __cfg80211_rdev_from_attrs(netns, info->attrs);
- }
- 
-+static int validate_ie_attr(const struct nlattr *attr,
-+			    struct netlink_ext_ack *extack);
-+
- /* policy for the attributes */
- static const struct nla_policy
- nl80211_pmsr_ftm_req_attr_policy[NL80211_PMSR_FTM_REQ_ATTR_MAX + 1] = {
-@@ -311,7 +314,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_BEACON_HEAD] = { .type = NLA_BINARY,
- 				       .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_ATTR_BEACON_TAIL] = { .type = NLA_BINARY,
--				       .len = IEEE80211_MAX_DATA_LEN },
-+				       .len = IEEE80211_MAX_DATA_LEN,
-+				       .validate = validate_ie_attr },
- 	[NL80211_ATTR_STA_AID] = {
- 		.type = NLA_U16,
- 		.min = 1,
-@@ -348,7 +352,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 
- 	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_IE] = { .type = NLA_BINARY,
--			      .len = IEEE80211_MAX_DATA_LEN },
-+			      .len = IEEE80211_MAX_DATA_LEN,
-+			      .validate = validate_ie_attr },
- 	[NL80211_ATTR_SCAN_FREQUENCIES] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_SCAN_SSIDS] = { .type = NLA_NESTED },
- 
-@@ -417,9 +422,11 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 		.max = NL80211_HIDDEN_SSID_ZERO_CONTENTS,
- 	},
- 	[NL80211_ATTR_IE_PROBE_RESP] = { .type = NLA_BINARY,
--					 .len = IEEE80211_MAX_DATA_LEN },
-+					 .len = IEEE80211_MAX_DATA_LEN,
-+					 .validate = validate_ie_attr },
- 	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
--					 .len = IEEE80211_MAX_DATA_LEN },
-+					 .len = IEEE80211_MAX_DATA_LEN,
-+					 .validate = validate_ie_attr },
- 	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_SCHED_SCAN_MATCH] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_TX_NO_CCK_RATE] = { .type = NLA_FLAG },
-@@ -738,14 +745,12 @@ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- }
- 
- /* IE validation */
--static bool is_valid_ie_attr(const struct nlattr *attr)
-+static int validate_ie_attr(const struct nlattr *attr,
-+			    struct netlink_ext_ack *extack)
- {
- 	const u8 *pos;
- 	int len;
- 
--	if (!attr)
--		return true;
--
- 	pos = nla_data(attr);
- 	len = nla_len(attr);
- 
-@@ -753,18 +758,18 @@ static bool is_valid_ie_attr(const struct nlattr *attr)
- 		u8 elemlen;
- 
- 		if (len < 2)
--			return false;
-+			return -EINVAL;
- 		len -= 2;
- 
- 		elemlen = pos[1];
- 		if (elemlen > len)
--			return false;
-+			return -EINVAL;
- 
- 		len -= elemlen;
- 		pos += 2 + elemlen;
- 	}
- 
--	return true;
-+	return 0;
- }
- 
- /* message building helper */
-@@ -4191,12 +4196,6 @@ static int nl80211_parse_beacon(struct nlattr *attrs[],
- {
- 	bool haveinfo = false;
- 
--	if (!is_valid_ie_attr(attrs[NL80211_ATTR_BEACON_TAIL]) ||
--	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE]) ||
--	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE_PROBE_RESP]) ||
--	    !is_valid_ie_attr(attrs[NL80211_ATTR_IE_ASSOC_RESP]))
--		return -EINVAL;
--
- 	memset(bcn, 0, sizeof(*bcn));
- 
- 	if (attrs[NL80211_ATTR_BEACON_HEAD]) {
-@@ -6326,7 +6325,8 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_AUTH_PROTOCOL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
--				    .len = IEEE80211_MAX_DATA_LEN },
-+				    .len = IEEE80211_MAX_DATA_LEN,
-+				    .validate = validate_ie_attr },
- 	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
- };
- 
-@@ -6527,8 +6527,6 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 	if (tb[NL80211_MESH_SETUP_IE]) {
- 		struct nlattr *ieattr =
- 			tb[NL80211_MESH_SETUP_IE];
--		if (!is_valid_ie_attr(ieattr))
--			return -EINVAL;
- 		setup->ie = nla_data(ieattr);
- 		setup->ie_len = nla_len(ieattr);
- 	}
-@@ -7161,9 +7159,6 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	int err, tmp, n_ssids = 0, n_channels, i;
- 	size_t ie_len;
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	wiphy = &rdev->wiphy;
- 
- 	if (wdev->iftype == NL80211_IFTYPE_NAN)
-@@ -7517,9 +7512,6 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
- 	s32 default_match_rssi = NL80211_SCAN_RSSI_THOLD_OFF;
- 
--	if (!is_valid_ie_attr(attrs[NL80211_ATTR_IE]))
--		return ERR_PTR(-EINVAL);
--
- 	if (attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
- 		n_channels = validate_scan_freqs(
- 				attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
-@@ -8487,9 +8479,6 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 	struct key_parse key;
- 	bool local_state_change;
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
- 
-@@ -8728,9 +8717,6 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
- 		return -EPERM;
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_MAC] ||
- 	    !info->attrs[NL80211_ATTR_SSID] ||
- 	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
-@@ -8854,9 +8840,6 @@ static int nl80211_deauthenticate(struct sk_buff *skb, struct genl_info *info)
- 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
- 		return -EPERM;
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
- 
-@@ -8905,9 +8888,6 @@ static int nl80211_disassociate(struct sk_buff *skb, struct genl_info *info)
- 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
- 		return -EPERM;
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
- 
-@@ -8982,9 +8962,6 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 
- 	memset(&ibss, 0, sizeof(ibss));
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_SSID] ||
- 	    !nla_len(info->attrs[NL80211_ATTR_SSID]))
- 		return -EINVAL;
-@@ -9422,9 +9399,6 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 
- 	memset(&connect, 0, sizeof(connect));
- 
--	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--		return -EINVAL;
--
- 	if (!info->attrs[NL80211_ATTR_SSID] ||
- 	    !nla_len(info->attrs[NL80211_ATTR_SSID]))
- 		return -EINVAL;
-@@ -9655,8 +9629,6 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
- 		return -EOPNOTSUPP;
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
--		if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
--			return -EINVAL;
- 		connect.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
- 		connect.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
- 		changed |= UPDATE_ASSOC_IES;
-@@ -12308,8 +12280,7 @@ static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
- 		return -EOPNOTSUPP;
- 
- 	if (!info->attrs[NL80211_ATTR_MDID] ||
--	    !info->attrs[NL80211_ATTR_IE] ||
--	    !is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+	    !info->attrs[NL80211_ATTR_IE])
- 		return -EINVAL;
- 
- 	memset(&ft_params, 0, sizeof(ft_params));
+>
+> johannes
+>
+
+
 -- 
-2.14.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
