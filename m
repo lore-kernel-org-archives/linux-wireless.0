@@ -6,36 +6,35 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA90C43382
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF09C43382
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E608F2150B
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:09:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E608F2150B
+	by mail.kernel.org (Postfix) with ESMTP id 37A052150C
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Sep 2018 20:18:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 37A052150C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726520AbeI0CYe (ORCPT
+        id S1726727AbeI0Ccn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Sep 2018 22:24:34 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:46012 "EHLO
+        Wed, 26 Sep 2018 22:32:43 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:46102 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726395AbeI0CYe (ORCPT
+        with ESMTP id S1726421AbeI0Ccn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Sep 2018 22:24:34 -0400
+        Wed, 26 Sep 2018 22:32:43 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g5G8C-0003y5-9h; Wed, 26 Sep 2018 22:09:56 +0200
-Message-ID: <1537992583.28767.24.camel@sipsolutions.net>
-Subject: Re: [RFC] nl80211: use policy range validation where applicable
+        id 1g5GFy-00045x-Du; Wed, 26 Sep 2018 22:17:58 +0200
+Message-ID: <1537993066.28767.29.camel@sipsolutions.net>
+Subject: Re: [PATCH] netlink: add policy attribute range validation
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date:   Wed, 26 Sep 2018 22:09:43 +0200
-In-Reply-To: <20180926200731.23491-1-johannes@sipsolutions.net> (sfid-20180926_220807_433903_259DD5BE)
+Date:   Wed, 26 Sep 2018 22:17:46 +0200
+In-Reply-To: <20180926200630.23399-1-johannes@sipsolutions.net> (sfid-20180926_220654_781731_7A389A4D)
 References: <20180926200630.23399-1-johannes@sipsolutions.net>
-         <20180926200731.23491-1-johannes@sipsolutions.net>
-         (sfid-20180926_220807_433903_259DD5BE)
+         (sfid-20180926_220654_781731_7A389A4D)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
 Mime-Version: 1.0
@@ -45,14 +44,30 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-09-26 at 22:07 +0200, Johannes Berg wrote:
+On Wed, 2018-09-26 at 22:06 +0200, Johannes Berg wrote:
 > From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Many range checks can be done in the policy, move them
-> there. A few in mesh are added in the code (taken out of
-> the macros) because they don't fit into the s16 range in
-> the policy validation.
+> Without further bloating the policy structs, we can overload
+> the `validation_data' pointer with a struct of s16 min, max
+> and use those to validate ranges in NLA_{U,S}{8,16,32,64}
+> attributes.
+> 
+> It may sound strange to validate NLA_U32 with a s16 max, but
+> in many cases NLA_U32 is used for enums etc. since there's no
+> size benefit in using a smaller attribute width anyway, due
+> to netlink attribute alignment; in cases like that it's still
+> useful, particularly when the attribute really transports an
+> enum value.
 
-Forgot to say - this saves 550 bytes of .text on x86-64 for me.
+That said, I did find a few places where we could benefit from a larger
+type here - e.g. having a NLA_U16 that must be non-zero cannot be
+represented in the policy as is, since you can't set max to 65535.
+
+However, I don't think we want to push the policy struct to 12 bytes on
+32-bit platforms? It's currently 16 bytes on 64-bit due to the pointer
+(and alignment), but only 8 bytes on 32-bit.
+
+Keeping the few places that needed this validation is unlikely to be a
+larger win than the policy size increase due to the larger type.
 
 johannes
