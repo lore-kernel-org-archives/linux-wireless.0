@@ -2,128 +2,88 @@ Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BAE8C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 11:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C225C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 11:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6EFE21580
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 11:19:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D6EFE21580
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id D8A0321531
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 11:47:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Lqnk5OEJ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D8A0321531
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727263AbeI0Rg5 (ORCPT
+        id S1727238AbeI0SFG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 13:36:57 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:54586 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727105AbeI0Rg5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 13:36:57 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g5UK4-0002YO-1t; Thu, 27 Sep 2018 13:19:08 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-09-27
-Date:   Thu, 27 Sep 2018 13:18:50 +0200
-Message-Id: <20180927111851.8058-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        Thu, 27 Sep 2018 14:05:06 -0400
+Received: from nbd.name ([46.4.11.11]:36046 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727057AbeI0SFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Sep 2018 14:05:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=d47uaVRHQkt2ooXJEFRh1Yl33Lo/5rK4s0Cy2XWRe8A=; b=Lqnk5OEJEvHGcxClDVZea+exY+
+        ocZuddjWnQTf0RQhdA70790YjCXv92J8mtVHUY21hpQ3qo6aaV1J9xEruDvrAZEH5gGixcq1wdzqE
+        AtIEjxL/IKb+QHJELOu3cC9Bt6sjrmYxnCIGtbCLHKoP72oWRWPPe1xpnLpoI3p39oW4=;
+Subject: Re: [RFC 0/4] mt76x0: phy/rf fixups for PCIe
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1538037450-18949-1-git-send-email-sgruszka@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <15a61b47-c506-391f-5d2a-2db73e0871e7@nbd.name>
+Date:   Thu, 27 Sep 2018 13:47:10 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
+MIME-Version: 1.0
+In-Reply-To: <1538037450-18949-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
-
-Here's another - unfortunately pretty large - set of fixes
-for the current cycle. The changes are pretty simple or even
-trivial though.
-
-Please pull and let me know if there's any problem.
+On 2018-09-27 10:37, Stanislaw Gruszka wrote:
+> This is RFC for now, especially I'm interesting if patch 3 and 4
+> is direction we should go.
+> 
+> This is on top of Lorenzo github mt7610ev5 branch. 
+Looks good to me.
 
 Thanks,
-johannes
 
-
-
-The following changes since commit 28619527b8a712590c93d0a9e24b4425b9376a8c:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-09-04 12:45:11 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-09-27
-
-for you to fetch changes up to 1222a16014888ed9733c11e221730d4a8196222b:
-
-  nl80211: Fix possible Spectre-v1 for CQM RSSI thresholds (2018-09-27 11:44:44 +0200)
-
-----------------------------------------------------------------
-More patches than I'd like perhaps, but each seems reasonable:
- * two new spectre-v1 mitigations in nl80211
- * TX status fix in general, and mesh in particular
- * powersave vs. offchannel fix
- * regulatory initialization fix
- * fix for a queue hang due to a bad return value
- * allocate TXQs for active monitor interfaces, fixing my
-   earlier patch to avoid unnecessary allocations where I
-   missed this case needed them
- * fix TDLS data frames priority assignment
- * fix scan results processing to take into account duplicate
-   channel numbers (over different operating classes, but we
-   don't necessarily know the operating class)
- * various hwsim fixes for radio destruction and new radio
-   announcement messages
- * remove an extraneous kernel-doc line
-
-----------------------------------------------------------------
-Andrei Otcheretianski (3):
-      mac80211: Always report TX status
-      mac80211: Don't wake up from PS for offchannel TX
-      cfg80211: reg: Init wiphy_idx in regulatory_hint_core()
-
-Bob Copeland (1):
-      mac80211: fix pending queue hang due to TX_DROP
-
-Felix Fietkau (1):
-      mac80211: allocate TXQs for active monitor interfaces
-
-Johannes Berg (1):
-      mac80211: TDLS: fix skb queue/priority assignment
-
-Jouni Malinen (1):
-      cfg80211: Address some corner cases in scan result channel updating
-
-Martin Willi (3):
-      mac80211_hwsim: fix locking when iterating radios during ns exit
-      mac80211_hwsim: fix race in radio destruction from netlink notifier
-      mac80211_hwsim: do not omit multicast announce of first added radio
-
-Masashi Honma (2):
-      nl80211: Fix possible Spectre-v1 for NL80211_TXRATE_HT
-      nl80211: Fix possible Spectre-v1 for CQM RSSI thresholds
-
-Randy Dunlap (1):
-      cfg80211: fix reg_query_regdb_wmm kernel-doc
-
-Yuan-Chi Pang (1):
-      mac80211: fix TX status reporting for ieee80211s
-
- drivers/net/wireless/mac80211_hwsim.c | 36 ++++++++++------------
- include/net/cfg80211.h                |  2 --
- net/mac80211/iface.c                  |  3 +-
- net/mac80211/mesh.h                   |  3 +-
- net/mac80211/mesh_hwmp.c              |  9 ++----
- net/mac80211/status.c                 | 11 +++----
- net/mac80211/tdls.c                   |  8 ++---
- net/mac80211/tx.c                     |  6 +++-
- net/wireless/nl80211.c                | 20 +++++++++---
- net/wireless/reg.c                    |  1 +
- net/wireless/scan.c                   | 58 +++++++++++++++++++++++++++++------
- 11 files changed, 103 insertions(+), 54 deletions(-)
+- Felix
