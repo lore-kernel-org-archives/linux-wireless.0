@@ -6,66 +6,66 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F9EC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3056CC43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:13:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE52021571
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:12:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EE52021571
+	by mail.kernel.org (Postfix) with ESMTP id D715021571
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:13:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D715021571
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727992AbeI0VbI (ORCPT
+        id S1727503AbeI0Vbo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 17:31:08 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:39825 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727282AbeI0VbI (ORCPT
+        Thu, 27 Sep 2018 17:31:44 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:39130 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727262AbeI0Vbo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 17:31:08 -0400
-Received: by mail-wm1-f67.google.com with SMTP id q8-v6so6370173wmq.4
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 08:12:24 -0700 (PDT)
+        Thu, 27 Sep 2018 17:31:44 -0400
+Received: by mail-wr1-f67.google.com with SMTP id s14-v6so3039377wrw.6
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 08:13:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=L/LkT0GprUCSwlSFGPfBimy5yKcd3Uj8ek+CtLVbEr8=;
-        b=bbP4dTmo8WOMpE6bZMr8az1ppDcJcl/VBWFtckEx2Bgx6pcCKrsPZ4TNcjPHS7rT6s
-         UJ+HQJTF5WpipExkUNtVG/XLURz/t+XUKG6pFp9Ghv7NILJ7VcSiGBYIeO8LiVfdZ5LG
-         tsvxwxg2aCEeVc+8sCJ9gqYTWZuWteOp3fwOzFJrpRMigvWyN6oaeL20a2XQs7Kl4NNt
-         r99s2IiQ+c39bd2lDwPYXPqudd2AZxLP1Gcc8/z1MiXEFc2TBZcezmdN1L/an6yxg4Cs
-         aB9mugAAceZphVe9yNHirhJZl85Z110sEz0tyKTA8D1xOKtE/4lAZDIoi7vLXEEw3PoH
-         89ug==
-X-Gm-Message-State: ABuFfogyGK1b6OJC4XfA8bKyajhXmY1iysSw3qiq/KHhuypv3L1ssMd2
-        uqqZMSkX3C2w+u2E4jNfStj1GA==
-X-Google-Smtp-Source: ACcGV61cL8HSk0Hoe0yNOVh1vUWh6oHtv6p214Kd4QaaYltAUXSPJDsJrXEjWjkmZzvTKdGecKxmBQ==
-X-Received: by 2002:a7b:c04c:: with SMTP id u12-v6mr8444151wmc.24.1538061143992;
-        Thu, 27 Sep 2018 08:12:23 -0700 (PDT)
+        bh=Op5jJLw7BA2N51GXcPYyWcJhxWQg8jifSeXXOxRzkM4=;
+        b=cTzj0rs6hIKGMP8eOp/nywcibKxHgwHCoeKJh4feWw1xaZlXyxUPd0rkmB5KehtdE1
+         R9GW9hGvsS8cRv/ZH7gh4hGzAoqq4FznmKWoG4aqx5aROuNllp2oErFe0eFjDeNWzJ1h
+         ng/b67P9z8T4K+d1shAJnioJmnS6ll4AWZeI5g4ju+1nSoQDbwWYbw2C4EvQXNKT+fAi
+         W9meQqpYsypvTDd4D65y7Tc6heV20kw4an5uH2txPvSmE0CHdr5lmqhLHDKYh12Pqrb/
+         R0NDc+9QKcrvmwyT6CPPsyHWHrYZRemxWb39c084l7eMWkQkdLHKtUk5sHrr+rNEgRu8
+         yHcQ==
+X-Gm-Message-State: ABuFfohO2keEUUxjQIIh/0L3CrNpNbBdoiV0pcZqFPxpl8k3cuzssyB/
+        LmfDQJ2EJ6KEQ0owAqpG4EXuBQ==
+X-Google-Smtp-Source: ACcGV62FGY7qT8+84Gh5WnpKeANZjMttUdw3MoqUe12uezktEh7EKTlFJBT1NBHpdg+WVAnCnJXVuA==
+X-Received: by 2002:a5d:6051:: with SMTP id j17-v6mr9516206wrt.265.1538061179978;
+        Thu, 27 Sep 2018 08:12:59 -0700 (PDT)
 Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id 62-v6sm3587370wra.48.2018.09.27.08.12.23
+        by smtp.gmail.com with ESMTPSA id s10-v6sm2230307wrw.35.2018.09.27.08.12.59
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 Sep 2018 08:12:23 -0700 (PDT)
-Date:   Thu, 27 Sep 2018 17:12:21 +0200
+        Thu, 27 Sep 2018 08:12:59 -0700 (PDT)
+Date:   Thu, 27 Sep 2018 17:12:57 +0200
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
 Subject: Re: [PATCH 15/26] mt76x0: init: reset beacon offset during bootstrap
-Message-ID: <20180927151221.GB24450@localhost.localdomain>
+Message-ID: <20180927151256.GC24450@localhost.localdomain>
 References: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
  <758cdeb9c4ab95c01a79dfc44e53f50b631948a2.1538036134.git.lorenzo.bianconi@redhat.com>
- <20180927101404.GC19941@redhat.com>
+ <c0be21df-c518-7a6b-2606-43af139e0683@nbd.name>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180927101404.GC19941@redhat.com>
+In-Reply-To: <c0be21df-c518-7a6b-2606-43af139e0683@nbd.name>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sep 27, Stanislaw Gruszka wrote:
-> On Thu, Sep 27, 2018 at 11:01:44AM +0200, Lorenzo Bianconi wrote:
+On Sep 27, Felix Fietkau wrote:
+> On 2018-09-27 11:01, Lorenzo Bianconi wrote:
 > > Add beacon offset reset in mt76x0e_init_hardware routine
 > > 
 > > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
@@ -94,21 +94,16 @@ On Sep 27, Stanislaw Gruszka wrote:
 > > +	for (i = 0; i < 8; i++) {
 > > +		for (j = 0; j < beacon_len; j += 4)
 > > +			mt76_wr(dev, mt76x02_beacon_offsets[i] + j, 0);
-> > +	}
 > > +
-> 
-> This seems to ba fix for 
-> 
-> "mt76: move mt76x02_beacon_offset in mt76x02_core.c"
+> That looks a bit convoluted. Do we really need to clear beacon memory?
+> If we do need it, how about simply clearing the entire scratch space
+> instead of looping over beacon offsets?
 
-I will double-check vendor driver but I guess this is in usb code as well,
-so I will add a 'Fixes' tag
-
+ack, will do in v2.
 Regards,
+
 Lorenzo
 
 > 
-> please add "Fixes:" tag or merge this patch into previous one.
+> - Felix
 > 
-> Thanks
-> Stanislaw
