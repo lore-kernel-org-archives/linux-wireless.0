@@ -2,110 +2,70 @@ Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9CFEC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:36:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD2EC43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 07:13:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A8B02150D
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:36:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B9jLdK25";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B9jLdK25"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6A8B02150D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id E055B204EC
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 07:12:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E055B204EC
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbeI0KxL (ORCPT
+        id S1726784AbeI0N3p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 06:53:11 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:34800 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726469AbeI0KxL (ORCPT
+        Thu, 27 Sep 2018 09:29:45 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:51734 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726669AbeI0N3p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 06:53:11 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DC3CE60B73; Thu, 27 Sep 2018 04:36:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538023015;
-        bh=CuNpMT27x7rbtjV2R+ibfnanTbbjVshv8Mi+LORWMNg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=B9jLdK25KqecuNwOQMwQlW8ztha5P2aZVTem6QMcgsdHcbM/h6rf5iT1jIuusEhJd
-         vfWMSibR3Jy2CZUqrK3AwYRaEW2j/PdkfxB+lUM4tCVqny/YfI3fUQkKLgkNe9cgJj
-         dgwzujlUVySUMj1DACPORelbUShtxT2kdrBVWmcc=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 5C52D607DD;
-        Thu, 27 Sep 2018 04:36:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538023015;
-        bh=CuNpMT27x7rbtjV2R+ibfnanTbbjVshv8Mi+LORWMNg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=B9jLdK25KqecuNwOQMwQlW8ztha5P2aZVTem6QMcgsdHcbM/h6rf5iT1jIuusEhJd
-         vfWMSibR3Jy2CZUqrK3AwYRaEW2j/PdkfxB+lUM4tCVqny/YfI3fUQkKLgkNe9cgJj
-         dgwzujlUVySUMj1DACPORelbUShtxT2kdrBVWmcc=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+        Thu, 27 Sep 2018 09:29:45 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1g5QTn-00069p-Rs; Thu, 27 Sep 2018 09:12:56 +0200
+Message-ID: <1538032363.14416.2.camel@sipsolutions.net>
+Subject: Re: How many null-data probes on connection loss?
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Thu, 27 Sep 2018 09:12:43 +0200
+In-Reply-To: <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
+References: <9a1447d9-9a61-dc2d-0101-33c6bdeb946f@candelatech.com>
+         <1537951137.28767.5.camel@sipsolutions.net>
+         <fc564b2e-b6f2-75db-a2d9-99ea55a63c4a@candelatech.com>
+         <1537986415.28767.17.camel@sipsolutions.net>
+         <7ed031b0-19d9-46db-33d9-082999e5ed22@candelatech.com>
+         <1537987703.28767.22.camel@sipsolutions.net>
+         <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 27 Sep 2018 10:06:55 +0530
-From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Add debugfs support to get power save state
- change of STA
-In-Reply-To: <20180926141208.0A87160C86@smtp.codeaurora.org>
-References: <1537252467-17353-1-git-send-email-mkenna@codeaurora.org>
- <20180926141208.0A87160C86@smtp.codeaurora.org>
-Message-ID: <7a0f6d9724f75bda6d0554810b4efcb7@codeaurora.org>
-X-Sender: mkenna@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-09-26 7:42 pm, Kalle Valo wrote:
-> Maharaja Kennadyrajan <mkenna@codeaurora.org> wrote:
+On Wed, 2018-09-26 at 15:21 -0700, Ben Greear wrote:
 > 
->> This patch helps to get the power save state change of each peer
->> connected to the AP. With WMI_10_4_PEER_STA_PS_STATECHG_EVENTID
->> event, ps state of each peer is reported to user space via
->> debugfs.
->> 
->> Use the below command to get the ps state of each sta:
->> cat /sys/kernel/debug/ieee80211/phyX/netdev::wlanX/stations/
->> XX:XX:XX:XX:XX:XX/peer_ps_state
->> 
->> If STA is in power save state, we get the peer_ps_state value as 1.
->> if STA is not in power save state, we get the peer_ps_state value as 
->> 0.
->> If ps_state event is disabled, we get the peer_ps_state value as 2.
->> 
->> We can enable/disable the ps_state events using the debugfs flag
->> "ps_state_enable"
->> 
->> echo Y > /sys/kernel/debug/ieee80211/phyX/ath10k/ps_state_enable
->> 
->> Y = 1 to enable and Y = 0 to disable
->> 
->> Tested in QCA4019 with firmware ver 10.4-3.2.1.1-00011
->> 
->> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-> 
-> This introduced a new warning:
-> 
-> drivers/net/wireless/ath/ath10k/wmi.c:5061:1: warning: symbol
-> 'ath10k_wmi_event_peer_sta_ps_state_chg' was not declared. Should it
-> be static?
+> Now only 4 retries per frame, but it seems mac80211 is all 5 of its
+> null-data probes within a few miliseconds.  Is that expected, or should
+> there be a bit more pause between each of the probe requests to better
+> weather periodic network glitches?
 
-[Maha]: Yes, it should be static.
+Hmm. That's a good point, but it seems we've never considered this
+before. This must be a consequence of retrying immediately on lost ACK,
+but I guess I could see that delaying it for a little bit would make
+sense.
 
-> I fixed this in the pending branch.
-[Maha]: Thanks Kalle.
+We do delay it if there's no reliable ACK reporting, IIRC, but if we
+know it failed for sure ...
 
--- 
-Regards,
-Maha
+It seems though that if there's some noise or so on the channel you
+wouldn't be transmitting, so what kind of "network glitches" might
+affect this? AP going away unexpectedly for some time?
+
+johannes
