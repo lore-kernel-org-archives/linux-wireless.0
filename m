@@ -2,101 +2,170 @@ Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6FA7C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 07:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67308C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64A9120836
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 07:16:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 64A9120836
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+	by mail.kernel.org (Postfix) with ESMTP id 01DEA2156B
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:12:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 01DEA2156B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726948AbeI0NdM (ORCPT
+        id S1727199AbeI0O3Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 09:33:12 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42278 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726681AbeI0NdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 09:33:11 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 502CCAE8F;
-        Thu, 27 Sep 2018 07:16:22 +0000 (UTC)
-Received: by unicorn.suse.cz (Postfix, from userid 1000)
-        id DB526A1004; Thu, 27 Sep 2018 09:16:21 +0200 (CEST)
-Date:   Thu, 27 Sep 2018 09:16:21 +0200
-From:   Michal Kubecek <mkubecek@suse.cz>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+        Thu, 27 Sep 2018 10:29:24 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:52610 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726669AbeI0O3Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Sep 2018 10:29:24 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1g5RPJ-0007WD-Pj; Thu, 27 Sep 2018 10:12:22 +0200
+Message-ID: <1538035929.14416.21.camel@sipsolutions.net>
 Subject: Re: [PATCH] netlink: add policy attribute range validation
-Message-ID: <20180927071621.GF30601@unicorn.suse.cz>
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Michal Kubecek <mkubecek@suse.cz>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date:   Thu, 27 Sep 2018 10:12:09 +0200
+In-Reply-To: <20180927071621.GF30601@unicorn.suse.cz>
 References: <20180926200630.23399-1-johannes@sipsolutions.net>
- <1537993066.28767.29.camel@sipsolutions.net>
- <1537994127.28767.39.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1537994127.28767.39.camel@sipsolutions.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+         <1537993066.28767.29.camel@sipsolutions.net>
+         <1537994127.28767.39.camel@sipsolutions.net>
+         <20180927071621.GF30601@unicorn.suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 10:35:27PM +0200, Johannes Berg wrote:
-> On Wed, 2018-09-26 at 22:17 +0200, Johannes Berg wrote:
-> > On Wed, 2018-09-26 at 22:06 +0200, Johannes Berg wrote:
-> > > From: Johannes Berg <johannes.berg@intel.com>
-> > > 
-> > > Without further bloating the policy structs, we can overload
-> > > the `validation_data' pointer with a struct of s16 min, max
-> > > and use those to validate ranges in NLA_{U,S}{8,16,32,64}
-> > > attributes.
-> > > 
-> > > It may sound strange to validate NLA_U32 with a s16 max, but
-> > > in many cases NLA_U32 is used for enums etc. since there's no
-> > > size benefit in using a smaller attribute width anyway, due
-> > > to netlink attribute alignment; in cases like that it's still
-> > > useful, particularly when the attribute really transports an
-> > > enum value.
-> > 
-> > That said, I did find a few places where we could benefit from a larger
-> > type here - e.g. having a NLA_U16 that must be non-zero cannot be
-> > represented in the policy as is, since you can't set max to 65535.
-> 
-> We could also fix that, btw, by taking two bits out of the "type" field,
-> and letting those indicate "check_min" and "check_max". That would also
-> fix the other thing I noted regarding the union, I suppose.
-> 
-> I didn't really like that too much because it makes the whole thing far
-> more complex, but perhaps if we hide it behind macros like
-> 
-> #define NLA_POLICY_RANGE(tp, _min, _max) {
-> 	.type = tp,
-> 	.min = _min, .check_min = 1,
-> 	.max = _max, .check_max = 1,
-> }
-> 
-> #define NLA_POLICY_MIN(tp, _min) {
-> 	.type = tp,
-> 	.min = _min, .check_min = 1,
-> }
-> 
-> #define NLA_POLICY_MAX(tp, _max) {
-> 	.type = tp,
-> 	.max = _max, .check_max = 1,
-> }
-> 
-> it becomes more palatable?
+On Thu, 2018-09-27 at 09:16 +0200, Michal Kubecek wrote:
 
-The overloading still feels a bit complicated. Perhaps we could rather
-use validation_data in the natural way, i.e. as a pointer to validation
-data. That would be a struct (maybe array) of two values of the
-corresponding type. It would mean a bit more data and a bit more writing
-but it would be IMHO more straightforward.
+> The overloading still feels a bit complicated. Perhaps we could rather
+> use validation_data in the natural way, i.e. as a pointer to validation
+> data. That would be a struct (maybe array) of two values of the
+> corresponding type. It would mean a bit more data and a bit more writing
+> but it would be IMHO more straightforward.
 
-Michal Kubecek
+I considered that, but I didn't really like it either. The memory
+wasting isn't *that* bad (even if we go to s64 that'd only be ~20x16
+bytes for nl80211, eating up 320 out of the 550 saved, but still); I'm
+more worried about making this really hard to actually *do*.
+
+Consider
+
+policy[] = {
+	...
+	[NL80211_ATTR_WIPHY_RETRY_SHORT] =
+		NLA_POLICY_RANGE(NLA_U8, 1, 255),
+	...
+};
+
+vs.
+
+static const struct netlink_policy_range retry_range = {
+	.min = 1,
+	.max = 255,
+};
+
+policy[] = {
+	...
+	[NL80211_ATTR_WIPHY_RETRY_SHORT] = {
+		.type = NLA_U8,
+		.validation_data = &retry_range,
+	},
+	...
+};
+
+
+That's significantly more to type, to the point where I'd seriously
+consider doing this only for attributes that are used and checked in
+many places - it doesn't feel like a big win over manual range-checking.
+
+But I want it to be a win over manual range-checking so it gets used
+more because it's more efficient, less prone to getting messed up if
+multiple places use the same attribute and validates attributes even if
+they're ignored by an operation.
+
+
+I'd also say that we're certainly no strangers to union/overloading, so
+I don't feel like this is a big argument. One doesn't even really have
+to be *aware* of it for the most part: if it were a struct instead of a
+union, it'd actually have the same effect since the .type field
+indicates which part gets used. That it's overloaded in a union is
+basically just a space saving measure, I don't think it makes the
+reasoning much more complex?
+
+
+That said, given that I also later sent that RFC patch for a further
+validation function pointer (which is useful e.g. for ensuring certain
+binary attributes are well-formed), I think it might in fact be better
+to split .type field (it really only needs to be u8, we have ~20) and
+adding a "validation" enum to the policy:
+
+enum netlink_policy_validation {
+	/* default */
+	NLA_VALIDATE_NONE,
+
+	/* valid for NLA_{U,S}{8,16,32,64} */
+	NLA_VALIDATE_MIN,
+	NLA_VALIDATE_MAX,
+	NLA_VALIDATE_RANGE,
+
+	/* valid for any type other than NLA_BITFIELD32/NLA_REJECT */
+	NLA_VALIDATE_FUNCTION,
+};
+
+Combining that with macros like the ones I wrote in my previous message
+in this thread:
+
+#define __NLA_ENSURE(condition) (sizeof(char[1 - 2*!(condition)]) - 1)
+#define NLA_ENSURE_INT_TYPE(tp)                         \
+        (__NLA_ENSURE(tp == NLA_S8 || tp == NLA_U8 ||   \
+                      tp == NLA_S16 || tp == NLA_U16 || \
+                      tp == NLA_S32 || tp == NLA_U32 || \
+                      tp == NLA_S64 || tp == NLA_U64) + tp)
+#define NLA_ENSURE_NO_VALIDATION_PTR(tp)                \
+        (__NLA_ENSURE(tp != NLA_BITFIELD32 &&           \
+                      tp != NLA_REJECT &&               \
+                      tp != NLA_NESTED &&               \
+                      tp != NLA_NESTED_ARRAY) + tp)
+
+#define NLA_POLICY_RANGE(tp, _min, _max) {
+        .type = NLA_ENSURE_INT_TYPE(tp),
+	.validate_type = NLA_VALIDATE_RANGE,
+        .min = _min,
+        .max = _max,
+}
+
+#define NLA_POLICY_MIN(tp, _min) {
+        .type = NLA_ENSURE_INT_TYPE(tp),
+	.validate_type = NLA_VALIDATE_MIN,
+        .min = _min,
+}
+
+#define NLA_POLICY_MAX(tp, _max) {
+        .type = NLA_ENSURE_INT_TYPE(tp),
+	.validate_type = NLA_VALIDATE_MAX,
+        .max = _max,
+}
+
+#define NLA_POLICY_FN(tp, fn) {
+	.type = NLA_ENSURE_NO_VALIDATION_PTR(tp),
+	.validate_type = NLA_VALIDATE_FUNCTION,
+	.validate = fn,
+}
+
+This would even give us the flexibility to extend the validation type
+further in the future, to actually have what you suggested where the
+validation_data is a pointer and the valid range is given in a struct
+pointed to, to allow larger ranges than s16.
+
+johannes
