@@ -2,101 +2,108 @@ Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB25CC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:15:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F839C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:18:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99E772147D
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:15:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 99E772147D
+	by mail.kernel.org (Postfix) with ESMTP id 23E0921571
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 15:18:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 23E0921571
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727522AbeI0VeA (ORCPT
+        id S1727377AbeI0VhD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 17:34:00 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:51550 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727320AbeI0VeA (ORCPT
+        Thu, 27 Sep 2018 17:37:03 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:42647 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727320AbeI0VhD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 17:34:00 -0400
-Received: by mail-wm1-f67.google.com with SMTP id y25-v6so6296680wmi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 08:15:16 -0700 (PDT)
+        Thu, 27 Sep 2018 17:37:03 -0400
+Received: by mail-wr1-f66.google.com with SMTP id b11-v6so3039307wru.9
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 08:18:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=BvpgcXj62QE16Jq+gFz2h/Rygnlms2aXsmrTxceyPIM=;
-        b=NvhZ/3+xQXeQTytcx+sxjlFaz3oSZy2wYpL5HNxmXHHwleHFxfKCfv+SmGGquekGwe
-         3MREWQqcjYwiUPX4zG5HAX+1HomzwCxnhK2LQJFqWBL1F9pgLdVwupdKDPMBcw5O6p2c
-         LGfLc9jCieGN17nbwM4pqRI8Jk7vqFthbMYJoiZXJWgX9RIweMBLI2cm4Cm7gnyF4ztW
-         7rcNPfH4Kr7oWJgu5EbdrOfyau/t43p5cX4YNw9cmy2yT5nb+SDa01qujwmohEG+039M
-         GuTQrK3LAUyn0muq6HN/SD9udMB/eFtferOsg5P4YIm1fD0Vu16+h+uiIGv2Fke8SzaI
-         rBdg==
-X-Gm-Message-State: ABuFfoiulc7GgKM0ytp2dp46bHEmoJ80ozkREi/EV1Xx8qVRvq8RZAtM
-        BJYbsialwKRKTHARu+93MWGt2g==
-X-Google-Smtp-Source: ACcGV61EFmOct+2J1toZh6LeaDgjWTufKqInWsiapUncHCAzKsXoBYNyFCYqe8nflJwjWffmgeMISA==
-X-Received: by 2002:a1c:1748:: with SMTP id 69-v6mr8381534wmx.75.1538061315625;
-        Thu, 27 Sep 2018 08:15:15 -0700 (PDT)
+        bh=Vas1wn+atVKSWsx4oB1rUL+3m5+NVDbN+640bnIOIVw=;
+        b=PKFznEL6yNo218lLUofIkMycVDBQoolvDMr1yo929WHkMiQbxC1a2nSPwgPJe/Rs3Y
+         HTenzH6hG9qBDx3CpTJNZTPCSWuAt0/JlOaJCm7simU6IlAXgGdj2pHqwxMBT7bmlyoM
+         Qb8zGeeXTMTc7LyNviFhrv+L79EhWRbVOx0WCNOrcwv0Uom0VPgvudYCx/xkWYVR6ti3
+         3HWqqgILboTGeXt73CEIjeF5L64dzCjzqTEiPxAfk3Pzvq6TIAfSq2VDSiRFUe/yFvwB
+         NELgUIhPN8tULfhnFjB9C4DR9j/g8SRcsaMynaDkg2CnyI/k34Rs9ce2GjzWzaKYz3Z3
+         AKVQ==
+X-Gm-Message-State: ABuFfojslAgPqkdll6UQRBgUYD7pIoYqz778Qbt5of9aq2lOzyS7CEu0
+        Mh7pTv8S5IJ8iIfAzV+pgzwTMR0hR7U=
+X-Google-Smtp-Source: ACcGV60IMjX/9OfJEI5bktZ9CbdfXgkiXYWO33J+ChbjUEOWtxMQQkelitUMrOE8VKT9uLYFNhKEMA==
+X-Received: by 2002:a5d:62c2:: with SMTP id o2-v6mr9734327wrv.83.1538061497941;
+        Thu, 27 Sep 2018 08:18:17 -0700 (PDT)
 Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id i7-v6sm2357192wrb.30.2018.09.27.08.15.15
+        by smtp.gmail.com with ESMTPSA id 124-v6sm3925881wmk.20.2018.09.27.08.18.17
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 Sep 2018 08:15:15 -0700 (PDT)
-Date:   Thu, 27 Sep 2018 17:15:13 +0200
+        Thu, 27 Sep 2018 08:18:17 -0700 (PDT)
+Date:   Thu, 27 Sep 2018 17:18:15 +0200
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 08/26] mt76: move mt76x2_wait_for_bbp in mt76x02-lib
- module
-Message-ID: <20180927151513.GE24450@localhost.localdomain>
+Subject: Re: [PATCH 19/26] mt76x0: pci: add hw initialization at bootstrap
+Message-ID: <20180927151814.GF24450@localhost.localdomain>
 References: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
- <abcc5b975da9d834067c45420397db4e3ff11e3b.1538036134.git.lorenzo.bianconi@redhat.com>
- <20180927101001.GB19941@redhat.com>
+ <74b90927973b06ffe237f7d568ffb3fa12791058.1538036134.git.lorenzo.bianconi@redhat.com>
+ <20180927102440.GE19941@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180927101001.GB19941@redhat.com>
+In-Reply-To: <20180927102440.GE19941@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sep 27, Stanislaw Gruszka wrote:
-> On Thu, Sep 27, 2018 at 11:01:37AM +0200, Lorenzo Bianconi wrote:
-> > Move mt76x2_wait_for_bbp utility routine in mt76x02_util.h
-> > in order to be resued by mt76x0 driver
+> On Thu, Sep 27, 2018 at 11:01:48AM +0200, Lorenzo Bianconi wrote:
+> > Add mt76x0e_register_device routine in pci_init.c
+> > to initialize the device during hw probe.
 > > 
 > > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 > > ---
-> > +static inline bool mt76x02_wait_for_bbp(struct mt76_dev *dev)
-> > +{
-> > +	return __mt76_poll_msec(dev, MT_MAC_STATUS,
-> > +				MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-> > +				0, 100);
-> > +}
+> >  .../wireless/mediatek/mt76/mt76x0/Makefile    |  2 +-
+> >  .../net/wireless/mediatek/mt76/mt76x0/init.c  | 10 +--
+> >  .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  2 +
+> >  .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  2 +-
+> >  .../wireless/mediatek/mt76/mt76x0/pci_init.c  | 65 +++++++++++++++++++
+> >  .../wireless/mediatek/mt76/mt76x02_eeprom.h   |  1 +
+> >  6 files changed, 73 insertions(+), 9 deletions(-)
+> >  create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/pci_init.c
+> > 
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> > index 30c84a557076..daa4929bdee6 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
+> > @@ -6,7 +6,7 @@ mt76x0-common-y := \
+> >  	init.o main.o trace.o eeprom.o phy.o \
+> >  	mac.o debugfs.o tx.o
+> >  mt76x0u-y := usb.o usb_mcu.o usb_init.o
+> > -mt76x0e-y := pci.o pci_mcu.o
+> > +mt76x0e-y := pci.o pci_mcu.o pci_init.o
 > 
-> I think this should be renamed to 
-> 
-> mt76x02_wait_for_txrx_busy()
-> 
-> or similar name, to avoid confusion and should be also used
-> in mt76x0 to replace:
-> 
->         if (!mt76_poll_msec(dev, MT_MAC_STATUS,
->                             MT_MAC_STATUS_TX | MT_MAC_STATUS_RX, 0, 1000))
+> How much {pci,usb}_{init,mcu}.c files are expected to grow?
+> For now they are about between 100 and 200 lines of code
+> and I do not see reason to move code into separate files
+> so far. It could be easy placed in usb.c and pci.c files.
+> But if the files will grow, I'm ok with code moving.
 
-ok, will do in v2
+At the moment I do not know how much {pci,usb}_{init,mcu}.c will
+grow, I guess a little bit more. Anyway I would prefer to have
+in {pci/usb}.c just bus specific code (but it is a matter of taste
+actually)
 
 Regards,
 Lorenzo
 
-
 > 
-> 
-> Regards
+> Thanks
 > Stanislaw
-> 
