@@ -3,54 +3,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7E29C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C6DC004D5
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 957392156B
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 957392156B
+	by mail.kernel.org (Postfix) with ESMTP id A45872156B
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A45872156B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727338AbeI0PTV (ORCPT
+        id S1727342AbeI0PTW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 11:19:21 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:45259 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727263AbeI0PTU (ORCPT
+        Thu, 27 Sep 2018 11:19:22 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36021 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727154AbeI0PTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 11:19:20 -0400
-Received: by mail-wr1-f65.google.com with SMTP id m16so1664543wrx.12
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:06 -0700 (PDT)
+        Thu, 27 Sep 2018 11:19:21 -0400
+Received: by mail-wr1-f68.google.com with SMTP id l10-v6so1713606wrp.3
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=s6/YcbVyABGu+2PwW1j25PpiDJjC0CfGA5v/8ROqYEw=;
-        b=GGZXn+GZ6U+AlaHEPC5IiS22i36lsqprd+8oeVVLA3YcIM5uYWYFqFSPPrcSqWWbmg
-         lvc0V7TE3LmiAN2Bhvxt5TNqKXjtK+dtiejliVw4QoEihHvFYB8NHx6AlrGZPrHPfe4B
-         SWK8jV3JJ4apkbosTOb8z8Wd020ys6nkyMDxpnQvHtzKgU/DfyY8MogbdvxsE4BHO4T0
-         ImC1v36ojvtC9WVS1UcYOpp2fxQ+cXg4Wa1Lq+r2oL9FTqMU41p+eYow7hibM0x0UaJ4
-         g+Lg+A3rNdqMV6VK0ME7TRpss5IUdQnWAo69XUzi5fr6R892SH8pXyPu8K8ren9gIV0h
-         8hzQ==
-X-Gm-Message-State: ABuFfoi09tXKLwIt/ymli6c/Gcsq9ZcuUdIJWujHQtNx1IBv1c8XbMr3
-        jUi4sDC71Fli3KG1bHsOp1SwtA==
-X-Google-Smtp-Source: ACcGV63AMVRffm096BaXEVauKRiTsqBt2p4K1LHKBFbjmOzzXhJXX7BHESrFNsk9yu6fPR77FBk0hg==
-X-Received: by 2002:adf:c98d:: with SMTP id f13-v6mr8110544wrh.148.1538038925659;
-        Thu, 27 Sep 2018 02:02:05 -0700 (PDT)
+        bh=xaKR4dwOXUAbxfmyKEKGqgXNIsh+PCPuW2+K3YgBBPY=;
+        b=oDBEkvdLTPZTcJwdet0QWCP5TUqqy9lg/0syMGuFdmummL/flbRdd1a5VA8V0SrRo+
+         A752ZNhHuAqZr0qsyacu1B4l9K8zEdRZkVqYV93GuoEHVvCy761PVeW+jzSkashm2KzA
+         hF5If9FAwc2jtLgLAsLi93ViwSXxiUZPZKaR5ROuGta0zASOsWvyAbO2Dhb8EuHR426q
+         iy8En1y2dSoAStR4PptwtY3/6mN6zNgcmzZd+Ov3fl2LSz5oGx/cP0dCmX+JIL77FwJw
+         IrGjKFghSHlaV0uyDr2ZWlb9MY7/u1wr8Ssnv4CCyX87s+jmCxCoh4gmuCkc/LYSszF9
+         88RQ==
+X-Gm-Message-State: ABuFfohiA4WuP5PRBvNjm6S6w7D/A/FgMMrJQ7pMuBk7s7HjWCp2OxXA
+        uNhieCdRPKuDHFqQnbKctEU9PLcEV30=
+X-Google-Smtp-Source: ACcGV61DvlWEBKZLkQM4yiVWi2ZgW8shtySfiNt86V7JKeh0L5aj1T6KF1A6Of1O4tv700Z8rYm8jg==
+X-Received: by 2002:adf:db11:: with SMTP id s17-v6mr8236869wri.221.1538038927795;
+        Thu, 27 Sep 2018 02:02:07 -0700 (PDT)
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.04
+        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.06
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 Sep 2018 02:02:05 -0700 (PDT)
+        Thu, 27 Sep 2018 02:02:07 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/26] mt76: move mt76x02_set_irq_mask in mt76x02_core.c
-Date:   Thu, 27 Sep 2018 11:01:33 +0200
-Message-Id: <95db0822dd64f5b1a27fe36f211be225b66defd3.1538036134.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH 06/26] mt76: move mt76x02_beacon_offset in mt76x02_core.c
+Date:   Thu, 27 Sep 2018 11:01:35 +0200
+Message-Id: <a3e3e4065e8dc6455ad6653c10b31b0a6fe3b7ef.1538036134.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
 References: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
@@ -59,364 +59,281 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76x02_set_irq_mask, mt76x02_irq_enable and mt76x02_irq_disable
-in mt76x02-lib module in order to be reused by mt76x0 driver.
-Moreover move irq_lock and irqmask in mt76_mmio data structure
+Move mt76x02_beacon_offset utility routine in mt76x02-lib module
+since it is shared between mt76x0 and mt76x2 driver and remove
+duplicated code. Moreover move beacon_offset data structure in
+mt76x02-lib module since it is shared between mt76x0 and mt76x2
+drivers
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile   |  3 +-
- drivers/net/wireless/mediatek/mt76/mmio.c     |  1 +
- drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
- .../net/wireless/mediatek/mt76/mt76x02_core.c | 34 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x02_util.h | 13 +++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h   | 15 --------
- .../net/wireless/mediatek/mt76/mt76x2_core.c  | 28 +++++----------
- .../net/wireless/mediatek/mt76/mt76x2_dfs.c   |  7 ++--
- .../net/wireless/mediatek/mt76/mt76x2_dma.c   |  7 ++--
- .../net/wireless/mediatek/mt76/mt76x2_init.c  |  6 ++--
- .../net/wireless/mediatek/mt76/mt76x2_mac.c   |  8 ++---
- 11 files changed, 75 insertions(+), 49 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_core.c
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  | 28 +------------
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  2 -
+ .../net/wireless/mediatek/mt76/mt76x02_core.c | 38 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_util.h |  2 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |  2 -
+ .../net/wireless/mediatek/mt76/mt76x2_init.c  | 41 +------------------
+ .../net/wireless/mediatek/mt76/mt76x2_mac.c   |  6 +--
+ .../net/wireless/mediatek/mt76/mt76x2u_init.c |  9 ----
+ 8 files changed, 45 insertions(+), 83 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 0cde9dff74a3..f02318ff1102 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -16,7 +16,8 @@ CFLAGS_trace.o := -I$(src)
- CFLAGS_usb_trace.o := -I$(src)
- 
- mt76x02-lib-y := mt76x02_util.o mt76x02_mac.o mt76x02_mcu.o \
--		 mt76x02_eeprom.o mt76x02_phy.o mt76x02_dma.o
-+		 mt76x02_eeprom.o mt76x02_phy.o mt76x02_dma.o \
-+		 mt76x02_core.o
- 
- mt76x02-usb-y := mt76x02_usb_mcu.o mt76x02_usb_core.o
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
-index 2f09f451a9b6..08685f515bf6 100644
---- a/drivers/net/wireless/mediatek/mt76/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mmio.c
-@@ -60,6 +60,7 @@ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
- 
- 	skb_queue_head_init(&dev->mmio.mcu.res_q);
- 	init_waitqueue_head(&dev->mmio.mcu.wait);
-+	spin_lock_init(&dev->mmio.irq_lock);
- 	mutex_init(&dev->mmio.mcu.mutex);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 5e3ec1bef144..3b4a67bf7039 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -168,30 +168,13 @@ static int mt76x0_init_bbp(struct mt76x0_dev *dev)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(mt76_mmio_init);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 8031360a6592..d747d60d59ea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -363,6 +363,8 @@ struct mt76_mmio {
- 		u32 msg_seq;
- 	} mcu;
- 	void __iomem *regs;
-+	spinlock_t irq_lock;
-+	u32 irqmask;
- };
  
- struct mt76_dev {
+-static void
+-mt76_init_beacon_offsets(struct mt76x0_dev *dev)
+-{
+-	u16 base = MT_BEACON_BASE;
+-	u32 regs[4] = {};
+-	int i;
+-
+-	for (i = 0; i < 16; i++) {
+-		u16 addr = dev->beacon_offsets[i];
+-
+-		regs[i / 4] |= ((addr - base) / 64) << (8 * (i % 4));
+-	}
+-
+-	for (i = 0; i < 4; i++)
+-		mt76_wr(dev, MT_BCN_OFFSET(i), regs[i]);
+-}
+-
+ static void mt76x0_init_mac_registers(struct mt76x0_dev *dev)
+ {
+ 	u32 reg;
+ 
+ 	RANDOM_WRITE(dev, common_mac_reg_table);
+ 
+-	mt76_init_beacon_offsets(dev);
++	mt76x02_set_beacon_offsets(&dev->mt76);
+ 
+ 	/* Enable PBF and MAC clock SYS_CTRL[11:10] = 0x3 */
+ 	RANDOM_WRITE(dev, mt76x0_mac_reg_table);
+@@ -372,17 +355,8 @@ EXPORT_SYMBOL_GPL(mt76x0_mac_stop);
+ 
+ int mt76x0_init_hardware(struct mt76x0_dev *dev)
+ {
+-	static const u16 beacon_offsets[16] = {
+-		/* 512 byte per beacon */
+-		0xc000,	0xc200,	0xc400,	0xc600,
+-		0xc800,	0xca00,	0xcc00,	0xce00,
+-		0xd000,	0xd200,	0xd400,	0xd600,
+-		0xd800,	0xda00,	0xdc00,	0xde00
+-	};
+ 	int ret;
+ 
+-	dev->beacon_offsets = beacon_offsets;
+-
+ 	if (!mt76_poll_msec(dev, MT_WPDMA_GLO_CFG,
+ 			    MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
+ 			    MT_WPDMA_GLO_CFG_RX_DMA_BUSY, 0, 100))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 242abab69cdb..66fcb90c1083 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -87,8 +87,6 @@ struct mt76x0_dev {
+ 
+ 	spinlock_t mac_lock;
+ 
+-	const u16 *beacon_offsets;
+-
+ 	struct mt76x0_caldata caldata;
+ 
+ 	struct mutex reg_atomic_mutex;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_core.c
-new file mode 100644
-index 000000000000..fb3f0b2edbd6
---- /dev/null
+index fb3f0b2edbd6..f12176d93fa1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_core.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_core.c
-@@ -0,0 +1,34 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+@@ -32,3 +32,41 @@ void mt76x02_set_irq_mask(struct mt76_dev *dev, u32 clear, u32 set)
+ 	spin_unlock_irqrestore(&dev->mmio.irq_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_set_irq_mask);
 +
-+#include <linux/kernel.h>
++const u16 mt76x02_beacon_offsets[16] = {
++	/* 1024 byte per beacon */
++	0xc000,
++	0xc400,
++	0xc800,
++	0xcc00,
++	0xd000,
++	0xd400,
++	0xd800,
++	0xdc00,
++	/* BSS idx 8-15 not used for beacons */
++	0xc000,
++	0xc000,
++	0xc000,
++	0xc000,
++	0xc000,
++	0xc000,
++	0xc000,
++	0xc000,
++};
++EXPORT_SYMBOL_GPL(mt76x02_beacon_offsets);
 +
-+#include "mt76.h"
-+#include "mt76x02_dma.h"
-+#include "mt76x02_regs.h"
-+
-+void mt76x02_set_irq_mask(struct mt76_dev *dev, u32 clear, u32 set)
++void mt76x02_set_beacon_offsets(struct mt76_dev *dev)
 +{
-+	unsigned long flags;
++	u16 val, base = MT_BEACON_BASE;
++	u32 regs[4] = {};
++	int i;
 +
-+	spin_lock_irqsave(&dev->mmio.irq_lock, flags);
-+	dev->mmio.irqmask &= ~clear;
-+	dev->mmio.irqmask |= set;
-+	__mt76_wr(dev, MT_INT_MASK_CSR, dev->mmio.irqmask);
-+	spin_unlock_irqrestore(&dev->mmio.irq_lock, flags);
++	for (i = 0; i < 16; i++) {
++		val = mt76x02_beacon_offsets[i] - base;
++		regs[i / 4] |= (val / 64) << (8 * (i % 4));
++	}
++
++	for (i = 0; i < 4; i++)
++		__mt76_wr(dev, MT_BCN_OFFSET(i), regs[i]);
 +}
-+EXPORT_SYMBOL_GPL(mt76x02_set_irq_mask);
++EXPORT_SYMBOL_GPL(mt76x02_set_beacon_offsets);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-index 2ea9e68bfa3f..2c1ead85077e 100644
+index 2c1ead85077e..479e7ffcc951 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-@@ -51,4 +51,17 @@ void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb);
- void mt76x02_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
+@@ -52,6 +52,8 @@ void mt76x02_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
  			    struct mt76_queue_entry *e, bool flush);
  bool mt76x02_tx_status_data(struct mt76_dev *dev, u8 *update);
-+
-+void mt76x02_set_irq_mask(struct mt76_dev *dev, u32 clear, u32 set);
-+
-+static inline void mt76x02_irq_enable(struct mt76_dev *dev, u32 mask)
-+{
-+	mt76x02_set_irq_mask(dev, 0, mask);
-+}
-+
-+static inline void mt76x02_irq_disable(struct mt76_dev *dev, u32 mask)
-+{
-+	mt76x02_set_irq_mask(dev, mask, 0);
-+}
-+
- #endif
+ 
++extern const u16 mt76x02_beacon_offsets[16];
++void mt76x02_set_beacon_offsets(struct mt76_dev *dev);
+ void mt76x02_set_irq_mask(struct mt76_dev *dev, u32 clear, u32 set);
+ 
+ static inline void mt76x02_irq_enable(struct mt76_dev *dev, u32 mask)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index b950361e5f87..2597bf43c2fe 100644
+index 1798f418c69d..c51d6e2a64ce 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -95,9 +95,6 @@ struct mt76x2_dev {
+@@ -78,8 +78,6 @@ struct mt76x2_dev {
  
- 	u32 aggr_stats[32];
+ 	struct mutex mutex;
  
--	spinlock_t irq_lock;
--	u32 irqmask;
+-	const u16 *beacon_offsets;
 -
- 	struct sk_buff *beacons[8];
- 	u8 beacon_mask;
- 	u8 beacon_data_mask;
-@@ -124,8 +121,6 @@ static inline bool is_mt7612(struct mt76x2_dev *dev)
- 	return mt76_chip(&dev->mt76) == 0x7612;
- }
+ 	u8 txdone_seq;
+ 	DECLARE_KFIFO_PTR(txstatus_fifo, struct mt76x02_tx_status);
  
--void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
--
- static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
- {
- 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
-@@ -134,16 +129,6 @@ static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
- 		chan->dfs_state != NL80211_DFS_AVAILABLE);
- }
- 
--static inline void mt76x2_irq_enable(struct mt76x2_dev *dev, u32 mask)
--{
--	mt76x2_set_irq_mask(dev, 0, mask);
--}
--
--static inline void mt76x2_irq_disable(struct mt76x2_dev *dev, u32 mask)
--{
--	mt76x2_set_irq_mask(dev, mask, 0);
--}
--
- static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
- {
- 	return mt76_poll_msec(dev, MT_MAC_STATUS,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_core.c b/drivers/net/wireless/mediatek/mt76/mt76x2_core.c
-index 2629779e8d3e..06e47f960f9a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_core.c
-@@ -17,23 +17,11 @@
- #include <linux/delay.h>
- #include "mt76x2.h"
- #include "mt76x2_trace.h"
--
--void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&dev->irq_lock, flags);
--	dev->irqmask &= ~clear;
--	dev->irqmask |= set;
--	mt76_wr(dev, MT_INT_MASK_CSR, dev->irqmask);
--	spin_unlock_irqrestore(&dev->irq_lock, flags);
--}
-+#include "mt76x02_util.h"
- 
- void mt76x2_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
- {
--	struct mt76x2_dev *dev = container_of(mdev, struct mt76x2_dev, mt76);
--
--	mt76x2_irq_enable(dev, MT_INT_RX_DONE(q));
-+	mt76x02_irq_enable(mdev, MT_INT_RX_DONE(q));
- }
- 
- irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance)
-@@ -47,22 +35,22 @@ irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance)
- 	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mt76.state))
- 		return IRQ_NONE;
- 
--	trace_dev_irq(dev, intr, dev->irqmask);
-+	trace_dev_irq(dev, intr, dev->mt76.mmio.irqmask);
- 
--	intr &= dev->irqmask;
-+	intr &= dev->mt76.mmio.irqmask;
- 
- 	if (intr & MT_INT_TX_DONE_ALL) {
--		mt76x2_irq_disable(dev, MT_INT_TX_DONE_ALL);
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_TX_DONE_ALL);
- 		tasklet_schedule(&dev->tx_tasklet);
- 	}
- 
- 	if (intr & MT_INT_RX_DONE(0)) {
--		mt76x2_irq_disable(dev, MT_INT_RX_DONE(0));
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_RX_DONE(0));
- 		napi_schedule(&dev->mt76.napi[0]);
- 	}
- 
- 	if (intr & MT_INT_RX_DONE(1)) {
--		mt76x2_irq_disable(dev, MT_INT_RX_DONE(1));
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_RX_DONE(1));
- 		napi_schedule(&dev->mt76.napi[1]);
- 	}
- 
-@@ -79,7 +67,7 @@ irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance)
- 	}
- 
- 	if (intr & MT_INT_GPTIMER) {
--		mt76x2_irq_disable(dev, MT_INT_GPTIMER);
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_GPTIMER);
- 		tasklet_schedule(&dev->dfs_pd.dfs_tasklet);
- 	}
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-index 374cc655c11d..8cfa3a063bda 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include "mt76x2.h"
-+#include "mt76x02_util.h"
- 
- #define RADAR_SPEC(m, len, el, eh, wl, wh,		\
- 		   w_tolerance, tl, th, t_tolerance,	\
-@@ -678,7 +679,7 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
- 	mt76_wr(dev, MT_BBP(DFS, 1), 0xf);
- 
- out:
--	mt76x2_irq_enable(dev, MT_INT_GPTIMER);
-+	mt76x02_irq_enable(&dev->mt76, MT_INT_GPTIMER);
- }
- 
- static void mt76x2_dfs_init_sw_detector(struct mt76x2_dev *dev)
-@@ -834,7 +835,7 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
- 		/* enable debug mode */
- 		mt76x2_dfs_set_capture_mode_ctrl(dev, true);
- 
--		mt76x2_irq_enable(dev, MT_INT_GPTIMER);
-+		mt76x02_irq_enable(&dev->mt76, MT_INT_GPTIMER);
- 		mt76_rmw_field(dev, MT_INT_TIMER_EN,
- 			       MT_INT_TIMER_EN_GP_TIMER_EN, 1);
- 	} else {
-@@ -844,7 +845,7 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
- 		mt76_wr(dev, MT_BBP(DFS, 1), 0xf);
- 		mt76_wr(dev, 0x212c, 0);
- 
--		mt76x2_irq_disable(dev, MT_INT_GPTIMER);
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_GPTIMER);
- 		mt76_rmw_field(dev, MT_INT_TIMER_EN,
- 			       MT_INT_TIMER_EN_GP_TIMER_EN, 0);
- 	}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-index 879ed9138841..45bed7cbcdec 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-@@ -16,6 +16,7 @@
- 
- #include "mt76x2.h"
- #include "mt76x02_dma.h"
-+#include "mt76x02_util.h"
- 
- static int
- mt76x2_init_tx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
-@@ -31,7 +32,7 @@ mt76x2_init_tx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
- 	if (ret)
- 		return ret;
- 
--	mt76x2_irq_enable(dev, MT_INT_TX_DONE(idx));
-+	mt76x02_irq_enable(&dev->mt76, MT_INT_TX_DONE(idx));
- 
- 	return 0;
- }
-@@ -50,7 +51,7 @@ mt76x2_init_rx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
- 	if (ret)
- 		return ret;
- 
--	mt76x2_irq_enable(dev, MT_INT_RX_DONE(idx));
-+	mt76x02_irq_enable(&dev->mt76, MT_INT_RX_DONE(idx));
- 
- 	return 0;
- }
-@@ -67,7 +68,7 @@ mt76x2_tx_tasklet(unsigned long data)
- 		mt76_queue_tx_cleanup(dev, i, false);
- 
- 	mt76x2_mac_poll_tx_status(dev, false);
--	mt76x2_irq_enable(dev, MT_INT_TX_DONE_ALL);
-+	mt76x02_irq_enable(&dev->mt76, MT_INT_TX_DONE_ALL);
- }
- 
- int mt76x2_dma_init(struct mt76x2_dev *dev)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index bd52c8b2ee9f..d4134e322ff4 100644
+index 98e40f6045b9..37cbe550ad1a 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -213,8 +213,9 @@ int mt76x2_mac_start(struct mt76x2_dev *dev)
- 		MT_MAC_SYS_CTRL_ENABLE_TX |
- 		MT_MAC_SYS_CTRL_ENABLE_RX);
- 
--	mt76x2_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
--			       MT_INT_TX_STAT);
-+	mt76x02_irq_enable(&dev->mt76,
-+			   MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
-+			   MT_INT_TX_STAT);
- 
- 	return 0;
+@@ -79,23 +79,6 @@ mt76x2_fixup_xtal(struct mt76x2_dev *dev)
+ 	}
  }
-@@ -422,7 +423,6 @@ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev)
- 	dev = container_of(mdev, struct mt76x2_dev, mt76);
- 	mdev->dev = pdev;
- 	mdev->drv = &drv_ops;
--	spin_lock_init(&dev->irq_lock);
  
- 	return dev;
- }
+-static void
+-mt76x2_init_beacon_offsets(struct mt76x2_dev *dev)
+-{
+-	u16 base = MT_BEACON_BASE;
+-	u32 regs[4] = {};
+-	int i;
+-
+-	for (i = 0; i < 16; i++) {
+-		u16 addr = dev->beacon_offsets[i];
+-
+-		regs[i / 4] |= ((addr - base) / 64) << (8 * (i % 4));
+-	}
+-
+-	for (i = 0; i < 4; i++)
+-		mt76_wr(dev, MT_BCN_OFFSET(i), regs[i]);
+-}
+-
+ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
+ {
+ 	static const u8 null_addr[ETH_ALEN] = {};
+@@ -187,7 +170,7 @@ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
+ 		MT_CH_TIME_CFG_EIFS_AS_BUSY |
+ 		FIELD_PREP(MT_CH_TIME_CFG_CH_TIMER_CLR, 1));
+ 
+-	mt76x2_init_beacon_offsets(dev);
++	mt76x02_set_beacon_offsets(&dev->mt76);
+ 
+ 	mt76x2_set_tx_ackto(dev);
+ 
+@@ -325,30 +308,8 @@ void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
+ 
+ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ {
+-	static const u16 beacon_offsets[16] = {
+-		/* 1024 byte per beacon */
+-		0xc000,
+-		0xc400,
+-		0xc800,
+-		0xcc00,
+-		0xd000,
+-		0xd400,
+-		0xd800,
+-		0xdc00,
+-
+-		/* BSS idx 8-15 not used for beacons */
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-		0xc000,
+-	};
+ 	int ret;
+ 
+-	dev->beacon_offsets = beacon_offsets;
+ 	tasklet_init(&dev->pre_tbtt_tasklet, mt76x2_pre_tbtt_tasklet,
+ 		     (unsigned long) dev);
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index 241ede98e6d3..5fff0860731b 100644
+index 5fff0860731b..25ce8fcbb873 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -42,9 +42,9 @@ void mt76x2_mac_poll_tx_status(struct mt76x2_dev *dev, bool irq)
- 	trace_mac_txstat_poll(dev);
+@@ -100,7 +100,7 @@ void mt76x2_tx_complete_skb(struct mt76_dev *mdev, struct mt76_queue *q,
+ static int
+ mt76_write_beacon(struct mt76x2_dev *dev, int offset, struct sk_buff *skb)
+ {
+-	int beacon_len = dev->beacon_offsets[1] - dev->beacon_offsets[0];
++	int beacon_len = mt76x02_beacon_offsets[1] - mt76x02_beacon_offsets[0];
+ 	struct mt76x02_txwi txwi;
  
- 	while (!irq || !kfifo_is_full(&dev->txstatus_fifo)) {
--		spin_lock_irqsave(&dev->irq_lock, flags);
-+		spin_lock_irqsave(&dev->mt76.mmio.irq_lock, flags);
- 		ret = mt76x02_mac_load_tx_status(&dev->mt76, &stat);
--		spin_unlock_irqrestore(&dev->irq_lock, flags);
-+		spin_unlock_irqrestore(&dev->mt76.mmio.irq_lock, flags);
+ 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x02_txwi)))
+@@ -118,8 +118,8 @@ mt76_write_beacon(struct mt76x2_dev *dev, int offset, struct sk_buff *skb)
+ static int
+ __mt76x2_mac_set_beacon(struct mt76x2_dev *dev, u8 bcn_idx, struct sk_buff *skb)
+ {
+-	int beacon_len = dev->beacon_offsets[1] - dev->beacon_offsets[0];
+-	int beacon_addr = dev->beacon_offsets[bcn_idx];
++	int beacon_len = mt76x02_beacon_offsets[1] - mt76x02_beacon_offsets[0];
++	int beacon_addr = mt76x02_beacon_offsets[bcn_idx];
+ 	int ret = 0;
+ 	int i;
  
- 		if (!ret)
- 			break;
-@@ -202,9 +202,9 @@ void mt76x2_mac_set_beacon_enable(struct mt76x2_dev *dev, u8 vif_idx, bool val)
- 	mt76_rmw(dev, MT_BEACON_TIME_CFG, reg, reg * en);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+index 9ba029451f8a..4eb3fe657bd2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+@@ -165,21 +165,12 @@ static void mt76x2u_init_beacon_offsets(struct mt76x2_dev *dev)
  
- 	if (en)
--		mt76x2_irq_enable(dev, MT_INT_PRE_TBTT | MT_INT_TBTT);
-+		mt76x02_irq_enable(&dev->mt76, MT_INT_PRE_TBTT | MT_INT_TBTT);
- 	else
--		mt76x2_irq_disable(dev, MT_INT_PRE_TBTT | MT_INT_TBTT);
-+		mt76x02_irq_disable(&dev->mt76, MT_INT_PRE_TBTT | MT_INT_TBTT);
- }
+ int mt76x2u_init_hardware(struct mt76x2_dev *dev)
+ {
+-	static const u16 beacon_offsets[] = {
+-		/* 512 byte per beacon */
+-		0xc000, 0xc200, 0xc400, 0xc600,
+-		0xc800, 0xca00, 0xcc00, 0xce00,
+-		0xd000, 0xd200, 0xd400, 0xd600,
+-		0xd800, 0xda00, 0xdc00, 0xde00
+-	};
+ 	const struct mt76_wcid_addr addr = {
+ 		.macaddr = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+ 		.ba_mask = 0,
+ 	};
+ 	int i, err;
  
- void mt76x2_update_channel(struct mt76_dev *mdev)
+-	dev->beacon_offsets = beacon_offsets;
+-
+ 	mt76x2_reset_wlan(dev, true);
+ 	mt76x2u_power_on(dev);
+ 
 -- 
 2.17.1
 
