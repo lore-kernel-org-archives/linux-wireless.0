@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A2A9C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:33:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61934C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:35:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1FC521566
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:33:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17B8921566
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 04:35:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bNuESIyJ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bNuESIyJ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C1FC521566
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VTUWMx6i";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VTUWMx6i"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17B8921566
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726687AbeI0KtV (ORCPT
+        id S1726687AbeI0KvK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 06:49:21 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33710 "EHLO
+        Thu, 27 Sep 2018 06:51:10 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34244 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726598AbeI0KtV (ORCPT
+        with ESMTP id S1726599AbeI0KvK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 06:49:21 -0400
+        Thu, 27 Sep 2018 06:51:10 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CF8D6607F4; Thu, 27 Sep 2018 04:33:06 +0000 (UTC)
+        id C43A360B0D; Thu, 27 Sep 2018 04:34:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538022786;
-        bh=0ZJGCSYdj5hCqJyT1at0PZI0aI8Kd2xn+MbTIoBGRNU=;
+        s=default; t=1538022894;
+        bh=xiC4OX4dGrVLb92ktNjWDCjHQHUCJXhAHQqPjbMM8pE=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=bNuESIyJ3oBKh7Ojpy+fBkX+HiGLGyNJLv6uQhhXQOUQg1UCpbtkn77jkyHoNjiNI
-         Bk6erQGMCHh3HcyFa8dyxYujtvOa8y7FgXqH3G3395Fn806YvWEg6vWfCXVkV14WFT
-         koieAmBJIgr2E+atE+dKi/G6IBV7RHCuKAHLuXyo=
+        b=VTUWMx6iFev9xcj4pM3+9ZsO2P/tVcut04hWo+c0LiHP3ZaYDv1UxhdtnsqlwI3Hg
+         LpIOFx4TJKEYiaLsKOZygGuKgHZDOVjW/jUUhN7PvfqNgZvQYqr5Hx/NNJCjQilkDa
+         Nmk8OTxTzd7HHEiOQRBIL0yI4yfE8AW3YGFNJh2Y=
 Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A021607F4;
-        Thu, 27 Sep 2018 04:33:04 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 32098607F4;
+        Thu, 27 Sep 2018 04:34:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538022786;
-        bh=0ZJGCSYdj5hCqJyT1at0PZI0aI8Kd2xn+MbTIoBGRNU=;
+        s=default; t=1538022894;
+        bh=xiC4OX4dGrVLb92ktNjWDCjHQHUCJXhAHQqPjbMM8pE=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=bNuESIyJ3oBKh7Ojpy+fBkX+HiGLGyNJLv6uQhhXQOUQg1UCpbtkn77jkyHoNjiNI
-         Bk6erQGMCHh3HcyFa8dyxYujtvOa8y7FgXqH3G3395Fn806YvWEg6vWfCXVkV14WFT
-         koieAmBJIgr2E+atE+dKi/G6IBV7RHCuKAHLuXyo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6A021607F4
+        b=VTUWMx6iFev9xcj4pM3+9ZsO2P/tVcut04hWo+c0LiHP3ZaYDv1UxhdtnsqlwI3Hg
+         LpIOFx4TJKEYiaLsKOZygGuKgHZDOVjW/jUUhN7PvfqNgZvQYqr5Hx/NNJCjQilkDa
+         Nmk8OTxTzd7HHEiOQRBIL0yI4yfE8AW3YGFNJh2Y=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 32098607F4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -59,10 +59,10 @@ Cc:     Johannes Berg <johannes@sipsolutions.net>,
         netdev@vger.kernel.org, kernel-team@android.com
 Subject: Re: [PATCH net-next v2] wireless-drivers: rtnetlink wifi simulation device
 References: <20180926194324.71290-1-schuffelen@google.com>
-Date:   Thu, 27 Sep 2018 07:33:01 +0300
+Date:   Thu, 27 Sep 2018 07:34:50 +0300
 In-Reply-To: <20180926194324.71290-1-schuffelen@google.com> (Cody Schuffelen's
         message of "Wed, 26 Sep 2018 12:43:24 -0700")
-Message-ID: <875zyrr24i.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <871s9fr21h.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -118,15 +118,20 @@ Cody Schuffelen <schuffelen@google.com> writes:
 > Acked-by: Alistair Strachan <astrachan@google.com>
 > Acked-by: Greg Hartman <ghartman@google.com>
 > Signed-off-by: Cody Schuffelen <schuffelen@google.com>
-> ---
-> Original change: https://lore.kernel.org/lkml/5b5b8e09.1c69fb81.c693c.0acd@mx.google.com/
-> First review: https://lore.kernel.org/lkml/1535460343.5895.56.camel@sipsolutions.net/
->
-> Thanks for the detailed review! I believe I've addressed all comments.
 
-BTW, this will likely go through mac80211-next, so don't add net-next to
-the subject to avoid Dave getting confused. But no need to resend
-because of this.
+[...]
+
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -114,4 +114,11 @@ config USB_NET_RNDIS_WLAN
+>  
+>  	  If you choose to build a module, it'll be called rndis_wlan.
+>  
+> +config VIRT_WIFI
+> +	tristate "Wifi wrapper for ethernet drivers"
+> +	default n
+
+Isn't 'n' the default so you don't need to explicitly set that?
 
 -- 
 Kalle Valo
