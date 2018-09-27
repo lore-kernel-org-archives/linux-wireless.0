@@ -3,113 +3,186 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C833FC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 16:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02051C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 18:10:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8695A21533
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 16:11:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8695A21533
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
+	by mail.kernel.org (Postfix) with ESMTP id B1C062170E
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 18:10:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B1C062170E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728223AbeI0WaX (ORCPT
+        id S1728393AbeI1AaF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 18:30:23 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:44339 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727270AbeI0WaX (ORCPT
+        Thu, 27 Sep 2018 20:30:05 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:59884 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727307AbeI1AaF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 18:30:23 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1g5Ysp-0004Yj-OF; Thu, 27 Sep 2018 16:11:19 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] b43: fix spelling mistake "hw_registred" -> "hw_registered"
-Date:   Thu, 27 Sep 2018 17:11:19 +0100
-Message-Id: <20180927161119.6698-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        Thu, 27 Sep 2018 20:30:05 -0400
+Received: from ben-dt3.candelatech.com (firewall.candelatech.com [50.251.239.81])
+        by mail2.candelatech.com (Postfix) with ESMTP id 30AC040A626;
+        Thu, 27 Sep 2018 11:10:34 -0700 (PDT)
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Improve connection-loss probing.
+Date:   Thu, 27 Sep 2018 11:10:29 -0700
+Message-Id: <1538071829-18527-1-git-send-email-greearb@candelatech.com>
+X-Mailer: git-send-email 2.4.11
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Trivial fix to spelling mistake struct field name, rename it.
+This makes the mlme code probe multiple times spread out across
+the time-out period instead of lots of probes all at once.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+It also makes the ap-probe and the nullfunc probe logic
+act similarly, which allows us to remove some code.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/broadcom/b43/b43.h  | 2 +-
- drivers/net/wireless/broadcom/b43/main.c | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/ieee80211_i.h |  1 -
+ net/mac80211/mlme.c        | 62 ++++++++++++++++++----------------------------
+ 2 files changed, 24 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/b43.h b/drivers/net/wireless/broadcom/b43/b43.h
-index b77d1a904f7e..9fc7c088a539 100644
---- a/drivers/net/wireless/broadcom/b43/b43.h
-+++ b/drivers/net/wireless/broadcom/b43/b43.h
-@@ -909,7 +909,7 @@ struct b43_wl {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 17de2d0..0a0f693 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -444,7 +444,6 @@ struct ieee80211_if_managed {
+ 	unsigned long beacon_timeout;
+ 	unsigned long probe_timeout;
+ 	int probe_send_count;
+-	bool nullfunc_failed;
+ 	bool connection_loss;
  
- 	/* Set this if we call ieee80211_register_hw() and check if we call
- 	 * ieee80211_unregister_hw(). */
--	bool hw_registred;
-+	bool hw_registered;
- 
- 	/* We can only have one operating interface (802.11 core)
- 	 * at a time. General information about this interface follows.
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index b37e7391f55d..4daa1ce8cba3 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -2611,7 +2611,7 @@ static void b43_request_firmware(struct work_struct *work)
- 	err = ieee80211_register_hw(wl->hw);
- 	if (err)
- 		goto err_one_core_detach;
--	wl->hw_registred = true;
-+	wl->hw_registered = true;
- 	b43_leds_register(wl->current_dev);
- 
- 	/* Register HW RNG driver */
-@@ -5610,7 +5610,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- 
- 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- 
--	wl->hw_registred = false;
-+	wl->hw_registered = false;
- 	hw->max_rates = 2;
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	if (is_valid_ether_addr(sprom->et1mac))
-@@ -5693,7 +5693,7 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	B43_WARN_ON(!wl);
- 	if (!wldev->fw.ucode.data)
- 		return;			/* NULL if firmware never loaded */
--	if (wl->current_dev == wldev && wl->hw_registred) {
-+	if (wl->current_dev == wldev && wl->hw_registered) {
- 		b43_leds_stop(wldev);
- 		ieee80211_unregister_hw(wl->hw);
+ 	struct cfg80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a1b08af..eb784ac 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2203,8 +2203,6 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->u.mgd.probe_send_count > 0) {
+ 		if (ack)
+ 			ieee80211_sta_reset_conn_monitor(sdata);
+-		else
+-			sdata->u.mgd.nullfunc_failed = true;
+ 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 		return;
  	}
-@@ -5776,7 +5776,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	B43_WARN_ON(!wl);
- 	if (!wldev->fw.ucode.data)
- 		return;			/* NULL if firmware never loaded */
--	if (wl->current_dev == wldev && wl->hw_registred) {
-+	if (wl->current_dev == wldev && wl->hw_registered) {
- 		b43_leds_stop(wldev);
- 		ieee80211_unregister_hw(wl->hw);
+@@ -2220,6 +2218,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	u8 *dst = ifmgd->associated->bssid;
+ 	u8 unicast_limit = max(1, max_probe_tries - 3);
+ 	struct sta_info *sta;
++	u32 max_tries;
+ 
+ 	/*
+ 	 * Try sending broadcast probe requests for the last three
+@@ -2247,11 +2246,13 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
  	}
+ 
+ 	if (ieee80211_hw_check(&sdata->local->hw, REPORTS_TX_ACK_STATUS)) {
+-		ifmgd->nullfunc_failed = false;
++		max_tries = max_nullfunc_tries;
+ 		ieee80211_send_nullfunc(sdata->local, sdata, false);
+ 	} else {
+ 		int ssid_len;
+ 
++		max_tries = max_probe_tries;
++
+ 		rcu_read_lock();
+ 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+ 		if (WARN_ON_ONCE(ssid == NULL))
+@@ -2266,7 +2267,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 		rcu_read_unlock();
+ 	}
+ 
+-	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
++	ifmgd->probe_timeout = jiffies +
++		msecs_to_jiffies(probe_wait_ms / max_tries);
+ 	run_again(sdata, ifmgd->probe_timeout);
+ }
+ 
+@@ -3978,54 +3980,38 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 	    ifmgd->associated) {
+ 		u8 bssid[ETH_ALEN];
+ 		int max_tries;
++		bool ack_status = ieee80211_hw_check(&local->hw,
++						     REPORTS_TX_ACK_STATUS);
+ 
+ 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+ 
+-		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
++		if (ack_status)
+ 			max_tries = max_nullfunc_tries;
+ 		else
+ 			max_tries = max_probe_tries;
+ 
+ 		/* ACK received for nullfunc probing frame */
+-		if (!ifmgd->probe_send_count)
++		if (!ifmgd->probe_send_count) {
++			/* probe_send_count of zero means probe succeeded */
+ 			ieee80211_reset_ap_probe(sdata);
+-		else if (ifmgd->nullfunc_failed) {
+-			if (ifmgd->probe_send_count < max_tries) {
+-				mlme_dbg(sdata,
+-					 "No ack for nullfunc frame to AP %pM, try %d/%i\n",
+-					 bssid, ifmgd->probe_send_count,
+-					 max_tries);
+-				ieee80211_mgd_probe_ap_send(sdata);
+-			} else {
+-				mlme_wrn(sdata,
+-					 "No ack for nullfunc frame to AP %pM, disconnecting.\n",
+-					 bssid);
+-				ieee80211_sta_connection_lost(sdata, bssid,
+-					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-					false);
+-			}
+-		} else if (time_is_after_jiffies(ifmgd->probe_timeout))
++		} else if (time_is_after_jiffies(ifmgd->probe_timeout)) {
++			/* probe_timeout is after current jiffies
++			 * Not time to (re)probe yet
++			 */
+ 			run_again(sdata, ifmgd->probe_timeout);
+-		else if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
+-			mlme_wrn(sdata,
+-				 "Failed to send nullfunc to AP %pM after %dms, disconnecting\n",
+-				 bssid, probe_wait_ms);
+-			ieee80211_sta_connection_lost(sdata, bssid,
+-				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY, false);
+ 		} else if (ifmgd->probe_send_count < max_tries) {
+-			mlme_dbg(sdata,
+-				 "No probe response from AP %pM after %dms, try %d/%i\n",
+-				 bssid, probe_wait_ms,
+-				 ifmgd->probe_send_count, max_tries);
++			mlme_dbg(sdata, "No %s AP %pM, try %d/%i\n",
++				 ack_status ? "ack for nullfunc frame to" :
++				 "probe response from",
++				 bssid, ifmgd->probe_send_count, max_tries);
+ 			ieee80211_mgd_probe_ap_send(sdata);
+ 		} else {
+-			/*
+-			 * We actually lost the connection ... or did we?
+-			 * Let's make sure!
+-			 */
+ 			mlme_wrn(sdata,
+-				 "No probe response from AP %pM after %dms, disconnecting.\n",
+-				 bssid, probe_wait_ms);
++				 "No %s AP %pM after %dms, tried %d/%i, disconnecting.\n",
++				 ack_status ? "ack for nullfunc frame to" :
++				 "probe response from",
++				  bssid, probe_wait_ms, ifmgd->probe_send_count,
++				  max_tries);
+ 
+ 			ieee80211_sta_connection_lost(sdata, bssid,
+ 				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY, false);
 -- 
-2.17.1
+2.4.11
 
