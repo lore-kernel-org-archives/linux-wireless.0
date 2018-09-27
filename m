@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD696C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8D5C04E87
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8EC2B2156B
+	by mail.kernel.org (Postfix) with ESMTP id C7EB921580
 	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8EC2B2156B
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C7EB921580
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727347AbeI0PTX (ORCPT
+        id S1727354AbeI0PTY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 11:19:23 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:38284 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727264AbeI0PTW (ORCPT
+        Thu, 27 Sep 2018 11:19:24 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45270 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727340AbeI0PTX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 11:19:22 -0400
-Received: by mail-wm1-f67.google.com with SMTP id z16-v6so5145191wmi.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:09 -0700 (PDT)
+        Thu, 27 Sep 2018 11:19:23 -0400
+Received: by mail-wr1-f68.google.com with SMTP id m16so1664762wrx.12
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=JgLafUdhLyejU1YNMVQm412Ferj4FxtAPZ9nqurf0J0=;
-        b=sKMsr9fNKtXhVCiilg4aC1Lyi0hyOs8wlvWEq3VQwk0a+0zVJZbKVD7j7eqNUKtz24
-         qwbSIWFHA5gbw/ku6rLGVjbqD4Sce7uoqPX9cakbdalDOXvOzBMgVEkvldSXsnsydT+g
-         klLawnGzR5Lr4OuzYvEFxOeffqlAcMsUT6w8XOtvDYV7faN5/KGTJpL51hmHwZ1d3lP3
-         9YzmC3l6KACcuS3opgdOLMLTKnKn+WvDYnkplzhy3xaZsF7sEDiDQVoHdTG+XRKa6a5W
-         g4jT3mtWpV8ZyLId56IgzFPhYJEA6Q1cN0MiXhqpuPu8+L8iaChbo1KqHR/6AmLwQDE2
-         QYhg==
-X-Gm-Message-State: ABuFfoiSml3klzixSRsVPpECk3LwRQM0d9fomzwqAppscvil0PtYTeMQ
-        JyQLGsaVV/P4v1NDTpWtUlA9O1k6qg8=
-X-Google-Smtp-Source: ACcGV60efgYQVn/u1B8osvQE76EYU57/8wtZy/SNwbZZ3g6uj/vX7iRF7GfGq8zdOQpggh+XmdlBJQ==
-X-Received: by 2002:a1c:2384:: with SMTP id j126-v6mr7086085wmj.124.1538038928661;
-        Thu, 27 Sep 2018 02:02:08 -0700 (PDT)
+        bh=uGxc7hsYVDcpYntF8gjLizJaOtsNZgb8lTo0SW3TY1o=;
+        b=HZRJf88TgX9qYC7o+S4D5EDIG9rrDCex/G3VmdT8oe4U8/J03tTJgOu36GzRgoexLU
+         mp1CvsG1X4dHRS9uRl8jqe+CEqOmNele5j34/05kZNWzM6Oi2CnFwYBqYbLlwsmnUGa9
+         8egH7ksRoIV9t1o/AFo9pfaBHu+kiVUVOdvvP0Ins1tcRxz0E6UMS3oa/CL+7v6TEwvw
+         bjxHHCUKEWyoEqdUOyqPxHGYuCXHz99lJIbZqnQ3nRoXXUZd+x8OVL/TbRLHglxQAETI
+         hCUWScNeu0CWdIe8PuQY+USShL6ytxzBoXtRSEbnTDNciCA9evpZnb84VlG5IGiW8ZtO
+         wh4Q==
+X-Gm-Message-State: ABuFfojO/QmLbe05nsg3TCQOcUVl4Tj1MTe7uXTOYvQ/g6/z+ZJ9xt4Y
+        jkMdunZCiVAqWp70Y4WKt48N0g==
+X-Google-Smtp-Source: ACcGV62CfH7qJSyL0yaRWHs7f34zHorMIjs21ix5m/JKU6Pt0aLJHdB1qtI/1TW+kIM3G9EQ4yVuNg==
+X-Received: by 2002:adf:f681:: with SMTP id v1-v6mr7981496wrp.201.1538038929683;
+        Thu, 27 Sep 2018 02:02:09 -0700 (PDT)
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.07
+        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.08
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 Sep 2018 02:02:08 -0700 (PDT)
+        Thu, 27 Sep 2018 02:02:09 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/26] mt76: mmio: add implementation of wr_rp and rd_rp
-Date:   Thu, 27 Sep 2018 11:01:36 +0200
-Message-Id: <5c61b31099057f6e66464bec864575e065352862.1538036134.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH 08/26] mt76: move mt76x2_wait_for_bbp in mt76x02-lib module
+Date:   Thu, 27 Sep 2018 11:01:37 +0200
+Message-Id: <abcc5b975da9d834067c45420397db4e3ff11e3b.1538036134.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
 References: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
@@ -59,94 +59,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce mmio implementation of mt76_mmio_rd_rp and
-mt76_mmio_wr_rp and remove mt76x2 duplicated code.
-mt76_mmio_{wr,rd}_rp allows to reuse mt76x0 init code
-adding mt76x0e support
+Move mt76x2_wait_for_bbp utility routine in mt76x02_util.h
+in order to be resued by mt76x0 driver
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mmio.c     | 26 +++++++++++++++++++
- .../mediatek/mt76/mt76x2_init_common.c        | 15 ++---------
- 2 files changed, 28 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h | 7 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2.h       | 7 -------
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c | 2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
-index 08685f515bf6..30a5d928e655 100644
---- a/drivers/net/wireless/mediatek/mt76/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mmio.c
-@@ -46,6 +46,30 @@ static void mt76_mmio_copy(struct mt76_dev *dev, u32 offset, const void *data,
- 	__iowrite32_copy(dev->mmio.regs + offset, data, len >> 2);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+index 479e7ffcc951..7ea77db99c01 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+@@ -66,4 +66,11 @@ static inline void mt76x02_irq_disable(struct mt76_dev *dev, u32 mask)
+ 	mt76x02_set_irq_mask(dev, mask, 0);
  }
  
-+static int mt76_mmio_wr_rp(struct mt76_dev *dev, u32 base,
-+			   const struct mt76_reg_pair *data, int len)
++static inline bool mt76x02_wait_for_bbp(struct mt76_dev *dev)
 +{
-+	while (len > 0) {
-+		mt76_mmio_wr(dev, data->reg, data->value);
-+		data++;
-+		len--;
-+	}
-+
-+	return 0;
++	return __mt76_poll_msec(dev, MT_MAC_STATUS,
++				MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
++				0, 100);
 +}
 +
-+static int mt76_mmio_rd_rp(struct mt76_dev *dev, u32 base,
-+			   struct mt76_reg_pair *data, int len)
-+{
-+	while (len > 0) {
-+		data->value = mt76_mmio_rr(dev, data->reg);
-+		data++;
-+		len--;
-+	}
-+
-+	return 0;
-+}
-+
- void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
- {
- 	static const struct mt76_bus_ops mt76_mmio_ops = {
-@@ -53,6 +77,8 @@ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
- 		.rmw = mt76_mmio_rmw,
- 		.wr = mt76_mmio_wr,
- 		.copy = mt76_mmio_copy,
-+		.wr_rp = mt76_mmio_wr_rp,
-+		.rd_rp = mt76_mmio_rd_rp,
- 	};
- 
- 	dev->bus = &mt76_mmio_ops;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-index abf535da0c78..4eacc681de49 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-@@ -62,17 +62,6 @@ void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index c51d6e2a64ce..9bf8be5ea1cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -124,13 +124,6 @@ static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
+ 		chan->dfs_state != NL80211_DFS_AVAILABLE);
  }
- EXPORT_SYMBOL_GPL(mt76x2_reset_wlan);
  
--static void
--mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
--		       const struct mt76_reg_pair *data, int len)
+-static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
 -{
--	while (len > 0) {
--		mt76_wr(dev, data->reg, data->value);
--		len--;
--		data++;
--	}
+-	return mt76_poll_msec(dev, MT_MAC_STATUS,
+-			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
+-			      0, 100);
 -}
 -
- void mt76_write_mac_initvals(struct mt76x2_dev *dev)
- {
- #define DEFAULT_PROT_CFG_CCK				\
-@@ -164,8 +153,8 @@ void mt76_write_mac_initvals(struct mt76x2_dev *dev)
- 		{ MT_GF40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
- 	};
+ extern const struct ieee80211_ops mt76x2_ops;
  
--	mt76x2_write_reg_pairs(dev, vals, ARRAY_SIZE(vals));
--	mt76x2_write_reg_pairs(dev, prot_vals, ARRAY_SIZE(prot_vals));
-+	mt76_wr_rp(dev, 0, vals, ARRAY_SIZE(vals));
-+	mt76_wr_rp(dev, 0, prot_vals, ARRAY_SIZE(prot_vals));
- }
- EXPORT_SYMBOL_GPL(mt76_write_mac_initvals);
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+index 4eb3fe657bd2..57669c7999ce 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+@@ -209,7 +209,7 @@ int mt76x2u_init_hardware(struct mt76x2_dev *dev)
  
+ 	mt76x2u_init_beacon_offsets(dev);
+ 
+-	if (!mt76x2_wait_for_bbp(dev))
++	if (!mt76x02_wait_for_bbp(&dev->mt76))
+ 		return -ETIMEDOUT;
+ 
+ 	/* reset wcid table */
 -- 
 2.17.1
 
