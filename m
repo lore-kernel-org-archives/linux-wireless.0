@@ -2,65 +2,77 @@ Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A616C43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67DF4C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:37:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B36521580
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:37:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3B36521580
+	by mail.kernel.org (Postfix) with ESMTP id 2AEDE21580
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 08:37:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2AEDE21580
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727057AbeI0Oyk (ORCPT
+        id S1727145AbeI0Oyo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 10:54:40 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60755 "EHLO mx1.redhat.com"
+        Thu, 27 Sep 2018 10:54:44 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34000 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726929AbeI0Oyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 10:54:40 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        id S1726929AbeI0Oyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Sep 2018 10:54:43 -0400
+Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E5E7C8830C;
-        Thu, 27 Sep 2018 08:37:34 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 45F92356F6;
+        Thu, 27 Sep 2018 08:37:38 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.6])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id ABD792270C;
-        Thu, 27 Sep 2018 08:37:32 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1118F30912F5;
+        Thu, 27 Sep 2018 08:37:35 +0000 (UTC)
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     Felix Fietkau <nbd@nbd.name>
 Cc:     linux-wireless@vger.kernel.org,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [RFC 0/4] mt76x0: phy/rf fixups for PCIe
-Date:   Thu, 27 Sep 2018 10:37:26 +0200
-Message-Id: <1538037450-18949-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Thu, 27 Sep 2018 08:37:34 +0000 (UTC)
+Subject: [RFC 1/4] mt76x0: print BBP version only for debug
+Date:   Thu, 27 Sep 2018 10:37:27 +0200
+Message-Id: <1538037450-18949-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1538037450-18949-1-git-send-email-sgruszka@redhat.com>
+References: <1538037450-18949-1-git-send-email-sgruszka@redhat.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.26
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Thu, 27 Sep 2018 08:37:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is RFC for now, especially I'm interesting if patch 3 and 4
-is direction we should go.
+Use dev_dbg to print BBP version.
 
-This is on top of Lorenzo github mt7610ev5 branch. 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Stanislaw Gruszka (4):
-  mt76x0: print BBP version only for debug
-  mt76x0: correct RF access via RF_CSR regiser.
-  mt76: allow to identify bus
-  mt76x0: correct RF reg pairs write for PCIe
-
- drivers/net/wireless/mediatek/mt76/mmio.c         |  1 +
- drivers/net/wireless/mediatek/mt76/mt76.h         |  9 ++++++++
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c   | 27 ++++++++++++++++-------
- drivers/net/wireless/mediatek/mt76/mt76x02_regs.h |  4 ++--
- drivers/net/wireless/mediatek/mt76/usb.c          |  1 +
- 5 files changed, 32 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index 4fd2c65e196a..ca0a693654a3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -187,7 +187,6 @@ int mt76x0_wait_bbp_ready(struct mt76x0_dev *dev)
+ 
+ 	do {
+ 		val = mt76_rr(dev, MT_BBP(CORE, 0));
+-		printk("BBP version %08x\n", val);
+ 		if (val && ~val)
+ 			break;
+ 	} while (--i);
+@@ -197,6 +196,7 @@ int mt76x0_wait_bbp_ready(struct mt76x0_dev *dev)
+ 		return -EIO;
+ 	}
+ 
++	dev_dbg(dev->mt76.dev, "BBP version %08x\n", val);
+ 	return 0;
+ }
+ 
 -- 
 1.9.3
 
