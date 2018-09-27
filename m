@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8D5C04E87
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B663C43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7EB921580
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C7EB921580
+	by mail.kernel.org (Postfix) with ESMTP id 137D32156B
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:02:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 137D32156B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727354AbeI0PTY (ORCPT
+        id S1727344AbeI0PTX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 11:19:24 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:45270 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727340AbeI0PTX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 27 Sep 2018 11:19:23 -0400
-Received: by mail-wr1-f68.google.com with SMTP id m16so1664762wrx.12
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:10 -0700 (PDT)
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34751 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727326AbeI0PTW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Sep 2018 11:19:22 -0400
+Received: by mail-wr1-f65.google.com with SMTP id z4-v6so324275wrb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 02:02:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=uGxc7hsYVDcpYntF8gjLizJaOtsNZgb8lTo0SW3TY1o=;
-        b=HZRJf88TgX9qYC7o+S4D5EDIG9rrDCex/G3VmdT8oe4U8/J03tTJgOu36GzRgoexLU
-         mp1CvsG1X4dHRS9uRl8jqe+CEqOmNele5j34/05kZNWzM6Oi2CnFwYBqYbLlwsmnUGa9
-         8egH7ksRoIV9t1o/AFo9pfaBHu+kiVUVOdvvP0Ins1tcRxz0E6UMS3oa/CL+7v6TEwvw
-         bjxHHCUKEWyoEqdUOyqPxHGYuCXHz99lJIbZqnQ3nRoXXUZd+x8OVL/TbRLHglxQAETI
-         hCUWScNeu0CWdIe8PuQY+USShL6ytxzBoXtRSEbnTDNciCA9evpZnb84VlG5IGiW8ZtO
-         wh4Q==
-X-Gm-Message-State: ABuFfojO/QmLbe05nsg3TCQOcUVl4Tj1MTe7uXTOYvQ/g6/z+ZJ9xt4Y
-        jkMdunZCiVAqWp70Y4WKt48N0g==
-X-Google-Smtp-Source: ACcGV62CfH7qJSyL0yaRWHs7f34zHorMIjs21ix5m/JKU6Pt0aLJHdB1qtI/1TW+kIM3G9EQ4yVuNg==
-X-Received: by 2002:adf:f681:: with SMTP id v1-v6mr7981496wrp.201.1538038929683;
-        Thu, 27 Sep 2018 02:02:09 -0700 (PDT)
+        bh=+FxM5Yt7whplcBmWvPhJ9ZWkrRN7vh5iyeg6yICXM9Q=;
+        b=MVSAcpAbVQ1lvTaPL20U/XgBqQEPjaRN9Mq4WV3iLYwHYI1V9+BtMAPoz3mZVobZsf
+         pbLTPErtIF5uc7pgEWxDM+b0SJF0oMqGfIsgjqdBcOjDbErP4KiIQPvqeMpTokaMuU4q
+         WSnfHSFkIyXv9ybxM8YjsI5zJOot0EFIF1CKhMM1PzSIQfKHNUZhQWrBGZUSMHfsbQSn
+         Jkow+8nbqsExQW8oumfZ6vyr8Riw4YjAHDZH7h0AT8uniyoU6ohQiGrqfRXIPgFTc43g
+         a1g4d1rUlEQOsUJmeRVcyNLmnFD8XF6aHV59nLkSuoS4ntB5iJQvf0r2DZQzy6fGquwf
+         XBwQ==
+X-Gm-Message-State: ABuFfohANqMZwKq1RC/KUBUDJu8v1wff5ofaIqnLJ/TgAViN1cXzFuRM
+        ai8ZNMi68X4zuJQtAEdn5sfguJankVg=
+X-Google-Smtp-Source: ACcGV60M+HKqGKAffsuW8AQ2PWTKEVqYkXem8zJCoLihQSj1gcLIinsKD8c9ZxUEtBvyv7Giw8Kaqw==
+X-Received: by 2002:adf:e6c9:: with SMTP id y9-v6mr8110963wrm.35.1538038926791;
+        Thu, 27 Sep 2018 02:02:06 -0700 (PDT)
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.08
+        by smtp.gmail.com with ESMTPSA id a17-v6sm1802382wme.40.2018.09.27.02.02.05
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 27 Sep 2018 02:02:09 -0700 (PDT)
+        Thu, 27 Sep 2018 02:02:06 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/26] mt76: move mt76x2_wait_for_bbp in mt76x02-lib module
-Date:   Thu, 27 Sep 2018 11:01:37 +0200
-Message-Id: <abcc5b975da9d834067c45420397db4e3ff11e3b.1538036134.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH 05/26] mt76: move queue initialization in mt76x02_dma.c
+Date:   Thu, 27 Sep 2018 11:01:34 +0200
+Message-Id: <3f23f3c595fc7774b0112e5644f4a0228784add8.1538036134.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
 References: <cover.1538036134.git.lorenzo.bianconi@redhat.com>
@@ -59,63 +59,304 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76x2_wait_for_bbp utility routine in mt76x02_util.h
-in order to be resued by mt76x0 driver
+Move mt76x02_dma_init, mt76x02_init_rx_queue and mt76x02_init_tx_queue
+routines in mt76x02-lib module in order to be reused by mt76x0 driver
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_util.h | 7 +++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h       | 7 -------
- drivers/net/wireless/mediatek/mt76/mt76x2u_init.c | 2 +-
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  4 +-
+ .../net/wireless/mediatek/mt76/mt76x02_dma.c  | 87 +++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt76x02_dma.h  |  4 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |  5 +-
+ .../net/wireless/mediatek/mt76/mt76x2_dma.c   | 88 +------------------
+ .../net/wireless/mediatek/mt76/mt76x2_init.c  |  3 +-
+ 6 files changed, 96 insertions(+), 95 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-index 479e7ffcc951..7ea77db99c01 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
-@@ -66,4 +66,11 @@ static inline void mt76x02_irq_disable(struct mt76_dev *dev, u32 mask)
- 	mt76x02_set_irq_mask(dev, mask, 0);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index d747d60d59ea..9b800f009e6e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -518,8 +518,8 @@ static inline u16 mt76_rev(struct mt76_dev *dev)
+ #define mt76xx_chip(dev) mt76_chip(&((dev)->mt76))
+ #define mt76xx_rev(dev) mt76_rev(&((dev)->mt76))
  
-+static inline bool mt76x02_wait_for_bbp(struct mt76_dev *dev)
+-#define mt76_init_queues(dev)		(dev)->mt76.queue_ops->init(&((dev)->mt76))
+-#define mt76_queue_alloc(dev, ...)	(dev)->mt76.queue_ops->alloc(&((dev)->mt76), __VA_ARGS__)
++#define __mt76_init_queues(dev)		(dev)->queue_ops->init((dev))
++#define __mt76_queue_alloc(dev, ...)	(dev)->queue_ops->alloc((dev), __VA_ARGS__)
+ #define mt76_queue_add_buf(dev, ...)	(dev)->mt76.queue_ops->add_buf(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_rx_reset(dev, ...)	(dev)->mt76.queue_ops->rx_reset(&((dev)->mt76), __VA_ARGS__)
+ #define mt76_queue_tx_cleanup(dev, ...)	(dev)->mt76.queue_ops->tx_cleanup(&((dev)->mt76), __VA_ARGS__)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.c
+index f471c3a0674a..e60e9bf7a9d9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.c
+@@ -19,7 +19,92 @@
+ 
+ #include "mt76.h"
+ #include "mt76x02_dma.h"
+-#include "mt76x02_regs.h"
++#include "mt76x02_util.h"
++#include "mt76x02_mac.h"
++
++static int
++mt76x02_init_tx_queue(struct mt76_dev *dev, struct mt76_queue *q,
++		      int idx, int n_desc)
 +{
-+	return __mt76_poll_msec(dev, MT_MAC_STATUS,
-+				MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-+				0, 100);
++	int ret;
++
++	q->regs = dev->mmio.regs + MT_TX_RING_BASE + idx * MT_RING_SIZE;
++	q->ndesc = n_desc;
++	q->hw_idx = idx;
++
++	ret = __mt76_queue_alloc(dev, q);
++	if (ret)
++		return ret;
++
++	mt76x02_irq_enable(dev, MT_INT_TX_DONE(idx));
++
++	return 0;
 +}
 +
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index c51d6e2a64ce..9bf8be5ea1cd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -124,13 +124,6 @@ static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
- 		chan->dfs_state != NL80211_DFS_AVAILABLE);
++static int
++mt76x02_init_rx_queue(struct mt76_dev *dev, struct mt76_queue *q,
++		      int idx, int n_desc, int bufsize)
++{
++	int ret;
++
++	q->regs = dev->mmio.regs + MT_RX_RING_BASE + idx * MT_RING_SIZE;
++	q->ndesc = n_desc;
++	q->buf_size = bufsize;
++
++	ret = __mt76_queue_alloc(dev, q);
++	if (ret)
++		return ret;
++
++	mt76x02_irq_enable(dev, MT_INT_RX_DONE(idx));
++
++	return 0;
++}
++
++int mt76x02_dma_init(struct mt76_dev *dev)
++{
++	struct mt76_txwi_cache __maybe_unused *t;
++	struct mt76_queue *q;
++	int i, ret;
++
++	BUILD_BUG_ON(sizeof(t->txwi) < sizeof(struct mt76x02_txwi));
++	BUILD_BUG_ON(sizeof(struct mt76x02_rxwi) > MT_RX_HEADROOM);
++
++	mt76_dma_attach(dev);
++	__mt76_wr(dev, MT_WPDMA_RST_IDX, ~0);
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		ret = mt76x02_init_tx_queue(dev, &dev->q_tx[i],
++					    mt76_ac_to_hwq(i),
++					    MT_TX_RING_SIZE);
++		if (ret)
++			return ret;
++	}
++
++	ret = mt76x02_init_tx_queue(dev, &dev->q_tx[MT_TXQ_PSD],
++				    MT_TX_HW_QUEUE_MGMT, MT_TX_RING_SIZE);
++	if (ret)
++		return ret;
++
++	ret = mt76x02_init_tx_queue(dev, &dev->q_tx[MT_TXQ_MCU],
++				    MT_TX_HW_QUEUE_MCU, MT_MCU_RING_SIZE);
++	if (ret)
++		return ret;
++
++	ret = mt76x02_init_rx_queue(dev, &dev->q_rx[MT_RXQ_MCU], 1,
++				    MT_MCU_RING_SIZE, MT_RX_BUF_SIZE);
++	if (ret)
++		return ret;
++
++	q = &dev->q_rx[MT_RXQ_MAIN];
++	q->buf_offset = MT_RX_HEADROOM - sizeof(struct mt76x02_rxwi);
++	ret = mt76x02_init_rx_queue(dev, q, 0, MT76X02_RX_RING_SIZE,
++				    MT_RX_BUF_SIZE);
++	if (ret)
++		return ret;
++
++	return __mt76_init_queues(dev);
++}
++EXPORT_SYMBOL_GPL(mt76x02_dma_init);
+ 
+ void mt76x02_dma_enable(struct mt76_dev *dev)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+index 0b78857c9b4c..65b97f5713d3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+@@ -48,6 +48,9 @@
+ #define MT_MCU_MSG_TYPE			GENMASK(31, 30)
+ #define MT_MCU_MSG_TYPE_CMD		BIT(30)
+ 
++#define MT_RX_HEADROOM			32
++#define MT76X02_RX_RING_SIZE		256
++
+ enum dma_msg_port {
+ 	WLAN_PORT,
+ 	CPU_RX_PORT,
+@@ -67,6 +70,7 @@ mt76x02_wait_for_wpdma(struct mt76_dev *dev, int timeout)
+ 			   0, timeout);
  }
  
--static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
++int mt76x02_dma_init(struct mt76_dev *dev);
+ void mt76x02_dma_enable(struct mt76_dev *dev);
+ void mt76x02_dma_disable(struct mt76_dev *dev);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 2597bf43c2fe..1798f418c69d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -35,9 +35,6 @@
+ #define MT7662U_FIRMWARE	"mediatek/mt7662u.bin"
+ #define MT7662U_ROM_PATCH	"mediatek/mt7662u_rom_patch.bin"
+ 
+-#define MT76x2_RX_RING_SIZE	256
+-#define MT_RX_HEADROOM		32
+-
+ #define MT_MAX_CHAINS		2
+ 
+ #define MT_CALIBRATE_INTERVAL	HZ
+@@ -165,7 +162,7 @@ int mt76x2_mcu_set_channel(struct mt76x2_dev *dev, u8 channel, u8 bw,
+ int mt76x2_mcu_load_cr(struct mt76x2_dev *dev, u8 type, u8 temp_level,
+ 		       u8 channel);
+ 
+-int mt76x2_dma_init(struct mt76x2_dev *dev);
++void mt76x2_tx_tasklet(unsigned long data);
+ void mt76x2_dma_cleanup(struct mt76x2_dev *dev);
+ 
+ void mt76x2_cleanup(struct mt76x2_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+index 45bed7cbcdec..7e5eccda47f8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+@@ -18,46 +18,7 @@
+ #include "mt76x02_dma.h"
+ #include "mt76x02_util.h"
+ 
+-static int
+-mt76x2_init_tx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
+-		     int idx, int n_desc)
 -{
--	return mt76_poll_msec(dev, MT_MAC_STATUS,
--			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
--			      0, 100);
+-	int ret;
+-
+-	q->regs = dev->mt76.mmio.regs + MT_TX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
+-	q->hw_idx = idx;
+-
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
+-
+-	mt76x02_irq_enable(&dev->mt76, MT_INT_TX_DONE(idx));
+-
+-	return 0;
 -}
 -
- extern const struct ieee80211_ops mt76x2_ops;
+-static int
+-mt76x2_init_rx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
+-		     int idx, int n_desc, int bufsize)
+-{
+-	int ret;
+-
+-	q->regs = dev->mt76.mmio.regs + MT_RX_RING_BASE + idx * MT_RING_SIZE;
+-	q->ndesc = n_desc;
+-	q->buf_size = bufsize;
+-
+-	ret = mt76_queue_alloc(dev, q);
+-	if (ret)
+-		return ret;
+-
+-	mt76x02_irq_enable(&dev->mt76, MT_INT_RX_DONE(idx));
+-
+-	return 0;
+-}
+-
+-static void
+-mt76x2_tx_tasklet(unsigned long data)
++void mt76x2_tx_tasklet(unsigned long data)
+ {
+ 	struct mt76x2_dev *dev = (struct mt76x2_dev *) data;
+ 	int i;
+@@ -71,53 +32,6 @@ mt76x2_tx_tasklet(unsigned long data)
+ 	mt76x02_irq_enable(&dev->mt76, MT_INT_TX_DONE_ALL);
+ }
  
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-index 4eb3fe657bd2..57669c7999ce 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
-@@ -209,7 +209,7 @@ int mt76x2u_init_hardware(struct mt76x2_dev *dev)
+-int mt76x2_dma_init(struct mt76x2_dev *dev)
+-{
+-	int ret;
+-	int i;
+-	struct mt76_txwi_cache __maybe_unused *t;
+-	struct mt76_queue *q;
+-
+-	BUILD_BUG_ON(sizeof(t->txwi) < sizeof(struct mt76x02_txwi));
+-	BUILD_BUG_ON(sizeof(struct mt76x02_rxwi) > MT_RX_HEADROOM);
+-
+-	mt76_dma_attach(&dev->mt76);
+-
+-	tasklet_init(&dev->tx_tasklet, mt76x2_tx_tasklet, (unsigned long) dev);
+-
+-	mt76_wr(dev, MT_WPDMA_RST_IDX, ~0);
+-
+-	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-		ret = mt76x2_init_tx_queue(dev, &dev->mt76.q_tx[i],
+-					   mt76_ac_to_hwq(i), MT_TX_RING_SIZE);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	ret = mt76x2_init_tx_queue(dev, &dev->mt76.q_tx[MT_TXQ_PSD],
+-				   MT_TX_HW_QUEUE_MGMT, MT_TX_RING_SIZE);
+-	if (ret)
+-		return ret;
+-
+-	ret = mt76x2_init_tx_queue(dev, &dev->mt76.q_tx[MT_TXQ_MCU],
+-				   MT_TX_HW_QUEUE_MCU, MT_MCU_RING_SIZE);
+-	if (ret)
+-		return ret;
+-
+-	ret = mt76x2_init_rx_queue(dev, &dev->mt76.q_rx[MT_RXQ_MCU], 1,
+-				   MT_MCU_RING_SIZE, MT_RX_BUF_SIZE);
+-	if (ret)
+-		return ret;
+-
+-	q = &dev->mt76.q_rx[MT_RXQ_MAIN];
+-	q->buf_offset = MT_RX_HEADROOM - sizeof(struct mt76x02_rxwi);
+-	ret = mt76x2_init_rx_queue(dev, q, 0, MT76x2_RX_RING_SIZE, MT_RX_BUF_SIZE);
+-	if (ret)
+-		return ret;
+-
+-	return mt76_init_queues(dev);
+-}
+-
+ void mt76x2_dma_cleanup(struct mt76x2_dev *dev)
+ {
+ 	tasklet_kill(&dev->tx_tasklet);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index d4134e322ff4..98e40f6045b9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -366,7 +366,7 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
  
- 	mt76x2u_init_beacon_offsets(dev);
+ 	dev->mt76.rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
  
--	if (!mt76x2_wait_for_bbp(dev))
-+	if (!mt76x02_wait_for_bbp(&dev->mt76))
- 		return -ETIMEDOUT;
+-	ret = mt76x2_dma_init(dev);
++	ret = mt76x02_dma_init(&dev->mt76);
+ 	if (ret)
+ 		return ret;
  
- 	/* reset wcid table */
+@@ -525,6 +525,7 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 	if (!status_fifo)
+ 		return -ENOMEM;
+ 
++	tasklet_init(&dev->tx_tasklet, mt76x2_tx_tasklet, (unsigned long)dev);
+ 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
+ 	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
+ 	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
 -- 
 2.17.1
 
