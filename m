@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E000DC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E540CC43382
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 814FB21546
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F04921546
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 09:45:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="wyRUaaDZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 814FB21546
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="ekkPht9O"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F04921546
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727118AbeI0QDQ (ORCPT
+        id S1727154AbeI0QDS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Sep 2018 12:03:16 -0400
+        Thu, 27 Sep 2018 12:03:18 -0400
 Received: from mail-by2nam03on0103.outbound.protection.outlook.com ([104.47.42.103]:11780
         "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726931AbeI0QDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Sep 2018 12:03:16 -0400
+        id S1726952AbeI0QDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Sep 2018 12:03:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UhdBa6U4bqo5XVQ38GjL88uffJ5IeKBtyFLtk3lcCIY=;
- b=wyRUaaDZzATbPGRCBW2mhAqyEf6UXXLRlWpGn9aPd51dwjbZG2jO25d0UyR5g29LAeRL4rkzMpTOMJvOtiQBvhvKemlkgLMwBqax/wlqjQBrfI/G8T3nUD5b6bpTguYEYJBXfAq2Vkj0t9ELjkrlmhPhXbE4qFd/KhTumvWRoXQ=
+ bh=c2JIv3pmImwqCOr4iLiwoASnEEL6umGLZ2GeFEmav9E=;
+ b=ekkPht9O1MGbHTyuGfSZt4qqrafpPqkCoOiSYYcgUGIv3LjomVXE6zyeTSJLojfrmiIijNw+N5L6sLrcGZYCFYXo5FYkrseNBWfc1U2osPSe4BEryFTsIX5rcwohWGYnn16nTLNOQlhGZ+DMqa6kgfGDmI5FdDMUSFKRvUXuZNY=
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com (10.162.111.23) by
  BY1PR0601MB1110.namprd06.prod.outlook.com (10.160.196.139) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1164.20; Thu, 27 Sep 2018 09:44:29 +0000
+ 15.20.1164.20; Thu, 27 Sep 2018 09:44:27 +0000
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::ad59:f71e:ebcb:70ac]) by BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::ad59:f71e:ebcb:70ac%5]) with mapi id 15.20.1164.024; Thu, 27 Sep 2018
- 09:44:28 +0000
+ 09:44:27 +0000
 From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
 To:     "linux-firmware@kernel.org" <linux-firmware@kernel.org>
 CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
@@ -52,13 +52,11 @@ CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         Wright Feng <Wright.Feng@cypress.com>,
         Stanley Hsu <Stanley.Hsu@cypress.com>,
         Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: [PATCH 2/2] brcmfmac: fix full timeout waiting for action frame
- on-channel tx
-Thread-Topic: [PATCH 2/2] brcmfmac: fix full timeout waiting for action frame
- on-channel tx
-Thread-Index: AQHUVkavNklCf7PtyEiLcOia8gF9Ow==
-Date:   Thu, 27 Sep 2018 09:44:28 +0000
-Message-ID: <1538041427-115758-3-git-send-email-chi-hsien.lin@cypress.com>
+Subject: [PATCH 1/2] brcmfmac: reduce timeout for action frame scan
+Thread-Topic: [PATCH 1/2] brcmfmac: reduce timeout for action frame scan
+Thread-Index: AQHUVkauC+1CtbdwG0W3m9pcdEKsWQ==
+Date:   Thu, 27 Sep 2018 09:44:27 +0000
+Message-ID: <1538041427-115758-2-git-send-email-chi-hsien.lin@cypress.com>
 References: <1538041427-115758-1-git-send-email-chi-hsien.lin@cypress.com>
 In-Reply-To: <1538041427-115758-1-git-send-email-chi-hsien.lin@cypress.com>
 Accept-Language: en-US, zh-TW
@@ -73,28 +71,28 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1110;6:A9ZVc8eqrFQoS0wh1gk0yN4VmHW75+KDOM+Kv8NU2nnmOeXgdMmNjCIj6Xca7Rd+2R9MP/Skyp5jvDnbSSJqfu/YHj5UoTHpzi7KJXU1cRBtm337OVzR82U9Czbxkl97BzzHBKbvHCh2nxHaJxVhAwvXyW8wzS67HYhrgExvEuLANZ793LSbspJ6+Fxft/fwK+7tq1o9tGge5CQQjsVWzLRo2cCLEnFUNSqGuyDPkObsiiWBjk8fiPx8Ix39+7dtokusFyy3paJjirwGSbw7m9JqvbQvsooz2QbytLpbb6HPkb7+rlcReUC+1VmhmdpsTRXu4QH9FtkSxj3rWdmYUoB3PzDV3TApi5q+2Sku8eYc2Nrah1x7E4SF2IFNbpXYrGnQfjkYXGPx8MpLfRq0swXgnZjOvrdwYYhBNbzFC9qZBinbW9Vz9GzW+xXncsOzki9QRnHB70OP7/Z2O2tUPA==;5:dVBvBh9wlzEoVeqLii0t8m/U3nxu11ow/LvM9wsazpt1sS3nRLeP2c5L1CsoFzaAaksyST4CeIZXjDRfIG0ZWHSe73PQVvWLs4fwRxoLYTlHcFoCWk77Yz1+9UI76/i1L10005nRii7r/m0CLV73fK7uqm0WmPfzr3RvQ/GVdqU=;7:6Iz4jJdVHQ55Pb2OBjyJDxs0adwhd4jDYWoTg5RBHwHCZc+7jgLAelIGw1PoGj/bdSOkbkGfDP87TAPtrmN8bamu7PmgNPObJkrAymTnm8hbltqWuKny85hdAAGaCjgQZCKOgA0FZTCfagSm+lRNvaY3gS+5Qm1DtMqmPA3CUIym9/Eed055K8hmjogxnDNGkvuB81R3XPEE4SfY0p1sYl7/HSQe94QadybyB803WP59obIXpKELPJP/LOgWVqXq
-x-ms-office365-filtering-correlation-id: e92667f8-9154-4bb1-2054-08d6245dd15f
+x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1110;6:kVQ23UWryV9FAA5GcCaAWWt1q9pqEmwib9zTpOB/cmdboTvgtdTtx7Gd5LWuG9h5wF3YYYIvftL5Xcg273VzXJoiaOKn0l5OPYF8xiiRtADCgHggkJV0AetS8zfsdNAJPKYzVj4TkR3c9RX3P4RsczSUX0XI+mOUt3y2L5lMgSqtTDOuRu6a+EgDuzeZbcK7bxnHVQq69bF/NJ4Ry/jCelHOa+khH2jjfc0JVtXSvGp5veoQjO/xC8TKg2Uq41DhAiw8zzn13Lcl0oN7exl8IqbfIWwqtTE4Jqm+gHwZZlQTrQM8Zy4E98GGu4tmiHcI6n4+5pOKKTWiDWbN6G15PtxOJYSSA5jhMOx4PPyWRyf1LHuvZjq3lqpHs6BkGzpTtaFWt6WadZvKEEoRbEtY/fWc08rcZO882kB2PpppInA7cKew0xQtKHYZCzjP4DS1NfyF1Bc8bgJ2qJMqhq6dtQ==;5:BsSoOrVAqqDyFB/Bb9WCpuexZmJRICJETJKkXX1yU/M2XT6fkgJyVIj9gByUBu/19s27IZLanOXgVc6MGb8sAP/8TILahnjlqvMZ5JHAv8+5eM0F9aTly5mz68bo7JHZIjXpzq5S3EAvk2Mv2OkDf7+tHmwvEBG70osg4eHN1DU=;7:OL52jKq6kvDKh/q5WyLsV1/TCVCL+x2ETOqG3RQsXPGj5uMVkIkAyfJLEdqRA0zCrz0QiRXVwlXDeP9woFmFINYxQCG0aqXj/jE6m5rUO7xgdnKdnn1n9PJ6+RJJxhAKDyguRK6TW2W4dET0mYo+q5VAUBukrvSh0II6s068TOhW8NQAum7MySyuOGG7UShTWYCxtf46MwDWbQX76to7HVKnjxLqqxjVfxsHF7NRlWXB71efRqCRwoYN1FdwD4QY
+x-ms-office365-filtering-correlation-id: 53f16f77-a837-4858-4fb2-08d6245dd08d
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1110;
 x-ms-traffictypediagnostic: BY1PR0601MB1110:
-x-microsoft-antispam-prvs: <BY1PR0601MB1110E1B89098E1A6EC6B2081BB140@BY1PR0601MB1110.namprd06.prod.outlook.com>
+x-microsoft-antispam-prvs: <BY1PR0601MB11107BF83253131EC20DBBF6BB140@BY1PR0601MB1110.namprd06.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:(258095267146985);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(10201501046)(3002001)(93006095)(93001095)(3231355)(944501410)(52105095)(6055026)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123562045)(20161123558120)(201708071742011)(7699051);SRVR:BY1PR0601MB1110;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1110;
 x-forefront-prvs: 0808323E97
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(346002)(39860400002)(376002)(396003)(366004)(22813001)(199004)(189003)(8676002)(256004)(76176011)(54906003)(66066001)(4326008)(6436002)(2900100001)(2906002)(53936002)(5640700003)(3846002)(71200400001)(107886003)(575784001)(6506007)(52116002)(386003)(102836004)(6512007)(5250100002)(97736004)(71190400001)(68736007)(6116002)(36756003)(14444005)(81156014)(99286004)(5024004)(486006)(316002)(81166006)(25786009)(186003)(26005)(86362001)(6486002)(305945005)(6916009)(7736002)(478600001)(5660300001)(105586002)(2351001)(106356001)(72206003)(11346002)(8936002)(2616005)(14454004)(446003)(34290500001)(2501003)(476003);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1110;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(346002)(39860400002)(376002)(396003)(366004)(199004)(189003)(8676002)(256004)(76176011)(54906003)(66066001)(4326008)(6436002)(2900100001)(2906002)(53936002)(5640700003)(3846002)(71200400001)(107886003)(6506007)(52116002)(386003)(102836004)(6512007)(5250100002)(97736004)(71190400001)(68736007)(6116002)(36756003)(14444005)(81156014)(99286004)(486006)(316002)(81166006)(25786009)(186003)(26005)(86362001)(6486002)(305945005)(6916009)(7736002)(478600001)(5660300001)(105586002)(2351001)(106356001)(72206003)(11346002)(8936002)(2616005)(14454004)(446003)(34290500001)(2501003)(476003);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1110;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: cypress.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: qF/JWBozVZX1N/lVT1VlXA1uDIf4NqDTxhylslMfQgXZ7TqDIj3v773oHj9hBpfQ/+je8LCOeaNM7Sf3tiMQ72q8vdlXTZIYkFQCzVwavk3YZYbQJ20rddUuJetBtr2Q67ee5gznk2DQEqQ4z/FwdlxaPN9UvveextxSxYkA1bVspinLuHA/rOUaOK2XRA7ikTSlKfWE39+fC+x6V3sEL2OVEvJUoerRQ+V1Efl+yQvukdyLCX7WtU8LkPEQW6bi1cg225AgZb4jQAoOnAl228JtNa04HwDNJjFPuV7bZofqe38tiTZi8BmF1C80bskKACC2jDOGYX76DHEKVwp3GljQ1ZpdQf+IHDbqMT6Z8BA=
+x-microsoft-antispam-message-info: q158TbL683AeIY4FV2Hx1rz2kAK7JCa65w5a9M65GPcyFY3b5Lx9IsfrcoynNYpCrZXmxubIs4E5zkzWIqEQoJYEFLu9FqACU+FIhS+X0TdZAl+DoLuvmvpDMO6gtOpH0gByFDADSRgirbkMQUpQI9bXpaOTX+/R12M01AxFU0fPJP5OH2MC7S8JY/cmi0QF0IsdbJ4v4pprwZaFIzuctfkz4RmoFf3x0LbYnifUl6Tnii7Mpr9wlSCAHuvwt095mHyFVTJe6g4K9yasvISrWmWLLnck7wHV/rOw1DkbSuVx0KutAfZ59K+cWWP3Obd/bdS5lCVMSZ5VIMLrpzBf4V14Bj9CGvD7YW60OFaeyMI=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e92667f8-9154-4bb1-2054-08d6245dd15f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Sep 2018 09:44:28.8828
+X-MS-Exchange-CrossTenant-Network-Message-Id: 53f16f77-a837-4858-4fb2-08d6245dd08d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Sep 2018 09:44:27.4765
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
@@ -106,88 +104,74 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
 
-The driver sends an action frame down and waits for a completion signal
-triggered by the received BRCMF_E_ACTION_FRAME_OFF_CHAN_COMPLETE event
-to continue the process. However, the action frame could be transmitted
-either on the current channel or on an off channel. For the on-channel
-case, only BRCMF_E_ACTION_FRAME_COMPLETE event will be received when
-the frame is transmitted, which make the driver always wait a full
-timeout duration. This patch has the completion signal be triggered by
-receiving the BRCMF_E_ACTION_FRAME_COMPLETE event for the on-channel
-case.
+Finding a common channel to send an action frame out is required for
+some action types. Since a loop with several scan retry is used to find
+the channel, a short wait time could be considered for each attempt.
+This patch reduces the wait time from 1500 to 450 msec for each action
+frame scan.
 
-This change fixes WFA p2p certification 5.1.19 failure.
+This patch fixes the WFA p2p certification 5.1.20 failure caused by the
+long action frame send time.
 
 Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
 Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 17 ++++++++++++++=
-+--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |  2 ++
- 2 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drive=
 rs/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 7822740a8cb4..456a1bf008b3 100644
+index 3e9c4f2f5dd1..7822740a8cb4 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1457,10 +1457,12 @@ int brcmf_p2p_notify_action_tx_complete(struct brcm=
-f_if *ifp,
- 		return 0;
+@@ -74,7 +74,7 @@
+ #define P2P_AF_MAX_WAIT_TIME		msecs_to_jiffies(2000)
+ #define P2P_INVALID_CHANNEL		-1
+ #define P2P_CHANNEL_SYNC_RETRY		5
+-#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(1500)
++#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(450)
+ #define P2P_DEFAULT_SLEEP_TIME_VSDB	200
 =20
- 	if (e->event_code =3D=3D BRCMF_E_ACTION_FRAME_COMPLETE) {
--		if (e->status =3D=3D BRCMF_E_STATUS_SUCCESS)
-+		if (e->status =3D=3D BRCMF_E_STATUS_SUCCESS) {
- 			set_bit(BRCMF_P2P_STATUS_ACTION_TX_COMPLETED,
- 				&p2p->status);
--		else {
-+			if (!p2p->wait_for_offchan_complete)
-+				complete(&p2p->send_af_done);
-+		} else {
- 			set_bit(BRCMF_P2P_STATUS_ACTION_TX_NOACK, &p2p->status);
- 			/* If there is no ack, we don't need to wait for
- 			 * WLC_E_ACTION_FRAME_OFFCHAN_COMPLETE event
-@@ -1511,6 +1513,17 @@ static s32 brcmf_p2p_tx_action_frame(struct brcmf_p2=
-p_info *p2p,
- 	p2p->af_sent_channel =3D le32_to_cpu(af_params->channel);
- 	p2p->af_tx_sent_jiffies =3D jiffies;
+ /* WiFi P2P Public Action Frame OUI Subtypes */
+@@ -1134,7 +1134,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcm=
+f_p2p_info *p2p)
+ {
+ 	struct afx_hdl *afx_hdl =3D &p2p->afx_hdl;
+ 	struct brcmf_cfg80211_vif *pri_vif;
+-	unsigned long duration;
+ 	s32 retry;
 =20
-+	if (test_bit(BRCMF_P2P_STATUS_DISCOVER_LISTEN, &p2p->status) &&
-+	    p2p->af_sent_channel =3D=3D
-+	    ieee80211_frequency_to_channel(p2p->remain_on_channel.center_freq))
-+		p2p->wait_for_offchan_complete =3D false;
-+	else
-+		p2p->wait_for_offchan_complete =3D true;
-+
-+	brcmf_dbg(TRACE, "Waiting for %s tx completion event\n",
-+		  (p2p->wait_for_offchan_complete) ?
-+		   "off-channel" : "on-channel");
-+
- 	timeout =3D wait_for_completion_timeout(&p2p->send_af_done,
- 					      P2P_AF_MAX_WAIT_TIME);
-=20
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h b/drive=
-rs/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-index 0e8b34d2d85c..39f0d0218088 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-@@ -124,6 +124,7 @@ struct afx_hdl {
-  * @gon_req_action: about to send go negotiation requets frame.
-  * @block_gon_req_tx: drop tx go negotiation requets frame.
-  * @p2pdev_dynamically: is p2p device if created by module param or suppli=
-cant.
-+ * @wait_for_offchan_complete: wait for off-channel tx completion event.
-  */
- struct brcmf_p2p_info {
- 	struct brcmf_cfg80211_info *cfg;
-@@ -144,6 +145,7 @@ struct brcmf_p2p_info {
- 	bool gon_req_action;
- 	bool block_gon_req_tx;
- 	bool p2pdev_dynamically;
-+	bool wait_for_offchan_complete;
- };
-=20
- s32 brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg, bool p2pdev_forced);
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1150,7 +1149,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcm=
+f_p2p_info *p2p)
+ 	 * pending action frame tx is cancelled.
+ 	 */
+ 	retry =3D 0;
+-	duration =3D msecs_to_jiffies(P2P_AF_FRM_SCAN_MAX_WAIT);
+ 	while ((retry < P2P_CHANNEL_SYNC_RETRY) &&
+ 	       (afx_hdl->peer_chan =3D=3D P2P_INVALID_CHANNEL)) {
+ 		afx_hdl->is_listen =3D false;
+@@ -1158,7 +1156,8 @@ static s32 brcmf_p2p_af_searching_channel(struct brcm=
+f_p2p_info *p2p)
+ 			  retry);
+ 		/* search peer on peer's listen channel */
+ 		schedule_work(&afx_hdl->afx_work);
+-		wait_for_completion_timeout(&afx_hdl->act_frm_scan, duration);
++		wait_for_completion_timeout(&afx_hdl->act_frm_scan,
++					    P2P_AF_FRM_SCAN_MAX_WAIT);
+ 		if ((afx_hdl->peer_chan !=3D P2P_INVALID_CHANNEL) ||
+ 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
+ 			       &p2p->status)))
+@@ -1171,7 +1170,7 @@ static s32 brcmf_p2p_af_searching_channel(struct brcm=
+f_p2p_info *p2p)
+ 			afx_hdl->is_listen =3D true;
+ 			schedule_work(&afx_hdl->afx_work);
+ 			wait_for_completion_timeout(&afx_hdl->act_frm_scan,
+-						    duration);
++						    P2P_AF_FRM_SCAN_MAX_WAIT);
+ 		}
+ 		if ((afx_hdl->peer_chan !=3D P2P_INVALID_CHANNEL) ||
+ 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
 --=20
 2.1.0
 
