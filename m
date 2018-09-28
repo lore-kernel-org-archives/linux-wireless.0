@@ -2,82 +2,99 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89ECFC43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60DCAC43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B930215EB
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:04:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="M/s0nxfm"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2B930215EB
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	by mail.kernel.org (Postfix) with ESMTP id 294332172C
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:08:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 294332172C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728944AbeI1P1M (ORCPT
+        id S1729122AbeI1Pax (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 11:27:12 -0400
-Received: from mail.toke.dk ([52.28.52.200]:38193 "EHLO mail.toke.dk"
+        Fri, 28 Sep 2018 11:30:53 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56930 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726440AbeI1P1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 11:27:12 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1538125464; bh=CRs3mB0TfBB0vzX9QUaDyH4VopRtcUTVxr7MpUAh6gM=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=M/s0nxfmpnDz/SScodF1v2/KKguEiHp0MntLQ+UgiZMB7Aqe+q2CP1IAW/8ypfC+M
-         ZPVlw3YuQ6umcaZy9uJq+av7AmS0JTNXj37vnxVQMrXwaTySbl+h4tAdJJ01OTTpHx
-         9j/mridv8bA3qKS+pua5BtB3N7a9ZqXusqKrtg+hEIOzbmxggWwrww/zDfIpU6B97S
-         ZWR2bksVN+L4gx7RNqH3X1Db9LFoZBAgXTVBqY23i/7yV1RZ8+U095zTs37duJKG2s
-         AEvph5uB66Nwxe2T0HNwMqEjR7cnmux2+sX9JjoQcUtyOtrBb3hW21bY1wLmHCp1fs
-         V0+NkbeY//mDQ==
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: TDLS: fix skb queue/priority assignment
-In-Reply-To: <1538119050.14416.55.camel@sipsolutions.net>
-References: <20180905113402.7665-1-johannes@sipsolutions.net> <1536147453.3528.11.camel@sipsolutions.net> <87k1o05g04.fsf@toke.dk> <1536147683.3528.12.camel@sipsolutions.net> <1536147865.3528.14.camel@sipsolutions.net> <87efe8yvju.fsf@toke.dk> <1536150812.3528.15.camel@sipsolutions.net> <87bm9cyuou.fsf@toke.dk> <1538119050.14416.55.camel@sipsolutions.net>
-Date:   Fri, 28 Sep 2018 11:04:23 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87mus2at7s.fsf@toke.dk>
+        id S1727777AbeI1Pax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 11:30:53 -0400
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8723C81DF7;
+        Fri, 28 Sep 2018 09:08:05 +0000 (UTC)
+Received: from localhost (ovpn-204-174.brq.redhat.com [10.40.204.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AD66C2010DA2;
+        Fri, 28 Sep 2018 09:08:04 +0000 (UTC)
+Date:   Fri, 28 Sep 2018 11:08:03 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     yhchuang@realtek.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        tehuang@realtek.com
+Subject: Re: [PATCH 01/12] rtwlan: main files
+Message-ID: <20180928090803.GB8323@redhat.com>
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+ <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
+ <20180927135040.GA4712@redhat.com>
+ <a6b6803e-fd18-81f4-6465-d573aa5c9e2a@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a6b6803e-fd18-81f4-6465-d573aa5c9e2a@lwfinger.net>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.25
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Fri, 28 Sep 2018 09:08:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Thu, Sep 27, 2018 at 10:40:44AM -0500, Larry Finger wrote:
+> On 9/27/18 8:50 AM, Stanislaw Gruszka wrote:
+> --snip
+> 
+> > 
+> > > +#define BIT_LEN_MASK_32(__bitlen) (0xFFFFFFFF >> (32 - (__bitlen)))
+> > > +#define BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)                          \
+> > > +	(BIT_LEN_MASK_32(__bitlen) << (__bitoffset))
+> > > +#define LE_P4BYTE_TO_HOST_4BYTE(__start) (le32_to_cpu(*((__le32 *)(__start))))
+> > > +#define LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen)               \
+> > > +	(LE_P4BYTE_TO_HOST_4BYTE(__start) &                                    \
+> > > +	 (~BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)))
+> > > +#define LE_BITS_TO_4BYTE(__start, __bitoffset, __bitlen)                       \
+> > > +	((LE_P4BYTE_TO_HOST_4BYTE(__start) >> (__bitoffset)) &                 \
+> > > +	 BIT_LEN_MASK_32(__bitlen))
+> > > +#define SET_BITS_TO_LE_4BYTE(__start, __bitoffset, __bitlen, __value)          \
+> > > +	do {                                                                   \
+> > > +		*((__le32 *)(__start)) = \
+> > > +		cpu_to_le32( \
+> > > +		LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen) |     \
+> > > +		((((u32)__value) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset))\
+> > > +		);                                                             \
+> > > +	} while (0)
+> 
+> Stanislaw,
+> 
+> I have never loved these macros, and it took a lot of time to get them to be
+> endian correct. Could you point me to a method that would overwrite a
+> portion of a 32-bit little-endian word that would be correct for both
+> little- and big-endian machines? Keep in mind that Kalle hates the use of
+> compile tests on __LITTLE_ENDIAN.
 
-> On Wed, 2018-09-05 at 14:50 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
-> (uh, sorry, bit late ...)
->
->> > The problem isn't so much how we handle it in mac80211 for the queuein=
-g,
->> > but how we deal with things like A-MSDU and how we present it to the
->> > driver ... for iwlwifi at least we'd really like to have only data
->> > frames so we can map it directly to the hardware queue ...
->>=20
->> Ah, I see. No, then just putting them at the head of a different TXQ
->> probably won't work...
->>=20
->> Are you mapping TXQs to hardware queues dynamically as they empty and
->> re-fill? Presumably you'll have cases where you don't have enough HWQs?
->
-> Depends on the hardware. Newer hardware has basically unlimited HWQs
-> (something on the order of 512 IIRC).
->
-> Older hardware sort of maps them dynamically, but not too dynamic, we
-> also have 32 (ish) queues there. We only free them if we need a new one
-> and don't have one, and yes, theoretically we can run out and then we
-> may have to share a single hardware queue for multiple TXQs, but it
-> basically never happens in practice.
+Maybe something like this (not tested)
 
-Right, gotcha, thanks for the explanation :)
+#define SET_LE32(reg, off, len, val) \
+	((reg & cpu_to_le32(~GENMASK(off + len - 1, off))) | cpu_to_le32(val << off))
 
--Toke
+?
+
+There are plenty of bitops and endian primitives in kernel, it's
+very very unlikly you need custom macros for handle that.
+
+Thanks
+Stanislaw
