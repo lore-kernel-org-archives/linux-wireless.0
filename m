@@ -2,130 +2,231 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD77C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E45C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:25:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5C1820666
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:23:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A5C1820666
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
+	by mail.kernel.org (Postfix) with ESMTP id C073720838
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:25:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="W0/uShIU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C073720838
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726971AbeI1VrU (ORCPT
+        id S1728643AbeI1VuF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 17:47:20 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:53580 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726345AbeI1VrU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 17:47:20 -0400
-Received: from [192.168.1.47] (unknown [50.34.223.145])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 18EBB40A539;
-        Fri, 28 Sep 2018 08:23:00 -0700 (PDT)
-Subject: Re: Problem with sending pkt on a monitor port
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
- <1537389335.10305.92.camel@sipsolutions.net>
- <d6f99a05-77a3-f18a-4e7a-083062119ce4@candelatech.com>
- <1537428695.3874.1.camel@sipsolutions.net>
- <6ac68a4c-04a3-ce6e-232e-3ebb6100ee29@candelatech.com>
- <1538118875.14416.53.camel@sipsolutions.net>
-From:   Ben Greear <greearb@candelatech.com>
-Message-ID: <e8be6dbc-7062-3e5a-0303-e68c988e4a9a@candelatech.com>
-Date:   Fri, 28 Sep 2018 08:22:58 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        Fri, 28 Sep 2018 17:50:05 -0400
+Received: from mail.toke.dk ([52.28.52.200]:40003 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726345AbeI1VuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 17:50:05 -0400
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1538148348; bh=R+TQHCNIudKILwJ4AyKuHZrpI63L+cAuAEdA6wlwMl8=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=W0/uShIUgUvuTKAn1+BEOVArbUEtqgVkT1MOz7WRA/COqHgMShddwmW1tclWiOYgI
+         DLsj+La3Xdww55zS5kXRMEgKkASHOtMT2AirRAN4q7C4gEUp53BuRZdWrNrIXdMmbw
+         o3/ZFT6Z05dWYOHPG4o3xvkNcisxlacHO0PMXQSjuLGLHHjY4XxwoJ0SMwpyx9Ua0Y
+         Fnv/j7ud2wU6scX++03C+kgtHGMnc7YRSnVSXu0TMkzYbAXTDm8cwi6a9dnQs9I7NS
+         iPCvsKwLcXVIv7DQvD17GZlPnkbt6xysHiad95eV5/zV8jHaPEE6WCghHMFFyWDqua
+         KsVVCs1pgJ6sA==
+To:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Subject: Re: [RFC 2/2] ath10k: reporting estimated tx airtime for fairness
+In-Reply-To: <1538008874-11692-2-git-send-email-rmanohar@codeaurora.org>
+References: <1538008874-11692-1-git-send-email-rmanohar@codeaurora.org> <1538008874-11692-2-git-send-email-rmanohar@codeaurora.org>
+Date:   Fri, 28 Sep 2018 17:25:47 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87lg7lfxtw.fsf@toke.dk>
 MIME-Version: 1.0
-In-Reply-To: <1538118875.14416.53.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 
-
-On 09/28/2018 12:14 AM, Johannes Berg wrote:
-> Sorry, I'm a bit behind things ...
+> Transmit airtime will be estimated from last tx rate used.
+> Firmware report tx rate by peer stats. Airtime is computed
+> on tx path and the same will be reported to mac80211 upon
+> tx completion.
 >
->>> It's actually created by mac80211, but only once, and not directly
->>> mapped to each vif seen by userspace - it's an internal construction.
->>
->> I'm not sure it matters, but ath10k firmware can also create a monitor vdev
->> itself for certain reasons.  (Maybe offchannel tx on some FW, but I haven't looked at
->> that code lately).
+> Signed-off-by: Kan Yan <kyan@google.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.h   |  2 ++
+>  drivers/net/wireless/ath/ath10k/htt_rx.c |  1 +
+>  drivers/net/wireless/ath/ath10k/mac.c    | 58 ++++++++++++++++++++++++++++++--
+>  drivers/net/wireless/ath/ath10k/txrx.c   |  4 +++
+>  4 files changed, 62 insertions(+), 3 deletions(-)
 >
-> Yeah and I think it may actually do for active monitor, but I believe
-> those get their own MAC address anyway? That might get used in the end
-> as the vif to the driver too.
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index d3e20aaf8023..4bfc370bf659 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -123,6 +123,7 @@ struct ath10k_skb_cb {
+>  	u8 flags;
+>  	u8 eid;
+>  	u16 msdu_id;
+> +	u16 airtime_est;
+>  	struct ieee80211_vif *vif;
+>  	struct ieee80211_txq *txq;
+>  } __packed;
+> @@ -493,6 +494,7 @@ struct ath10k_sta {
+>  	u32 smps;
+>  	u16 peer_id;
+>  	struct rate_info txrate;
+> +	u32 last_tx_bitrate;
+>  
+>  	struct work_struct update_wk;
+>  	u64 rx_duration;
+> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> index f2aaa2f7a022..f1de9fc09d9f 100644
+> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> @@ -2809,6 +2809,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+>  
+>  	arsta->txrate.nss = txrate.nss;
+>  	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
+> +	arsta->last_tx_bitrate = cfg80211_calculate_bitrate(&arsta->txrate);
+>  
+>  	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
+>  		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index d4648b22ad64..a694dae6f024 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -3528,7 +3528,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+>  static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+>  				    struct ieee80211_vif *vif,
+>  				    struct ieee80211_txq *txq,
+> -				    struct sk_buff *skb)
+> +				    struct sk_buff *skb, u16 airtime)
+>  {
+>  	struct ieee80211_hdr *hdr = (void *)skb->data;
+>  	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
+> @@ -3545,6 +3545,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+>  
+>  	cb->vif = vif;
+>  	cb->txq = txq;
+> +	cb->airtime_est = airtime;
+>  }
+>  
+>  bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
+> @@ -3932,6 +3933,50 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
+>  	return false;
+>  }
+>  
+> +/* Return estimated airtime in microsecond, which is calculated using last
+> + * reported TX rate. This is just a rough estimation because host driver has no
+> + * knowledge of the actual transmit rate, retries or aggregation. If actual
+> + * airtime can be reported by firmware, then delta between estimated and actual
+> + * airtime can be adjusted from deficit.
+> + */
+> +#define IEEE80211_ATF_OVERHEAD		100	/* IFS + some slot time */
+> +#define IEEE80211_ATF_OVERHEAD_IFS	16	/* IFS only */
+> +static u16 ath10k_mac_update_airtime(struct ath10k *ar,
+> +				     struct ieee80211_txq *txq,
+> +				     struct sk_buff *skb)
+> +{
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> +	struct ath10k_sta *arsta;
+> +	u32 pktlen;
+> +	u16 airtime = 0;
+> +
+> +	if (!txq || !txq->sta || !ieee80211_is_data(hdr->frame_control))
+> +		return airtime;
+> +
+> +	spin_lock_bh(&ar->data_lock);
+> +	arsta = (struct ath10k_sta *)txq->sta->drv_priv;
+> +
+> +	pktlen = skb->len + 38; /* Assume MAC header 30, SNAP 8 for most case */
+> +	if (arsta->last_tx_bitrate) {
+> +		/* airtime in us, last_tx_bitrate in 100kbps */
+> +		airtime = (pktlen * 8 * (1000 / 100))
+> +				/ arsta->last_tx_bitrate;
+> +		/* overhead for media access time and IFS */
+> +		airtime += IEEE80211_ATF_OVERHEAD_IFS;
+> +	} else {
+> +		/* This is mostly for throttle excessive BC/MC frames, and the
+> +		 * airtime/rate doesn't need be exact. Airtime of BC/MC frames
+> +		 * in 2G get some discount, which helps prevent very low rate
+> +		 * frames from being blocked for too long.
+> +		 */
+> +		airtime = (pktlen * 8 * (1000 / 100)) / 60; /* 6M */
+> +		airtime += IEEE80211_ATF_OVERHEAD;
+> +	}
+> +	spin_unlock_bh(&ar->data_lock);
+> +
+> +	return airtime;
+> +}
+> +
+>  int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+>  			   struct ieee80211_txq *txq)
+>  {
+> @@ -3947,6 +3992,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+>  	size_t skb_len;
+>  	bool is_mgmt, is_presp;
+>  	int ret;
+> +	u16 airtime;
+>  
+>  	spin_lock_bh(&ar->htt.tx_lock);
+>  	ret = ath10k_htt_tx_inc_pending(htt);
+> @@ -3964,7 +4010,8 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+>  		return -ENOENT;
+>  	}
+>  
+> -	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
+> +	airtime = ath10k_mac_update_airtime(ar, txq, skb);
+> +	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
+>  
+>  	skb_len = skb->len;
+>  	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+> @@ -4230,8 +4277,10 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+>  	bool is_mgmt;
+>  	bool is_presp;
+>  	int ret;
+> +	u16 airtime;
+>  
+> -	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
+> +	airtime = ath10k_mac_update_airtime(ar, txq, skb);
+> +	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
+>  
+>  	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+>  	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
+> @@ -8446,6 +8495,9 @@ int ath10k_mac_register(struct ath10k *ar)
+>  		wiphy_ext_feature_set(ar->hw->wiphy,
+>  				      NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
+>  
+> +	if (ath10k_peer_stats_enabled(ar))
+> +		wiphy_ext_feature_set(ar->hw->wiphy,
+> +				      NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
+>  	/*
+>  	 * on LL hardware queues are managed entirely by the FW
+>  	 * so we only advertise to mac we can do the queues thing
+> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+> index 23606b6972d0..8e7c416cd330 100644
+> --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> @@ -95,6 +95,10 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+>  		wake_up(&htt->empty_tx_wq);
+>  	spin_unlock_bh(&htt->tx_lock);
+>  
+> +	if (txq && txq->sta)
+> +		ieee80211_sta_register_airtime(txq->sta, txq->tid,
+> +					       skb_cb->airtime_est, 0);
+> +
 
-The monitor port has the same mac as the wlanX in ath10k, ie the 'radio's mac'.
+So this just uses the calculated airtime based on rate and size? Wasn't
+there supposed to be an airtime usage value reported by the firmware? :)
 
->>> However, thinking about it, that also breaks userspace in other ways -
->>> for example if you do injection this way you actually get encryption and
->>> other nice things if you use the local address that matches an existing
->>> interface.
->>
->> I'm not entirely sure of a useful use-case for this feature in user-space.
->
-> Which feature?
-
-radio-tap send on a monitor vdev.
-
->
-> At least ancient versions of hostapd would rely on this, but clearly
-> that's no longer super relevant. I don't know if anyone else relies on
-> it, but in a way that is the problem. If I knew, then I could think
-> about alternatives or how to keep that working if we change anything
-> here.
->
->> I am using it just to test sending some test frames to debug some firmware
->> features.  I think another user sent hand-crafted specialized beacons in this manner
->> using my 10.1 ath10k firmware & driver.  For whatever reason, I didn't realize monitor
->> vdevs were not directly used when I added that support..maybe I just got lucky
->> before I had to dig closely.
->
-> They may be used if they were active monitor? I don't know ath10k well.
-> But then they shouldn't have had the same MAC address to start with,
-> IIRC.
-
-The code I quoted at the first of this thread make sure the monitor vdev is
-not used if possible.  But, maybe the driver has or had some ways to force certain
-frames out the monitor port.  That is my recollection.  I added code to the firmware
-to allow this to work, including bug fixes to crashes, so I am pretty sure there is *some*
-way for that tx path to happen, at least in wave-1 firmware.
-
->> If I make the code in my original email be skipped, so that sdata remains the
->> monitor vdev, then it fails a check later in that method because there is no
->> chanctxt for the monitor sdata object.
->>
->> I guess that changing the source MAC to something unique would cause the same
->> issue and no frame would be sent towards the driver.
->
-> Hmm. This *should* work in one way or the other? But again, maybe ath10k
-> has something special here?
->
-> You skipped *just* that loop?
-
-Yes...because the monitor vdev chanctx was null and that method checks a bit later for it.
-
-Maybe there is a way to create/configure the monitor vdev so that it has
-a chanctx?
-
-Thanks,
-Ben
-
->
-> johannes
->
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+-Toke
