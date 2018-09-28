@@ -2,71 +2,82 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 778EAC43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 08:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89ECFC43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:04:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F01C2152A
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 08:59:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3F01C2152A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 2B930215EB
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:04:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="M/s0nxfm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2B930215EB
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728944AbeI1PWe (ORCPT
+        id S1728944AbeI1P1M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 11:22:34 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:36236 "EHLO mx1.redhat.com"
+        Fri, 28 Sep 2018 11:27:12 -0400
+Received: from mail.toke.dk ([52.28.52.200]:38193 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726440AbeI1PWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 11:22:33 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C7D1DC05169D;
-        Fri, 28 Sep 2018 08:59:48 +0000 (UTC)
-Received: from localhost (ovpn-204-174.brq.redhat.com [10.40.204.174])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C867260F86;
-        Fri, 28 Sep 2018 08:59:45 +0000 (UTC)
-Date:   Fri, 28 Sep 2018 10:59:41 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 08/24] mt76: move mt76x2_wait_for_bbp in mt76x02-lib
- module
-Message-ID: <20180928085940.GA8323@redhat.com>
-References: <20180928064017.26870-9-lorenzo.bianconi@redhat.com>
+        id S1726440AbeI1P1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 11:27:12 -0400
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1538125464; bh=CRs3mB0TfBB0vzX9QUaDyH4VopRtcUTVxr7MpUAh6gM=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=M/s0nxfmpnDz/SScodF1v2/KKguEiHp0MntLQ+UgiZMB7Aqe+q2CP1IAW/8ypfC+M
+         ZPVlw3YuQ6umcaZy9uJq+av7AmS0JTNXj37vnxVQMrXwaTySbl+h4tAdJJ01OTTpHx
+         9j/mridv8bA3qKS+pua5BtB3N7a9ZqXusqKrtg+hEIOzbmxggWwrww/zDfIpU6B97S
+         ZWR2bksVN+L4gx7RNqH3X1Db9LFoZBAgXTVBqY23i/7yV1RZ8+U095zTs37duJKG2s
+         AEvph5uB66Nwxe2T0HNwMqEjR7cnmux2+sX9JjoQcUtyOtrBb3hW21bY1wLmHCp1fs
+         V0+NkbeY//mDQ==
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc:     Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: TDLS: fix skb queue/priority assignment
+In-Reply-To: <1538119050.14416.55.camel@sipsolutions.net>
+References: <20180905113402.7665-1-johannes@sipsolutions.net> <1536147453.3528.11.camel@sipsolutions.net> <87k1o05g04.fsf@toke.dk> <1536147683.3528.12.camel@sipsolutions.net> <1536147865.3528.14.camel@sipsolutions.net> <87efe8yvju.fsf@toke.dk> <1536150812.3528.15.camel@sipsolutions.net> <87bm9cyuou.fsf@toke.dk> <1538119050.14416.55.camel@sipsolutions.net>
+Date:   Fri, 28 Sep 2018 11:04:23 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87mus2at7s.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180928064017.26870-9-lorenzo.bianconi@redhat.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Fri, 28 Sep 2018 08:59:48 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Sep 28, 2018 at 08:40:01AM +0200, Lorenzo Bianconi wrote:
-> +static inline bool
-> +mt76x02_wait_for_txrx_active(struct mt76_dev *dev)
-> +{
-> +	return __mt76_poll_msec(dev, MT_MAC_STATUS,
-> +				MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-> +				0, 100);
-> +}
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-The name is unfortunate, what we wait for is TX and RX become idle
-i.e. hardware do not perform any RX or TX (see for example 
-mt76x2_mac_stop() ).
+> On Wed, 2018-09-05 at 14:50 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>
+> (uh, sorry, bit late ...)
+>
+>> > The problem isn't so much how we handle it in mac80211 for the queuein=
+g,
+>> > but how we deal with things like A-MSDU and how we present it to the
+>> > driver ... for iwlwifi at least we'd really like to have only data
+>> > frames so we can map it directly to the hardware queue ...
+>>=20
+>> Ah, I see. No, then just putting them at the head of a different TXQ
+>> probably won't work...
+>>=20
+>> Are you mapping TXQs to hardware queues dynamically as they empty and
+>> re-fill? Presumably you'll have cases where you don't have enough HWQs?
+>
+> Depends on the hardware. Newer hardware has basically unlimited HWQs
+> (something on the order of 512 IIRC).
+>
+> Older hardware sort of maps them dynamically, but not too dynamic, we
+> also have 32 (ish) queues there. We only free them if we need a new one
+> and don't have one, and yes, theoretically we can run out and then we
+> may have to share a single hardware queue for multiple TXQs, but it
+> basically never happens in practice.
 
-I think this patch should be droped and we should just use
-mt76_poll_msec(MT_MAC_STATUS) directly, there is no real benefit
-for this function.
+Right, gotcha, thanks for the explanation :)
 
-Thanks
-Stanislaw
-
+-Toke
