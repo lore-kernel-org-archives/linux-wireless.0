@@ -5,71 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3901C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A01CC43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E6DA216FA
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:17:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9E6DA216FA
+	by mail.kernel.org (Postfix) with ESMTP id 29F54216FA
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:19:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 29F54216FA
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728825AbeI1NkH (ORCPT
+        id S1728976AbeI1Nl5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 09:40:07 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:37910 "EHLO
+        Fri, 28 Sep 2018 09:41:57 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37932 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbeI1NkH (ORCPT
+        with ESMTP id S1726106AbeI1Nl5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 09:40:07 -0400
+        Fri, 28 Sep 2018 09:41:57 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g5n1z-00082Z-7S; Fri, 28 Sep 2018 09:17:43 +0200
-Message-ID: <1538119050.14416.55.camel@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: TDLS: fix skb queue/priority assignment
+        id 1g5n3m-00085P-57; Fri, 28 Sep 2018 09:19:34 +0200
+Message-ID: <1538119161.14416.57.camel@sipsolutions.net>
+Subject: Re: How many null-data probes on connection loss?
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>
-Date:   Fri, 28 Sep 2018 09:17:30 +0200
-In-Reply-To: <87bm9cyuou.fsf@toke.dk>
-References: <20180905113402.7665-1-johannes@sipsolutions.net>
-         <1536147453.3528.11.camel@sipsolutions.net> <87k1o05g04.fsf@toke.dk>
-         <1536147683.3528.12.camel@sipsolutions.net>
-         <1536147865.3528.14.camel@sipsolutions.net> <87efe8yvju.fsf@toke.dk>
-         <1536150812.3528.15.camel@sipsolutions.net> <87bm9cyuou.fsf@toke.dk>
+To:     Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Fri, 28 Sep 2018 09:19:21 +0200
+In-Reply-To: <a409f0b7-5a91-1add-484d-588a554f0cd4@candelatech.com>
+References: <9a1447d9-9a61-dc2d-0101-33c6bdeb946f@candelatech.com>
+         <1537951137.28767.5.camel@sipsolutions.net>
+         <fc564b2e-b6f2-75db-a2d9-99ea55a63c4a@candelatech.com>
+         <1537986415.28767.17.camel@sipsolutions.net>
+         <7ed031b0-19d9-46db-33d9-082999e5ed22@candelatech.com>
+         <1537987703.28767.22.camel@sipsolutions.net>
+         <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
+         <1538032363.14416.2.camel@sipsolutions.net>
+         <a409f0b7-5a91-1add-484d-588a554f0cd4@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-09-05 at 14:50 +0200, Toke Høiland-Jørgensen wrote:
+On Thu, 2018-09-27 at 08:32 -0700, Ben Greear wrote:
 
-(uh, sorry, bit late ...)
-
-> > The problem isn't so much how we handle it in mac80211 for the queueing,
-> > but how we deal with things like A-MSDU and how we present it to the
-> > driver ... for iwlwifi at least we'd really like to have only data
-> > frames so we can map it directly to the hardware queue ...
+> > It seems though that if there's some noise or so on the channel you
+> > wouldn't be transmitting, so what kind of "network glitches" might
+> > affect this? AP going away unexpectedly for some time?
 > 
-> Ah, I see. No, then just putting them at the head of a different TXQ
-> probably won't work...
-> 
-> Are you mapping TXQs to hardware queues dynamically as they empty and
-> re-fill? Presumably you'll have cases where you don't have enough HWQs?
+> I am thinking that if the 'timeout' is 500ms, and the number of probes is 2
+> (the default values), then it should probe at 0ms, and at 250ms, and then finally
+> fail at 500ms if nothing was received.  In otherwords, X probes, x/timeout apart.
 
-Depends on the hardware. Newer hardware has basically unlimited HWQs
-(something on the order of 512 IIRC).
-
-Older hardware sort of maps them dynamically, but not too dynamic, we
-also have 32 (ish) queues there. We only free them if we need a new one
-and don't have one, and yes, theoretically we can run out and then we
-may have to share a single hardware queue for multiple TXQs, but it
-basically never happens in practice.
+That seems reasonable I guess. Although I'm not sure - perhaps once we
+know it failed we *do* want to try a bit quicker again? Otherwise we
+have a totally dead period there in the meantime, no?
 
 johannes
