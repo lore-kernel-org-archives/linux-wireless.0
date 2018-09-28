@@ -1,175 +1,444 @@
-Return-Path: <SRS0=euQo=MJ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BAFC43382
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 23:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C15C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 03:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EDB5216FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Sep 2018 23:05:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ATQKR6Vn"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3EDB5216FE
-Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=google.com
+	by mail.kernel.org (Postfix) with ESMTP id 57FB9216C4
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 03:22:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 57FB9216C4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728341AbeI1F0C (ORCPT
+        id S1726738AbeI1Jmk convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 01:26:02 -0400
-Received: from mail-it1-f193.google.com ([209.85.166.193]:38696 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbeI1FZ6 (ORCPT
+        Fri, 28 Sep 2018 05:42:40 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:52506 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726091AbeI1Jmk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 01:25:58 -0400
-Received: by mail-it1-f193.google.com with SMTP id p129-v6so551728ite.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Sep 2018 16:05:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EGPQKS9QAFsXKRvVZGbetCzzPksevUpCvkfR7rrWeW8=;
-        b=ATQKR6VnPyCVoqS9yz4vtyoApwEntOu68/67lS4jXTsw8PoPYHz4XIjnDFMCcx6SSg
-         k1EUpPmDPzXbtHQ+pvGkbSl1rxCrVD/Lg4JjQIcZRB0ilQ17F5aiwC0bSLSnCl1FltYh
-         enbPSzj0xgiLM8r4iCmiPNl82yZHGkFbLlDzAgaxjjW8t5x+CQZnoa0N7t4TraA3KqJI
-         VpXkbshJnChKVwqgtpmVeNwuGR+yE1RS/HqWdoVAQ3rwDJ473jpRJggL6Ln9ZxPJuICv
-         GVRjjpuFMhT7Sr6GkymaZ1167qYnruytDeyBVOo1UDlLn5hwncixFTaur5fiZvcxtwPf
-         uJsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EGPQKS9QAFsXKRvVZGbetCzzPksevUpCvkfR7rrWeW8=;
-        b=jjETe8K7NJo1rhJ08CiAlu7+sDhbLDJbynpgWzJWeLVHNObM7LIxT5J1uxETJ2VQN2
-         anc+o8Phmg6VW/4tFwFnhsRVmBCAZvSxv0a5N0/KJ0vGT/yzl98QZh/Yi3shtUeFhAw4
-         Mn4B00y4dQBvJ4MefXSS1twahYsgkC27TNosWI30lcTVv/c/pus770nyDuhq+3rRYpvJ
-         93+Ecnr0r8A21yyZQKWZyS7DWFCKvDOVp3kn99CfeQYqV2mMCXPyBOQ4bOaq771QSYrO
-         SvSGfR/7t/jOsRtTgXGmuh0V1EnwKbTK9sskQbCNR82k4FPX6EUO3bsHzlwQLhGunrdN
-         BtCg==
-X-Gm-Message-State: ABuFfoh+8ZOS4dPLgyJpzMyK6e5fvIgzvaUru1eyEFfS9Gmtebn4MxNZ
-        L6u86wHU9YNFiBzyyRs7ndcDLgDIasjtSWAX
-X-Google-Smtp-Source: ACcGV63e0V7CwAvk/TzQ9Q+GXYuS7cGW80anCP79Wv8cZqP3rC/sZCFXeQjHLgPrw1AKV7Pj/EVR0Q==
-X-Received: by 2002:a24:2487:: with SMTP id f129-v6mr571824ita.51.1538089516862;
-        Thu, 27 Sep 2018 16:05:16 -0700 (PDT)
-Received: from yuzhao.bld.corp.google.com ([2620:15c:183:0:a0c3:519e:9276:fc96])
-        by smtp.gmail.com with ESMTPSA id o201-v6sm211331ito.41.2018.09.27.16.05.15
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 27 Sep 2018 16:05:15 -0700 (PDT)
-From:   Yu Zhao <yuzhao@google.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yu Zhao <yuzhao@google.com>
-Subject: [PATCH] cfg80211: fix use-after-free in reg_process_hint()
-Date:   Thu, 27 Sep 2018 17:05:04 -0600
-Message-Id: <20180927230504.214931-1-yuzhao@google.com>
-X-Mailer: git-send-email 2.19.0.605.g01d371f741-goog
+        Fri, 28 Sep 2018 05:42:40 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w8S3KloH010903, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w8S3KloH010903
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Fri, 28 Sep 2018 11:20:47 +0800
+Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
+ RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Fri, 28 Sep
+ 2018 11:20:46 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
+Subject: RE: [PATCH 01/12] rtwlan: main files
+Thread-Topic: [PATCH 01/12] rtwlan: main files
+Thread-Index: AQHUVmkc7fXueOv/LUWUMOOpXqM0maUFAMQw
+Date:   Fri, 28 Sep 2018 03:20:45 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+ <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
+ <20180927135040.GA4712@redhat.com>
+In-Reply-To: <20180927135040.GA4712@redhat.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.123]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-reg_process_hint_country_ie() can free regulatory_request and return
-REG_REQ_ALREADY_SET. We shouldn't use regulatory_request after it's
-called. KASAN error was observed when this happens.
+Stanislaw,
 
-BUG: KASAN: use-after-free in reg_process_hint+0x839/0x8aa [cfg80211]
-Read of size 4 at addr ffff8800c430d434 by task kworker/1:3/89
-<snipped>
-Workqueue: events reg_todo [cfg80211]
-Call Trace:
- dump_stack+0xc1/0x10c
- ? _atomic_dec_and_lock+0x1ad/0x1ad
- ? _raw_spin_lock_irqsave+0xa0/0xd2
- print_address_description+0x86/0x26f
- ? reg_process_hint+0x839/0x8aa [cfg80211]
- kasan_report+0x241/0x29b
- reg_process_hint+0x839/0x8aa [cfg80211]
- reg_todo+0x204/0x5b9 [cfg80211]
- process_one_work+0x55f/0x8d0
- ? worker_detach_from_pool+0x1b5/0x1b5
- ? _raw_spin_unlock_irq+0x65/0xdd
- ? _raw_spin_unlock_irqrestore+0xf3/0xf3
- worker_thread+0x5dd/0x841
- ? kthread_parkme+0x1d/0x1d
- kthread+0x270/0x285
- ? pr_cont_work+0xe3/0xe3
- ? rcu_read_unlock_sched_notrace+0xca/0xca
- ret_from_fork+0x22/0x40
+Thanks a lot to point them some, some of them I have not even noticed!
 
-Allocated by task 2718:
- set_track+0x63/0xfa
- __kmalloc+0x119/0x1ac
- regulatory_hint_country_ie+0x38/0x329 [cfg80211]
- __cfg80211_connect_result+0x854/0xadd [cfg80211]
- cfg80211_rx_assoc_resp+0x3bc/0x4f0 [cfg80211]
-smsc95xx v1.0.6
- ieee80211_sta_rx_queued_mgmt+0x1803/0x7ed5 [mac80211]
- ieee80211_iface_work+0x411/0x696 [mac80211]
- process_one_work+0x55f/0x8d0
- worker_thread+0x5dd/0x841
- kthread+0x270/0x285
- ret_from_fork+0x22/0x40
+> -----Original Message-----
+> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> Sent: Thursday, September 27, 2018 9:51 PM
+> To: Tony Chuang
+> Cc: kvalo@codeaurora.org; Larry.Finger@lwfinger.net;
+> linux-wireless@vger.kernel.org; Pkshih; Andy Huang
+> Subject: Re: [PATCH 01/12] rtwlan: main files
+> 
+> Hi,
+> 
+> Below is some more detailed review of first patch (with mostly
+> nitpicks).
+> 
+> On Fri, Sep 21, 2018 at 02:03:56PM +0800, yhchuang@realtek.com wrote:
+> > +static void rtw_ops_tx(struct ieee80211_hw *hw,
+> > +		       struct ieee80211_tx_control *control,
+> > +		       struct sk_buff *skb)
+> > +{
+> > +	struct rtw_dev *rtwdev = hw->priv;
+> > +	struct rtw_tx_pkt_info pkt_info;
+> > +
+> > +	if (!rtw_flag_check(rtwdev, RTW_FLAG_RUNNING))
+> > +		goto out;
+> > +
+> > +	memset(&pkt_info, 0, sizeof(pkt_info));
+> > +	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control, skb);
+> > +	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+> > +		goto out;
+> > +
+> > +	return;
+> > +
+> > +out:
+> > +	dev_kfree_skb_any(skb);
+> This can be simplified by just do kfree after if ().
 
-Freed by task 89:
- set_track+0x63/0xfa
- kasan_slab_free+0x6a/0x87
- kfree+0xdc/0x470
- reg_process_hint+0x31e/0x8aa [cfg80211]
- reg_todo+0x204/0x5b9 [cfg80211]
- process_one_work+0x55f/0x8d0
- worker_thread+0x5dd/0x841
- kthread+0x270/0x285
- ret_from_fork+0x22/0x40
-<snipped>
 
-Signed-off-by: Yu Zhao <yuzhao@google.com>
----
- net/wireless/reg.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+OK, will replace them with ieee80211_free_txskb
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 765dedb12361..24cfa2776f50 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2661,11 +2661,12 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- {
- 	struct wiphy *wiphy = NULL;
- 	enum reg_request_treatment treatment;
-+	enum nl80211_reg_initiator initiator = reg_request->initiator;
- 
- 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
- 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
- 
--	switch (reg_request->initiator) {
-+	switch (initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
- 		treatment = reg_process_hint_core(reg_request);
- 		break;
-@@ -2683,7 +2684,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 		treatment = reg_process_hint_country_ie(wiphy, reg_request);
- 		break;
- 	default:
--		WARN(1, "invalid initiator %d\n", reg_request->initiator);
-+		WARN(1, "invalid initiator %d\n", initiator);
- 		goto out_free;
- 	}
- 
-@@ -2698,7 +2699,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	 */
- 	if (treatment == REG_REQ_ALREADY_SET && wiphy &&
- 	    wiphy->regulatory_flags & REGULATORY_STRICT_REG) {
--		wiphy_update_regulatory(wiphy, reg_request->initiator);
-+		wiphy_update_regulatory(wiphy, initiator);
- 		wiphy_all_share_dfs_chan_state(wiphy);
- 		reg_check_channels();
- 	}
--- 
-2.19.0.605.g01d371f741-goog
 
+> > +static int rtw_ops_add_interface(struct ieee80211_hw *hw,
+> > +				 struct ieee80211_vif *vif)
+> > +{
+> > +	struct rtw_dev *rtwdev = hw->priv;
+> > +	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+> > +	enum rtw_net_type net_type;
+> > +	u32 config = 0;
+> > +	u8 port = 0;
+> <snip>
+> > +	list_add(&rtwvif->list, &rtwdev->vif_list);
+> How rtwdev->vif_list is protected agains concurent access ?
+> 
+> > +	INIT_LIST_HEAD(&rtwvif->sta_list);
+> > +
+> > +	rtwvif->conf = &rtw_vif_port[port];
+> port is always 0, this either should be fixes or max interfaces for
+> STA should be set to 1 (temporally).
+> 
+> > +static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+> > +				     struct ieee80211_vif *vif,
+> > +				     struct ieee80211_bss_conf *conf,
+> > +				     u32 changed)
+> > +{
+> > +	struct rtw_dev *rtwdev = hw->priv;
+> > +	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+> > +	u32 config = 0;
+> > +
+> > +	if (changed & BSS_CHANGED_ASSOC) {
+> > +		struct rtw_sta_info *ap;
+> > +		struct rtw_chip_info *chip = rtwdev->chip;
+> > +		enum rtw_net_type net_type;
+> > +
+> > +		ap = list_first_entry(&rtwvif->sta_list,
+> > +				      struct rtw_sta_info, list);
+> How rtlwvif->sta_list is protected against concurrent access ?
+
+
+Have not noticed so far, cause not we can only support on vif.
+
+And only STA mode is tested, should first modify the iface_conbination.
+Then modify them back again if we submit patches support concurrents
+
+I think that vif_list & sta_list could be protected by a single mutex that
+protects concurrent access against mac80211 callbacks, and further add
+some rcu locks to protect sta_info. You have some suggestions?
+
+
+> 
+> > +static u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
+> > +{
+> > +	u8 i;
+> > +
+> > +	for (i = 0; i < RTW_MAX_MAC_ID_NUM; i++) {
+> > +		if (!rtwdev->macid_used[i]) {
+> > +			rtwdev->macid_used[i] = true;
+> > +			return i;
+> > +		}
+> > +	}
+> > +
+> > +	return i;
+> > +}
+> > +
+> > +static void rtw_release_macid(struct rtw_dev *rtwdev, u8 mac_id)
+> > +{
+> > +	rtwdev->macid_used[mac_id] = false;
+> > +}
+> > +
+> > +static int rtw_ops_sta_add(struct ieee80211_hw *hw,
+> > +			   struct ieee80211_vif *vif,
+> > +			   struct ieee80211_sta *sta)
+> > +{
+> > +	struct rtw_dev *rtwdev = hw->priv;
+> > +	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
+> > +	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+> > +
+> > +	si->mac_id = rtw_acquire_macid(rtwdev);
+> <snip>
+> > +
+> > +static int rtw_ops_sta_remove(struct ieee80211_hw *hw,
+> > +			      struct ieee80211_vif *vif,
+> > +			      struct ieee80211_sta *sta)
+> > +{
+> > +	struct rtw_dev *rtwdev = hw->priv;
+> > +	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
+> > +
+> > +	rtw_release_macid(rtwdev, si->mac_id);
+> I'm not sure if mac80211 can not add one STA and remove another one
+> STA at the same time. This need to be verified.
+
+
+I think mac80211 will do it "if the vif is different", but under the same vif,
+mac80211 will protect it with "sdata->wdev.mtx". Not sure if I am right.
+
+
+> 
+> > +static struct ieee80211_iface_limit rtw_5port_limits[] = {
+> > +	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) |
+> > +			     BIT(NL80211_IFTYPE_ADHOC) |
+> > +			     BIT(NL80211_IFTYPE_MESH_POINT), },
+> > +	{ .max = 5, .types = BIT(NL80211_IFTYPE_STATION), },
+> <snip>
+> > +static struct ieee80211_iface_combination rtw_5port_if_combs[] = {
+> > +	{
+> > +		.limits = rtw_5port_limits,
+> > +		.n_limits = ARRAY_SIZE(rtw_5port_limits),
+> > +		.max_interfaces = 5,
+> > +		.num_different_channels = 1,
+> > +	},
+> Here: change to max interfaces to 1 or fix port in add/remove interface.
+
+
+OK
+
+
+> > +static void rtw_watch_dog_work(struct work_struct *work)
+> > +{
+> > +	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
+> > +					      watch_dog_work.work);
+> > +	struct rtw_vif *rtwvif;
+> > +
+> > +	if (!rtw_flag_check(rtwdev, RTW_FLAG_RUNNING))
+> > +		return;
+> > +
+> > +	ieee80211_queue_delayed_work(rtwdev->hw,
+> &rtwdev->watch_dog_work,
+> > +				     RTW_WATCH_DOG_DELAY_TIME);
+> > +
+> > +	/* check if we can enter lps */
+> > +	rtw_lps_enter_check(rtwdev);
+> > +
+> > +	/* reset tx/rx statictics */
+> > +	rtwdev->stats.tx_unicast = 0;
+> > +	rtwdev->stats.rx_unicast = 0;
+> > +	rtwdev->stats.tx_cnt = 0;
+> > +	rtwdev->stats.rx_cnt = 0;
+> > +	list_for_each_entry(rtwvif, &rtwdev->vif_list, list) {
+> > +		rtwvif->stats.tx_unicast = 0;
+> > +		rtwvif->stats.rx_unicast = 0;
+> > +		rtwvif->stats.tx_cnt = 0;
+> > +		rtwvif->stats.rx_cnt = 0;
+> If we just nulify statistics here, what is the point to provide them ?
+> I can not see code where we read those stats. Perhaps code
+> that use them will be added, so this possibly is fine.
+
+
+Yeah the will be used.
+
+
+> > +	hal->current_channel = center_chan;
+> Not used anywhere.
+
+
+Will be used in set channel, but missed that in this patch
+
+
+> > +static int rtw_load_firmware(struct rtw_dev *rtwdev, const char
+> *fw_name)
+> > +{
+> > +	struct rtw_fw_state *fw = &rtwdev->fw;
+> > +	const struct firmware *firmware;
+> > +	int ret;
+> > +
+> > +	ret = request_firmware(&firmware, fw_name, rtwdev->dev);
+> > +	if (ret) {
+> > +		rtw_err(rtwdev, "failed to request firmware\n");
+> > +		return ret;
+> > +	}
+> > +
+> > +	fw->firmware = firmware;
+> > +	fw->data = firmware->data;
+> > +	fw->size = firmware->size;
+> Seems not needed, we can use fw->firmware->{data,size}
+> since fw->firwware is not released till chip de-init.
+
+
+OK
+
+
+> > +#define BIT_LEN_MASK_32(__bitlen) (0xFFFFFFFF >> (32 - (__bitlen)))
+> > +#define BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)
+> \
+> > +	(BIT_LEN_MASK_32(__bitlen) << (__bitoffset))
+> > +#define LE_P4BYTE_TO_HOST_4BYTE(__start) (le32_to_cpu(*((__le32
+> *)(__start))))
+> > +#define LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen)
+> \
+> > +	(LE_P4BYTE_TO_HOST_4BYTE(__start) &
+> \
+> > +	 (~BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)))
+> > +#define LE_BITS_TO_4BYTE(__start, __bitoffset, __bitlen)
+> \
+> > +	((LE_P4BYTE_TO_HOST_4BYTE(__start) >> (__bitoffset)) &
+> \
+> > +	 BIT_LEN_MASK_32(__bitlen))
+> > +#define SET_BITS_TO_LE_4BYTE(__start, __bitoffset, __bitlen, __value)
+> \
+> > +	do
+> {
+>     \
+> > +		*((__le32 *)(__start)) = \
+> > +		cpu_to_le32( \
+> > +		LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen) |     \
+> > +		((((u32)__value) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset))\
+> > +		);
+> \
+> > +	} while (0)
+> I think this should be somehow cleaned up or replaced by something sane.
+
+
+Larry replied you, and that is exactly what I wanted to ask.
+
+
+> > +struct rtw_sta_info {
+> > +	struct list_head list;
+> > +
+> > +	struct ieee80211_sta *sta;
+> > +	struct ieee80211_vif *vif;
+> > +
+> > +	struct ewma_rssi avg_rssi;
+> > +	u8 rssi_level;
+> > +
+> > +	u8 mac_id;
+> > +	u8 rate_id;
+> > +	enum rtw_bandwidth bw_mode;
+> 
+> Can we talk with different STA using different bandwidh ? I think this
+> is configures channel property and bw_mode is the same for all
+> connected stations.
+
+
+Yes, we can. If we have TDLS peer in STA mode or in AP mode, we could have
+different bw_mode, by the sta_info mac80211 passed to us, and that sta_info is
+checked by mac80211 based on the capabilities (IE) of the peer.
+
+
+> > +struct rtw_table {
+> > +	const void *data;
+> > +	const u32 size;
+> > +	void (*parse)(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
+> > +	void (*do_cfg)(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
+> > +		       u32 addr, u32 data);
+> > +	enum rtw_rf_path rf_path;
+> > +};
+> > +
+> > +static inline void rtw_load_table(struct rtw_dev *rtwdev,
+> > +				  const struct rtw_table *tbl)
+> > +{
+> > +	(*tbl->parse)(rtwdev, tbl);
+> > +}
+> 
+> This interface of loading/processing tables of data looks very strange.
+> I don't think is incorrect, but seems to be somewhat not necessary
+> complicated. I'll try provide more detailed comment about that when
+> review other files.
+
+
+OK, but I think this is needed, our tables have different forms ....
+
+
+> > +static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
+> > +{
+> > +	__le16 fc = hdr->frame_control;
+> > +	u8 *bssid;
+> > +
+> > +	if (ieee80211_has_tods(fc))
+> > +		bssid = hdr->addr1;
+> > +	else if (ieee80211_has_fromds(fc))
+> > +		bssid = hdr->addr2;
+> > +	else
+> > +		bssid = hdr->addr3;
+> > +
+> > +	return bssid;
+> 
+> This seems to not to be that simple and depend on frame type and
+> interface type. See ieee80211_get_bssid().
+
+
+OK, thanks.
+
+
+
+> > +#define BIT_SET_RXGCK_VHT_FIFOTHR(x, v)
+> \
+> > +	(BIT_CLEAR_RXGCK_VHT_FIFOTHR(x) | BIT_RXGCK_VHT_FIFOTHR(v))
+> > +
+> > +#define BIT_SHIFT_RXGCK_HT_FIFOTHR 24
+> > +#define BIT_MASK_RXGCK_HT_FIFOTHR 0x3
+> > +#define BIT_RXGCK_HT_FIFOTHR(x)
+> \
+> > +	(((x) & BIT_MASK_RXGCK_HT_FIFOTHR) <<
+> BIT_SHIFT_RXGCK_HT_FIFOTHR)
+> > +#define BITS_RXGCK_HT_FIFOTHR
+> \
+> > +	(BIT_MASK_RXGCK_HT_FIFOTHR << BIT_SHIFT_RXGCK_HT_FIFOTHR)
+> > +#define BIT_CLEAR_RXGCK_HT_FIFOTHR(x) ((x) &
+> (~BITS_RXGCK_HT_FIFOTHR))
+> > +#define BIT_GET_RXGCK_HT_FIFOTHR(x)
+> \
+> > +	(((x) >> BIT_SHIFT_RXGCK_HT_FIFOTHR) &
+> BIT_MASK_RXGCK_HT_FIFOTHR)
+> > +#define BIT_SET_RXGCK_HT_FIFOTHR(x, v)
+> \
+> > +	(BIT_CLEAR_RXGCK_HT_FIFOTHR(x) | BIT_RXGCK_HT_FIFOTHR(v))
+> > +
+> > +#define BIT_SHIFT_RXGCK_OFDM_FIFOTHR 22
+> > +#define BIT_MASK_RXGCK_OFDM_FIFOTHR 0x3
+> > +#define BIT_RXGCK_OFDM_FIFOTHR(x)
+> \
+> > +	(((x) & BIT_MASK_RXGCK_OFDM_FIFOTHR) <<
+> BIT_SHIFT_RXGCK_OFDM_FIFOTHR)
+> > +#define BITS_RXGCK_OFDM_FIFOTHR
+> \
+> > +	(BIT_MASK_RXGCK_OFDM_FIFOTHR <<
+> BIT_SHIFT_RXGCK_OFDM_FIFOTHR)
+> > +#define BIT_CLEAR_RXGCK_OFDM_FIFOTHR(x) ((x) &
+> (~BITS_RXGCK_OFDM_FIFOTHR))
+> > +#define BIT_GET_RXGCK_OFDM_FIFOTHR(x)
+> \
+> > +	(((x) >> BIT_SHIFT_RXGCK_OFDM_FIFOTHR) &
+> BIT_MASK_RXGCK_OFDM_FIFOTHR)
+> > +#define BIT_SET_RXGCK_OFDM_FIFOTHR(x, v)
+> \
+> > +	(BIT_CLEAR_RXGCK_OFDM_FIFOTHR(x) | BIT_RXGCK_OFDM_FIFOTHR(v))
+> 
+> Lot of not used defines.
+
+
+Will remove them.
+
+
+> Regards
+> Stanislaw
+> 
+> ------Please consider the environment before printing this e-mail.
+
+
+Anyway, appreciate your review and suggestion
+
+Yan-Hsuan Chuang
