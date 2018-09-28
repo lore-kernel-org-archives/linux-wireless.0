@@ -5,43 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A01CC43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:19:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 936D7C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:21:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29F54216FA
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:19:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 29F54216FA
+	by mail.kernel.org (Postfix) with ESMTP id 517C2216FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 07:21:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 517C2216FE
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728976AbeI1Nl5 (ORCPT
+        id S1728916AbeI1Nnv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 09:41:57 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:37932 "EHLO
+        Fri, 28 Sep 2018 09:43:51 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37974 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbeI1Nl5 (ORCPT
+        with ESMTP id S1728811AbeI1Nnu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 09:41:57 -0400
+        Fri, 28 Sep 2018 09:43:50 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1g5n3m-00085P-57; Fri, 28 Sep 2018 09:19:34 +0200
-Message-ID: <1538119161.14416.57.camel@sipsolutions.net>
-Subject: Re: How many null-data probes on connection loss?
+        id 1g5n5Z-00088B-TJ; Fri, 28 Sep 2018 09:21:26 +0200
+Message-ID: <1538119273.14416.59.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 1/2] mac80211: invoke sw_scan if hw_scan returns EPERM
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Fri, 28 Sep 2018 09:19:21 +0200
-In-Reply-To: <a409f0b7-5a91-1add-484d-588a554f0cd4@candelatech.com>
-References: <9a1447d9-9a61-dc2d-0101-33c6bdeb946f@candelatech.com>
-         <1537951137.28767.5.camel@sipsolutions.net>
-         <fc564b2e-b6f2-75db-a2d9-99ea55a63c4a@candelatech.com>
-         <1537986415.28767.17.camel@sipsolutions.net>
-         <7ed031b0-19d9-46db-33d9-082999e5ed22@candelatech.com>
-         <1537987703.28767.22.camel@sipsolutions.net>
-         <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
-         <1538032363.14416.2.camel@sipsolutions.net>
-         <a409f0b7-5a91-1add-484d-588a554f0cd4@candelatech.com>
+To:     Siva Rebbagondla <siva8118@gmail.com>
+Cc:     Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
+        sushant kumar mishra <sushant2k1513@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Date:   Fri, 28 Sep 2018 09:21:13 +0200
+In-Reply-To: <CANGSkXQ3Yo21vf+mqk+CpQ7z7rUtRi__eHoyFtbM3YBARuY8TQ@mail.gmail.com> (sfid-20180922_072928_899822_92639F6C)
+References: <1533180646-8028-1-git-send-email-sushant2k1513@gmail.com>
+         <1534246392.3547.26.camel@sipsolutions.net>
+         <5B83C2FE.90000@redpinesignals.com>
+         <1535527450.5215.8.camel@sipsolutions.net>
+         <CANGSkXTnEV7efC8nY9MRK1q2Ky-Ao_6rLoLp75oj4cvCkguZGw@mail.gmail.com>
+         <1535970059.3437.39.camel@sipsolutions.net>
+         <CANGSkXTPejV11TVpauXn+t6g+rUQ8cYik8KAz7W1P-2Y-8XebA@mail.gmail.com>
+         <CANGSkXR11ZxFoiZ7sbKTu8BnXSpTsiAhH=DOD=e9Zh8bquDC0A@mail.gmail.com>
+         <1536668735.3224.145.camel@sipsolutions.net>
+         <CANGSkXSD4dWKBLROMLT=oqCJLXV7R6HAWw9sfS=d1CBppAQhbw@mail.gmail.com>
+         <CANGSkXQ3Yo21vf+mqk+CpQ7z7rUtRi__eHoyFtbM3YBARuY8TQ@mail.gmail.com>
+         (sfid-20180922_072928_899822_92639F6C)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
 Mime-Version: 1.0
@@ -51,18 +59,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2018-09-27 at 08:32 -0700, Ben Greear wrote:
+Hi,
 
-> > It seems though that if there's some noise or so on the channel you
-> > wouldn't be transmitting, so what kind of "network glitches" might
-> > affect this? AP going away unexpectedly for some time?
-> 
-> I am thinking that if the 'timeout' is 500ms, and the number of probes is 2
-> (the default values), then it should probe at 0ms, and at 250ms, and then finally
-> fail at 500ms if nothing was received.  In otherwords, X probes, x/timeout apart.
+> Actually, we have missed this in code. Our module supports scanning on
+> both bands at the same time.
 
-That seems reasonable I guess. Although I'm not sure - perhaps once we
-know it failed we *do* want to try a bit quicker again? Otherwise we
-have a totally dead period there in the meantime, no?
+Yeah, but we still have to support drivers that don't support this.
+
+> Thanks for the info.
+> And also we ran the scan on our dual band module by setting
+> "SINGLE_SCAN_ON_ALL_BANDS" flag in
+> driver and removing SCAN_HW_CANCELLED bit in mac80211 stack. We didn't
+> see any issues in scan and
+> as i mentioned earlier, I didn't observe "scan aborted".
+> Can i resubmit patch with these changes?.
+
+Were you able to try my patch instead? I tend to like the structure of
+it better - i.e. how we fall back after cleaning up the state, rather
+than directly in the middle.
+
+Like I said above, I don't think we should take your patch - you've seen
+a bug there, and if we just work around it by making your driver do
+both-bands-at-once, we still have the bug...
 
 johannes
