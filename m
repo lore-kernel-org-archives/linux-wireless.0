@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A6AAC43143
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 19:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF18C43143
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 19:17:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D428D20685
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 19:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD551206B2
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 19:17:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=bowerswilkins.com header.i=@bowerswilkins.com header.b="jQwevELd"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D428D20685
+	dkim=pass (1024-bit key) header.d=bowerswilkins.com header.i=@bowerswilkins.com header.b="ZENTaP/p"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CD551206B2
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bowerswilkins.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726402AbeI2Bff (ORCPT
+        id S1726344AbeI2Bmj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 21:35:35 -0400
-Received: from mail-eopbgr30072.outbound.protection.outlook.com ([40.107.3.72]:58271
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        Fri, 28 Sep 2018 21:42:39 -0400
+Received: from mail-eopbgr20042.outbound.protection.outlook.com ([40.107.2.42]:24785
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726335AbeI2Bff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 21:35:35 -0400
+        id S1725906AbeI2Bmj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 21:42:39 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bowerswilkins.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JMf8Tg9K9vXG5gURkgpZvZQbdrAxg5bUudL5ZUsobcA=;
- b=jQwevELdQTkgN9Y5EbBZRE47yTZVWaxDHbTCD3rILY1dY81ANfYCfqs/Mo8gQdFxHnzM5CwZJI8J6kc7KouSqaTcaXblSjdQ29RwLOoZ3vj23h18sW8FNHro7zvVrVw4yTmy+ZXecKcUjxRuEiUfVlwrnvNToDaKAY7Rk05inVE=
+ bh=y+Uj9gKdCCb8GqCRxne1C+GjYFSf3rEbuY6OR2YC0B0=;
+ b=ZENTaP/peUPYMy6Wa/malx1Q/RAQnd9idcnbhdVbJK9gsXcLIP87mG3r7EP/ri3ExIoYWIPoECSREn8k0qAMg6tuDBYFPn5gQya0MpeAP3RtrA7BElnNzd3Gf/vcQ8h8QdXh2A2FiKOc3nLcypX68Rn98XGlfKFtQNsEtesbknQ=
 Received: from DB7PR04MB4154.eurprd04.prod.outlook.com (52.135.130.151) by
- DB7PR04MB4266.eurprd04.prod.outlook.com (52.135.131.28) with Microsoft SMTP
+ DB7PR04MB4282.eurprd04.prod.outlook.com (52.135.131.32) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1185.20; Fri, 28 Sep 2018 19:10:21 +0000
+ 15.20.1143.18; Fri, 28 Sep 2018 19:17:23 +0000
 Received: from DB7PR04MB4154.eurprd04.prod.outlook.com
  ([fe80::8c5:db28:1dc9:8ec2]) by DB7PR04MB4154.eurprd04.prod.outlook.com
  ([fe80::8c5:db28:1dc9:8ec2%2]) with mapi id 15.20.1164.024; Fri, 28 Sep 2018
- 19:10:21 +0000
+ 19:17:23 +0000
 From:   Peter Oh <peter.oh@bowerswilkins.com>
 To:     Anilkumar Kolli <akolli@codeaurora.org>,
         "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
@@ -46,66 +46,72 @@ Subject: Re: [RFC v4 2/2] ath10k: report tx rate using
  ieee80211_tx_rate_update()
 Thread-Topic: [RFC v4 2/2] ath10k: report tx rate using
  ieee80211_tx_rate_update()
-Thread-Index: AQHUU9VMrxQ2yQaQPkmpdQCnu/BzkKUGFhuA
-Date:   Fri, 28 Sep 2018 19:10:21 +0000
-Message-ID: <caada2d5-2e0e-8a5a-cab9-5078654ab5a4@bowerswilkins.com>
+Thread-Index: AQHUU9VMrxQ2yQaQPkmpdQCnu/BzkKUGFhuAgAAB9gA=
+Date:   Fri, 28 Sep 2018 19:17:22 +0000
+Message-ID: <1024b679-3748-681d-e0d4-badbc4987704@bowerswilkins.com>
 References: <1537773000-2587-1-git-send-email-akolli@codeaurora.org>
  <1537773000-2587-3-git-send-email-akolli@codeaurora.org>
-In-Reply-To: <1537773000-2587-3-git-send-email-akolli@codeaurora.org>
+ <caada2d5-2e0e-8a5a-cab9-5078654ab5a4@bowerswilkins.com>
+In-Reply-To: <caada2d5-2e0e-8a5a-cab9-5078654ab5a4@bowerswilkins.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: DM6PR08CA0001.namprd08.prod.outlook.com
- (2603:10b6:5:80::14) To DB7PR04MB4154.eurprd04.prod.outlook.com
+x-clientproxiedby: BN6PR11CA0009.namprd11.prod.outlook.com
+ (2603:10b6:405:2::19) To DB7PR04MB4154.eurprd04.prod.outlook.com
  (2603:10a6:5:26::23)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=peter.oh@bowerswilkins.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [2001:1900:2200:85:d6be:d9ff:fe0e:a5ac]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DB7PR04MB4266;6:qAiBp/U1eVau2MYcltDQxUGdEJvKsIhXO2/RXbKIT9E0ReTVDk3zfnvWmiQvxC8Sy8wbjRIM9OeaarE/iK8Aw/KOfODATKFlxnVumUeA2W2VBh6FDgLTUxi7CJzeMOKFewebgpoJWeJyYh0XV4Q5cbw0ksDimyaDCbXZpV+ruBu3he0/p5McDY9Zsa4UO5gN/07Gc8OspQKuFxSy4BZTSeq1IyNr8QpG1RsrQ2zjAUavoOu+pdrvQN9GrizpisTsHdHmPxwFYE44JuCDoGOtoQOPLG9uSGESWw3N6EY483ZshECmp1ItWzx96NQPmubG0NWvac7vqXCTbp8NbBMBP9VFuMmEZH7cg3uCtnlVgBvZh9+8iQ0Y8HFZrqwSPda8NIMigEFCJkdjqoTY3qPUJfsJ5QMkR0e0HiGUw9Lc6KSju5x/kTI4IU8XWx8SMZ2uk+LyQDtJoLRqljAAae9vDg==;5:6DsJlN6ZnnJWO/UhXUK8vP6BNVwf/El4rEjqXMDf3xLlP7RmhiQdISL0k9SJVOMhdspdOrilR/DFSoayL45uSKpVHyXSlS3ZnMirF2BlFEZ2HLXSeBH6XCrq55k9URhoEQyeWdeJiaRwWVEi8hl0n6p+NlPHt6gxhY9Ay9pwU7U=;7:WeiNYfG1b768qBvn9IBunwl20/Z5ny9dialLAknuZApNiB+yrCVWzDpZ4vCEQ2KCejPxJs7ajYFOMbwktkfUiaTMpLqsAhS068k+TPgIotYAlz7LQLY6TqnRIFBKelZ2ZD9Jt+iI2m4lHzZjN5xDpussOfe2zQgkbH/5W5RcNa27LLogfBySYkj+kMaeFVGntwMfP+fjHJG0ikoVMyJBtQ9U8wiNCmxodNm4IthFZds6fMP40NIhE1VG8w8pIjOJ
-x-ms-office365-filtering-correlation-id: 69dd8301-23e5-4f16-0d6c-08d62576094a
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:DB7PR04MB4266;
-x-ms-traffictypediagnostic: DB7PR04MB4266:
-x-microsoft-antispam-prvs: <DB7PR04MB4266D5AE8BB6066670A0F76599EC0@DB7PR04MB4266.eurprd04.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
+x-microsoft-exchange-diagnostics: 1;DB7PR04MB4282;6:RYxjCgzZw5HUb0W4m5QxovIMYKx9U0qDM7gWRhJ4U4dU8FoW/7PWOdpLxj8xN0GmtJb6f+ix8Sex5qpPwFGoHFpDlCs+sQxGbjMxkxEq1nUfKmtTEcqxPr4fBqBrJzArA31MXXt/HVrwzabQ4o39GKX/4LtnXtav2+eTuJo76uerFtFKXO0nf/dwNgsx3h+UzFSeLI8Oykj91HQoIK1BL1yPcvmSPMPTOZuEe7rcq8FFSm4pcF4yPLjZ0RyIc7tokm3mixiTbAT5ws05ByVQdb+VyxnXKYEJgVHWIl6D73RGlODRauE8lo+L5iADagwWpICAevr8uY0VHMC0KDnheYOgFIgleqe+1ntffnIbJiT/LES/EfRzDTvPSN+Jbq6sAxuL9zjwjwoQ3Sv2xjV7PT0Cb/AYXULj7pPEuJ+4zcIGAWAcpbGc6XbnmtOrkb7kNW587Qh8I/srXt9PrMJv+w==;5:PpfjU9lHlfKqEQLutIr7+7myf4n0Ld8yOURPM2sgCIxO+TCOXs/d0Qc6+GKrmm6t/1+OXbJBFPqDQBbIAx/CaNPJrTKESlOwD3jW2bf7I1g1YmXagdEqvkymCxaB7AFljxBLcXRLSgRWYQ+qc1SINYjPErQWZsSqsF5ELN6WFlI=;7:vTXxOKeh0i7hvwJ+gOcrkXdZoAglKAOqbXf1Ja1eNhiShv01NUvULAxUQBMzCC2HVETE0ME+UW5vUMr30RMyMQSb1+HR9AxI7qlsnBK/JjdJNQzVpjjOSuvH3clXzudY7dEl9iPviO9jMHb5VmxuuxNVkAPLttqj+591dgY0I5uO8A9/gAobsDb42efN2egbE2Bv8K+5RQ+T3bZ5uiBrnzSpdZnxieVKfEPzbOfa5DOlIb6W9c2A3nDdW1HpUVZx
+x-ms-office365-filtering-correlation-id: b6cfbd0f-a3a0-4723-3f48-08d625770481
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534165)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:DB7PR04MB4282;
+x-ms-traffictypediagnostic: DB7PR04MB4282:
+x-microsoft-antispam-prvs: <DB7PR04MB42823BA8D4A457E4F233FC6099EC0@DB7PR04MB4282.eurprd04.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(17755550239193);
 x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(10201501046)(3002001)(3231355)(944501410)(52105095)(149066)(150057)(6041310)(20161123562045)(20161123558120)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(201708071742011)(7699051);SRVR:DB7PR04MB4266;BCL:0;PCL:0;RULEID:;SRVR:DB7PR04MB4266;
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(3231355)(944501410)(52105095)(3002001)(10201501046)(149066)(150057)(6041310)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123558120)(20161123560045)(201708071742011)(7699051);SRVR:DB7PR04MB4282;BCL:0;PCL:0;RULEID:;SRVR:DB7PR04MB4282;
 x-forefront-prvs: 0809C12563
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(396003)(366004)(376002)(39850400004)(199004)(189003)(186003)(5660300001)(102836004)(106356001)(53936002)(52116002)(76176011)(53546011)(6506007)(386003)(476003)(25786009)(31696002)(6486002)(68736007)(99286004)(2616005)(15760500003)(44832011)(486006)(446003)(11346002)(478600001)(86362001)(229853002)(7736002)(6512007)(110136005)(105586002)(305945005)(316002)(46003)(8936002)(6436002)(36756003)(31686004)(81166006)(8676002)(81156014)(14454004)(6116002)(97736004)(71200400001)(6246003)(2900100001)(2906002)(2501003)(5250100002)(71190400001)(256004)(34290500001)(4326008);DIR:OUT;SFP:1101;SCL:1;SRVR:DB7PR04MB4266;H:DB7PR04MB4154.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(136003)(396003)(39850400004)(366004)(346002)(189003)(199004)(25786009)(6116002)(386003)(46003)(53546011)(6506007)(446003)(11346002)(86362001)(8936002)(71200400001)(6512007)(305945005)(31696002)(71190400001)(81166006)(81156014)(8676002)(229853002)(14454004)(52116002)(76176011)(7736002)(97736004)(186003)(102836004)(99286004)(6486002)(486006)(256004)(2501003)(31686004)(68736007)(5250100002)(478600001)(2616005)(44832011)(2900100001)(476003)(15760500003)(5660300001)(316002)(6246003)(105586002)(53936002)(4326008)(34290500001)(36756003)(110136005)(106356001)(2906002)(6436002);DIR:OUT;SFP:1101;SCL:1;SRVR:DB7PR04MB4282;H:DB7PR04MB4154.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: bowerswilkins.com does not
  designate permitted sender hosts)
-x-microsoft-antispam-message-info: 2mUvRwKvJzf46hxvdK4J2KBw8mA4yNZ+PCS4/o3tLW4OtyT9/kr6EHBb4DDTP8uLTkrculCeaW07sZUSKdrg1NW+PYyCC04HfYZUUGfOp5snUMLLHycBPjioYogwcXDXIZGqOLioUEkaWVAcP/IOpMYTHepN0M/s6e2a23BpNvD9OGecEqQk/Cmi6DewDnbZht7VpGQpbMvVNNm9VbkGmoUKuB8V5rVMkUhiEmGfg+Bd+GbQFiBYfoDl9CUDiBPHa1LggpC0uy/k5v8gHIPWi5hu0fT6jkEveUf2msScOmk4PU3NKOw0PyLppQZVA4Kv5bp7FTujEmM/8wDlQdLcq+KQZ0XqVys+mQgusZ/D/Cw=
+x-microsoft-antispam-message-info: xGAJMQqLoCDhqMF21dSEZav6lK/Q5FGGCF7JtKsFpgyYXb/4gJo2eb+f1CztkhHs7OWmcfnHWtT3TErHrVMmBuf5jtBOvX0hagIoiVnPHh1VQoLyKeGTfFOFdIHlW3vlsxBuwIRhb7w1vjo2C8EqdNq5sMdwG577Oldt78DBb2u5nAcPCLI7jv38MmXBxvHHfbRiD8tSaeU6+L/yljO93juL+ElZgPGMia/CM04nzfYdPs4tECXdxgSLchGlQkZ6LmtgttdOoLZG1G2/aJRuFg8hXqZsfUIFCB9ocrktpGm/ArpUtGQddIm28oyk/uLUVOHvOMzU2vwxumKoc1FcTljFckUqsFWRlTAcCoJBsWk=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="utf-8"
-Content-ID: <6B9653BB3E245D47BE0DB3CF46012025@eurprd04.prod.outlook.com>
+Content-ID: <DFB9023582C9A74C813A42EF816FC6FB@eurprd04.prod.outlook.com>
 Content-Transfer-Encoding: base64
 MIME-Version: 1.0
 X-OriginatorOrg: bowerswilkins.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 69dd8301-23e5-4f16-0d6c-08d62576094a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Sep 2018 19:10:21.6095
+X-MS-Exchange-CrossTenant-Network-Message-Id: b6cfbd0f-a3a0-4723-3f48-08d625770481
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Sep 2018 19:17:22.9856
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a75a45bb-4772-448f-a2c6-9d2413d86410
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR04MB4266
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR04MB4282
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCk9uIDA5LzI0LzIwMTggMTI6MTAgQU0sIEFuaWxrdW1hciBLb2xsaSB3cm90ZToNCj4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvaHR0X3J4LmMgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL2h0dF9yeC5jDQo+IGluZGV4IGYyNDA1MjU4YTZk
-My4uMzU1YzM5YTA0ODZjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgv
-YXRoMTBrL2h0dF9yeC5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsv
-aHR0X3J4LmMNCj4gQEAgLTI3NTMsOCArMjc1MywxMSBAQCBzdGF0aWMgaW5saW5lIGludCBhdGgx
-MGtfZ2V0X2xlZ2FjeV9yYXRlX2lkeChzdHJ1Y3QgYXRoMTBrICphciwgdTggcmF0ZSkNCj4gICAJ
-CQkJc3RydWN0IGF0aDEwa19wZXJfcGVlcl90eF9zdGF0cyAqcGVlcl9zdGF0cykNCj4gICB7DQo+
+DQoNCk9uIDA5LzI4LzIwMTggMTI6MTAgUE0sIFBldGVyIE9oIHdyb3RlOg0KPg0KPiBPbiAwOS8y
+NC8yMDE4IDEyOjEwIEFNLCBBbmlsa3VtYXIgS29sbGkgd3JvdGU6DQo+PiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9odHRfcnguYyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL2F0aC9hdGgxMGsvaHR0X3J4LmMNCj4+IGluZGV4IGYyNDA1MjU4YTZkMy4uMzU1YzM5
+YTA0ODZjIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9o
+dHRfcnguYw0KPj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9odHRfcngu
+Yw0KPj4gQEAgLTI3NTMsOCArMjc1MywxMSBAQCBzdGF0aWMgaW5saW5lIGludCBhdGgxMGtfZ2V0
+X2xlZ2FjeV9yYXRlX2lkeChzdHJ1Y3QgYXRoMTBrICphciwgdTggcmF0ZSkNCj4+ICAgIAkJCQlz
+dHJ1Y3QgYXRoMTBrX3Blcl9wZWVyX3R4X3N0YXRzICpwZWVyX3N0YXRzKQ0KPj4gICAgew0KPj4g
 ICAgCXN0cnVjdCBhdGgxMGtfc3RhICphcnN0YSA9IChzdHJ1Y3QgYXRoMTBrX3N0YSAqKXN0YS0+
-ZHJ2X3ByaXY7DQo+IC0JdTggcmF0ZSA9IDAsIHJhdGVfaWR4ID0gMCwgc2dpOw0KPiArCXN0cnVj
-dCBpZWVlODAyMTFfY2hhbmN0eF9jb25mICpjb25mID0gTlVMTDsNCj4gICAJc3RydWN0IHJhdGVf
-aW5mbyB0eHJhdGU7DQo+ICsJdTggcmF0ZSA9IDAsIHNnaTsNCj4gKwlpbnQgcmF0ZV9pZHggPSAw
-Ow0KdHlwZSBtaXNtYXRjaC4gYXRoMTBrX2FjY3VtdWxhdGVfcGVyX3BlZXJfdHhfc3RhdHMoKSB0
-YWtlIHU4IHJhdGVfaWR4LCANCmJ1dCB5b3UncmUgcGFzc2luZyBpbnQuDQoNCg==
+ZHJ2X3ByaXY7DQo+PiAtCXU4IHJhdGUgPSAwLCByYXRlX2lkeCA9IDAsIHNnaTsNCj4+ICsJc3Ry
+dWN0IGllZWU4MDIxMV9jaGFuY3R4X2NvbmYgKmNvbmYgPSBOVUxMOw0KPj4gICAgCXN0cnVjdCBy
+YXRlX2luZm8gdHhyYXRlOw0KPj4gKwl1OCByYXRlID0gMCwgc2dpOw0KPj4gKwlpbnQgcmF0ZV9p
+ZHggPSAwOw0KPiB0eXBlIG1pc21hdGNoLiBhdGgxMGtfYWNjdW11bGF0ZV9wZXJfcGVlcl90eF9z
+dGF0cygpIHRha2UgdTggcmF0ZV9pZHgsDQo+IGJ1dCB5b3UncmUgcGFzc2luZyBpbnQuDQpJdCBs
+b29rcyBsaWtlIHlvdSBiZXR0ZXIgY2hhbmdlIHJldHVybiB0eXBlIG9mIA0KYXRoMTBrX2dldF9s
+ZWdhY3lfcmF0ZV9pZHgoKSBmcm9tIGludCB0byB1OCBieSB1c2luZyB1OCBpOyBpbnN0ZWFkIG9m
+IA0KaW50IGkgaW5zaWRlIG9mIGF0aDEwa19nZXRfbGVnYWN5X3JhdGVfaWR4KCkgYW5kIGtlZXAg
+dXNpbmcgcmF0ZV9pZHggYXMgDQp1OCBoZXJlLg0KDQpQZXRlcg0K
