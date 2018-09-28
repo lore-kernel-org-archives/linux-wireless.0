@@ -3,51 +3,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB256C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD77C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC94820685
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:14:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AC94820685
+	by mail.kernel.org (Postfix) with ESMTP id A5C1820666
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:23:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A5C1820666
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729164AbeI1VjF (ORCPT
+        id S1726971AbeI1VrU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 17:39:05 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:53384 "EHLO
+        Fri, 28 Sep 2018 17:47:20 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:53580 "EHLO
         mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728451AbeI1VjF (ORCPT
+        with ESMTP id S1726345AbeI1VrU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 17:39:05 -0400
+        Fri, 28 Sep 2018 17:47:20 -0400
 Received: from [192.168.1.47] (unknown [50.34.223.145])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 56FDA40A5CB;
-        Fri, 28 Sep 2018 08:14:47 -0700 (PDT)
-Subject: Re: How many null-data probes on connection loss?
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 18EBB40A539;
+        Fri, 28 Sep 2018 08:23:00 -0700 (PDT)
+Subject: Re: Problem with sending pkt on a monitor port
 To:     Johannes Berg <johannes@sipsolutions.net>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <9a1447d9-9a61-dc2d-0101-33c6bdeb946f@candelatech.com>
- <1537951137.28767.5.camel@sipsolutions.net>
- <fc564b2e-b6f2-75db-a2d9-99ea55a63c4a@candelatech.com>
- <1537986415.28767.17.camel@sipsolutions.net>
- <7ed031b0-19d9-46db-33d9-082999e5ed22@candelatech.com>
- <1537987703.28767.22.camel@sipsolutions.net>
- <e3c18a8d-9a58-54c5-9aaa-b778299f527b@candelatech.com>
- <1538032363.14416.2.camel@sipsolutions.net>
- <a409f0b7-5a91-1add-484d-588a554f0cd4@candelatech.com>
- <1538119161.14416.57.camel@sipsolutions.net>
+References: <76ce3d16-dbea-e882-63e7-2337fbc269c6@candelatech.com>
+ <1537389335.10305.92.camel@sipsolutions.net>
+ <d6f99a05-77a3-f18a-4e7a-083062119ce4@candelatech.com>
+ <1537428695.3874.1.camel@sipsolutions.net>
+ <6ac68a4c-04a3-ce6e-232e-3ebb6100ee29@candelatech.com>
+ <1538118875.14416.53.camel@sipsolutions.net>
 From:   Ben Greear <greearb@candelatech.com>
-Message-ID: <da09e014-3335-dc46-0e94-ee7ce3f318e7@candelatech.com>
-Date:   Fri, 28 Sep 2018 08:14:45 -0700
+Message-ID: <e8be6dbc-7062-3e5a-0303-e68c988e4a9a@candelatech.com>
+Date:   Fri, 28 Sep 2018 08:22:58 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <1538119161.14416.57.camel@sipsolutions.net>
+In-Reply-To: <1538118875.14416.53.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -57,37 +52,72 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 09/28/2018 12:19 AM, Johannes Berg wrote:
-> On Thu, 2018-09-27 at 08:32 -0700, Ben Greear wrote:
+On 09/28/2018 12:14 AM, Johannes Berg wrote:
+> Sorry, I'm a bit behind things ...
 >
->>> It seems though that if there's some noise or so on the channel you
->>> wouldn't be transmitting, so what kind of "network glitches" might
->>> affect this? AP going away unexpectedly for some time?
+>>> It's actually created by mac80211, but only once, and not directly
+>>> mapped to each vif seen by userspace - it's an internal construction.
 >>
->> I am thinking that if the 'timeout' is 500ms, and the number of probes is 2
->> (the default values), then it should probe at 0ms, and at 250ms, and then finally
->> fail at 500ms if nothing was received.  In otherwords, X probes, x/timeout apart.
+>> I'm not sure it matters, but ath10k firmware can also create a monitor vdev
+>> itself for certain reasons.  (Maybe offchannel tx on some FW, but I haven't looked at
+>> that code lately).
 >
-> That seems reasonable I guess. Although I'm not sure - perhaps once we
-> know it failed we *do* want to try a bit quicker again? Otherwise we
-> have a totally dead period there in the meantime, no?
+> Yeah and I think it may actually do for active monitor, but I believe
+> those get their own MAC address anyway? That might get used in the end
+> as the vif to the driver too.
 
-I don't think the tx path stops just because the mlme decides probes
-are timing out, so if AP is really functional, you won't have a dead period.
+The monitor port has the same mac as the wlanX in ath10k, ie the 'radio's mac'.
 
-If it is dead, then the sooner you probe and discover timeout and disconnect,
-the sooner you can re-connect to some better AP (assuming one exists).  A
-false disconnect due to missing a few probes would be disruptive though, and
-probing very often in idle situations would use more airtime, so
-of course there is a trade-off.
+>>> However, thinking about it, that also breaks userspace in other ways -
+>>> for example if you do injection this way you actually get encryption and
+>>> other nice things if you use the local address that matches an existing
+>>> interface.
+>>
+>> I'm not entirely sure of a useful use-case for this feature in user-space.
+>
+> Which feature?
 
-While watching the sniffer, it seems the initial mlme probe happens about
-3 seconds after I admin down the AP, and then disconnect is about 1s after
-that (I have my timeout set to 1000ms instead of default 500ms, and I have retry
-count set to 5 instead of 2.
+radio-tap send on a monitor vdev.
 
-Did you see that patch I posted?  It looks good in the sniffer and logs,
-as far as I can tell....
+>
+> At least ancient versions of hostapd would rely on this, but clearly
+> that's no longer super relevant. I don't know if anyone else relies on
+> it, but in a way that is the problem. If I knew, then I could think
+> about alternatives or how to keep that working if we change anything
+> here.
+>
+>> I am using it just to test sending some test frames to debug some firmware
+>> features.  I think another user sent hand-crafted specialized beacons in this manner
+>> using my 10.1 ath10k firmware & driver.  For whatever reason, I didn't realize monitor
+>> vdevs were not directly used when I added that support..maybe I just got lucky
+>> before I had to dig closely.
+>
+> They may be used if they were active monitor? I don't know ath10k well.
+> But then they shouldn't have had the same MAC address to start with,
+> IIRC.
+
+The code I quoted at the first of this thread make sure the monitor vdev is
+not used if possible.  But, maybe the driver has or had some ways to force certain
+frames out the monitor port.  That is my recollection.  I added code to the firmware
+to allow this to work, including bug fixes to crashes, so I am pretty sure there is *some*
+way for that tx path to happen, at least in wave-1 firmware.
+
+>> If I make the code in my original email be skipped, so that sdata remains the
+>> monitor vdev, then it fails a check later in that method because there is no
+>> chanctxt for the monitor sdata object.
+>>
+>> I guess that changing the source MAC to something unique would cause the same
+>> issue and no frame would be sent towards the driver.
+>
+> Hmm. This *should* work in one way or the other? But again, maybe ath10k
+> has something special here?
+>
+> You skipped *just* that loop?
+
+Yes...because the monitor vdev chanctx was null and that method checks a bit later for it.
+
+Maybe there is a way to create/configure the monitor vdev so that it has
+a chanctx?
 
 Thanks,
 Ben
