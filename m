@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0345C43382
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA203C04E87
 	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:39:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66C4321547
+	by mail.kernel.org (Postfix) with ESMTP id 94D3B21566
 	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:39:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 66C4321547
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 94D3B21566
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729598AbeI1SC6 (ORCPT
+        id S1729600AbeI1SC6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 28 Sep 2018 14:02:58 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36609 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729093AbeI1SC6 (ORCPT
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:54135 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729431AbeI1SC6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 28 Sep 2018 14:02:58 -0400
-Received: by mail-wr1-f66.google.com with SMTP id l10-v6so6041970wrp.3
+Received: by mail-wm1-f67.google.com with SMTP id b19-v6so1884345wme.3
         for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2018 04:39:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=mrDn2uIbVdWeM9084FD+7vFY3c1BB4eWWF+mZOY20Lw=;
-        b=FBHTV/7djA2FAdyLdumug6TQYVeNSeoWGJq2JUx+PNAcfV0UUFiLK6yQerQl65RRYK
-         nkES3KTWRFyhXr0MIBHTRVvHoE1CEgEJ2vxJIkdF8d+r2LzmVCGlYN64IRQZoYB5toYn
-         8EslluvLFvYK3MHY+p6O29NCgHNm66hjUc0D5s4ECQtaBsGtsGMiQ0MU+L9VbM96hKll
-         k8/Ae2DAUhr/0Zrk2XC3PQEDZd/Mral6KEYGsmVA2aS6cOoI/Zw8Y29aniLcPBzOmVei
-         WTa6YflVRFETN9jg649MlyHVLiwJit5/fIdltk6p6o5CnxnFKvRoQNdOBT7DJ4Avvv+g
-         W3Tg==
-X-Gm-Message-State: ABuFfojX7cngebFBIPLn8haaJsTOYFP9JfujbsHhkiwwYLSsxhvx1nn1
-        djzlPu7RXdo8+dMmDsO0Gu2NA7GIqOY=
-X-Google-Smtp-Source: ACcGV61STgLesunpaNcHibNToDQIf6vFpOrtq0c7g3LsJU1/6ARat5AWXOLjuuYAQgPgZfqa6RC9MQ==
-X-Received: by 2002:a5d:4488:: with SMTP id j8-v6mr7879771wrq.236.1538134774220;
-        Fri, 28 Sep 2018 04:39:34 -0700 (PDT)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id s10-v6sm2395655wmd.22.2018.09.28.04.39.33
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        bh=E1DDaTqt5ZsQMgR43CynVXswb+r4uiff8tNO2Vk9tNg=;
+        b=m/a+Ncru5egqLRB8tYz2HtiPbP2KCglQlVSTuEYSKvncYIOtHa1oOce/ynLHVKWLHW
+         P6UGowPBeKBlSElaDzUMo/1vxUpDef3OTTTIUemauUzTSd5l9DmcfGQDQ4QrN8zItZRE
+         Pyf1aSMNi2cRNqlkgpn+77O0lh30vs1yjL6/BHkBBZyTi9rySX8uxakE/4QOwmY3m+dh
+         hbISQSQC8jOlWQ8VhUMbCPUmVicZHhqXzuW7K6uUkj8wpIC33cypeH1VZ6YKsQACss00
+         aOFzgrRHIYtfotiTfykXeVpsl7dRXDSxTJSkap3eI9j4VtbdHdFmal+pgNDQODlvK53J
+         uLaw==
+X-Gm-Message-State: ABuFfohcDLN9S49WtMNJjmNIAblfc097peUBK8FVqYcphq4c5aqEzZCw
+        QCg5hj2dBGyimd+bIZHnvalzu/UW+S4=
+X-Google-Smtp-Source: ACcGV61FsWR30F7kQ8neZTZIQTPA1HYjyAFxqReo7EmgHpMogWv0rjwsqTSuPrw7dhOrXgJtvbElFA==
+X-Received: by 2002:a1c:7e92:: with SMTP id z140-v6mr1455454wmc.48.1538134773283;
         Fri, 28 Sep 2018 04:39:33 -0700 (PDT)
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id s10-v6sm2395655wmd.22.2018.09.28.04.39.32
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 28 Sep 2018 04:39:32 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 18/24] mt76x0: pci: add hw initialization at bootstrap
-Date:   Fri, 28 Sep 2018 13:39:01 +0200
-Message-Id: <23558d6b89284a8abe04b78e4d9c4068d59f069b.1538134522.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH v3 17/24] mt76x0: usb: move initialization code in usb.c
+Date:   Fri, 28 Sep 2018 13:39:00 +0200
+Message-Id: <e891599236409ba5a68c8a7b00e4ba37a6da9dc1.1538134522.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <cover.1538134522.git.lorenzo.bianconi@redhat.com>
 References: <cover.1538134522.git.lorenzo.bianconi@redhat.com>
@@ -59,121 +59,281 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add mt76x0e_register_device routine in pci.c
-to initialize the device during hw probe.
+Move usb initialization code in mt76x0-usb module in
+order to remove usb dependency from generic init code
+(not completed yet). Moreover fix a memory leak in usb probe
+if mt76x02_wait_for_mac fails
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/init.c  | 10 ++--
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   | 47 ++++++++++++++++++-
- .../wireless/mediatek/mt76/mt76x02_eeprom.h   |  1 +
- 3 files changed, 50 insertions(+), 8 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  |  54 --------
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |   1 -
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   | 115 ++++++++++++++----
+ 3 files changed, 91 insertions(+), 79 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 1d20ed56d201..5ec0ee6ce38d 100644
+index 0fd4b4ca8227..1d20ed56d201 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -107,6 +107,9 @@ static void mt76x0_reset_csr_bbp(struct mt76x0_dev *dev)
- 		MT_MAC_SYS_CTRL_RESET_CSR |
- 		MT_MAC_SYS_CTRL_RESET_BBP);
+@@ -109,33 +109,6 @@ static void mt76x0_reset_csr_bbp(struct mt76x0_dev *dev)
  	msleep(200);
-+	mt76_clear(dev, MT_MAC_SYS_CTRL,
-+		   MT_MAC_SYS_CTRL_RESET_CSR |
-+		   MT_MAC_SYS_CTRL_RESET_BBP);
  }
  
- #define RANDOM_WRITE(dev, tab)			\
-@@ -152,13 +155,6 @@ static void mt76x0_init_mac_registers(struct mt76x0_dev *dev)
- 	reg &= ~0x3;
- 	mt76_wr(dev, MT_MAC_SYS_CTRL, reg);
- 
--	if (is_mt7610e(dev)) {
--		/* Disable COEX_EN */
--		reg = mt76_rr(dev, MT_COEXCFG0);
--		reg &= 0xFFFFFFFE;
--		mt76_wr(dev, MT_COEXCFG0, reg);
--	}
+-static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
+-{
+-	u32 val;
 -
- 	/* Set 0x141C[15:12]=0xF */
- 	reg = mt76_rr(dev, MT_EXT_CCA_CFG);
- 	reg |= 0x0000F000;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index 99d142319d1c..79db75811458 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -20,6 +20,51 @@
+-	val = mt76_rr(dev, MT_USB_DMA_CFG);
+-
+-	val |= MT_USB_DMA_CFG_RX_BULK_EN |
+-	       MT_USB_DMA_CFG_TX_BULK_EN;
+-
+-	/* disable AGGR_BULK_RX in order to receive one
+-	 * frame in each rx urb and avoid copies
+-	 */
+-	val &= ~MT_USB_DMA_CFG_RX_BULK_AGG_EN;
+-	mt76_wr(dev, MT_USB_DMA_CFG, val);
+-
+-	val = mt76_rr(dev, MT_COM_REG0);
+-	if (val & 1)
+-		dev_dbg(dev->mt76.dev, "MCU not ready\n");
+-
+-	val = mt76_rr(dev, MT_USB_DMA_CFG);
+-
+-	val |= MT_USB_DMA_CFG_RX_DROP_OR_PAD;
+-	mt76_wr(dev, MT_USB_DMA_CFG, val);
+-	val &= ~MT_USB_DMA_CFG_RX_DROP_OR_PAD;
+-	mt76_wr(dev, MT_USB_DMA_CFG, val);
+-}
+-
+ #define RANDOM_WRITE(dev, tab)			\
+ 	mt76_wr_rp(dev, MT_MCU_MEMMAP_WLAN,	\
+ 		   tab, ARRAY_SIZE(tab))
+@@ -347,8 +320,6 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
+ 		return -ETIMEDOUT;
  
- #include "mt76x0.h"
- #include "mcu.h"
-+#include "../mt76x02_dma.h"
-+
-+static int mt76x0e_register_device(struct mt76x0_dev *dev)
+ 	mt76x0_reset_csr_bbp(dev);
+-	mt76x0_init_usb_dma(dev);
+-
+ 	ret = mt76x02_mcu_function_select(&dev->mt76, Q_SELECT, 1, false);
+ 	if (ret)
+ 		return ret;
+@@ -381,12 +352,6 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
+ 
+ 	mt76x0_reset_counters(dev);
+ 
+-	mt76_rmw(dev, MT_US_CYC_CFG, MT_US_CYC_CNT, 0x1e);
+-
+-	mt76_wr(dev, MT_TXOP_CTRL_CFG,
+-		   FIELD_PREP(MT_TXOP_TRUN_EN, 0x3f) |
+-		   FIELD_PREP(MT_TXOP_EXT_CCA_DLY, 0x58));
+-
+ 	ret = mt76x0_eeprom_init(dev);
+ 	if (ret)
+ 		return ret;
+@@ -397,15 +362,6 @@ int mt76x0_init_hardware(struct mt76x0_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(mt76x0_init_hardware);
+ 
+-void mt76x0_cleanup(struct mt76x0_dev *dev)
+-{
+-	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
+-	mt76x0_chip_onoff(dev, false, false);
+-	mt76u_queues_deinit(&dev->mt76);
+-	mt76u_mcu_deinit(&dev->mt76);
+-}
+-EXPORT_SYMBOL_GPL(mt76x0_cleanup);
+-
+ struct mt76x0_dev *
+ mt76x0_alloc_device(struct device *pdev, const struct mt76_driver_ops *drv_ops)
+ {
+@@ -437,10 +393,6 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	int ret;
+ 
+-	ret = mt76x0_init_hardware(dev);
+-	if (ret)
+-		return ret;
+-
+ 	/* Reserve WCID 0 for mcast - thanks to this APs WCID will go to
+ 	 * entry no. 1 like it does in the vendor driver.
+ 	 */
+@@ -475,12 +427,6 @@ int mt76x0_register_device(struct mt76x0_dev *dev)
+ 	if (mdev->cap.has_5ghz)
+ 		mt76x0_vht_cap_mask(&dev->mt76.sband_5g.sband);
+ 
+-	/* check hw sg support in order to enable AMSDU */
+-	if (mt76u_check_sg(mdev))
+-		hw->max_tx_fragments = MT_SG_MAX_SIZE;
+-	else
+-		hw->max_tx_fragments = 1;
+-
+ 	mt76x0_init_debugfs(dev);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 66fcb90c1083..e2e23df1b40a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -130,7 +130,6 @@ struct mt76x0_dev *
+ mt76x0_alloc_device(struct device *pdev, const struct mt76_driver_ops *drv_ops);
+ int mt76x0_init_hardware(struct mt76x0_dev *dev);
+ int mt76x0_register_device(struct mt76x0_dev *dev);
+-void mt76x0_cleanup(struct mt76x0_dev *dev);
+ void mt76x0_chip_onoff(struct mt76x0_dev *dev, bool enable, bool reset);
+ 
+ int mt76x0_mac_start(struct mt76x0_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index 7ad4dacb7411..3ed2e1a89e3f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -49,6 +49,93 @@ static struct usb_device_id mt76x0_device_table[] = {
+ 	{ 0, }
+ };
+ 
++static void mt76x0_init_usb_dma(struct mt76x0_dev *dev)
 +{
++	u32 val;
++
++	val = mt76_rr(dev, MT_USB_DMA_CFG);
++
++	val |= MT_USB_DMA_CFG_RX_BULK_EN |
++	       MT_USB_DMA_CFG_TX_BULK_EN;
++
++	/* disable AGGR_BULK_RX in order to receive one
++	 * frame in each rx urb and avoid copies
++	 */
++	val &= ~MT_USB_DMA_CFG_RX_BULK_AGG_EN;
++	mt76_wr(dev, MT_USB_DMA_CFG, val);
++
++	val = mt76_rr(dev, MT_COM_REG0);
++	if (val & 1)
++		dev_dbg(dev->mt76.dev, "MCU not ready\n");
++
++	val = mt76_rr(dev, MT_USB_DMA_CFG);
++
++	val |= MT_USB_DMA_CFG_RX_DROP_OR_PAD;
++	mt76_wr(dev, MT_USB_DMA_CFG, val);
++	val &= ~MT_USB_DMA_CFG_RX_DROP_OR_PAD;
++	mt76_wr(dev, MT_USB_DMA_CFG, val);
++}
++
++static void mt76x0u_cleanup(struct mt76x0_dev *dev)
++{
++	clear_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
++	mt76x0_chip_onoff(dev, false, false);
++	mt76u_queues_deinit(&dev->mt76);
++	mt76u_mcu_deinit(&dev->mt76);
++}
++
++static int mt76x0u_register_device(struct mt76x0_dev *dev)
++{
++	struct ieee80211_hw *hw = dev->mt76.hw;
 +	int err;
 +
-+	mt76x0_chip_onoff(dev, true, false);
-+	if (!mt76x02_wait_for_mac(&dev->mt76))
-+		return -ETIMEDOUT;
-+
-+	mt76x02_dma_disable(&dev->mt76);
-+	err = mt76x0e_mcu_init(dev);
++	err = mt76u_mcu_init_rx(&dev->mt76);
 +	if (err < 0)
 +		return err;
 +
-+	err = mt76x02_dma_init(&dev->mt76);
++	err = mt76u_alloc_queues(&dev->mt76);
 +	if (err < 0)
 +		return err;
 +
-+	err = mt76x0_init_hardware(dev);
-+	if (err < 0)
-+		return err;
-+
-+	if (mt76_chip(&dev->mt76) == 0x7610) {
-+		u16 val;
-+
-+		mt76_clear(dev, MT_COEXCFG0, BIT(0));
-+		val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_0);
-+		if (val & MT_EE_NIC_CONF_0_PA_IO_CURRENT) {
-+			u32 data;
-+
-+			/* set external external PA I/O
-+			 * current to 16mA
-+			 */
-+			data = mt76_rr(dev, 0x11c);
-+			val |= 0xc03;
-+			mt76_wr(dev, 0x11c, val);
-+		}
++	mt76x0_chip_onoff(dev, true, true);
++	if (!mt76x02_wait_for_mac(&dev->mt76)) {
++		err = -ETIMEDOUT;
++		goto err;
 +	}
 +
-+	mt76_clear(dev, 0x110, BIT(9));
-+	mt76_set(dev, MT_MAX_LEN_CFG, BIT(13));
++	err = mt76x0u_mcu_init(dev);
++	if (err < 0)
++		goto err;
++
++	mt76x0_init_usb_dma(dev);
++	err = mt76x0_init_hardware(dev);
++	if (err < 0)
++		goto err;
++
++	mt76_rmw(dev, MT_US_CYC_CFG, MT_US_CYC_CNT, 0x1e);
++	mt76_wr(dev, MT_TXOP_CTRL_CFG,
++		FIELD_PREP(MT_TXOP_TRUN_EN, 0x3f) |
++		FIELD_PREP(MT_TXOP_EXT_CCA_DLY, 0x58));
++
++	err = mt76x0_register_device(dev);
++	if (err < 0)
++		goto err;
++
++	/* check hw sg support in order to enable AMSDU */
++	if (mt76u_check_sg(&dev->mt76))
++		hw->max_tx_fragments = MT_SG_MAX_SIZE;
++	else
++		hw->max_tx_fragments = 1;
++
++	set_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
 +
 +	return 0;
++
++err:
++	mt76x0u_cleanup(dev);
++	return err;
 +}
++
+ static int mt76x0u_probe(struct usb_interface *usb_intf,
+ 			 const struct usb_device_id *id)
+ {
+@@ -98,32 +185,12 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
+ 	if (!(mt76_rr(dev, MT_EFUSE_CTRL) & MT_EFUSE_CTRL_SEL))
+ 		dev_warn(dev->mt76.dev, "Warning: eFUSE not present\n");
  
- static int
- mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-@@ -50,7 +95,7 @@ mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	dev->mt76.rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	dev_info(dev->mt76.dev, "ASIC revision: %08x\n", dev->mt76.rev);
- 
--	ret = mt76x0e_mcu_init(dev);
-+	ret = mt76x0e_register_device(dev);
+-	ret = mt76u_alloc_queues(&dev->mt76);
++	ret = mt76x0u_register_device(dev);
  	if (ret < 0)
- 		goto error;
+ 		goto err;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-index b45e2afeadd0..bcd05f7c5f45 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
-@@ -107,6 +107,7 @@ enum mt76x02_eeprom_field {
- #define MT_EE_NIC_CONF_0_PA_TYPE		GENMASK(9, 8)
- #define MT_EE_NIC_CONF_0_PA_INT_2G		BIT(8)
- #define MT_EE_NIC_CONF_0_PA_INT_5G		BIT(9)
-+#define MT_EE_NIC_CONF_0_PA_IO_CURRENT		BIT(10)
- #define MT_EE_NIC_CONF_0_BOARD_TYPE		GENMASK(13, 12)
+-	ret = mt76u_mcu_init_rx(&dev->mt76);
+-	if (ret < 0)
+-		goto err;
+-
+-	mt76x0_chip_onoff(dev, true, true);
+-
+-	if (!mt76x02_wait_for_mac(&dev->mt76))
+-		return -ETIMEDOUT;
+-
+-	ret = mt76x0u_mcu_init(dev);
+-	if (ret)
+-		goto err_hw;
+-
+-	ret = mt76x0_register_device(dev);
+-	if (ret)
+-		goto err_hw;
+-
+-	set_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
+-
+ 	return 0;
+-err_hw:
+-	mt76x0_cleanup(dev);
++
+ err:
+ 	usb_set_intfdata(usb_intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(usb_intf));
+@@ -141,7 +208,7 @@ static void mt76x0_disconnect(struct usb_interface *usb_intf)
+ 		return;
  
- #define MT_EE_NIC_CONF_1_HW_RF_CTRL		BIT(0)
+ 	ieee80211_unregister_hw(dev->mt76.hw);
+-	mt76x0_cleanup(dev);
++	mt76x0u_cleanup(dev);
+ 
+ 	usb_set_intfdata(usb_intf, NULL);
+ 	usb_put_dev(interface_to_usbdev(usb_intf));
+@@ -190,7 +257,7 @@ static int __maybe_unused mt76x0_resume(struct usb_interface *usb_intf)
+ 
+ 	return 0;
+ err:
+-	mt76x0_cleanup(dev);
++	mt76x0u_cleanup(dev);
+ 	return ret;
+ }
+ 
 -- 
 2.17.1
 
