@@ -2,53 +2,61 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.5 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLACK autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF865C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D776C004D1
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 823572159D
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:03:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="XacXKJzt"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 823572159D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	by mail.kernel.org (Postfix) with ESMTP id DFCD02170E
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 11:33:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DFCD02170E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729329AbeI1R0N (ORCPT
+        id S1729548AbeI1R4W convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 13:26:13 -0400
-Received: from mail.toke.dk ([52.28.52.200]:37437 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729008AbeI1R0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 13:26:13 -0400
-Date:   Fri, 28 Sep 2018 13:02:55 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1538132577; bh=wsJ6ZQ4XkGA+4C5JFTWeawe1oV9yeOmJ21hgjBTlf6A=;
-        h=Date:In-Reply-To:References:Subject:To:CC:From:From;
-        b=XacXKJztAAM0GA+Y4vduvaI9X5ro7iO70ntXiHoGeOKt54LGzOY3hRfvj7DAd02Hx
-         4t6+G2UXth+yD6jMbTZQ5mHlAxn7hVanqz7Oi4u+UYL06C1X10OPvhDBA9zHcrb1bu
-         ThjM+LmdDasqymdjQTl+5QDvY0RIEkP3hvOrR50HCRmLdq2A5S2RJsnqHbRMWhurRv
-         DzT2qtJr/sdQcrkTXjsggWXwRNcXjb2x8bvwV1u00YYTOFtmE5aEzIcHUmtxvRz+2j
-         D0jz0Ut2e8ni0uhJfbNqRCohi1Ngc/uyje9V2rsCSmaV7vmBlDEgfmw8CiPp36TIHC
-         1SQYsnfBVmUEg==
-In-Reply-To: <586459da6ec36edc2284df8533915d62@codeaurora.org>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973134.9231.18038849900399644494.stgit@alrua-x1.karlstad.toke.dk> <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org> <87pnx0haud.fsf@toke.dk> <8f7145bf5abe50194bced025a5e739b9@codeaurora.org> <863bc54fbf04441d38dd53f523300a7e@codeaurora.org> <93015743-5D16-4D79-948F-E2F46CF2450A@toke.dk> <7ba8513b0ec5a7c35b396c7739fc2d7d@codeaurora.org> <87zhw2eyfo.fsf@toke.dk> <5d961a5f61de45b85b1b037bcef9270d@codeaurora.org> <44B09168-C08F-4C85-8D74-D576CCC79880@gmail.com> <586459da6ec36edc2284df8533915d62@codeaurora.org>
+        Fri, 28 Sep 2018 13:56:22 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:51061 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729232AbeI1R4W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 13:56:22 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w8SBWhLs008523, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w8SBWhLs008523
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Fri, 28 Sep 2018 19:32:43 +0800
+Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
+ RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Fri, 28 Sep
+ 2018 19:32:43 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
+Subject: RE: [PATCH 01/12] rtwlan: main files
+Thread-Topic: [PATCH 01/12] rtwlan: main files
+Thread-Index: AQHUVmkc7fXueOv/LUWUMOOpXqM0maUFAMQw///nxICAAImvEA==
+Date:   Fri, 28 Sep 2018 11:32:41 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D08DB7E3@RTITMBSVM01.realtek.com.tw>
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+ <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
+ <20180927135040.GA4712@redhat.com>
+ <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
+ <20180928092918.GC8323@redhat.com>
+In-Reply-To: <20180928092918.GC8323@redhat.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.123]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [Make-wifi-fast] [PATCH RFC v4 3/4] mac80211: Add airtime accounting and scheduling to TXQs
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Jonathan Morton <chromatix99@gmail.com>
-CC:     Kan Yan <kyan@google.com>, make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless-owner@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-From:   =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <4929C006-3452-4C17-9500-8D7485EB538E@toke.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -56,31 +64,128 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 28 September 2018 12:47:51 CEST, Rajkumar Manoharan <rmanohar@codeauror=
-a=2Eorg> wrote:
->On 2018-09-28 03:35, Jonathan Morton wrote:
->>> On 28 Sep, 2018, at 1:19 pm, Rajkumar Manoharan=20
->>> <rmanohar@codeaurora=2Eorg> wrote:
->>>=20
->>>> This is going to break fairness; we only want to increase deficits=20
->>>> when
->>>> all stations' deficits are negative=2E Hence the two loops=2E Did you
->see
->>>> any problems with those specifically?
->>>=20
->>> No=2E I didn't see any issue but the loop won't exit until one txq=20
->>> becomes positive=2E
->>> Till then the lock won't be released=2E Hence I converged into single=
-=20
->>> iteration=2E
->>=20
->> The problem is that the fairness behaviour is changed when there are
->> already positive txqs, but the first one happens to not be positive=2E
->> That's why there were two loops=2E
->>=20
->Yeah=2E=2E Understood=2E we can ignore the cleanup change=2E
+> -----Original Message-----
+> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> Sent: Friday, September 28, 2018 5:29 PM
+> To: Tony Chuang
+> Cc: kvalo@codeaurora.org; Larry.Finger@lwfinger.net;
+> linux-wireless@vger.kernel.org; Pkshih; Andy Huang
+> Subject: Re: [PATCH 01/12] rtwlan: main files
+> 
+> Hi
+> 
+> On Fri, Sep 28, 2018 at 03:20:45AM +0000, Tony Chuang wrote:
+> > > > +	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control, skb);
+> > > > +	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+> > > > +		goto out;
+> > > > +
+> > > > +	return;
+> > > > +
+> > > > +out:
+> > > > +	dev_kfree_skb_any(skb);
+> > > This can be simplified by just do kfree after if ().
+> >
+> >
+> > OK, will replace them with ieee80211_free_txskb
+> 
+> I was thinking about:
+> 
+> 	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+> 		dev_kfree_skb_any(skb)
+> 
+> just to remove 'return;' and out label.
 
-Great! I'll fold in the rest, test it with ath9k and submit as a proper pa=
-tch :)
 
--Toke
+OK, but why not use ieee80211_free_txskb, should it be better for mac80211?
+
+
+> > Have not noticed so far, cause not we can only support on vif.
+> >
+> > And only STA mode is tested, should first modify the iface_conbination.
+> > Then modify them back again if we submit patches support concurrents
+> >
+> > I think that vif_list & sta_list could be protected by a single mutex that
+> > protects concurrent access against mac80211 callbacks, and further add
+> > some rcu locks to protect sta_info. You have some suggestions?
+> 
+> That's good solution, sync multiple possible writes via mutex and
+> reads of list against writes via RCU.
+> 
+> > I think mac80211 will do it "if the vif is different", but under the same vif,
+> > mac80211 will protect it with "sdata->wdev.mtx". Not sure if I am right.
+> 
+> I need to check that as well :-)
+> 
+> > Yes, we can. If we have TDLS peer in STA mode or in AP mode, we could have
+> > different bw_mode, by the sta_info mac80211 passed to us, and that
+> sta_info is
+> > checked by mac80211 based on the capabilities (IE) of the peer.
+> How this work with respect we configure band-width when we change the
+> channel?
+> If we set band-width per sta, should then setting band-width on channel
+> setup be droped ?
+
+
+The channel setup and per-sta are required.
+
+Now suppose we are STA mode, capable of 80Mhz, connecting to an AP that
+is also capable of 80Mhz, then mac80211 will ask us to setup channel to 80Mhz.
+Before change the channel, mac80211 will intersect the capabilities.
+
+And now another peer joined, like TDLS, and the peer is only capable of 40Mhz,
+after mac80211 intersect our capabilities, the sta_info passed will be 40Mhz.
+Then we can talk to AP with 80Mhz BW, and to TDLS peer with 40Mhz.
+
+Hence we need the per-sta capabilities.
+
+> 
+> > > > +static inline void rtw_load_table(struct rtw_dev *rtwdev,
+> > > > +				  const struct rtw_table *tbl)
+> > > > +{
+> > > > +	(*tbl->parse)(rtwdev, tbl);
+> > > > +}
+> > >
+> > > This interface of loading/processing tables of data looks very strange.
+> > > I don't think is incorrect, but seems to be somewhat not necessary
+> > > complicated. I'll try provide more detailed comment about that when
+> > > review other files.
+> >
+> >
+> > OK, but I think this is needed, our tables have different forms ....
+> 
+> Not sure if that is better solution, but could the tables be pre-prarsed
+> by user-space program and then embed in the driver in ready to send
+> to the hardware from ?
+> 
+> Also there are lot of redundancy in those tables, for example:
+> 
+> +	0x81C, 0xFF000003,
+> +	0x81C, 0xF5000003,
+> +	0x81C, 0xF4020003,
+> +	0x81C, 0xF3040003,
+> +	0x81C, 0xF2060003,
+> +	0x81C, 0xF1080003,
+> +	0x81C, 0xF00A0003,
+> +	0x81C, 0xEF0C0003,
+> +	0x81C, 0xEE0E0003,
+> +	0x81C, 0xED100003,
+> +	0x81C, 0xEC120003,
+> +	0x81C, 0xEB140003,
+> +	0x81C, 0xEA160003,
+> +	0x81C, 0xE9180003,
+> +	0x81C, 0xE81A0003,
+> +	0x81C, 0xE71C0003,
+> +	0x81C, 0xE61E0003,
+> +	0x81C, 0xE5200003,
+> 
+> 0x81C and 0003 repeats in many lines.
+> 
+> This seems to be parse data, not that we have to write 0x81C
+> register many times. Would be possible to remove the redundancy?
+
+
+No, they cannot be removed, the sequence matters.
+And it is really writing to 0x81C ...
+It is really magic, I cannot believe to this, too.
+
+Yan-Hsuan Chuang
