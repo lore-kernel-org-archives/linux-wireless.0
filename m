@@ -2,95 +2,317 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22155C43143
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 23:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B7AC43143
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 23:16:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD2EA206B2
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 23:05:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CD2EA206B2
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
+	by mail.kernel.org (Postfix) with ESMTP id F2F01206B8
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 23:16:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="e+guU5k1";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oQiNSj07"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F2F01206B8
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726881AbeI2Fa6 (ORCPT
+        id S1726769AbeI2FmV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 29 Sep 2018 01:30:58 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:37324 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726492AbeI2Fa5 (ORCPT
+        Sat, 29 Sep 2018 01:42:21 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:41062 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726612AbeI2FmV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Sep 2018 01:30:57 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Sat, 29 Sep 2018 01:42:21 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 1A6D6601D1; Fri, 28 Sep 2018 23:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538176581;
+        bh=YurQfF1RIV9li5WsCMs2jn+EKz2fWzK3ZAs797kex0w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=e+guU5k1zdO/eSLIG2vUaawm0eDbKzNRrxQV6y0yR1PZnhGZC79VNBdqBXsZehcey
+         EH+brNf33Ct2s6etXl7JFEsm15YSvaof7/xx59RNQYILiOrw7j0EUXIF1x8omgwTga
+         nLvjs2YWxDElt8qRgYnzZ3OeL3SJJbvWIRiBkG2c=
+Received: from smtp.codeaurora.org (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 0C90A40A69D;
-        Fri, 28 Sep 2018 16:04:57 -0700 (PDT)
-Subject: Re: [RFC 2/2] ath10k: reporting estimated tx airtime for fairness
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-References: <1538008874-11692-1-git-send-email-rmanohar@codeaurora.org>
- <1538008874-11692-2-git-send-email-rmanohar@codeaurora.org>
- <87lg7lfxtw.fsf@toke.dk> <34bac7851e6c9d3194cef87bd952c388@codeaurora.org>
- <25469b4a-219d-f941-15ad-a1c95308dd69@candelatech.com>
- <df1c4f9bde7682646c901305d1c0ab5d@codeaurora.org>
-Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <4678c2a6-93ab-5688-1907-73ceb74999c4@candelatech.com>
-Date:   Fri, 28 Sep 2018 16:04:56 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.0
+        (Authenticated sender: rmanohar@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B18C5605FD;
+        Fri, 28 Sep 2018 23:16:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538176580;
+        bh=YurQfF1RIV9li5WsCMs2jn+EKz2fWzK3ZAs797kex0w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oQiNSj07VEFrwr40ydPqlGkn15Dh7Kagb3pZRrpLlCpR/fZ7sbxzq+4jA7HnsQltb
+         2TAqbFKELfo13wmxg9KQDVJsKxg/LTO93RCamZrn/k4onOAykh1wo80Sbulz83EVSQ
+         FVhXheQ2sB9aGwPwNO0uwxFgK1ctQZOhvR8yQNpk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B18C5605FD
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
+Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Fri, 28 Sep 2018 16:16:17 -0700
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [RFC v2 1/2] ath10k: migrate to mac80211 txq scheduling
+Date:   Fri, 28 Sep 2018 16:16:13 -0700
+Message-Id: <1538176574-5580-1-git-send-email-rmanohar@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 MIME-Version: 1.0
-In-Reply-To: <df1c4f9bde7682646c901305d1c0ab5d@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/28/2018 03:47 PM, Rajkumar Manoharan wrote:
-> On 2018-09-28 12:57, Ben Greear wrote:
->> On 09/28/2018 12:47 PM, Rajkumar Manoharan wrote:
->>> On 2018-09-28 08:25, Toke Høiland-Jørgensen wrote:
->>>
->>>> So this just uses the calculated airtime based on rate and size? Wasn't
->>>> there supposed to be an airtime usage value reported by the firmware? :)
->>>>
->>> Firmware interface changes are in progress. Airtime for sta/tid will be reported via
->>> htt tx-compl and rx ind messages. Meantime I thought it would be useful to use Kan's changes
->>> for ATF validation in ath10k using existing firmware. :)
->>
->> Maybe you can get the firmware guys to report the tx rate in the tx-completion
->> (like I have been doing for years in my ath10k-ct firmware)?  Then let the host
->> do the air-time calculating?
->>
->> I'll give them firmware patches if the want :)
->>
-> Ben,
->
-> As you know, it needs cleanup in firmware to free up space for new interface
-> changes. Most of time we try to leverage rsvd/unused slots. I am aware of that
-> you did a lot of clean up in CT firmware which is quite hard in official
-> firmware as it also has to support prop. releases. Kalle can answer much better.
+ath10k maintains common txqs list for all stations. This txq
+management can be removed by migrating to mac80211 txq APIs
+and let mac80211 handle txqs reordering based on reported airtime.
+By doing this, txq fairness maintained in ath10k i.e processing
+N frames per txq is removed. By adapting to mac80211 APIs,
+ath10k will support mac80211 based airtime fairness algorithm.
 
-There are hard ways to get more space in the firmware, but there are also some
-easier ones (un-used members in structs, better natural packing, and such).
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c   |  2 -
+ drivers/net/wireless/ath/ath10k/core.h   |  3 --
+ drivers/net/wireless/ath/ath10k/htc.h    |  1 -
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  8 +++
+ drivers/net/wireless/ath/ath10k/mac.c    | 92 +++++++++++++-------------------
+ 5 files changed, 45 insertions(+), 61 deletions(-)
 
-If there was a QCA firmware engineer that could promptly discuss these things
-with me and apply patches, I can feed them patches.
-
-And, the 10.4 firmware already has some extra space in its tx descriptor that
-can be used to report tx-status without much additional code or RAM.  The wave-1 stuff
-needs some more serious hacking and does consume more memory.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index cf3c47b8cb2d..0684f87abc9b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -3068,9 +3068,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 
+ 	mutex_init(&ar->conf_mutex);
+ 	spin_lock_init(&ar->data_lock);
+-	spin_lock_init(&ar->txqs_lock);
+ 
+-	INIT_LIST_HEAD(&ar->txqs);
+ 	INIT_LIST_HEAD(&ar->peers);
+ 	init_waitqueue_head(&ar->peer_mapping_wq);
+ 	init_waitqueue_head(&ar->htt.empty_tx_wq);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index f6e5c29f74e7..d3e20aaf8023 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1054,10 +1054,7 @@ struct ath10k {
+ 
+ 	/* protects shared structure data */
+ 	spinlock_t data_lock;
+-	/* protects: ar->txqs, artxq->list */
+-	spinlock_t txqs_lock;
+ 
+-	struct list_head txqs;
+ 	struct list_head arvifs;
+ 	struct list_head peers;
+ 	struct ath10k_peer *peer_map[ATH10K_MAX_NUM_PEER_IDS];
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 51fda6c23f69..cb30add7dd33 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -51,7 +51,6 @@
+  */
+ 
+ #define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
+-#define HTC_HOST_MAX_MSG_PER_TX_BUNDLE        16
+ 
+ enum ath10k_htc_tx_flags {
+ 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index f2405258a6d3..f2aaa2f7a022 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2379,6 +2379,7 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
+ 	u8 tid;
+ 	int ret;
+ 	int i;
++	bool may_tx;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch ind\n");
+ 
+@@ -2451,8 +2452,13 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
+ 		num_msdus = 0;
+ 		num_bytes = 0;
+ 
++		ieee80211_txq_schedule_start(hw, txq->ac);
++		may_tx = ieee80211_txq_may_transmit(hw, txq);
+ 		while (num_msdus < max_num_msdus &&
+ 		       num_bytes < max_num_bytes) {
++			if (!may_tx)
++				break;
++
+ 			ret = ath10k_mac_tx_push_txq(hw, txq);
+ 			if (ret < 0)
+ 				break;
+@@ -2460,6 +2466,8 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
+ 			num_msdus++;
+ 			num_bytes += ret;
+ 		}
++		ieee80211_return_txq(hw, txq);
++		ieee80211_txq_schedule_end(hw, txq->ac);
+ 
+ 		record->num_msdus = cpu_to_le16(num_msdus);
+ 		record->num_bytes = cpu_to_le32(num_bytes);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 97548f96a2f7..3b441179a36c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3874,7 +3874,6 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
+ 
+ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ {
+-	struct ath10k_txq *artxq;
+ 	struct ath10k_skb_cb *cb;
+ 	struct sk_buff *msdu;
+ 	int msdu_id;
+@@ -3882,12 +3881,6 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ 	if (!txq)
+ 		return;
+ 
+-	artxq = (void *)txq->drv_priv;
+-	spin_lock_bh(&ar->txqs_lock);
+-	if (!list_empty(&artxq->list))
+-		list_del_init(&artxq->list);
+-	spin_unlock_bh(&ar->txqs_lock);
+-
+ 	spin_lock_bh(&ar->htt.tx_lock);
+ 	idr_for_each_entry(&ar->htt.pending_tx, msdu, msdu_id) {
+ 		cb = ATH10K_SKB_CB(msdu);
+@@ -3927,7 +3920,6 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
+ 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
+ 
+ 	/* No need to get locks */
+-
+ 	if (ar->htt.tx_q_state.mode == HTT_TX_MODE_SWITCH_PUSH)
+ 		return true;
+ 
+@@ -4014,48 +4006,44 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 	return skb_len;
+ }
+ 
+-void ath10k_mac_tx_push_pending(struct ath10k *ar)
++static int ath10k_mac_schedule_txq(struct ieee80211_hw *hw, u32 ac)
+ {
+-	struct ieee80211_hw *hw = ar->hw;
+ 	struct ieee80211_txq *txq;
+-	struct ath10k_txq *artxq;
+-	struct ath10k_txq *last;
+-	int ret;
+-	int max;
+-
+-	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
+-		return;
+-
+-	spin_lock_bh(&ar->txqs_lock);
+-	rcu_read_lock();
+-
+-	last = list_last_entry(&ar->txqs, struct ath10k_txq, list);
+-	while (!list_empty(&ar->txqs)) {
+-		artxq = list_first_entry(&ar->txqs, struct ath10k_txq, list);
+-		txq = container_of((void *)artxq, struct ieee80211_txq,
+-				   drv_priv);
++	int ret = 0;
+ 
+-		/* Prevent aggressive sta/tid taking over tx queue */
+-		max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
+-		ret = 0;
+-		while (ath10k_mac_tx_can_push(hw, txq) && max--) {
++	ieee80211_txq_schedule_start(hw, ac);
++	while ((txq = ieee80211_next_txq(hw, ac))) {
++		while (ath10k_mac_tx_can_push(hw, txq)) {
+ 			ret = ath10k_mac_tx_push_txq(hw, txq);
+ 			if (ret < 0)
+ 				break;
+ 		}
++		ieee80211_return_txq(hw, txq);
++		ath10k_htt_tx_txq_update(hw, txq);
++		if (ret == -EBUSY)
++			break;
++	}
++	ieee80211_txq_schedule_end(hw, ac);
+ 
+-		list_del_init(&artxq->list);
+-		if (ret != -ENOENT)
+-			list_add_tail(&artxq->list, &ar->txqs);
++	return ret;
++}
+ 
+-		ath10k_htt_tx_txq_update(hw, txq);
++void ath10k_mac_tx_push_pending(struct ath10k *ar)
++{
++	struct ieee80211_hw *hw = ar->hw;
++	u32 ac;
++
++	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
++		return;
+ 
+-		if (artxq == last || (ret < 0 && ret != -ENOENT))
++	rcu_read_lock();
++
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++		if (ath10k_mac_schedule_txq(hw, ac) == -EBUSY)
+ 			break;
+ 	}
+ 
+ 	rcu_read_unlock();
+-	spin_unlock_bh(&ar->txqs_lock);
+ }
+ EXPORT_SYMBOL(ath10k_mac_tx_push_pending);
+ 
+@@ -4293,31 +4281,25 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
+ 					struct ieee80211_txq *txq)
+ {
+-	struct ath10k *ar = hw->priv;
+-	struct ath10k_txq *artxq = (void *)txq->drv_priv;
+-	struct ieee80211_txq *f_txq;
+-	struct ath10k_txq *f_artxq;
++	u8 ac = txq->ac;
+ 	int ret = 0;
+-	int max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
+-
+-	spin_lock_bh(&ar->txqs_lock);
+-	if (list_empty(&artxq->list))
+-		list_add_tail(&artxq->list, &ar->txqs);
+ 
+-	f_artxq = list_first_entry(&ar->txqs, struct ath10k_txq, list);
+-	f_txq = container_of((void *)f_artxq, struct ieee80211_txq, drv_priv);
+-	list_del_init(&f_artxq->list);
++	ieee80211_txq_schedule_start(hw, ac);
++	txq = ieee80211_next_txq(hw, ac);
++	ieee80211_txq_schedule_end(hw, ac);
++	if (!txq)
++		return;
+ 
+-	while (ath10k_mac_tx_can_push(hw, f_txq) && max--) {
+-		ret = ath10k_mac_tx_push_txq(hw, f_txq);
++	while (ath10k_mac_tx_can_push(hw, txq)) {
++		ret = ath10k_mac_tx_push_txq(hw, txq);
+ 		if (ret < 0)
+ 			break;
+ 	}
+-	if (ret != -ENOENT)
+-		list_add_tail(&f_artxq->list, &ar->txqs);
+-	spin_unlock_bh(&ar->txqs_lock);
+-
+-	ath10k_htt_tx_txq_update(hw, f_txq);
++	if (ret == -EBUSY) {
++		ieee80211_txq_schedule_start(hw, ac);
++		ieee80211_return_txq(hw, txq);
++		ieee80211_txq_schedule_end(hw, ac);
++	}
+ 	ath10k_htt_tx_txq_update(hw, txq);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
