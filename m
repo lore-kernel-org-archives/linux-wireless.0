@@ -2,127 +2,149 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA0EC43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5389C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 587B82172C
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:28:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aqPR/5wG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 587B82172C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
+	by mail.kernel.org (Postfix) with ESMTP id A7D402172C
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 09:29:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A7D402172C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729141AbeI1PvZ (ORCPT
+        id S1729141AbeI1PwO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 11:51:25 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38228 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726440AbeI1PvZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 11:51:25 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8S9NiTI060744;
-        Fri, 28 Sep 2018 09:28:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2018-07-02;
- bh=rq+GREca+4DscrSeI35+5JwS8bGdYV/0rH7BcI80TMo=;
- b=aqPR/5wGgDbSXQozJEglsMZnInsg0neW80LRjBVxxBoJPim9JihJREPhYrFUhWkyRx6+
- TNR7WeAtJYpaiTCVnDekIAEssncatMqKKmGNHPistbvvFyfLU7VmLEZK1VKiPxuiaXeE
- zQMxwe3MgnxcpuTnedcQDI7OGRLYnwr46aaydDU4J+WbwEtnJi9134rJjB/sTYbAGsD6
- BINM80T8lNgnOoJZtU26SpOlzSpBjNwRhjeIMNlLQQZZDbSxkWpkO+4O0MlonhsCcjvE
- o7cvRUzNjgJadSsMHMXsWNOWjslsmDfnN012Fty27bgGHZ8X2E20vsBYU7iew0SQ38zR Cg== 
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2mnvtv5qyy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Sep 2018 09:28:32 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8S9SVWg032232
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Sep 2018 09:28:31 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8S9SVap008452;
-        Fri, 28 Sep 2018 09:28:31 GMT
-Received: from mwanda (/197.232.248.111)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Sep 2018 02:28:31 -0700
-Date:   Fri, 28 Sep 2018 12:28:26 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     christophe.ricard@gmail.com
-Cc:     linux-wireless@vger.kernel.org
-Subject: [bug report] NFC: st21nfca: Fix some skb memory leaks
-Message-ID: <20180928092826.GA2420@mwanda>
+        Fri, 28 Sep 2018 11:52:14 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43286 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726440AbeI1PwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 11:52:13 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 18BE45F73D;
+        Fri, 28 Sep 2018 09:29:22 +0000 (UTC)
+Received: from localhost (ovpn-204-174.brq.redhat.com [10.40.204.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2324D60920;
+        Fri, 28 Sep 2018 09:29:20 +0000 (UTC)
+Date:   Fri, 28 Sep 2018 11:29:19 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
+Subject: Re: [PATCH 01/12] rtwlan: main files
+Message-ID: <20180928092918.GC8323@redhat.com>
+References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
+ <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
+ <20180927135040.GA4712@redhat.com>
+ <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9029 signatures=668707
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
- phishscore=0 bulkscore=92 spamscore=0 mlxscore=0 mlxlogscore=528
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1807170000 definitions=main-1809280098
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Fri, 28 Sep 2018 09:29:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Christophe Ricard,
+Hi
 
-The patch c490c557b67f: "NFC: st21nfca: Fix some skb memory leaks"
-from Jan 25, 2015, leads to the following static checker warning:
+On Fri, Sep 28, 2018 at 03:20:45AM +0000, Tony Chuang wrote:
+> > > +	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control, skb);
+> > > +	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+> > > +		goto out;
+> > > +
+> > > +	return;
+> > > +
+> > > +out:
+> > > +	dev_kfree_skb_any(skb);
+> > This can be simplified by just do kfree after if ().
+> 
+> 
+> OK, will replace them with ieee80211_free_txskb
 
-	drivers/nfc/st21nfca/core.c:742 st21nfca_hci_complete_target_discovered()
-	warn: 'nfcid_skb' was already freed.
+I was thinking about:
 
-drivers/nfc/st21nfca/core.c
-   712                          /* NFC Forum Digital Protocol Table 44 */
-   713                          if (target->sensf_res[0] == 0x01 &&
-   714                              target->sensf_res[1] == 0xfe)
-   715                                  target->supported_protocols =
-   716                                                          NFC_PROTO_NFC_DEP_MASK;
-   717                          else
-   718                                  target->supported_protocols =
-   719                                                          NFC_PROTO_FELICA_MASK;
-   720                  } else {
-   721                          kfree_skb(nfcid_skb);
-                                ^^^^^^^^^^^^^^^^^^^^
-Freed.
+	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+		dev_kfree_skb_any(skb)
 
-   722                          /* P2P in type A */
-   723                          r = nfc_hci_get_param(hdev, ST21NFCA_RF_READER_F_GATE,
-   724                                          ST21NFCA_RF_READER_F_NFCID1,
-   725                                          &nfcid_skb);
-                                                ^^^^^^^^^^
-This is set to a different new skb on some error paths but if we return
--EADDRNOTAVAIL then it's still the same freed skb.
+just to remove 'return;' and out label.
 
-   726                          if (r < 0)
-   727                                  goto exit;
-                                        ^^^^^^^^^
-We hit this goto and double free.
+> Have not noticed so far, cause not we can only support on vif.
+> 
+> And only STA mode is tested, should first modify the iface_conbination.
+> Then modify them back again if we submit patches support concurrents
+> 
+> I think that vif_list & sta_list could be protected by a single mutex that
+> protects concurrent access against mac80211 callbacks, and further add
+> some rcu locks to protect sta_info. You have some suggestions?
 
-   728  
-   729                          if (nfcid_skb->len > NFC_NFCID1_MAXSIZE) {
-   730                                  r = -EPROTO;
-   731                                  goto exit;
-   732                          }
-   733                          memcpy(target->sensf_res, nfcid_skb->data,
-   734                                  nfcid_skb->len);
-   735                          target->sensf_res_len = nfcid_skb->len;
-   736                          target->supported_protocols = NFC_PROTO_NFC_DEP_MASK;
-   737                  }
-   738                  target->hci_reader_gate = ST21NFCA_RF_READER_F_GATE;
-   739          }
-   740          r = 1;
-   741  exit:
-   742          kfree_skb(nfcid_skb);
-   743          return r;
-   744  }
+That's good solution, sync multiple possible writes via mutex and
+reads of list against writes via RCU.
 
-regards,
-dan carpenter
+> I think mac80211 will do it "if the vif is different", but under the same vif,
+> mac80211 will protect it with "sdata->wdev.mtx". Not sure if I am right.
+
+I need to check that as well :-)
+
+> Yes, we can. If we have TDLS peer in STA mode or in AP mode, we could have
+> different bw_mode, by the sta_info mac80211 passed to us, and that sta_info is
+> checked by mac80211 based on the capabilities (IE) of the peer.
+How this work with respect we configure band-width when we change the channel?
+If we set band-width per sta, should then setting band-width on channel
+setup be droped ?
+
+> > > +static inline void rtw_load_table(struct rtw_dev *rtwdev,
+> > > +				  const struct rtw_table *tbl)
+> > > +{
+> > > +	(*tbl->parse)(rtwdev, tbl);
+> > > +}
+> > 
+> > This interface of loading/processing tables of data looks very strange.
+> > I don't think is incorrect, but seems to be somewhat not necessary
+> > complicated. I'll try provide more detailed comment about that when
+> > review other files.
+> 
+> 
+> OK, but I think this is needed, our tables have different forms ....
+
+Not sure if that is better solution, but could the tables be pre-prarsed
+by user-space program and then embed in the driver in ready to send
+to the hardware from ?
+
+Also there are lot of redundancy in those tables, for example:
+
++	0x81C, 0xFF000003,
++	0x81C, 0xF5000003,
++	0x81C, 0xF4020003,
++	0x81C, 0xF3040003,
++	0x81C, 0xF2060003,
++	0x81C, 0xF1080003,
++	0x81C, 0xF00A0003,
++	0x81C, 0xEF0C0003,
++	0x81C, 0xEE0E0003,
++	0x81C, 0xED100003,
++	0x81C, 0xEC120003,
++	0x81C, 0xEB140003,
++	0x81C, 0xEA160003,
++	0x81C, 0xE9180003,
++	0x81C, 0xE81A0003,
++	0x81C, 0xE71C0003,
++	0x81C, 0xE61E0003,
++	0x81C, 0xE5200003,
+
+0x81C and 0003 repeats in many lines. 
+
+This seems to be parse data, not that we have to write 0x81C
+register many times. Would be possible to remove the redundancy?
+
+Thanks
+Stanislaw
