@@ -2,104 +2,92 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A82C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 13:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4A8C43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 14:15:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED3A02168B
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 13:09:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MOAFB0ph"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ED3A02168B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 5877E2064E
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 14:15:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5877E2064E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728453AbeI1TdE (ORCPT
+        id S1726971AbeI1UjZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 15:33:04 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:34865 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726430AbeI1TdE (ORCPT
+        Fri, 28 Sep 2018 16:39:25 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:49158 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726121AbeI1UjY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 15:33:04 -0400
-Received: by mail-ot1-f68.google.com with SMTP id j9-v6so5987742otl.2
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2018 06:09:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=61MZ4Kf+eEI2YuPc9XPGomA3P6dDDVqehMMb1y7aoLA=;
-        b=MOAFB0phN2QLYUQMcIIOZug1Qe1mp4MFm2uFmTMZ5SIUe2S9wFS2xANhjkV//q69tz
-         c78Fv/CJm15PfsEb5fMmggtbbN8TvUOGDr8RB6hwZPFfv/mwe1VUf4ZF/Wn4DJNnkaYw
-         yyFNJne5Ang4jw7xQiRhpSYxv3AZA85oJNhQ6ZuV1K4nDCAoIFV+HKZ9aOoGDSC4a1GV
-         02Zhcg402GlVjbyJFaEcy2g/t0JvavgqT8nFtbx0esXAUEe83YOi/EG4UMDKa7ZLyE92
-         9SUjPyTX1R4Kf0d29RHvXlImx6ieVhAzXepkJidpp5cxdX4NF2+3FWLoHJXLKLSNeVtS
-         Vzxg==
+        Fri, 28 Sep 2018 16:39:24 -0400
+Received: from mail-it1-f199.google.com ([209.85.166.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1g5tYB-0002U5-Ss
+        for linux-wireless@vger.kernel.org; Fri, 28 Sep 2018 14:15:23 +0000
+Received: by mail-it1-f199.google.com with SMTP id w68-v6so2665996ith.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2018 07:15:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=61MZ4Kf+eEI2YuPc9XPGomA3P6dDDVqehMMb1y7aoLA=;
-        b=LKoMbBJKo319CPZMJU2AOo+GZp/Os25zGrf9dH5JwL5aK+Loluxzt0QHQRYbXRGKtM
-         vxRE+BvQ94VDAQ6ozpVfPcC6QVIIqCspm9i4aOxqx0zWtj/yOKpMv1ZolQot29LQTcKZ
-         GMgECkYCcZHbXK7n3UfGY2GhYmpPtl7NYGpqCCFMjfnNz48CWdSWNrNktpkUTkOJ0Tls
-         zb7NdDBhNK3+YdGQTtVngHlfCwuXC1hONoDh73Hd4XrD5tuSN8NMmQhu78/nfPU7KyrM
-         gQCKfIEKlQfidd9j0vSoi6nysQCSMlOFTeLbn7dOu3cHXV6WLNmVEMp6nothDK5L1Kf/
-         p36A==
-X-Gm-Message-State: ABuFfoib/uXtyJgdG84THZmYcV62Y0eLWe58Liq+D+0eNQF2Dad2Js3b
-        7uET7UBlfRRUQuTXA+Hit5GsUdWNBMCJwvjzoT8Yig==
-X-Google-Smtp-Source: ACcGV60HuGvD0FW47g9cOAIjcZrV5G+LN2cGFTY4Ev8OWHU/CUKhBnF8ZgmB4NfrGjvzja5K51YprtmbXmkqNtLBmoc=
-X-Received: by 2002:a9d:5285:: with SMTP id f5-v6mr9509913oth.247.1538140161806;
- Fri, 28 Sep 2018 06:09:21 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=hX6amrLRVvY/emHXiOefZ9clw6veaAT8gz2hk85NfXU=;
+        b=GF8CEr+HimcMdRMwMXSdQHY5T3B9I+9n9ueuFOML64mUD/CA/lVtxQJxCzwz0hZHMH
+         pNjHnrJ/6oRgvaPbgrkrlEhQ3quAf7psC5DHHvHzWrUwzbBxIw6/usKfEP7646P5CJPx
+         D+JMYnadQz1b6MQnYy/dscDQ2WRCXLpvxb7oLnkuO+/FesM+IJWmOKUQxtM4iwHxgmd/
+         KjuH1bPJQCDH3xvlIust0LIpR4VykclsfaJKdsD08w/BaVY42Ys4IybxV0i2sCdxcsYL
+         gWKokY6C9ihGhDkW08EtDitqfSMjUVry4YRfj08BNH2dqsHD6k6Hnt6AwdXAz005LkEX
+         8F+A==
+X-Gm-Message-State: ABuFfoijA2eUvFZThkGY50bDPkuwIv+tXpR395qzVxffeG3tO2HFIlhI
+        alJLWqRzxh0X/5hkPU1Ntkq+UE4R0JMoUXQfpsuENkrOrD1JyhoTzy3UuSTcdH4L0D1AkczcAfF
+        6q40BRP7yOkJ/FJJWWPeiWJFxQBkWC8MjrEdI9wt+YGdH
+X-Received: by 2002:a02:308f:: with SMTP id q137-v6mr13221868jaq.18.1538144122756;
+        Fri, 28 Sep 2018 07:15:22 -0700 (PDT)
+X-Google-Smtp-Source: ACcGV61tyXpvZzMySRsekff1wb4MnfRonlk0H5qOFfMzWOoNiBy0/bpVsqoc1Y+Q6ZHQa0xSrhTzLQ==
+X-Received: by 2002:a02:308f:: with SMTP id q137-v6mr13221837jaq.18.1538144122366;
+        Fri, 28 Sep 2018 07:15:22 -0700 (PDT)
+Received: from localhost ([2605:a601:ac7:2a20:7891:1d10:21bb:42d5])
+        by smtp.gmail.com with ESMTPSA id w193-v6sm1102556ita.11.2018.09.28.07.15.21
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 28 Sep 2018 07:15:21 -0700 (PDT)
+Date:   Fri, 28 Sep 2018 09:15:20 -0500
+From:   Seth Forshee <seth.forshee@canonical.com>
+To:     Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc:     linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+        Simon Wunderlich <simon.wunderlich@openmesh.com>,
+        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>
+Subject: Re: [PATCH 1/2] wireless-regdb: Sync FR with ETSI EN 301 893 V2.1.1
+ (2017-05)
+Message-ID: <20180928141520.GS16752@ubuntu-xps13>
+References: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
 MIME-Version: 1.0
-Received: by 2002:a9d:2834:0:0:0:0:0 with HTTP; Fri, 28 Sep 2018 06:09:21
- -0700 (PDT)
-In-Reply-To: <20180919103711.19304-1-sw@simonwunderlich.de>
-References: <20180919103711.19304-1-sw@simonwunderlich.de>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Fri, 28 Sep 2018 15:09:21 +0200
-Message-ID: <CAKR_QVJM4T_nvVMVqh75U+_xqXG8hW80OzzJmtpxbJKWecUtKg@mail.gmail.com>
-Subject: Re: [PATCH 0/5] ath9k: FFT fixes and improvements
-To:     Simon Wunderlich <sw@simonwunderlich.de>
-Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        ath9k-devel@qca.qualcomm.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180917074212.6739-1-sven.eckelmann@openmesh.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-compiles OK, no interfere with normal card operations (IBSS) so it
-should be merged.
+On Mon, Sep 17, 2018 at 09:42:11AM +0200, Sven Eckelmann wrote:
+> The documents
+> https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
+> and
+> https://www.anfr.fr/fileadmin/mediatheque/documents/controle/20171127ANFR_-_ficheRLAN_5GHz.pdf
+> show that the limits for the 5GHz bands are out of date:
+> 
+> * frequencies don't match the official limits
+> * 5150 - 5350 MHz is not for outdoor usage
+> * 5150 - 5250 MHz only usage is allowed to use up to 23 dBm (200 mW) even
+>   without TPC
+> 
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
 
-On 19/09/2018, Simon Wunderlich <sw@simonwunderlich.de> wrote:
-> During FFT evaluation on an AR9462 adapter, we noticed that there were
-> way less FFT samples received than we would expect. This patchset adds
-> some counters to be able to check for received (and discarded) FFT
-> samples, and fixes a variety of issues I found while debugging.
->
-> Cheers,
->      Simon
->
-> Simon Wunderlich (5):
->   ath9k: add counters for good and errorneous FFT/spectral frames
->   ath9k: return when short FFT frame was handled
->   ath9k: fix and simplify FFT max index retrieval
->   ath9k: FFT magnitude check: don't consider lower 3 data bits
->   ath9k: fix reporting calculated new FFT upper max
->
->  drivers/net/wireless/ath/ath9k/common-debug.c    |  2 +
->  drivers/net/wireless/ath/ath9k/common-debug.h    |  4 ++
->  drivers/net/wireless/ath/ath9k/common-spectral.c | 83
-> +++++++++---------------
->  drivers/net/wireless/ath/ath9k/common-spectral.h | 17 +++++
->  4 files changed, 55 insertions(+), 51 deletions(-)
->
-> --
-> 2.11.0
->
->
+Applied both patches, thanks!
+
+Seth
