@@ -2,231 +2,176 @@ Return-Path: <SRS0=in5x=MK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E45C43382
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:25:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD77CC43382
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:59:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C073720838
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:25:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 836CE206B6
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Sep 2018 15:59:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="W0/uShIU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C073720838
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jmHkR+8V"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 836CE206B6
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728643AbeI1VuF (ORCPT
+        id S1729093AbeI1WXl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Sep 2018 17:50:05 -0400
-Received: from mail.toke.dk ([52.28.52.200]:40003 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726345AbeI1VuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Sep 2018 17:50:05 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1538148348; bh=R+TQHCNIudKILwJ4AyKuHZrpI63L+cAuAEdA6wlwMl8=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=W0/uShIUgUvuTKAn1+BEOVArbUEtqgVkT1MOz7WRA/COqHgMShddwmW1tclWiOYgI
-         DLsj+La3Xdww55zS5kXRMEgKkASHOtMT2AirRAN4q7C4gEUp53BuRZdWrNrIXdMmbw
-         o3/ZFT6Z05dWYOHPG4o3xvkNcisxlacHO0PMXQSjuLGLHHjY4XxwoJ0SMwpyx9Ua0Y
-         Fnv/j7ud2wU6scX++03C+kgtHGMnc7YRSnVSXu0TMkzYbAXTDm8cwi6a9dnQs9I7NS
-         iPCvsKwLcXVIv7DQvD17GZlPnkbt6xysHiad95eV5/zV8jHaPEE6WCghHMFFyWDqua
-         KsVVCs1pgJ6sA==
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Subject: Re: [RFC 2/2] ath10k: reporting estimated tx airtime for fairness
-In-Reply-To: <1538008874-11692-2-git-send-email-rmanohar@codeaurora.org>
-References: <1538008874-11692-1-git-send-email-rmanohar@codeaurora.org> <1538008874-11692-2-git-send-email-rmanohar@codeaurora.org>
-Date:   Fri, 28 Sep 2018 17:25:47 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87lg7lfxtw.fsf@toke.dk>
+        Fri, 28 Sep 2018 18:23:41 -0400
+Received: from mail-oi1-f173.google.com ([209.85.167.173]:36897 "EHLO
+        mail-oi1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726121AbeI1WXl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 28 Sep 2018 18:23:41 -0400
+Received: by mail-oi1-f173.google.com with SMTP id e17-v6so4958827oib.4
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Sep 2018 08:59:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=177xObPEmAbsJmBUWc9dUnvuK/WMG0iFTYQNgsJmCKA=;
+        b=jmHkR+8VIo5Qg1RDwo/V6POp2bSazf0r4IJvFqBe0KNaKrVizlrOx9gIc00T9L7F3t
+         JR7NP21McgYBSO4oXYHtaAgb/pg7cAJFERyKnuE4nkdiHxfz3sVlT/cxeRdwXAVgTwEb
+         NcMw32WcAJoGIb0qeA/eQxfImJqX9A7SEKh54ImYbW38W4UQcs4RKQlRAegjau+AUbZl
+         zYiH+L0hDa1Ai+68IiHgy7FrRB4w4t2IIbsNR5zr7LXpvZtA5iwHc1GFxzhleFqB9tkQ
+         1xidnzL/WX6H0WlLyVed3P6NvkDxtNNu9QKlrfmj7sj/jnw/gSc2B2Veg8i9tzahjqcq
+         8Cfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=177xObPEmAbsJmBUWc9dUnvuK/WMG0iFTYQNgsJmCKA=;
+        b=L8H5yGkkT3fISYZ9hp3MfgqRjVuVQ/7fqX3bHG/lsdbjTzKqbCq9rpxQgAXzImy5z7
+         e1IfYe9kcK4KqB1P3bhXciN+6SSFankfnPEPj1r5vDLgJcBX1bkyMOHyf7rbq2fM56Ct
+         5x8F/4VyK3RG+ZMwhFWsbDy6vw0UlxksAeJfy6sR5aU6pAtWp1zF1skwrI/hknWI9BWC
+         ogwDopaWZhPjnLPTdUUWZBMul8SILhRRdnsV/OefjCfYPo3KXSsOqBBAqARGLiPliHVF
+         8SnxhgMZsymFLtUR5cAGjz7Ckbj0P9yF/L66kvlOyUKw8mjNk/N18ZbjMpteaPe3SenZ
+         i80A==
+X-Gm-Message-State: ABuFfogmVK3bXbFMAfzjzNbkgoZJsnf01/+AK2KFdjX5nfjrwelo1hD/
+        KxaY5BzyWcSfP+GWlnSQLftr7ym3
+X-Google-Smtp-Source: ACcGV60MxwfrQuWIF0JrVeCScZLmFpewlxKPxDr5bOeYFuADaoIvIZggOb66d+52dxkzUHEa91pQPA==
+X-Received: by 2002:aca:f409:: with SMTP id s9-v6mr6353666oih.102.1538150356871;
+        Fri, 28 Sep 2018 08:59:16 -0700 (PDT)
+Received: from [192.168.1.107] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id r10-v6sm1904477oif.37.2018.09.28.08.59.15
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 28 Sep 2018 08:59:15 -0700 (PDT)
+Subject: Re: Problems and suggestions to the kernel module r8723bs
+To:     Simon Beginn <simonmicro@simonmicro.de>,
+        Bastien Nocera <hadess@hadess.net>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+References: <83c86a2a-0d2a-8119-2831-e9cfab7a43d7@simonmicro.de>
+ <f0b67da4-747a-08e3-9744-fce2c74aaddc@lwfinger.net>
+ <6e27de67-739f-ee17-eb5f-efb079d1f37f@simonmicro.de>
+ <7a47d05c-2f3b-e4d5-ccf1-5c2106d3c93d@lwfinger.net>
+ <3a0468ee-e391-3b03-bfc5-36df484bce9d@simonmicro.de>
+ <9a7105c0-fd23-c7ff-3e28-62533c24cdb9@lwfinger.net>
+ <374c0f3a-aa89-18c5-cd53-0c395ff02a6d@simonmicro.de>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <72ffad3d-1cdf-f93b-cefc-4ee06872926d@lwfinger.net>
+Date:   Fri, 28 Sep 2018 10:59:15 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <374c0f3a-aa89-18c5-cd53-0c395ff02a6d@simonmicro.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On 9/28/18 5:02 AM, Simon Beginn wrote:
+>> That value means that the signal strength is way too low. One other 
+>> possibility is that the chip has retained the setting and is not obeying the 
+>> antenna number command. To check that, create a file (as root) named 
+>> /etc/modprobe.d/50-r8723bs.conf, and add a single line containing "options 
+>> r8723bs rtw_ant_num=2" (without the quotation marks). After that file is 
+>> ready, then do a cold boot so that the chip has been power cycled. Finally, 
+>> redo the signal test. Note: If your patch is applied, the above will not work! 
+> I've applied my patch and got the following results (btw good idea with the cold 
+> boot!):
+> 
+> ***FILE CREATED***
+> options rtl8723bs rtw_ant_num=1
+> 
+> ***POWEROFF + 2 MINUTES WAITING***
+> 
+> ***REBOOT + COMMAND***
+> sudo iw dev wlan0 scan | egrep "SSID|signal"
+> -> Desk
+>      signal: -93.00 dBm
+>      SSID: Gonzales
+>      signal: -63.00 dBm
+>      SSID: Gonzales
+>      signal: -63.00 dBm
+>      SSID: Gonzales
+>      signal: -50.00 dBm
+>      SSID: TPC_Install
+> -> Place A
+>      signal: -93.00 dBm
+>      SSID: Gonzales
+>      signal: -45.00 dBm
+>      SSID: Gonzales
+>      signal: -62.00 dBm
+>      SSID: Gonzales
+>      signal: -64.00 dBm
+>      SSID: TPC_Install
+> 
+> ***FILE MODIFIED***
+> options rtl8723bs rtw_ant_num=2
+> 
+> ***POWEROFF + 2 MINUTES WAITING***
+> 
+> ***REBOOT + COMMAND***
+> sudo iw dev wlan0 scan | egrep "SSID|signal"
+> -> Desk
+>      signal: -85.00 dBm
+>      SSID: Gonzales
+>      signal: -64.00 dBm
+>      SSID: Gonzales
+>      signal: -65.00 dBm
+>      SSID: Gonzales
+>      signal: -48.00 dBm
+>      SSID: Gonzales
+>      signal: -48.00 dBm
+>      SSID: TPC_Install
+> -> Place A
+>      signal: -79.00 dBm
+>      SSID: Gonzales
+>      signal: -45.00 dBm
+>      SSID: Gonzales
+>      signal: -63.00 dBm
+>      SSID: Gonzales
+>      signal: -63.00 dBm
+>      SSID: TPC_Install
+> 
+>> ccepted. Even if it had been correctly done, I would have NACKed it.
+> Sry, would you reformulate this, please? I just can't understand/determine what 
+> the word "NACKed" means in this situation (Neither google or the raw translation 
+> helps me).
+> 
 
-> Transmit airtime will be estimated from last tx rate used.
-> Firmware report tx rate by peer stats. Airtime is computed
-> on tx path and the same will be reported to mac80211 upon
-> tx completion.
->
-> Signed-off-by: Kan Yan <kyan@google.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/core.h   |  2 ++
->  drivers/net/wireless/ath/ath10k/htt_rx.c |  1 +
->  drivers/net/wireless/ath/ath10k/mac.c    | 58 ++++++++++++++++++++++++++++++--
->  drivers/net/wireless/ath/ath10k/txrx.c   |  4 +++
->  4 files changed, 62 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index d3e20aaf8023..4bfc370bf659 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -123,6 +123,7 @@ struct ath10k_skb_cb {
->  	u8 flags;
->  	u8 eid;
->  	u16 msdu_id;
-> +	u16 airtime_est;
->  	struct ieee80211_vif *vif;
->  	struct ieee80211_txq *txq;
->  } __packed;
-> @@ -493,6 +494,7 @@ struct ath10k_sta {
->  	u32 smps;
->  	u16 peer_id;
->  	struct rate_info txrate;
-> +	u32 last_tx_bitrate;
->  
->  	struct work_struct update_wk;
->  	u64 rx_duration;
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index f2aaa2f7a022..f1de9fc09d9f 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -2809,6 +2809,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
->  
->  	arsta->txrate.nss = txrate.nss;
->  	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
-> +	arsta->last_tx_bitrate = cfg80211_calculate_bitrate(&arsta->txrate);
->  
->  	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
->  		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index d4648b22ad64..a694dae6f024 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -3528,7 +3528,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
->  static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
->  				    struct ieee80211_vif *vif,
->  				    struct ieee80211_txq *txq,
-> -				    struct sk_buff *skb)
-> +				    struct sk_buff *skb, u16 airtime)
->  {
->  	struct ieee80211_hdr *hdr = (void *)skb->data;
->  	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
-> @@ -3545,6 +3545,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
->  
->  	cb->vif = vif;
->  	cb->txq = txq;
-> +	cb->airtime_est = airtime;
->  }
->  
->  bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
-> @@ -3932,6 +3933,50 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
->  	return false;
->  }
->  
-> +/* Return estimated airtime in microsecond, which is calculated using last
-> + * reported TX rate. This is just a rough estimation because host driver has no
-> + * knowledge of the actual transmit rate, retries or aggregation. If actual
-> + * airtime can be reported by firmware, then delta between estimated and actual
-> + * airtime can be adjusted from deficit.
-> + */
-> +#define IEEE80211_ATF_OVERHEAD		100	/* IFS + some slot time */
-> +#define IEEE80211_ATF_OVERHEAD_IFS	16	/* IFS only */
-> +static u16 ath10k_mac_update_airtime(struct ath10k *ar,
-> +				     struct ieee80211_txq *txq,
-> +				     struct sk_buff *skb)
-> +{
-> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> +	struct ath10k_sta *arsta;
-> +	u32 pktlen;
-> +	u16 airtime = 0;
-> +
-> +	if (!txq || !txq->sta || !ieee80211_is_data(hdr->frame_control))
-> +		return airtime;
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	arsta = (struct ath10k_sta *)txq->sta->drv_priv;
-> +
-> +	pktlen = skb->len + 38; /* Assume MAC header 30, SNAP 8 for most case */
-> +	if (arsta->last_tx_bitrate) {
-> +		/* airtime in us, last_tx_bitrate in 100kbps */
-> +		airtime = (pktlen * 8 * (1000 / 100))
-> +				/ arsta->last_tx_bitrate;
-> +		/* overhead for media access time and IFS */
-> +		airtime += IEEE80211_ATF_OVERHEAD_IFS;
-> +	} else {
-> +		/* This is mostly for throttle excessive BC/MC frames, and the
-> +		 * airtime/rate doesn't need be exact. Airtime of BC/MC frames
-> +		 * in 2G get some discount, which helps prevent very low rate
-> +		 * frames from being blocked for too long.
-> +		 */
-> +		airtime = (pktlen * 8 * (1000 / 100)) / 60; /* 6M */
-> +		airtime += IEEE80211_ATF_OVERHEAD;
-> +	}
-> +	spin_unlock_bh(&ar->data_lock);
-> +
-> +	return airtime;
-> +}
-> +
->  int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
->  			   struct ieee80211_txq *txq)
->  {
-> @@ -3947,6 +3992,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
->  	size_t skb_len;
->  	bool is_mgmt, is_presp;
->  	int ret;
-> +	u16 airtime;
->  
->  	spin_lock_bh(&ar->htt.tx_lock);
->  	ret = ath10k_htt_tx_inc_pending(htt);
-> @@ -3964,7 +4010,8 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
->  		return -ENOENT;
->  	}
->  
-> -	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
-> +	airtime = ath10k_mac_update_airtime(ar, txq, skb);
-> +	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
->  
->  	skb_len = skb->len;
->  	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-> @@ -4230,8 +4277,10 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
->  	bool is_mgmt;
->  	bool is_presp;
->  	int ret;
-> +	u16 airtime;
->  
-> -	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
-> +	airtime = ath10k_mac_update_airtime(ar, txq, skb);
-> +	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
->  
->  	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
->  	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-> @@ -8446,6 +8495,9 @@ int ath10k_mac_register(struct ath10k *ar)
->  		wiphy_ext_feature_set(ar->hw->wiphy,
->  				      NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT);
->  
-> +	if (ath10k_peer_stats_enabled(ar))
-> +		wiphy_ext_feature_set(ar->hw->wiphy,
-> +				      NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
->  	/*
->  	 * on LL hardware queues are managed entirely by the FW
->  	 * so we only advertise to mac we can do the queues thing
-> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-> index 23606b6972d0..8e7c416cd330 100644
-> --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> @@ -95,6 +95,10 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
->  		wake_up(&htt->empty_tx_wq);
->  	spin_unlock_bh(&htt->tx_lock);
->  
-> +	if (txq && txq->sta)
-> +		ieee80211_sta_register_airtime(txq->sta, txq->tid,
-> +					       skb_cb->airtime_est, 0);
-> +
+I do not think that changing rtw_ant_num made any difference. In each location, 
+both tests had one AP with a signal greater than -50, which should be strong 
+enough. We do not know if the driver is roaming correctly. At each location, is 
+that AP with the strongest signal actually the one that is selected? To see 
+that, change the scan command to
 
-So this just uses the calculated airtime based on rate and size? Wasn't
-there supposed to be an airtime usage value reported by the firmware? :)
+sudo iw dev wlan0 scan | egrep "associated|SSID|signal"
 
--Toke
+Check the output to see if the AP with the strongest signal is preceded by a BSS 
+line.
+
+Sorry about using jargon that you could not run through a translator. As Bastien 
+explained, NACK means to reject a patch. You accept a patch by providing an 
+"ACKed-by: name <email address>" line. Thus NACK is the opposite.
+
+Larry
+
+
