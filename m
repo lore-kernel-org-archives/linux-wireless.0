@@ -2,111 +2,144 @@ Return-Path: <SRS0=a98u=MM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9748C004D2
-	for <linux-wireless@archiver.kernel.org>; Sun, 30 Sep 2018 09:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D80AC004D2
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Sep 2018 09:57:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD45D2082A
-	for <linux-wireless@archiver.kernel.org>; Sun, 30 Sep 2018 09:51:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="DUJ7QWiz"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AD45D2082A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=googlemail.com
+	by mail.kernel.org (Postfix) with ESMTP id 2EA6D20685
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Sep 2018 09:57:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2EA6D20685
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727951AbeI3QXV (ORCPT
+        id S1727968AbeI3Q3h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 30 Sep 2018 12:23:21 -0400
-Received: from mail-wm1-f41.google.com ([209.85.128.41]:34725 "EHLO
-        mail-wm1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727501AbeI3QXV (ORCPT
+        Sun, 30 Sep 2018 12:29:37 -0400
+Received: from mail-wr1-f42.google.com ([209.85.221.42]:43549 "EHLO
+        mail-wr1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727501AbeI3Q3h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Sep 2018 12:23:21 -0400
-Received: by mail-wm1-f41.google.com with SMTP id z25-v6so931049wmf.1;
-        Sun, 30 Sep 2018 02:51:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20161025;
-        h=subject:from:to:references:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=GQQp6Fom4aI9PCu4Qk6DhR/4h3ZZ14OQgyszbTQVdm8=;
-        b=DUJ7QWizzyOwRwRPIHuUmYeUe0PQps+VX7SRPjXoY5KBXlZcGOVCMBRHJxQ/r59Cwb
-         2wh/zua5Q5vO978GKQfE7jEaO3/tUIx92njolBDT0cCvvE2ssswlOHnucb1Mx3xBDbFe
-         ULvPyrrW+qPBkxnidLTX7IZJAzaq509pI0PRBADU+L/AJA0ePXQx9/ngPJhFI2XHrXdC
-         zy08GRJpOYRB6IIgwTAmVvFqgbfm6wZ8uaZM5fK4cw6ZWBucHsI92vUk9e0H6sVC53Ud
-         UOX9TXng25R25GpskJxPLncU1oOinGCWKO3i5cR2HBu2t3ZBEIYudauactrsGufCpc9V
-         wIxg==
+        Sun, 30 Sep 2018 12:29:37 -0400
+Received: by mail-wr1-f42.google.com with SMTP id n1-v6so471001wrt.10
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Sep 2018 02:57:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:references:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=GQQp6Fom4aI9PCu4Qk6DhR/4h3ZZ14OQgyszbTQVdm8=;
-        b=qUK3XxITsfg2KkV24bPDmosP7+TXLx8r1U2dKdXZFDPqcX2XlgdZRBz6/WlYpSt57S
-         dIwzQDjj7mqhjmqJ2MZllFFm8M8+GToFieXdBY0sx8kmFMNBENzo7uosgnzmGk/9tyS6
-         rihhRwYox02AoeipnfGR7V9nVOySK80BmVSyUv3NzKD8+BSvWxXTrv9YjTynVEwhTETK
-         8q+TJXWK0E3VBaZKYaoy2U0ScOODu1sbLM/BJePQdzNI50R0yTs0skf8+Cuy27hUrQJp
-         l0YJMqHUy6WC496rMGPz2r0qQiVw4j8dVuavmQkgikquKBbExOPpKT/S431ZleXZG2A8
-         i8dw==
-X-Gm-Message-State: ABuFfohK+iZ2vSy8aW5CFYTnuulHRwEiu3Xy8BPcIJhv8+SD2OSstTsr
-        sLkdUejCkz09qxrpNpyJXcARY/m5
-X-Google-Smtp-Source: ACcGV639s6g1IkEvSAaun/VWyG9s4+ss6dYKXogpJV2jVQQWiyhjkt7ruZZQjQhLVWsKtzwYARRLFA==
-X-Received: by 2002:a1c:8942:: with SMTP id l63-v6mr6417589wmd.66.1538301060649;
-        Sun, 30 Sep 2018 02:51:00 -0700 (PDT)
-Received: from [192.168.200.12] (p57B63A04.dip0.t-ipconnect.de. [87.182.58.4])
-        by smtp.gmail.com with ESMTPSA id s1-v6sm466410wrw.35.2018.09.30.02.50.59
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=v/Oo2vWN+XIOhplD/eENHYdq/Sjtmc4YWiOvynvMUiM=;
+        b=cgs+pd9OrUGiUAYSPQUwoHjN6jF5NZcaEXuS4Qc8tPrMREqfibpS7Xc1a7GmOdoKs0
+         FOZsGzhTCljrRufMzi6vnjATKhmRY8j5yOWU8hXMo2A9XVJjFtx+Y5vRXHQXCihHEaZ5
+         2meSTzqRxF/5AW0iMsm4673xP31daEI2fUYi6dPAzFaxVwjHfgdsiDQy/rGC5cC7+YUD
+         tcFFJ/MWWfwj3Yf3oGMijWilyGnl5rpYb5fP6Tdn9eBiOhsJMPIhoieFGWaKDeAF+bbJ
+         Gt/38H6r4s55QeVWgm6em0cMSTdgkvhDgBh4caAtAkYmbZPGx9pIDUSnSTQfZpEAdaVG
+         zUxg==
+X-Gm-Message-State: ABuFfoi0XyTsHg4DxiwRIbQ6/8OzfYS57+RVVR3tlvEOtAmgYBqI9jJc
+        xQY6eHh+zi1+lZ7eihpaYWLzdQ==
+X-Google-Smtp-Source: ACcGV626IqcMKbN9MYa3Yh2+J1iH5nGZx3gKVxGWX/i8bf0r//3LL+m9Oztye1W73QP8hrKbFLZwgQ==
+X-Received: by 2002:adf:ef0a:: with SMTP id e10-v6mr3984864wro.292.1538301434759;
+        Sun, 30 Sep 2018 02:57:14 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.32.138])
+        by smtp.gmail.com with ESMTPSA id 12-v6sm4898375wms.11.2018.09.30.02.57.13
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 30 Sep 2018 02:51:00 -0700 (PDT)
-Subject: Re: SIOCGIWRATE (and others) leaking SLAB (kmalloc-2048)
-From:   Stefan Seyfried <stefan.seyfried@googlemail.com>
-To:     LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-References: <cfbf778f-8817-a6f4-f56a-680f13ef5723@message-id.googlemail.com>
- <97c6b1b3-d992-2466-81ee-b383ef7bd90c@message-id.googlemail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=stefan.seyfried@googlemail.com; prefer-encrypt=mutual;
- keydata=
- xsDiBDqoB5ARBACZn/K+5V0uoo0Wr9cI9hw5vPioOmIbPv30x47j/w/XNECPSzos078v9Fr2
- Mlz0MG9Gnpl9S1o0OIh//K5xxj2/LRLO2nL9/nqlnwmJ6W5qrjjn6Ch3mxz5mxMeRMRMY1cZ
- EkSj7GH3ZLviZlzrnpuJd12HWsXhAwVxUyQnvsvNzwCgpIO6EfQT33o9illpG/AxIk2Uu0cD
- /A4cgKbm5VZW5DPTlLe8P92eEgj5cN51SUXHXYgWBI0Fx+QwSYm6ON0U03B4oR5zDWMHkJfZ
- WgXROdwY/NqouBoV7lXvHsyInPzExNixe+1vcrhDJ3ow6nlCW77aCFp22iwumC4ouzFtOMXK
- kih0WPrxPKq27Hw9fq9EaR2oV2tUBACN6ZC+G7J21ruG9slJ+bFcY5cW7M5Um6Czk08T+vtd
- 7fAg+fEUcGCtIdVdHrXBut07K9y6iy5IuqwAV5fJsE+JQO+f+X1pymdRgdWHGEoMMdEW4k3W
- IGjrmmMUtpqzr30h4WFgA4+0nR3jpmcGCWBSa4selQecyyOlM7rcmKyQNs0kU3RlZmFuIFNl
- eWZyaWVkIDxzZWlmZUBvcGVuc3VzZS5vcmc+wmAEExECACAFAkx9Sb0CGyMGCwkIBwMCBBUC
- CAMEFgIDAQIeAQIXgAAKCRAx00vNNldAmFZuAJ9xLbFShKeTTDgfwMUmO37qw07npACgmLIK
- fbArokRryKixiliTvxAgFHHOwE0EOqgHkhAEALGQaS9Hj25lKGsaTOMKMBBvjklv6brH8JdF
- WTA9dr37spc+PFFyc9686bcT+5nkbpjq3ndXUzGdGzfe0YwOlQh4fWXZT/oTXosIBqDWPShE
- ntDU8BX9JVqBBZwJ/ey+QF5tgYrICjCzp8S/mL6sqw8En4/AS84lulAoNJMJsUcDAAMFA/4p
- ik7hBklqJzYC7uNWZDL9dkYwIsUXM64kGenUhpgguLZvhuVeUeHU2iIsdTcNBbeBwvXgLnEu
- vVSdf4wtDwR7SjUYebymbGc/JLkXjqGntaWUr+wfHmAm3oXV2X+WFzZQJ+o8N5dJyBEUbrVX
- YvBD7wErgEuJAL+q/i28U9u7OcJGBBgRAgAGBQI6qAeSAAoJEDHTS802V0CYBL8An1gF2k4s
- UaMjAtoX/ixcOhAv44i4AJ9Yi+OgvhS8CbUp+XkI5Q352XU+BQ==
-Message-ID: <653d1bde-6372-5f67-5b6e-d48eb912efe0@message-id.googlemail.com>
-Date:   Sun, 30 Sep 2018 11:50:59 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        Sun, 30 Sep 2018 02:57:14 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [RFC 00/10] unify rxwi parsing between mt76x0 and mt76x2 drivers
+Date:   Sun, 30 Sep 2018 11:56:56 +0200
+Message-Id: <20180930095706.28428-1-lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-In-Reply-To: <97c6b1b3-d992-2466-81ee-b383ef7bd90c@message-id.googlemail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 30.09.18 um 11:43 schrieb Stefan Seyfried:
-> Looking at the commit, the bug might have been already in 4.18, which
-> I'm trying to confirm right now.
+Merge mt76x0_dev and mt76x2_dev in mt76x02_dev and remove duplicated code.
+Move mt76x02_mac_process_rx routine in mt76x02-lib module in order to
+unify rxwi parsing between mt76x0 and mt76x2 drivers.
+Move mt76x02_tx in mt76x02-lib module and remove duplicated code
 
-4.18.8 (which was easily available to me prebuilt) has the same problem.
+Lorenzo Bianconi (10):
+  mt76: move mt76x02_phy_get_min_avg_rssi in mt76x02_phy.c
+  mt76: move mt76x02_rx_get_sta and mt76x02_rx_get_sta_wcid in
+    mt76x02_util.c
+  mt76x0: mac: use sta ewma estimation for rssi tracking
+  mt76x0: remove unused variable in mt76x0_dev
+  mt76x0: remove hw_atomic_mutex mutex in mt76x0_dev
+  mt76x2: move mt76x2_dev in mt76x02_util.h
+  mt76x0: merge mt76x0_dev in mt76x02_dev
+  mt76: move mt76x02_mac_process_rx in mt76x02-lib module
+  mt76: unify rxwi parsing between mt76x2 and mt76x0 drivers
+  mt76: move mt76x02_tx in mt76x02-lib module
+
+ .../wireless/mediatek/mt76/mt76x0/Makefile    |   2 +-
+ .../wireless/mediatek/mt76/mt76x0/debugfs.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x0/eeprom.c    |  28 ++--
+ .../wireless/mediatek/mt76/mt76x0/eeprom.h    |  18 +--
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  |  41 +++--
+ .../wireless/mediatek/mt76/mt76x0/initvals.h  |   3 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mac.c   |  78 +---------
+ .../net/wireless/mediatek/mt76/mt76x0/mac.h   |  20 ---
+ .../net/wireless/mediatek/mt76/mt76x0/main.c  |  16 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mcu.h   |   8 +-
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    | 127 +++-------------
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  18 +--
+ .../wireless/mediatek/mt76/mt76x0/pci_mcu.c   |   4 +-
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 112 +++++---------
+ .../net/wireless/mediatek/mt76/mt76x0/trace.h |   1 -
+ .../net/wireless/mediatek/mt76/mt76x0/tx.c    |  63 --------
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   |  24 +--
+ .../wireless/mediatek/mt76/mt76x0/usb_mcu.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt76x02_dfs.h  | 140 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 104 +++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_mac.h  |   4 +
+ .../net/wireless/mediatek/mt76/mt76x02_phy.c  |  48 ++++++
+ .../net/wireless/mediatek/mt76/mt76x02_phy.h  |   1 +
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |  80 ++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_util.h |  95 ++++++++++++
+ .../wireless/mediatek/mt76/mt76x2/Makefile    |   3 +-
+ .../wireless/mediatek/mt76/mt76x2/common.c    |  42 -----
+ .../wireless/mediatek/mt76/mt76x2/debugfs.c   |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/dfs.h   | 134 +---------------
+ .../wireless/mediatek/mt76/mt76x2/eeprom.c    |  40 ++---
+ .../wireless/mediatek/mt76/mt76x2/eeprom.h    |  10 +-
+ .../net/wireless/mediatek/mt76/mt76x2/init.c  |  10 +-
+ .../net/wireless/mediatek/mt76/mt76x2/mac.c   | 126 +--------------
+ .../net/wireless/mediatek/mt76/mt76x2/mac.h   |  21 ++-
+ .../net/wireless/mediatek/mt76/mt76x2/mcu.c   |   8 +-
+ .../net/wireless/mediatek/mt76/mt76x2/mcu.h   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/mt76x2.h    | 143 +++++-------------
+ .../wireless/mediatek/mt76/mt76x2/mt76x2u.h   |  38 ++---
+ .../net/wireless/mediatek/mt76/mt76x2/pci.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_core.c  |   2 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_dfs.c   | 139 ++++++++---------
+ .../wireless/mediatek/mt76/mt76x2/pci_dma.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  40 ++---
+ .../wireless/mediatek/mt76/mt76x2/pci_mac.c   |  27 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  28 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_mcu.c   |   6 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  31 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_tx.c    |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  65 ++------
+ .../net/wireless/mediatek/mt76/mt76x2/trace.h |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/tx.c    |  33 +---
+ .../net/wireless/mediatek/mt76/mt76x2/usb.c   |   8 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  28 ++--
+ .../wireless/mediatek/mt76/mt76x2/usb_mac.c   |  12 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_main.c  |  18 +--
+ .../wireless/mediatek/mt76/mt76x2/usb_mcu.c   |  16 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_phy.c   |  13 +-
+ 57 files changed, 946 insertions(+), 1188 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dfs.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/common.c
+
 -- 
-Stefan Seyfried
+2.19.0
 
-"For a successful technology, reality must take precedence over
- public relations, for nature cannot be fooled." -- Richard Feynman
