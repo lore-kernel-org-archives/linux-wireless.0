@@ -2,41 +2,55 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D47EC43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 21:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2541AC43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:19:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5BC202089A
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 21:41:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5BC202089A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=atomide.com
+	by mail.kernel.org (Postfix) with ESMTP id CC93E2089A
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:19:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CC93E2089A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726287AbeJBEVT (ORCPT
+        id S1726308AbeJBE7V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Oct 2018 00:21:19 -0400
-Received: from muru.com ([72.249.23.125]:58054 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726027AbeJBEVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Oct 2018 00:21:19 -0400
-Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 787DB80F0;
-        Mon,  1 Oct 2018 21:45:54 +0000 (UTC)
-From:   Tony Lindgren <tony@atomide.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH] wlcore: Add support for optional wakeirq
-Date:   Mon,  1 Oct 2018 14:41:10 -0700
-Message-Id: <20181001214110.86774-1-tony@atomide.com>
+        Tue, 2 Oct 2018 00:59:21 -0400
+Received: from mail-wr1-f48.google.com ([209.85.221.48]:33580 "EHLO
+        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725936AbeJBE7V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Oct 2018 00:59:21 -0400
+Received: by mail-wr1-f48.google.com with SMTP id e4-v6so1853720wrs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 15:19:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RidWmsjlt9+cjBg1Q2aQSsJj6dkiYFHCWmmI3QYjmRA=;
+        b=tggdjujP1YYpuWLcla7IlQ4niDGs0pgMiNCP8MAs5YVQV6UqtV8uFtODVKEM8c7HxP
+         +4LvO1BRCEzV/9c+p8LuSdfTi127Cj6gc+2at2EL+LUpY/tYsy50sNtbxNDc0apMtm08
+         BSM3Xi8WEEqg0MSisOQT6N3x05Y3hkEdbLOMz98zXmDdTUmmJYgGh5PYJXjDRnXwIP0T
+         bMkAs5Z43n9tMGB6f+KX3WyKrNyguZdmdMxBrF9hDHyi0T4Uvn8Q9NFiPNo/1fb6tbFs
+         QFoGJ60fZp64eTsjA8zWGOEy6fn4Qrd/IZGlyj/ahOOF8rS4InUbrzibrS00QZIQCu37
+         IjQA==
+X-Gm-Message-State: ABuFfohWl2KDg9v1n9hIL3gE6PHe/tYVkids+Erdt2VYh4NDkr0Oc5sz
+        skusiG+4RNY40qoR+ViLY4fElJ54Iys=
+X-Google-Smtp-Source: ACcGV60HFP9c3OQ12vEX384nuETrN6CMhbGdQOOsPR+nyxsnBJtv56MC/Rl0t58qplL7Axh/zX+wtg==
+X-Received: by 2002:adf:b501:: with SMTP id a1-v6mr5692865wrd.273.1538432361590;
+        Mon, 01 Oct 2018 15:19:21 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.32.138])
+        by smtp.gmail.com with ESMTPSA id t4-v6sm9203420wrb.45.2018.10.01.15.19.20
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 01 Oct 2018 15:19:20 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/10] unify rxwi parsing between mt76x0 and mt76x2 drivers
+Date:   Tue,  2 Oct 2018 00:18:58 +0200
+Message-Id: <20181001221908.16005-1-lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -45,171 +59,87 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Now with wlcore using PM runtime, we can also add support for Linux
-generic wakeirq handling for it if configured in the dts file.
+Merge mt76x0_dev and mt76x2_dev in mt76x02_dev and remove duplicated code.
+Move mt76x02_mac_process_rx routine in mt76x02-lib module in order to
+unify rxwi parsing between mt76x0 and mt76x2 drivers.
+Move mt76x02_tx in mt76x02-lib module and remove duplicated code
 
-The wakeirq can be configured as the second interrupt in the dts file
-with interrupts-extended property where it is the padconf irq of the OOB
-GPIO pin used for wlcore interrupt.
+Lorenzo Bianconi (10):
+  mt76: move mt76x02_phy_get_min_avg_rssi in mt76x02_phy.c
+  mt76: move mt76x02_rx_get_sta and mt76x02_rx_get_sta_wcid in
+    mt76x02_util.c
+  mt76x0: mac: use sta ewma estimation for rssi tracking
+  mt76x0: remove unused variable in mt76x0_dev
+  mt76x0: remove hw_atomic_mutex mutex in mt76x0_dev
+  mt76x2: move mt76x2_dev in mt76x02_util.h
+  mt76x0: merge mt76x0_dev in mt76x02_dev
+  mt76: move mt76x02_mac_process_rx in mt76x02-lib module
+  mt76: unify rxwi parsing between mt76x2 and mt76x0 drivers
+  mt76: move mt76x02_tx in mt76x02-lib module
 
-Note that eventually we should also allow configuring wlcore to use the
-SDIO dat1 IRQ for wake-up, and in that case the the wakeirq should be
-configured to be the padconf interrupt of the dat1 pin and not the
-padconf interrupt of the OOB GPIO pin.
+ .../wireless/mediatek/mt76/mt76x0/Makefile    |   2 +-
+ .../wireless/mediatek/mt76/mt76x0/debugfs.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x0/eeprom.c    |  28 ++--
+ .../wireless/mediatek/mt76/mt76x0/eeprom.h    |  18 +--
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  |  41 ++---
+ .../wireless/mediatek/mt76/mt76x0/initvals.h  |   3 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mac.c   |  78 +---------
+ .../net/wireless/mediatek/mt76/mt76x0/mac.h   |  20 ---
+ .../net/wireless/mediatek/mt76/mt76x0/main.c  |  16 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mcu.h   |   8 +-
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    | 127 +++------------
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  18 +--
+ .../wireless/mediatek/mt76/mt76x0/pci_mcu.c   |   4 +-
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 112 +++++---------
+ .../net/wireless/mediatek/mt76/mt76x0/trace.h |   1 -
+ .../net/wireless/mediatek/mt76/mt76x0/tx.c    |  63 --------
+ .../net/wireless/mediatek/mt76/mt76x0/usb.c   |  24 +--
+ .../wireless/mediatek/mt76/mt76x0/usb_mcu.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt76x02_dfs.h  | 140 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 104 +++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_mac.h  |   4 +
+ .../net/wireless/mediatek/mt76/mt76x02_phy.c  |  48 ++++++
+ .../net/wireless/mediatek/mt76/mt76x02_phy.h  |   1 +
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |  80 ++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_util.h |  95 ++++++++++++
+ .../wireless/mediatek/mt76/mt76x2/Makefile    |   3 +-
+ .../wireless/mediatek/mt76/mt76x2/common.c    |  42 -----
+ .../wireless/mediatek/mt76/mt76x2/debugfs.c   |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/dfs.h   | 134 +---------------
+ .../wireless/mediatek/mt76/mt76x2/eeprom.c    |  40 ++---
+ .../wireless/mediatek/mt76/mt76x2/eeprom.h    |  10 +-
+ .../net/wireless/mediatek/mt76/mt76x2/init.c  |  10 +-
+ .../net/wireless/mediatek/mt76/mt76x2/mac.c   | 126 +--------------
+ .../net/wireless/mediatek/mt76/mt76x2/mac.h   |  21 ++-
+ .../net/wireless/mediatek/mt76/mt76x2/mcu.c   |   8 +-
+ .../net/wireless/mediatek/mt76/mt76x2/mcu.h   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/mt76x2.h    | 145 +++++-------------
+ .../wireless/mediatek/mt76/mt76x2/mt76x2u.h   |  38 ++---
+ .../net/wireless/mediatek/mt76/mt76x2/pci.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_core.c  |   2 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_dfs.c   | 139 ++++++++---------
+ .../wireless/mediatek/mt76/mt76x2/pci_dma.c   |   4 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  40 ++---
+ .../wireless/mediatek/mt76/mt76x2/pci_mac.c   |  27 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  28 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_mcu.c   |   6 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  31 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_tx.c    |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  65 ++------
+ .../net/wireless/mediatek/mt76/mt76x2/trace.h |  12 +-
+ .../net/wireless/mediatek/mt76/mt76x2/tx.c    |  33 +---
+ .../net/wireless/mediatek/mt76/mt76x2/usb.c   |   8 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  28 ++--
+ .../wireless/mediatek/mt76/mt76x2/usb_mac.c   |  12 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_main.c  |  18 +--
+ .../wireless/mediatek/mt76/mt76x2/usb_mcu.c   |  16 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_phy.c   |  13 +-
+ 57 files changed, 947 insertions(+), 1189 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dfs.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/common.c
 
-Cc: Eyal Reizer <eyalr@ti.com>
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/main.c   | 30 +++++++++++++++++++++----
- drivers/net/wireless/ti/wlcore/sdio.c   | 17 +++++++++-----
- drivers/net/wireless/ti/wlcore/wlcore.h |  2 ++
- 3 files changed, 40 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -27,6 +27,7 @@
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/pm_runtime.h>
-+#include <linux/pm_wakeirq.h>
- 
- #include "wlcore.h"
- #include "debug.h"
-@@ -6627,13 +6628,25 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	}
- 
- #ifdef CONFIG_PM
-+	device_init_wakeup(wl->dev, true);
-+
- 	ret = enable_irq_wake(wl->irq);
- 	if (!ret) {
- 		wl->irq_wake_enabled = true;
--		device_init_wakeup(wl->dev, 1);
- 		if (pdev_data->pwr_in_suspend)
- 			wl->hw->wiphy->wowlan = &wlcore_wowlan_support;
- 	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_IRQ, 1);
-+	if (res) {
-+		wl->wakeirq = res->start;
-+		wl->wakeirq_flags = res->flags & IRQF_TRIGGER_MASK;
-+		ret = dev_pm_set_dedicated_wake_irq(wl->dev, wl->wakeirq);
-+		if (ret)
-+			wl->wakeirq = -ENODEV;
-+	} else {
-+		wl->wakeirq = -ENODEV;
-+	}
- #endif
- 	disable_irq(wl->irq);
- 	wl1271_power_off(wl);
-@@ -6661,6 +6674,9 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	wl1271_unregister_hw(wl);
- 
- out_irq:
-+	if (wl->wakeirq >= 0)
-+		dev_pm_clear_wake_irq(wl->dev);
-+	device_init_wakeup(wl->dev, false);
- 	free_irq(wl->irq, wl);
- 
- out_free_nvs:
-@@ -6825,10 +6841,16 @@ int wlcore_remove(struct platform_device *pdev)
- 	if (!wl->initialized)
- 		return 0;
- 
--	if (wl->irq_wake_enabled) {
--		device_init_wakeup(wl->dev, 0);
--		disable_irq_wake(wl->irq);
-+	if (wl->wakeirq >= 0) {
-+		dev_pm_clear_wake_irq(wl->dev);
-+		wl->wakeirq = -ENODEV;
- 	}
-+
-+	device_init_wakeup(wl->dev, false);
-+
-+	if (wl->irq_wake_enabled)
-+		disable_irq_wake(wl->irq);
-+
- 	wl1271_unregister_hw(wl);
- 
- 	pm_runtime_put_sync(wl->dev);
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -241,7 +241,7 @@ static const struct of_device_id wlcore_sdio_of_match_table[] = {
- 	{ }
- };
- 
--static int wlcore_probe_of(struct device *dev, int *irq,
-+static int wlcore_probe_of(struct device *dev, int *irq, int *wakeirq,
- 			   struct wlcore_platdev_data *pdev_data)
- {
- 	struct device_node *np = dev->of_node;
-@@ -259,6 +259,8 @@ static int wlcore_probe_of(struct device *dev, int *irq,
- 		return -EINVAL;
- 	}
- 
-+	*wakeirq = irq_of_parse_and_map(np, 1);
-+
- 	/* optional clock frequency params */
- 	of_property_read_u32(np, "ref-clock-frequency",
- 			     &pdev_data->ref_clock_freq);
-@@ -268,7 +270,7 @@ static int wlcore_probe_of(struct device *dev, int *irq,
- 	return 0;
- }
- #else
--static int wlcore_probe_of(struct device *dev, int *irq,
-+static int wlcore_probe_of(struct device *dev, int *irq, int *wakeirq,
- 			   struct wlcore_platdev_data *pdev_data)
- {
- 	return -ENODATA;
-@@ -280,10 +282,10 @@ static int wl1271_probe(struct sdio_func *func,
- {
- 	struct wlcore_platdev_data *pdev_data;
- 	struct wl12xx_sdio_glue *glue;
--	struct resource res[1];
-+	struct resource res[2];
- 	mmc_pm_flag_t mmcflags;
- 	int ret = -ENOMEM;
--	int irq;
-+	int irq, wakeirq;
- 	const char *chip_family;
- 
- 	/* We are only able to handle the wlan function */
-@@ -308,7 +310,7 @@ static int wl1271_probe(struct sdio_func *func,
- 	/* Use block mode for transferring over one block size of data */
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
--	ret = wlcore_probe_of(&func->dev, &irq, pdev_data);
-+	ret = wlcore_probe_of(&func->dev, &irq, &wakeirq, pdev_data);
- 	if (ret)
- 		goto out;
- 
-@@ -351,6 +353,11 @@ static int wl1271_probe(struct sdio_func *func,
- 		       irqd_get_trigger_type(irq_get_irq_data(irq));
- 	res[0].name = "irq";
- 
-+	res[1].start = wakeirq;
-+	res[1].flags = IORESOURCE_IRQ |
-+		       irqd_get_trigger_type(irq_get_irq_data(wakeirq));
-+	res[1].name = "wakeirq";
-+
- 	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
- 	if (ret) {
- 		dev_err(glue->dev, "can't add resources\n");
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -199,8 +199,10 @@ struct wl1271 {
- 	struct wl1271_if_operations *if_ops;
- 
- 	int irq;
-+	int wakeirq;
- 
- 	int irq_flags;
-+	int wakeirq_flags;
- 
- 	spinlock_t wl_lock;
- 
 -- 
 2.19.0
+
