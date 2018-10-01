@@ -3,185 +3,161 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60AF2C00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 770B7C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 313162084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 313162084C
+	by mail.kernel.org (Postfix) with ESMTP id 4A4202084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4A4202084C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729162AbeJASrw (ORCPT
+        id S1729256AbeJASrx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 14:47:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54310 "EHLO
+        Mon, 1 Oct 2018 14:47:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54318 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728999AbeJASrv (ORCPT
+        with ESMTP id S1729099AbeJASrw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 14:47:51 -0400
+        Mon, 1 Oct 2018 14:47:52 -0400
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1g6x1o-0006wq-FP; Mon, 01 Oct 2018 15:10:21 +0300
+        id 1g6x1p-0006wq-Eq; Mon, 01 Oct 2018 15:10:22 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Naftali Goldstein <naftali.goldstein@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  1 Oct 2018 15:09:56 +0300
-Message-Id: <20181001121010.29684-3-luca@coelho.fi>
+Date:   Mon,  1 Oct 2018 15:09:57 +0300
+Message-Id: <20181001121010.29684-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20181001121010.29684-1-luca@coelho.fi>
 References: <20181001121010.29684-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/16] iwlwifi: add dump collection in case alive flow fails
+Subject: [PATCH 03/16] iwlwifi: nvm: get num of hw addresses from firmware
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-Trigger dump collection if the alive flow fails, regardless of the
-reason.
+With NICs that don't read the NVM directly and instead rely on getting
+the relevant data from the firmware, the number of reserved MAC
+addresses was not added to the API. This caused the driver to assume
+there is only one address which results in all interfaces getting the
+same address. Update the API to fix this.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+While at it, fix-up the comments with firmware api names to actually
+match what we have in the firmware.
+
+Fixes: e9e1ba3dbf00 ("iwlwifi: mvm: support getting nvm data from firmware")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 27 ++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  1 +
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  2 ++
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  2 ++
- 6 files changed, 34 insertions(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    | 14 +++++++-------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 10 +++++++++-
+ 2 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 146ec5065825..a049367ac08a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -973,6 +973,30 @@ const struct iwl_fw_dump_desc iwl_dump_desc_assert = {
- };
- IWL_EXPORT_SYMBOL(iwl_dump_desc_assert);
- 
-+void iwl_fw_alive_error_dump(struct iwl_fw_runtime *fwrt)
-+{
-+	struct iwl_fw_dump_desc *iwl_dump_desc_no_alive =
-+		kmalloc(sizeof(*iwl_dump_desc_no_alive), GFP_KERNEL);
-+
-+	if (!iwl_dump_desc_no_alive)
-+		return;
-+
-+	iwl_dump_desc_no_alive->trig_desc.type =
-+		cpu_to_le32(FW_DBG_TRIGGER_NO_ALIVE);
-+	iwl_dump_desc_no_alive->len = 0;
-+
-+	if (WARN_ON(fwrt->dump.desc))
-+		iwl_fw_free_dump_desc(fwrt);
-+
-+	IWL_WARN(fwrt, "Collecting data: trigger %d fired.\n",
-+		 FW_DBG_TRIGGER_NO_ALIVE);
-+
-+	fwrt->dump.desc = iwl_dump_desc_no_alive;
-+	iwl_fw_error_dump(fwrt);
-+	clear_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &fwrt->status);
-+}
-+IWL_EXPORT_SYMBOL(iwl_fw_alive_error_dump);
-+
- int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 			    const struct iwl_fw_dump_desc *desc,
- 			    const struct iwl_fw_dbg_trigger_tlv *trigger)
-@@ -998,7 +1022,8 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- 	    fwrt->smem_cfg.num_lmacs)
- 		return -EIO;
- 
--	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
-+	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status) ||
-+	    test_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &fwrt->status))
- 		return -EBUSY;
- 
- 	if (WARN_ON(fwrt->dump.desc))
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 5b087fc4f380..0f09a2128ad2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -368,4 +368,5 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
- 
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
- 
-+void iwl_fw_alive_error_dump(struct iwl_fw_runtime *fwrt);
- #endif  /* __iwl_fw_dbg_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 6d3ef331b7d5..6fede174c664 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -328,6 +328,7 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
-  * @FW_DBG_TDLS: trigger log collection upon TDLS related events.
-  * @FW_DBG_TRIGGER_TX_STATUS: trigger log collection upon tx status when
-  *  the firmware sends a tx reply.
-+ * @FW_DBG_TRIGGER_NO_ALIVE: trigger log collection if alive flow fails
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 6c5338364794..d22c1eefba6a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -165,7 +165,7 @@ struct iwl_nvm_access_resp {
   */
- enum iwl_fw_dbg_trigger {
- 	FW_DBG_TRIGGER_INVALID = 0,
-@@ -345,6 +346,7 @@ enum iwl_fw_dbg_trigger {
- 	FW_DBG_TRIGGER_TX_LATENCY,
- 	FW_DBG_TRIGGER_TDLS,
- 	FW_DBG_TRIGGER_TX_STATUS,
-+	FW_DBG_TRIGGER_NO_ALIVE,
- 
- 	/* must be last */
- 	FW_DBG_TRIGGER_MAX,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 9ed5819defaf..ac6db5e2b3d0 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -88,6 +88,7 @@ struct iwl_fwrt_shared_mem_cfg {
- 
- enum iwl_fw_runtime_status {
- 	IWL_FWRT_STATUS_DUMPING = 0,
-+	IWL_FWRT_STATUS_WAIT_ALIVE,
- };
+ struct iwl_nvm_get_info {
+ 	__le32 reserved;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_S_VER_1 */
++} __packed; /* REGULATORY_NVM_GET_INFO_CMD_API_S_VER_1 */
  
  /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 3fee304cddbb..c5df73231ba3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -299,6 +299,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	enum iwl_ucode_type old_type = mvm->fwrt.cur_fw_img;
- 	static const u16 alive_cmd[] = { MVM_ALIVE };
+  * enum iwl_nvm_info_general_flags - flags in NVM_GET_INFO resp
+@@ -180,14 +180,14 @@ enum iwl_nvm_info_general_flags {
+  * @flags: bit 0: 1 - empty, 0 - non-empty
+  * @nvm_version: nvm version
+  * @board_type: board type
+- * @reserved: reserved
++ * @n_hw_addrs: number of reserved MAC addresses
+  */
+ struct iwl_nvm_get_info_general {
+ 	__le32 flags;
+ 	__le16 nvm_version;
+ 	u8 board_type;
+-	u8 reserved;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_GENERAL_S_VER_1 */
++	u8 n_hw_addrs;
++} __packed; /* REGULATORY_NVM_GET_INFO_GENERAL_S_VER_2 */
  
-+	set_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status);
- 	if (ucode_type == IWL_UCODE_REGULAR &&
- 	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_START_FROM_ALIVE) &&
- 	    !(fw_has_capa(&mvm->fw->ucode_capa,
-@@ -369,6 +370,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 		atomic_set(&mvm->mac80211_queue_stop_count[i], 0);
+ /**
+  * enum iwl_nvm_mac_sku_flags - flags in &iwl_nvm_get_info_sku
+@@ -231,7 +231,7 @@ struct iwl_nvm_get_info_sku {
+ struct iwl_nvm_get_info_phy {
+ 	__le32 tx_chains;
+ 	__le32 rx_chains;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_PHY_SKU_SECTION_S_VER_1 */
++} __packed; /* REGULATORY_NVM_GET_INFO_PHY_SKU_SECTION_S_VER_1 */
  
- 	set_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
-+	clear_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status);
+ #define IWL_NUM_CHANNELS (51)
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index b058b7de88be..c388e0e758e7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -788,6 +788,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	mutex_lock(&mvm->mutex);
- 	iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
- 	err = iwl_run_init_mvm_ucode(mvm, true);
-+	if (test_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status))
-+		iwl_fw_alive_error_dump(&mvm->fwrt);
- 	if (!iwlmvm_mod_params.init_dbg || !err)
- 		iwl_mvm_stop_device(mvm);
- 	iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
+@@ -245,7 +245,7 @@ struct iwl_nvm_get_info_regulatory {
+ 	__le32 lar_enabled;
+ 	__le16 channel_profile[IWL_NUM_CHANNELS];
+ 	__le16 reserved;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_REGULATORY_S_VER_1 */
++} __packed; /* REGULATORY_NVM_GET_INFO_REGULATORY_S_VER_1 */
+ 
+ /**
+  * struct iwl_nvm_get_info_rsp - response to get NVM data
+@@ -259,7 +259,7 @@ struct iwl_nvm_get_info_rsp {
+ 	struct iwl_nvm_get_info_sku mac_sku;
+ 	struct iwl_nvm_get_info_phy phy_sku;
+ 	struct iwl_nvm_get_info_regulatory regulatory;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_2 */
++} __packed; /* REGULATORY_NVM_GET_INFO_RSP_API_S_VER_3 */
+ 
+ /**
+  * struct iwl_nvm_access_complete_cmd - NVM_ACCESS commands are completed
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 137dedc844ad..4ed8fb49a091 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -1350,6 +1350,7 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
+ 				fw_has_capa(&fw->ucode_capa,
+ 					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
++	bool empty_otp;
+ 	u32 mac_flags;
+ 	u32 sbands_flags = 0;
+ 
+@@ -1365,7 +1366,9 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 	}
+ 
+ 	rsp = (void *)hcmd.resp_pkt->data;
+-	if (le32_to_cpu(rsp->general.flags) & NVM_GENERAL_FLAGS_EMPTY_OTP)
++	empty_otp = !!(le32_to_cpu(rsp->general.flags) &
++		       NVM_GENERAL_FLAGS_EMPTY_OTP);
++	if (empty_otp)
+ 		IWL_INFO(trans, "OTP is empty\n");
+ 
+ 	nvm = kzalloc(sizeof(*nvm) +
+@@ -1389,6 +1392,11 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 
+ 	/* Initialize general data */
+ 	nvm->nvm_version = le16_to_cpu(rsp->general.nvm_version);
++	nvm->n_hw_addrs = rsp->general.n_hw_addrs;
++	if (nvm->n_hw_addrs == 0)
++		IWL_WARN(trans,
++			 "Firmware declares no reserved mac addresses. OTP is empty: %d\n",
++			 empty_otp);
+ 
+ 	/* Initialize MAC sku data */
+ 	mac_flags = le32_to_cpu(rsp->mac_sku.mac_sku_flags);
 -- 
 2.19.0
 
