@@ -2,169 +2,116 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89018C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50408C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DEBF2064A
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:55:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4DEBF2064A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id D68192084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:04:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VNxf/25c"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D68192084C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbeJAQcU (ORCPT
+        id S1729076AbeJAQls (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 12:32:20 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:56714 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729073AbeJAQcU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 12:32:20 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g6uvA-00024a-6y; Mon, 01 Oct 2018 11:55:20 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: add error messages to nl80211_parse_chandef()
-Date:   Mon,  1 Oct 2018 11:55:09 +0200
-Message-Id: <20181001095509.24870-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        Mon, 1 Oct 2018 12:41:48 -0400
+Received: from nbd.name ([46.4.11.11]:41304 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728960AbeJAQls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Oct 2018 12:41:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=9Hj/KGismAjVt/BATg9abj6CpZh/WrIsxxeMJeD5qKM=; b=VNxf/25csVk4B3+TthibtuUqf+
+        0lhAIVbYP2ZGRXp1nxVpoM7Qe0pmvIxPwhxxkzRUpArfjh3C7ZOeLFKqFKdl2U4ggek3pLs8lcILO
+        E8/wFpm3epBBSOmH392eZ++phpF1++vuU0JlaGJMhWWOBagClgeD8W0/htuqgvZlZHFA=;
+Subject: Re: [RFC 4/5] mt76: move mt76x02_mac_write_txwi in mt76x02-lib module
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <20180929174456.995-5-lorenzo.bianconi@redhat.com>
+ <20181001054838.GC22206@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <47c5b9bf-e079-0a7b-f0e6-f3c977334ea5@nbd.name>
+Date:   Mon, 1 Oct 2018 12:04:44 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
+MIME-Version: 1.0
+In-Reply-To: <20181001054838.GC22206@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2018-10-01 07:48, Stanislaw Gruszka wrote:
+> On Sat, Sep 29, 2018 at 07:44:55PM +0200, Lorenzo Bianconi wrote:
+>> +	spin_lock_bh(&dev->lock);
+>> +	if (wcid && (rate->idx < 0 || !rate->count)) {
+>> +		txwi->rate = wcid->tx_rate;
+>> +		max_txpwr_adj = wcid->max_txpwr_adj;
+>> +		nss = wcid->tx_rate_nss;
+>> +	} else {
+>> +		txwi->rate = mt76x02_mac_tx_rate_val(dev, rate, &nss);
+>> +		max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(dev, rate);
+>> +	}
+>> +	spin_unlock_bh(&dev->lock);
+>> +
+>> +	if (dev->drv->get_tx_txpwr_adj) {
+>> +		txpwr_adj = dev->drv->get_tx_txpwr_adj(dev, dev->txpower_conf,
+>> +						       max_txpwr_adj);
+>> +		txwi->ctl2 = FIELD_PREP(MT_TX_PWR_ADJ, txpwr_adj);
+>> +	}
+>> +
+>> +	if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E4)
+>> +		txwi->txstream = 0x13;
+>> +	else if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E3 &&
+>> +		 !(txwi->rate & cpu_to_le16(rate_ht_mask)))
+>> +		txwi->txstream = 0x93;
+> 
+> All above looks mt76x2 specific, maybe would be beter to place this in 
+> in setup_txwi() calback i.e:
+> 
+> 	if (dev->drv->setup_txwi)
+> 		drv->drv->setup_txwi(...)
+> 
+> or maybe you plan to implement get_tx_txpwr_adj() for mt76x0 as well,
+> is this feature supported by the MT76x0 chips ?
+I think get_tx_txpwr_adj should be implemented for mt76x0 as well. I
+don't think we need a setup_txwi callback here.
 
-Add some error messages to nl80211_parse_chandef() to make
-failures here - especially with disabled channels - easier
-to diagnose.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 62 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 40 insertions(+), 22 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0b8896dca65e..fb7f07b0e123 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2292,12 +2292,14 @@ static int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 				 struct genl_info *info,
- 				 struct cfg80211_chan_def *chandef)
- {
-+	struct netlink_ext_ack *extack = info->extack;
-+	struct nlattr **attrs = info->attrs;
- 	u32 control_freq;
- 
--	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+	if (!attrs[NL80211_ATTR_WIPHY_FREQ])
- 		return -EINVAL;
- 
--	control_freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	control_freq = nla_get_u32(attrs[NL80211_ATTR_WIPHY_FREQ]);
- 
- 	chandef->chan = ieee80211_get_channel(&rdev->wiphy, control_freq);
- 	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-@@ -2305,14 +2307,16 @@ static int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 	chandef->center_freq2 = 0;
- 
- 	/* Primary channel not allowed */
--	if (!chandef->chan || chandef->chan->flags & IEEE80211_CHAN_DISABLED)
-+	if (!chandef->chan || chandef->chan->flags & IEEE80211_CHAN_DISABLED) {
-+		NL_SET_ERR_MSG_ATTR(extack, attrs[NL80211_ATTR_WIPHY_FREQ],
-+				    "Channel is disabled");
- 		return -EINVAL;
-+	}
- 
--	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+	if (attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
- 		enum nl80211_channel_type chantype;
- 
--		chantype = nla_get_u32(
--				info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		chantype = nla_get_u32(attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
- 
- 		switch (chantype) {
- 		case NL80211_CHAN_NO_HT:
-@@ -2322,42 +2326,56 @@ static int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 			cfg80211_chandef_create(chandef, chandef->chan,
- 						chantype);
- 			/* user input for center_freq is incorrect */
--			if (info->attrs[NL80211_ATTR_CENTER_FREQ1] &&
--			    chandef->center_freq1 != nla_get_u32(
--					info->attrs[NL80211_ATTR_CENTER_FREQ1]))
-+			if (attrs[NL80211_ATTR_CENTER_FREQ1] &&
-+			    chandef->center_freq1 != nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ1])) {
-+				NL_SET_ERR_MSG_ATTR(extack,
-+						    attrs[NL80211_ATTR_CENTER_FREQ1],
-+						    "bad center frequency 1");
- 				return -EINVAL;
-+			}
- 			/* center_freq2 must be zero */
--			if (info->attrs[NL80211_ATTR_CENTER_FREQ2] &&
--			    nla_get_u32(info->attrs[NL80211_ATTR_CENTER_FREQ2]))
-+			if (attrs[NL80211_ATTR_CENTER_FREQ2] &&
-+			    nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ2])) {
-+				NL_SET_ERR_MSG_ATTR(extack,
-+						    attrs[NL80211_ATTR_CENTER_FREQ2],
-+						    "center frequency 2 can't be used");
- 				return -EINVAL;
-+			}
- 			break;
- 		default:
-+			NL_SET_ERR_MSG_ATTR(extack,
-+					    attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE],
-+					    "invalid channel type");
- 			return -EINVAL;
- 		}
--	} else if (info->attrs[NL80211_ATTR_CHANNEL_WIDTH]) {
-+	} else if (attrs[NL80211_ATTR_CHANNEL_WIDTH]) {
- 		chandef->width =
--			nla_get_u32(info->attrs[NL80211_ATTR_CHANNEL_WIDTH]);
--		if (info->attrs[NL80211_ATTR_CENTER_FREQ1])
-+			nla_get_u32(attrs[NL80211_ATTR_CHANNEL_WIDTH]);
-+		if (attrs[NL80211_ATTR_CENTER_FREQ1])
- 			chandef->center_freq1 =
--				nla_get_u32(
--					info->attrs[NL80211_ATTR_CENTER_FREQ1]);
--		if (info->attrs[NL80211_ATTR_CENTER_FREQ2])
-+				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ1]);
-+		if (attrs[NL80211_ATTR_CENTER_FREQ2])
- 			chandef->center_freq2 =
--				nla_get_u32(
--					info->attrs[NL80211_ATTR_CENTER_FREQ2]);
-+				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ2]);
- 	}
- 
--	if (!cfg80211_chandef_valid(chandef))
-+	if (!cfg80211_chandef_valid(chandef)) {
-+		NL_SET_ERR_MSG(extack, "invalid channel definition");
- 		return -EINVAL;
-+	}
- 
- 	if (!cfg80211_chandef_usable(&rdev->wiphy, chandef,
--				     IEEE80211_CHAN_DISABLED))
-+				     IEEE80211_CHAN_DISABLED)) {
-+		NL_SET_ERR_MSG(extack, "(extension) channel is disabled");
- 		return -EINVAL;
-+	}
- 
- 	if ((chandef->width == NL80211_CHAN_WIDTH_5 ||
- 	     chandef->width == NL80211_CHAN_WIDTH_10) &&
--	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ))
-+	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ)) {
-+		NL_SET_ERR_MSG(extack, "5/10 MHz not supported");
- 		return -EINVAL;
-+	}
- 
- 	return 0;
- }
--- 
-2.14.4
-
+- Felix
