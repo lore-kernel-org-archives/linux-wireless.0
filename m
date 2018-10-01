@@ -4,100 +4,90 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA001C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA23C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:55:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89B24208AE
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:54:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7F47213A2
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:55:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ozxAked3";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E9HNdly/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 89B24208AE
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h/e3tErW";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XL7OLNTW"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E7F47213A2
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729358AbeJAUcN (ORCPT
+        id S1729322AbeJAUdn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:32:13 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:52192 "EHLO
+        Mon, 1 Oct 2018 16:33:43 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:52618 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728979AbeJAUcN (ORCPT
+        with ESMTP id S1729182AbeJAUdn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:32:13 -0400
+        Mon, 1 Oct 2018 16:33:43 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 88D9260B7A; Mon,  1 Oct 2018 13:54:18 +0000 (UTC)
+        id 52ABF6079B; Mon,  1 Oct 2018 13:55:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402058;
-        bh=h9TrJKkulq3XtSXVb5WcJsx2fNqpmsQhnUPRyv3JIAU=;
+        s=default; t=1538402148;
+        bh=8c73G5lsfLHxeyhsWdPJgip+zjn6Dm5tHbDeDbVHvls=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=ozxAked3G3NXbWdC108IsF57TkmnKsqSujm/+68xn8FwnjYPQySG7loNSE8o8x/kw
-         T8n1KEKKTkIgiiXkfgykEz11umjPf1Haj3ccf9GeE/m9VJkf9k+NDfzzFsnwl8Q2ID
-         qeetUU7DGbEmz3pxi+t2njqTmREnrJqbv5zM/li8=
+        b=h/e3tErWXW1ClCbLk/YM96GNFYy7ZMVLpbrt+rDlcQLiqtjlsEJQF/Rn9NUizkHwD
+         dbGVxqgaYfqVHKVZ5HebFmKatD7hQs3X+GQxSLq5qz6wGvm02yf8PgIKN8u6jOLLsq
+         fDQTsavFO1Z7bKfub+6tfOLQN4f48LC09loWfsjw=
 Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0829A6079B;
-        Mon,  1 Oct 2018 13:54:15 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B054960376;
+        Mon,  1 Oct 2018 13:55:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402057;
-        bh=h9TrJKkulq3XtSXVb5WcJsx2fNqpmsQhnUPRyv3JIAU=;
+        s=default; t=1538402147;
+        bh=8c73G5lsfLHxeyhsWdPJgip+zjn6Dm5tHbDeDbVHvls=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=E9HNdly/C143VS/Z1RluXZr8uHGzcQj/jerGgYbZbW7PocUrzJ+8ra9QCoo8is/Im
-         u7M77ymqaP8snaugYLhDer1MMkLlVScMSWKBILvD9Y/7BtzASphQ9T98yapjZUBvOG
-         CXWRv5TXqM/swJN4BTEkNMrDof+VLYdZKe2D3oQ0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0829A6079B
+        b=XL7OLNTWIMThxuTOy2d+/P/pINOxph+vnGmfguX+lXApTMK5fCm12qQ3AYiYTPQ2x
+         YL4JN6yFRkQdM2wM64O1gC7mZ6PXPEkdQSgbUv8C/Ui9Nrwz+2gQJktQOeL9+Z/1zJ
+         KnNpwIcbKcEqmTDhNRLfBGsrjNnTRlYzOQ3ggiuA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B054960376
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: utilize random MAC address if none is provided
+Subject: Re: [PATCH 1/2] ath10k: add default value for num_peers in WMI TLV
+ init
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180907172157.203785-1-briannorris@chromium.org>
-References: <20180907172157.203785-1-briannorris@chromium.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
+In-Reply-To: <20180913144506.8272-1-erik.stromdahl@gmail.com>
+References: <20180913144506.8272-1-erik.stromdahl@gmail.com>
+To:     Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc:     kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181001135418.88D9260B7A@smtp.codeaurora.org>
-Date:   Mon,  1 Oct 2018 13:54:18 +0000 (UTC)
+Message-Id: <20181001135548.52ABF6079B@smtp.codeaurora.org>
+Date:   Mon,  1 Oct 2018 13:55:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> wrote:
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-> Since commit 9d5804662ce1 ("ath10k: retrieve MAC address from system
-> firmware if provided"), we support pulling our MAC address from system
-> firmware. Along with this, we should admit that it's possible for system
-> firmware to be screwed up as well, omitting the MAC address there.
+> The hw_params value will only be used if it was explicitly set in the
+> global hw_params array.
 > 
-> Provide a fallback, such that we choose a randomly-generated MAC
-> address, with the local assignment bit set.
+> This makes it possible to have the num_peers member unset.
 > 
-> This is not a preferred mode of operation and really should only serve
-> the purpose of keeping the system chugging along while someone figures
-> out what's wrong with the system. Grepping through other wireless
-> drivers shows very similar fallback logic though, so why not?
-> 
->   git grep eth_random_addr drivers/net/wireless/
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-234e4307cf7f ath10k: utilize random MAC address if none is provided
+8e8374db3424 ath10k: add default value for num_peers in WMI TLV init
+08fafd646d63 ath10k: remove num_peers in hw_params for most targets
 
 -- 
-https://patchwork.kernel.org/patch/10592411/
+https://patchwork.kernel.org/patch/10599685/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
