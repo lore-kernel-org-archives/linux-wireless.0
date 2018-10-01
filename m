@@ -3,83 +3,75 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49517C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2EA9C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00F0C2083C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:25:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 00F0C2083C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+	by mail.kernel.org (Postfix) with ESMTP id 97B0620684
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 09:43:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 97B0620684
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729019AbeJAQCc (ORCPT
+        id S1729038AbeJAQUJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 12:02:32 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:53853 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728960AbeJAQCc (ORCPT
+        Mon, 1 Oct 2018 12:20:09 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:56124 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728953AbeJAQUJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 12:02:32 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w919PSAY007545, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w919PSAY007545
-        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Mon, 1 Oct 2018 17:25:28 +0800
-Received: from localhost.localdomain (172.21.69.146) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Mon, 1 Oct 2018 17:25:27 +0800
-From:   <pkshih@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <joe@perches.com>,
-        <rickveens92@gmail.com>, <Larry.Finger@lwfinger.net>
-Subject: [PATCH v2] rtlwifi: Removed unused define and code efuse_re_pg* from wifi.h
-Date:   Mon, 1 Oct 2018 17:25:14 +0800
-Message-ID: <20181001092514.14359-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.15.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.69.146]
+        Mon, 1 Oct 2018 12:20:09 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1g6ujQ-0001lX-Ia; Mon, 01 Oct 2018 11:43:12 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: regulatory: make initialization more robust
+Date:   Mon,  1 Oct 2018 11:43:00 +0200
+Message-Id: <20181001094300.15280-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.14.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The following:
- bool efuse_re_pg_sec1flag;
- u8 efuse_re_pg_data[8];
-are not referenced anywhere in the rtlwifi code.
+Since my change to split out the regulatory init to occur later,
+any issues during earlier cfg80211_init() or errors during the
+platform device allocation would lead to crashes later. Make this
+more robust by checking that the earlier initialization succeeded.
 
-This patch is originally created by Rick Veens <rickveens92@gmail.com>,
-and Joe Perches <joe@perches.com> reminded to apply it to rtlwifi.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Fixes: d7be102f2945 ("cfg80211: initialize regulatory keys/database later")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2: change author to me
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 4 ----
- 1 file changed, 4 deletions(-)
+ net/wireless/reg.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 0f3b98c5227f..87bc21bb5e8b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1905,10 +1905,6 @@ struct rtl_efuse {
- 	u8 efuse_map[2][EFUSE_MAX_LOGICAL_SIZE];
- 	u16 efuse_usedbytes;
- 	u8 efuse_usedpercentage;
--#ifdef EFUSE_REPG_WORKAROUND
--	bool efuse_re_pg_sec1flag;
--	u8 efuse_re_pg_data[8];
--#endif
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 56be68a27bb9..d7b93a772edc 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -3829,6 +3829,15 @@ static int __init regulatory_init_db(void)
+ {
+ 	int err;
  
- 	u8 autoload_failflag;
- 	u8 autoload_status;
++	/*
++	 * It's possible that - due to other bugs/issues - cfg80211
++	 * never called regulatory_init() below, or that it failed;
++	 * in that case, don't try to do any further work here as
++	 * it's doomed to lead to crashes.
++	 */
++	if (IS_ERR_OR_NULL(reg_pdev))
++		return -EINVAL;
++
+ 	err = load_builtin_regdb_keys();
+ 	if (err)
+ 		return err;
 -- 
-2.15.1
+2.14.4
 
