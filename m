@@ -2,339 +2,92 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0370EC43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE59C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:32:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC7F72084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:29:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BC7F72084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id C74012084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:32:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VTDGygDm";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oTedxMYi"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C74012084C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729286AbeJAUHY (ORCPT
+        id S1729334AbeJAUKj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:07:24 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:58996 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728979AbeJAUHX (ORCPT
+        Mon, 1 Oct 2018 16:10:39 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729182AbeJAUKj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:07:23 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g6yGQ-0005gt-Sm; Mon, 01 Oct 2018 15:29:30 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: sort tracing properly
-Date:   Mon,  1 Oct 2018 15:29:18 +0200
-Message-Id: <20181001132918.23214-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        Mon, 1 Oct 2018 16:10:39 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 14581609A5; Mon,  1 Oct 2018 13:32:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538400768;
+        bh=se/Bsihd1mVsIp/qd5se+4FPRtlG/XYNzH7RNv+O/PI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=VTDGygDmPGaFT/C4xgFwvoSTMRmGQGzu2m5F+2PZ4zfeJD9v0+dkjmuQ4WSamMb71
+         896FU0cYwftLWHxgEwGXbk1VxPgqtmqHyt4bMQpLxbc37zPZrp2x/GC0APRkWzImsm
+         BnZ9OxUTUDfmGWiGD6m44zILimYhjTivrwhAHIls=
+Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 452AD6079B;
+        Mon,  1 Oct 2018 13:32:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538400767;
+        bh=se/Bsihd1mVsIp/qd5se+4FPRtlG/XYNzH7RNv+O/PI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=oTedxMYiXeId1fSph0DNuHd/MrUhAjZ/5lbfCeUs9KqwC4edOyY2DzZF9fZCd7qXm
+         e1868Uj/kpKBdUcK3BsvdIRIc6w6JJmtdXPK1sueSpY22BMOl1F4vjgriF1HWOBaHF
+         HbZmBKaKzVBtHwei6FGudFAphNSs+5IUBGocf66M=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 452AD6079B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        johannes@sipsolutions.net, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: Add support to configure ftm responder role
+References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
+        <1534293018-4930-4-git-send-email-pradeepc@codeaurora.org>
+        <36962f12-84ff-d1a9-8273-a8e3444db108@dd-wrt.com>
+Date:   Mon, 01 Oct 2018 16:32:44 +0300
+In-Reply-To: <36962f12-84ff-d1a9-8273-a8e3444db108@dd-wrt.com> (Sebastian
+        Gottschall's message of "Wed, 15 Aug 2018 12:16:50 +0200")
+Message-ID: <871s99lrlv.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-There were supposed to be two blocks - one for each direction
-cfg80211 <-> driver, clean up the code to restore that.
+> Am 15.08.2018 um 02:30 schrieb Pradeep Kumar Chitrapu:
+>>   +	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map))
+>> +		wiphy_ext_feature_set(ar->hw->wiphy,
+>> +				      NL80211_EXT_FEATURE_SET_FTM_RESPONDER);
+>> +
+>
+> not sure if this is accurate. even if WMI_SERVICE_RTT is set, the
+> firmware may not support this feature. this feature doesnt seem to be
+> implemented in current firmware releases
+> i checked the firmware sourcecode i have from 3.4 series and it doesnt
+> support this feature
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/trace.h | 268 +++++++++++++++++++++++++--------------------------
- 1 file changed, 134 insertions(+), 134 deletions(-)
+Pradeep, did you check this? It's really bad if ath10k enables the
+feature even if the firmware doesn't support this.
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 7e0380192445..c6a9446b4e6b 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2368,6 +2368,140 @@ TRACE_EVENT(rdev_external_auth,
- 		      __entry->bssid, __entry->ssid, __entry->status)
- );
- 
-+TRACE_EVENT(rdev_start_radar_detection,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 struct cfg80211_chan_def *chandef,
-+		 u32 cac_time_ms),
-+	TP_ARGS(wiphy, netdev, chandef, cac_time_ms),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		CHAN_DEF_ENTRY
-+		__field(u32, cac_time_ms)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		CHAN_DEF_ASSIGN(chandef);
-+		__entry->cac_time_ms = cac_time_ms;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT
-+		  ", cac_time_ms=%u",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG,
-+		  __entry->cac_time_ms)
-+);
-+
-+TRACE_EVENT(rdev_set_mcast_rate,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 int *mcast_rate),
-+	TP_ARGS(wiphy, netdev, mcast_rate),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		__array(int, mcast_rate, NUM_NL80211_BANDS)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		memcpy(__entry->mcast_rate, mcast_rate,
-+		       sizeof(int) * NUM_NL80211_BANDS);
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", "
-+		  "mcast_rates [2.4GHz=0x%x, 5.2GHz=0x%x, 60GHz=0x%x]",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG,
-+		  __entry->mcast_rate[NL80211_BAND_2GHZ],
-+		  __entry->mcast_rate[NL80211_BAND_5GHZ],
-+		  __entry->mcast_rate[NL80211_BAND_60GHZ])
-+);
-+
-+TRACE_EVENT(rdev_set_coalesce,
-+	TP_PROTO(struct wiphy *wiphy, struct cfg80211_coalesce *coalesce),
-+	TP_ARGS(wiphy, coalesce),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		__field(int, n_rules)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		__entry->n_rules = coalesce ? coalesce->n_rules : 0;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", n_rules=%d",
-+		  WIPHY_PR_ARG, __entry->n_rules)
-+);
-+
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	TP_ARGS(wiphy, wdev)
-+);
-+
-+TRACE_EVENT(rdev_set_multicast_to_unicast,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 const bool enabled),
-+	TP_ARGS(wiphy, netdev, enabled),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		__field(bool, enabled)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		__entry->enabled = enabled;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", unicast: %s",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG,
-+		  BOOL_TO_STR(__entry->enabled))
-+);
-+
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_get_txq_stats,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	TP_ARGS(wiphy, wdev)
-+);
-+
-+TRACE_EVENT(rdev_get_ftm_responder_stats,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 struct cfg80211_ftm_responder_stats *ftm_stats),
-+
-+	TP_ARGS(wiphy, netdev, ftm_stats),
-+
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		__field(u64, timestamp)
-+		__field(u32, success_num)
-+		__field(u32, partial_num)
-+		__field(u32, failed_num)
-+		__field(u32, asap_num)
-+		__field(u32, non_asap_num)
-+		__field(u64, duration)
-+		__field(u32, unknown_triggers)
-+		__field(u32, reschedule)
-+		__field(u32, out_of_window)
-+	),
-+
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		__entry->success_num = ftm_stats->success_num;
-+		__entry->partial_num = ftm_stats->partial_num;
-+		__entry->failed_num = ftm_stats->failed_num;
-+		__entry->asap_num = ftm_stats->asap_num;
-+		__entry->non_asap_num = ftm_stats->non_asap_num;
-+		__entry->duration = ftm_stats->total_duration_ms;
-+		__entry->unknown_triggers = ftm_stats->unknown_triggers_num;
-+		__entry->reschedule = ftm_stats->reschedule_requests_num;
-+		__entry->out_of_window = ftm_stats->out_of_window_triggers_num;
-+	),
-+
-+	TP_printk(WIPHY_PR_FMT "Ftm responder stats: success %u, partial %u, "
-+		"failed %u, asap %u, non asap %u, total duration %llu, unknown "
-+		"triggers %u, rescheduled %u, out of window %u", WIPHY_PR_ARG,
-+		__entry->success_num, __entry->partial_num, __entry->failed_num,
-+		__entry->asap_num, __entry->non_asap_num, __entry->duration,
-+		__entry->unknown_triggers, __entry->reschedule,
-+		__entry->out_of_window)
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
-@@ -3160,140 +3294,6 @@ TRACE_EVENT(cfg80211_stop_iface,
- 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT,
- 		  WIPHY_PR_ARG, WDEV_PR_ARG)
- );
--
--TRACE_EVENT(rdev_start_radar_detection,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 struct cfg80211_chan_def *chandef,
--		 u32 cac_time_ms),
--	TP_ARGS(wiphy, netdev, chandef, cac_time_ms),
--	TP_STRUCT__entry(
--		WIPHY_ENTRY
--		NETDEV_ENTRY
--		CHAN_DEF_ENTRY
--		__field(u32, cac_time_ms)
--	),
--	TP_fast_assign(
--		WIPHY_ASSIGN;
--		NETDEV_ASSIGN;
--		CHAN_DEF_ASSIGN(chandef);
--		__entry->cac_time_ms = cac_time_ms;
--	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT
--		  ", cac_time_ms=%u",
--		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG,
--		  __entry->cac_time_ms)
--);
--
--TRACE_EVENT(rdev_set_mcast_rate,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 int *mcast_rate),
--	TP_ARGS(wiphy, netdev, mcast_rate),
--	TP_STRUCT__entry(
--		WIPHY_ENTRY
--		NETDEV_ENTRY
--		__array(int, mcast_rate, NUM_NL80211_BANDS)
--	),
--	TP_fast_assign(
--		WIPHY_ASSIGN;
--		NETDEV_ASSIGN;
--		memcpy(__entry->mcast_rate, mcast_rate,
--		       sizeof(int) * NUM_NL80211_BANDS);
--	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", "
--		  "mcast_rates [2.4GHz=0x%x, 5.2GHz=0x%x, 60GHz=0x%x]",
--		  WIPHY_PR_ARG, NETDEV_PR_ARG,
--		  __entry->mcast_rate[NL80211_BAND_2GHZ],
--		  __entry->mcast_rate[NL80211_BAND_5GHZ],
--		  __entry->mcast_rate[NL80211_BAND_60GHZ])
--);
--
--TRACE_EVENT(rdev_set_coalesce,
--	TP_PROTO(struct wiphy *wiphy, struct cfg80211_coalesce *coalesce),
--	TP_ARGS(wiphy, coalesce),
--	TP_STRUCT__entry(
--		WIPHY_ENTRY
--		__field(int, n_rules)
--	),
--	TP_fast_assign(
--		WIPHY_ASSIGN;
--		__entry->n_rules = coalesce ? coalesce->n_rules : 0;
--	),
--	TP_printk(WIPHY_PR_FMT ", n_rules=%d",
--		  WIPHY_PR_ARG, __entry->n_rules)
--);
--
--DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
--	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
--	TP_ARGS(wiphy, wdev)
--);
--
--TRACE_EVENT(rdev_set_multicast_to_unicast,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 const bool enabled),
--	TP_ARGS(wiphy, netdev, enabled),
--	TP_STRUCT__entry(
--		WIPHY_ENTRY
--		NETDEV_ENTRY
--		__field(bool, enabled)
--	),
--	TP_fast_assign(
--		WIPHY_ASSIGN;
--		NETDEV_ASSIGN;
--		__entry->enabled = enabled;
--	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", unicast: %s",
--		  WIPHY_PR_ARG, NETDEV_PR_ARG,
--		  BOOL_TO_STR(__entry->enabled))
--);
--
--DEFINE_EVENT(wiphy_wdev_evt, rdev_get_txq_stats,
--	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
--	TP_ARGS(wiphy, wdev)
--);
--
--TRACE_EVENT(rdev_get_ftm_responder_stats,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 struct cfg80211_ftm_responder_stats *ftm_stats),
--
--	TP_ARGS(wiphy, netdev, ftm_stats),
--
--	TP_STRUCT__entry(
--		WIPHY_ENTRY
--		NETDEV_ENTRY
--		__field(u64, timestamp)
--		__field(u32, success_num)
--		__field(u32, partial_num)
--		__field(u32, failed_num)
--		__field(u32, asap_num)
--		__field(u32, non_asap_num)
--		__field(u64, duration)
--		__field(u32, unknown_triggers)
--		__field(u32, reschedule)
--		__field(u32, out_of_window)
--	),
--
--	TP_fast_assign(
--		WIPHY_ASSIGN;
--		NETDEV_ASSIGN;
--		__entry->success_num = ftm_stats->success_num;
--		__entry->partial_num = ftm_stats->partial_num;
--		__entry->failed_num = ftm_stats->failed_num;
--		__entry->asap_num = ftm_stats->asap_num;
--		__entry->non_asap_num = ftm_stats->non_asap_num;
--		__entry->duration = ftm_stats->total_duration_ms;
--		__entry->unknown_triggers = ftm_stats->unknown_triggers_num;
--		__entry->reschedule = ftm_stats->reschedule_requests_num;
--		__entry->out_of_window = ftm_stats->out_of_window_triggers_num;
--	),
--
--	TP_printk(WIPHY_PR_FMT "Ftm responder stats: success %u, partial %u, "
--		"failed %u, asap %u, non asap %u, total duration %llu, unknown "
--		"triggers %u, rescheduled %u, out of window %u", WIPHY_PR_ARG,
--		__entry->success_num, __entry->partial_num, __entry->failed_num,
--		__entry->asap_num, __entry->non_asap_num, __entry->duration,
--		__entry->unknown_triggers, __entry->reschedule,
--		__entry->out_of_window)
--);
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
 -- 
-2.14.4
-
+Kalle Valo
