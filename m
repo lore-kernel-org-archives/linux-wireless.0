@@ -2,105 +2,118 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33357C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 11:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7C7C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 11:59:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDDD82089D
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 11:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44CE12089C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 11:59:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="agIveKzG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EDDD82089D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="g1meiFJt";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="g1meiFJt"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 44CE12089C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729235AbeJASe5 (ORCPT
+        id S1729237AbeJASgq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 14:34:57 -0400
-Received: from nbd.name ([46.4.11.11]:45346 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728979AbeJASe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 14:34:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=PWpldbmIBOHfn77IDbmSAjrhFjsh4dJ/4kIFJ+lMlO4=; b=agIveKzGGPgyL0L+Cm0pJB2tOV
-        kC2XMdMd/Mg/p4Cu/xnBH+F/RJCUC8L++N312IT0qjN32Y2w/hPhb5c7xpGSeoahe/C3AFRtH/2f0
-        ZZMcUVZjw1K7DScBv5sXnqV0DB/L8pMnGWi4cxrjsgHy3f7DhXjE/njdnj+9BzH0UulQ=;
-Subject: Re: [PATCH] mt76: fix header guard macro define names
-To:     Colin King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180930225715.18491-1-colin.king@canonical.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <ae443a0d-9272-d538-ee85-6d5bf1231db8@nbd.name>
-Date:   Mon, 1 Oct 2018 13:57:22 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        Mon, 1 Oct 2018 14:36:46 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:60278 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728979AbeJASgp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Oct 2018 14:36:45 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5463060B26; Mon,  1 Oct 2018 11:59:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538395158;
+        bh=23iCdpBzvltAa0fJ8/+cftdNnOmI0u3d3wp8IQFhERg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=g1meiFJtqdrFnQmclGYeeNnJCaQ8eQVhigGWQ3x4tl/vt5ljAR7JmscS/hsFrMwoV
+         n7j3eMlTVuOQUeLI8VJ3b9HqwW8TN2K8tKNy9ROeib7szCjV87kPDdSoTtuZb70XkK
+         63UncwQNATX/ghT0P+fPQJLzD0XkEcTFbYdUONy4=
+Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DBBD0601A0;
+        Mon,  1 Oct 2018 11:59:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538395158;
+        bh=23iCdpBzvltAa0fJ8/+cftdNnOmI0u3d3wp8IQFhERg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=g1meiFJtqdrFnQmclGYeeNnJCaQ8eQVhigGWQ3x4tl/vt5ljAR7JmscS/hsFrMwoV
+         n7j3eMlTVuOQUeLI8VJ3b9HqwW8TN2K8tKNy9ROeib7szCjV87kPDdSoTtuZb70XkK
+         63UncwQNATX/ghT0P+fPQJLzD0XkEcTFbYdUONy4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DBBD0601A0
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     David Miller <davem@davemloft.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2018-10-01
+Date:   Mon, 01 Oct 2018 14:59:14 +0300
+Message-ID: <87a7nxlvxp.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20180930225715.18491-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-01 00:57, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The header guards that are #defined are different from those being
-> checked.  Fix this by #defining them to the correct name.
-> 
-> Fixes clang warnings:
-> drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h:17:9:
-> warning: '__MT76x02_MCU_H' is used as a header guard here, followed
-> by #define of a different macro [-Wheader-guard]
-> 
-> drivers/net/wireless/mediatek/mt76/mt76x02_usb.h:17:9:
-> warning: '__MT76x02_USB_H' is used as a header guard here, followed
-> by #define of a different macro [-Wheader-guard]
-> 
-> Fixes: 905db7470199 ("mt76: usb: move mt76x02 mcu code in mt76x02-usb module")
-> Fixes: edaa580bc830 ("mt76: move shared mcu_calibrate routine in mt76x02-lib module")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Merged, thanks.
+Hi Dave,
 
-- Felix
+here's a really small pull request to net tree for 4.19. More info below
+and please let me know if there are any problems.
+
+Kalle
+
+The following changes since commit 5b394b2ddf0347bef56e50c69a58773c94343ff3:
+
+  Linux 4.19-rc1 (2018-08-26 14:11:59 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2018-10-01
+
+for you to fetch changes up to 3baafeffa48a12b3cec9a0b6d4049fba02d53cea:
+
+  iwlwifi: 1000: set the TFD queue size (2018-09-27 21:20:36 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.19
+
+First, and also hopefully the last, set of fixes for 4.19. All small
+but still important fixes
+
+mt76x0
+
+* fix a bug when a virtual interface is removed multiple times
+
+b43
+
+* fix DMA error related regression with proprietary firmware
+
+iwlwifi
+
+* fix an oops which was a regression in v4.19-rc1
+
+----------------------------------------------------------------
+Larry Finger (1):
+      b43: fix DMA error related regression with proprietary firmware
+
+Pavel Machek (1):
+      iwlwifi: 1000: set the TFD queue size
+
+Stanislaw Gruszka (1):
+      mt76x0: fix remove_interface
+
+ drivers/net/wireless/broadcom/b43/dma.c          | 6 ++++--
+ drivers/net/wireless/intel/iwlwifi/cfg/1000.c    | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c | 3 +--
+ 3 files changed, 6 insertions(+), 4 deletions(-)
