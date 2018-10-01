@@ -2,106 +2,79 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50408C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3D6C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:07:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D68192084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:04:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VNxf/25c"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D68192084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 698842084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 10:07:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 698842084C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729076AbeJAQls (ORCPT
+        id S1729067AbeJAQoC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 12:41:48 -0400
-Received: from nbd.name ([46.4.11.11]:41304 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728960AbeJAQls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 12:41:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=9Hj/KGismAjVt/BATg9abj6CpZh/WrIsxxeMJeD5qKM=; b=VNxf/25csVk4B3+TthibtuUqf+
-        0lhAIVbYP2ZGRXp1nxVpoM7Qe0pmvIxPwhxxkzRUpArfjh3C7ZOeLFKqFKdl2U4ggek3pLs8lcILO
-        E8/wFpm3epBBSOmH392eZ++phpF1++vuU0JlaGJMhWWOBagClgeD8W0/htuqgvZlZHFA=;
+        Mon, 1 Oct 2018 12:44:02 -0400
+Received: from mail-wm1-f46.google.com ([209.85.128.46]:39072 "EHLO
+        mail-wm1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728791AbeJAQoB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Oct 2018 12:44:01 -0400
+Received: by mail-wm1-f46.google.com with SMTP id q8-v6so8106241wmq.4
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 03:07:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=SVRGqnvTAgOahDfrIlZ3+cU2XNbIITzprTVXajYfDjw=;
+        b=Hrn8b6+GA1uF4jIMjglr4wUMewrPPIr3b4k0hJvHsshn0IZgTNB4902Lm0yfMwPyMu
+         gPCARt9MzeRhbic/Xmrxpx2L7ZH6nRV+yBi9K59QX/SMhK9lJ4qk4vmL+276Ehugit8/
+         RIWHUFk9ej25HRG0JKhQPtB6hwF+XVYbtfd1ohr5Byl6IOiP+hmKlwhjgDGFP0DkwD5N
+         7AD0CwPzOvacZR5zCXDUw07UVNtroLRfCO75AmsLgy+TiZrysIAqyG8pi92BpnReMALJ
+         HwdtBKqtIu6pXuuvgL47GAV3riM5k2N3qyzdDBzl6USczo80SZsNREKBGGWQc9C3C6xH
+         8ulA==
+X-Gm-Message-State: ABuFfogZFPqhecCLXBplKWpbgQ/4zFPaPG1oqqoWN4NywTdvvYHUsBMv
+        eVnJ43NYmAhKGdvphXR3tELzhQ==
+X-Google-Smtp-Source: ACcGV615mC9KI1dNbXpIUNszU8naGdyBXM4ZJtg+xFgvsXGxNSnTMtP40jcuF+rNw/7+MSyFPQSSsQ==
+X-Received: by 2002:a1c:d00c:: with SMTP id h12-v6mr8053217wmg.107.1538388419223;
+        Mon, 01 Oct 2018 03:06:59 -0700 (PDT)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id z21-v6sm7472662wmi.29.2018.10.01.03.06.58
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 01 Oct 2018 03:06:59 -0700 (PDT)
+Date:   Mon, 1 Oct 2018 12:06:56 +0200
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
 Subject: Re: [RFC 4/5] mt76: move mt76x02_mac_write_txwi in mt76x02-lib module
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless@vger.kernel.org
+Message-ID: <20181001100656.GC3055@localhost.localdomain>
 References: <20180929174456.995-5-lorenzo.bianconi@redhat.com>
  <20181001054838.GC22206@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <47c5b9bf-e079-0a7b-f0e6-f3c977334ea5@nbd.name>
-Date:   Mon, 1 Oct 2018 12:04:44 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20181001054838.GC22206@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-01 07:48, Stanislaw Gruszka wrote:
 > On Sat, Sep 29, 2018 at 07:44:55PM +0200, Lorenzo Bianconi wrote:
->> +	spin_lock_bh(&dev->lock);
->> +	if (wcid && (rate->idx < 0 || !rate->count)) {
->> +		txwi->rate = wcid->tx_rate;
->> +		max_txpwr_adj = wcid->max_txpwr_adj;
->> +		nss = wcid->tx_rate_nss;
->> +	} else {
->> +		txwi->rate = mt76x02_mac_tx_rate_val(dev, rate, &nss);
->> +		max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(dev, rate);
->> +	}
->> +	spin_unlock_bh(&dev->lock);
->> +
->> +	if (dev->drv->get_tx_txpwr_adj) {
->> +		txpwr_adj = dev->drv->get_tx_txpwr_adj(dev, dev->txpower_conf,
->> +						       max_txpwr_adj);
->> +		txwi->ctl2 = FIELD_PREP(MT_TX_PWR_ADJ, txpwr_adj);
->> +	}
->> +
->> +	if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E4)
->> +		txwi->txstream = 0x13;
->> +	else if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E3 &&
->> +		 !(txwi->rate & cpu_to_le16(rate_ht_mask)))
->> +		txwi->txstream = 0x93;
+> > +	if (dev->drv->get_tx_txpwr_adj) {
+> > +		txpwr_adj = dev->drv->get_tx_txpwr_adj(dev, dev->txpower_conf,
+> > +						       max_txpwr_adj);
+> > +		txwi->ctl2 = FIELD_PREP(MT_TX_PWR_ADJ, txpwr_adj);
+> > +	}
+> > +
+> > +	if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E4)
+> > +		txwi->txstream = 0x13;
+> > +	else if (is_mt76x2(dev) && mt76_rev(dev) >= MT76XX_REV_E3 &&
+> > +		 !(txwi->rate & cpu_to_le16(rate_ht_mask)))
+> > +		txwi->txstream = 0x93;
 > 
 > All above looks mt76x2 specific, maybe would be beter to place this in 
 > in setup_txwi() calback i.e:
@@ -111,7 +84,19 @@ On 2018-10-01 07:48, Stanislaw Gruszka wrote:
 > 
 > or maybe you plan to implement get_tx_txpwr_adj() for mt76x0 as well,
 > is this feature supported by the MT76x0 chips ?
-I think get_tx_txpwr_adj should be implemented for mt76x0 as well. I
-don't think we need a setup_txwi callback here.
 
-- Felix
+For the moment tpc is supported just for mt76x2 chipsets but tx power subfield
+is present in mt76x0_txwi as well. Moreover merging mt76x2_dev and mt76x0_dev
+in mt76x02_dev allows us to move mt76x2_get_tx_txpwr_adj() in mt76x02-lib
+module, remove get_tx_txpwr_adj callback and just make tpc disabled for mt76x0
+for the moment.
+As suggested by Felix, we can take into account chainmask for txstream
+configuration and remove is_mt76x2() check.
+Agree?
+
+Regards,
+Lorenzo
+
+> 
+> Thanks
+> Stanislaw
