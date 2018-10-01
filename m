@@ -2,135 +2,125 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC26AC43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B643C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98D222084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:09:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 98D222084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id 5872A2084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5872A2084C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729145AbeJASrB (ORCPT
+        id S1729132AbeJASru (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 14:47:01 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:58214 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728999AbeJASrB (ORCPT
+        Mon, 1 Oct 2018 14:47:50 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54296 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728999AbeJASru (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 14:47:01 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        Mon, 1 Oct 2018 14:47:50 -0400
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g6x10-0004QA-9V; Mon, 01 Oct 2018 14:09:30 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: combine wdev/netdev unregister code
-Date:   Mon,  1 Oct 2018 14:09:17 +0200
-Message-Id: <20181001120917.10565-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        (envelope-from <luca@coelho.fi>)
+        id 1g6x1m-0006wq-KF; Mon, 01 Oct 2018 15:10:19 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Mon,  1 Oct 2018 15:09:54 +0300
+Message-Id: <20181001121010.29684-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.19.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 00/16] iwlwifi: updates intended for v4.20 2018-10-01
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-We currently have two places that do similar things, depending
-on whether it's a wdev with or without netdev.
+Hi,
 
-Combine the code to avoid having to duplicate all new additions.
+Here's the sixth set of patches intended for v4.20.  It's the usual
+development, some improvements, debugging and bugfixes.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
+The changes are:
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 52dba3976803..fffb35010c52 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1047,36 +1047,49 @@ void cfg80211_cqm_config_free(struct wireless_dev *wdev)
- 	wdev->cqm_config = NULL;
- }
- 
--void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-+static void __cfg80211_unregister_wdev(struct wireless_dev *wdev, bool sync)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 
- 	ASSERT_RTNL();
- 
--	if (WARN_ON(wdev->netdev))
--		return;
--
- 	nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
- 
- 	list_del_rcu(&wdev->list);
--	synchronize_rcu();
-+	if (sync)
-+		synchronize_rcu();
- 	rdev->devlist_generation++;
- 
-+	cfg80211_mlme_purge_registrations(wdev);
-+
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
--		cfg80211_mlme_purge_registrations(wdev);
- 		cfg80211_stop_p2p_device(rdev, wdev);
- 		break;
- 	case NL80211_IFTYPE_NAN:
- 		cfg80211_stop_nan(rdev, wdev);
- 		break;
- 	default:
--		WARN_ON_ONCE(1);
- 		break;
- 	}
- 
-+#ifdef CONFIG_CFG80211_WEXT
-+	kzfree(wdev->wext.keys);
-+#endif
-+	/* only initialized if we have a netdev */
-+	if (wdev->netdev)
-+		flush_work(&wdev->disconnect_wk);
-+
- 	cfg80211_cqm_config_free(wdev);
- }
-+
-+void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-+{
-+	if (WARN_ON(wdev->netdev))
-+		return;
-+
-+	__cfg80211_unregister_wdev(wdev, true);
-+}
- EXPORT_SYMBOL(cfg80211_unregister_wdev);
- 
- static const struct device_type wiphy_type = {
-@@ -1337,17 +1350,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		 * remove and clean it up.
- 		 */
- 		if (!list_empty(&wdev->list)) {
--			nl80211_notify_iface(rdev, wdev,
--					     NL80211_CMD_DEL_INTERFACE);
-+			__cfg80211_unregister_wdev(wdev, false);
- 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
--			list_del_rcu(&wdev->list);
--			rdev->devlist_generation++;
--			cfg80211_mlme_purge_registrations(wdev);
--#ifdef CONFIG_CFG80211_WEXT
--			kzfree(wdev->wext.keys);
--#endif
--			flush_work(&wdev->disconnect_wk);
--			cfg80211_cqm_config_free(wdev);
- 		}
- 		/*
- 		 * synchronise (so that we won't find this netdev
+* Bumped the FW API version supported after the last API change for
+  this release;
+* Debugging improvements;
+* A few bug fixes;
+* Other small improvements, cleanups and fixes.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+
+Haim Dreyfuss (1):
+  iwlwifi: mvm Support new MCC update response
+
+Johannes Berg (6):
+  iwlwifi: pcie gen2: check iwl_pcie_gen2_set_tb() return value
+  iwlwifi: add fall through comment
+  iwlwifi: pcie: check iwl_pcie_txq_build_tfd() return value
+  iwlwifi: bump firmware API version for 9000 and 22000 series devices
+  iwlwifi: mvm: decode HE information for MU (without ext info)
+  iwlwifi: mvm: show more HE radiotap data for TB PPDUs
+
+Naftali Goldstein (1):
+  iwlwifi: nvm: get num of hw addresses from firmware
+
+Sara Sharon (3):
+  iwlwifi: dbg: make iwl_fw_dbg_no_trig_window trigger agnostic
+  iwlwifi: dbg: decrement occurrences for all triggers
+  iwlwifi: dbg: make trigger functions type agnostic
+
+Shahar S Matityahu (3):
+  iwlwifi: add dump collection in case alive flow fails
+  iwlwifi: runtime: add send host command op to firmware runtime op
+    struct
+  iwlwifi: add debugfs to send host command
+
+Shaul Triebitz (1):
+  iwlwifi: pcie: avoid empty free RB queue
+
+Yisheng Xie (1):
+  iwlwifi: mvm: use match_string() helper
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  2 +-
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 81 ++++++++-----------
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 64 ++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 15 ++--
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 64 +++++++++++++++
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  2 +
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  7 +-
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  1 +
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 10 ++-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 13 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c  | 25 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  | 17 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 70 ++++++++--------
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 32 +++++---
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  2 +
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  2 +
+ 20 files changed, 269 insertions(+), 152 deletions(-)
+
 -- 
-2.14.4
+2.19.0
 
