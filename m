@@ -6,129 +6,102 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0351C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F43CC43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:18:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 929A22084C
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:11:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 929A22084C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id 0DCC42089D
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:18:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0DCC42089D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729361AbeJASsq (ORCPT
+        id S1729284AbeJAS4Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 14:48:46 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54458 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729111AbeJASsq (ORCPT
+        Mon, 1 Oct 2018 14:56:16 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:58398 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728921AbeJAS4Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 14:48:46 -0400
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        Mon, 1 Oct 2018 14:56:16 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1g6x1y-0006wq-Pn; Mon, 01 Oct 2018 15:10:31 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  1 Oct 2018 15:10:09 +0300
-Message-Id: <20181001121010.29684-16-luca@coelho.fi>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181001121010.29684-1-luca@coelho.fi>
-References: <20181001121010.29684-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 15/16] iwlwifi: dbg: decrement occurrences for all triggers
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1g6x9u-0004eB-6n; Mon, 01 Oct 2018 14:18:42 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: unify sending NL80211_CMD_NEW_INTERFACE
+Date:   Mon,  1 Oct 2018 14:18:31 +0200
+Message-Id: <20181001121831.12343-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.14.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-iwl_fw_dbg_collect can be called by any function that already
-has the error string ready. iwl_fw_dbg_collect_trig, on the
-other hand, does string formatting. The occurrences decrement
-is at iwl_fw_dbg_collect_trig, instead of iwl_fw_dbg_collect,
-which causes it to sometimes be skipped. Move it to the right
-location.
+There isn't really any need for us to be sending this from
+two different places - move cfg80211_init_wdev() later and
+send the notification from there, removing it from the non-
+netdev case.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 16 ++++++++++------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h |  2 +-
- 2 files changed, 11 insertions(+), 7 deletions(-)
+ net/wireless/core.c    | 5 +++--
+ net/wireless/nl80211.c | 9 ---------
+ 2 files changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index a049367ac08a..1ae04577aed3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1044,10 +1044,13 @@ IWL_EXPORT_SYMBOL(iwl_fw_dbg_collect_desc);
- int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 		       enum iwl_fw_dbg_trigger trig,
- 		       const char *str, size_t len,
--		       const struct iwl_fw_dbg_trigger_tlv *trigger)
-+		       struct iwl_fw_dbg_trigger_tlv *trigger)
- {
- 	struct iwl_fw_dump_desc *desc;
- 
-+	if (trigger && !le16_to_cpu(trigger->occurrences))
-+		return 0;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index ba6363db1f31..5bd01058b9e6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1186,6 +1186,8 @@ void cfg80211_init_wdev(struct cfg80211_registered_device *rdev,
+ 		wdev->identifier = ++rdev->wdev_id;
+ 	list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+ 	rdev->devlist_generation++;
 +
- 	if (trigger && trigger->flags & IWL_FW_DBG_FORCE_RESTART) {
- 		IWL_WARN(fwrt, "Force restart: trigger %d fired.\n", trig);
- 		iwl_force_nmi(fwrt->trans);
-@@ -1058,6 +1061,12 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 	if (!desc)
- 		return -ENOMEM;
- 
-+	if (trigger) {
-+		u16 occurrences = le16_to_cpu(trigger->occurrences) - 1;
-+
-+		trigger->occurrences = cpu_to_le16(occurrences);
-+	}
-+
- 	desc->len = len;
- 	desc->trig_desc.type = cpu_to_le32(trig);
- 	memcpy(desc->trig_desc.data, str, len);
-@@ -1070,13 +1079,9 @@ int iwl_fw_dbg_collect_trig(struct iwl_fw_runtime *fwrt,
- 			    struct iwl_fw_dbg_trigger_tlv *trigger,
- 			    const char *fmt, ...)
- {
--	u16 occurrences = le16_to_cpu(trigger->occurrences);
- 	int ret, len = 0;
- 	char buf[64];
- 
--	if (!occurrences)
--		return 0;
--
- 	if (fmt) {
- 		va_list ap;
- 
-@@ -1099,7 +1104,6 @@ int iwl_fw_dbg_collect_trig(struct iwl_fw_runtime *fwrt,
- 	if (ret)
- 		return ret;
- 
--	trigger->occurrences = cpu_to_le16(occurrences - 1);
- 	return 0;
++	nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
  }
- IWL_EXPORT_SYMBOL(iwl_fw_dbg_collect_trig);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index bee7a938a721..701bac1aba4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -111,7 +111,7 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
- int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
- 		       enum iwl_fw_dbg_trigger trig,
- 		       const char *str, size_t len,
--		       const struct iwl_fw_dbg_trigger_tlv *trigger);
-+		       struct iwl_fw_dbg_trigger_tlv *trigger);
- int iwl_fw_dbg_collect_trig(struct iwl_fw_runtime *fwrt,
- 			    struct iwl_fw_dbg_trigger_tlv *trigger,
- 			    const char *fmt, ...) __printf(3, 4);
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+@@ -1213,7 +1215,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 * called within code protected by it when interfaces
+ 		 * are added with nl80211.
+ 		 */
+-		cfg80211_init_wdev(rdev, wdev);
+ 		/* can only change netns with wiphy */
+ 		dev->features |= NETIF_F_NETNS_LOCAL;
+ 
+@@ -1242,7 +1243,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 
+ 		INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
+ 
+-		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
++		cfg80211_init_wdev(rdev, wdev);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+ 		cfg80211_leave(rdev, wdev);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 616927f70cc3..36e26ac20638 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3303,15 +3303,6 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOBUFS;
+ 	}
+ 
+-	/*
+-	 * For wdevs which have no associated netdev object (e.g. of type
+-	 * NL80211_IFTYPE_P2P_DEVICE), emit the NEW_INTERFACE event here.
+-	 * For all other types, the event will be generated from the
+-	 * netdev notifier
+-	 */
+-	if (!wdev->netdev)
+-		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+-
+ 	return genlmsg_reply(msg, info);
+ }
+ 
 -- 
-2.19.0
+2.14.4
 
