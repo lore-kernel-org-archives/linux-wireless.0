@@ -3,150 +3,185 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B42C0044B
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60AF2C00449
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88DF2208AE
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 88DF2208AE
+	by mail.kernel.org (Postfix) with ESMTP id 313162084C
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 12:10:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 313162084C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729137AbeJASrv (ORCPT
+        id S1729162AbeJASrw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 14:47:51 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54302 "EHLO
+        Mon, 1 Oct 2018 14:47:52 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:54310 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729099AbeJASru (ORCPT
+        with ESMTP id S1728999AbeJASrv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 14:47:50 -0400
+        Mon, 1 Oct 2018 14:47:51 -0400
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1g6x1n-0006wq-Ll; Mon, 01 Oct 2018 15:10:20 +0300
+        id 1g6x1o-0006wq-FP; Mon, 01 Oct 2018 15:10:21 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  1 Oct 2018 15:09:55 +0300
-Message-Id: <20181001121010.29684-2-luca@coelho.fi>
+Date:   Mon,  1 Oct 2018 15:09:56 +0300
+Message-Id: <20181001121010.29684-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20181001121010.29684-1-luca@coelho.fi>
 References: <20181001121010.29684-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/16] iwlwifi: pcie: avoid empty free RB queue
+Subject: [PATCH 02/16] iwlwifi: add dump collection in case alive flow fails
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-If all free RB queues are empty, the driver will never restock the
-free RB queue.  That's because the restocking happens in the Rx flow,
-and if the free queue is empty there will be no Rx.
+Trigger dump collection if the alive flow fails, regardless of the
+reason.
 
-Although there's a background worker (a.k.a. allocator) allocating
-memory for RBs so that the Rx handler can restock them, the worker may
-run only after the free queue has become empty (and then it is too
-late for restocking as explained above).
-
-There is a solution for that called 'emergency': If the number of used
-RB's reaches half the amount of all RB's, the Rx handler will not wait
-for the allocator but immediately allocate memory for the used RB's
-and restock the free queue.
-
-But, since the used RB's is per queue, it may happen that the used
-RB's are spread between the queues such that the emergency check will
-fail for each of the queues
-(and still run out of RBs, causing the above symptom).
-
-To fix it, move to emergency mode if the sum of *all* used RBs (for
-all Rx queues) reaches half the amount of all RB's
-
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 32 +++++++++++++-------
- 1 file changed, 21 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 27 ++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  1 +
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  2 ++
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  2 ++
+ 6 files changed, 34 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index d519e7ebdbe8..e965cc588850 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1144,6 +1144,14 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 	kfree(trans_pcie->rxq);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 146ec5065825..a049367ac08a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -973,6 +973,30 @@ const struct iwl_fw_dump_desc iwl_dump_desc_assert = {
+ };
+ IWL_EXPORT_SYMBOL(iwl_dump_desc_assert);
  
-+static void iwl_pcie_rx_move_to_allocator(struct iwl_rxq *rxq,
-+					  struct iwl_rb_allocator *rba)
++void iwl_fw_alive_error_dump(struct iwl_fw_runtime *fwrt)
 +{
-+	spin_lock(&rba->lock);
-+	list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
-+	spin_unlock(&rba->lock);
++	struct iwl_fw_dump_desc *iwl_dump_desc_no_alive =
++		kmalloc(sizeof(*iwl_dump_desc_no_alive), GFP_KERNEL);
++
++	if (!iwl_dump_desc_no_alive)
++		return;
++
++	iwl_dump_desc_no_alive->trig_desc.type =
++		cpu_to_le32(FW_DBG_TRIGGER_NO_ALIVE);
++	iwl_dump_desc_no_alive->len = 0;
++
++	if (WARN_ON(fwrt->dump.desc))
++		iwl_fw_free_dump_desc(fwrt);
++
++	IWL_WARN(fwrt, "Collecting data: trigger %d fired.\n",
++		 FW_DBG_TRIGGER_NO_ALIVE);
++
++	fwrt->dump.desc = iwl_dump_desc_no_alive;
++	iwl_fw_error_dump(fwrt);
++	clear_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &fwrt->status);
 +}
++IWL_EXPORT_SYMBOL(iwl_fw_alive_error_dump);
 +
- /*
-  * iwl_pcie_rx_reuse_rbd - Recycle used RBDs
-  *
-@@ -1175,9 +1183,7 @@ static void iwl_pcie_rx_reuse_rbd(struct iwl_trans *trans,
- 	if ((rxq->used_count % RX_CLAIM_REQ_ALLOC) == RX_POST_REQ_ALLOC) {
- 		/* Move the 2 RBDs to the allocator ownership.
- 		 Allocator has another 6 from pool for the request completion*/
--		spin_lock(&rba->lock);
--		list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
--		spin_unlock(&rba->lock);
-+		iwl_pcie_rx_move_to_allocator(rxq, rba);
+ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 			    const struct iwl_fw_dump_desc *desc,
+ 			    const struct iwl_fw_dbg_trigger_tlv *trigger)
+@@ -998,7 +1022,8 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 	    fwrt->smem_cfg.num_lmacs)
+ 		return -EIO;
  
- 		atomic_inc(&rba->req_pending);
- 		queue_work(rba->alloc_wq, &rba->rx_alloc);
-@@ -1400,10 +1406,18 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 		IWL_DEBUG_RX(trans, "Q %d: HW = SW = %d\n", rxq->id, r);
+-	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
++	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status) ||
++	    test_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &fwrt->status))
+ 		return -EBUSY;
  
- 	while (i != r) {
-+		struct iwl_rb_allocator *rba = &trans_pcie->rba;
- 		struct iwl_rx_mem_buffer *rxb;
--
--		if (unlikely(rxq->used_count == rxq->queue_size / 2))
-+		/* number of RBDs still waiting for page allocation */
-+		u32 rb_pending_alloc =
-+			atomic_read(&trans_pcie->rba.req_pending) *
-+			RX_CLAIM_REQ_ALLOC;
-+
-+		if (unlikely(rb_pending_alloc >= rxq->queue_size / 2 &&
-+			     !emergency)) {
-+			iwl_pcie_rx_move_to_allocator(rxq, rba);
- 			emergency = true;
-+		}
+ 	if (WARN_ON(fwrt->dump.desc))
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index 5b087fc4f380..0f09a2128ad2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -368,4 +368,5 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
  
- 		rxb = iwl_pcie_get_rxb(trans, rxq, i);
- 		if (!rxb)
-@@ -1425,17 +1439,13 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 			iwl_pcie_rx_allocator_get(trans, rxq);
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
  
- 		if (rxq->used_count % RX_CLAIM_REQ_ALLOC == 0 && !emergency) {
--			struct iwl_rb_allocator *rba = &trans_pcie->rba;
--
- 			/* Add the remaining empty RBDs for allocator use */
--			spin_lock(&rba->lock);
--			list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
--			spin_unlock(&rba->lock);
-+			iwl_pcie_rx_move_to_allocator(rxq, rba);
- 		} else if (emergency) {
- 			count++;
- 			if (count == 8) {
- 				count = 0;
--				if (rxq->used_count < rxq->queue_size / 3)
-+				if (rb_pending_alloc < rxq->queue_size / 3)
- 					emergency = false;
++void iwl_fw_alive_error_dump(struct iwl_fw_runtime *fwrt);
+ #endif  /* __iwl_fw_dbg_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 6d3ef331b7d5..6fede174c664 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -328,6 +328,7 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TDLS: trigger log collection upon TDLS related events.
+  * @FW_DBG_TRIGGER_TX_STATUS: trigger log collection upon tx status when
+  *  the firmware sends a tx reply.
++ * @FW_DBG_TRIGGER_NO_ALIVE: trigger log collection if alive flow fails
+  */
+ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_INVALID = 0,
+@@ -345,6 +346,7 @@ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_TX_LATENCY,
+ 	FW_DBG_TRIGGER_TDLS,
+ 	FW_DBG_TRIGGER_TX_STATUS,
++	FW_DBG_TRIGGER_NO_ALIVE,
  
- 				rxq->read = i;
+ 	/* must be last */
+ 	FW_DBG_TRIGGER_MAX,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 9ed5819defaf..ac6db5e2b3d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -88,6 +88,7 @@ struct iwl_fwrt_shared_mem_cfg {
+ 
+ enum iwl_fw_runtime_status {
+ 	IWL_FWRT_STATUS_DUMPING = 0,
++	IWL_FWRT_STATUS_WAIT_ALIVE,
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 3fee304cddbb..c5df73231ba3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -299,6 +299,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	enum iwl_ucode_type old_type = mvm->fwrt.cur_fw_img;
+ 	static const u16 alive_cmd[] = { MVM_ALIVE };
+ 
++	set_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status);
+ 	if (ucode_type == IWL_UCODE_REGULAR &&
+ 	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_START_FROM_ALIVE) &&
+ 	    !(fw_has_capa(&mvm->fw->ucode_capa,
+@@ -369,6 +370,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 		atomic_set(&mvm->mac80211_queue_stop_count[i], 0);
+ 
+ 	set_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
++	clear_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index b058b7de88be..c388e0e758e7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -788,6 +788,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	mutex_lock(&mvm->mutex);
+ 	iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 	err = iwl_run_init_mvm_ucode(mvm, true);
++	if (test_bit(IWL_FWRT_STATUS_WAIT_ALIVE, &mvm->fwrt.status))
++		iwl_fw_alive_error_dump(&mvm->fwrt);
+ 	if (!iwlmvm_mod_params.init_dbg || !err)
+ 		iwl_mvm_stop_device(mvm);
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
 -- 
 2.19.0
 
