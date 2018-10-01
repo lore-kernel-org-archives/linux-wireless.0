@@ -2,93 +2,92 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CEAFC43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 14:09:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5467FC43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 14:21:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C51CC208D9
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 14:09:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="n/C6dgI6";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gVFBL6yQ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C51CC208D9
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 1E930208D9
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 14:21:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1E930208D9
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729397AbeJAUq5 (ORCPT
+        id S1729729AbeJAU7G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:46:57 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38280 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728979AbeJAUq5 (ORCPT
+        Mon, 1 Oct 2018 16:59:06 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:41108 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729749AbeJAU7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:46:57 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 36A7260C1B; Mon,  1 Oct 2018 14:08:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402938;
-        bh=s+YLz7KxtAWc7Rib6IsHtEGaS5IxPPM7inw/rFoE/8w=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=n/C6dgI6fv663jwedq/rtU8ENydNJ9qlGmJpvboNXNlf1qcPcXpqtPMLSL8XNyaQ4
-         ect5q0gaGiB/kHbVAwzP+hMb1YBY+wqLXXitnHuYHGJ5E2LkR95mwpUlv8yGuhDlHb
-         VuxUdKh43qg03DUJQi7Noao9BcHz94XYgtBNkSGY=
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6CB64607DC;
-        Mon,  1 Oct 2018 14:08:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402937;
-        bh=s+YLz7KxtAWc7Rib6IsHtEGaS5IxPPM7inw/rFoE/8w=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=gVFBL6yQNw/sZrd7a26oD7akhTUa6DIb2KKbQWQruEWkirclolVpTau7mSIM/TgC6
-         WhyoWrqWNB8LTPtlYFN0GcgvDJCg3r7Ge0G10QJqimOt/iDuMjWFBD0k5N3FgzzKpK
-         X3FqO7WFend4WVysTXk8STIfgnmi16wQcfEc23/Q=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6CB64607DC
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wil6210: remove set but not used variable 'start'
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536669139-14848-1-git-send-email-yuehaibing@huawei.com>
-References: <1536669139-14848-1-git-send-email-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Maya Erez <merez@codeaurora.org>,
-        YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qti.qualcomm.com>,
-        <netdev@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181001140858.36A7260C1B@smtp.codeaurora.org>
-Date:   Mon,  1 Oct 2018 14:08:58 +0000 (UTC)
+        Mon, 1 Oct 2018 16:59:05 -0400
+Received: by mail-wr1-f68.google.com with SMTP id j15-v6so14176455wrt.8
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 07:21:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=y6bC53qgv8afpPYUfnR9/L3HFFkLMo6QmDvmN6dhI3w=;
+        b=oyhFaV90v2eiQGEIhr4w6fnVlo0lzafXARV5XZI2ufCIG7R5vc7ZnmtfOmoOVj8ZFQ
+         CxJMA6IeGrP3EiwprLdEpu31SAiHYp2zcvWq62hzWqv3pItWzpQspne2rDNP8zPnDRr3
+         bP3/X7NHk2iKd4lChNUy/iZlT1eVoBvaA4NANlBcc8BvFRxLC0eaJZK3ovnApY37lFm5
+         /djNeAdF5P1I7ihZFmc1zV469UzHq+3vEBa8kj534ja+kQw1jkMu7zS6phVlvqqBBevt
+         aL231Zuqf/bM3iychTodERhEk5CWXWO+PUI6RQzGAwEaR1CoYdJQDbMrMV8o2rKqqw0g
+         ZDOg==
+X-Gm-Message-State: ABuFfohQHfkstV8HdX/vUjIBDMnlB+FGPA95e5Q1opoResNLNcvWIRuH
+        XvwRVLz+oRecyc0TIb8MINpxiKLrn5Q=
+X-Google-Smtp-Source: ACcGV60gcbmdD4CbtSUW3c+Ys2TrRpAfqAKBnaNxW9c1wKvxC89WRvGJPiom/6xoCXhEjuiPTIDRgg==
+X-Received: by 2002:a05:6000:12c5:: with SMTP id l5mr6018210wrx.215.1538403661613;
+        Mon, 01 Oct 2018 07:21:01 -0700 (PDT)
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id r16-v6sm1292372wrv.21.2018.10.01.07.21.00
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 01 Oct 2018 07:21:00 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mt76x0: init: remove unnecessary configurations
+Date:   Mon,  1 Oct 2018 16:20:49 +0200
+Message-Id: <4c7c809d3af118f388e6140b6570a94a63dbc133.1538403562.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1538403562.git.lorenzo.bianconi@redhat.com>
+References: <cover.1538403562.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Remove leftover configuration for legacy devices in
+mt76x0_init_mac_registers routine. Moreover remove
+unnecessary msleep delay
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/ath/wil6210/pm.c: In function 'wil_suspend_keep_radio_on':
-> drivers/net/wireless/ath/wil6210/pm.c:193:16: warning:
->  variable 'start' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Reviewed-by: Maya Erez <merez@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+Changes since v1
+- remove msleep delay
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-ec95e84c3955 wil6210: remove set but not used variable 'start'
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index edfd5d94d197..d64594205491 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -172,12 +172,6 @@ static void mt76x0_init_mac_registers(struct mt76x0_dev *dev)
+ 	reg &= ~0x000003FF;
+ 	reg |= 0x00000201;
+ 	mt76_wr(dev, MT_WMM_CTRL, reg);
+-
+-	/* TODO: Probably not needed */
+-	mt76_wr(dev, 0x7028, 0);
+-	mt76_wr(dev, 0x7010, 0);
+-	mt76_wr(dev, 0x7024, 0);
+-	msleep(10);
+ }
+ 
+ static int mt76x0_init_wcid_mem(struct mt76x0_dev *dev)
 -- 
-https://patchwork.kernel.org/patch/10595613/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
 
