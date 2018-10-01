@@ -2,95 +2,88 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD010C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C27C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 93A7B208AE
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:56:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 595D82145D
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:57:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="i9VKB6CL";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="isxqdPfW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 93A7B208AE
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MYu24kas";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="M5M4wKoc"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 595D82145D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729332AbeJAUes (ORCPT
+        id S1729417AbeJAUfq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:34:48 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53044 "EHLO
+        Mon, 1 Oct 2018 16:35:46 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53470 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729134AbeJAUes (ORCPT
+        with ESMTP id S1729272AbeJAUfq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:34:48 -0400
+        Mon, 1 Oct 2018 16:35:46 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9038260AD8; Mon,  1 Oct 2018 13:56:52 +0000 (UTC)
+        id 31BF660866; Mon,  1 Oct 2018 13:57:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402212;
-        bh=tPgcqRFtiBweNyOpzZ/vThPsL+dCA4fSA5zVvcNpzR4=;
+        s=default; t=1538402270;
+        bh=eiHYJBUdohJ5/OHfDKqtRADf0Ubsn21ufKwhS/urvjI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=i9VKB6CL8RyYtytAh6LGcHs6bYBafAsMRlq+83kEG+mtZsnf4s4IYnHONsixkTofM
-         xi5z+87v75+5E54FK+NORP+9Nr43ZF/0fq1aUEtKgq42+SRRoh6uqEnkA6niKl2Cmr
-         k1jJx9PfBVJjx+AUxriosG2mVQeocH69C95deR+w=
+        b=MYu24kasyQzunMoFsw9crTQZpjIBjyz4bS/KPKXUU6XWTwrbqf46mkfIKHR0MYd7x
+         RtU1yrnXlvFfsm0Gz9fSWOKOLpOU1nmhMiDiGDVihDE+Y5A13g3R0+LXkpYjeMNQPy
+         3MNbs1ASfV6Poqd7aoQGYyaeYcrw420LN9tUDsGo=
 Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 220116079B;
-        Mon,  1 Oct 2018 13:56:50 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A501960376;
+        Mon,  1 Oct 2018 13:57:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402212;
-        bh=tPgcqRFtiBweNyOpzZ/vThPsL+dCA4fSA5zVvcNpzR4=;
+        s=default; t=1538402269;
+        bh=eiHYJBUdohJ5/OHfDKqtRADf0Ubsn21ufKwhS/urvjI=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=isxqdPfWg4YB9HSfI80Xi3TX/cygUhSFVjj7ltu/TGdJ0J3uVMW2tnzMv2ax7EZS0
-         D2UJXkKZAtbqmLsTz+Rt65M6eh/elDuLsqkUj6U433mB/eTbphgtFOLlKQKLoUzhBX
-         4jIURsw+oQQNnDVtCFBvo57BnUKU8W2KiLiu+qhk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 220116079B
+        b=M5M4wKocqlznRwq7IvFqlgrT/ZMx9LvvBLxcxOyv2ZsgDPkI8zvB3pMQR1x9B899k
+         tOgOeLw1aI/KOp2gPdYxM/0/MnX1qu8QFO/bD3T1sHng8yCtziBVyuHdBcc0mxgqcE
+         5Ph9ZGeCQu5iWOhSbdou/qDVbPuCpjlmI3uJor7I=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A501960376
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: Add support for configuring management packet rate
+Subject: Re: [PATCH] ath10k: Remove duplicated includes
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1536557980-11895-1-git-send-email-srirrama@codeaurora.org>
-References: <1536557980-11895-1-git-send-email-srirrama@codeaurora.org>
-To:     Sriram R <srirrama@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sriram R <srirrama@codeaurora.org>
+In-Reply-To: <20180913140121.23152-1-yuehaibing@huawei.com>
+References: <20180913140121.23152-1-yuehaibing@huawei.com>
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     <ath10k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <davem@davemloft.net>,
+        <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181001135652.9038260AD8@smtp.codeaurora.org>
-Date:   Mon,  1 Oct 2018 13:56:52 +0000 (UTC)
+Message-Id: <20181001135750.31BF660866@smtp.codeaurora.org>
+Date:   Mon,  1 Oct 2018 13:57:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sriram R <srirrama@codeaurora.org> wrote:
+YueHaibing <yuehaibing@huawei.com> wrote:
 
-> By default the firmware uses 1Mbps and 6Mbps rate for management packets
-> in 2G and 5G bands respectively. But when the user selects different
-> basic rates from the userspace, we need to send the management
-> packets at the lowest basic rate selected by the user.
+> remove duplicated include from ath10k driver.
 > 
-> This change makes use of WMI_VDEV_PARAM_MGMT_RATE param for configuring the
-> management packets rate to the firmware.
-> 
-> Chipsets Tested : QCA988X, QCA9887, QCA9984
-> FW Tested 	: 10.2.4-1.0-41, 10.4-3.6.104
-> 
-> Signed-off-by: Sriram R <srirrama@codeaurora.org>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-f279294e9ee2 ath10k: add support for configuring management packet rate
+4be3b05e7a83 ath10k: remove duplicated includes
 
 -- 
-https://patchwork.kernel.org/patch/10593571/
+https://patchwork.kernel.org/patch/10599605/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
