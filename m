@@ -2,88 +2,90 @@ Return-Path: <SRS0=txZa=MN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C27C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BCD7C43143
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:58:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 595D82145D
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:57:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25172208AE
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 13:58:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MYu24kas";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="M5M4wKoc"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 595D82145D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="xKmN9m2c"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 25172208AE
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729417AbeJAUfq (ORCPT
+        id S1729370AbeJAUgq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 Oct 2018 16:35:46 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53470 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729272AbeJAUfq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:35:46 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 31BF660866; Mon,  1 Oct 2018 13:57:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402270;
-        bh=eiHYJBUdohJ5/OHfDKqtRADf0Ubsn21ufKwhS/urvjI=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=MYu24kasyQzunMoFsw9crTQZpjIBjyz4bS/KPKXUU6XWTwrbqf46mkfIKHR0MYd7x
-         RtU1yrnXlvFfsm0Gz9fSWOKOLpOU1nmhMiDiGDVihDE+Y5A13g3R0+LXkpYjeMNQPy
-         3MNbs1ASfV6Poqd7aoQGYyaeYcrw420LN9tUDsGo=
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 1 Oct 2018 16:36:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53408 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729182AbeJAUgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 1 Oct 2018 16:36:45 -0400
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A501960376;
-        Mon,  1 Oct 2018 13:57:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538402269;
-        bh=eiHYJBUdohJ5/OHfDKqtRADf0Ubsn21ufKwhS/urvjI=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=M5M4wKocqlznRwq7IvFqlgrT/ZMx9LvvBLxcxOyv2ZsgDPkI8zvB3pMQR1x9B899k
-         tOgOeLw1aI/KOp2gPdYxM/0/MnX1qu8QFO/bD3T1sHng8yCtziBVyuHdBcc0mxgqcE
-         5Ph9ZGeCQu5iWOhSbdou/qDVbPuCpjlmI3uJor7I=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A501960376
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by mail.kernel.org (Postfix) with ESMTPSA id 6B181213A2
+        for <linux-wireless@vger.kernel.org>; Mon,  1 Oct 2018 13:58:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1538402329;
+        bh=Sp8mSpPDs0AFBacr55xCiahuVUgEPiZKFCGgRo7s5UY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=xKmN9m2cFKIMIjew7n7LpYti6cFBe3SJtMZ0PAMt4tzxveOWkYTjxB8ogmFl8FwWj
+         PfUfmbejY00s2jLQIC3acQVKCqLe2R752iAuqoGtOxQmAR7ooeH6509cxjCYPBYmsI
+         zeh/TvXuef4ql8dVboB39GIk6u+pnFL351gKYjX0=
+Received: by mail-qt1-f178.google.com with SMTP id c56-v6so9108222qtd.11
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 06:58:49 -0700 (PDT)
+X-Gm-Message-State: ABuFfoh9NmgNSExeDhu5T+7TKGL4FioZMd4pK1Y3MNz6IfxF5b2g1YgF
+        Qo10CoT9w2tV8YHV40+CraTbgCCti5dwZmJPh84=
+X-Google-Smtp-Source: ACcGV637ar6xbYPg7ENMMyB3Kq9aZLJp24DPfXK4lpAgw+xURY4c1KT2B6KI+sysYPjfkaU/i+h3KtswgChAxik0pDs=
+X-Received: by 2002:ac8:fa2:: with SMTP id b31-v6mr8706495qtk.2.1538402328662;
+ Mon, 01 Oct 2018 06:58:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: Remove duplicated includes
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180913140121.23152-1-yuehaibing@huawei.com>
-References: <20180913140121.23152-1-yuehaibing@huawei.com>
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     <ath10k@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <davem@davemloft.net>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181001135750.31BF660866@smtp.codeaurora.org>
-Date:   Mon,  1 Oct 2018 13:57:50 +0000 (UTC)
+References: <1537977579442.29538@marvell.com>
+In-Reply-To: <1537977579442.29538@marvell.com>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Mon, 1 Oct 2018 09:58:37 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA696w0JGHb+RHhPC=XipKaTKzJ=i+WBczbTR1Or86gh8w@mail.gmail.com>
+Message-ID: <CA+5PVA696w0JGHb+RHhPC=XipKaTKzJ=i+WBczbTR1Or86gh8w@mail.gmail.com>
+Subject: Re: pull-request mwifiex-firmware 2018-09-26
+To:     Ganapathi Bhat <gbhat@marvell.com>
+Cc:     Linux Firmware <linux-firmware@kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, James Cao <jcao@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>, rakeshp@marvell.com,
+        spatki@marvell.com, laksnr@marvell.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+On Wed, Sep 26, 2018 at 12:07 PM Ganapathi Bhat <gbhat@marvell.com> wrote:
+>
+> The following changes since commit 0ced724f6ed564a5e1602808163db7cfa4697f39:
+>
+>   linux-firmware: update Marvell USB8801 B0 firmware image (2018-07-20 11:00:29 +0530)
+>
+> are available in the git repository at:
+>
+>   git://git.marvell.com/mwifiex-firmware.git
+>
+> for you to fetch changes up to 52b23a9326fd8bb468b1b9e4c1816bf08bc2bc3c:
+>
+>   linux-firmware: add Marvell SD8997 firmware image (2018-09-26 21:25:40 +0530)
+>
+> ----------------------------------------------------------------
+> Ganapathi Bhat (1):
+>       linux-firmware: add Marvell SD8997 firmware image
+>
+>  WHENCE                     |   3 +++
+>  mrvl/sdsd8997_combo_v4.bin | Bin 0 -> 621896 bytes
+>  2 files changed, 3 insertions(+)
+>  create mode 100644 mrvl/sdsd8997_combo_v4.bin
 
-> remove duplicated include from ath10k driver.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Pulled and pushed out.  Thanks.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-4be3b05e7a83 ath10k: remove duplicated includes
-
--- 
-https://patchwork.kernel.org/patch/10599605/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+josh
