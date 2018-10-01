@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29956C43143
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:34:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22FAEC64EB8
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:34:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF8C220645
-	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:34:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF8C220645
+	by mail.kernel.org (Postfix) with ESMTP id D3D3520645
+	for <linux-wireless@archiver.kernel.org>; Mon,  1 Oct 2018 22:34:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D3D3520645
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726445AbeJBFOx (ORCPT
+        id S1726452AbeJBFOy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Oct 2018 01:14:53 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:33382 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726344AbeJBFOx (ORCPT
+        Tue, 2 Oct 2018 01:14:54 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:39862 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726310AbeJBFOy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Oct 2018 01:14:53 -0400
-Received: by mail-wm1-f66.google.com with SMTP id y140-v6so3576508wmd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 15:34:52 -0700 (PDT)
+        Tue, 2 Oct 2018 01:14:54 -0400
+Received: by mail-wr1-f68.google.com with SMTP id s14-v6so15704615wrw.6
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Oct 2018 15:34:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=l0Zo9P41+4voPcWp2zVCxRdduptJG1DoKRiWT/9C32A=;
-        b=d/X8A6mUssdDRSxQLthqgN1cFd1gFvi35K4NNVZ+mD+CROPLgbbMhi9npBIAKQB22g
-         gk7hG1uiRzNtfXeudJMTEm5ZUKiIhFk/wRjy/QP73YBLEbZ7M1/co4+POjupQg5wBlNf
-         JVVMB4XzqLEm//eqhsgWEdwAda6cmv7d/4ckeUrzr/RmYnEYchUoRGvuxIeGfKBrjLsK
-         4eRShA64VHAb26bdbhGbGfm0QiJ6/NFSkkpRb4DTzMEyT9h/AeY1fuTaSoxKhuLs7qdR
-         OIy3JoEdr2AS4NfbVlzEf98syl2Yy0WhG3SwjeJJsVqlRKar0sGe2Hch+NeLpbvcr6TQ
-         r45g==
-X-Gm-Message-State: ABuFfognqQ2aPZ1ZE69clBUXxY5zkc081VrWm0gY+AbiQhiBLVBDL6I+
-        RF9G6eXIUza9zNrvfPe3jGax6gWrnEc=
-X-Google-Smtp-Source: ACcGV63PKEsEkhzX3NjB27kbfDG9mkK7jSmlNfBrSm4Lv2P62M271wJDmRkscQWb3vB6lz/X83Vm2w==
-X-Received: by 2002:a1c:a9ce:: with SMTP id s197-v6mr41840wme.82.1538433291460;
-        Mon, 01 Oct 2018 15:34:51 -0700 (PDT)
-Received: from localhost.localdomain ([151.66.32.138])
-        by smtp.gmail.com with ESMTPSA id 184-v6sm22231093wmv.6.2018.10.01.15.34.50
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        bh=JQMWeu/Y+HSiCPK0Yq/HYKol7u7d2Ms7V9tD/llzlw8=;
+        b=JZCAifZG7NJgBCrtlaVLyqX8KxUZg71jlUAokv4R3EkWRP0At5AyXHrh62GCw6tfqO
+         bv6sBqKTPGfMMIkG9nq6DeB19+28fQ7Qn9CnYXbpWy+v9OP7TF72dL8LnOuP3g3TRrBR
+         6H0HtCDMPmwIHkEgCmH/lgosw2RBw76bfTjqJuqT/EFwD4rTrBiGVW1m7A7HLQlZY239
+         1DUcQcndpQ9RlVQhUB9Vuxr7OAaq4nxO+bUD1FWnkmc/d40yzJc9EosTqgDte/CzpHkB
+         v9prZoBt4UIbf3MI9o2LPZZinVqumNuhRHyIrupmr53Gn6yXcr5FczHk7ULjLEZzJ4Bf
+         FPyw==
+X-Gm-Message-State: ABuFfoh/akcmfJd7jX7uZTPPjDHxVtaQ2Q8PsHdq44fh0rEfJ/vv42wL
+        4FCR12WH1MtpMyr7y7+0MkVvHQ==
+X-Google-Smtp-Source: ACcGV63XXxQ/ymt5xqMIYdfFxn0G1AnJ20DgOZbPHKl3kQuWHNApGV72ujtkAPyUA9XiHmPzgtyFsA==
+X-Received: by 2002:adf:ec11:: with SMTP id x17-v6mr8487346wrn.266.1538433290317;
         Mon, 01 Oct 2018 15:34:50 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.32.138])
+        by smtp.gmail.com with ESMTPSA id 184-v6sm22231093wmv.6.2018.10.01.15.34.49
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 01 Oct 2018 15:34:49 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] mt76x2: remove leftover function declatarions
-Date:   Tue,  2 Oct 2018 00:34:29 +0200
-Message-Id: <20181001223429.21061-4-lorenzo.bianconi@redhat.com>
+Subject: [PATCH 2/3] mt76: rename mt76x02_util.h in mt76x02.h
+Date:   Tue,  2 Oct 2018 00:34:28 +0200
+Message-Id: <20181001223429.21061-3-lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -59,40 +59,419 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove following function declarations since they have been moved
-to mt76x02-lib module:
-- mt76x2_sta_add
-- mt76x2_sta_remove
-- mt76x2_remove_interface
-- mt76x2_conf_tx
-- mt76x2_txq_init
+Rename mt76x02_util.h header file in mt76x02.h since now contains
+all mt76x02 related definitions and not just utility routines
+declarations
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h | 10 ----------
- 1 file changed, 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c             | 3 ---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c              | 4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c             | 3 +--
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h           | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c              | 2 --
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c              | 1 -
+ .../net/wireless/mediatek/mt76/{mt76x02_util.h => mt76x02.h} | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c             | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c            | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c            | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c        | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c            | 5 +----
+ drivers/net/wireless/mediatek/mt76/mt76x2/mac.c              | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/mac.h              | 3 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c              | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h           | 4 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h          | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c         | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c          | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_dma.c          | 2 --
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c         | 2 --
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c          | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c         | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c          | 1 -
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c           | 2 --
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c         | 3 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c         | 1 -
+ 27 files changed, 15 insertions(+), 56 deletions(-)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x02_util.h => mt76x02.h} (98%)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index d0f2ee6d7040..ee2b8e885608 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -18,9 +18,6 @@
+ #include "eeprom.h"
+ #include "trace.h"
+ #include "mcu.h"
+-#include "../mt76x02_util.h"
+-#include "../mt76x02_dma.h"
+-
+ #include "initvals.h"
+ 
+ static void mt76x0_vht_cap_mask(struct ieee80211_supported_band *sband)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+index 793297cd6bf1..7a422c590211 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+@@ -13,10 +13,10 @@
+  * GNU General Public License for more details.
+  */
+ 
++#include <linux/etherdevice.h>
++
+ #include "mt76x0.h"
+ #include "trace.h"
+-#include "../mt76x02_util.h"
+-#include <linux/etherdevice.h>
+ 
+ void mt76x0_mac_set_protection(struct mt76x02_dev *dev, bool legacy_prot,
+ 			       int ht_mode)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 7803aa00491e..c9cd0254a979 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -13,9 +13,8 @@
+  * GNU General Public License for more details.
+  */
+ 
+-#include "mt76x0.h"
+-#include "../mt76x02_util.h"
+ #include <linux/etherdevice.h>
++#include "mt76x0.h"
+ 
+ int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 237407200908..1bff2be45a13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -25,10 +25,7 @@
+ #include <net/mac80211.h>
+ #include <linux/debugfs.h>
+ 
+-#include "../mt76.h"
+-#include "../mt76x02_regs.h"
+-#include "../mt76x02_mac.h"
+-#include "../mt76x02_util.h"
++#include "../mt76x02.h"
+ #include "eeprom.h"
+ 
+ #define MT_CALIBRATE_INTERVAL		(4 * HZ)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index 80c6b1ca9065..55c62e40499b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -20,8 +20,6 @@
+ 
+ #include "mt76x0.h"
+ #include "mcu.h"
+-#include "../mt76x02_dma.h"
+-#include "../mt76x02_util.h"
+ 
+ static int mt76x0e_start(struct ieee80211_hw *hw)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+index d77de5f43920..2080933efa2e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -18,7 +18,6 @@
+ #include "mt76x0.h"
+ #include "mcu.h"
+ #include "trace.h"
+-#include "../mt76x02_util.h"
+ #include "../mt76x02_usb.h"
+ 
+ static struct usb_device_id mt76x0_device_table[] = {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+similarity index 98%
+rename from drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+rename to drivers/net/wireless/mediatek/mt76/mt76x02.h
+index 0121902658ff..96c7b1028608 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+@@ -20,8 +20,11 @@
+ 
+ #include <linux/kfifo.h>
+ 
++#include "mt76.h"
++#include "mt76x02_regs.h"
+ #include "mt76x02_mac.h"
+ #include "mt76x02_dfs.h"
++#include "mt76x02_dma.h"
+ 
+ struct mt76x02_mac_stats {
+ 	u64 rx_stat[6];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+index a743f1c5fa55..07b3217ecb51 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+@@ -15,10 +15,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#include "mt76.h"
+-#include "mt76x02_regs.h"
+-#include "mt76x02_mac.h"
+-#include "mt76x02_util.h"
++#include "mt76x02.h"
+ 
+ enum mt76x02_cipher_type
+ mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+index 1146fbfd8df5..af95b6708eaf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+@@ -17,10 +17,7 @@
+ 
+ #include <linux/kernel.h>
+ 
+-#include "mt76.h"
+-#include "mt76x02_dma.h"
+-#include "mt76x02_util.h"
+-#include "mt76x02_mac.h"
++#include "mt76x02.h"
+ 
+ static int
+ mt76x02_init_tx_queue(struct mt76_dev *dev, struct mt76_queue *q,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
+index caa9bb107e68..24298b7ddd7d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
+@@ -17,10 +17,7 @@
+ 
+ #include <linux/kernel.h>
+ 
+-#include "mt76.h"
+-#include "mt76x02_regs.h"
+-#include "mt76x02_dma.h"
+-#include "mt76x02_util.h"
++#include "mt76x02.h"
+ 
+ void mt76x02_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 		struct sk_buff *skb)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index dea944b43576..a0cd77ddaef3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -14,10 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#include "mt76.h"
+-#include "mt76x02_dma.h"
+-#include "mt76x02_mac.h"
+-#include "mt76x02_util.h"
++#include "mt76x02.h"
+ 
+ static int mt76x02u_check_skb_rooms(struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 8a099253b28d..9be98f4af14b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -16,10 +16,7 @@
+  */
+ 
+ #include <linux/module.h>
+-#include "mt76.h"
+-#include "mt76x02_regs.h"
+-#include "mt76x02_mac.h"
+-#include "mt76x02_util.h"
++#include "mt76x02.h"
+ 
+ #define CCK_RATE(_idx, _rate) {					\
+ 	.bitrate = _rate,					\
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.c
+index 9ebb219d63ae..e25905c91ee2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.c
+@@ -16,7 +16,6 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "../mt76x02_util.h"
+ 
+ void mt76x2_mac_stop(struct mt76x02_dev *dev, bool force)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
+index f1077f96a8a4..6bd04b74e15a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mac.h
+@@ -17,8 +17,7 @@
+ #ifndef __MT76x2_MAC_H
+ #define __MT76x2_MAC_H
+ 
+-#include "../mt76.h"
+-#include "../mt76x02_mac.h"
++#include "mt76x2.h"
+ 
+ struct mt76x02_dev;
+ struct mt76x2_sta;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
+index 7d944f50956a..134037a227d7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
+@@ -22,7 +22,6 @@
+ #include "mt76x2.h"
+ #include "mcu.h"
+ #include "eeprom.h"
+-#include "../mt76x02_dma.h"
+ 
+ int mt76x2_mcu_set_channel(struct mt76x02_dev *dev, u8 channel, u8 bw,
+ 			   u8 bw_index, bool scan)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-index 62a211563056..c4d1e5d8cea2 100644
+index c7d5e666cc65..62a211563056 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-@@ -111,16 +111,6 @@ void mt76x2_init_txpower(struct mt76x02_dev *dev,
- 			 struct ieee80211_supported_band *sband);
- void mt76_write_mac_initvals(struct mt76x02_dev *dev);
+@@ -36,9 +36,7 @@
  
--int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		   struct ieee80211_sta *sta);
--int mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		      struct ieee80211_sta *sta);
--void mt76x2_remove_interface(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif);
--int mt76x2_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		   u16 queue, const struct ieee80211_tx_queue_params *params);
--void mt76x2_txq_init(struct mt76x02_dev *dev, struct ieee80211_txq *txq);
--
- void mt76x2_phy_tssi_compensate(struct mt76x02_dev *dev, bool wait);
- void mt76x2_phy_set_txpower_regs(struct mt76x02_dev *dev,
- 				 enum nl80211_band band);
+ #define MT_CALIBRATE_INTERVAL	HZ
+ 
+-#include "../mt76.h"
+-#include "../mt76x02_regs.h"
+-#include "../mt76x02_util.h"
++#include "../mt76x02.h"
+ #include "mac.h"
+ #include "dfs.h"
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
+index b3270b0b0930..6e932b5010ef 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
+@@ -21,7 +21,6 @@
+ 
+ #include "mt76x2.h"
+ #include "mcu.h"
+-#include "../mt76x02_dma.h"
+ 
+ #define MT7612U_EEPROM_SIZE		512
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
+index 6da12fca668c..1738e025a57e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
+@@ -17,7 +17,6 @@
+ #include <linux/delay.h>
+ #include "mt76x2.h"
+ #include "trace.h"
+-#include "../mt76x02_util.h"
+ 
+ void mt76x2_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
+index b36286bc8b69..c0a3485e96f6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dfs.c
+@@ -15,7 +15,6 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "../mt76x02_util.h"
+ 
+ #define RADAR_SPEC(m, len, el, eh, wl, wh,		\
+ 		   w_tolerance, tl, th, t_tolerance,	\
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dma.c
+index 35f0ceb7094b..2859812ac47a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_dma.c
+@@ -15,8 +15,6 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "../mt76x02_dma.h"
+-#include "../mt76x02_util.h"
+ 
+ void mt76x2_tx_tasklet(unsigned long data)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+index c8077d4a62aa..5f6e31f4a69a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+@@ -18,8 +18,6 @@
+ #include "mt76x2.h"
+ #include "eeprom.h"
+ #include "mcu.h"
+-#include "../mt76x02_util.h"
+-#include "../mt76x02_dma.h"
+ 
+ static void
+ mt76x2_mac_pbf_init(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
+index 4538afc7e50e..981633cbd527 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
+@@ -19,7 +19,6 @@
+ #include "mcu.h"
+ #include "eeprom.h"
+ #include "trace.h"
+-#include "../mt76x02_util.h"
+ 
+ void mt76x2_mac_set_bssid(struct mt76x02_dev *dev, u8 idx, const u8 *addr)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+index 9f42372acd81..8773ed4af51d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+@@ -15,7 +15,6 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "../mt76x02_util.h"
+ 
+ static int
+ mt76x2_start(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
+index a17c9a5279ad..898aa229671c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
+@@ -21,7 +21,6 @@
+ #include "mt76x2.h"
+ #include "mcu.h"
+ #include "eeprom.h"
+-#include "../mt76x02_dma.h"
+ 
+ static int
+ mt76pci_load_rom_patch(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c
+index ab9cb632222c..cfc9d3d207df 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_tx.c
+@@ -15,8 +15,6 @@
+  */
+ 
+ #include "mt76x2.h"
+-#include "../mt76x02_util.h"
+-#include "../mt76x02_dma.h"
+ 
+ struct beacon_bc_data {
+ 	struct mt76x02_dev *dev;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+index 0e1a97e406a8..01f096f36fa2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+@@ -17,9 +17,8 @@
+ #include <linux/delay.h>
+ 
+ #include "mt76x2u.h"
+-#include "../mt76x02_util.h"
+-#include "../mt76x02_phy.h"
+ #include "eeprom.h"
++#include "../mt76x02_phy.h"
+ #include "../mt76x02_usb.h"
+ 
+ static void mt76x2u_init_dma(struct mt76x02_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
+index 6c7699278582..224609d6915f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
+@@ -15,7 +15,6 @@
+  */
+ 
+ #include "mt76x2u.h"
+-#include "../mt76x02_util.h"
+ 
+ static int mt76x2u_start(struct ieee80211_hw *hw)
+ {
 -- 
 2.19.0
 
