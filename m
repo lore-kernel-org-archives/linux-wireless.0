@@ -3,410 +3,846 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA92C43143
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Oct 2018 16:33:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5291CC43143
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Oct 2018 17:06:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5BC42083F
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 Oct 2018 16:33:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E65342064A
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 Oct 2018 17:06:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ojQckTkN";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="a0oDOi6O"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A5BC42083F
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dKwx8H/j";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="O3UEALL0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E65342064A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727707AbeJBXRo (ORCPT
+        id S1728397AbeJBXvC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Oct 2018 19:17:44 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:45548 "EHLO
+        Tue, 2 Oct 2018 19:51:02 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33652 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726525AbeJBXRo (ORCPT
+        with ESMTP id S1726572AbeJBXvB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Oct 2018 19:17:44 -0400
+        Tue, 2 Oct 2018 19:51:01 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 375EF60C1B; Tue,  2 Oct 2018 16:33:29 +0000 (UTC)
+        id 2D0A560C4F; Tue,  2 Oct 2018 17:06:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538498009;
-        bh=22FkYbxkQjMVzgFZpxXpi7vf98Y/SE3hMIV/08rxGQg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ojQckTkNy1AVnZVY4Ma5wQWojJt900gWj3bFar5RqQsYO8kmfVp77qquAJZXK0EF6
-         dnSWTiR2ne5K2pg4s91TqKH72TmUAMMAM6XAqAOefw1LFQ0/MznIpCWTCRazrMRjGD
-         +0qqWgRyrJHOGM5eWVeTplCZaHnHmcleNqEY2Wko=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 1A9B7601A1;
-        Tue,  2 Oct 2018 16:33:27 +0000 (UTC)
+        s=default; t=1538499998;
+        bh=fmeCrpVSoaUflnciOmlRDNaL5Ik8UhTpMaIp4of9gCQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=dKwx8H/jiWskSoE6z03z5qIsiJzfxMTEOioybR2WhzvS/2ltJdkm1zRiYEjfiOVeY
+         HbWWgGvEhjJ48MS8wUUX6dfdXE3PTorvk4WqWgAKGGdO/xBiIsqDyAb/JF7+BJci1V
+         ErR26lpenpawVRSBfHgmdnx3EIMSQcxp0v21baNY=
+Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CE8F060C1D;
+        Tue,  2 Oct 2018 17:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538498007;
-        bh=22FkYbxkQjMVzgFZpxXpi7vf98Y/SE3hMIV/08rxGQg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=a0oDOi6OOstSbrtpscWB82KSm/mGQddg2Zn6u4ckHBS+F7mrQg3wg9wk19CW53laE
-         dH+F1LJNBXmcqAVC1+lnFk70RYrrEm0AFKwb6aKjcEnkQb6lFQK3+alv2/rkZfuap/
-         4sCB8FKzXlZf8oZdOS/h84hO4AXefm7Hlnsz5oxs=
+        s=default; t=1538499996;
+        bh=fmeCrpVSoaUflnciOmlRDNaL5Ik8UhTpMaIp4of9gCQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=O3UEALL0NZEuI+SepbfmO7i3MQy1vxJ8BaeWS0npgefcZVZwTLgbfftRF9YBJOVF/
+         q+22HdgdS2SUPwYypxxTI7ZVQNewkzj8cMg/o1kqF1RqEx/RqPNc+rgTkoXnhupQo3
+         cD3mHGgc5n+eMsVLBpjaS2smiukkr0uwUGpaZyUY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CE8F060C1D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     David Miller <davem@davemloft.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers-next 2018-10-02
+Date:   Tue, 02 Oct 2018 20:06:30 +0300
+Message-ID: <87ftxojn1l.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_8ae9499de0c834b6d7bb75e5b180f67a"
-Date:   Tue, 02 Oct 2018 09:33:27 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     Jonathan Morton <chromatix99@gmail.com>, Kan Yan <kyan@google.com>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless-owner@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [Make-wifi-fast] [PATCH RFC v4 3/4] mac80211: Add airtime
- accounting and scheduling to TXQs
-In-Reply-To: <87a7nwbvwu.fsf@toke.dk>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
- <153711973134.9231.18038849900399644494.stgit@alrua-x1.karlstad.toke.dk>
- <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org> <87pnx0haud.fsf@toke.dk>
- <8f7145bf5abe50194bced025a5e739b9@codeaurora.org>
- <863bc54fbf04441d38dd53f523300a7e@codeaurora.org>
- <93015743-5D16-4D79-948F-E2F46CF2450A@toke.dk>
- <7ba8513b0ec5a7c35b396c7739fc2d7d@codeaurora.org> <87zhw2eyfo.fsf@toke.dk>
- <5d961a5f61de45b85b1b037bcef9270d@codeaurora.org>
- <44B09168-C08F-4C85-8D74-D576CCC79880@gmail.com>
- <586459da6ec36edc2284df8533915d62@codeaurora.org>
- <4929C006-3452-4C17-9500-8D7485EB538E@toke.dk>
- <0531def170ef7f9cadcf85a6dc9af22b@codeaurora.org> <87a7nwbvwu.fsf@toke.dk>
-Message-ID: <a5a7e11d6913c32385cc74ea3d0e1c76@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---=_8ae9499de0c834b6d7bb75e5b180f67a
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Hi Dave,
 
-On 2018-10-02 01:22, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->>> Great! I'll fold in the rest, test it with ath9k and submit as a 
->>> proper
->>> patch :)
->>> 
->> Toke,
->> 
->> I noticed a race condition b/w sta cleanup and kick_airtime tasklet.
->> How do you plan to exit kick_airtime gracefully during sta_cleanup?
-> 
-> Ah, right, there's a lot of stuff going on before we get to purge_txq.
-> Hmm, I guess we should either make sure we remove the station from
-> active_txqs earlier in the sta cleanup process, or maybe it'd enough to
-> just check the removed flag in the tasklet?
-> 
-> Does the below patch fix the issue?
-> 
+here's the first pull request to net-next for 4.20. This is rather large
+due to mt76 refactoring and me not being able to send the pull request
+earlier, sorry about that.
 
-No. Attaching backtrace. Any clue?
+Most of this has been in linux-next for some time now so I'm hoping
+there should not be any nasty surprises, but please let me know if you
+have any problems.
 
--Rajkumar
---=_8ae9499de0c834b6d7bb75e5b180f67a
-Content-Transfer-Encoding: base64
-Content-Type: text/plain;
- name=sta_remove.txt
-Content-Disposition: attachment;
- filename=sta_remove.txt;
- size=16773
+Kalle
 
-WyAgNjEyLjA4NDY4NV0gSU5GTzogcmN1X3ByZWVtcHQgc2VsZi1kZXRlY3RlZCBzdGFsbCBvbiBD
-UFUgeyAwfSAgKHQ9MjEwMSBqaWZmaWUNCnMgZz0zNjQzIGM9MzY0MiBxPTEwNykNClsgIDYxMi4w
-OTI2ODldIENQVTogMCBQSUQ6IDAgQ29tbTogc3dhcHBlci8wIE5vdCB0YWludGVkIDMuMTQuNzcg
-IzkNClsgIDYxMi4wOTQ3MDJdIElORk86IHJjdV9wcmVlbXB0IGRldGVjdGVkIHN0YWxscyBvbiBD
-UFVzL3Rhc2tzOiB7IDB9IChkZXRlY3RlZCBiDQp5IDEsIHQ9MjEwMiBqaWZmaWVzLCBnPTM2NDMs
-IGM9MzY0MiwgcT0xMDcpDQpbICA2MTIuMDk0NzA1XSBUYXNrIGR1bXAgZm9yIENQVSAwOg0KWyAg
-NjEyLjA5NDcxNl0gc3dhcHBlci8wICAgICAgIFIgcnVubmluZyAgICAgIDAgICAgIDAgICAgICAw
-IDB4MDAwMDEwMDINClsgIDYxMi4wOTQ3NDVdIFs8YzAyMGVjMjA+XSAoX19zY2hlZHVsZSkgZnJv
-bSBbPGMwMjE4MzA0Pl0gKGFyY2hfY3B1X2lkbGUrMHgzOC8wDQp4NWMpDQpbICA2MTIuMDk0ODM0
-XSBbPGMwMjE4MzA0Pl0gKGFyY2hfY3B1X2lkbGUpIGZyb20gWzxmZmZmZmZmZj5dICgweGZmZmZm
-ZmZmKQ0KWyAgNjEyLjEzMzE0OV0gWzxjMDIxZDlhYz5dICh1bndpbmRfYmFja3RyYWNlKSBmcm9t
-IFs8YzAyMWFhNDA+XSAoc2hvd19zdGFjaysweDENCjAvMHgxNCkNClsgIDYxMi4xNDA4NzRdIFs8
-YzAyMWFhNDA+XSAoc2hvd19zdGFjaykgZnJvbSBbPGMwM2M1OWQ0Pl0gKGR1bXBfc3RhY2srMHg4
-MC8weGEwDQopDQpbICA2MTIuMTQ4MDc5XSBbPGMwM2M1OWQ0Pl0gKGR1bXBfc3RhY2spIGZyb20g
-WzxjMDI2ZTFkYz5dIChyY3VfY2hlY2tfY2FsbGJhY2tzKw0KMHgyMzAvMHg2YTgpDQpbICA2MTIu
-MTU2MjM5XSBbPGMwMjZlMWRjPl0gKHJjdV9jaGVja19jYWxsYmFja3MpIGZyb20gWzxjMDIzODgx
-ND5dICh1cGRhdGVfcHJvYw0KZXNzX3RpbWVzKzB4MzgvMHg1OCkNClsgIDYxMi4xNjUwOTJdIFs8
-YzAyMzg4MTQ+XSAodXBkYXRlX3Byb2Nlc3NfdGltZXMpIGZyb20gWzxjMDI3Njc4MD5dICh0aWNr
-X3NjaGVkDQpfdGltZXIrMHg0NC8weDc0KQ0KWyAgNjEyLjE3MzY4M10gWzxjMDI3Njc4MD5dICh0
-aWNrX3NjaGVkX3RpbWVyKSBmcm9tIFs8YzAyNGE4Mjg+XSAoX19ydW5faHJ0aW1lcisNCjB4NTAv
-MHhjOCkNClsgIDYxMi4xODE2NjhdIFs8YzAyNGE4Mjg+XSAoX19ydW5faHJ0aW1lcikgZnJvbSBb
-PGMwMjRhZmY4Pl0gKGhydGltZXJfaW50ZXJydXB0DQorMHgxMzAvMHgyN2MpDQpbICA2MTIuMTg5
-OTE3XSBbPGMwMjRhZmY4Pl0gKGhydGltZXJfaW50ZXJydXB0KSBmcm9tIFs8YzA1MTc1YWM+XSAo
-bXNtX3RpbWVyX2ludA0KZXJydXB0KzB4MzgvMHg0NCkNClsgIDYxMi4xOTg1MTBdIFs8YzA1MTc1
-YWM+XSAobXNtX3RpbWVyX2ludGVycnVwdCkgZnJvbSBbPGMwMjY4YTZjPl0gKGhhbmRsZV9wZXJj
-DQpwdV9kZXZpZF9pcnErMHg2OC8weDg0KQ0KWyAgNjEyLjIwNzYyNV0gWzxjMDI2OGE2Yz5dICho
-YW5kbGVfcGVyY3B1X2RldmlkX2lycSkgZnJvbSBbPGMwMjY1M2UwPl0gKGdlbmVyaWMNCl9oYW5k
-bGVfaXJxKzB4MjAvMHgzMCkNClsgIDYxMi4yMTY2NTNdIFs8YzAyNjUzZTA+XSAoZ2VuZXJpY19o
-YW5kbGVfaXJxKSBmcm9tIFs8YzAyMTgwM2M+XSAoaGFuZGxlX0lSUSswDQp4NjgvMHg5MCkNClsg
-IDYxMi4yMjQ1NDhdIFs8YzAyMTgwM2M+XSAoaGFuZGxlX0lSUSkgZnJvbSBbPGMwMjA4NGUwPl0g
-KGdpY19oYW5kbGVfaXJxKzB4M2MvDQoweDYwKQ0KWyAgNjEyLjIzMjEwMV0gWzxjMDIwODRlMD5d
-IChnaWNfaGFuZGxlX2lycSkgZnJvbSBbPGMwMjA5NWMwPl0gKF9faXJxX3N2YysweDQwLzANCng3
-MCkNClsgIDYxMi4yMzk1NjJdIEV4Y2VwdGlvbiBzdGFjaygweGMwODVkZTY4IHRvIDB4YzA4NWRl
-YjApDQpbICA2MTIuMjQ0NTk3XSBkZTYwOiAgICAgICAgICAgICAgICAgICAwMDAwMDAwMCBkNjU0
-OTBhMCAwMDAwMDAwMCAwMDAwMDAxMCBkNGQyMA0KZDE4IGQ0ZDIwZDAwDQpbICA2MTIuMjUyNzU4
-XSBkZTgwOiBkNGQyMGMyMCAwMDAwMDAwMiAwMDAwMDAzMCAwMDAwMDAxOCBkNjU0OTAwMCAwMDAw
-MDAwNiAwMDAwMA0KMDAwIGMwODVkZWIwDQpbICA2MTIuMjYwOTE3XSBkZWEwOiBiZjg0YmM5NCBj
-MDIwY2IyNCA2MDAwMDExMyBmZmZmZmZmZg0KWyAgNjEyLjI2NTk1OV0gWzxjMDIwOTVjMD5dIChf
-X2lycV9zdmMpIGZyb20gWzxjMDIwY2IyND5dIChfdGVzdF9hbmRfY2xlYXJfYml0KzANCngzYy8w
-eDQ4KQ0KWyAgNjEyLjI3MzkxNV0gWzxjMDIwY2IyND5dIChfdGVzdF9hbmRfY2xlYXJfYml0KSBm
-cm9tIFs8YmY4NGJjOTQ+XSAoaWVlZTgwMjExX2sNCmlja19haXJ0aW1lKzB4OTAvMHgxYTggW21h
-YzgwMjExXSkNClsgIDYxMi4yODQwMjhdIFs8YmY4NGJjOTQ+XSAoaWVlZTgwMjExX2tpY2tfYWly
-dGltZSBbbWFjODAyMTFdKSBmcm9tIFs8YzAyMzMxZWM+DQpdICh0YXNrbGV0X2FjdGlvbisweDhj
-LzB4ZWMpDQpbICA2MTIuMjkzNDc0XSBbPGMwMjMzMWVjPl0gKHRhc2tsZXRfYWN0aW9uKSBmcm9t
-IFs8YzAyMzI3ZTQ+XSAoX19kb19zb2Z0aXJxKzB4MQ0KMDQvMHgyOTQpDQpbICA2MTIuMzAxMzcw
-XSBbPGMwMjMyN2U0Pl0gKF9fZG9fc29mdGlycSkgZnJvbSBbPGMwMjMyYzYwPl0gKGlycV9leGl0
-KzB4OWMvMHgxMQ0KYykNClsgIDYxMi4zMDg2NjNdIFs8YzAyMzJjNjA+XSAoaXJxX2V4aXQpIGZy
-b20gWzxjMDIxODA0MD5dIChoYW5kbGVfSVJRKzB4NmMvMHg5MCkNClsgIDYxMi4zMTU2OTVdIFs8
-YzAyMTgwNDA+XSAoaGFuZGxlX0lSUSkgZnJvbSBbPGMwMjA4NGUwPl0gKGdpY19oYW5kbGVfaXJx
-KzB4M2MvDQoweDYwKQ0KWyAgNjEyLjMyMzI0NF0gWzxjMDIwODRlMD5dIChnaWNfaGFuZGxlX2ly
-cSkgZnJvbSBbPGMwMjA5NWMwPl0gKF9faXJxX3N2YysweDQwLzANCng3MCkNClsgIDYxMi4zMzA3
-MDZdIEV4Y2VwdGlvbiBzdGFjaygweGMwODVkZjYwIHRvIDB4YzA4NWRmYTgpDQpbICA2MTIuMzM1
-NzQ0XSBkZjYwOiBmZmZmZmZlZCAwMDAwMDAwMCAxZDNjMjAwMCBjMDIwYTA0MCBjMDg1YzAwMCBj
-MDg1YzAzMCBmZmZmZg0KZmZmIGMwOGIzMDE0DQpbICA2MTIuMzQzOTAzXSBkZjgwOiBjMDg2NDNj
-MCBjMDg1MzljOCBkZGZmY2M4MCBjMDhiMzAxMCBjMDg2ZDI4OCBjMDg1ZGZhOCBjMDIxOA0KMzAw
-IGMwMjE4MzA0DQpbICA2MTIuMzUyMDYxXSBkZmEwOiA2MDAwMDAxMyBmZmZmZmZmZg0KWyAgNjEy
-LjM1NTUzOV0gWzxjMDIwOTVjMD5dIChfX2lycV9zdmMpIGZyb20gWzxjMDIxODMwND5dIChhcmNo
-X2NwdV9pZGxlKzB4MzgvMHgNCjVjKQ0KWyAgNjEyLjM2MjkxOF0gWzxjMDIxODMwND5dIChhcmNo
-X2NwdV9pZGxlKSBmcm9tIFs8YzAyNjUzNGM+XSAoY3B1X3N0YXJ0dXBfZW50cnkNCisweGE0LzB4
-MTA4KQ0KWyAgNjEyLjM3MTA4NF0gWzxjMDI2NTM0Yz5dIChjcHVfc3RhcnR1cF9lbnRyeSkgZnJv
-bSBbPGMwODMyYWYwPl0gKHN0YXJ0X2tlcm5lbCsNCjB4MzU4LzB4M2NjKQ0KWyAgNjMyLjIwNDY4
-N10gQlVHOiBzb2Z0IGxvY2t1cCAtIENQVSMxIHN0dWNrIGZvciAyMnMhIFtubWJkOjE0NThdDQpb
-ICA2MzIuMjA5NTY5XSBNb2R1bGVzIGxpbmtlZCBpbjogYXRoMTBrX3BjaSBhdGgxMGtfY29yZSBh
-dGggbWFjODAyMTEgY2ZnODAyMTEgYw0Kb21wYXQgZWNtIGlwdGFibGVfbmF0IG5mX25hdF9wcHRw
-IG5mX25hdF9pcHY0IG5mX25hdF9hbWFuZGEgbmZfY29ubnRyYWNrX3BwdHAgbmYNCl9jb25udHJh
-Y2tfaXB2NiBuZl9jb25udHJhY2tfaXB2NCBuZl9jb25udHJhY2tfYW1hbmRhIHh0X3RpbWUgeHRf
-dGNwdWRwIHh0X3RjcG1zDQpzIHh0X3N0cmluZyB4dF9zdGF0aXN0aWMgeHRfc3RhdGUgeHRfcmVj
-ZW50IHh0X3F1b3RhIHh0X3BvbGljeSB4dF9wa3R0eXBlIHh0X3BoeQ0Kc2RldiB4dF9vd25lciB4
-dF9uYXQgeHRfbXVsdGlwb3J0IHh0X21hcmsgeHRfbWFjIHh0X2xpbWl0IHh0X2xlbmd0aCB4dF9o
-bCB4dF9oZWwNCnBlciB4dF9lc3AgeHRfZWNuIHh0X2RzY3AgeHRfY29ubnRyYWNrIHh0X2Nvbm5t
-YXJrIHh0X2Nvbm5saW1pdCB4dF9jb25uYnl0ZXMgeHRfDQpjb21tZW50IHh0X2FkZHJ0eXBlIHh0
-X1RDUE1TUyB4dF9SRURJUkVDVCB4dF9MT0cgeHRfSEwgeHRfRFNDUCB4dF9DVCB4dF9DTEFTU0lG
-WQ0KIHVzYm5ldCB0c19rbXAgdHNfZnNtIHRzX2JtIHI4MTUyIHBwcG9lIHBwcF9tcHBlIHBwcF9h
-c3luYyBuZl9uYXRfdGZ0cCBuZl9uYXRfc24NCm1wX2Jhc2ljIG5mX25hdF9zaXAgbmZfbmF0X3J0
-c3AgbmZfbmF0X3Byb3RvX2dyZSBuZl9uYXRfaXJjIG5mX25hdF9oMzIzIG5mX25hdF9mDQp0cCBu
-Zl9kZWZyYWdfaXB2NiBuZl9kZWZyYWdfaXB2NCBuZl9jb25udHJhY2tfdGZ0cCBuZl9jb25udHJh
-Y2tfc25tcCBuZl9jb25udHJhYw0Ka19zaXAgbmZfY29ubnRyYWNrX3J0c3AgbmZfY29ubnRyYWNr
-X3Byb3RvX2dyZSBuZl9jb25udHJhY2tfaXJjIG5mX2Nvbm50cmFja19oMzINCjMgbmZfY29ubnRy
-YWNrX2Z0cCBuZl9jb25udHJhY2tfYnJvYWRjYXN0IGwydHBfcHBwIGlwdGFibGVfcmF3IGlwdGFi
-bGVfbWFuZ2xlIGlwDQp0YWJsZV9maWx0ZXIgaXB0X2FoIGlwdF9SRUpFQ1QgaXB0X01BU1FVRVJB
-REUgaXB0X0VDTiBpcF90YWJsZXMgY3JjX2NjaXR0IGFycHRhYg0KbGVfZmlsdGVyIGFycHRfbWFu
-Z2xlIGFycF90YWJsZXMgc2NoX3RlcWwgc2NoX3RiZiBzY2hfc2ZxIHNjaF9yZWQgc2NoX3ByaW8g
-c2NoX3ANCmllIHNjaF9odGIgc2NoX2dyZWQgc2NoX2ZxIHNjaF9kc21hcmsgc2NoX2NvZGVsIGVt
-X3RleHQgZW1fbmJ5dGUgZW1fbWV0YSBlbV9jbXANCmNsc19iYXNpYyBhY3RfcG9saWNlIGFjdF9p
-cHQgYWN0X2Nvbm5tYXJrIGFjdF9za2JlZGl0IGFjdF9taXJyZWQgZW1fdTMyIGNsc191MzINCmNs
-c190Y2luZGV4IGNsc19mbG93IGNsc19yb3V0ZSBjbHNfZncgc2NoX2hmc2Mgc2NoX2luZ3Jlc3Mg
-cWNhX25zc19pcHNlYyBxY2FfbnNzDQpfY2ZpX29jZiBxY2FfbnNzX3R1bmlwaXA2IHFjYV9uc3Nf
-dHVuNnJkIHFjYV9uc3NfaXBzZWNtZ3IgcWNhX25zc19jZmlfY3J5cHRvYXBpDQpxY2FfbnNzX3Fk
-aXNjIHFjYV9uc3NfbWFjc2VjIHFjYV9uc3NfY3J5cHRvX3Rvb2wgcWNhX25zc19jcnlwdG8gcWNh
-X25zc19wcHRwIHBwdA0KcCBwcHBveCBxY2FfbnNzX21hcF90IHFjYV9uc3NfbGFnX21nciBxY2Ff
-bnNzX2wydHB2MiBwcHBfZ2VuZXJpYyBzbGhjIHFjYV9uc3NfZ3INCmUgaHlmaV9icmlkZ2luZyBu
-Zl9uYXRfcHJvdG9fc2N0cCBuZl9uYXQgbGliY3JjMzJjIGxlZHRyaWdfdXNiZGV2IG5mX2Nvbm50
-cmFja19wDQpyb3RvX3NjdHAgZXNzZWRtYSBpcDZ0X1JFSkVDVCBpcDZ0YWJsZV9yYXcgaXA2dGFi
-bGVfbWFuZ2xlIGlwNnRhYmxlX2ZpbHRlciBpcDZfdA0KYWJsZXMgeF90YWJsZXMgcWNhX21jcyBx
-Y2FfODV4eF9zdyBtc2RvcyBib25kaW5nIGlwNl9ncmUgaXBfZ3JlIGdyZSBpZmIgbmF0NDYgc2kN
-CnQgcWNhX25zc19kcnYgbDJ0cF9uZXRsaW5rIGwydHBfY29yZSBpcGNvbXA2IHhmcm02X3R1bm5l
-bCB4ZnJtNl9tb2RlX3R1bm5lbCB4ZnJtDQo2X21vZGVfdHJhbnNwb3J0IHhmcm02X21vZGVfYmVl
-dCBlc3A2IGFoNiBpcGNvbXAgeGZybTRfdHVubmVsIHhmcm00X21vZGVfdHVubmVsDQp4ZnJtNF9t
-b2RlX3RyYW5zcG9ydCB4ZnJtNF9tb2RlX2JlZXQgZXNwNCBhaDQgaXA2X3R1bm5lbCBxY2FfbnNz
-X2dtYWMgdHVubmVsNiB0dQ0Kbm5lbDQgaXBfdHVubmVsIHNuZF9wY21fb3NzIHNuZF9taXhlcl9v
-c3Mgc25kX3Jhd21pZGkgc25kX3NlcV9kZXZpY2UgcWNhX3NzZGsgYWYNCl9rZXkgeGZybV91c2Vy
-IHhmcm1faXBjb21wIHhmcm1fYWxnbyB2ZmF0IGZhdCBudGZzIHFyZnMgbmZfY29ubnRyYWNrIG5s
-c19pc284ODU5DQpfMSBubHNfY3A0Mzcgc2hvcnRjdXRfZmVfZHJ2IGFxX3BoeSBzaG9ydGN1dF9m
-ZV9pcHY2IHNob3J0Y3V0X2ZlIHNoYTFfZ2VuZXJpYyBxYw0KcnlwdG8gY3J5cHRvc29mdCBjcnlw
-dG9kZXYgb2NmIG1kNSBobWFjIGVjYiBkZXNfZ2VuZXJpYyBjYmMgYXV0aGVuYyB1c2Jfc3RvcmFn
-ZQ0KbGVkc19ncGlvIGJvb3Rjb25maWcgeGhjaV9oY2QgZHdjMyB1ZGNfY29yZSBkd2MzX3Fjb20g
-ZHdjM19pcHE0MHh4IHBoeV9xY29tX3NzdXMNCmIgcGh5X3Fjb21faHN1c2IgcGh5X3FjYV91bmlw
-aHkgcGh5X3FjYV9iYWxkdXIgc2RfbW9kIGFoY2lfcGxhdGZvcm0gZ3Bpb19idXR0b25fDQpob3Rw
-bHVnIGJ1dHRvbl9ob3RwbHVnIGlucHV0X2NvcmUgdXNiY29yZSBubHNfYmFzZSB1c2JfY29tbW9u
-IG1paSBbbGFzdCB1bmxvYWRlZA0KOiBjb21wYXRdDQpbICA2MzIuNDM5NjkwXQ0KWyAgNjMyLjQ0
-MTE2OF0gQ1BVOiAxIFBJRDogMTQ1OCBDb21tOiBubWJkIE5vdCB0YWludGVkIDMuMTQuNzcgIzkN
-ClsgIDYzMi40NDY5ODVdIHRhc2s6IGRjZjVkYzgwIHRpOiBkNWNlNDAwMCB0YXNrLnRpOiBkNWNl
-NDAwMA0KWyAgNjMyLjQ1MjM2OV0gUEMgaXMgYXQgX3Jhd19zcGluX2xvY2tfYmgrMHg0OC8weDVj
-DQpbICA2MzIuNDU3MDEyXSBMUiBpcyBhdCBpZWVlODAyMTFfdHhfZGVxdWV1ZSsweDZlOC8weDhl
-YyBbbWFjODAyMTFdDQpbICA2MzIuNDYyOTU2XSBwYyA6IFs8YzAyMTFmYjQ+XSAgICBsciA6IFs8
-YmY4NDYyMjQ+XSAgICBwc3I6IDIwMDAwMDEzDQpbICA2MzIuNDYyOTU2XSBzcCA6IGQ1Y2U1YjIw
-ICBpcCA6IGQ0MzE0MDM4ICBmcCA6IDAwMDAwMDAwDQpbICA2MzIuNDc0NDEyXSByMTA6IGQ0ZDIw
-Y2I0ICByOSA6IGQ0ZDIwY2E4ICByOCA6IGQ0ZDIwY2FjDQpbICA2MzIuNDc5NjIyXSByNyA6IDAw
-MDAwMDAwICByNiA6IGQ2ZDE3YTgwICByNSA6IGQ2OTk3NDc4ICByNCA6IGQ0ZDIwYzIwDQpbICA2
-MzIuNDg2MTMyXSByMyA6IDAwMDBkNzY5ICByMiA6IDAwMDBkNzZhICByMSA6IDAwMDAwMDAwICBy
-MCA6IGQ0ZDIwZDAwDQpbICA2MzIuNDkyNjQ0XSBGbGFnczogbnpDdiAgSVJRcyBvbiAgRklRcyBv
-biAgTW9kZSBTVkNfMzIgIElTQSBBUk0gIFNlZ21lbnQgdXNlcg0KWyAgNjMyLjQ5OTc2MF0gQ29u
-dHJvbDogMTBjNTc4N2QgIFRhYmxlOiA1N2M0YzA2YSAgREFDOiAwMDAwMDAxNQ0KWyAgNjMyLjUw
-NTQ5MF0gQ1BVOiAxIFBJRDogMTQ1OCBDb21tOiBubWJkIE5vdCB0YWludGVkIDMuMTQuNzcgIzkN
-ClsgIDYzMi41MTEzMTddIFs8YzAyMWQ5YWM+XSAodW53aW5kX2JhY2t0cmFjZSkgZnJvbSBbPGMw
-MjFhYTQwPl0gKHNob3dfc3RhY2srMHgxDQowLzB4MTQpDQpbICA2MzIuNTE5MDQwXSBbPGMwMjFh
-YTQwPl0gKHNob3dfc3RhY2spIGZyb20gWzxjMDNjNTlkND5dIChkdW1wX3N0YWNrKzB4ODAvMHhh
-MA0KKQ0KWyAgNjMyLjUyNjI1MF0gWzxjMDNjNTlkND5dIChkdW1wX3N0YWNrKSBmcm9tIFs8YzAy
-ODI2OWM+XSAod2F0Y2hkb2dfdGltZXJfZm4rMHgNCjEwYy8weDE2MCkNClsgIDYzMi41MzQyMzFd
-IFs8YzAyODI2OWM+XSAod2F0Y2hkb2dfdGltZXJfZm4pIGZyb20gWzxjMDI0YTgyOD5dIChfX3J1
-bl9ocnRpbWVyDQorMHg1MC8weGM4KQ0KWyAgNjMyLjU0MjMwMV0gWzxjMDI0YTgyOD5dIChfX3J1
-bl9ocnRpbWVyKSBmcm9tIFs8YzAyNGFmZjg+XSAoaHJ0aW1lcl9pbnRlcnJ1cHQNCisweDEzMC8w
-eDI3YykNClsgIDYzMi41NTA1NTBdIFs8YzAyNGFmZjg+XSAoaHJ0aW1lcl9pbnRlcnJ1cHQpIGZy
-b20gWzxjMDUxNzVhYz5dIChtc21fdGltZXJfaW50DQplcnJ1cHQrMHgzOC8weDQ0KQ0KWyAgNjMy
-LjU1OTE0M10gWzxjMDUxNzVhYz5dIChtc21fdGltZXJfaW50ZXJydXB0KSBmcm9tIFs8YzAyNjhh
-NmM+XSAoaGFuZGxlX3BlcmMNCnB1X2RldmlkX2lycSsweDY4LzB4ODQpDQpbICA2MzIuNTY4MjU5
-XSBbPGMwMjY4YTZjPl0gKGhhbmRsZV9wZXJjcHVfZGV2aWRfaXJxKSBmcm9tIFs8YzAyNjUzZTA+
-XSAoZ2VuZXJpYw0KX2hhbmRsZV9pcnErMHgyMC8weDMwKQ0KWyAgNjMyLjU3NzI4N10gWzxjMDI2
-NTNlMD5dIChnZW5lcmljX2hhbmRsZV9pcnEpIGZyb20gWzxjMDIxODAzYz5dIChoYW5kbGVfSVJR
-KzANCng2OC8weDkwKQ0KWyAgNjMyLjU4NTE4NF0gWzxjMDIxODAzYz5dIChoYW5kbGVfSVJRKSBm
-cm9tIFs8YzAyMDg0ZTA+XSAoZ2ljX2hhbmRsZV9pcnErMHgzYy8NCjB4NjApDQpbICA2MzIuNTky
-NzM0XSBbPGMwMjA4NGUwPl0gKGdpY19oYW5kbGVfaXJxKSBmcm9tIFs8YzAyMDk1YzA+XSAoX19p
-cnFfc3ZjKzB4NDAvMA0KeDcwKQ0KWyAgNjMyLjYwMDE5M10gRXhjZXB0aW9uIHN0YWNrKDB4ZDVj
-ZTVhZDggdG8gMHhkNWNlNWIyMCkNClsgIDYzMi42MDUyMzFdIDVhYzA6ICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGQ0ZDIwDQpkMDAgMDAwMDAw
-MDANClsgIDYzMi42MTMzOTJdIDVhZTA6IDAwMDBkNzZhIDAwMDBkNzY5IGQ0ZDIwYzIwIGQ2OTk3
-NDc4IGQ2ZDE3YTgwIDAwMDAwMDAwIGQ0ZDIwDQpjYWMgZDRkMjBjYTgNClsgIDYzMi42MjE1NTJd
-IDViMDA6IGQ0ZDIwY2I0IDAwMDAwMDAwIGQ0MzE0MDM4IGQ1Y2U1YjIwIGJmODQ2MjI0IGMwMjEx
-ZmI0IDIwMDAwDQowMTMgZmZmZmZmZmYNClsgIDYzMi42Mjk3MTVdIFs8YzAyMDk1YzA+XSAoX19p
-cnFfc3ZjKSBmcm9tIFs8YzAyMTFmYjQ+XSAoX3Jhd19zcGluX2xvY2tfYmgrMHg0DQo4LzB4NWMp
-DQpbICA2MzIuNjM3NDg3XSBbPGMwMjExZmI0Pl0gKF9yYXdfc3Bpbl9sb2NrX2JoKSBmcm9tIFs8
-YmY4NDYyMjQ+XSAoaWVlZTgwMjExX3R4Xw0KZGVxdWV1ZSsweDZlOC8weDhlYyBbbWFjODAyMTFd
-KQ0KWyAgNjMyLjY0NzMzOV0gWzxiZjg0NjIyND5dIChpZWVlODAyMTFfdHhfZGVxdWV1ZSBbbWFj
-ODAyMTFdKSBmcm9tIFs8YmY4NDYzNTA+XQ0KKGllZWU4MDIxMV90eF9kZXF1ZXVlKzB4ODE0LzB4
-OGVjIFttYWM4MDIxMV0pDQpbICA2MzIuNjU4MzYxXSBbPGJmODQ2MzUwPl0gKGllZWU4MDIxMV90
-eF9kZXF1ZXVlIFttYWM4MDIxMV0pIGZyb20gWzxiZjg0OGMyOD5dDQooaWVlZTgwMjExX3N1Ymlm
-XzgwMjNfc3RhcnRfeG1pdCsweDMxNC8weDM1YyBbbWFjODAyMTFdKQ0KWyAgNjMyLjY3MDMwMl0g
-WzxiZjg0OGMyOD5dIChpZWVlODAyMTFfc3ViaWZfODAyM19zdGFydF94bWl0IFttYWM4MDIxMV0p
-IGZyb20gWzwNCmMwNTliZjQwPl0gKGRldl9oYXJkX3N0YXJ0X3htaXQrMHgzMjAvMHg0NTQpDQpb
-ICA2MzIuNjgxMTkyXSBbPGMwNTliZjQwPl0gKGRldl9oYXJkX3N0YXJ0X3htaXQpIGZyb20gWzxj
-MDU5YzNlYz5dIChfX2Rldl9xdWV1ZQ0KX3htaXQrMHgzNzgvMHg0NTQpDQpbICA2MzIuNjg5ODc3
-XSBbPGMwNTljM2VjPl0gKF9fZGV2X3F1ZXVlX3htaXQpIGZyb20gWzxjMDY1NWViOD5dIChicl9k
-ZXZfcXVldWVfcA0KdXNoX3htaXQrMHhiYy8weGM0KQ0KWyAgNjMyLjY5ODY0MF0gWzxjMDY1NWVi
-OD5dIChicl9kZXZfcXVldWVfcHVzaF94bWl0KSBmcm9tIFs8YzA2NTVkZjQ+XSAoZGVsaXZlcl8N
-CmNsb25lKzB4NDAvMHg0OCkNClsgIDYzMi43MDcxNDVdIFs8YzA2NTVkZjQ+XSAoZGVsaXZlcl9j
-bG9uZSkgZnJvbSBbPGMwNjU2MWU4Pl0gKG1heWJlX2RlbGl2ZXIrMHg1DQpjLzB4NmMpDQpbICA2
-MzIuNzE0ODcwXSBbPGMwNjU2MWU4Pl0gKG1heWJlX2RlbGl2ZXIpIGZyb20gWzxjMDY1NjI4ND5d
-IChicl9mbG9vZCsweDhjLzB4Zg0KYykNClsgIDYzMi43MjIxNjJdIFs8YzA2NTYyODQ+XSAoYnJf
-Zmxvb2QpIGZyb20gWzxjMDY1NjNlOD5dIChicl9mbG9vZF9kZWxpdmVyKzB4MTgvDQoweDI0KQ0K
-WyAgNjMyLjcyOTcxNl0gWzxjMDY1NjNlOD5dIChicl9mbG9vZF9kZWxpdmVyKSBmcm9tIFs8YzA2
-NTQzYzA+XSAoYnJfZGV2X3htaXQrMHgNCjJhOC8weDJjNCkNClsgIDYzMi43Mzc3MDJdIFs8YzA2
-NTQzYzA+XSAoYnJfZGV2X3htaXQpIGZyb20gWzxjMDU5YmY0MD5dIChkZXZfaGFyZF9zdGFydF94
-bWl0DQorMHgzMjAvMHg0NTQpDQpbICA2MzIuNzQ1OTQ3XSBbPGMwNTliZjQwPl0gKGRldl9oYXJk
-X3N0YXJ0X3htaXQpIGZyb20gWzxjMDU5YzNlYz5dIChfX2Rldl9xdWV1ZQ0KX3htaXQrMHgzNzgv
-MHg0NTQpDQpbICA2MzIuNzU0NjM1XSBbPGMwNTljM2VjPl0gKF9fZGV2X3F1ZXVlX3htaXQpIGZy
-b20gWzxjMDVjOWVmOD5dIChpcF9maW5pc2hfb3V0cA0KdXQrMHg0MzQvMHg0YTQpDQpbICA2MzIu
-NzYzMDU0XSBbPGMwNWM5ZWY4Pl0gKGlwX2ZpbmlzaF9vdXRwdXQpIGZyb20gWzxjMDVjYmRmYz5d
-IChpcF9zZW5kX3NrYisweA0KMTAvMHg5OCkNClsgIDYzMi43NzA4NjVdIFs8YzA1Y2JkZmM+XSAo
-aXBfc2VuZF9za2IpIGZyb20gWzxjMDVlYmU0ND5dICh1ZHBfc2VuZF9za2IrMHgxODQvDQoweDIz
-NCkNClsgIDYzMi43Nzg1MDNdIFs8YzA1ZWJlNDQ+XSAodWRwX3NlbmRfc2tiKSBmcm9tIFs8YzA1
-ZWQ0NjQ+XSAodWRwX3NlbmRtc2crMHg2YmMvDQoweDZlNCkNClsgIDYzMi43ODYxNDNdIFs8YzA1
-ZWQ0NjQ+XSAodWRwX3NlbmRtc2cpIGZyb20gWzxjMDU4NDQyMD5dIChzb2NrX3NlbmRtc2crMHg3
-MC8wDQp4ODQpDQpbICA2MzIuNzkzNjA3XSBbPGMwNTg0NDIwPl0gKHNvY2tfc2VuZG1zZykgZnJv
-bSBbPGMwNTg2N2E0Pl0gKFN5U19zZW5kdG8rMHhlNC8weA0KMTI4KQ0KWyAgNjMyLjgwMTA3MF0g
-WzxjMDU4NjdhND5dIChTeVNfc2VuZHRvKSBmcm9tIFs8YzAyMDhjODA+XSAocmV0X2Zhc3Rfc3lz
-Y2FsbCsweDANCi8weDQ0KQ0KWyAgNjM2LjEyNDY3OF0gQlVHOiBzb2Z0IGxvY2t1cCAtIENQVSMw
-IHN0dWNrIGZvciAyMnMhIFtzd2FwcGVyLzA6MF0NClsgIDYzNi4xMjk3MjZdIE1vZHVsZXMgbGlu
-a2VkIGluOiBhdGgxMGtfcGNpIGF0aDEwa19jb3JlIGF0aCBtYWM4MDIxMSBjZmc4MDIxMSBjDQpv
-bXBhdCBlY20gaXB0YWJsZV9uYXQgbmZfbmF0X3BwdHAgbmZfbmF0X2lwdjQgbmZfbmF0X2FtYW5k
-YSBuZl9jb25udHJhY2tfcHB0cCBuZg0KX2Nvbm50cmFja19pcHY2IG5mX2Nvbm50cmFja19pcHY0
-IG5mX2Nvbm50cmFja19hbWFuZGEgeHRfdGltZSB4dF90Y3B1ZHAgeHRfdGNwbXMNCnMgeHRfc3Ry
-aW5nIHh0X3N0YXRpc3RpYyB4dF9zdGF0ZSB4dF9yZWNlbnQgeHRfcXVvdGEgeHRfcG9saWN5IHh0
-X3BrdHR5cGUgeHRfcGh5DQpzZGV2IHh0X293bmVyIHh0X25hdCB4dF9tdWx0aXBvcnQgeHRfbWFy
-ayB4dF9tYWMgeHRfbGltaXQgeHRfbGVuZ3RoIHh0X2hsIHh0X2hlbA0KcGVyIHh0X2VzcCB4dF9l
-Y24geHRfZHNjcCB4dF9jb25udHJhY2sgeHRfY29ubm1hcmsgeHRfY29ubmxpbWl0IHh0X2Nvbm5i
-eXRlcyB4dF8NCmNvbW1lbnQgeHRfYWRkcnR5cGUgeHRfVENQTVNTIHh0X1JFRElSRUNUIHh0X0xP
-RyB4dF9ITCB4dF9EU0NQIHh0X0NUIHh0X0NMQVNTSUZZDQogdXNibmV0IHRzX2ttcCB0c19mc20g
-dHNfYm0gcjgxNTIgcHBwb2UgcHBwX21wcGUgcHBwX2FzeW5jIG5mX25hdF90ZnRwIG5mX25hdF9z
-bg0KbXBfYmFzaWMgbmZfbmF0X3NpcCBuZl9uYXRfcnRzcCBuZl9uYXRfcHJvdG9fZ3JlIG5mX25h
-dF9pcmMgbmZfbmF0X2gzMjMgbmZfbmF0X2YNCnRwIG5mX2RlZnJhZ19pcHY2IG5mX2RlZnJhZ19p
-cHY0IG5mX2Nvbm50cmFja190ZnRwIG5mX2Nvbm50cmFja19zbm1wIG5mX2Nvbm50cmFjDQprX3Np
-cCBuZl9jb25udHJhY2tfcnRzcCBuZl9jb25udHJhY2tfcHJvdG9fZ3JlIG5mX2Nvbm50cmFja19p
-cmMgbmZfY29ubnRyYWNrX2gzMg0KMyBuZl9jb25udHJhY2tfZnRwIG5mX2Nvbm50cmFja19icm9h
-ZGNhc3QgbDJ0cF9wcHAgaXB0YWJsZV9yYXcgaXB0YWJsZV9tYW5nbGUgaXANCnRhYmxlX2ZpbHRl
-ciBpcHRfYWggaXB0X1JFSkVDVCBpcHRfTUFTUVVFUkFERSBpcHRfRUNOIGlwX3RhYmxlcyBjcmNf
-Y2NpdHQgYXJwdGFiDQpsZV9maWx0ZXIgYXJwdF9tYW5nbGUgYXJwX3RhYmxlcyBzY2hfdGVxbCBz
-Y2hfdGJmIHNjaF9zZnEgc2NoX3JlZCBzY2hfcHJpbyBzY2hfcA0KaWUgc2NoX2h0YiBzY2hfZ3Jl
-ZCBzY2hfZnEgc2NoX2RzbWFyayBzY2hfY29kZWwgZW1fdGV4dCBlbV9uYnl0ZSBlbV9tZXRhIGVt
-X2NtcA0KY2xzX2Jhc2ljIGFjdF9wb2xpY2UgYWN0X2lwdCBhY3RfY29ubm1hcmsgYWN0X3NrYmVk
-aXQgYWN0X21pcnJlZCBlbV91MzIgY2xzX3UzMg0KY2xzX3RjaW5kZXggY2xzX2Zsb3cgY2xzX3Jv
-dXRlIGNsc19mdyBzY2hfaGZzYyBzY2hfaW5ncmVzcyBxY2FfbnNzX2lwc2VjIHFjYV9uc3MNCl9j
-Zmlfb2NmIHFjYV9uc3NfdHVuaXBpcDYgcWNhX25zc190dW42cmQgcWNhX25zc19pcHNlY21nciBx
-Y2FfbnNzX2NmaV9jcnlwdG9hcGkNCnFjYV9uc3NfcWRpc2MgcWNhX25zc19tYWNzZWMgcWNhX25z
-c19jcnlwdG9fdG9vbCBxY2FfbnNzX2NyeXB0byBxY2FfbnNzX3BwdHAgcHB0DQpwIHBwcG94IHFj
-YV9uc3NfbWFwX3QgcWNhX25zc19sYWdfbWdyIHFjYV9uc3NfbDJ0cHYyIHBwcF9nZW5lcmljIHNs
-aGMgcWNhX25zc19ncg0KZSBoeWZpX2JyaWRnaW5nIG5mX25hdF9wcm90b19zY3RwIG5mX25hdCBs
-aWJjcmMzMmMgbGVkdHJpZ191c2JkZXYgbmZfY29ubnRyYWNrX3ANCnJvdG9fc2N0cCBlc3NlZG1h
-IGlwNnRfUkVKRUNUIGlwNnRhYmxlX3JhdyBpcDZ0YWJsZV9tYW5nbGUgaXA2dGFibGVfZmlsdGVy
-IGlwNl90DQphYmxlcyB4X3RhYmxlcyBxY2FfbWNzIHFjYV84NXh4X3N3IG1zZG9zIGJvbmRpbmcg
-aXA2X2dyZSBpcF9ncmUgZ3JlIGlmYiBuYXQ0NiBzaQ0KdCBxY2FfbnNzX2RydiBsMnRwX25ldGxp
-bmsgbDJ0cF9jb3JlIGlwY29tcDYgeGZybTZfdHVubmVsIHhmcm02X21vZGVfdHVubmVsIHhmcm0N
-CjZfbW9kZV90cmFuc3BvcnQgeGZybTZfbW9kZV9iZWV0IGVzcDYgYWg2IGlwY29tcCB4ZnJtNF90
-dW5uZWwgeGZybTRfbW9kZV90dW5uZWwNCnhmcm00X21vZGVfdHJhbnNwb3J0IHhmcm00X21vZGVf
-YmVldCBlc3A0IGFoNCBpcDZfdHVubmVsIHFjYV9uc3NfZ21hYyB0dW5uZWw2IHR1DQpubmVsNCBp
-cF90dW5uZWwgc25kX3BjbV9vc3Mgc25kX21peGVyX29zcyBzbmRfcmF3bWlkaSBzbmRfc2VxX2Rl
-dmljZSBxY2Ffc3NkayBhZg0KX2tleSB4ZnJtX3VzZXIgeGZybV9pcGNvbXAgeGZybV9hbGdvIHZm
-YXQgZmF0IG50ZnMgcXJmcyBuZl9jb25udHJhY2sgbmxzX2lzbzg4NTkNCl8xIG5sc19jcDQzNyBz
-aG9ydGN1dF9mZV9kcnYgYXFfcGh5IHNob3J0Y3V0X2ZlX2lwdjYgc2hvcnRjdXRfZmUgc2hhMV9n
-ZW5lcmljIHFjDQpyeXB0byBjcnlwdG9zb2Z0IGNyeXB0b2RldiBvY2YgbWQ1IGhtYWMgZWNiIGRl
-c19nZW5lcmljIGNiYyBhdXRoZW5jIHVzYl9zdG9yYWdlDQpsZWRzX2dwaW8gYm9vdGNvbmZpZyB4
-aGNpX2hjZCBkd2MzIHVkY19jb3JlIGR3YzNfcWNvbSBkd2MzX2lwcTQweHggcGh5X3Fjb21fc3N1
-cw0KYiBwaHlfcWNvbV9oc3VzYiBwaHlfcWNhX3VuaXBoeSBwaHlfcWNhX2JhbGR1ciBzZF9tb2Qg
-YWhjaV9wbGF0Zm9ybSBncGlvX2J1dHRvbl8NCmhvdHBsdWcgYnV0dG9uX2hvdHBsdWcgaW5wdXRf
-Y29yZSB1c2Jjb3JlIG5sc19iYXNlIHVzYl9jb21tb24gbWlpIFtsYXN0IHVubG9hZGVkDQo6IGNv
-bXBhdF0NClsgIDYzNi4zNTk4NDddDQpbICA2MzYuMzYxMzI0XSBDUFU6IDAgUElEOiAwIENvbW06
-IHN3YXBwZXIvMCBOb3QgdGFpbnRlZCAzLjE0Ljc3ICM5DQpbICA2MzYuMzY3MzE0XSB0YXNrOiBj
-MDg2ODc1MCB0aTogYzA4NWMwMDAgdGFzay50aTogYzA4NWMwMDANClsgIDYzNi4zNzI3MjNdIFBD
-IGlzIGF0IGllZWU4MDIxMV9raWNrX2FpcnRpbWUrMHg3Yy8weDFhOCBbbWFjODAyMTFdDQpbICA2
-MzYuMzc4Nzk4XSBMUiBpcyBhdCBpZWVlODAyMTFfa2lja19haXJ0aW1lKzB4OTAvMHgxYTggW21h
-YzgwMjExXQ0KWyAgNjM2LjM4NDg0OF0gcGMgOiBbPGJmODRiYzgwPl0gICAgbHIgOiBbPGJmODRi
-Yzk0Pl0gICAgcHNyOiAyMDAwMDExMw0KWyAgNjM2LjM4NDg0OF0gc3AgOiBjMDg1ZGViMCAgaXAg
-OiAwMDAwMDAwMCAgZnAgOiAwMDAwMDAwNg0KWyAgNjM2LjM5NjMwNl0gcjEwOiBkNjU0OTAwMCAg
-cjkgOiAwMDAwMDAxOCAgcjggOiAwMDAwMDAzMA0KWyAgNjM2LjQwMTUxNF0gcjcgOiAwMDAwMDAw
-MiAgcjYgOiBkNGQyMGMyMCAgcjUgOiBkNGQyMGQwMCAgcjQgOiBkNGQyMGQxOA0KWyAgNjM2LjQw
-ODAyNV0gcjMgOiAwMDAwMDAwMCAgcjIgOiAwMDAwMDBiOSAgcjEgOiAwMDAwMDAwMSAgcjAgOiAw
-MDAwMDAwMA0KWyAgNjM2LjQxNDUzNl0gRmxhZ3M6IG56Q3YgIElSUXMgb24gIEZJUXMgb24gIE1v
-ZGUgU1ZDXzMyICBJU0EgQVJNICBTZWdtZW50IGtlcm4NCmVsDQpbICA2MzYuNDIxODI3XSBDb250
-cm9sOiAxMGM1Nzg3ZCAgVGFibGU6IDU4NmNjMDZhICBEQUM6IDAwMDAwMDE1DQpbICA2MzYuNDI3
-NTU3XSBDUFU6IDAgUElEOiAwIENvbW06IHN3YXBwZXIvMCBOb3QgdGFpbnRlZCAzLjE0Ljc3ICM5
-DQpbICA2MzYuNDMzNTUyXSBbPGMwMjFkOWFjPl0gKHVud2luZF9iYWNrdHJhY2UpIGZyb20gWzxj
-MDIxYWE0MD5dIChzaG93X3N0YWNrKzB4MQ0KMC8weDE0KQ0KWyAgNjM2LjQ0MTI3Nl0gWzxjMDIx
-YWE0MD5dIChzaG93X3N0YWNrKSBmcm9tIFs8YzAzYzU5ZDQ+XSAoZHVtcF9zdGFjaysweDgwLzB4
-YTANCikNClsgIDYzNi40NDg0ODJdIFs8YzAzYzU5ZDQ+XSAoZHVtcF9zdGFjaykgZnJvbSBbPGMw
-MjgyNjljPl0gKHdhdGNoZG9nX3RpbWVyX2ZuKzB4DQoxMGMvMHgxNjApDQpbICA2MzYuNDU2NDY4
-XSBbPGMwMjgyNjljPl0gKHdhdGNoZG9nX3RpbWVyX2ZuKSBmcm9tIFs8YzAyNGE4Mjg+XSAoX19y
-dW5faHJ0aW1lcg0KKzB4NTAvMHhjOCkNClsgIDYzNi40NjQ1MzldIFs8YzAyNGE4Mjg+XSAoX19y
-dW5faHJ0aW1lcikgZnJvbSBbPGMwMjRhZmY4Pl0gKGhydGltZXJfaW50ZXJydXB0DQorMHgxMzAv
-MHgyN2MpDQpbICA2MzYuNDcyNzg3XSBbPGMwMjRhZmY4Pl0gKGhydGltZXJfaW50ZXJydXB0KSBm
-cm9tIFs8YzA1MTc1YWM+XSAobXNtX3RpbWVyX2ludA0KZXJydXB0KzB4MzgvMHg0NCkNClsgIDYz
-Ni40ODEzODBdIFs8YzA1MTc1YWM+XSAobXNtX3RpbWVyX2ludGVycnVwdCkgZnJvbSBbPGMwMjY4
-YTZjPl0gKGhhbmRsZV9wZXJjDQpwdV9kZXZpZF9pcnErMHg2OC8weDg0KQ0KWyAgNjM2LjQ5MDQ5
-NV0gWzxjMDI2OGE2Yz5dIChoYW5kbGVfcGVyY3B1X2RldmlkX2lycSkgZnJvbSBbPGMwMjY1M2Uw
-Pl0gKGdlbmVyaWMNCl9oYW5kbGVfaXJxKzB4MjAvMHgzMCkNClsgIDYzNi40OTk1MjRdIFs8YzAy
-NjUzZTA+XSAoZ2VuZXJpY19oYW5kbGVfaXJxKSBmcm9tIFs8YzAyMTgwM2M+XSAoaGFuZGxlX0lS
-USswDQp4NjgvMHg5MCkNClsgIDYzNi41MDc0MjJdIFs8YzAyMTgwM2M+XSAoaGFuZGxlX0lSUSkg
-ZnJvbSBbPGMwMjA4NGUwPl0gKGdpY19oYW5kbGVfaXJxKzB4M2MvDQoweDYwKQ0KWyAgNjM2LjUx
-NDk3Ml0gWzxjMDIwODRlMD5dIChnaWNfaGFuZGxlX2lycSkgZnJvbSBbPGMwMjA5NWMwPl0gKF9f
-aXJxX3N2YysweDQwLzANCng3MCkNClsgIDYzNi41MjI0MzZdIEV4Y2VwdGlvbiBzdGFjaygweGMw
-ODVkZTY4IHRvIDB4YzA4NWRlYjApDQpbICA2MzYuNTI3NDcxXSBkZTYwOiAgICAgICAgICAgICAg
-ICAgICAwMDAwMDAwMCAwMDAwMDAwMSAwMDAwMDBiOSAwMDAwMDAwMCBkNGQyMA0KZDE4IGQ0ZDIw
-ZDAwDQpbICA2MzYuNTM1NjMxXSBkZTgwOiBkNGQyMGMyMCAwMDAwMDAwMiAwMDAwMDAzMCAwMDAw
-MDAxOCBkNjU0OTAwMCAwMDAwMDAwNiAwMDAwMA0KMDAwIGMwODVkZWIwDQpbICA2MzYuNTQzNzkx
-XSBkZWEwOiBiZjg0YmM5NCBiZjg0YmM4MCAyMDAwMDExMyBmZmZmZmZmZg0KWyAgNjM2LjU0ODg1
-NF0gWzxjMDIwOTVjMD5dIChfX2lycV9zdmMpIGZyb20gWzxiZjg0YmM4MD5dIChpZWVlODAyMTFf
-a2lja19haXJ0aW0NCmUrMHg3Yy8weDFhOCBbbWFjODAyMTFdKQ0KWyAgNjM2LjU1ODA1Nl0gWzxi
-Zjg0YmM4MD5dIChpZWVlODAyMTFfa2lja19haXJ0aW1lIFttYWM4MDIxMV0pIGZyb20gWzxjMDIz
-MzFlYz4NCl0gKHRhc2tsZXRfYWN0aW9uKzB4OGMvMHhlYykNClsgIDYzNi41Njc1NzhdIFs8YzAy
-MzMxZWM+XSAodGFza2xldF9hY3Rpb24pIGZyb20gWzxjMDIzMjdlND5dIChfX2RvX3NvZnRpcnEr
-MHgxDQowNC8weDI5NCkNClsgIDYzNi41NzU0NzddIFs8YzAyMzI3ZTQ+XSAoX19kb19zb2Z0aXJx
-KSBmcm9tIFs8YzAyMzJjNjA+XSAoaXJxX2V4aXQrMHg5Yy8weDExDQpjKQ0KWyAgNjM2LjU4Mjc3
-MF0gWzxjMDIzMmM2MD5dIChpcnFfZXhpdCkgZnJvbSBbPGMwMjE4MDQwPl0gKGhhbmRsZV9JUlEr
-MHg2Yy8weDkwKQ0KWyAgNjM2LjU4OTgwMF0gWzxjMDIxODA0MD5dIChoYW5kbGVfSVJRKSBmcm9t
-IFs8YzAyMDg0ZTA+XSAoZ2ljX2hhbmRsZV9pcnErMHgzYy8NCjB4NjApDQpbICA2MzYuNTk3MzUx
-XSBbPGMwMjA4NGUwPl0gKGdpY19oYW5kbGVfaXJxKSBmcm9tIFs8YzAyMDk1YzA+XSAoX19pcnFf
-c3ZjKzB4NDAvMA0KeDcwKQ0KWyAgNjM2LjYwNDgxM10gRXhjZXB0aW9uIHN0YWNrKDB4YzA4NWRm
-NjAgdG8gMHhjMDg1ZGZhOCkNClsgIDYzNi42MDk4NTFdIGRmNjA6IGZmZmZmZmVkIDAwMDAwMDAw
-IDFkM2MyMDAwIGMwMjBhMDQwIGMwODVjMDAwIGMwODVjMDMwIGZmZmZmDQpmZmYgYzA4YjMwMTQN
-ClsgIDYzNi42MTgwMDldIGRmODA6IGMwODY0M2MwIGMwODUzOWM4IGRkZmZjYzgwIGMwOGIzMDEw
-IGMwODZkMjg4IGMwODVkZmE4IGMwMjE4DQozMDAgYzAyMTgzMDQNClsgIDYzNi42MjYxNjddIGRm
-YTA6IDYwMDAwMDEzIGZmZmZmZmZmDQpbICA2MzYuNjI5NjQ0XSBbPGMwMjA5NWMwPl0gKF9faXJx
-X3N2YykgZnJvbSBbPGMwMjE4MzA0Pl0gKGFyY2hfY3B1X2lkbGUrMHgzOC8weA0KNWMpDQpbICA2
-MzYuNjM3MDI0XSBbPGMwMjE4MzA0Pl0gKGFyY2hfY3B1X2lkbGUpIGZyb20gWzxjMDI2NTM0Yz5d
-IChjcHVfc3RhcnR1cF9lbnRyeQ0KKzB4YTQvMHgxMDgpDQpbICA2MzYuNjQ1MTg0XSBbPGMwMjY1
-MzRjPl0gKGNwdV9zdGFydHVwX2VudHJ5KSBmcm9tIFs8YzA4MzJhZjA+XSAoc3RhcnRfa2VybmVs
-Kw0KMHgzNTgvMHgzY2Mp
---=_8ae9499de0c834b6d7bb75e5b180f67a--
+The following changes since commit 050cdc6c9501abcd64720b8cc3e7941efee9547d:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-08-27 11:59:39 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2018-10-02
+
+for you to fetch changes up to 08b0109eea36d71f87b863045d91bbcee98758bd:
+
+  Merge tag 'iwlwifi-next-for-kalle-2018-09-28' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next (2018-10-01 18:49:48 +0300)
+
+----------------------------------------------------------------
+wireless-drivers-next patches for 4.20
+
+First set of new features for 4.20. mt76 driver is going through major
+refactoring and that's why there are so many mt76 patches. iwlwifi is
+also under heavy development and smaller changes to other drivers.
+
+Also wireless-drivers was merged to fix a conflict between the two trees.
+
+Major changes:
+
+ath10k
+
+* limit available channels via DT ieee80211-freq-limit
+
+wil6210
+
+* add 802.11r Fast Roaming support for AP and station modes
+
+* add support for channel 4
+
+iwlwifi
+
+* new FW API handling
+
+* some improvements in the PCI recovery mechanism
+
+* enable a new scanning feature;
+
+* continued work on HE (mostly radiotap)
+
+* TKIP implementation in new devices
+
+* work continues for new 22560 hardware
+
+mt76
+
+* add support for Alfa AWUS036ACM
+
+* lots of refactoring to make it easier to add new hardware support
+
+* prepare for adding mt76x0e (pci-e variant) support
+
+* add CONFIG_MT76x0E kconfig symbol
+
+brcmfmac
+
+* add support CYW89342 mini-PCIe device
+
+* add 4-way handshake offload detection for FT-802.1X
+
+* enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+
+* fix for proper support of 160MHz bandwidth
+
+rtl8xxxu
+
+* add rtl8188ctv support
+
+----------------------------------------------------------------
+Ahmad Masri (1):
+      wil6210: add FT roam support for AP and station
+
+Aleksei Mamlin (1):
+      rtl8xxxu: Add rtl8188ctv support
+
+Alexei Avshalom Lazar (1):
+      wil6210: add support for channel 4
+
+Arend van Spriel (2):
+      brcmfmac: fix for proper support of 160MHz bandwidth
+      brcmfmac: increase buffer for obtaining firmware capabilities
+
+Avraham Stern (3):
+      iwlwifi: set the tid for non-QOS frames to zero
+      iwlwifi: mvm: Send LQ command as async when necessary
+      iwlwifi: mvm: set wep key for all stations in soft ap mode
+
+Ayala Beker (2):
+      iwlwifi: mvm: skip EBS in low latency mode while fragmented scan isn't supported
+      iwlwifi: mvm: activate fragmented EBS in case of fragmented scan
+
+Chung-Hsien Hsu (2):
+      brcmfmac: add FT-based AKMs in brcmf_set_key_mgmt() for FT support
+      brcmfmac: add 4-way handshake offload detection for FT-802.1X
+
+Colin Ian King (3):
+      ath9k: remove unused array firstep_table
+      orinoco: remove unused array encaps_hdr and macro ENCAPS_OVERHEAD
+      b43: fix spelling mistake "hw_registred" -> "hw_registered"
+
+Dan Carpenter (2):
+      libertas_tf: prevent underflow in process_cmdrequest()
+      rt2x00: use simple_read_from_buffer()
+
+David Spinadel (1):
+      iwlwifi: mvm: Support TKIP on gen2 data path
+
+Dedy Lansky (2):
+      wil6210: drop Rx multicast packets that are looped-back to STA
+      wil6210: fix invalid memory access for rx_buff_mgmt debugfs
+
+Dreyfuss, Haim (1):
+      iwlwifi: mvm: cleanup dead code on resume flow for non unified image.
+
+Emmanuel Grumbach (5):
+      iwlwifi: improve the flow when a NIC is disconnected
+      iwlwifi: mvm: send BCAST management frames to the right station
+      iwlwifi: mvm: fix a comment about the SP length
+      iwlwifi: dbg: don't crash if the firmware crashes in the middle of a debug dump
+      iwlwifi: mvm: remove support for adjacent channel compensation
+
+Erel Geron (3):
+      iwlwifi: mvm: support Coex Schema 2
+      iwlwifi: fix non_shared_ant for 22000 devices
+      iwlwifi: mvm: TLC support for Coex Schema 2
+
+Felix Fietkau (2):
+      ath9k: fix tx99 with monitor mode interface
+      mt76: use a per rx queue page fragment cache
+
+Ganapathi Bhat (2):
+      mwifiex: do no submit URB in suspended state
+      mwifex: free rx_cmd skb in suspended state
+
+Geert Uytterhoeven (1):
+      mt76: Fix comparisons with invalid hardware key index
+
+Golan Ben Ami (9):
+      iwlwifi: add required include to iwl-fh.h
+      iwlwifi: pcie: allow using tx init for other queues but the command queue
+      iwlwifi: pcie: make non-static hcmd and rx code
+      iwlwifi: remove FSF's address from the license notice
+      iwlwifi: pcie: store the default rxq number
+      iwlwifi: pcie: make gen2 of apm_init non-static
+      iwlwifi: refactor txq_alloc for supporting more command type
+      iwlwifi: pcie: fit reclaim msg to MAX_MSG_LEN
+      iwlwifi: configure power scheme to balanced for 22560 devices
+
+Gregory Greenman (1):
+      iwlwifi: mvm: add NOA and CSA to a probe response
+
+Gustavo A. R. Silva (2):
+      ath10k: use struct_size() in kzalloc()
+      orinoco_usb: fix spelling mistake in fall-through annotation
+
+Haim Dreyfuss (1):
+      iwlwifi: mvm: support new reduce tx power FW API.
+
+Ido Yariv (1):
+      iwlwifi: Add missing 11n disable module parameter check
+
+Igor Mitsyanko (11):
+      qtnfmac_pcie: do not store FW name in driver state structure
+      qtnfmac_pcie: move Pearl pcie sources to pcie-specific directory
+      qtnfmac_pcie: rename private Pearl PCIe state structure
+      qtnfmac_pcie: indicate pearl-specific structures by their names
+      qtnfmac_pcie: pearl: rename spinlock tx0_lock to tx_lock
+      qtnfmac_pcie: separate platform-independent PCIe structure
+      qtnfmac_pcie: rename platform-specific functions
+      qtnfmac: add missing header includes to bus.h
+      qtnfmac_pcie: extract platform-independent PCIe code
+      qtnfmac: wait for FW load work to finish at PCIe remove
+      qtnfmac_pcie: check for correct CHIP ID at pcie probe
+
+Igor Stoppa (1):
+      wireless: remove unnecessary unlikely()
+
+Ilan Peer (1):
+      iwlwifi: mvm: Allow TKIP for AP mode
+
+Jia-Shyr Chuang (1):
+      brcmfmac: add CYW89342 mini-PCIe device
+
+Johannes Berg (19):
+      iwlwifi: remove dump_regs() from transport ops
+      iwlwifi: don't WARN on trying to dump dead firmware
+      iwlwifi: mvm: implement extended HE-MU sniffer API
+      iwlwifi: mvm: put LTF symbol size into HE radiotap
+      iwlwifi: mvm: properly decode HE GI duration
+      iwlwifi: mvm: report # of LTF symbols for extended range SU PPDUs
+      iwlwifi: mvm: remove channel 2 from HE radiotap if not applicable
+      iwlwifi: mvm: decode HE TB PPDU data
+      Revert "iwlwifi: allow memory debug TLV to specify the memory type"
+      iwlwifi: RX API: remove unnecessary anonymous struct
+      iwlwifi: mvm: report RU offset is known
+      iwlwifi: remove ucode error tracepoint
+      iwlwifi: api: annotate compressed BA notif array sizes
+      iwlwifi: pcie: gen2: pull adding frags to helper routine
+      iwlwifi: pcie: gen2: build A-MSDU only for GSO
+      iwlwifi: pcie: tx: unify TFD unmapping
+      iwlwifi: pcie: tx: pull tracing out of iwl_fill_data_tbs()
+      iwlwifi: pcie: support transmitting SKBs with fraglist
+      iwlwifi: fix LED command capability bit
+
+Kalle Valo (5):
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+      Merge tag 'iwlwifi-next-for-kalle-2018-08-31' of git://git.kernel.org/.../iwlwifi/iwlwifi-next
+      Merge wireless-drivers into wireless-drivers-next
+      Merge tag 'mt76-for-kvalo-2018-09-19' of https://github.com/nbd168/wireless
+      Merge tag 'iwlwifi-next-for-kalle-2018-09-28' of git://git.kernel.org/.../iwlwifi/iwlwifi-next
+
+Karthick Gopalasubramanian (1):
+      wil6210: remove reset file from debugfs
+
+Kevin Lo (1):
+      rtlwifi: remove set but unused variables
+
+Kristian Evensen (1):
+      mt76: Enable NL80211_EXT_FEATURE_CQM_RSSI_LIST
+
+Larry Finger (1):
+      rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
+
+Liad Kaufman (2):
+      iwlwifi: mvm: add bss color to radiotap
+      iwlwifi: mvm: add support for RX_AMPDU_EOF bit for HE SU
+
+Lorenzo Bianconi (76):
+      mt76x2u: run device cleanup routine if resume fails
+      mt76: verify evt type in usb mcu response
+      mt76: move mt76_reg_pair definition in mt76.h
+      mt76: split __mt76u_mcu_send_msg and mt76u_mcu_send_msg routines
+      mt76: move mt76x2u_mcu_deinit routine in mt76-usb module
+      mt76: add multiple regs read support to usb_mcu layer
+      mt76x0: use mt76u_init for bus initialization
+      mt76x0: remove mt76x0_vendor_reset routine
+      mt76x0: remove mt76x0_vendor_single_wr routine
+      mt76x0: remove mt76x0_mcu_msg_alloc routine
+      mt76x0: use shared mt76 usb mcu completion
+      mt76x0: remove mt76x0_complete_urb routine
+      mt76x0: remove mt76x0_vendor_request routine
+      mt76x0: remove unused mt76x0_wait_asic_ready routine
+      mt76x0: use mt76u_mcu_send_msg utility routine to send fw cmds
+      mt76x0: remove unused mt76x0_mcu structure
+      mt76x0: use mt76u_mcu_fw_send_data for fw uploading
+      mt76x0: remove unused routines for usb_buff alloc/free
+      mt76x2: change mt76x2_tx_complete routine signature
+      mt76: move mt76x2_tx_complete routine in mt76x02-lib module
+      mt76: move mt76x2u_remove_dma_hdr in mt76x02-lib module
+      mt76: move mt76x2u_tx_complete_skb in mt76x02-lib moudule
+      mt76: move mt76_qsel definition in dma.h
+      mt76: move mt76x2u_set_txinfo in mt76x02-lib module
+      mt76x0: introduce mt76x0_tx_prepare_skb routine
+      mt76: move mt76x2u_tx_status_data in mt76x02-lib module
+      mt76x0: disable usb rx bulk aggregation
+      mt76x0: mark device as running in mt76x0_start
+      mt76x0: simplify mt76_mac_process_rx signature
+      mt76x0: add mt76x0_queue_rx_skb routine
+      mt76x0: init mt76_driver_ops callbacks
+      mt76x0: use mt76_alloc_device for device allocation
+      mt76x0: unify tx/rx datapath with mt76x2u driver
+      mt76x0: stop stat workqueue at hw stop
+      mt76x0: set max fragments size
+      mt76x0: remove unused dma.c source file
+      mt76x0: remove unused stat work_queue
+      mt76x0: remove unused {tx/rx}_queue definitions
+      mt76x0: remove unused mt76x0_tx_status routine
+      mt76x0: remove unused endpoint definitions
+      mt76x0: remove unused stat_work
+      mt76x0: enable per-sta tx queueing
+      mt76x0: init hw capabilities
+      mt76: remove unused MT76_MORE_STATS state
+      mt76x0: remove mt76x0_stop_hardware routine
+      mt76: move mt76 rate definitions in mt76x02-lib module
+      mt76x0: alloc mcu buffers first in mt76x0_mcu_cmd_init
+      mt76x0: fix memory leak during hw probe
+      mt76x0: move stop related routines in mt76x0_mac_stop
+      mt76x0: move mt76x0_init_hardware in mt76x0_register_device
+      mt76x0: do not free/alloc buffers during suspend/resume
+      mt76x0: remove has_{2,5}ghz fields of mt76x0_eeprom_params
+      mt76x0: use mt76_register_device for device registration
+      mt76x0: run vco calibration for each channel configuration
+      mt76: move mt76x0 and mt76x2 mcu shared defs in mt76x02_mcu.h
+      mt76: add mt76_mcu_ops data structure for mcu related pointers
+      mt76: usb: use common helpers for mcu_alloc_msg()/mcu_send_msg()
+      mt76: usb: move mt76x02 mcu code in mt76x02-usb module
+      mt76: usb: move mt76u_skb_dma_info in mt76x02_usb_core.c
+      mt76x02: move TXD/RXD/MCU definitions in mt76x02_dma.h
+      mt76x02: add static qualifier to mt76x02_remove_dma_hdr
+      mt76: usb: remove skb check in mt76x{0,2}u mcu routines
+      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_tx_queue_mcu
+      mt76x2: remove leftover mt76u_buf data structure in mt76x2_mcu
+      mt76: introduce mmio data structure in mt76_dev
+      mt76: move __iomem regs in mt76_mmio
+      mt76x2: use mt76_dev instead of mt76x2_dev in mt76x2_mcu_msg_send
+      mt76x2: use common helpers for mcu_alloc_msg()/mcu_send_msg()
+      mt76: unify firmware header between mt76x0 and mt76x2
+      mt76: move mt76{0,2} mcu shared code in mt76x02_mcu.c
+      mt76x2: move mt76x2 mcu shared code in mt76x2_mcu_common.c
+      mt76: move shared mcu_calibrate routine in mt76x02-lib module
+      mt76x2: move mt76x2_phy_tssi_compensate in mt76x2-common module
+      mt76x0: remove mcu source file
+      mt76x0: remove unused usb header file
+      mt76x0: usb: remove mt76_fw definition
+
+Luca Coelho (6):
+      iwlwifi: remove unused TLC debugging commands
+      iwlwifi: mvm: remove duplicate if in iwl_mvm_setup_connection_keep()
+      iwlwifi: mvm: protect D0i3 code behind CONFIG_PM
+      iwlwifi: mvm: support new WoWLAN status FW API
+      iwlwifi: remove all occurrences of the FSF address paragraph
+      iwlwifi: fix devices with PCI Device ID 0x34F0 and 11ac RF modules
+
+Martin Willi (1):
+      ath10k: schedule hardware restart if WMI command times out
+
+Matt Chen (1):
+      iwlwifi: pcie: avoid unnecessary work if NIC is disconnected
+
+Maya Erez (4):
+      wil6210: set edma variables only for Talyn-MB devices
+      wil6210: allocate rx reorder buffer only if rx reorder is enabled
+      wil6210: prevent usage of tx ring 0 for eDMA
+      wil6210: fix RX buffers release and unmap
+
+Mordechay Goodstein (3):
+      iwlwifi: turn timestamp marker cmd off by default
+      iwlwifi: enable reading the value of delay in timestamp_marker cmd
+      iwlwifi: add 80211 hdr offset to trace data
+
+Naftali Goldstein (4):
+      iwlwifi: runtime: avoid calling debugfs read functions more than once
+      iwlwifi: mvm: always init rs_fw with 20MHz bandwidth rates
+      iwlwifi: rs-fw: enable STBC in he correctly
+      iwlwifi: rs-fw: support dcm
+
+Nathan Chancellor (4):
+      ipw2x00: Remove unnecessary parentheses
+      rsi: Remove unnecessary boolean condition
+      ath5k: Remove unused BUG_ON
+      rtlwifi: btcoex: Use proper enumerated types for Wi-Fi only interface
+
+Rajat Jain (1):
+      iwlwifi: pcie: Fail fast if HW is inaccessible at probe
+
+Rakesh Pillai (1):
+      ath10k: skip resetting rx filter for WCN3990
+
+Rasmus Villemoes (1):
+      brcmfmac: fix wrong strnchr usage
+
+Rosen Penev (1):
+      mt76x2u: Add support for Alfa AWUS036ACM
+
+Sara Sharon (11):
+      iwlwifi: mvm: move he RX handling to a separate function
+      iwlwifi: mvm: move he RX handling to a separate function
+      iwlwifi: drop packets with bad status in CD
+      iwlwifi: mvm: fix BAR seq ctrl reporting
+      iwlwifi: mvm: avoid sending too many BARs
+      iwlwifi: pcie: set interrupt coalescing also for gen2
+      iwlwifi: fw: add a restart FW debug function
+      iwlwifi: fw: stop and start debugging using host command
+      iwlwifi: pcie: read correct prph address for newer devices
+      iwlwifi: mvm: use correct FIFO length
+      iwlwifi: pcie: add infrastructure for multiple debug buffers
+
+Shahar S Matityahu (4):
+      iwlwifi: add d3 debug data support
+      iwlwifi: change monitor DMA to be coherent
+      iwlwifi: avoid code duplication in stopping fw debug data recording
+      iwlwifi: debug flow cleanup
+
+Shaul Triebitz (4):
+      iwlwifi: iwlmvm: fix typo when checking for TX Beamforming
+      iwlwifi: mvm: enable sending HE_AIR_SNIFFER command via debugfs
+      iwlwifi: mvm: do not override amsdu size user settings
+      iwlwifi: pcie: set RB size according to user settings
+
+Siva Rebbagondla (2):
+      rsi: fix memory alignment issue in ARM32 platforms
+      rsi: improve kernel thread handling to fix kernel panic
+
+Stanislaw Gruszka (52):
+      mt76: unify wait_for_mac
+      mt76: rename mt76x2_regs.h
+      mt76: merge mt76x0/regs.h into mt76x02_regs.h
+      mt76: create new mt76x02-lib module for common mt76x{0,2} code
+      mt76: unify mac_get_key_info
+      mt76: add helpers for register access with mt76_dev struct
+      mt76: unify mac_shared_key_setup
+      mt76: unify mac_wcid_set_key
+      mt76: unify mac_wcid_setup
+      mt76: use mac_wcid_set_drop in mt76x0
+      mt76x0: use mt76_wcid_free in mt76x0
+      mt76: unify mt76x02_vif struct
+      mt76: unify sta structure part 1
+      mt76: unify sta structure part 2
+      mt76x0: initalize custom tx queues
+      mt76x0: use mt76x02_sta and mt76x02_tx_status
+      mt76x0: fix remove_interface
+      mt76: move wcid fields to common mt76_dev struct
+      mt76: unify sta_add / sta_remove
+      mt76: pratially unify add_interface
+      mt76: unify ampdu_action
+      mt76: unify set_key
+      mt76x0: remove empty sta_notify
+      mt76: unify AC to hw queue mapping
+      mt76: unify conf_tx
+      mt76x0: remove vif_mask
+      mt76: unify remove_interface
+      mt76: unify add_interface
+      mt76: unify sta_rate_tbl_update and related helpers
+      mt76: unify txwi and rxwi structures
+      mt76: unify load_tx_status
+      mt76: unify send_tx_status and related helpers
+      mt76: use mt76_rx_status in mt76x0
+      mt76: unify mac_process_rate
+      mt76x0: reserve enough space in mac80211
+      mt76: unify {insert/remove}_hdr_pad
+      mt76: partially unify filling txwi fields
+      mt76x0: trim rx skb to proper length
+      mt76x0: inital split between pci and usb
+      mt76x0: remove unused mt76x0_wcid
+      mt76x0: remove some usb specific code from mt76x0_register_device
+      mt76x0: make device allocation bus neutral
+      mt76: add usb implementation of {wr,rd}_rp
+      mt76: add rd_rp and wr_rp to bus_ops/mcu_ops
+      mt76x0: remove unused mt76x0_burst_read_regs
+      mt76x0: remove mt76x0_burst_write_regs()
+      mt76x0: usb: move firmware loading to usb.c
+      rt2800: move usb specific txdone/txstatus routines to rt2800lib
+      rt2800mmio: use txdone/txstatus routines from lib
+      rt2x00: do not check for txstatus timeout every time on tasklet
+      rt2x00: use different txstatus timeouts when flushing
+      rt2800: flush and txstatus rework for rt2800mmio
+
+Sven Eckelmann (1):
+      ath10k: limit available channels via DT ieee80211-freq-limit
+
+Takashi Iwai (1):
+      brcmsmac: Use kvmalloc() for ucode allocations
+
+Tamizh chelvam (1):
+      ath10k: fix kernel panic by moving pci flush after napi_disable
+
+Varsha Rao (4):
+      ath9k: Remove unnecessary parentheses
+      ath6kl: Remove unnecessary parentheses
+      brcmsmac: Remove extra parentheses
+      cw1200: Remove extra parentheses
+
+YueHaibing (5):
+      wcn36xx: Use kmemdup instead of duplicating it in wcn36xx_smd_process_ptt_msg_rsp
+      wcn36xx: use dma_zalloc_coherent instead of allocator/memset
+      rsi: remove set but not used variables 'header_size' and 'tx_params'
+      brcmfmac: remove set but not used variables 'sfdoff' and 'pad_size'
+      qtnfmac: remove set but not used variable 'vif'
+
+zhong jiang (1):
+      brcm80211: remove redundant condition check before debugfs_remove_recursive
+
+ drivers/net/wireless/ath/ath10k/ahb.c              |    4 +-
+ drivers/net/wireless/ath/ath10k/ce.c               |   24 +-
+ drivers/net/wireless/ath/ath10k/core.c             |   17 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c           |    4 +-
+ drivers/net/wireless/ath/ath10k/hw.h               |    5 +
+ drivers/net/wireless/ath/ath10k/mac.c              |    2 +
+ drivers/net/wireless/ath/ath10k/pci.c              |    2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c              |    6 +
+ drivers/net/wireless/ath/ath5k/debug.c             |    2 -
+ drivers/net/wireless/ath/ath6kl/main.c             |    2 +-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c        |    4 -
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    1 -
+ drivers/net/wireless/ath/ath9k/debug_sta.c         |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   12 +-
+ drivers/net/wireless/ath/ath9k/tx99.c              |    9 -
+ drivers/net/wireless/ath/ath9k/xmit.c              |    2 +-
+ drivers/net/wireless/ath/carl9170/tx.c             |    4 +-
+ drivers/net/wireless/ath/wcn36xx/dxe.c             |   19 +-
+ drivers/net/wireless/ath/wcn36xx/smd.c             |    4 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  333 ++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c         |   47 +-
+ drivers/net/wireless/ath/wil6210/main.c            |   13 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c        |    1 +
+ drivers/net/wireless/ath/wil6210/rx_reorder.c      |   12 +-
+ drivers/net/wireless/ath/wil6210/txrx.c            |   98 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c       |   26 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h         |   19 +
+ drivers/net/wireless/ath/wil6210/wmi.c             |  350 ++++-
+ drivers/net/wireless/ath/wil6210/wmi.h             |    2 +
+ drivers/net/wireless/broadcom/b43/b43.h            |    2 +-
+ drivers/net/wireless/broadcom/b43/dma.c            |    2 +-
+ drivers/net/wireless/broadcom/b43/main.c           |    8 +-
+ drivers/net/wireless/broadcom/b43legacy/dma.c      |    2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |    8 +
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |    4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |    2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |    1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |    5 +-
+ .../wireless/broadcom/brcm80211/brcmsmac/debug.c   |    3 +-
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c      |    6 +-
+ .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        |    4 +-
+ .../net/wireless/broadcom/brcm80211/brcmutil/d11.c |   34 +-
+ .../broadcom/brcm80211/include/brcmu_wifi.h        |    3 +
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c       |    2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/1000.c      |    4 -
+ drivers/net/wireless/intel/iwlwifi/cfg/2000.c      |    4 -
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |   71 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/5000.c      |    4 -
+ drivers/net/wireless/intel/iwlwifi/cfg/6000.c      |    4 -
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c      |    5 -
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c      |    5 -
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c      |    4 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/agn.h       |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/calib.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/calib.h     |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/commands.h  |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c   |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/dev.h       |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/devices.c   |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/led.c       |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/led.h       |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/lib.c       |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c  |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c      |    6 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/power.c     |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/power.h     |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c        |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.h        |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/rx.c        |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/rxon.c      |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c      |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/sta.c       |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/tt.c        |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/tt.h        |    4 -
+ drivers/net/wireless/intel/iwlwifi/dvm/tx.c        |    5 -
+ drivers/net/wireless/intel/iwlwifi/dvm/ucode.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c       |    3 -
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h       |    3 -
+ drivers/net/wireless/intel/iwlwifi/fw/api/coex.h   |    3 +
+ .../net/wireless/intel/iwlwifi/fw/api/commands.h   |    3 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/d3.h     |   89 +-
+ .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |    5 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/debug.h  |   32 +
+ .../net/wireless/intel/iwlwifi/fw/api/mac-cfg.h    |   49 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/mac.h    |   14 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/power.h  |   30 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     |   78 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/rx.h     |  189 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h   |    1 +
+ drivers/net/wireless/intel/iwlwifi/fw/api/sta.h    |    4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h     |    8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c        |  337 ++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |   97 +-
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c    |  124 +-
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h    |    3 -
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h |    8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h       |   32 +-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h        |    5 -
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.c |    5 -
+ drivers/net/wireless/intel/iwlwifi/fw/notif-wait.h |    5 -
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |    1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-agn-hw.h    |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   18 +-
+ .../net/wireless/intel/iwlwifi/iwl-context-info.h  |   25 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |    6 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.h     |    4 -
+ .../net/wireless/intel/iwlwifi/iwl-devtrace-data.h |   10 +-
+ .../net/wireless/intel/iwlwifi/iwl-devtrace-io.h   |    4 -
+ .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  |   69 +-
+ .../net/wireless/intel/iwlwifi/iwl-devtrace-msg.h  |    4 -
+ .../wireless/intel/iwlwifi/iwl-devtrace-ucode.h    |    4 -
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c  |    7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h  |   22 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   24 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.h       |    5 -
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c  |    7 +-
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |    5 -
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-read.c   |    5 -
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-read.h   |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |    5 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-io.c        |    4 -
+ drivers/net/wireless/intel/iwlwifi/iwl-io.h        |    4 -
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h |    3 -
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h   |    7 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c    |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h    |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h      |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-scd.h       |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   41 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/binding.c   |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |   23 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  183 ++-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   37 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.h   |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |   28 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/led.c       |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |   70 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   91 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |   36 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       |    5 -
+ .../net/wireless/intel/iwlwifi/mvm/offloading.c    |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   69 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/quota.c     |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     |   35 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   25 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |    4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  721 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |   26 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   30 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c      |    3 -
+ drivers/net/wireless/intel/iwlwifi/mvm/testmode.h  |    5 -
+ .../net/wireless/intel/iwlwifi/mvm/time-event.h    |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.c       |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tof.h       |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |    5 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  162 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |   27 +-
+ .../wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c   |    4 +-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |   28 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |   60 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  109 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   20 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |    9 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  267 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  182 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   93 +-
+ .../net/wireless/intersil/orinoco/orinoco_usb.c    |    6 +-
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c  |    5 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c         |   13 +
+ drivers/net/wireless/mediatek/mt76/Kconfig         |   29 +-
+ drivers/net/wireless/mediatek/mt76/Makefile        |   10 +-
+ drivers/net/wireless/mediatek/mt76/dma.c           |   16 +-
+ drivers/net/wireless/mediatek/mt76/dma.h           |   51 +-
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |    6 +-
+ drivers/net/wireless/mediatek/mt76/mmio.c          |   12 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h          |   94 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/Makefile |   13 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/core.c   |   34 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/dma.c    |  522 -------
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c |   26 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.h |    3 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c   |  400 ++----
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c    |  437 +-----
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h    |  136 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c   |  272 +---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c    |  656 ---------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h    |   61 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h |  181 +--
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c    |   81 ++
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c    |   37 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/regs.h   |  651 ---------
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h  |   14 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c     |  245 +---
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  382 +++--
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.h    |   61 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/util.c   |   42 -
+ drivers/net/wireless/mediatek/mt76/mt76x02_dma.h   |   60 +
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   |  504 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h   |  205 +++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c   |  213 +++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h   |  100 ++
+ .../mt76/{mt76x2_regs.h => mt76x02_regs.h}         |   78 +-
+ .../mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h}  |   22 +-
+ .../net/wireless/mediatek/mt76/mt76x02_usb_core.c  |   72 +
+ .../net/wireless/mediatek/mt76/mt76x02_usb_mcu.c   |  359 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  456 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h  |   54 +
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |   88 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c |  318 +----
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    |   55 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   |   27 +-
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    |   48 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    |   19 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |  131 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c |  488 +------
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   |   93 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    |  261 +---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    |   68 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mcu_common.c |  124 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    |   65 +-
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c |   53 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  |    2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     |   13 +-
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  |   49 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_usb.c    |   17 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h       |   17 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  |   69 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  |   23 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   |    2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  |   47 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c   |  218 +--
+ drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c   |   67 +-
+ drivers/net/wireless/mediatek/mt76/tx.c            |   16 +
+ drivers/net/wireless/mediatek/mt76/usb.c           |  105 +-
+ drivers/net/wireless/mediatek/mt76/usb_mcu.c       |  204 +--
+ drivers/net/wireless/quantenna/qtnfmac/Makefile    |    3 +-
+ drivers/net/wireless/quantenna/qtnfmac/bus.h       |    5 +-
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  |    3 -
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |  391 +++++
+ .../wireless/quantenna/qtnfmac/pcie/pcie_priv.h    |   85 ++
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 1262 +++++++++++++++++
+ .../{pearl/pcie_ipc.h => pcie/pearl_pcie_ipc.h}    |   58 -
+ .../pcie_regs_pearl.h => pcie/pearl_pcie_regs.h}   |    0
+ .../net/wireless/quantenna/qtnfmac/pearl/pcie.c    | 1494 --------------------
+ .../quantenna/qtnfmac/pearl/pcie_bus_priv.h        |   91 --
+ .../net/wireless/quantenna/qtnfmac/qtn_hw_ids.h    |   14 +
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |  154 ++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h     |    3 +
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c    |  277 ++--
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.h    |    1 +
+ drivers/net/wireless/ralink/rt2x00/rt2800pci.c     |    2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c     |  143 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h        |    3 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00debug.c   |   18 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c     |    4 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c   |    2 +
+ .../net/wireless/realtek/rtl818x/rtl8187/leds.c    |    2 +-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  |    2 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |    6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |    6 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |    4 +-
+ drivers/net/wireless/rsi/rsi_91x_hal.c             |    4 -
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c        |    2 +-
+ drivers/net/wireless/rsi/rsi_91x_usb.c             |   11 +-
+ drivers/net/wireless/rsi/rsi_common.h              |    1 -
+ drivers/net/wireless/st/cw1200/txrx.c              |    4 +-
+ 276 files changed, 8620 insertions(+), 9949 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/core.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/dma.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/regs.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/usb.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_dma.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_regs.h => mt76x02_regs.h} (89%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_dma.h => mt76x02_usb.h} (58%)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_usb_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu_common.c
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pcie_priv.h
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
+ rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_ipc.h => pcie/pearl_pcie_ipc.h} (68%)
+ rename drivers/net/wireless/quantenna/qtnfmac/{pearl/pcie_regs_pearl.h => pcie/pearl_pcie_regs.h} (100%)
+ delete mode 100644 drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+ delete mode 100644 drivers/net/wireless/quantenna/qtnfmac/pearl/pcie_bus_priv.h
