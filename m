@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E18C65BA7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57948C00449
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56907213A2
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 56907213A2
+	by mail.kernel.org (Postfix) with ESMTP id E493A2098A
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E493A2098A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbeJCSJd (ORCPT
+        id S1726855AbeJCSJc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 14:09:33 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:58131 "EHLO
+        Wed, 3 Oct 2018 14:09:32 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:58129 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726726AbeJCSJc (ORCPT
+        with ESMTP id S1726694AbeJCSJc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 3 Oct 2018 14:09:32 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w93BLH8j012979, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w93BLG6I012967, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w93BLH8j012979
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w93BLG6I012967
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 3 Oct 2018 19:21:17 +0800
+        Wed, 3 Oct 2018 19:21:16 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 3 Oct 2018 19:21:17 +0800
+ 14.3.408.0; Wed, 3 Oct 2018 19:21:15 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <pkshih@realtek.com>,
         <tehuang@realtek.com>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [RFC v3 04/12] rtw88: trx files
-Date:   Wed, 3 Oct 2018 19:20:51 +0800
-Message-ID: <1538565659-29530-5-git-send-email-yhchuang@realtek.com>
+Subject: [RFC v3 02/12] rtw88: core files
+Date:   Wed, 3 Oct 2018 19:20:49 +0800
+Message-ID: <1538565659-29530-3-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
 References: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
@@ -53,568 +53,954 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-trx files for Realtek 802.11ac wireless network chips
+core files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rx.c | 144 +++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rx.h |  30 ++++
- drivers/net/wireless/realtek/rtw88/tx.c | 271 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/tx.h |  81 ++++++++++
- 4 files changed, 526 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
+ drivers/net/wireless/realtek/rtw88/ps.c   | 198 +++++++++++++
+ drivers/net/wireless/realtek/rtw88/ps.h   |  21 ++
+ drivers/net/wireless/realtek/rtw88/regd.c | 462 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/regd.h |  40 +++
+ drivers/net/wireless/realtek/rtw88/sec.c  | 135 +++++++++
+ drivers/net/wireless/realtek/rtw88/sec.h  |  40 +++
+ 6 files changed, 896 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
 new file mode 100644
-index 0000000..83214db
+index 0000000..549c4f4
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rx.c
-@@ -0,0 +1,144 @@
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -0,0 +1,198 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
 +#include "main.h"
-+#include "rx.h"
++#include "fw.h"
 +#include "ps.h"
++#include "mac.h"
++#include "debug.h"
 +
-+void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb)
++static int rtw_ips_pwr_up(struct rtw_dev *rtwdev)
 +{
-+	struct ieee80211_hdr *hdr;
-+	struct rtw_vif *rtwvif;
++	int ret;
 +
-+	hdr = (struct ieee80211_hdr *)skb->data;
++	ret = rtw_core_start(rtwdev);
++	if (ret)
++		rtw_err(rtwdev, "leave idle state failed\n");
 +
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return;
++	rtw_flag_clear(rtwdev, RTW_FLAG_INACTIVE_PS);
 +
-+	if (!is_broadcast_ether_addr(hdr->addr1) &&
-+	    !is_multicast_ether_addr(hdr->addr1)) {
-+		rtwdev->stats.rx_unicast += skb->len;
-+		rtwdev->stats.rx_cnt++;
-+		if (vif) {
-+			rtwvif = (struct rtw_vif *)vif->drv_priv;
-+			rtwvif->stats.rx_unicast += skb->len;
-+			rtwvif->stats.rx_cnt++;
-+			if (rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
-+				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
-+		}
-+	}
++	return ret;
 +}
-+EXPORT_SYMBOL(rtw_rx_stats);
 +
-+static void rtw_rx_rssi_add(struct rtw_dev *rtwdev,
-+			    struct rtw_rx_pkt_stat *pkt_stat,
-+			    struct ieee80211_hdr *hdr)
++int rtw_enter_ips(struct rtw_dev *rtwdev)
 +{
-+	struct ieee80211_vif *vif;
++	rtw_flag_set(rtwdev, RTW_FLAG_INACTIVE_PS);
++
++	rtw_core_stop(rtwdev);
++
++	return 0;
++}
++
++static void rtw_restore_port_cfg(struct rtw_dev *rtwdev)
++{
 +	struct rtw_vif *rtwvif;
-+	struct rtw_sta_info *si;
-+	__le16 fc = hdr->frame_control;
-+	u8 *bssid;
-+	u8 macid = RTW_BC_MC_MACID;
-+	bool match_bssid = false;
-+	bool is_packet_match_bssid;
-+	bool if_addr_match;
-+	bool hw_err;
-+	bool ctl;
++	u32 config = ~0;
 +
 +	rcu_read_lock();
-+
-+	bssid = get_hdr_bssid(hdr);
-+	rtwvif = get_hdr_vif(rtwdev, hdr);
-+	vif = rtwvif ? rtwvif->vif : NULL;
-+	pkt_stat->vif = vif;
-+	if (unlikely(is_broadcast_ether_addr(hdr->addr1) ||
-+		     is_multicast_ether_addr(hdr->addr1)))
-+		match_bssid = get_hdr_match_bssid(rtwdev, hdr, bssid);
-+	else if (vif)
-+		match_bssid = ether_addr_equal(vif->bss_conf.bssid, bssid);
-+	si = get_hdr_sta(rtwdev, vif, hdr);
-+	macid = si ? si->mac_id : RTW_BC_MC_MACID;
-+	pkt_stat->mac_id = macid;
-+	pkt_stat->si = si;
-+
-+	if_addr_match = !!vif;
-+	hw_err = pkt_stat->crc_err || pkt_stat->icv_err;
-+	ctl = ieee80211_is_ctl(fc);
-+	is_packet_match_bssid = !hw_err && !ctl && match_bssid;
-+
-+	if (((match_bssid && if_addr_match) || ieee80211_is_beacon(fc)) &&
-+	    (!hw_err && !ctl) && (pkt_stat->phy_status && pkt_stat->si))
-+		ewma_rssi_add(&pkt_stat->si->avg_rssi, pkt_stat->rssi);
-+
++	list_for_each_entry_rcu(rtwvif, &rtwdev->vif_list, list)
++		rtw_vif_port_config(rtwdev, rtwvif, config);
 +	rcu_read_unlock();
 +}
 +
-+void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
-+			   struct rtw_rx_pkt_stat *pkt_stat,
-+			   struct ieee80211_hdr *hdr,
-+			   struct ieee80211_rx_status *rx_status,
-+			   u8 *phy_status)
++int rtw_leave_ips(struct rtw_dev *rtwdev)
 +{
-+	struct ieee80211_hw *hw = rtwdev->hw;
++	int ret;
 +
-+	memset(rx_status, 0, sizeof(*rx_status));
-+	rx_status->freq = hw->conf.chandef.chan->center_freq;
-+	rx_status->band = hw->conf.chandef.chan->band;
-+	if (pkt_stat->crc_err)
-+		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	if (pkt_stat->decrypted)
-+		rx_status->flag |= RX_FLAG_DECRYPTED;
-+
-+	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0)
-+		rx_status->encoding = RX_ENC_VHT;
-+	else if (pkt_stat->rate >= DESC_RATEMCS0)
-+		rx_status->encoding = RX_ENC_HT;
-+
-+	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0 &&
-+	    pkt_stat->rate <= DESC_RATEVHT1SS_MCS9) {
-+		rx_status->nss = 1;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT1SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT2SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT2SS_MCS9) {
-+		rx_status->nss = 2;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT2SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT3SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT3SS_MCS9) {
-+		rx_status->nss = 3;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT3SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEVHT4SS_MCS0 &&
-+		   pkt_stat->rate <= DESC_RATEVHT4SS_MCS9) {
-+		rx_status->nss = 4;
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT4SS_MCS0;
-+	} else if (pkt_stat->rate >= DESC_RATEMCS0 &&
-+		   pkt_stat->rate <= DESC_RATEMCS15) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATEMCS0;
-+	} else if (rx_status->band == NL80211_BAND_5GHZ &&
-+		   pkt_stat->rate >= DESC_RATE6M &&
-+		   pkt_stat->rate <= DESC_RATE54M) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATE6M;
-+	} else if (rx_status->band == NL80211_BAND_2GHZ &&
-+		   pkt_stat->rate >= DESC_RATE1M &&
-+		   pkt_stat->rate <= DESC_RATE54M) {
-+		rx_status->rate_idx = pkt_stat->rate - DESC_RATE1M;
-+	} else {
-+		rx_status->rate_idx = 0;
++	ret = rtw_ips_pwr_up(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "fail to leave ips state");
++		return ret;
 +	}
 +
-+	rx_status->flag |= RX_FLAG_MACTIME_START;
-+	rx_status->mactime = pkt_stat->tsf_low;
++	rtw_restore_port_cfg(rtwdev);
 +
-+	if (pkt_stat->bw == RTW_CHANNEL_WIDTH_80)
-+		rx_status->bw = RATE_INFO_BW_80;
-+	else if (pkt_stat->bw == RTW_CHANNEL_WIDTH_40)
-+		rx_status->bw = RATE_INFO_BW_40;
-+	else
-+		rx_status->bw = RATE_INFO_BW_20;
-+
-+	rx_status->signal = pkt_stat->signal_power;
-+
-+	rtw_rx_rssi_add(rtwdev, pkt_stat, hdr);
++	return 0;
 +}
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.h b/drivers/net/wireless/realtek/rtw88/rx.h
++
++void rtw_lps_enter_check(struct rtw_dev *rtwdev)
++{
++	struct rtw_vif *rtwvif, *lps_if;
++	u8 assoc_cnt = 0;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(rtwvif, &rtwdev->vif_list, list) {
++		/* only station mode supports lps */
++		if (rtwvif->vif->type != NL80211_IFTYPE_STATION)
++			goto unlock;
++		/* take the station associated into account */
++		if (rtwvif->vif->bss_conf.assoc) {
++			lps_if = rtwvif;
++			assoc_cnt++;
++		}
++	}
++
++	/* fw supports only one station associated to enter lps, if there are
++	 * more than two stations associated to the AP, then we can not enter
++	 * lps, because fw does not handle the overlapped beacon interval
++	 */
++	if (assoc_cnt != 1)
++		goto unlock;
++
++	/* the remained interface is the one we want to enter lps */
++	if (lps_if->stats.tx_cnt <= RTW_LPS_THRESHOLD &&
++	    lps_if->stats.rx_cnt <= RTW_LPS_THRESHOLD)
++		rtw_enter_lps(rtwdev, lps_if);
++unlock:
++	rcu_read_unlock();
++}
++
++static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	conf->state = RTW_ALL_ON;
++	conf->awake_interval = 1;
++	conf->rlbm = 0;
++	conf->smart_ps = 0;
++
++	rtw_fw_set_pwr_mode(rtwdev);
++	rtw_flag_clear(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++static void rtw_enter_lps_core(struct rtw_dev *rtwdev)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	conf->state = RTW_RF_OFF;
++	conf->awake_interval = 1;
++	conf->rlbm = 1;
++	conf->smart_ps = 2;
++
++	rtw_fw_set_pwr_mode(rtwdev);
++	rtw_flag_set(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++void rtw_lps_work(struct work_struct *work)
++{
++	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
++					      lps_work.work);
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++	struct rtw_vif *rtwvif = conf->rtwvif;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (conf->mode == RTW_MODE_LPS)
++		rtw_enter_lps_core(rtwdev);
++	else
++		rtw_leave_lps_core(rtwdev);
++}
++
++void rtw_enter_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_LPS;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = true;
++
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->lps_work, 0);
++}
++
++void rtw_leave_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (!rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_ACTIVE;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = false;
++
++	ieee80211_queue_delayed_work(rtwdev->hw, &rtwdev->lps_work, 0);
++}
++
++bool rtw_in_lps(struct rtw_dev *rtwdev)
++{
++	return rtw_flag_check(rtwdev, RTW_FLAG_LEISURE_PS);
++}
++
++void rtw_enter_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_LPS;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = true;
++
++	rtw_enter_lps_core(rtwdev);
++}
++
++void rtw_leave_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
++{
++	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
++
++	if (WARN_ON(!rtwvif))
++		return;
++
++	if (!rtwvif->in_lps)
++		return;
++
++	conf->mode = RTW_MODE_ACTIVE;
++	conf->rtwvif = rtwvif;
++	rtwvif->in_lps = false;
++
++	rtw_leave_lps_core(rtwdev);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
 new file mode 100644
-index 0000000..9a71ffb
+index 0000000..71a74d1
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rx.h
-@@ -0,0 +1,30 @@
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -0,0 +1,21 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_RX_H_
-+#define __RTW_RX_H_
++#ifndef __RTW_PS_H_
++#define __RTW_PS_H_
 +
-+#define GET_RX_DESC_PHYST(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 26, 1)
-+#define GET_RX_DESC_ICV_ERR(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 15, 1)
-+#define GET_RX_DESC_CRC32(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 14, 1)
-+#define GET_RX_DESC_SWDEC(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 27, 1)
-+#define GET_RX_DESC_C2H(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x08, 28, 1)
-+#define GET_RX_DESC_PKT_LEN(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 0, 14)
-+#define GET_RX_DESC_DRV_INFO_SIZE(rxdesc) \
-+	LE_BITS_TO_4BYTE((rxdesc) + 0x00, 16, 4)
-+#define GET_RX_DESC_SHIFT(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 24, 2)
-+#define GET_RX_DESC_RX_RATE(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x0C, 0, 7)
-+#define GET_RX_DESC_MACID(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x04, 0, 7)
-+#define GET_RX_DESC_PPDU_CNT(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x08, 29, 2)
-+#define GET_RX_DESC_TSFL(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x14, 0, 32)
++#define RTW_LPS_THRESHOLD	2
 +
-+void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb);
-+void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
-+			   struct rtw_rx_pkt_stat *pkt_stat,
-+			   struct ieee80211_hdr *hdr,
-+			   struct ieee80211_rx_status *rx_status,
-+			   u8 *phy_status);
++int rtw_enter_ips(struct rtw_dev *rtwdev);
++int rtw_leave_ips(struct rtw_dev *rtwdev);
++
++void rtw_lps_enter_check(struct rtw_dev *rtwdev);
++void rtw_lps_work(struct work_struct *work);
++void rtw_enter_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_leave_lps_irqsafe(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_enter_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++void rtw_leave_lps(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif);
++bool rtw_in_lps(struct rtw_dev *rtwdev);
 +
 +#endif
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
 new file mode 100644
-index 0000000..eb70123
+index 0000000..4c2dcd3
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -0,0 +1,271 @@
++++ b/drivers/net/wireless/realtek/rtw88/regd.c
+@@ -0,0 +1,462 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
 +#include "main.h"
-+#include "tx.h"
-+#include "ps.h"
++#include "regd.h"
 +
-+static
-+void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-+		  struct sk_buff *skb)
++static struct country_code_to_enum_rd all_countries[] = {
++	{COUNTRY_CODE_FCC, "US"},
++	{COUNTRY_CODE_IC, "US"},
++	{COUNTRY_CODE_ETSI, "EC"},
++	{COUNTRY_CODE_SPAIN, "EC"},
++	{COUNTRY_CODE_FRANCE, "EC"},
++	{COUNTRY_CODE_MKK, "JP"},
++	{COUNTRY_CODE_MKK1, "JP"},
++	{COUNTRY_CODE_ISRAEL, "EC"},
++	{COUNTRY_CODE_TELEC, "JP"},
++	{COUNTRY_CODE_MIC, "JP"},
++	{COUNTRY_CODE_GLOBAL_DOMAIN, "JP"},
++	{COUNTRY_CODE_WORLD_WIDE_13, "EC"},
++	{COUNTRY_CODE_TELEC_NETGEAR, "EC"},
++	{COUNTRY_CODE_WORLD_WIDE_13_5G_ALL, "US"},
++};
++
++/* Only these channels allow active
++ * scan on all world regulatory domains
++ */
++#define RTW_2GHZ_CH01_11	\
++	REG_RULE(2412 - 10, 2462 + 10, 40, 0, 20, 0)
++
++/* Enable active scan on these case
++ * by case basis by regulatory domain
++ */
++#define RTW_2GHZ_CH12_13	\
++	REG_RULE(2467 - 10, 2472 + 10, 40, 0, 20,\
++	NL80211_RRF_PASSIVE_SCAN)
++
++#define RTW_2GHZ_CH14	\
++	REG_RULE(2484 - 10, 2484 + 10, 40, 0, 20, \
++	NL80211_RRF_PASSIVE_SCAN | \
++	NL80211_RRF_NO_OFDM)
++
++/* 5G chan 36 - chan 64 */
++#define RTW_5GHZ_5150_5350	\
++	REG_RULE(5150 - 10, 5350 + 10, 80, 0, 30, 0)
++/* 5G chan 100 - chan 165 */
++#define RTW_5GHZ_5470_5850	\
++	REG_RULE(5470 - 10, 5850 + 10, 80, 0, 30, 0)
++/* 5G chan 149 - chan 165 */
++#define RTW_5GHZ_5725_5850	\
++	REG_RULE(5725 - 10, 5850 + 10, 80, 0, 30, 0)
++
++#define RTW_5GHZ_ALL	\
++	(RTW_5GHZ_5150_5350, RTW_5GHZ_5470_5850)
++
++static const struct ieee80211_regdomain rtw_regdom_11 = {
++	.n_reg_rules = 1,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_12_13 = {
++	.n_reg_rules = 2,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_2GHZ_CH12_13,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_no_midband = {
++	.n_reg_rules = 3,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_5GHZ_5150_5350,
++		RTW_5GHZ_5725_5850,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_60_64 = {
++	.n_reg_rules = 3,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_2GHZ_CH12_13,
++		RTW_5GHZ_5725_5850,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_14_60_64 = {
++	.n_reg_rules = 4,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_2GHZ_CH12_13,
++		RTW_2GHZ_CH14,
++		RTW_5GHZ_5725_5850,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_12_13_5g_all = {
++	.n_reg_rules = 4,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_2GHZ_CH12_13,
++		RTW_5GHZ_5150_5350,
++		RTW_5GHZ_5470_5850,
++	}
++};
++
++static const struct ieee80211_regdomain rtw_regdom_14 = {
++	.n_reg_rules = 3,
++	.alpha2 = "99",
++	.reg_rules = {
++		RTW_2GHZ_CH01_11,
++		RTW_2GHZ_CH12_13,
++		RTW_2GHZ_CH14,
++	}
++};
++
++static bool rtw_is_radar_freq(u16 center_freq)
 +{
-+	struct ieee80211_hdr *hdr;
-+	struct rtw_vif *rtwvif;
++	return center_freq >= 5260 && center_freq <= 5700;
++}
 +
-+	hdr = (struct ieee80211_hdr *)skb->data;
++static void rtw_regd_apply_beaconing_flags(struct wiphy *wiphy,
++					   enum nl80211_reg_initiator initiator)
++{
++	enum nl80211_band band;
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_reg_rule *reg_rule;
++	struct ieee80211_channel *ch;
++	unsigned int i;
 +
-+	if (!ieee80211_is_data(hdr->frame_control))
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++
++		sband = wiphy->bands[band];
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++			if (rtw_is_radar_freq(ch->center_freq) ||
++			    (ch->flags & IEEE80211_CHAN_RADAR))
++				continue;
++			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++				reg_rule = freq_reg_info(wiphy,
++							 ch->center_freq);
++				if (IS_ERR(reg_rule))
++					continue;
++
++				/* If 11d had a rule for this channel ensure
++				 * we enable adhoc/beaconing if it allows us to
++				 * use it. Note that we would have disabled it
++				 * by applying our static world regdomain by
++				 * default during init, prior to calling our
++				 * regulatory_hint().
++				 */
++				if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
++					ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
++				if (!(reg_rule->flags &
++				      NL80211_RRF_PASSIVE_SCAN))
++					ch->flags &=
++					    ~IEEE80211_CHAN_PASSIVE_SCAN;
++			} else {
++				if (ch->beacon_found)
++					ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
++						   IEEE80211_CHAN_PASSIVE_SCAN);
++			}
++		}
++	}
++}
++
++/* Allows active scan scan on Ch 12 and 13 */
++static void
++rtw_regd_apply_active_scan_flags(struct wiphy *wiphy,
++				 enum nl80211_reg_initiator initiator)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	const struct ieee80211_reg_rule *reg_rule;
++
++	if (!wiphy->bands[NL80211_BAND_2GHZ])
++		return;
++	sband = wiphy->bands[NL80211_BAND_2GHZ];
++
++	/* If no country IE has been received always enable active scan
++	 * on these channels. This is only done for specific regulatory SKUs
++	 */
++	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++		ch = &sband->channels[11];	/* CH 12 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		ch = &sband->channels[12];	/* CH 13 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		return;
++	}
++
++	/* If a country IE has been received check its rule for this
++	 * channel first before enabling active scan. The passive scan
++	 * would have been enforced by the initial processing of our
++	 * custom regulatory domain.
++	 */
++
++	ch = &sband->channels[11];	/* CH 12 */
++	reg_rule = freq_reg_info(wiphy, ch->center_freq);
++	if (!IS_ERR(reg_rule)) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++
++	ch = &sband->channels[12];	/* CH 13 */
++	reg_rule = freq_reg_info(wiphy, ch->center_freq);
++	if (!IS_ERR(reg_rule)) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++}
++
++static void rtw_regd_apply_hw_cap_flags(struct wiphy *wiphy)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	int i;
++
++	if (efuse->hw_cap.bw & BIT(RTW_CHANNEL_WIDTH_80))
 +		return;
 +
-+	if (!is_broadcast_ether_addr(hdr->addr1) &&
-+	    !is_multicast_ether_addr(hdr->addr1)) {
-+		rtwdev->stats.tx_unicast += skb->len;
-+		rtwdev->stats.tx_cnt++;
-+		if (vif) {
-+			rtwvif = (struct rtw_vif *)vif->drv_priv;
-+			rtwvif->stats.tx_unicast += skb->len;
-+			rtwvif->stats.tx_cnt++;
-+			if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD)
-+				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
-+		}
++	sband = wiphy->bands[NL80211_BAND_2GHZ];
++	if (!sband)
++		goto out_5g;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		ch->flags |= IEEE80211_CHAN_NO_80MHZ;
++	}
++
++out_5g:
++	sband = wiphy->bands[NL80211_BAND_5GHZ];
++	if (!sband)
++		return;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		ch->flags |= IEEE80211_CHAN_NO_80MHZ;
 +	}
 +}
 +
-+void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
++/* Always apply Radar/DFS rules on
++ * freq range 5260 MHz - 5700 MHz
++ */
++static void rtw_regd_apply_radar_flags(struct wiphy *wiphy)
 +{
-+	u8 *buf = skb->data;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	int i;
 +
-+	SET_TX_DESC_TXPKTSIZE(buf, pkt_info->tx_pkt_size);
-+	SET_TX_DESC_OFFSET(buf, pkt_info->offset);
-+	SET_TX_DESC_PKT_OFFSET(buf, pkt_info->pkt_offset);
-+	SET_TX_DESC_QSEL(buf, pkt_info->qsel);
-+	SET_TX_DESC_BMC(buf, pkt_info->bmc);
-+	SET_TX_DESC_RATE_ID(buf, pkt_info->rate_id);
-+	SET_TX_DESC_DATARATE(buf, pkt_info->rate);
-+	SET_TX_DESC_DISDATAFB(buf, pkt_info->dis_rate_fallback);
-+	SET_TX_DESC_USE_RATE(buf, pkt_info->use_rate);
-+	SET_TX_DESC_SEC_TYPE(buf, pkt_info->sec_type);
-+	SET_TX_DESC_DATA_BW(buf, pkt_info->bw);
-+	SET_TX_DESC_SW_SEQ(buf, pkt_info->seq);
-+	SET_TX_DESC_MAX_AGG_NUM(buf, pkt_info->ampdu_factor);
-+	SET_TX_DESC_AMPDU_DENSITY(buf, pkt_info->ampdu_density);
-+	SET_TX_DESC_DATA_STBC(buf, pkt_info->stbc);
-+	SET_TX_DESC_DATA_LDPC(buf, pkt_info->ldpc);
-+	SET_TX_DESC_AGG_EN(buf, pkt_info->ampdu_en);
-+	SET_TX_DESC_LS(buf, 1);
-+	SET_TX_DESC_DATA_SHORT(buf, pkt_info->short_gi);
-+}
-+EXPORT_SYMBOL(rtw_tx_fill_tx_desc);
++	if (!wiphy->bands[NL80211_BAND_5GHZ])
++		return;
 +
-+static u8 get_tx_ampdu_factor(struct ieee80211_sta *sta)
-+{
-+	u8 exp = sta->ht_cap.ampdu_factor;
++	sband = wiphy->bands[NL80211_BAND_5GHZ];
 +
-+	/* the least ampdu factor is 8K, and the value in the tx desc is the
-+	 * max aggregation num, which represents val * 2 packets can be
-+	 * aggregated in an AMPDU, so here we should use 8/2=4 as the base
-+	 */
-+	return (BIT(2) << exp) - 1;
-+}
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		if (!rtw_is_radar_freq(ch->center_freq))
++			continue;
 +
-+static u8 get_tx_ampdu_density(struct ieee80211_sta *sta)
-+{
-+	return sta->ht_cap.ampdu_density;
++		/* We always enable radar detection/DFS on this
++		 * frequency range. Additionally we also apply on
++		 * this frequency range:
++		 * - If STA mode does not yet have DFS supports disable
++		 *   active scanning
++		 * - If adhoc mode does not support DFS yet then disable
++		 *   adhoc in the frequency.
++		 * - If AP mode does not yet support radar detection/DFS
++		 *   do not allow AP mode
++		 */
++		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
++			ch->flags |= IEEE80211_CHAN_RADAR |
++			    IEEE80211_CHAN_NO_IBSS |
++			    IEEE80211_CHAN_PASSIVE_SCAN;
++	}
 +}
 +
-+static u8 get_highest_ht_tx_rate(struct rtw_dev *rtwdev,
-+				 struct ieee80211_sta *sta)
++static void rtw_regd_apply_world_flags(struct wiphy *wiphy,
++				       enum nl80211_reg_initiator initiator,
++				       struct rtw_regulatory *reg)
 +{
-+	u8 rate;
-+
-+	if (rtwdev->hal.rf_type == RF_2T2R && sta->ht_cap.mcs.rx_mask[1] != 0)
-+		rate = DESC_RATEMCS15;
-+	else
-+		rate = DESC_RATEMCS7;
-+
-+	return rate;
++	rtw_regd_apply_beaconing_flags(wiphy, initiator);
++	rtw_regd_apply_active_scan_flags(wiphy, initiator);
 +}
 +
-+static u8 get_highest_vht_tx_rate(struct rtw_dev *rtwdev,
-+				  struct ieee80211_sta *sta)
++static void rtw_dump_channel_map(struct wiphy *wiphy)
 +{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u8 rate;
-+	u16 tx_mcs_map;
++	enum nl80211_band band;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	unsigned int i;
 +
-+	tx_mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.tx_mcs_map);
-+	if (efuse->hw_cap.nss == 1) {
-+		switch (tx_mcs_map & 0x3) {
-+		case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+			rate = DESC_RATEVHT1SS_MCS7;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+			rate = DESC_RATEVHT1SS_MCS8;
-+			break;
-+		default:
-+		case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+			rate = DESC_RATEVHT1SS_MCS9;
-+			break;
-+		}
-+	} else if (efuse->hw_cap.nss >= 2) {
-+		switch ((tx_mcs_map & 0xc) >> 2) {
-+		case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+			rate = DESC_RATEVHT2SS_MCS7;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+			rate = DESC_RATEVHT2SS_MCS8;
-+			break;
-+		default:
-+		case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+			rate = DESC_RATEVHT2SS_MCS9;
-+			break;
-+		}
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++		sband = wiphy->bands[band];
++		for (i = 0; i < sband->n_channels; i++)
++			ch = &sband->channels[i];
++	}
++}
++
++static int rtw_regd_notifier_apply(struct wiphy *wiphy,
++				   struct regulatory_request *request,
++				   struct rtw_regulatory *reg)
++{
++	/* We always apply this */
++	rtw_regd_apply_radar_flags(wiphy);
++
++	switch (request->initiator) {
++	case NL80211_REGDOM_SET_BY_DRIVER:
++	case NL80211_REGDOM_SET_BY_CORE:
++	case NL80211_REGDOM_SET_BY_USER:
++		break;
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		rtw_regd_apply_world_flags(wiphy, request->initiator, reg);
++		break;
++	}
++
++	rtw_dump_channel_map(wiphy);
++
++	return 0;
++}
++
++static const
++struct ieee80211_regdomain *rtw_regdomain_select(struct rtw_regulatory *reg)
++{
++	switch (reg->country_code) {
++	case COUNTRY_CODE_FCC:
++		return &rtw_regdom_no_midband;
++	case COUNTRY_CODE_IC:
++		return &rtw_regdom_11;
++	case COUNTRY_CODE_TELEC_NETGEAR:
++		return &rtw_regdom_60_64;
++	case COUNTRY_CODE_ETSI:
++	case COUNTRY_CODE_SPAIN:
++	case COUNTRY_CODE_FRANCE:
++	case COUNTRY_CODE_ISRAEL:
++		return &rtw_regdom_12_13;
++	case COUNTRY_CODE_MKK:
++	case COUNTRY_CODE_MKK1:
++	case COUNTRY_CODE_TELEC:
++	case COUNTRY_CODE_MIC:
++		return &rtw_regdom_14_60_64;
++	case COUNTRY_CODE_GLOBAL_DOMAIN:
++		return &rtw_regdom_14;
++	case COUNTRY_CODE_WORLD_WIDE_13:
++	case COUNTRY_CODE_WORLD_WIDE_13_5G_ALL:
++		return &rtw_regdom_12_13_5g_all;
++	default:
++		return &rtw_regdom_no_midband;
++	}
++}
++
++static int
++rtw_regd_init_wiphy(struct rtw_regulatory *reg, struct wiphy *wiphy,
++		    void (*reg_notifier)(struct wiphy *wiphy,
++					 struct regulatory_request *request))
++{
++	const struct ieee80211_regdomain *regd;
++
++	wiphy->reg_notifier = reg_notifier;
++
++	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
++	wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
++	wiphy->regulatory_flags &= ~REGULATORY_DISABLE_BEACON_HINTS;
++
++	regd = rtw_regdomain_select(reg);
++	wiphy_apply_custom_regulatory(wiphy, regd);
++	rtw_regd_apply_hw_cap_flags(wiphy);
++	rtw_regd_apply_radar_flags(wiphy);
++	rtw_regd_apply_world_flags(wiphy, NL80211_REGDOM_SET_BY_DRIVER, reg);
++
++	return 0;
++}
++
++static struct country_code_to_enum_rd *rtw_regd_find_country(u16 countrycode)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(all_countries); i++) {
++		if (all_countries[i].countrycode == countrycode)
++			return &all_countries[i];
++	}
++	return NULL;
++}
++
++static u8 channel_plan_to_country_code(u8 channel_plan)
++{
++	switch (channel_plan) {
++	case 0x20:
++	case 0x21:
++		return COUNTRY_CODE_WORLD_WIDE_13;
++	case 0x22:
++		return COUNTRY_CODE_IC;
++	case 0x25:
++		return COUNTRY_CODE_ETSI;
++	case 0x32:
++		return COUNTRY_CODE_TELEC_NETGEAR;
++	case 0x41:
++		return COUNTRY_CODE_GLOBAL_DOMAIN;
++	case 0x7f:
++		return COUNTRY_CODE_WORLD_WIDE_13_5G_ALL;
++	default:
++		return COUNTRY_CODE_MAX;
++	}
++}
++
++int rtw_regd_init(struct rtw_dev *rtwdev,
++		  void (*reg_notifier)(struct wiphy *wiphy,
++				       struct regulatory_request *request))
++{
++	struct wiphy *wiphy = rtwdev->hw->wiphy;
++	struct country_code_to_enum_rd *country = NULL;
++	u8 channel_plan = rtwdev->efuse.channel_plan;
++
++	if (!wiphy || !&rtwdev->regd)
++		return -EINVAL;
++
++	/* init country_code from efuse channel plan */
++	rtwdev->regd.country_code = channel_plan_to_country_code(channel_plan);
++
++	if (rtwdev->regd.country_code >= COUNTRY_CODE_MAX)
++		rtwdev->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
++
++	country = rtw_regd_find_country(rtwdev->regd.country_code);
++
++	if (country) {
++		rtwdev->regd.alpha2[0] = country->iso_name[0];
++		rtwdev->regd.alpha2[1] = country->iso_name[1];
 +	} else {
-+		rate = DESC_RATEVHT1SS_MCS9;
++		rtwdev->regd.alpha2[0] = '0';
++		rtwdev->regd.alpha2[1] = '0';
 +	}
 +
-+	return rate;
++	rtw_regd_init_wiphy(&rtwdev->regd, wiphy, reg_notifier);
++
++	return 0;
 +}
 +
-+static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
-+					struct rtw_tx_pkt_info *pkt_info,
-+					struct ieee80211_tx_control *control,
-+					struct sk_buff *skb)
++void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
 +{
-+	pkt_info->use_rate = true;
-+	pkt_info->rate_id = 6;
-+	pkt_info->dis_rate_fallback = true;
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct rtw_dev *rtwdev = hw->priv;
++
++	rtw_regd_notifier_apply(wiphy, request, &rtwdev->regd);
 +}
-+
-+static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
-+					struct rtw_tx_pkt_info *pkt_info,
-+					struct ieee80211_tx_control *control,
-+					struct sk_buff *skb)
-+{
-+	struct ieee80211_sta *sta = control->sta;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct rtw_sta_info *si;
-+	u16 seq;
-+	u8 ampdu_factor = 0;
-+	u8 ampdu_density = 0;
-+	bool ampdu_en = false;
-+	u8 rate = DESC_RATE6M;
-+	u8 rate_id = 6;
-+	u8 bw = RTW_CHANNEL_WIDTH_20;
-+	bool stbc = false;
-+	bool ldpc = false;
-+
-+	seq = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
-+
-+	/* for broadcast/multicast, use default values */
-+	if (!sta)
-+		goto out;
-+
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		ampdu_en = true;
-+		ampdu_factor = get_tx_ampdu_factor(sta);
-+		ampdu_density = get_tx_ampdu_density(sta);
-+	}
-+
-+	if (sta->vht_cap.vht_supported)
-+		rate = get_highest_vht_tx_rate(rtwdev, sta);
-+	else if (sta->ht_cap.ht_supported)
-+		rate = get_highest_ht_tx_rate(rtwdev, sta);
-+	else if (sta->supp_rates[0] <= 0xf)
-+		rate = DESC_RATE11M;
-+	else
-+		rate = DESC_RATE54M;
-+
-+	si = (struct rtw_sta_info *)sta->drv_priv;
-+
-+	bw = si->bw_mode;
-+	rate_id = si->rate_id;
-+	stbc = si->stbc_en;
-+	ldpc = si->ldpc_en;
-+
-+out:
-+	pkt_info->seq = seq;
-+	pkt_info->ampdu_factor = ampdu_factor;
-+	pkt_info->ampdu_density = ampdu_density;
-+	pkt_info->ampdu_en = ampdu_en;
-+	pkt_info->rate = rate;
-+	pkt_info->rate_id = rate_id;
-+	pkt_info->bw = bw;
-+	pkt_info->stbc = stbc;
-+	pkt_info->ldpc = ldpc;
-+}
-+
-+void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
-+			    struct rtw_tx_pkt_info *pkt_info,
-+			    struct ieee80211_tx_control *control,
-+			    struct sk_buff *skb)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct rtw_sta_info *si;
-+	struct ieee80211_vif *vif = NULL;
-+	__le16 fc = hdr->frame_control;
-+	u8 sec_type = 0;
-+	bool bmc;
-+
-+	if (control->sta) {
-+		si = (struct rtw_sta_info *)control->sta->drv_priv;
-+		vif = si->vif;
-+	}
-+
-+	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
-+		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, control, skb);
-+	else if (ieee80211_is_data(fc))
-+		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, control, skb);
-+
-+	if (info->control.hw_key) {
-+		struct ieee80211_key_conf *key = info->control.hw_key;
-+
-+		switch (key->cipher) {
-+		case WLAN_CIPHER_SUITE_WEP40:
-+		case WLAN_CIPHER_SUITE_WEP104:
-+		case WLAN_CIPHER_SUITE_TKIP:
-+			sec_type = 0x01;
-+			break;
-+		case WLAN_CIPHER_SUITE_CCMP:
-+			sec_type = 0x03;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	bmc = is_broadcast_ether_addr(hdr->addr1) ||
-+	      is_multicast_ether_addr(hdr->addr1);
-+
-+	pkt_info->bmc = bmc;
-+	pkt_info->sec_type = sec_type;
-+	pkt_info->tx_pkt_size = skb->len;
-+	pkt_info->offset = chip->tx_pkt_desc_sz;
-+	pkt_info->qsel = skb->priority;
-+
-+	/* maybe merge with tx status ? */
-+	rtw_tx_stats(rtwdev, vif, skb);
-+}
-+
-+void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
-+				   struct rtw_tx_pkt_info *pkt_info,
-+				   struct sk_buff *skb)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	bool bmc;
-+
-+	bmc = is_broadcast_ether_addr(hdr->addr1) ||
-+	      is_multicast_ether_addr(hdr->addr1);
-+	pkt_info->use_rate = true;
-+	pkt_info->rate_id = 6;
-+	pkt_info->dis_rate_fallback = true;
-+	pkt_info->bmc = bmc;
-+	pkt_info->tx_pkt_size = skb->len;
-+	pkt_info->offset = chip->tx_pkt_desc_sz;
-+	pkt_info->qsel = skb->priority;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.h b/drivers/net/wireless/realtek/rtw88/regd.h
 new file mode 100644
-index 0000000..f1b6686
+index 0000000..9cbdb8b
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -0,0 +1,81 @@
++++ b/drivers/net/wireless/realtek/rtw88/regd.h
+@@ -0,0 +1,40 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_TX_H_
-+#define __RTW_TX_H_
++#ifndef __RTW_REGD_H_
++#define __RTW_REGD_H_
 +
-+#define RTK_TX_MAX_AGG_NUM_MASK		0x1f
++#define IEEE80211_CHAN_NO_IBSS IEEE80211_CHAN_NO_IR
++#define IEEE80211_CHAN_PASSIVE_SCAN IEEE80211_CHAN_NO_IR
 +
-+#define SET_TX_DESC_TXPKTSIZE(txdesc, value)                                   \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 0, 16, value)
-+#define SET_TX_DESC_OFFSET(txdesc, value)                                      \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 16, 8, value)
-+#define SET_TX_DESC_PKT_OFFSET(txdesc, value)                                  \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 24, 5, value)
-+#define SET_TX_DESC_QSEL(txdesc, value)                                        \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 8, 5, value)
-+#define SET_TX_DESC_BMC(txdesc, value)                                         \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 24, 1, value)
-+#define SET_TX_DESC_RATE_ID(txdesc, value)                                     \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 16, 5, value)
-+#define SET_TX_DESC_DATARATE(txdesc, value)                                    \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x10, 0, 7, value)
-+#define SET_TX_DESC_DISDATAFB(txdesc, value)                                   \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 10, 1, value)
-+#define SET_TX_DESC_USE_RATE(txdesc, value)                                    \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 8, 1, value)
-+#define SET_TX_DESC_SEC_TYPE(txdesc, value)                                    \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 22, 2, value)
-+#define SET_TX_DESC_DATA_BW(txdesc, value)                                     \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 5, 2, value)
-+#define SET_TX_DESC_SW_SEQ(txdesc, value)                                      \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x24, 12, 12, value)
-+#define SET_TX_DESC_MAX_AGG_NUM(txdesc, value)                                 \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 17, 5, value)
-+#define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x08, 20, 3, value)
-+#define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 8, 2, value)
-+#define SET_TX_DESC_DATA_LDPC(txdesc, value)                                   \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 7, 1, value)
-+#define SET_TX_DESC_AGG_EN(txdesc, value)                                      \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x08, 12, 1, value)
-+#define SET_TX_DESC_LS(txdesc, value)                                          \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 26, 1, value)
-+#define SET_TX_DESC_DATA_SHORT(txdesc, value)				       \
-+	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 4, 1, value)
-+
-+enum rtw_tx_desc_queue_select {
-+	TX_DESC_QSEL_TID0	= 0,
-+	TX_DESC_QSEL_TID1	= 1,
-+	TX_DESC_QSEL_TID2	= 2,
-+	TX_DESC_QSEL_TID3	= 3,
-+	TX_DESC_QSEL_TID4	= 4,
-+	TX_DESC_QSEL_TID5	= 5,
-+	TX_DESC_QSEL_TID6	= 6,
-+	TX_DESC_QSEL_TID7	= 7,
-+	TX_DESC_QSEL_TID8	= 8,
-+	TX_DESC_QSEL_TID9	= 9,
-+	TX_DESC_QSEL_TID10	= 10,
-+	TX_DESC_QSEL_TID11	= 11,
-+	TX_DESC_QSEL_TID12	= 12,
-+	TX_DESC_QSEL_TID13	= 13,
-+	TX_DESC_QSEL_TID14	= 14,
-+	TX_DESC_QSEL_TID15	= 15,
-+	TX_DESC_QSEL_BEACON	= 16,
-+	TX_DESC_QSEL_HIGH	= 17,
-+	TX_DESC_QSEL_MGMT	= 18,
-+	TX_DESC_QSEL_H2C	= 19,
++struct country_code_to_enum_rd {
++	u16 countrycode;
++	const char *iso_name;
 +};
 +
-+void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
-+			    struct rtw_tx_pkt_info *pkt_info,
-+			    struct ieee80211_tx_control *control,
-+			    struct sk_buff *skb);
-+void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
-+void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
-+				   struct rtw_tx_pkt_info *pkt_info,
-+				   struct sk_buff *skb);
++enum country_code_type {
++	COUNTRY_CODE_FCC = 0,
++	COUNTRY_CODE_IC = 1,
++	COUNTRY_CODE_ETSI = 2,
++	COUNTRY_CODE_SPAIN = 3,
++	COUNTRY_CODE_FRANCE = 4,
++	COUNTRY_CODE_MKK = 5,
++	COUNTRY_CODE_MKK1 = 6,
++	COUNTRY_CODE_ISRAEL = 7,
++	COUNTRY_CODE_TELEC = 8,
++	COUNTRY_CODE_MIC = 9,
++	COUNTRY_CODE_GLOBAL_DOMAIN = 10,
++	COUNTRY_CODE_WORLD_WIDE_13 = 11,
++	COUNTRY_CODE_TELEC_NETGEAR = 12,
++	COUNTRY_CODE_WORLD_WIDE_13_5G_ALL = 13,
++
++	/* new channel plan above this */
++	COUNTRY_CODE_MAX
++};
++
++int rtw_regd_init(struct rtw_dev *rtwdev,
++		  void (*reg_notifier)(struct wiphy *wiphy,
++				       struct regulatory_request *request));
++void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request);
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/sec.c b/drivers/net/wireless/realtek/rtw88/sec.c
+new file mode 100644
+index 0000000..7d09439
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sec.c
+@@ -0,0 +1,135 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "sec.h"
++#include "reg.h"
++
++u32 rtw_sec_installed_cam_num(struct rtw_sec_desc *sec)
++{
++	u32 cnt = 0;
++	int i;
++
++	for (i = 0; i < sec->total_cam_num; i++)
++		if (sec->cam_table[i].used)
++			cnt++;
++
++	return cnt;
++}
++
++int rtw_sec_get_free_cam(struct rtw_sec_desc *sec)
++{
++	int i;
++
++	/* if default key search is enabled, the first 4 cam entries
++	 * are used to direct map to group key with its key->key_idx, so
++	 * driver should use cam entries after 4 to install pairwise key
++	 */
++	i = sec->default_key_search ? RTW_SEC_DEFAULT_KEY_NUM : 0;
++	for (; i < sec->total_cam_num; i++)
++		if (!sec->cam_table[i].used)
++			return i;
++
++	return i;
++}
++
++void rtw_sec_write_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *key,
++		       u8 hw_key_type, u8 hw_key_idx)
++{
++	struct rtw_cam_entry *cam = &sec->cam_table[hw_key_idx];
++	u32 write_cmd;
++	u32 command;
++	u32 content;
++	u32 addr;
++	int i, j;
++
++	cam->used = true;
++	cam->valid = true;
++	cam->group = !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE);
++	cam->hw_key_type = hw_key_type;
++	cam->key = key;
++	if (sta)
++		ether_addr_copy(cam->addr, sta->addr);
++	else
++		eth_broadcast_addr(cam->addr);
++
++	write_cmd = RTW_SEC_CMD_WRITE_ENABLE | RTW_SEC_CMD_POLLING;
++	addr = hw_key_idx << RTW_SEC_CAM_ENTRY_SHIFT;
++	for (i = 5; i >= 0; i--) {
++		switch (i) {
++		case 0:
++			content = ((key->keyidx & 0x3))		|
++				  ((hw_key_type & 0x7)	<< 2)	|
++				  (cam->group		<< 6)	|
++				  (cam->valid		<< 15)	|
++				  (cam->addr[0]		<< 16)	|
++				  (cam->addr[1]		<< 24);
++			break;
++		case 1:
++			content = (cam->addr[2])		|
++				  (cam->addr[3]		<< 8)	|
++				  (cam->addr[4]		<< 16)	|
++				  (cam->addr[5]		<< 24);
++			break;
++		default:
++			j = (i - 2) << 2;
++			content = (key->key[j])			|
++				  (key->key[j + 1]	<< 8)	|
++				  (key->key[j + 2]	<< 16)	|
++				  (key->key[j + 3]	<< 24);
++			break;
++		}
++
++		command = write_cmd | (addr + i);
++		rtw_write32(rtwdev, RTW_SEC_WRITE_REG, content);
++		rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
++	}
++}
++
++void rtw_sec_clear_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       u8 hw_key_idx)
++{
++	struct rtw_cam_entry *cam = &sec->cam_table[hw_key_idx];
++	u32 write_cmd;
++	u32 command;
++	u32 addr;
++
++	cam->used = false;
++	cam->valid = false;
++	cam->key = NULL;
++	eth_zero_addr(cam->addr);
++
++	write_cmd = RTW_SEC_CMD_WRITE_ENABLE | RTW_SEC_CMD_POLLING;
++	addr = hw_key_idx << RTW_SEC_CAM_ENTRY_SHIFT;
++	command = write_cmd | addr;
++	rtw_write32(rtwdev, RTW_SEC_WRITE_REG, 0);
++	rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
++}
++
++void rtw_sec_enable_sec_engine(struct rtw_dev *rtwdev)
++{
++	struct rtw_sec_desc *sec = &rtwdev->sec;
++	u16 ctrl_reg;
++	u16 sec_config;
++
++	/* default use default key search for now */
++	sec->default_key_search = true;
++
++	ctrl_reg = rtw_read16(rtwdev, REG_CR);
++	ctrl_reg |= RTW_SEC_ENGINE_EN;
++	rtw_write16(rtwdev, REG_CR, ctrl_reg);
++
++	sec_config = rtw_read16(rtwdev, RTW_SEC_CONFIG);
++
++	sec_config |= RTW_SEC_TX_DEC_EN | RTW_SEC_RX_DEC_EN;
++	if (sec->default_key_search)
++		sec_config |= RTW_SEC_TX_UNI_USE_DK | RTW_SEC_RX_UNI_USE_DK |
++			      RTW_SEC_TX_BC_USE_DK | RTW_SEC_RX_BC_USE_DK;
++
++	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec_config);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/sec.h b/drivers/net/wireless/realtek/rtw88/sec.h
+new file mode 100644
+index 0000000..b3d9fdb
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sec.h
+@@ -0,0 +1,40 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_SEC_H_
++#define __RTW_SEC_H_
++
++#define RTW_SEC_CMD_REG			0x670
++#define RTW_SEC_WRITE_REG		0x674
++#define RTW_SEC_READ_REG		0x678
++#define RTW_SEC_CONFIG			0x680
++
++#define RTW_SEC_CAM_ENTRY_SHIFT		3
++#define RTW_SEC_DEFAULT_KEY_NUM		4
++#define RTW_SEC_CMD_WRITE_ENABLE	BIT(16)
++#define RTW_SEC_CMD_CLEAR		BIT(30)
++#define RTW_SEC_CMD_POLLING		BIT(31)
++
++#define RTW_SEC_TX_UNI_USE_DK		BIT(0)
++#define RTW_SEC_RX_UNI_USE_DK		BIT(1)
++#define RTW_SEC_TX_DEC_EN		BIT(2)
++#define RTW_SEC_RX_DEC_EN		BIT(3)
++#define RTW_SEC_TX_BC_USE_DK		BIT(6)
++#define RTW_SEC_RX_BC_USE_DK		BIT(7)
++
++#define RTW_SEC_ENGINE_EN		BIT(9)
++
++u32 rtw_sec_installed_cam_num(struct rtw_sec_desc *sec);
++int rtw_sec_get_free_cam(struct rtw_sec_desc *sec);
++void rtw_sec_write_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *key,
++		       u8 hw_key_type, u8 hw_key_idx);
++void rtw_sec_clear_cam(struct rtw_dev *rtwdev,
++		       struct rtw_sec_desc *sec,
++		       u8 hw_key_idx);
++void rtw_sec_enable_sec_engine(struct rtw_dev *rtwdev);
 +
 +#endif
 -- 
