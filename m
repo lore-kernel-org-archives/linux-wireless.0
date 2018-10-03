@@ -2,144 +2,108 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FECEC64EBC
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA2F7C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E949B2098A
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:58:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IRAPLirT";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IRAPLirT"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E949B2098A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 77B912089F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:19:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 77B912089F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbeJCQpn (ORCPT
+        id S1726569AbeJCRHf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 12:45:43 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59360 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725746AbeJCQpn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 12:45:43 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 668E96079C; Wed,  3 Oct 2018 09:58:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538560682;
-        bh=9tBJ1/LvggrCHA/EPLB6ubAGRzeC9XUtM9E9G40VkFA=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=IRAPLirTdKo0HsKJQ7gk5OKWQzmGCl/8fhF7gx6ABYZRurjyO8HrX044Ua6FjxRe6
-         a/GML/jG4jrDw89n412Y3Corl8n2h3n9tPMLlHbNpW6vV1Qx5sE5UX2Ix/eIn2zwAx
-         tIXlvdknln9w3duXIPVkRszruH8HsxJOq/w/aQGg=
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Wed, 3 Oct 2018 13:07:35 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43652 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726143AbeJCRHf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 13:07:35 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B326860275;
-        Wed,  3 Oct 2018 09:57:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538560682;
-        bh=9tBJ1/LvggrCHA/EPLB6ubAGRzeC9XUtM9E9G40VkFA=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=IRAPLirTdKo0HsKJQ7gk5OKWQzmGCl/8fhF7gx6ABYZRurjyO8HrX044Ua6FjxRe6
-         a/GML/jG4jrDw89n412Y3Corl8n2h3n9tPMLlHbNpW6vV1Qx5sE5UX2Ix/eIn2zwAx
-         tIXlvdknln9w3duXIPVkRszruH8HsxJOq/w/aQGg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B326860275
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc:     Kai Heng Feng <kai.heng.feng@canonical.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Berg\, Johannes" <johannes.berg@intel.com>,
-        "Coelho\, Luciano" <luciano.coelho@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-bluetooth@vger.kernel.org
-Subject: Re: [RESEND] [PATCH 3/3] iwlwifi: Load firmware exclusively for Intel WiFi
-References: <20181003073556.28154-1-kai.heng.feng@canonical.com>
-        <20181003073556.28154-3-kai.heng.feng@canonical.com>
-        <87y3bfiees.fsf@kamboji.qca.qualcomm.com>
-        <265BAF93-4BFF-4850-92F7-80AC39496473@canonical.com>
-        <0BA3FCBA62E2DC44AF3030971E174FB301336D868D@HASMSX111.ger.corp.intel.com>
-Date:   Wed, 03 Oct 2018 12:57:57 +0300
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301336D868D@HASMSX111.ger.corp.intel.com>
-        (Emmanuel Grumbach's message of "Wed, 3 Oct 2018 09:50:58 +0000")
-Message-ID: <871s97ic7u.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mx1.redhat.com (Postfix) with ESMTPS id E70707E9C0;
+        Wed,  3 Oct 2018 10:19:50 +0000 (UTC)
+Received: from localhost (ovpn-204-105.brq.redhat.com [10.40.204.105])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 48BC25ED55;
+        Wed,  3 Oct 2018 10:19:48 +0000 (UTC)
+Date:   Wed, 3 Oct 2018 12:19:47 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76: fix frag length allocation for usb
+Message-ID: <20181003101946.GC2229@redhat.com>
+References: <1538554631-5168-1-git-send-email-sgruszka@redhat.com>
+ <20181003091206.GA27279@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181003091206.GA27279@localhost.localdomain>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Wed, 03 Oct 2018 10:19:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ linux-bluetooth
+On Wed, Oct 03, 2018 at 11:12:07AM +0200, Lorenzo Bianconi wrote:
+> > This is correct fix for c12128ce44b0 ("mt76: use a per rx queue page
+> > fragment cache"). We use wrong length when we allocate segments for
+> > MCU transmissions, which require bigger segment size than e->buf_size.
+> > 
+> > Commit 481bb0432414 ("mt76: usb: make rx page_frag_cache access atomic")
+> > partially solved the problem or actually mask it by changing
+> > mt76u_mcu_init_rx() and mt76u_alloc_queues() sequence, so e->buf_size
+> > become non zero any longer, but still not big enough to handle MCU data.
+> 
+> Hi Stanislaw,
+> 
+> I agree that we should use len in page_frag_alloc() instead of q->buf_size, so
+> 
+> Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> 
+> but reviewing the code I guess the real issue is not q->buf_size (since it should
+> be bigger than MCU_RESP_URB_SIZE) but it is the sequence of calls in
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+I added printk and there are allocations where len is bigger then
+q->buf_size even with correct mt76u_alloc_queues, mt76u_mcu_init_rx
+sequence for mt76x0u:
 
->>=20
->> > On Oct 3, 2018, at 5:10 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> >
->> > Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
->> >
->> >> To avoid the firmware loading race between Bluetooth and WiFi on
->> >> Intel 8260, load firmware exclusively when BT_INTEL is enabled.
->> >>
->> >> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
->> >
->> > Still the commit log tells nothing about the actual problem which
->> > makes review impossible.
->>=20
->> Sorry for that. The first two patches [1] only sends to linux-bluetooth =
-and
->> LMKL.
->>=20
->> I don=E2=80=99t know what really happened at hardware/firmware level, bu=
-t making
->> btusb and iwlwifi load firmware sequentially can workaround the issue.
->>=20
->> Matt Chen may be able to explain this issue with more detail.
->>=20
->> [1] https://lkml.org/lkml/2018/10/3/322
->>
->
-> I just read the code of this patch and I don't quite understand.
-> You have a function that is declared as a non-inline function in two diff=
-erent header files?
-> btintel_firmware_lock is declared here:
->
-> --- /dev/null
-> +++ b/include/linux/intel-wifi-bt.h
-> @@ -0,0 +1,8 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#ifndef __INTEL_WIFI_BT_H__
-> +#define __INTEL_WIFI_BT_H__
-> +
-> +void btintel_firmware_lock(void);
->
-> And ...
->
-> diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
-> index 41c642cc523f..1373ffc2b575 100644
-> --- a/drivers/bluetooth/btintel.h
-> +++ b/drivers/bluetooth/btintel.h
-> @@ -102,6 +102,8 @@ int btintel_read_boot_params(struct hci_dev *hdev,
->  			     struct intel_boot_params *params);
->  int btintel_download_firmware(struct hci_dev *dev, const struct firmware=
- *fw,
->  			      u32 *boot_param);
-> +void btintel_firmware_lock(void);
->
->
-> This can't be right.
+[16426.606090] q->buf_size 2048 len 2048 nsgs 8sglen 1728
+[16426.606131] q->buf_size 2048 len 2048 nsgs 8sglen 1728
+[16426.606134] q->buf_size 2048 len 2048 nsgs 8sglen 1728
+<snip>
+[16426.606464] q->buf_size 2048 len 2048 nsgs 8sglen 1728
+[16426.607517] q->buf_size 2048 len 1024 nsgs 1sglen 1024
+[16426.939268] q->buf_size 2048 len 14584 nsgs 1sglen 14584
+[16426.984955] q->buf_size 2048 len 14584 nsgs 1sglen 14584
 
---=20
-Kalle Valo
+Not sure where it come from, but it's after MCU init (which is 1024
+third line from end).
+
+> mt76x0u_register_device() since mt76u_alloc_queues need to be called before
+> mt76u_mcu_init_rx()
+
+Ok, so this was already fixed in 
+
+commit 481bb0432414f790066205fe77226b7d1877385d
+Author: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Wed Sep 26 13:07:39 2018 +0200
+
+    mt76: usb: make rx page_frag_cache access atomic
+
+but then the sequence was changed again in
+
+commit faa605bdfaa1322ea8e85791abdb3382a8cb4e0c
+Author: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date:   Fri Sep 28 13:39:00 2018 +0200
+
+    mt76x0: usb: move initialization code in usb.c
+
+Thanks
+Stanislaw
+ 
