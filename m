@@ -2,122 +2,129 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34FFDC00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 06:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E30BC64EBC
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEA9420652
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 06:27:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JErG+VDW";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JErG+VDW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EEA9420652
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 298F62089F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:15:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 298F62089F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726761AbeJCNOO (ORCPT
+        id S1726868AbeJCOCt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 09:14:14 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:35414 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726738AbeJCNOO (ORCPT
+        Wed, 3 Oct 2018 10:02:49 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:55887 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726521AbeJCOCs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 09:14:14 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id BFB5760C6A; Wed,  3 Oct 2018 06:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538548036;
-        bh=2CN7A384fqLG8Wv7yQlJ/lhfQD75xVr6J4FB6r4zKkw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=JErG+VDWU14g0Z1C9BbftgIP7VLWh75Cz3BEzeWg3dPOjf42OicoX0+fT/8Aqvtqu
-         QZFeMQ/AaCuoA0VMZek4tyIlnsNao9Culo+LBNgy5Z9ZRjkzTkZIm8f2t3jiMNTd0m
-         66ugZR+tIk9N43WYe1AH3R4MPmF+ua7+26U5JFU4=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 1824260A9B;
-        Wed,  3 Oct 2018 06:27:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538548036;
-        bh=2CN7A384fqLG8Wv7yQlJ/lhfQD75xVr6J4FB6r4zKkw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=JErG+VDWU14g0Z1C9BbftgIP7VLWh75Cz3BEzeWg3dPOjf42OicoX0+fT/8Aqvtqu
-         QZFeMQ/AaCuoA0VMZek4tyIlnsNao9Culo+LBNgy5Z9ZRjkzTkZIm8f2t3jiMNTd0m
-         66ugZR+tIk9N43WYe1AH3R4MPmF+ua7+26U5JFU4=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 02 Oct 2018 23:27:16 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     Jonathan Morton <chromatix99@gmail.com>, Kan Yan <kyan@google.com>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless-owner@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [Make-wifi-fast] [PATCH RFC v4 3/4] mac80211: Add airtime
- accounting and scheduling to TXQs
-In-Reply-To: <08dabe69e625c11f70b217ae9695c7f4@codeaurora.org>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1>
- <153711973134.9231.18038849900399644494.stgit@alrua-x1.karlstad.toke.dk>
- <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org> <87pnx0haud.fsf@toke.dk>
- <8f7145bf5abe50194bced025a5e739b9@codeaurora.org>
- <863bc54fbf04441d38dd53f523300a7e@codeaurora.org>
- <93015743-5D16-4D79-948F-E2F46CF2450A@toke.dk>
- <7ba8513b0ec5a7c35b396c7739fc2d7d@codeaurora.org> <87zhw2eyfo.fsf@toke.dk>
- <5d961a5f61de45b85b1b037bcef9270d@codeaurora.org>
- <44B09168-C08F-4C85-8D74-D576CCC79880@gmail.com>
- <586459da6ec36edc2284df8533915d62@codeaurora.org>
- <4929C006-3452-4C17-9500-8D7485EB538E@toke.dk>
- <0531def170ef7f9cadcf85a6dc9af22b@codeaurora.org> <87a7nwbvwu.fsf@toke.dk>
- <a5a7e11d6913c32385cc74ea3d0e1c76@codeaurora.org> <877ej0b2d8.fsf@toke.dk>
- <30cf3754fa970aa1af11791c2625a7c9@codeaurora.org>
- <08dabe69e625c11f70b217ae9695c7f4@codeaurora.org>
-Message-ID: <9483b0f1835ddda56c4bebc6e6c920e4@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        Wed, 3 Oct 2018 10:02:48 -0400
+Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1g7bNj-0007CY-9j; Wed, 03 Oct 2018 07:15:40 +0000
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 3/3] iwlwifi: Load firmware exclusively for Intel WiFi
+Date:   Wed,  3 Oct 2018 15:15:12 +0800
+Message-Id: <20181003071513.13004-3-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-02 22:53, Rajkumar Manoharan wrote:
+To avoid the firmware loading race between Bluetooth and WiFi on Intel
+8260, load firmware exclusively when BT_INTEL is enabled.
 
-Shouldn't have to call next_txq(). It should be as below.
-Anyway drv_wake_tx_queue is just an indication to driver and
-driver will always dequeue first node from list.
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 37 ++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 2dbfd1d8eb5f..74ac0b19cd54 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -242,7 +242,7 @@ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index cc8c53dc0ab6..c30d3989e2a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -71,6 +71,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/module.h>
++#include <linux/intel-wifi-bt.h>
+ 
+ #include "iwl-drv.h"
+ #include "iwl-trans.h"
+@@ -1335,6 +1336,10 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	bool hw_rfkill;
+ 	int ret;
+ 
++#if IS_ENABLED(CONFIG_BT_INTEL)
++	void (*firmware_lock_func)(void);
++	void (*firmware_unlock_func)(void);
++#endif
+ 	/* This may fail if AMT took ownership of the device */
+ 	if (iwl_pcie_prepare_card_hw(trans)) {
+ 		IWL_WARN(trans, "Exit HW not ready\n");
+@@ -1394,6 +1399,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	 * RF-Kill switch is toggled, we will find out after having loaded
+ 	 * the firmware and return the proper value to the caller.
+ 	 */
++
+ 	iwl_enable_fw_load_int(trans);
+ 
+ 	/* really make sure rfkill handshake bits are cleared */
+@@ -1401,8 +1407,37 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+ 
+ 	/* Load the given image to the HW */
+-	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000)
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000) {
++#if IS_ENABLED(CONFIG_BT_INTEL)
++		firmware_lock_func = symbol_request(btintel_firmware_lock);
++		firmware_unlock_func = symbol_request(btintel_firmware_unlock);
++		if (!firmware_lock_func || !firmware_unlock_func) {
++			if (firmware_lock_func) {
++				symbol_put(btintel_firmware_lock);
++				firmware_lock_func = NULL;
++			}
++
++			if (firmware_unlock_func) {
++				symbol_put(btintel_firmware_unlock);
++				firmware_unlock_func = NULL;
++			}
++		}
++
++		if (firmware_lock_func)
++			firmware_lock_func();
++#endif
+ 		ret = iwl_pcie_load_given_ucode_8000(trans, fw);
++
++#if IS_ENABLED(CONFIG_BT_INTEL)
++		if (firmware_unlock_func) {
++			firmware_unlock_func();
++			symbol_put(btintel_firmware_lock);
++			firmware_lock_func = NULL;
++			symbol_put(btintel_firmware_unlock);
++			firmware_unlock_func = NULL;
++		}
++#endif
++	}
+ 	else
+ 		ret = iwl_pcie_load_given_ucode(trans, fw);
+ 
+-- 
+2.17.1
 
-  static void __ieee80211_kick_airtime(struct ieee80211_local *local, int 
-ac)
-  {
--       struct ieee80211_txq *txq;
-+       struct ieee80211_txq *txq = NULL;
-         bool seen_eligible = false;
-         struct txq_info *txqi;
-         struct sta_info *sta;
-@@ -263,6 +263,7 @@ static void __ieee80211_kick_airtime(struct 
-ieee80211_local *local, int ac)
-                 if (sta->airtime[ac].deficit >= 0) {
-                         seen_eligible = true;
-                         clear_bit(IEEE80211_TXQ_AIRTIME_THROTTLE, 
-&txqi->flags);
-+                       txq = &txqi->txq;
-                 }
-         }
-
-@@ -283,7 +284,6 @@ static void __ieee80211_kick_airtime(struct 
-ieee80211_local *local, int ac)
-         }
-   out:
-         rcu_read_unlock();
--       txq = ieee80211_next_txq(&local->hw, ac);
-         spin_unlock_bh(&local->active_txq_lock[ac]);
-
--Rajkumar
