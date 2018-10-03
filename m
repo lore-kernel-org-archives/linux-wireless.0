@@ -6,68 +6,89 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27AE2C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9562C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:29:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E63602089F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:22:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E63602089F
+	by mail.kernel.org (Postfix) with ESMTP id 8438D2089F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:29:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8438D2089F
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726646AbeJCRKA (ORCPT
+        id S1726613AbeJCRRV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 13:10:00 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:35508 "EHLO mx1.redhat.com"
+        Wed, 3 Oct 2018 13:17:21 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:45674 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725976AbeJCRKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 13:10:00 -0400
-Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        id S1726544AbeJCRRV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 13:17:21 -0400
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.24])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B41685F74B;
-        Wed,  3 Oct 2018 10:22:15 +0000 (UTC)
-Received: from localhost (ovpn-204-105.brq.redhat.com [10.40.204.105])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 21FDA309136E;
-        Wed,  3 Oct 2018 10:22:11 +0000 (UTC)
-Date:   Wed, 3 Oct 2018 12:22:11 +0200
+        by mx1.redhat.com (Postfix) with ESMTPS id 3C909C01BD3F;
+        Wed,  3 Oct 2018 10:29:35 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B4BE93001741;
+        Wed,  3 Oct 2018 10:29:29 +0000 (UTC)
+Date:   Wed, 3 Oct 2018 12:29:28 +0200
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mt76: make frag_cache global per cpu structure
-Message-ID: <20181003102210.GD2229@redhat.com>
-References: <1538558230-16576-1-git-send-email-sgruszka@redhat.com>
- <1538558230-16576-2-git-send-email-sgruszka@redhat.com>
- <20181003093853.GC27279@localhost.localdomain>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: new mt76 usb crashes on device removal
+Message-ID: <20181003102927.GA2250@redhat.com>
+References: <20181003082309.GB2229@redhat.com>
+ <20181003091536.GB27279@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181003093853.GC27279@localhost.localdomain>
+In-Reply-To: <20181003091536.GB27279@localhost.localdomain>
 User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.26
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Wed, 03 Oct 2018 10:22:15 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.24
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Wed, 03 Oct 2018 10:29:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 03, 2018 at 11:38:54AM +0200, Lorenzo Bianconi wrote:
-> > +static DEFINE_PER_CPU(struct page_frag_cache, mt76_frag_cache);
-> > +
-> > +void *mt76_alloc_frag(unsigned int fragsz)
-> > +{
-> > +	struct page_frag_cache *fc;
-> > +	unsigned long flags;
-> > +	void *data;
-> > +
-> > +	local_irq_save(flags);
+On Wed, Oct 03, 2018 at 11:15:37AM +0200, Lorenzo Bianconi wrote:
+> > After
+> > 
+> > b11e19694dc9 "mt76x0: add ieee80211_ops ops pointer to mt76x0_alloc_device signature"
+> > 
+> > I have new crashs when remove mt76x0u and mt76x2u devices. 
+> > I can not provide calltrace because some other warning/traces
+> > show up instantly after the problem happen and mask prints
+> > for initall problem. Then the machine hungs.
+> > 
+> > Anyway bisection blame b11e19694dc9 commit and I confirm that problem
+> > not happen before this commit. I also applied the fix with I just
+> > posted, so this is diffrent issue.
 > 
-> I like this approach since we will avoid a cache miss for the spinlock :)
-> Do we still need to disable local_irq here since (not considering fw upload)
-> I guess there is no contention for mt76_frag_cache
+> Hi Stanislaw,
+> 
+> I do not know if it is related or not, but could you please try following patch:
+> 
+> Regards,
+> Lorenzo
+> 
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> @@ -179,11 +179,11 @@ static int mt76x0u_register_device(struct mt76x0_dev *dev)
+>  	struct ieee80211_hw *hw = dev->mt76.hw;
+>  	int err;
+>  
+> -	err = mt76u_mcu_init_rx(&dev->mt76);
+> +	err = mt76u_alloc_queues(&dev->mt76);
+>  	if (err < 0)
+>  		return err;
+>  
+> -	err = mt76u_alloc_queues(&dev->mt76);
+> +	err = mt76u_mcu_init_rx(&dev->mt76);
+>  	if (err < 0)
+>  		return err;
 
-I think is needed if we have more than one device, but I think we can
-change to local_irq_disable() / local_irq_enable() . 
+It still crashes. You can not reproduce the problem ?
+It's 100% reproducible for me, when I unplug mt76x0u or mt76x2 device.
 
 Thanks
-Stanislaw 
+Stanislaw
