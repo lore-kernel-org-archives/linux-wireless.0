@@ -2,47 +2,45 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3619C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0183FC64EBC
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:03:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0CB7C2089F
+	by mail.kernel.org (Postfix) with ESMTP id BAD832089F
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:03:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0CB7C2089F
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BAD832089F
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727028AbeJCOuP (ORCPT
+        id S1727181AbeJCOuQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 10:50:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:48178 "EHLO
+        Wed, 3 Oct 2018 10:50:16 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48173 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726912AbeJCOuP (ORCPT
+        with ESMTP id S1725951AbeJCOuQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 10:50:15 -0400
+        Wed, 3 Oct 2018 10:50:16 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9382iou026285, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9382eqZ026069, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9382iou026285
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9382eqZ026069
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 3 Oct 2018 16:02:44 +0800
+        Wed, 3 Oct 2018 16:02:40 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.408.0; Wed, 3 Oct 2018 16:02:43 +0800
+ 14.3.408.0; Wed, 3 Oct 2018 16:02:39 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <pkshih@realtek.com>,
         <tehuang@realtek.com>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [RFC v2 05/12] rtw88: mac files
-Date:   Wed, 3 Oct 2018 16:02:21 +0800
-Message-ID: <1538553748-26364-6-git-send-email-yhchuang@realtek.com>
+Subject: [RFC v2 00/12] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+Date:   Wed, 3 Oct 2018 16:02:16 +0800
+Message-ID: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
-References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.143]
@@ -53,1108 +51,150 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-mac files for Realtek 802.11ac wireless network chips
+This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+rtwlan supports 8822BE and 8822CE chips, and will be able to support
+multi-vif combinations in run-time.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/mac.c | 1045 ++++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/mac.h |   35 +
- 2 files changed, 1080 insertions(+)
+For now, only PCI bus is supported, but rtwlan was originally designed
+to optionally support three buses includes USB & SDIO. USB & SDIO modules
+will soon be supported by rtwlan, with configurable core module to fit
+with different bus modules in the same time.
+
+For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+be selected, built, loaded into kernel. This is one of the major
+difference from rtlwifi, which can only support specific combinations.
+
+Another difference from rtlwifi is that rtwlan is designed to support
+the latest Realtek 802.11ac wireless network chips like 8822B and
+8822C series. Compared to the earlier chips supported by rtlwifi like
+the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+have different MAC & PHY settings, such as new multi-port feature for the
+MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+
+Multi-Port feature is also supported under rtwlan's software architecture.
+rtlwifi can only support one vif in the same time, most because of the
+hardware limitations for early chips, hence the original design of it
+also restricts the usage of multi-vif support, so latest chipset seems not
+take advantages from its new MAC engine.
+
+However, rtwlan can run multiple vifs concurrently by holding them on
+hardware ports provided by MAC engine, hence can easily start different
+roles on a single device.
+
+Based on the reasons mentioned before, we implemented rtwlan. It had many
+authors, they are listed here alphabetically:
+
+Ping-Ke Shih <pkshih@realtek.com>
+Tzu-En Huang <tehuang@realtek.com>
+Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+
+v2
+
+ - rename from rtwlan to rtw88
+ - remove lots of magic numbers
+ - add pci null entry for auto load on boot
+ - add rtwdev->mutex to protect against mac80211 callbacks
+ - add rcu lock protection for vif_list and sta_list
+ - refine bits & endian macros to use helper functions provided by kernel
+   instead of create new ones
+ - ieee80211_free_txskb for tx path dropped packets
+ - not register iface_combination since now only one vif is allowed
+ - some fixes suggested by Stanislaw
+
+
+Yan-Hsuan Chuang (12):
+  rtw88: main files
+  rtw88: core files
+  rtw88: hci files
+  rtw88: trx files
+  rtw88: mac files
+  rtw88: fw and efuse files
+  rtw88: phy files
+  rtw88: debug files
+  rtw88: chip files
+  rtw88: 8822B init table
+  rtw88: 8822C init table
+  rtw88: Kconfig & Makefile
+
+ drivers/net/wireless/realtek/Kconfig               |     1 +
+ drivers/net/wireless/realtek/Makefile              |     1 +
+ drivers/net/wireless/realtek/rtw88/Kconfig         |    57 +
+ drivers/net/wireless/realtek/rtw88/Makefile        |    19 +
+ drivers/net/wireless/realtek/rtw88/debug.c         |   652 +
+ drivers/net/wireless/realtek/rtw88/debug.h         |    45 +
+ drivers/net/wireless/realtek/rtw88/efuse.c         |   150 +
+ drivers/net/wireless/realtek/rtw88/efuse.h         |    53 +
+ drivers/net/wireless/realtek/rtw88/fw.c            |   638 +
+ drivers/net/wireless/realtek/rtw88/fw.h            |   182 +
+ drivers/net/wireless/realtek/rtw88/hci.h           |   212 +
+ drivers/net/wireless/realtek/rtw88/mac.c           |  1045 +
+ drivers/net/wireless/realtek/rtw88/mac.h           |    35 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c      |   482 +
+ drivers/net/wireless/realtek/rtw88/main.c          |  1133 +
+ drivers/net/wireless/realtek/rtw88/main.h          |  1200 ++
+ drivers/net/wireless/realtek/rtw88/pci.c           |  1220 ++
+ drivers/net/wireless/realtek/rtw88/pci.h           |   228 +
+ drivers/net/wireless/realtek/rtw88/phy.c           |  1675 ++
+ drivers/net/wireless/realtek/rtw88/phy.h           |   125 +
+ drivers/net/wireless/realtek/rtw88/ps.c            |   198 +
+ drivers/net/wireless/realtek/rtw88/ps.h            |    21 +
+ drivers/net/wireless/realtek/rtw88/reg.h           |   404 +
+ drivers/net/wireless/realtek/rtw88/regd.c          |   462 +
+ drivers/net/wireless/realtek/rtw88/regd.h          |    40 +
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c      |  1593 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h      |   271 +
+ .../net/wireless/realtek/rtw88/rtw8822b_table.c    | 20783 +++++++++++++++++++
+ .../net/wireless/realtek/rtw88/rtw8822b_table.h    |    18 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c      |  1170 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h      |   416 +
+ .../net/wireless/realtek/rtw88/rtw8822c_table.c    |  4150 ++++
+ .../net/wireless/realtek/rtw88/rtw8822c_table.h    |    16 +
+ drivers/net/wireless/realtek/rtw88/rx.c            |   144 +
+ drivers/net/wireless/realtek/rtw88/rx.h            |    30 +
+ drivers/net/wireless/realtek/rtw88/sec.c           |   135 +
+ drivers/net/wireless/realtek/rtw88/sec.h           |    40 +
+ drivers/net/wireless/realtek/rtw88/tx.c            |   271 +
+ drivers/net/wireless/realtek/rtw88/tx.h            |    81 +
+ 39 files changed, 39396 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/Kconfig
+ create mode 100644 drivers/net/wireless/realtek/rtw88/Makefile
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
  create mode 100644 drivers/net/wireless/realtek/rtw88/mac.c
  create mode 100644 drivers/net/wireless/realtek/rtw88/mac.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac80211.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/reg.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-new file mode 100644
-index 0000000..f960890
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -0,0 +1,1045 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#include "main.h"
-+#include "mac.h"
-+#include "reg.h"
-+#include "fw.h"
-+#include "debug.h"
-+
-+void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+			 u8 primary_ch_idx)
-+{
-+	u8 txsc40 = 0, txsc20 = 0;
-+	u32 value32;
-+	u8 value8;
-+
-+	txsc20 = primary_ch_idx;
-+	if (txsc20 == 1 || txsc20 == 3)
-+		txsc40 = 9;
-+	else
-+		txsc40 = 10;
-+	rtw_write8(rtwdev, REG_DATA_SC,
-+		   BIT_TXSC_20M(txsc20) | BIT_TXSC_40M(txsc40));
-+
-+	value32 = rtw_read32(rtwdev, REG_WMAC_TRXPTCL_CTL);
-+	value32 &= ~BIT_RFMOD;
-+	switch (bw) {
-+	case RTW_CHANNEL_WIDTH_80:
-+		value32 |= BIT_RFMOD_80M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_40:
-+		value32 |= BIT_RFMOD_40M;
-+		break;
-+	case RTW_CHANNEL_WIDTH_20:
-+	default:
-+		break;
-+	}
-+	rtw_write32(rtwdev, REG_WMAC_TRXPTCL_CTL, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_AFE_CTRL1) & ~(BIT_MAC_CLK_SEL);
-+	value32 |= (MAC_CLK_HW_DEF_80M << BIT_SHIFT_MAC_CLK_SEL);
-+	rtw_write32(rtwdev, REG_AFE_CTRL1, value32);
-+
-+	rtw_write8(rtwdev, REG_USTIME_TSF, MAC_CLK_SPEED);
-+	rtw_write8(rtwdev, REG_USTIME_EDCA, MAC_CLK_SPEED);
-+
-+	value8 = rtw_read8(rtwdev, REG_CCK_CHECK);
-+	value8 = value8 & ~BIT_CHECK_CCK_EN;
-+	if (channel > 35)
-+		value8 |= BIT_CHECK_CCK_EN;
-+	rtw_write8(rtwdev, REG_CCK_CHECK, value8);
-+}
-+
-+static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
-+{
-+	u32 value32;
-+	u8 value8;
-+
-+	rtw_write8(rtwdev, REG_RSV_CTRL, 0);
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rtw_write32_set(rtwdev, REG_HCI_OPT_CTRL, BIT_BT_DIG_CLK_EN);
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	/* config PIN Mux */
-+	value32 = rtw_read32(rtwdev, REG_PAD_CTRL1);
-+	value32 |= BIT_PAPE_WLBT_SEL | BIT_LNAON_WLBT_SEL;
-+	rtw_write32_set(rtwdev, REG_PAD_CTRL1, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_LED_CFG);
-+	value32 &= ~(BIT_PAPE_SEL_EN | BIT_LNAON_SEL_EN);
-+	rtw_write32(rtwdev, REG_LED_CFG, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_GPIO_MUXCFG);
-+	value32 |= BIT_WLRFE_4_5_EN;
-+	rtw_write32(rtwdev, REG_GPIO_MUXCFG, value32);
-+
-+	/* disable BB/RF */
-+	value8 = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	value8 &= ~(BIT_FEN_BB_RSTB | BIT_FEN_BB_GLB_RST);
-+	rtw_write8(rtwdev, REG_SYS_FUNC_EN, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_RF_CTRL);
-+	value8 &= ~(BIT_RF_SDM_RSTB | BIT_RF_RSTB | BIT_RF_EN);
-+	rtw_write8(rtwdev, REG_RF_CTRL, value8);
-+
-+	value32 = rtw_read32(rtwdev, REG_WLRF1);
-+	value32 &= ~BIT_WLRF1_BBRF_EN;
-+	rtw_write32(rtwdev, REG_WLRF1, value32);
-+
-+	return 0;
-+}
-+
-+static int rtw_pwr_cmd_polling(struct rtw_dev *rtwdev,
-+			       struct rtw_pwr_seq_cmd *cmd)
-+{
-+	u8 value;
-+	u8 flag = 0;
-+	u32 offset;
-+	u32 cnt = RTW_PWR_POLLING_CNT;
-+
-+	if (cmd->base == RTW_PWR_ADDR_SDIO)
-+		offset = cmd->offset | SDIO_LOCAL_OFFSET;
-+	else
-+		offset = cmd->offset;
-+
-+	do {
-+		cnt--;
-+		value = rtw_read8(rtwdev, offset);
-+		value &= cmd->mask;
-+		if (value == (cmd->value & cmd->mask))
-+			return 0;
-+		if (cnt == 0) {
-+			if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE &&
-+			    flag == 0) {
-+				value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
-+				value |= BIT(3);
-+				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
-+				value &= ~BIT(3);
-+				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
-+				cnt = RTW_PWR_POLLING_CNT;
-+				flag = 1;
-+			} else {
-+				return -EBUSY;
-+			}
-+		} else {
-+			udelay(50);
-+		}
-+	} while (1);
-+}
-+
-+static int rtw_sub_pwr_seq_parser(struct rtw_dev *rtwdev, u8 intf_mask,
-+				  u8 cut_mask, struct rtw_pwr_seq_cmd *cmd)
-+{
-+	struct rtw_pwr_seq_cmd *cur_cmd;
-+	u32 offset;
-+	u8 value;
-+
-+	for (cur_cmd = cmd; cur_cmd->cmd != RTW_PWR_CMD_END; cur_cmd++) {
-+		if (!(cur_cmd->intf_mask & intf_mask) ||
-+		    !(cur_cmd->cut_mask & cut_mask))
-+			continue;
-+
-+		switch (cur_cmd->cmd) {
-+		case RTW_PWR_CMD_WRITE:
-+			offset = cur_cmd->offset;
-+
-+			if (cur_cmd->base == RTW_PWR_ADDR_SDIO)
-+				offset |= SDIO_LOCAL_OFFSET;
-+
-+			value = rtw_read8(rtwdev, offset);
-+			value &= ~cur_cmd->mask;
-+			value |= (cur_cmd->value & cur_cmd->mask);
-+			rtw_write8(rtwdev, offset, value);
-+			break;
-+		case RTW_PWR_CMD_POLLING:
-+			if (rtw_pwr_cmd_polling(rtwdev, cur_cmd))
-+				return -EBUSY;
-+			break;
-+		case RTW_PWR_CMD_DELAY:
-+			if (cur_cmd->value == RTW_PWR_DELAY_US)
-+				udelay(cur_cmd->offset);
-+			else
-+				mdelay(cur_cmd->offset);
-+			break;
-+		case RTW_PWR_CMD_READ:
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
-+			      struct rtw_pwr_seq_cmd **cmd_seq)
-+{
-+	u8 cut_mask;
-+	u8 intf_mask;
-+	u8 cut;
-+	u32 idx = 0;
-+	struct rtw_pwr_seq_cmd *cmd;
-+	int ret;
-+
-+	cut = rtwdev->hal.cut_version;
-+	cut_mask = cut_version_to_mask(cut);
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		intf_mask = BIT(2);
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		intf_mask = BIT(1);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	do {
-+		cmd = cmd_seq[idx];
-+		if (!cmd)
-+			break;
-+
-+		ret = rtw_sub_pwr_seq_parser(rtwdev, intf_mask, cut_mask, cmd);
-+		if (ret)
-+			return -EBUSY;
-+
-+		idx++;
-+	} while (1);
-+
-+	return 0;
-+}
-+
-+static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_pwr_seq_cmd **pwr_seq;
-+	u8 rpwm;
-+	bool cur_pwr;
-+
-+	rpwm = rtw_read8(rtwdev, rtwdev->hci.rpwm_addr);
-+
-+	/* Check FW still exist or not */
-+	if (rtw_read16(rtwdev, REG_MCUFW_CTRL) == 0xC078) {
-+		rpwm = (rpwm ^ BIT_RPWM_TOGGLE) & BIT_RPWM_TOGGLE;
-+		rtw_write8(rtwdev, rtwdev->hci.rpwm_addr, rpwm);
-+	}
-+
-+	if (rtw_read8(rtwdev, REG_CR) == 0xea)
-+		cur_pwr = false;
-+	else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
-+		 (rtw_read8(rtwdev, REG_SYS_STATUS1 + 1) & BIT(0)))
-+		cur_pwr = false;
-+	else
-+		cur_pwr = true;
-+
-+	if (pwr_on && cur_pwr)
-+		return -EALREADY;
-+
-+	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
-+	if (rtw_pwr_seq_parser(rtwdev, pwr_seq))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static int rtw_mac_init_system_cfg(struct rtw_dev *rtwdev)
-+{
-+	u8 sys_func_en = rtwdev->chip->sys_func_en;
-+	u8 value8;
-+	u32 value, tmp;
-+
-+	value = rtw_read32(rtwdev, REG_CPU_DMEM_CON);
-+	value |= BIT_WL_PLATFORM_RST | BIT_DDMA_EN;
-+	rtw_write32(rtwdev, REG_CPU_DMEM_CON, value);
-+
-+	rtw_write8(rtwdev, REG_SYS_FUNC_EN + 1, sys_func_en);
-+	value8 = (rtw_read8(rtwdev, REG_CR_EXT + 3) & 0xF0) | 0x0C;
-+	rtw_write8(rtwdev, REG_CR_EXT + 3, value8);
-+
-+	/* disable boot-from-flash for driver's DL FW */
-+	tmp = rtw_read32(rtwdev, REG_MCUFW_CTRL);
-+	if (tmp & BIT_BOOT_FSPI_EN) {
-+		rtw_write32(rtwdev, REG_MCUFW_CTRL, tmp & (~BIT_BOOT_FSPI_EN));
-+		value = rtw_read32(rtwdev, REG_GPIO_MUXCFG) & (~BIT_FSPI_EN);
-+		rtw_write32(rtwdev, REG_GPIO_MUXCFG, value);
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw_mac_power_on(struct rtw_dev *rtwdev)
-+{
-+	int ret = 0;
-+
-+	ret = rtw_mac_pre_system_cfg(rtwdev);
-+	if (ret)
-+		goto err;
-+
-+	ret = rtw_mac_power_switch(rtwdev, true);
-+	if (ret)
-+		goto err;
-+
-+	ret = rtw_mac_init_system_cfg(rtwdev);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+
-+err:
-+	rtw_err(rtwdev, "mac power on failed");
-+	return ret;
-+}
-+
-+void rtw_mac_power_off(struct rtw_dev *rtwdev)
-+{
-+	rtw_mac_power_switch(rtwdev, false);
-+}
-+
-+static void
-+restore_mac_reg(struct rtw_dev *rtwdev, struct rtw_backup_info *bckp, u32 num)
-+{
-+	u8 len;
-+	u32 reg;
-+	u32 val;
-+	int i;
-+
-+	for (i = 0; i < num; i++, bckp++) {
-+		len = bckp->len;
-+		reg = bckp->reg;
-+		val = bckp->val;
-+
-+		switch (len) {
-+		case 1:
-+			rtw_write8(rtwdev, reg, (u8)val);
-+			break;
-+		case 2:
-+			rtw_write16(rtwdev, reg, (u16)val);
-+			break;
-+		case 4:
-+			rtw_write32(rtwdev, reg, (u32)val);
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+}
-+
-+static bool check_firmware_size(const u8 *data, u32 size)
-+{
-+	u32 dmem_size;
-+	u32 imem_size;
-+	u32 emem_size;
-+	u32 real_size;
-+
-+	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
-+	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
-+	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
-+		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
-+
-+	dmem_size += FW_HDR_CHKSUM_SIZE;
-+	imem_size += FW_HDR_CHKSUM_SIZE;
-+	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
-+	real_size = FW_HDR_SIZE + dmem_size + imem_size + emem_size;
-+	if (real_size != size)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool ltecoex_read_reg(struct rtw_dev *rtwdev, u16 offset, u32 *val)
-+{
-+	u32 cnt = 10000;
-+
-+	while ((rtw_read8(rtwdev, LTECOEX_ACCESS_CTRL + 3) & BIT(5)) == 0) {
-+		if (cnt-- == 0)
-+			return false;
-+		udelay(50);
-+	}
-+
-+	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0x800F0000 | offset);
-+	*val = rtw_read32(rtwdev, LTECOEX_READ_DATA);
-+
-+	return true;
-+}
-+
-+static bool ltecoex_reg_write(struct rtw_dev *rtwdev, u16 offset, u32 value)
-+{
-+	u32 cnt;
-+
-+	cnt = 10000;
-+	while ((rtw_read8(rtwdev, LTECOEX_ACCESS_CTRL + 3) & BIT(5)) == 0) {
-+		if (cnt == 0) {
-+			pr_err("[ERR]lte ready(W)\n");
-+			return false;
-+		}
-+		cnt--;
-+		udelay(50);
-+	}
-+
-+	rtw_write32(rtwdev, LTECOEX_WRITE_DATA, value);
-+	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0xC00F0000 | offset);
-+
-+	return true;
-+}
-+
-+static void wlan_cpu_enable(struct rtw_dev *rtwdev, bool enable)
-+{
-+	if (enable) {
-+		/* cpu io interface enable */
-+		rtw_write8_set(rtwdev, REG_RSV_CTRL + 1, BIT_WLMCU_IOIF);
-+
-+		/* cpu enable */
-+		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
-+	} else {
-+		/* cpu io interface disable */
-+		rtw_write8_clr(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
-+
-+		/* cpu disable */
-+		rtw_write8_clr(rtwdev, REG_RSV_CTRL + 1, BIT_WLMCU_IOIF);
-+	}
-+}
-+
-+#define DLFW_RESTORE_REG_NUM 6
-+
-+static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
-+					 struct rtw_backup_info *bckp)
-+{
-+	u8 tmp;
-+	u8 bckp_idx = 0;
-+
-+	/* set HIQ to hi priority */
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_TXDMA_PQ_MAP + 1;
-+	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_TXDMA_PQ_MAP + 1);
-+	bckp_idx++;
-+	tmp = RTW_DMA_MAPPING_HIGH << 6;
-+	rtw_write8(rtwdev, REG_TXDMA_PQ_MAP + 1, tmp);
-+
-+	/* DLFW only use HIQ, map HIQ to hi priority */
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_CR;
-+	bckp[bckp_idx].val = rtw_read8(rtwdev, REG_CR);
-+	bckp_idx++;
-+	bckp[bckp_idx].len = 4;
-+	bckp[bckp_idx].reg = REG_H2CQ_CSR;
-+	bckp[bckp_idx].val = BIT_H2CQ_FULL;
-+	bckp_idx++;
-+	tmp = BIT_HCI_TXDMA_EN | BIT_TXDMA_EN;
-+	rtw_write8(rtwdev, REG_CR, tmp);
-+	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
-+
-+	/* Config hi priority queue and public priority queue page number */
-+	bckp[bckp_idx].len = 2;
-+	bckp[bckp_idx].reg = REG_FIFOPAGE_INFO_1;
-+	bckp[bckp_idx].val = rtw_read16(rtwdev, REG_FIFOPAGE_INFO_1);
-+	bckp_idx++;
-+	bckp[bckp_idx].len = 4;
-+	bckp[bckp_idx].reg = REG_RQPN_CTRL_2;
-+	bckp[bckp_idx].val = rtw_read32(rtwdev, REG_RQPN_CTRL_2) | BIT_LD_RQPN;
-+	bckp_idx++;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, 0x200);
-+	rtw_write32(rtwdev, REG_RQPN_CTRL_2, bckp[bckp_idx - 1].val);
-+
-+	/* Disable beacon related functions */
-+	tmp = rtw_read8(rtwdev, REG_BCN_CTRL);
-+	bckp[bckp_idx].len = 1;
-+	bckp[bckp_idx].reg = REG_BCN_CTRL;
-+	bckp[bckp_idx].val = tmp;
-+	bckp_idx++;
-+	tmp = (u8)((tmp & (~BIT_EN_BCN_FUNCTION)) | BIT_DIS_TSF_UDT);
-+	rtw_write8(rtwdev, REG_BCN_CTRL, tmp);
-+
-+	WARN(bckp_idx != DLFW_RESTORE_REG_NUM, "wrong backup number");
-+}
-+
-+static void download_firmware_reset_platform(struct rtw_dev *rtwdev)
-+{
-+	rtw_write8_clr(rtwdev, REG_CPU_DMEM_CON + 2, BIT_WL_PLATFORM_RST >> 16);
-+	rtw_write8_clr(rtwdev, REG_SYS_CLK_CTRL + 1, BIT_CPU_CLK_EN >> 8);
-+	rtw_write8_set(rtwdev, REG_CPU_DMEM_CON + 2, BIT_WL_PLATFORM_RST >> 16);
-+	rtw_write8_set(rtwdev, REG_SYS_CLK_CTRL + 1, BIT_CPU_CLK_EN >> 8);
-+}
-+
-+static void download_firmware_reg_restore(struct rtw_dev *rtwdev,
-+					  struct rtw_backup_info *bckp,
-+					  u8 bckp_num)
-+{
-+	restore_mac_reg(rtwdev, bckp, bckp_num);
-+}
-+
-+#define TX_DESC_SIZE 48
-+
-+static int
-+send_firmware_pkt(struct rtw_dev *rtwdev, u16 pg_addr, const u8 *data, u32 size)
-+{
-+	u8 *fw_add_num = NULL;
-+	u8 *buf;
-+	int ret;
-+
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
-+	    !((size + TX_DESC_SIZE) & (512 - 1))) {
-+		fw_add_num = kmalloc(size + 1, GFP_KERNEL);
-+		if (!fw_add_num)
-+			return -ENOMEM;
-+		memcpy(fw_add_num, data, size);
-+		ret = rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, fw_add_num,
-+						  size + 1);
-+		if (ret)
-+			rtw_err(rtwdev, "fail to download rsvd page for usb");
-+
-+		kfree(fw_add_num);
-+		return ret;
-+	}
-+
-+	buf = kmalloc(size, GFP_KERNEL);
-+	memcpy(buf, data, size);
-+	ret = rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
-+	if (ret)
-+		rtw_err(rtwdev, "fail to download rsvd page");
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
-+static int
-+iddma_enable(struct rtw_dev *rtwdev, u32 src, u32 dst, u32 ctrl)
-+{
-+	u32 cnt = DDMA_POLLING_COUNT;
-+
-+	rtw_write32(rtwdev, REG_DDMA_CH0SA, src);
-+	rtw_write32(rtwdev, REG_DDMA_CH0DA, dst);
-+	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, ctrl);
-+
-+	while (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
-+		cnt--;
-+		if (cnt == 0)
-+			return -EBUSY;
-+	}
-+
-+	return 0;
-+}
-+
-+static int iddma_download_firmware(struct rtw_dev *rtwdev, u32 src, u32 dst,
-+				   u32 len, u8 first)
-+{
-+	u32 cnt = DDMA_POLLING_COUNT;
-+	u32 ch0_ctrl = BIT_DDMACH0_CHKSUM_EN | BIT_DDMACH0_OWN;
-+
-+	while (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
-+		cnt--;
-+		if (cnt == 0)
-+			return -EBUSY;
-+	}
-+
-+	ch0_ctrl |= len & BIT_MASK_DDMACH0_DLEN;
-+	if (!first)
-+		ch0_ctrl |= BIT_DDMACH0_CHKSUM_CONT;
-+
-+	if (iddma_enable(rtwdev, src, dst, ch0_ctrl))
-+		return -EBUSY;
-+
-+	return 0;
-+}
-+
-+static bool
-+check_fw_checksum(struct rtw_dev *rtwdev, u32 addr)
-+{
-+	u8 fw_ctrl;
-+
-+	fw_ctrl = rtw_read8(rtwdev, REG_MCUFW_CTRL);
-+
-+	if (rtw_read32(rtwdev, REG_DDMA_CH0CTRL) & BIT_DDMACH0_CHKSUM_STS) {
-+		if (addr < OCPBASE_DMEM_88XX) {
-+			fw_ctrl |= BIT_IMEM_DW_OK;
-+			fw_ctrl &= ~BIT_IMEM_CHKSUM_OK;
-+			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+		} else {
-+			fw_ctrl |= BIT_DMEM_DW_OK;
-+			fw_ctrl &= ~BIT_DMEM_CHKSUM_OK;
-+			rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+		}
-+
-+		rtw_err(rtwdev, "invalid fw checksum");
-+
-+		return false;
-+	}
-+
-+	if (addr < OCPBASE_DMEM_88XX) {
-+		fw_ctrl |= (BIT_IMEM_DW_OK | BIT_IMEM_CHKSUM_OK);
-+		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+	} else {
-+		fw_ctrl |= (BIT_DMEM_DW_OK | BIT_DMEM_CHKSUM_OK);
-+		rtw_write8(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+	}
-+
-+	return true;
-+}
-+
-+static int
-+download_firmware_to_mem(struct rtw_dev *rtwdev, const u8 *data,
-+			 u32 src, u32 dst, u32 size)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u32 desc_size = chip->tx_pkt_desc_sz;
-+	u8 first_part;
-+	u32 mem_offset;
-+	u32 residue_size;
-+	u32 pkt_size;
-+	u32 max_size = 0x1000;
-+	u32 val;
-+	int ret;
-+
-+	mem_offset = 0;
-+	first_part = 1;
-+	residue_size = size;
-+
-+	val = rtw_read32(rtwdev, REG_DDMA_CH0CTRL);
-+	val |= BIT_DDMACH0_RESET_CHKSUM_STS;
-+	rtw_write32(rtwdev, REG_DDMA_CH0CTRL, val);
-+
-+	while (residue_size) {
-+		if (residue_size >= max_size)
-+			pkt_size = max_size;
-+		else
-+			pkt_size = residue_size;
-+
-+		ret = send_firmware_pkt(rtwdev, (u16)(src >> 7),
-+					data + mem_offset, pkt_size);
-+		if (ret)
-+			return ret;
-+
-+		ret = iddma_download_firmware(rtwdev, OCPBASE_TXBUF_88XX +
-+					      src + desc_size,
-+					      dst + mem_offset, pkt_size,
-+					      first_part);
-+		if (ret)
-+			return ret;
-+
-+		first_part = 0;
-+		mem_offset += pkt_size;
-+		residue_size -= pkt_size;
-+	}
-+
-+	if (!check_fw_checksum(rtwdev, dst))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static void update_firmware_info(struct rtw_dev *rtwdev, const u8 *data)
-+{
-+	struct rtw_fw_state *fw = &rtwdev->fw;
-+
-+	fw->h2c_version =
-+		le16_to_cpu(*((__le16 *)(data + FW_HDR_H2C_FMT_VER)));
-+	fw->version =
-+		le16_to_cpu(*((__le16 *)(data + FW_HDR_VERSION)));
-+	fw->sub_version = *(data + FW_HDR_SUBVERSION);
-+	fw->sub_index = *(data + FW_HDR_SUBINDEX);
-+
-+	rtw_dbg(rtwdev, "fw h2c version: %x", fw->h2c_version);
-+	rtw_dbg(rtwdev, "fw version:     %x", fw->version);
-+	rtw_dbg(rtwdev, "fw sub version: %x", fw->sub_version);
-+	rtw_dbg(rtwdev, "fw sub index:   %x", fw->sub_index);
-+}
-+
-+static int
-+start_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size)
-+{
-+	const u8 *cur_fw;
-+	u16 val;
-+	u16 fw_ctrl;
-+	u32 imem_size;
-+	u32 dmem_size;
-+	u32 emem_size;
-+	u32 addr;
-+	int ret;
-+
-+	dmem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_SIZE)));
-+	imem_size = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_SIZE)));
-+	emem_size = ((*(data + FW_HDR_MEM_USAGE)) & BIT(4)) ?
-+		    le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_SIZE))) : 0;
-+	dmem_size += FW_HDR_CHKSUM_SIZE;
-+	imem_size += FW_HDR_CHKSUM_SIZE;
-+	emem_size += emem_size ? FW_HDR_CHKSUM_SIZE : 0;
-+
-+	val = (u16)(rtw_read16(rtwdev, REG_MCUFW_CTRL) & 0x3800);
-+	val |= BIT_MCUFWDL_EN;
-+	rtw_write16(rtwdev, REG_MCUFW_CTRL, val);
-+
-+	cur_fw = data + FW_HDR_SIZE;
-+	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_DMEM_ADDR)));
-+	addr &= ~BIT(31);
-+	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, dmem_size);
-+	if (ret)
-+		return ret;
-+
-+	cur_fw = data + FW_HDR_SIZE + dmem_size;
-+	addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_IMEM_ADDR)));
-+	addr &= ~BIT(31);
-+	ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr, imem_size);
-+	if (ret)
-+		return ret;
-+
-+	if (emem_size) {
-+		cur_fw = data + FW_HDR_SIZE + dmem_size + imem_size;
-+		addr = le32_to_cpu(*((__le32 *)(data + FW_HDR_EMEM_ADDR)));
-+		addr &= ~BIT(31);
-+		ret = download_firmware_to_mem(rtwdev, cur_fw, 0, addr,
-+					       emem_size);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	rtw_write32(rtwdev, REG_TXDMA_STATUS, BTI_PAGE_OVF);
-+
-+	/* Check IMEM & DMEM checksum is OK or not */
-+	fw_ctrl = rtw_read16(rtwdev, REG_MCUFW_CTRL);
-+	if ((fw_ctrl & BIT_CHECK_SUM_OK) != BIT_CHECK_SUM_OK)
-+		return -EBUSY;
-+
-+	fw_ctrl = (fw_ctrl | BIT_FW_DW_RDY) & ~BIT_MCUFWDL_EN;
-+	rtw_write16(rtwdev, REG_MCUFW_CTRL, fw_ctrl);
-+
-+	return 0;
-+}
-+
-+static int download_firmware_validate(struct rtw_dev *rtwdev)
-+{
-+	u32 cnt;
-+
-+	cnt = 5000;
-+	while (rtw_read16(rtwdev, REG_MCUFW_CTRL) != 0xC078) {
-+		if (cnt == 0) {
-+			rtw_err(rtwdev, "invalid fw status");
-+			if ((rtw_read32(rtwdev, REG_FW_DBG7) & 0xFFFFFF00) ==
-+			    ILLEGAL_KEY_GROUP) {
-+				rtw_err(rtwdev, "invalid fw key");
-+				return -EINVAL;
-+			}
-+			return -EINVAL;
-+		}
-+		cnt--;
-+		udelay(50);
-+	}
-+
-+	return 0;
-+}
-+
-+int rtw_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size)
-+{
-+	struct rtw_backup_info bckp[DLFW_RESTORE_REG_NUM];
-+	u32 ltecoex_bckp;
-+	int ret;
-+
-+	if (!check_firmware_size(data, size))
-+		return -EINVAL;
-+
-+	if (!ltecoex_read_reg(rtwdev, 0x38, &ltecoex_bckp))
-+		return -EBUSY;
-+
-+	wlan_cpu_enable(rtwdev, false);
-+
-+	download_firmware_reg_backup(rtwdev, bckp);
-+	download_firmware_reset_platform(rtwdev);
-+
-+	ret = start_download_firmware(rtwdev, data, size);
-+	if (ret)
-+		goto dlfw_fail;
-+
-+	download_firmware_reg_restore(rtwdev, bckp, DLFW_RESTORE_REG_NUM);
-+
-+	wlan_cpu_enable(rtwdev, true);
-+
-+	if (!ltecoex_reg_write(rtwdev, 0x38, ltecoex_bckp))
-+		return -EBUSY;
-+
-+	ret = download_firmware_validate(rtwdev);
-+	if (ret)
-+		goto dlfw_fail;
-+
-+	update_firmware_info(rtwdev, data);
-+
-+	rtw_flag_set(rtwdev, RTW_FLAG_FW_RUNNING);
-+
-+	return 0;
-+
-+dlfw_fail:
-+	/* Disable FWDL_EN */
-+	rtw_write8_clr(rtwdev, REG_MCUFW_CTRL, BIT_MCUFWDL_EN);
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN + 1, BIT_FEN_CPUEN);
-+
-+	return ret;
-+}
-+
-+static int txdma_queue_mapping(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_rqpn *rqpn = NULL;
-+	u16 txdma_pq_map = 0;
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rqpn = &chip->rqpn_table[1];
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		if (rtwdev->hci.bulkout_num == 2)
-+			rqpn = &chip->rqpn_table[2];
-+		else if (rtwdev->hci.bulkout_num == 3)
-+			rqpn = &chip->rqpn_table[3];
-+		else if (rtwdev->hci.bulkout_num == 4)
-+			rqpn = &chip->rqpn_table[4];
-+		else
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	txdma_pq_map |= BIT_TXDMA_HIQ_MAP(rqpn->dma_map_hi);
-+	txdma_pq_map |= BIT_TXDMA_MGQ_MAP(rqpn->dma_map_mg);
-+	txdma_pq_map |= BIT_TXDMA_BKQ_MAP(rqpn->dma_map_bk);
-+	txdma_pq_map |= BIT_TXDMA_BEQ_MAP(rqpn->dma_map_be);
-+	txdma_pq_map |= BIT_TXDMA_VIQ_MAP(rqpn->dma_map_vi);
-+	txdma_pq_map |= BIT_TXDMA_VOQ_MAP(rqpn->dma_map_vo);
-+	rtw_write16(rtwdev, REG_TXDMA_PQ_MAP, txdma_pq_map);
-+
-+	rtw_write8(rtwdev, REG_CR, 0);
-+	rtw_write8(rtwdev, REG_CR, MAC_TRX_ENABLE);
-+	rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
-+
-+	return 0;
-+}
-+
-+static int set_trx_fifo_info(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u16 cur_pg_addr;
-+	u8 csi_buf_pg_num = chip->csi_buf_pg_num;
-+
-+	/* config rsvd page num */
-+	fifo->rsvd_drv_pg_num = 8;
-+	fifo->txff_pg_num = chip->txff_size >> 7;
-+	fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num +
-+			   RSVD_PG_H2C_EXTRAINFO_NUM +
-+			   RSVD_PG_H2C_STATICINFO_NUM +
-+			   RSVD_PG_H2CQ_NUM +
-+			   RSVD_PG_CPU_INSTRUCTION_NUM +
-+			   RSVD_PG_FW_TXBUF_NUM +
-+			   csi_buf_pg_num;
-+
-+	if (fifo->rsvd_pg_num > fifo->txff_pg_num)
-+		return -ENOMEM;
-+
-+	fifo->acq_pg_num = fifo->txff_pg_num - fifo->rsvd_pg_num;
-+	fifo->rsvd_boundary = fifo->txff_pg_num - fifo->rsvd_pg_num;
-+
-+	cur_pg_addr = fifo->txff_pg_num;
-+	cur_pg_addr -= csi_buf_pg_num;
-+	fifo->rsvd_csibuf_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_FW_TXBUF_NUM;
-+	fifo->rsvd_fw_txbuf_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_CPU_INSTRUCTION_NUM;
-+	fifo->rsvd_cpu_instr_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2CQ_NUM;
-+	fifo->rsvd_h2cq_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2C_STATICINFO_NUM;
-+	fifo->rsvd_h2c_sta_info_addr = cur_pg_addr;
-+	cur_pg_addr -= RSVD_PG_H2C_EXTRAINFO_NUM;
-+	fifo->rsvd_h2c_info_addr = cur_pg_addr;
-+	cur_pg_addr -= fifo->rsvd_drv_pg_num;
-+	fifo->rsvd_drv_addr = cur_pg_addr;
-+
-+	if (fifo->rsvd_boundary != fifo->rsvd_drv_addr) {
-+		rtw_err(rtwdev, "wrong rsvd driver address");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int priority_queue_cfg(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_page_table *pg_tbl = NULL;
-+	u32 cnt;
-+	u16 pubq_num;
-+	int ret;
-+
-+	ret = set_trx_fifo_info(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		pg_tbl = &chip->page_table[1];
-+		break;
-+	case RTW_HCI_TYPE_USB:
-+		if (rtwdev->hci.bulkout_num == 2)
-+			pg_tbl = &chip->page_table[2];
-+		else if (rtwdev->hci.bulkout_num == 3)
-+			pg_tbl = &chip->page_table[3];
-+		else if (rtwdev->hci.bulkout_num == 4)
-+			pg_tbl = &chip->page_table[4];
-+		else
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
-+		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, pg_tbl->hq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_2, pg_tbl->lq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_3, pg_tbl->nq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_4, pg_tbl->exq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_5, pubq_num);
-+	rtw_write32_set(rtwdev, REG_RQPN_CTRL_2, BIT_LD_RQPN);
-+
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, fifo->rsvd_boundary);
-+	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL + 2, BIT_EN_WR_FREE_TAIL >> 16);
-+
-+	rtw_write16(rtwdev, REG_BCNQ_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2 + 2, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_BCNQ1_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write32(rtwdev, REG_RXFF_BNDY, chip->rxff_size - C2H_PKT_BUF - 1);
-+	rtw_write8_set(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1);
-+
-+	cnt = 1000;
-+	while (rtw_read8(rtwdev, REG_AUTO_LLT_V1) & BIT_AUTO_INIT_LLT_V1)
-+		if (cnt-- == 0)
-+			return -EBUSY;
-+
-+	rtw_write8(rtwdev, REG_CR + 3, 0);
-+
-+	return 0;
-+}
-+
-+static int init_h2c(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	u8 value8;
-+	u32 value32;
-+	u32 h2cq_addr;
-+	u32 h2cq_size;
-+	u32 h2cq_free;
-+	u32 wp, rp;
-+
-+	h2cq_addr = fifo->rsvd_h2cq_addr << TX_PAGE_SIZE_SHIFT;
-+	h2cq_size = RSVD_PG_H2CQ_NUM << TX_PAGE_SIZE_SHIFT;
-+
-+	value32 = rtw_read32(rtwdev, REG_H2C_HEAD);
-+	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
-+	rtw_write32(rtwdev, REG_H2C_HEAD, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_H2C_READ_ADDR);
-+	value32 = (value32 & 0xFFFC0000) | h2cq_addr;
-+	rtw_write32(rtwdev, REG_H2C_READ_ADDR, value32);
-+
-+	value32 = rtw_read32(rtwdev, REG_H2C_TAIL);
-+	value32 &= 0xFFFC0000;
-+	value32 |= (h2cq_addr + h2cq_size);
-+	rtw_write32(rtwdev, REG_H2C_TAIL, value32);
-+
-+	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
-+	value8 = (u8)((value8 & 0xFC) | 0x01);
-+	rtw_write8(rtwdev, REG_H2C_INFO, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_H2C_INFO);
-+	value8 = (u8)((value8 & 0xFB) | 0x04);
-+	rtw_write8(rtwdev, REG_H2C_INFO, value8);
-+
-+	value8 = rtw_read8(rtwdev, REG_TXDMA_OFFSET_CHK + 1);
-+	value8 = (u8)((value8 & 0x7f) | 0x80);
-+	rtw_write8(rtwdev, REG_TXDMA_OFFSET_CHK + 1, value8);
-+
-+	wp = rtw_read32(rtwdev, REG_H2C_PKT_WRITEADDR) & 0x3FFFF;
-+	rp = rtw_read32(rtwdev, REG_H2C_PKT_READADDR) & 0x3FFFF;
-+	h2cq_free = wp >= rp ? h2cq_size - (wp - rp) : rp - wp;
-+
-+	if (h2cq_size != h2cq_free) {
-+		rtw_err(rtwdev, "H2C queue mismatch");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw_init_trx_cfg(struct rtw_dev *rtwdev)
-+{
-+	int ret;
-+
-+	ret = txdma_queue_mapping(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = priority_queue_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = init_h2c(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int rtw_drv_info_cfg(struct rtw_dev *rtwdev)
-+{
-+	u8 value8;
-+
-+	rtw_write8(rtwdev, REG_RX_DRVINFO_SZ, PHY_STATUS_SIZE);
-+	value8 = rtw_read8(rtwdev, REG_TRXFF_BNDY + 1);
-+	value8 &= 0xF0;
-+	/* For rxdesc len = 0 issue */
-+	value8 |= 0xF;
-+	rtw_write8(rtwdev, REG_TRXFF_BNDY + 1, value8);
-+	rtw_write32_set(rtwdev, REG_RCR, BIT_APP_PHYSTS);
-+	rtw_write32_clr(rtwdev, REG_WMAC_OPTION_FUNCTION + 4, BIT(8) | BIT(9));
-+
-+	return 0;
-+}
-+
-+int rtw_mac_init(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw_general_info info;
-+	int ret;
-+
-+	ret = rtw_init_trx_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = chip->ops->mac_init(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = rtw_drv_info_cfg(rtwdev);
-+	if (ret)
-+		return ret;
-+
-+	efuse = &rtwdev->efuse;
-+	info.rfe_type = efuse->rfe_option;
-+	if (rtwdev->hal.rf_type == RF_1T1R)
-+		info.rf_type = FW_RF_1T1R;
-+	else if (rtwdev->hal.rf_type == RF_2T2R)
-+		info.rf_type = FW_RF_2T2R;
-+
-+	rtw_fw_send_general_info(rtwdev, &info);
-+	rtw_fw_send_phydm_info(rtwdev, &info);
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
-new file mode 100644
-index 0000000..cc598cf
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/mac.h
-@@ -0,0 +1,35 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright(c) 2018  Realtek Corporation.
-+ */
-+
-+#ifndef __RTW_MAC_H__
-+#define __RTW_MAc_H__
-+
-+#define RTW_HW_PORT_NUM		5
-+#define cut_version_to_mask(cut) (0x1 << ((cut) + 1))
-+#define SDIO_LOCAL_OFFSET	0x10250000
-+#define DDMA_POLLING_COUNT	1000
-+#define C2H_PKT_BUF		256
-+#define PHY_STATUS_SIZE		4
-+#define ILLEGAL_KEY_GROUP	0xFAAAAA00
-+
-+/* HW memory address */
-+#define OCPBASE_TXBUF_88XX		0x18780000
-+#define OCPBASE_DMEM_88XX		0x00200000
-+#define OCPBASE_EMEM_88XX		0x00100000
-+
-+#define RSVD_PG_DRV_NUM			16
-+#define RSVD_PG_H2C_EXTRAINFO_NUM	24
-+#define RSVD_PG_H2C_STATICINFO_NUM	8
-+#define RSVD_PG_H2CQ_NUM		8
-+#define RSVD_PG_CPU_INSTRUCTION_NUM	0
-+#define RSVD_PG_FW_TXBUF_NUM		4
-+
-+void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
-+			 u8 primary_ch_idx);
-+int rtw_mac_power_on(struct rtw_dev *rtwdev);
-+void rtw_mac_power_off(struct rtw_dev *rtwdev);
-+int rtw_download_firmware(struct rtw_dev *rtwdev, const u8 *data, u32 size);
-+int rtw_mac_init(struct rtw_dev *rtwdev);
-+
-+#endif
 -- 
 2.7.4
 
