@@ -2,104 +2,71 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89AA3C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A2EC64EBC
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:50:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B3AC2098A
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:43:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2B3AC2098A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 162F820835
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 10:50:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="SAAkZkdv"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 162F820835
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726715AbeJCRb1 (ORCPT
+        id S1726849AbeJCRif (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 13:31:27 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:35206 "EHLO mx1.redhat.com"
+        Wed, 3 Oct 2018 13:38:35 -0400
+Received: from nbd.name ([46.4.11.11]:39068 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726544AbeJCRb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 13:31:27 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 073434E91C;
-        Wed,  3 Oct 2018 10:43:39 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.0])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7F36517F35;
-        Wed,  3 Oct 2018 10:43:36 +0000 (UTC)
-Date:   Wed, 3 Oct 2018 12:43:35 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/10] mt76x2: move mt76x2_dev in mt76x02_util.h
-Message-ID: <20181003104334.GB2250@redhat.com>
-References: <20181001221908.16005-7-lorenzo.bianconi@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181001221908.16005-7-lorenzo.bianconi@redhat.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 03 Oct 2018 10:43:39 +0000 (UTC)
+        id S1726842AbeJCRie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 13:38:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=To:References:Message-Id:Content-Transfer-Encoding:Cc:Date:
+        In-Reply-To:From:Subject:Mime-Version:Content-Type:Sender:Reply-To:Content-ID
+        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
+        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
+        :List-Post:List-Owner:List-Archive;
+        bh=SsJy+hEKIAGBIM8lSsK4bPlCX/2+7IJBPPTbjfv+oRs=; b=SAAkZkdvPiK2DDxO66yRCiEwhi
+        pljwWUr0QsuNESOtX7A2tbl3GWobBYDGb4dAfZnGFjFsEPFm4E5E7Doe3tUDSx4oqhLhWtvQ4Pemi
+        7TrCaFD4nQD7mhBH1CLYub82rzb+tbEIZc8UsXy3ovUNQVoxE+N+ww/EHwHY6lSHC3+k=;
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [RFC 2/2] mt76: make frag_cache global per cpu structure
+From:   Felix Fietkau <nbd@nbd.name>
+X-Mailer: iPhone Mail (15C114)
+In-Reply-To: <1538558230-16576-2-git-send-email-sgruszka@redhat.com>
+Date:   Wed, 3 Oct 2018 12:50:42 +0200
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <62BAC9EF-9AC9-476E-A663-6EC81A7FB079@nbd.name>
+References: <1538558230-16576-1-git-send-email-sgruszka@redhat.com> <1538558230-16576-2-git-send-email-sgruszka@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 02, 2018 at 12:19:04AM +0200, Lorenzo Bianconi wrote:
-> Move mt76x2_dev in mt76x02_util.h and rename it in mt76x02_dev
-> in order to be shared between mt76x2 and mt76x0 driver
-<snip>
-> +struct mt76x02_dev {
-> +	struct mt76_dev mt76; /* must be first */
-> +
-> +	struct mac_address macaddr_list[8];
-> +
-> +	struct mutex mutex;
-> +
-> +	u8 txdone_seq;
-> +	DECLARE_KFIFO_PTR(txstatus_fifo, struct mt76x02_tx_status);
-> +
-> +	struct sk_buff *rx_head;
-> +
-> +	struct tasklet_struct tx_tasklet;
-> +	struct tasklet_struct pre_tbtt_tasklet;
-> +	struct delayed_work cal_work;
-> +	struct delayed_work mac_work;
-> +
-> +	u32 aggr_stats[32];
-> +
-> +	struct sk_buff *beacons[8];
-> +	u8 beacon_mask;
-> +	u8 beacon_data_mask;
-> +
-> +	u8 tbtt_count;
-> +	u16 beacon_int;
-> +
-> +	struct mt76x02_calibration cal;
-> +
-> +	s8 target_power;
-> +	s8 target_power_delta[2];
-> +	bool enable_tpc;
-> +
-> +	u8 coverage_class;
-> +	u8 slottime;
-> +
-> +	struct mt76x02_dfs_pattern_detector dfs_pd;
-> +};
-> +
-<snip> 
->  static bool
-> -mt76x2_has_cal_free_data(struct mt76x2_dev *dev, u8 *efuse)
-> +mt76x2_has_cal_free_data(struct mt76x02_dev *dev, u8 *efuse)
 
-I don't think this is right approach. I would rather prefer to have
-common data structures embeded in mt76x2_dev and mt76x0_dev
-structures to have chip sepcific fields/data separated.
+> On 3. Oct 2018, at 11:17, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>=20
+> Make mt76 frag cache similar to netdev frag cache. This should
+> make frag allocation safe regarding concurrent access and also
+> be more efficient since we will use pages that most likely are
+> hot on particular cpu.
+>=20
+> And we don't need to clean up the cache up during device removal.
+The problem with feeding multiple queues with buffers from the same fragment=
+ cache is the fact that this re-introduces the problem of large compound pag=
+es staying pinned in memory (often with only one or two fragments actually b=
+eing used) far too long, leading to excessive RAM usage.
+That is much more critical than the spinlock on alloc issue.
+Please keep allocation the way it is now.
 
-Regards
-Stanislaw
+- Felix=
 
