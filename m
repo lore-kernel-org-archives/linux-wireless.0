@@ -2,181 +2,95 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FB2C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 16:24:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 310AFC00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 16:52:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 542402082A
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 16:24:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5DB22089F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 16:52:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c/NAjTsR"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 542402082A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Doi617kS"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D5DB22089F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726856AbeJCXNx (ORCPT
+        id S1726854AbeJCXmI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 19:13:53 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:37630 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726811AbeJCXNx (ORCPT
+        Wed, 3 Oct 2018 19:42:08 -0400
+Received: from mail-oi1-f175.google.com ([209.85.167.175]:44916 "EHLO
+        mail-oi1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726842AbeJCXmI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 19:13:53 -0400
-Received: by mail-wr1-f66.google.com with SMTP id u12-v6so6809862wrr.4
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2018 09:24:46 -0700 (PDT)
+        Wed, 3 Oct 2018 19:42:08 -0400
+Received: by mail-oi1-f175.google.com with SMTP id u74-v6so5081484oia.11
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2018 09:52:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=zPzzVPC/fkempvCD0lfC9gKlVcfugyjtQ6oUh52pSIM=;
-        b=c/NAjTsRiNxrlJYoBHab8IIQ10uqOQKB6zU3JAKfgiUjwAfgeaN/yedHNPwQ1cFXp6
-         FGaFvCvXjPCBUA5OOgMnxEop1Y2dTWBUzmywvH1mJQyFSHHfJBYcYz+EEyI6PXF0uEOn
-         S/i1kxrBigfqE/hCtLwJQ0qKDO58rT3i+Aa1/yisAcAsPBxtA6KACqn/oUXDCgoIV36y
-         /GRuQjlqE6Q7uJAiVmkKHj1voTPj5nbhtrRLBCyKfF8/WLIMaOLQ4531kpQhNI5lAc4l
-         OKrWquJO/HwQUYPJM5iJzjH2BHvE5On+x5ugjj86/O57BU/DEZ/DzBh0Qk9sBHxbmYp2
-         CYCg==
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=YXn2MDtwtJe2k2wpMpXosnvx4KkFqslN0W3KgViPMbQ=;
+        b=Doi617kSoXnyRi4VO9fL9TVfnTG33bFzjzFtBJqxT5aBTAzvnJzY5YnD9fD6x06tCv
+         21bgXLd5kyzItd7+Pxz2gCxUaaDvN2xSLrS+bxA4jxui3JPENSvIH9Bn56qqDnRVDe2t
+         EwPTVISN8vqmOoQFvJbkQclsMrD89gxtriFzh/8D29Oj587I1enbwIwnUAdPObHsPJb4
+         jbf47cVncITDeafHhcG8N+xKBAuTygMJhhHoDJs7q4WOanO1sANNAUiaFaOl4XAge4nz
+         pONq7og/PkfOM1D3Hl+NkncLxg1ah+uhe2gHdzs1sIhGX+ODGE0OMYwB1mkT2kJUVU4Y
+         Vo3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=zPzzVPC/fkempvCD0lfC9gKlVcfugyjtQ6oUh52pSIM=;
-        b=Uh7eJfRjgsMvKXBadFunEmNUsZZjVHe8GuRT+gZQmuTanStzRSs+kBr2BMjI8SH+4u
-         RMOdLa5APTzp3CT+g4wVunxfEp7E01DbWN1qRCUygn3i3Jg4vwV9IK3uwKWppRJj66LO
-         0fgEIjDOVJbXZoETRN9DxG9YSDAMbgLUlpJkapTdbTy7IQxDenyzPu+1gw4JvBhjk6/k
-         xn0iXbUl6LT08RserZ6sS6MvorEVDg8SIgzpvzTIhopFByVyoLm3mHRDqpwTyW28j2uA
-         doyiA+LWDlOVr7rG1SZAxu8jU9HJbu1VcT4Hxtm6PRTzvdoZZLeFTVHvlDbLOlD3N4pd
-         gxOA==
-X-Gm-Message-State: ABuFfoiLWhz6sv5muuyAM2e+E6+rlOeySC5fysno+3ILO1PaTfEipCAo
-        Zmor/mi8Uj0hcAr+6zw14WvdrpD4
-X-Google-Smtp-Source: ACcGV62zsI/aH0UtJjS3PuIghzWjUjLvSctIQpawN4iYrxy0rngHTUYD78q6KczjkmB9gWnUy2Oj1w==
-X-Received: by 2002:adf:b30f:: with SMTP id j15-v6mr1942593wrd.207.1538583886189;
-        Wed, 03 Oct 2018 09:24:46 -0700 (PDT)
-Received: from localhost.localdomain ([37.238.236.10])
-        by smtp.gmail.com with ESMTPSA id 185-v6sm2609392wmy.38.2018.10.03.09.24.44
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=YXn2MDtwtJe2k2wpMpXosnvx4KkFqslN0W3KgViPMbQ=;
+        b=Zkizk4cNkUTRhF55LYnvc1dhi8xjqp4d4kNpA6u0RA21e+2QETXOO8gWlkBgZhvQIz
+         /D2uivcfV9TE2WyqOIU0uHlUwhSBdAPWZF1vpFmn4xQXgUpAr/VKTUvCx/bxVco/sAwC
+         J2DP+nRYzSvm8fbv6wS7Sj/h2JI7cWXmHnmWmdMeVmgHFwr9h39B/mpkpy10l9B3pBFe
+         fKXF1XxqID45BjsIqAlLV6bTM5e0hGgdTz2NWigcLpH1S+SHiPPaOF5/eU2DlAtt1q4f
+         Hn5w8IHQ7Dhh8xdwgVduZRYm9hPyLKABD1znFMERcZuImSK6cuSeU5j7mAJnwDqUD+Rm
+         nzDg==
+X-Gm-Message-State: ABuFfogXFoyiADLV3KXhtCms68WcBB2HvGVdsZXchFnO+dVWYYWwR80v
+        IegcHYqXgp8lA2VUz6d0jQJjZJlT
+X-Google-Smtp-Source: ACcGV62Z0mFNLAsXbBnDdZX5bLUj/ULAzRYo3/d4/M9V/L9CRMRb4J5f5wnfzrRcs07Cqua+75pJcA==
+X-Received: by 2002:a54:4e0f:: with SMTP id a15-v6mr1061873oiy.346.1538585571050;
+        Wed, 03 Oct 2018 09:52:51 -0700 (PDT)
+Received: from [192.168.1.107] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id e9sm581576oth.7.2018.10.03.09.52.49
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 03 Oct 2018 09:24:45 -0700 (PDT)
-From:   Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-Subject: [PATCH v4] brcmsmac: AP mode: update beacon when TIM changes
-Date:   Wed,  3 Oct 2018 19:21:39 +0300
-Message-Id: <20181003162139.17014-1-alimjalnasrawy@gmail.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
-References: <20180911172618.13049-1-alimjalnasrawy@gmail.com>
+        Wed, 03 Oct 2018 09:52:50 -0700 (PDT)
+Subject: Re: [RFC v2 00/12] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+To:     Sid Hayn <sidhayn@gmail.com>, yhchuang@realtek.com
+Cc:     Kalle Valo <kvalo@codeaurora.org>, pkshih@realtek.com,
+        tehuang@realtek.com, sgruszka@redhat.com,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
+ <CAM0KTbAkm+crgK98kus7N7fCZFA5w9aRJ=Fam+Qe5cv_t9x=DA@mail.gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <3aa94c69-9cdf-77e0-f7b6-d31b501beaee@lwfinger.net>
+Date:   Wed, 3 Oct 2018 11:52:48 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
+MIME-Version: 1.0
+In-Reply-To: <CAM0KTbAkm+crgK98kus7N7fCZFA5w9aRJ=Fam+Qe5cv_t9x=DA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Beacons are not updated to reflect TIM changes. This is not compliant with
-power-saving client stations as the beacons do not have valid TIM and can
-cause the network to stall at random occasions and to have highly variable
-latencies.
-Fix it by updating beacon templates on mac80211 set_tim callback.
+On 10/3/18 11:15 AM, Sid Hayn wrote:
+> Is there a public repository where I can track development for this driver?
 
-Addresses an issue described in:
-https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
+For the moment, this is it. Once the driver is accepted into the 
+wireless-drivers-next tree, I will create a new rtw88 branch in 
+http://github.com/lwfinger.git with this driver to accomodate people that want 
+to use the driver with an older kernel.. At the moment, it is still in too much 
+of a flux.
 
-Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
----
+Larry
 
-v3 -> v4:
-	-set vif to NULL on remove_interface callback to prevent dangling
-pointers.
-	-access vif from within &wl->lock context only.
-	-perform null pointer check before passing vif to
-ieee80211_beacon_get_tim.
-
-v2 -> v3:
-	- remove tabs from blank lines
-	- extend the commit message to answer "Why"
-
-v1 -> v2:
-	-remove FIXME comment
-	-remove blank line before 'vif' member declaration
-
- .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 26 +++++++++++++++++++
- .../broadcom/brcm80211/brcmsmac/main.h        |  1 +
- 2 files changed, 27 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-index ddfdfe1..257968f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-@@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	}
- 
- 	spin_lock_bh(&wl->lock);
-+	wl->wlc->vif = vif;
- 	wl->mute_tx = false;
- 	brcms_c_mute(wl->wlc, false);
- 	if (vif->type == NL80211_IFTYPE_STATION)
-@@ -519,6 +520,11 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- static void
- brcms_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-+	struct brcms_info *wl = hw->priv;
-+
-+	spin_lock_bh(&wl->lock);
-+	wl->wlc->vif = NULL;
-+	spin_unlock_bh(&wl->lock);
- }
- 
- static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
-@@ -937,6 +943,25 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&wl->lock);
- }
- 
-+static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
-+				 struct ieee80211_sta *sta, bool set)
-+{
-+	struct brcms_info *wl = hw->priv;
-+	struct sk_buff *beacon = NULL;
-+	u16 tim_offset = 0;
-+
-+	spin_lock_bh(&wl->lock);
-+	if (wl->wlc->vif)
-+		beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
-+						  &tim_offset, NULL);
-+	if (beacon)
-+		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
-+				       wl->wlc->vif->bss_conf.dtim_period);
-+	spin_unlock_bh(&wl->lock);
-+
-+	return 0;
-+}
-+
- static const struct ieee80211_ops brcms_ops = {
- 	.tx = brcms_ops_tx,
- 	.start = brcms_ops_start,
-@@ -955,6 +980,7 @@ static const struct ieee80211_ops brcms_ops = {
- 	.flush = brcms_ops_flush,
- 	.get_tsf = brcms_ops_get_tsf,
- 	.set_tsf = brcms_ops_set_tsf,
-+	.set_tim = brcms_ops_beacon_set_tim,
- };
- 
- void brcms_dpc(unsigned long data)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-index c4d135c..9f76b88 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
-@@ -563,6 +563,7 @@ struct brcms_c_info {
- 
- 	struct wiphy *wiphy;
- 	struct scb pri_scb;
-+	struct ieee80211_vif *vif;
- 
- 	struct sk_buff *beacon;
- 	u16 beacon_tim_offset;
--- 
-2.18.0
 
