@@ -2,132 +2,160 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B37C64EBC
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84305C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:25:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 713E12089F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:18:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 713E12089F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id 522DE2064E
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:25:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 522DE2064E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbeJCOF0 (ORCPT
+        id S1726890AbeJCOMf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 10:05:26 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:54998 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726521AbeJCOFZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 10:05:25 -0400
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1g7bQF-0008Ca-DQ; Wed, 03 Oct 2018 10:18:16 +0300
-Message-ID: <9ea7a802cbf547ca44b604e2b13bd6a1030bbb2b.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     linux-firmware@kernel.org
-Cc:     linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>,
-        Josh Boyer <jwboyer@kernel.org>,
-        Kyle McMartin <kyle@infradead.org>,
-        Ben Hutchings <ben@decadent.org.uk>,
-        emmanuel.grumbach@intel.com
-Date:   Wed, 03 Oct 2018 10:18:14 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-LJxqDtvZsFsYJtn05yxj"
+        Wed, 3 Oct 2018 10:12:35 -0400
+Received: from mga02.intel.com ([134.134.136.20]:33110 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726521AbeJCOMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 10:12:35 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Oct 2018 00:25:26 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,335,1534834800"; 
+   d="scan'208";a="94192628"
+Received: from dhenry-mobl.ger.corp.intel.com ([10.252.4.16])
+  by fmsmga004.fm.intel.com with ESMTP; 03 Oct 2018 00:24:44 -0700
+Message-ID: <2787bccf20b6f647de9f4cafae5fd223e771b167.camel@intel.com>
+Subject: Re: [PATCH 3/3] iwlwifi: Load firmware exclusively for Intel WiFi
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        linux-kernel@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date:   Wed, 03 Oct 2018 10:24:44 +0300
+In-Reply-To: <20181003071513.13004-3-kai.heng.feng@canonical.com>
+References: <20181003071513.13004-3-kai.heng.feng@canonical.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.1-1 
 Mime-Version: 1.0
-Subject: pull-request: iwlwifi firmwares update 2018-10-03
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Wed, 2018-10-03 at 15:15 +0800, Kai-Heng Feng wrote:
+> To avoid the firmware loading race between Bluetooth and WiFi on Intel
+> 8260, load firmware exclusively when BT_INTEL is enabled.
+> 
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> ---
 
---=-LJxqDtvZsFsYJtn05yxj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Where is this coming from? Can you explain what "the firmware loading
+race" is?
 
-Hi,
 
-We have updated all the firmwares we currently support.
+>  .../net/wireless/intel/iwlwifi/pcie/trans.c   | 37 ++++++++++++++++++-
+>  1 file changed, 36 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> index cc8c53dc0ab6..c30d3989e2a8 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+> @@ -71,6 +71,7 @@
+>  #include <linux/vmalloc.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/module.h>
+> +#include <linux/intel-wifi-bt.h>
 
-Please pull or let me know if there are any issues.
+I don't see this upstream.  Is it something that was recently added?
+Looks odd...
 
+Regardless, this should also be protected on CONFIG_BT_INTEL.
+
+
+>  #include "iwl-drv.h"
+>  #include "iwl-trans.h"
+> @@ -1335,6 +1336,10 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+>  	bool hw_rfkill;
+>  	int ret;
+>  
+> +#if IS_ENABLED(CONFIG_BT_INTEL)
+> +	void (*firmware_lock_func)(void);
+> +	void (*firmware_unlock_func)(void);
+> +#endif
+>  	/* This may fail if AMT took ownership of the device */
+>  	if (iwl_pcie_prepare_card_hw(trans)) {
+>  		IWL_WARN(trans, "Exit HW not ready\n");
+> @@ -1394,6 +1399,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+>  	 * RF-Kill switch is toggled, we will find out after having loaded
+>  	 * the firmware and return the proper value to the caller.
+>  	 */
+> +
+
+Stray empty line.
+
+>  	iwl_enable_fw_load_int(trans);
+>  
+>  	/* really make sure rfkill handshake bits are cleared */
+> @@ -1401,8 +1407,37 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+>  	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+>  
+>  	/* Load the given image to the HW */
+> -	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000)
+> +	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000) {
+> +#if IS_ENABLED(CONFIG_BT_INTEL)
+> +		firmware_lock_func = symbol_request(btintel_firmware_lock);
+> +		firmware_unlock_func = symbol_request(btintel_firmware_unlock);
+> +		if (!firmware_lock_func || !firmware_unlock_func) {
+> +			if (firmware_lock_func) {
+> +				symbol_put(btintel_firmware_lock);
+> +				firmware_lock_func = NULL;
+> +			}
+> +
+> +			if (firmware_unlock_func) {
+> +				symbol_put(btintel_firmware_unlock);
+> +				firmware_unlock_func = NULL;
+> +			}
+> +		}
+> +
+> +		if (firmware_lock_func)
+> +			firmware_lock_func();
+> +#endif
+>  		ret = iwl_pcie_load_given_ucode_8000(trans, fw);
+> +
+> +#if IS_ENABLED(CONFIG_BT_INTEL)
+> +		if (firmware_unlock_func) {
+> +			firmware_unlock_func();
+> +			symbol_put(btintel_firmware_lock);
+> +			firmware_lock_func = NULL;
+> +			symbol_put(btintel_firmware_unlock);
+> +			firmware_unlock_func = NULL;
+> +		}
+> +#endif
+> +	}
+>  	else
+>  		ret = iwl_pcie_load_given_ucode(trans, fw);
+>  
+
+I'm not sure I like adding this BT-specific stuff here, especially not
+without a detailed explanation.
+
+Did you also send the other patches in this series to linux-wireless? I
+can't see them...
+
+--
 Cheers,
 Luca.
-
-
-The following changes since commit 7c81f23ad903f72e87e2102d8f52408305c0f7a2=
-:
-
-  ti-connectivity: add firmware for CC2560(A) Bluetooth (2018-10-01 10:08:3=
-0 -0400)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git =
-tags/iwlwifi-fw-2018-10-03
-
-for you to fetch changes up to da110f2f392ab0f9a4e3cc35402b1f3e2c58127f:
-
-  iwlwifi: add -41.ucode firmwares for 9000 series (2018-10-03 10:08:09 +03=
-00)
-
-----------------------------------------------------------------
-iwlwifi: updata all currently supported FWs
-
-* Update FWs for 3160, 7260 and 7265;
-* Update FWs for 3168 and 7265D;
-* Update FWs for 8000C and 8265;
-* Update FWs for 9000 and 9260.
-
-----------------------------------------------------------------
-Emmanuel Grumbach (2):
-      iwlwifi: update firmwares for 9000 series
-      iwlwifi: add -41.ucode firmwares for 9000 series
-
-Luca Coelho (1):
-      iwlwifi: update firmwares for 7000, 8000 and 9000 series
-
- WHENCE                            |  20 +++++++++++++-------
- iwlwifi-3160-17.ucode             | Bin 918268 -> 918268 bytes
- iwlwifi-7260-17.ucode             | Bin 1049340 -> 1049340 bytes
- iwlwifi-7265-17.ucode             | Bin 1180412 -> 1180412 bytes
- iwlwifi-8000C-36.ucode            | Bin 2486572 -> 2486572 bytes
- iwlwifi-8265-36.ucode             | Bin 2498044 -> 2498044 bytes
- iwlwifi-9000-pu-b0-jf-b0-38.ucode | Bin 2520568 -> 2520568 bytes
- iwlwifi-9000-pu-b0-jf-b0-41.ucode | Bin 0 -> 2961864 bytes
- iwlwifi-9260-th-b0-jf-b0-38.ucode | Bin 2521412 -> 2521412 bytes
- iwlwifi-9260-th-b0-jf-b0-41.ucode | Bin 0 -> 2620368 bytes
- 10 files changed, 13 insertions(+), 7 deletions(-)
- create mode 100644 iwlwifi-9000-pu-b0-jf-b0-41.ucode
- create mode 100644 iwlwifi-9260-th-b0-jf-b0-41.ucode
-
---=-LJxqDtvZsFsYJtn05yxj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlu0bTYACgkQoUecoho8
-xfophA/9GovUPxQ52RNrHfIyA3S2zc9ExK+RgRpo+oQMSmFO9aS5zzV6wqAdSC/m
-kOirGGvScap9WKm337Vmibjhzr3aCQz/ElsUqqDaXrn/P1vdKGSS/yw7reIQPgDv
-2Q5N+dcGgiLmutc78noLjgwSEeFY745kIZg0NHPAuHzUjemnwmDoNN94t1sa8ekx
-GFZ/SAdQEY7PIXSALB3Ddjw0jAghzAvXSUStwOXaxtSKa3NoPcM4IrVbNggzMcdL
-JDU4dvhKY5C33zzuvYvitlmsastqM1y3zBwDVcaxAGowydu0t4h2zDwi3Fwb8HDr
-OkJO6fSCIK2z3QNyMQhnPLrct5tJ9WiOlYTPMbwLd7hCQCD1jnHpPTpMG2aS822n
-H0Hiz2mQAd1c+4Zvfzk80hnDqY7DTUSpaH1EtN90G7XRwHRbWmviU2LVgvScGYzD
-w16wu5wYl4BavpNWazBerC79taXtTYFcpQG/EiE8kJIL6UletqZFKEGzZR53nIh6
-1LLQ1wbPzbMLx68SvFjQSrEN0rQKzzbmuY809mJRfPlC01ugZuNUXTreHs72ZvmZ
-sV11QiSPGiPEK78Cn+sfkQKanwtq2fO/MYsLhhz4OtyuwKAFRNjU3kaiEmSZentb
-QS1gOLynCgR92hkzeRPKxDo2xFQBDeCNzgtbgbQJSx974qkIwO0=
-=mY4l
------END PGP SIGNATURE-----
-
---=-LJxqDtvZsFsYJtn05yxj--
 
