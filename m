@@ -8,66 +8,66 @@ X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0394C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 19:05:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFE9C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 19:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 386FF21473
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 19:05:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50E2F21473
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 19:09:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vYqCcQTb"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 386FF21473
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JeqJsIEk"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 50E2F21473
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727148AbeJDBym (ORCPT
+        id S1727034AbeJDB7D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 21:54:42 -0400
-Received: from mail-ot1-f51.google.com ([209.85.210.51]:40273 "EHLO
-        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726964AbeJDByl (ORCPT
+        Wed, 3 Oct 2018 21:59:03 -0400
+Received: from mail-ot1-f52.google.com ([209.85.210.52]:46097 "EHLO
+        mail-ot1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726884AbeJDB7D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 21:54:41 -0400
-Received: by mail-ot1-f51.google.com with SMTP id w67so6662561ota.7;
-        Wed, 03 Oct 2018 12:04:58 -0700 (PDT)
+        Wed, 3 Oct 2018 21:59:03 -0400
+Received: by mail-ot1-f52.google.com with SMTP id o21so6382400otb.13;
+        Wed, 03 Oct 2018 12:09:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Nvsj+o/oD+MY9CHEuT68erPkhWtjXL0RuQBB6IfaR6o=;
-        b=vYqCcQTbVLR1UghlFO/LV5gMAhywdiowY9tdc9jyxkUhbAEsbVql39g+fG+sPwCMuw
-         gyxrYP5xEYn5Juuk4ptcYL1fLzWo8of8UnUD2mTd3JQxRr27tZTiR4ppOtT0TOMby1CI
-         rmceJRYrq9esmyScXBNDZGMK78Ro5u34Z3oOhLUurdJYmiuqghHF7qJVD+HGPtnloKI5
-         j0OQ453/H4iPvl9rBe2IBxbCZL6tcEeJIgj5r/3ybdPBR3GimqsioF6xOlIfak9J/DV7
-         5wLYeAuwQKvB04pI3ulop940KOh+dWMskEFXMYfvYZ1QKu4NdMOL/pTnwVfCeuuGsW9m
-         /j6Q==
+        bh=/I9iAjR+DHyKl3+2tEyUyJcIthASxYVHOzsBneipRro=;
+        b=JeqJsIEkOT8HgCFJ79HKqG7FVBNtRfAo+k2x3CdvX9ATwNHH/jHzbjHaeIAW/n1SSB
+         YK+DwHFZ6GOjzz6s40378pcXs17vvgDgwiZokUQoEjBUbDsOiq2LOxRl6M8qcdne+53Q
+         UbSeEiweaIw8LG8WOq/xJYwYTH2/Iomls/uNxJmxeSlGxom25DLl3WK3GahkYJivi6Kh
+         WHieKWMrAdbVEB/1LS0DOrLgpkctnhx7AfqgDDPArPXwZA5+IhmuLOBVFZZxkstOgp5K
+         BhJI/m2enz6ZGnzuOyolaIsEcpafUpbwjNSvI/JCMRTTbnG8vVvCn5ZkmIK6vaxXAsAV
+         K5OA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :mime-version:content-transfer-encoding;
-        bh=Nvsj+o/oD+MY9CHEuT68erPkhWtjXL0RuQBB6IfaR6o=;
-        b=LrhpUnli3bFBV2U0EhuxAopJ7+dTcQvfc5f3ldCij6sN47NBExHig08MJgEPP90yeJ
-         15DoBShvatQliGm/sCKWP6mZbk3zF6FHPXMkWGve7Sa7pvRZtkp3sNm0b5yYyismeN9u
-         EHYaPj0e3qSKDBRRotMXTTlqU4FaG59UMug87MYrnV8hjyWGGQKLhU8mgDUPWHyfWXaE
-         yHpaNQL+rAJ8Jq8++dj6E54j39Vh29XFgiyxVhiA7B1ZYqmImSRyeUHZuc8SKlRTi6az
-         PsbSTIAKi2XBa7TdJT6VOLojIuDRsiSkKC/snTZ0neDPLYQ7SWpZStN5yYFGJ9ZTERo8
-         IKbg==
-X-Gm-Message-State: ABuFfohBP1flJpY4EzlAXooaaADGUbWrtp13szRImXidN+gWd4CeXUY7
-        o7TIAsIyjN4NGu45MKVTazc=
-X-Google-Smtp-Source: ACcGV620dyijOE8YkE4o6kLJFM2zctXjjZtftmtwul69IwO6hAhqOAkwVFTXV87XJ2F/eayvYcnZ5w==
-X-Received: by 2002:a9d:28d4:: with SMTP id s78mr1552108ota.38.1538593496081;
-        Wed, 03 Oct 2018 12:04:56 -0700 (PDT)
+        bh=/I9iAjR+DHyKl3+2tEyUyJcIthASxYVHOzsBneipRro=;
+        b=kVAyGgcFzzB+peY8wFfr3bxReW+t0HrVjuK6K9jaSzN2Hbfzy1daJVtYLWGrRI8gIE
+         EbrigyZkDeqYnbTogo4pqChqggL+jAiCac9yEDx+q32jdDipgKTqUO5VKIinXxHQBHqr
+         3g9OleO4MrOkwAmhMse9b5Fk508+zkbdXRJz1ueDBN/LWCyiF2ehMtYxnb0tJuUXyWHq
+         VyW9CCR4A06ZgWnzXJDv/mcM86J4cLDrEIlk2GAqQNXS/b1XFVv3lvXbkeFTUC1eDAru
+         FMCYD1gQI1Zq+pxpzoBEP3I8QeOCSr6FQp8L1xUom4l/d7rRREFkS80OMHgWB2ilPRka
+         OKxw==
+X-Gm-Message-State: ABuFfog1B/9HKGDni1V8rnyIJtTRbmz/rPc8mZE4EAdgwz0DNpW07TRg
+        GfDxYtsVkiDYN6zQPSzgZJU=
+X-Google-Smtp-Source: ACcGV633aWrxaC+UmpC5Q4FzNiOrAkHwxStCLmiiAMUmOh+OLIqbjBJKR2AsxtnbudHUCYXbav54PA==
+X-Received: by 2002:a9d:439b:: with SMTP id t27mr202516ote.235.1538593757468;
+        Wed, 03 Oct 2018 12:09:17 -0700 (PDT)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id f75-v6sm698831oib.30.2018.10.03.12.04.54
+        by smtp.gmail.com with ESMTPSA id q23-v6sm794310otd.57.2018.10.03.12.09.15
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 03 Oct 2018 12:04:55 -0700 (PDT)
+        Wed, 03 Oct 2018 12:09:16 -0700 (PDT)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     linux-firmware@kernel.org
 Cc:     linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>,
         netdev@vger.kernel.org, Yan-Hsuan Chuang <yhchuang@realtek.com>
-Subject: [PATCH] rtw88: Add firmware file for driver rtw88
-Date:   Wed,  3 Oct 2018 14:04:46 -0500
-Message-Id: <20181003190446.18536-1-Larry.Finger@lwfinger.net>
+Subject: [PATCHi v2] rtw88: Add firmware file for new driver
+Date:   Wed,  3 Oct 2018 14:09:12 -0500
+Message-Id: <20181003190912.22566-1-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -82,6 +82,9 @@ developer.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+v2 - removed redundant information from subject
 ---
  WHENCE                |   9 +++++++++
  rtw88/rtw8822b_fw.bin | Bin 0 -> 150984 bytes
