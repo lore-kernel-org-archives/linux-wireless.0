@@ -2,70 +2,106 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7774AC00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 20:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3E9C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 20:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0798120645
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 20:15:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="Ej5Elatr"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0798120645
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	by mail.kernel.org (Postfix) with ESMTP id D2F8920684
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 20:22:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D2F8920684
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbeJDDFR (ORCPT
+        id S1727332AbeJDDL4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 23:05:17 -0400
-Received: from mail.toke.dk ([52.28.52.200]:58669 "EHLO mail.toke.dk"
+        Wed, 3 Oct 2018 23:11:56 -0400
+Received: from bues.ch ([80.190.117.144]:33006 "EHLO bues.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726941AbeJDDFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 23:05:17 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1538597722; bh=Tsr+JRZJC9GhrvaihO69jGHqTuMgrjpdIEPrtmw7cXM=;
-        h=From:To:Subject:In-Reply-To:References:Date:From;
-        b=Ej5ElatrvAUnKsTNDITkh6pP8G9DUxGqmxIS/BjqX13cR9iwP+VHMmy7j1ZhtfGEI
-         fqd5RnXcMQisU0YhOxK7EqGFuHlSs8EKWiud76MkHvPqhOOlsZfAuw1BY3XVahl5bk
-         bFaf4EIgVkNasQkPWwIZB/S024tJVyVbPzxZJAoaWcHMfI1Y50bNPglWhgwXtXVLWE
-         jCnxy608HSrh18rW/tSs2l1WMC2+vnTVVlFpFbQ6Adkw03GMvexGtGViaA454QqDt+
-         KXJ1ZNDvmUsaRv8ex00bt911iYfkR0UB/e8JBIC5MyddaP65J1fxMFzzm7giY10YcK
-         rDT2RK4cPV32Q==
-To:     Ben Greear <greearb@candelatech.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Tool to debug wifi pkt sniffs?
-In-Reply-To: <a44e3947-29a9-d7ba-abec-59bc1b92b201@candelatech.com>
-References: <a44e3947-29a9-d7ba-abec-59bc1b92b201@candelatech.com>
-Date:   Wed, 03 Oct 2018 22:15:19 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87pnwqaiso.fsf@toke.dk>
+        id S1727144AbeJDDLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 23:11:55 -0400
+X-Greylist: delayed 996 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Oct 2018 23:11:53 EDT
+Received: by bues.ch with esmtpsa (Exim 4.89)
+        (envelope-from <m@bues.ch>)
+        id 1g7nOe-00041w-DF; Wed, 03 Oct 2018 22:05:24 +0200
+Date:   Wed, 3 Oct 2018 22:04:35 +0200
+From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ssb: chipcommon: fix fall-through annotation
+Message-ID: <20181003220435.6f7c27b4@wiggum>
+In-Reply-To: <20181003120102.GA22824@embeddedor.com>
+References: <20181003120102.GA22824@embeddedor.com>
+X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/PfFJg7Ygci4F8ZR17VKQECj"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ben Greear <greearb@candelatech.com> writes:
+--Sig_/PfFJg7Ygci4F8ZR17VKQECj
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> Hello,
->
-> I often find myself wanting to figure out what equipment is to blame (and why)
-> in a wifi environment.
->
-> I am thinking writing a tool that would parse a pcap file and look at frames
-> in enough detail to flag block-ack bugs, rate-ctrl bugs, guess at the sniffer's
-> capture ability, etc.
->
-> Does anyone have anything already written that they would like to share, or know
-> of projects that might already do some of this?
+On Wed, 3 Oct 2018 14:01:02 +0200
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-Not sure if this fits your criteria, but Sven's tool to create airtime
-charts from packet sniffing data immediately came to mind:
+> Replace "Fallthough" with a proper "fall through" annotation.
+>=20
+> This fix is part of the ongoing efforts to enabling
+> -Wimplicit-fallthrough
+>=20
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/ssb/driver_chipcommon.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcom=
+mon.c
+> index 99a4656..3861cb6 100644
+> --- a/drivers/ssb/driver_chipcommon.c
+> +++ b/drivers/ssb/driver_chipcommon.c
+> @@ -425,7 +425,7 @@ void ssb_chipco_get_clockcontrol(struct ssb_chipcommo=
+n *cc,
+>  			*m =3D chipco_read32(cc, SSB_CHIPCO_CLOCK_M2);
+>  			break;
+>  		}
+> -		/* Fallthough */
+> +		/* Fall through */
+>  	default:
+>  		*m =3D chipco_read32(cc, SSB_CHIPCO_CLOCK_SB);
+>  	}
 
-https://github.com/cloudtrax/airtime-pie-chart
+Acked-by: Michael B=C3=BCsch <m@bues.ch>
 
--Toke
+
+--=20
+Michael
+
+--Sig_/PfFJg7Ygci4F8ZR17VKQECj
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlu1INMACgkQ9TK+HZCN
+iw7Q1Q//QwsYOThlhR3DB4BrrCQ9NkS+STG/k+i+aQp61yUMcILepSaXvHsGvEx3
+rTMScS6I98q2FnwD3IwfKsdGKxvtjacMRTfEiiuaqNaX9ikOpYnAHdAiNf16/4d4
+uY0+D6Vb2z6e2wgVMWlKVaZKukFjGpNcK66Gt3EYfIw+QoMe0N/fZd0wwHkvkUDT
+vMIU01pxNWXZ3DA/A1c4UKY8QkCwN1Fx9f9RqPqw+zTiyBV7BjRSaiZC2YUNxeCF
+L4sRLSTQbxDH8DZukv0xGzyZhXsmhZl1n8/FqGI56IHJ7urLt3OqwH07OelwE9vT
+bObJkwe7pFIzay66TWnC4tMmGvio4C995brrsyuEyUSlG7+MmuouHRQ5hK1KuoWr
++2gdSncJgPzZ026pSh2LTtAZvvrmI11wz1auKLdGmerm69+AJnpRTxF93WzOj95j
+mvc0dvE96fnFewNSisC4adQwEl/leRAFpKhm+AvAB0AlXA9azSNb4KUR8vBS3Kc8
+DgJL5HSEekVapySvkl7Dvb7NOj9kjnSY5JL+aN3oaJpJXXhtNxsViy5KE7lGrFXm
+CLbuAhvsM8178u8gzOHknqHQjfASJvFTmapkQMJ7RQoSkR6NdXbjvBEEXTTZG9nV
+/aLGKwc7tfyVDQxsgeoKxEVxPZSEUVWjx+NKBZXEEyNXJYDJ6AE=
+=zgWz
+-----END PGP SIGNATURE-----
+
+--Sig_/PfFJg7Ygci4F8ZR17VKQECj--
