@@ -2,112 +2,102 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D958BC00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA55FC00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:15:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98E172098A
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:12:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 98E172098A
+	by mail.kernel.org (Postfix) with ESMTP id 999B220684
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 09:15:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 999B220684
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727510AbeJCP7l (ORCPT
+        id S1727622AbeJCQDN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 11:59:41 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:44351 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727421AbeJCP7l (ORCPT
+        Wed, 3 Oct 2018 12:03:13 -0400
+Received: from mail-wm1-f53.google.com ([209.85.128.53]:50681 "EHLO
+        mail-wm1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727188AbeJCQDM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 11:59:41 -0400
-Received: by mail-wr1-f66.google.com with SMTP id 63-v6so5220725wra.11
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2018 02:12:10 -0700 (PDT)
+        Wed, 3 Oct 2018 12:03:12 -0400
+Received: by mail-wm1-f53.google.com with SMTP id s12-v6so4954139wmc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2018 02:15:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=QLK3iN1ry/IiJCVa41drOZfvh30cqIjxnmRhY2HRung=;
-        b=hr8UwWmobNsYWyqvbdoAc2OT7miTV5FgiMAjgXdfIIbW4PCc1d8O9K/2XbJ+vqcgX4
-         ArqD567LEhFzf7ELbow6MH4EXw9IbYy4rfxxM7ujosdqwQcggBuqmHfv9GsgR6zKZ3l+
-         vw8gGSIn7JF3hg6Lzu6URiFa8QMfaL6tDClXfWCimmvLgicqZzhsKIOV01t/FPyVfjry
-         JGHQb7G+CTVQnNnzHCNNDG5i0TBcxJFz/QpXlpYiiEWExZXsJMuOPcGCk009fTY8fHpD
-         N3x9axDnkiQTQ1G5H+Ul/p4vzXgCfNhsg3sR9s+hcKQ/PHWG9Ej+3K1HdOhbdvS5Te57
-         odhA==
-X-Gm-Message-State: ABuFfoj1oF8/iK26pDfFFe3YgQEWcI87NvUlq65NGv1Kj9brmQjYla16
-        vdPAp4pE+yVYFNtwSpfbhZomWg==
-X-Google-Smtp-Source: ACcGV63UT/d+TV1lCeP/E1MQtQG1LrHjrDMPZOs6slkabGjBY6e3D6tT3bN9kKnsv/hHeSVxyue9LQ==
-X-Received: by 2002:adf:f0d2:: with SMTP id x18-v6mr530689wro.287.1538557930056;
-        Wed, 03 Oct 2018 02:12:10 -0700 (PDT)
+        bh=9/29QdVcnVBxhD5b+ujLejXJYBljx4UBYMU4m+EXHkU=;
+        b=E2Lk31Bax8tUzfSicXkqVr7Vpg2aPK0OgqLJLj4avS5/UuvEs2jawy2tz/Yd31nznQ
+         J2sS1KThbd0TYHYbwZo/A5D+S3OTsIQxNIZGBbFO8Q5UASme5jkMqw4ck39XodzZf1Zh
+         7s33oMA3MvQPNtBLo7T9uKwvLYaVE+hSclnsOXAlgSO8FSbfmwc/hyBqxLI8zhBSTzYF
+         rCHEIsnUlxw7WPwsHnmeF2Udw6sqopSZOugPMbjeWnDDm416+oaCT2+l089/89zJNKoF
+         tbbxtmVsVJ17w1i3SOR2LJ7g2JVkyZOPlS+AhEtBWiPPdRLO7kuEkVfuEBBrWx5UanjU
+         ciLg==
+X-Gm-Message-State: ABuFfoiUC2Ky5RyjQyriWrHOmuODUcjTU1vXTqibDy6RJwV5XEON8vZe
+        g6M4nk6djz4BM71P0eqWZsMQ8w==
+X-Google-Smtp-Source: ACcGV63b75zD8Qdngyqb7gxKMgIGUfcgHRrAgfsButdGu2sJVzCk7FqOUL7pGLSNGL7GZafe12juxA==
+X-Received: by 2002:a1c:8dcd:: with SMTP id p196-v6mr671383wmd.49.1538558139674;
+        Wed, 03 Oct 2018 02:15:39 -0700 (PDT)
 Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id y203-v6sm1492506wmd.1.2018.10.03.02.12.09
+        by smtp.gmail.com with ESMTPSA id f1-v6sm1105037wme.23.2018.10.03.02.15.38
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 03 Oct 2018 02:12:09 -0700 (PDT)
-Date:   Wed, 3 Oct 2018 11:12:07 +0200
+        Wed, 03 Oct 2018 02:15:39 -0700 (PDT)
+Date:   Wed, 3 Oct 2018 11:15:37 +0200
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76: fix frag length allocation for usb
-Message-ID: <20181003091206.GA27279@localhost.localdomain>
-References: <1538554631-5168-1-git-send-email-sgruszka@redhat.com>
+Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: new mt76 usb crashes on device removal
+Message-ID: <20181003091536.GB27279@localhost.localdomain>
+References: <20181003082309.GB2229@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1538554631-5168-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <20181003082309.GB2229@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> This is correct fix for c12128ce44b0 ("mt76: use a per rx queue page
-> fragment cache"). We use wrong length when we allocate segments for
-> MCU transmissions, which require bigger segment size than e->buf_size.
+> After
 > 
-> Commit 481bb0432414 ("mt76: usb: make rx page_frag_cache access atomic")
-> partially solved the problem or actually mask it by changing
-> mt76u_mcu_init_rx() and mt76u_alloc_queues() sequence, so e->buf_size
-> become non zero any longer, but still not big enough to handle MCU data.
+> b11e19694dc9 "mt76x0: add ieee80211_ops ops pointer to mt76x0_alloc_device signature"
+> 
+> I have new crashs when remove mt76x0u and mt76x2u devices. 
+> I can not provide calltrace because some other warning/traces
+> show up instantly after the problem happen and mask prints
+> for initall problem. Then the machine hungs.
+> 
+> Anyway bisection blame b11e19694dc9 commit and I confirm that problem
+> not happen before this commit. I also applied the fix with I just
+> posted, so this is diffrent issue.
 
 Hi Stanislaw,
 
-I agree that we should use len in page_frag_alloc() instead of q->buf_size, so
-
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-
-but reviewing the code I guess the real issue is not q->buf_size (since it should
-be bigger than MCU_RESP_URB_SIZE) but it is the sequence of calls in
-mt76x0u_register_device() since mt76u_alloc_queues need to be called before
-mt76u_mcu_init_rx()
+I do not know if it is related or not, but could you please try following patch:
 
 Regards,
 Lorenzo
 
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+@@ -179,11 +179,11 @@ static int mt76x0u_register_device(struct mt76x0_dev *dev)
+ 	struct ieee80211_hw *hw = dev->mt76.hw;
+ 	int err;
+ 
+-	err = mt76u_mcu_init_rx(&dev->mt76);
++	err = mt76u_alloc_queues(&dev->mt76);
+ 	if (err < 0)
+ 		return err;
+ 
+-	err = mt76u_alloc_queues(&dev->mt76);
++	err = mt76u_mcu_init_rx(&dev->mt76);
+ 	if (err < 0)
+ 		return err;
+
 > 
-> Patch fixes memory corruption which can manifest itself as random,
-> not easy to reproduce crashes, during mt76 driver load or unload.
-> 
-> Fixes: c12128ce44b0 ("mt76: use a per rx queue page fragment cache")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/usb.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-> index de7785c4f6af..6b643ea701e3 100644
-> --- a/drivers/net/wireless/mediatek/mt76/usb.c
-> +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-> @@ -286,7 +286,7 @@ mt76u_fill_rx_sg(struct mt76_dev *dev, struct mt76u_buf *buf,
->  		void *data;
->  		int offset;
->  
-> -		data = page_frag_alloc(&q->rx_page, q->buf_size, GFP_ATOMIC);
-> +		data = page_frag_alloc(&q->rx_page, len, GFP_ATOMIC);
->  		if (!data)
->  			break;
->  
-> -- 
-> 2.7.5
-> 
+> Thanks
+> Stanislaw 
