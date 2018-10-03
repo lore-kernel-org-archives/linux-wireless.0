@@ -2,34 +2,33 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF659C64EBC
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1461CC65BA7
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 539982098A
+	by mail.kernel.org (Postfix) with ESMTP id BC0A42098A
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 11:21:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 539982098A
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BC0A42098A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbeJCSJh (ORCPT
+        id S1726942AbeJCSJk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 14:09:37 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:58141 "EHLO
+        Wed, 3 Oct 2018 14:09:40 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:58138 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726741AbeJCSJg (ORCPT
+        with ESMTP id S1726726AbeJCSJi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 14:09:36 -0400
+        Wed, 3 Oct 2018 14:09:38 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w93BLKmT012995, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w93BLJAV012991, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w93BLKmT012995
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w93BLJAV012991
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Wed, 3 Oct 2018 19:21:20 +0800
+        Wed, 3 Oct 2018 19:21:19 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
  14.3.408.0; Wed, 3 Oct 2018 19:21:19 +0800
@@ -38,9 +37,9 @@ To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <pkshih@realtek.com>,
         <tehuang@realtek.com>, <sgruszka@redhat.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [RFC v3 08/12] rtw88: debug files
-Date:   Wed, 3 Oct 2018 19:20:55 +0800
-Message-ID: <1538565659-29530-9-git-send-email-yhchuang@realtek.com>
+Subject: [RFC v3 07/12] rtw88: phy files
+Date:   Wed, 3 Oct 2018 19:20:54 +0800
+Message-ID: <1538565659-29530-8-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
 References: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
@@ -54,723 +53,1826 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-debug files for Realtek 802.11ac wireless network chips
+phy files for Realtek 802.11ac wireless network chips
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 652 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/debug.h |  45 ++
- 2 files changed, 697 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
+ drivers/net/wireless/realtek/rtw88/phy.c | 1675 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/phy.h |  125 +++
+ 2 files changed, 1800 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
 new file mode 100644
-index 0000000..e00c602
+index 0000000..7048d29
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -0,0 +1,652 @@
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -0,0 +1,1675 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#include <linux/debugfs.h>
-+#include <linux/seq_file.h>
 +#include "main.h"
-+#include "sec.h"
 +#include "fw.h"
++#include "phy.h"
 +#include "debug.h"
 +
-+#ifdef CONFIG_RTW88_DEBUGFS
-+
-+struct rtw_debugfs_priv {
-+	struct rtw_dev *rtwdev;
-+	int (*cb_read)(struct seq_file *m, void *v);
-+	ssize_t (*cb_write)(struct file *filp, const char __user *buffer,
-+			    size_t count, loff_t *loff);
-+	union {
-+		u32 cb_data;
-+		u8 *buf;
-+		struct {
-+			u32 page_offset;
-+			u32 page_num;
-+		} rsvd_page;
-+		struct {
-+			u8 rf_path;
-+			u32 rf_addr;
-+			u32 rf_mask;
-+		};
-+		struct {
-+			u32 addr;
-+			u32 len;
-+		} read_reg;
-+	};
++struct phy_cfg_pair {
++	u32 addr;
++	u32 data;
 +};
 +
-+static int rtw_debugfs_single_show(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+
-+	return debugfs_priv->cb_read(m, v);
-+}
-+
-+static ssize_t rtw_debugfs_common_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+
-+	return debugfs_priv->cb_write(filp, buffer, count, loff);
-+}
-+
-+static ssize_t rtw_debugfs_single_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+
-+	return debugfs_priv->cb_write(filp, buffer, count, loff);
-+}
-+
-+static int rtw_debugfs_single_open_rw(struct inode *inode, struct file *filp)
-+{
-+	return single_open(filp, rtw_debugfs_single_show, inode->i_private);
-+}
-+
-+static int rtw_debugfs_close(struct inode *inode, struct file *filp)
-+{
-+	return 0;
-+}
-+
-+static const struct file_operations file_ops_single_r = {
-+	.owner = THIS_MODULE,
-+	.open = rtw_debugfs_single_open_rw,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.release = seq_release,
++union phy_table_tile {
++	struct rtw_phy_cond cond;
++	struct phy_cfg_pair cfg;
 +};
 +
-+static const struct file_operations file_ops_single_rw = {
-+	.owner = THIS_MODULE,
-+	.open = rtw_debugfs_single_open_rw,
-+	.release = single_release,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.write = rtw_debugfs_single_write,
++struct phy_pg_cfg_pair {
++	u32 band;
++	u32 rf_path;
++	u32 tx_num;
++	u32 addr;
++	u32 bitmask;
++	u32 data;
 +};
 +
-+static const struct file_operations file_ops_common_write = {
-+	.owner = THIS_MODULE,
-+	.write = rtw_debugfs_common_write,
-+	.open = simple_open,
-+	.release = rtw_debugfs_close,
++struct txpwr_lmt_cfg_pair {
++	u8 regd;
++	u8 band;
++	u8 bw;
++	u8 rs;
++	u8 ch;
++	s8 txpwr_lmt;
 +};
 +
-+static int rtw_debugfs_get_read_reg(struct seq_file *m, void *v)
++static const u32 db_invert_table[12][8] = {
++	{10,		13,		16,		20,
++	 25,		32,		40,		50},
++	{64,		80,		101,		128,
++	 160,		201,		256,		318},
++	{401,		505,		635,		800,
++	 1007,		1268,		1596,		2010},
++	{316,		398,		501,		631,
++	 794,		1000,		1259,		1585},
++	{1995,		2512,		3162,		3981,
++	 5012,		6310,		7943,		10000},
++	{12589,		15849,		19953,		25119,
++	 31623,		39811,		50119,		63098},
++	{79433,		100000,		125893,		158489,
++	 199526,	251189,		316228,		398107},
++	{501187,	630957,		794328,		1000000,
++	 1258925,	1584893,	1995262,	2511886},
++	{3162278,	3981072,	5011872,	6309573,
++	 7943282,	1000000,	12589254,	15848932},
++	{19952623,	25118864,	31622777,	39810717,
++	 50118723,	63095734,	79432823,	100000000},
++	{125892541,	158489319,	199526232,	251188643,
++	 316227766,	398107171,	501187234,	630957345},
++	{794328235,	1000000000,	1258925412,	1584893192,
++	 1995262315,	2511886432U,	3162277660U,	3981071706U}
++};
++
++enum rtw_phy_band_type {
++	PHY_BAND_2G	= 0,
++	PHY_BAND_5G	= 1,
++};
++
++void rtw_phy_init(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, len, addr;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u32 addr, mask;
 +
-+	len = debugfs_priv->read_reg.len;
-+	addr = debugfs_priv->read_reg.addr;
-+	switch (len) {
-+	case 1:
-+		val = rtw_read8(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%02x\n", addr, val);
-+		break;
-+	case 2:
-+		val = rtw_read16(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%04x\n", addr, val);
-+		break;
-+	case 4:
-+		val = rtw_read32(rtwdev, addr);
-+		seq_printf(m, "reg 0x%03x: 0x%08x\n", addr, val);
-+		break;
-+	}
-+	return 0;
++	dm_info->fa_history[3] = 0;
++	dm_info->fa_history[2] = 0;
++	dm_info->fa_history[1] = 0;
++	dm_info->fa_history[0] = 0;
++	dm_info->igi_bitmap = 0;
++	dm_info->igi_history[3] = 0;
++	dm_info->igi_history[2] = 0;
++	dm_info->igi_history[1] = 0;
++
++	addr = chip->dig[0].addr;
++	mask = chip->dig[0].mask;
++	dm_info->igi_history[0] = rtw_read32_mask(rtwdev, addr, mask);
 +}
 +
-+static int rtw_debugfs_get_rf_read(struct seq_file *m, void *v)
++void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, addr, mask;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u32 addr, mask;
 +	u8 path;
 +
-+	path = debugfs_priv->rf_path;
-+	addr = debugfs_priv->rf_addr;
-+	mask = debugfs_priv->rf_mask;
-+
-+	val = rtw_read_rf(rtwdev, path, addr, mask);
-+
-+	seq_printf(m, "rf_read path:%d addr:0x%08x mask:0x%08x val=0x%08x\n",
-+		   path, addr, mask, val);
-+
-+	return 0;
-+}
-+
-+static int rtw_debugfs_copy_from_user(char tmp[], int size,
-+				      const char __user *buffer, size_t count,
-+				      int num)
-+{
-+	int tmp_len;
-+
-+	if (count < num)
-+		return -EFAULT;
-+
-+	tmp_len = (count > size - 1 ? size - 1 : count);
-+
-+	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
-+		return count;
-+
-+	tmp[tmp_len] = '\0';
-+
-+	return 0;
-+}
-+
-+static ssize_t rtw_debugfs_set_read_reg(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 addr, len;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
-+
-+	num = sscanf(tmp, "%x %x", &addr, &len);
-+
-+	if (num !=  2)
-+		return count;
-+
-+	if (len != 1 && len != 2 && len != 4) {
-+		rtw_warn(rtwdev, "read reg setting wrong len\n");
-+		return -EINVAL;
++	for (path = 0; path < hal->rf_path_num; path++) {
++		addr = chip->dig[path].addr;
++		mask = chip->dig[path].mask;
++		rtw_write32_mask(rtwdev, addr, mask, igi);
 +	}
-+	debugfs_priv->read_reg.addr = addr;
-+	debugfs_priv->read_reg.len = len;
-+
-+	return count;
 +}
 +
-+static int rtw_debugfs_get_dump_cam(struct seq_file *m, void *v)
++static void rtw_phy_stat_false_alarm(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val, command;
-+	u32 hw_key_idx = debugfs_priv->cb_data << RTW_SEC_CAM_ENTRY_SHIFT;
-+	u32 read_cmd = RTW_SEC_CMD_POLLING;
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	chip->ops->false_alarm_statistics(rtwdev);
++}
++
++#define RA_FLOOR_TABLE_SIZE	7
++#define RA_FLOOR_UP_GAP		3
++
++static u8 rtw_phy_get_rssi_level(u8 old_level, u8 rssi)
++{
++	u8 table[RA_FLOOR_TABLE_SIZE] = {20, 34, 38, 42, 46, 50, 100};
++	u8 new_level = 0;
 +	int i;
 +
-+	seq_printf(m, "cam entry%d\n", debugfs_priv->cb_data);
-+	seq_puts(m, "0x0      0x1      0x2     0x3     ");
-+	seq_puts(m, "0x4     0x5\n");
-+	mutex_lock(&rtwdev->mutex);
-+	for (i = 0; i <= 5; i++) {
-+		command = read_cmd | (hw_key_idx + i);
-+		rtw_write32(rtwdev, RTW_SEC_CMD_REG, command);
-+		val = rtw_read32(rtwdev, RTW_SEC_READ_REG);
-+		seq_printf(m, "%8.8x", val);
-+		if (i < 2)
-+			seq_puts(m, " ");
++	for (i = 0; i < RA_FLOOR_TABLE_SIZE; i++)
++		if (i >= old_level)
++			table[i] += RA_FLOOR_UP_GAP;
++
++	for (i = 0; i < RA_FLOOR_TABLE_SIZE; i++) {
++		if (rssi < table[i]) {
++			new_level = i;
++			break;
++		}
 +	}
-+	seq_puts(m, "\n");
-+	mutex_unlock(&rtwdev->mutex);
-+	return 0;
++
++	return new_level;
 +}
 +
-+static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
++static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u8 page_size = rtwdev->chip->page_size;
-+	u32 buf_size = debugfs_priv->rsvd_page.page_num * page_size;
-+	u32 offset = debugfs_priv->rsvd_page.page_offset * page_size;
-+	u8 *buf = vzalloc(buf_size);
-+	int i;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_vif *rtwvif;
++	struct rtw_sta_info *si;
++	u8 min_rssi = U8_MAX;
++	u8 rssi;
++	u8 rssi_level;
 +
-+	if (rtw_dump_drv_rsvd_page(rtwdev, offset, buf_size, (u32 *)buf)) {
-+		vfree(buf);
-+		rtw_err(rtwdev, "failed to dump rsvd page\n");
++	rcu_read_lock();
++	list_for_each_entry_rcu(rtwvif, &rtwdev->vif_list, list) {
++		list_for_each_entry_rcu(si, &rtwvif->sta_list, list) {
++			rssi = ewma_rssi_read(&si->avg_rssi);
++			min_rssi = min_t(u8, rssi, min_rssi);
++
++			rssi_level = si->rssi_level;
++			si->rssi_level = rtw_phy_get_rssi_level(rssi_level,
++								rssi);
++
++			rtw_fw_send_rssi_info(rtwdev, si);
++		}
++	}
++	rcu_read_unlock();
++
++	dm_info->pre_min_rssi = dm_info->min_rssi;
++	dm_info->min_rssi = min_rssi;
++}
++
++static void rtw_phy_statistics(struct rtw_dev *rtwdev)
++{
++	rtw_phy_stat_rssi(rtwdev);
++	rtw_phy_stat_false_alarm(rtwdev);
++}
++
++#define DIG_PERF_FA_TH_LOW			250
++#define DIG_PERF_FA_TH_HIGH			500
++#define DIG_PERF_FA_TH_EXTRA_HIGH		750
++#define DIG_PERF_MAX				0x5a
++#define DIG_PERF_MID				0x40
++#define DIG_CVRG_FA_TH_LOW			2000
++#define DIG_CVRG_FA_TH_HIGH			4000
++#define DIG_CVRG_FA_TH_EXTRA_HIGH		5000
++#define DIG_CVRG_MAX				0x2a
++#define DIG_CVRG_MID				0x26
++#define DIG_CVRG_MIN				0x1c
++#define DIG_RSSI_GAIN_OFFSET			15
++
++static bool
++rtw_phy_dig_check_damping(struct rtw_dm_info *dm_info)
++{
++	u16 fa_lo = DIG_PERF_FA_TH_LOW;
++	u16 fa_hi = DIG_PERF_FA_TH_HIGH;
++	u16 *fa_history;
++	u8 *igi_history;
++	u8 damping_rssi;
++	u8 min_rssi;
++	u8 diff;
++	u8 igi_bitmap;
++	bool damping = false;
++
++	min_rssi = dm_info->min_rssi;
++	if (dm_info->damping) {
++		damping_rssi = dm_info->damping_rssi;
++		diff = min_rssi > damping_rssi ? min_rssi - damping_rssi :
++						 damping_rssi - min_rssi;
++		if (diff > 3 || dm_info->damping_cnt++ > 20) {
++			dm_info->damping = false;
++			return false;
++		}
++
++		return true;
++	}
++
++	igi_history = dm_info->igi_history;
++	fa_history = dm_info->fa_history;
++	igi_bitmap = dm_info->igi_bitmap & 0xf;
++	switch (igi_bitmap) {
++	case 5:
++		/* down -> up -> down -> up */
++		if (igi_history[0] > igi_history[1] &&
++		    igi_history[2] > igi_history[3] &&
++		    igi_history[0] - igi_history[1] >= 2 &&
++		    igi_history[2] - igi_history[3] >= 2 &&
++		    fa_history[0] > fa_hi && fa_history[1] < fa_lo &&
++		    fa_history[2] > fa_hi && fa_history[3] < fa_lo)
++			damping = true;
++		break;
++	case 9:
++		/* up -> down -> down -> up */
++		if (igi_history[0] > igi_history[1] &&
++		    igi_history[3] > igi_history[2] &&
++		    igi_history[0] - igi_history[1] >= 4 &&
++		    igi_history[3] - igi_history[2] >= 2 &&
++		    fa_history[0] > fa_hi && fa_history[1] < fa_lo &&
++		    fa_history[2] < fa_lo && fa_history[3] > fa_hi)
++			damping = true;
++		break;
++	default:
++		return false;
++	}
++
++	if (damping) {
++		dm_info->damping = true;
++		dm_info->damping_cnt = 0;
++		dm_info->damping_rssi = min_rssi;
++	}
++
++	return damping;
++}
++
++static void rtw_phy_dig_get_boundary(struct rtw_dm_info *dm_info,
++				     u8 *upper, u8 *lower, bool linked)
++{
++	u8 dig_max, dig_min, dig_mid;
++	u8 min_rssi;
++
++	if (linked) {
++		dig_max = DIG_PERF_MAX;
++		dig_mid = DIG_PERF_MID;
++		/* 22B=0x1c, 22C=0x20 */
++		dig_min = 0x1c;
++		min_rssi = max_t(u8, dm_info->min_rssi, dig_min);
++	} else {
++		dig_max = DIG_CVRG_MAX;
++		dig_mid = DIG_CVRG_MID;
++		dig_min = DIG_CVRG_MIN;
++		min_rssi = dig_min;
++	}
++
++	/* DIG MAX should be bounded by minimum RSSI with offset +15 */
++	dig_max = min_t(u8, dig_max, min_rssi + DIG_RSSI_GAIN_OFFSET);
++
++	*lower = clamp_t(u8, min_rssi, dig_min, dig_mid);
++	*upper = clamp_t(u8, *lower + DIG_RSSI_GAIN_OFFSET, dig_min, dig_max);
++}
++
++static void rtw_phy_dig_get_threshold(struct rtw_dm_info *dm_info,
++				      u16 *fa_th, u8 *step, bool linked)
++{
++	u8 min_rssi, pre_min_rssi;
++
++	min_rssi = dm_info->min_rssi;
++	pre_min_rssi = dm_info->pre_min_rssi;
++	step[0] = 4;
++	step[1] = 3;
++	step[2] = 2;
++
++	if (linked) {
++		fa_th[0] = DIG_PERF_FA_TH_EXTRA_HIGH;
++		fa_th[1] = DIG_PERF_FA_TH_HIGH;
++		fa_th[2] = DIG_PERF_FA_TH_LOW;
++		if (pre_min_rssi > min_rssi) {
++			step[0] = 6;
++			step[1] = 4;
++			step[2] = 2;
++		}
++	} else {
++		fa_th[0] = DIG_CVRG_FA_TH_EXTRA_HIGH;
++		fa_th[1] = DIG_CVRG_FA_TH_HIGH;
++		fa_th[2] = DIG_CVRG_FA_TH_LOW;
++	}
++}
++
++static void rtw_phy_dig_recorder(struct rtw_dm_info *dm_info, u8 igi, u16 fa)
++{
++	u8 *igi_history;
++	u16 *fa_history;
++	u8 igi_bitmap;
++	bool up;
++
++	igi_bitmap = dm_info->igi_bitmap << 1 & 0xfe;
++	igi_history = dm_info->igi_history;
++	fa_history = dm_info->fa_history;
++
++	up = igi > igi_history[0];
++	igi_bitmap |= up;
++
++	igi_history[3] = igi_history[2];
++	igi_history[2] = igi_history[1];
++	igi_history[1] = igi_history[0];
++	igi_history[0] = igi;
++
++	fa_history[3] = fa_history[2];
++	fa_history[2] = fa_history[1];
++	fa_history[1] = fa_history[0];
++	fa_history[0] = fa;
++
++	dm_info->igi_bitmap = igi_bitmap;
++}
++
++static void rtw_phy_dig(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 upper_bound, lower_bound;
++	u8 pre_igi, cur_igi;
++	u16 fa_th[3], fa_cnt;
++	u8 level;
++	u8 step[3];
++	bool linked;
++
++	if (rtw_flag_check(rtwdev, RTW_FLAG_DIG_DISABLE))
++		return;
++
++	if (rtw_phy_dig_check_damping(dm_info))
++		return;
++
++	linked = get_link_status(rtwdev);
++
++	fa_cnt = dm_info->total_fa_cnt;
++	pre_igi = dm_info->igi_history[0];
++
++	rtw_phy_dig_get_threshold(dm_info, fa_th, step, linked);
++
++	/* test the false alarm count from the highest threshold level first,
++	 * and increase it by corresponding step size
++	 *
++	 * note that the step size is offset by -2, compensate it afterall
++	 */
++	cur_igi = pre_igi;
++	for (level = 0; level < 3; level++) {
++		if (fa_cnt > fa_th[level]) {
++			cur_igi += step[level];
++			break;
++		}
++	}
++	cur_igi -= 2;
++
++	/* calculate the upper/lower bound by the minimum rssi we have among
++	 * the peers connected with us, meanwhile make sure the igi value does
++	 * not beyond the hardware limitation
++	 */
++	rtw_phy_dig_get_boundary(dm_info, &upper_bound, &lower_bound, linked);
++	cur_igi = clamp_t(u8, cur_igi, lower_bound, upper_bound);
++
++	/* record current igi value and false alarm statistics for further
++	 * damping checks, and record the trend of igi values
++	 */
++	rtw_phy_dig_recorder(dm_info, cur_igi, fa_cnt);
++
++	if (cur_igi != pre_igi)
++		rtw_phy_dig_write(rtwdev, cur_igi);
++}
++
++static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
++{
++	struct rtw_vif *rtwvif;
++	struct rtw_sta_info *si;
++
++	if (rtwdev->watch_dog_cnt & 0x3)
++		return;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(rtwvif, &rtwdev->vif_list, list) {
++		list_for_each_entry_rcu(si, &rtwvif->sta_list, list) {
++			rtw_update_sta_info(rtwdev, si);
++		}
++	}
++	rcu_read_unlock();
++}
++
++void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev)
++{
++	/* for further calculation */
++	rtw_phy_statistics(rtwdev);
++	rtw_phy_dig(rtwdev);
++	rtw_phy_ra_info_update(rtwdev);
++}
++
++#define FRAC_BITS 3
++
++static u8 rtw_phy_power_2_db(s8 power)
++{
++	if (power <= -100 || power >= 20)
++		return 0;
++	else if (power >= 0)
++		return 100;
++	else
++		return 100 + power;
++}
++
++static u64 rtw_phy_db_2_linear(u8 power_db)
++{
++	u8 i, j;
++	u64 linear;
++
++	/* 1dB ~ 96dB */
++	i = (power_db - 1) >> 3;
++	j = (power_db - 1) - (i << 3);
++
++	linear = db_invert_table[i][j];
++	linear = i > 2 ? linear << FRAC_BITS : linear;
++
++	return linear;
++}
++
++static u8 rtw_phy_linear_2_db(u64 linear)
++{
++	u8 i;
++	u8 j;
++	u32 dB;
++
++	if (linear >= db_invert_table[11][7])
++		return 96; /* maximum 96 dB */
++
++	for (i = 0; i < 12; i++) {
++		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
++			break;
++		else if (i > 2 && linear <= db_invert_table[i][7])
++			break;
++	}
++
++	for (j = 0; j < 8; j++) {
++		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
++			break;
++		else if (i > 2 && linear <= db_invert_table[i][j])
++			break;
++	}
++
++	if (j == 0 && i == 0)
++		goto end;
++
++	if (j == 0) {
++		if (i != 3) {
++			if (db_invert_table[i][0] - linear >
++			    linear - db_invert_table[i - 1][7]) {
++				i = i - 1;
++				j = 7;
++			}
++		} else {
++			if (db_invert_table[3][0] - linear >
++			    linear - db_invert_table[2][7]) {
++				i = 2;
++				j = 7;
++			}
++		}
++	} else {
++		if (db_invert_table[i][j] - linear >
++		    linear - db_invert_table[i][j - 1]) {
++			j = j - 1;
++		}
++	}
++end:
++	dB = (i << 3) + j + 1;
++
++	return dB;
++}
++
++u8 rtw_phy_rf_power_2_rssi(s8 *rf_power, u8 path_num)
++{
++	s8 power;
++	u8 power_db;
++	u64 linear;
++	u64 sum = 0;
++	u8 path;
++
++	for (path = 0; path < path_num; path++) {
++		power = rf_power[path];
++		power_db = rtw_phy_power_2_db(power);
++		linear = rtw_phy_db_2_linear(power_db);
++		sum += linear;
++	}
++
++	sum = (sum + (1 << (FRAC_BITS - 1))) >> FRAC_BITS;
++	switch (path_num) {
++	case 2:
++		sum >>= 1;
++		break;
++	case 3:
++		sum = ((sum) + ((sum) << 1) + ((sum) << 3)) >> 5;
++		break;
++	case 4:
++		sum >>= 2;
++		break;
++	default:
++		break;
++	}
++
++	return rtw_phy_linear_2_db(sum);
++}
++
++u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++		    u32 addr, u32 mask)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const u32 *base_addr = chip->rf_base_addr;
++	u32 val, direct_addr;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)", rf_path);
++		return INV_RF_DATA;
++	}
++
++	addr &= 0xff;
++	direct_addr = base_addr[rf_path] + (addr << 2);
++	mask &= RFREG_MASK;
++
++	val = rtw_read32_mask(rtwdev, direct_addr, mask);
++
++	return val;
++}
++
++bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			       u32 addr, u32 mask, u32 data)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u32 *sipi_addr = chip->rf_sipi_addr;
++	u32 data_and_addr;
++	u32 old_data = 0;
++	u32 shift;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)", rf_path);
++		return false;
++	}
++
++	addr &= 0xff;
++	mask &= RFREG_MASK;
++
++	if (mask != RFREG_MASK) {
++		old_data = rtw_phy_read_rf(rtwdev, rf_path, addr, RFREG_MASK);
++
++		if (old_data == INV_RF_DATA) {
++			rtw_err(rtwdev, "Write fail, rf is disabled");
++			return false;
++		}
++
++		shift = __ffs(mask);
++		data = ((old_data) & (~mask)) | (data << shift);
++	}
++
++	data_and_addr = ((addr << 20) | (data & 0x000fffff)) & 0x0fffffff;
++
++	rtw_write32(rtwdev, sipi_addr[rf_path], data_and_addr);
++
++	return true;
++}
++
++bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			  u32 addr, u32 mask, u32 data)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const u32 *base_addr = chip->rf_base_addr;
++	u32 direct_addr;
++
++	if (rf_path >= hal->rf_path_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)", rf_path);
++		return false;
++	}
++
++	addr &= 0xff;
++	direct_addr = base_addr[rf_path] + (addr << 2);
++	mask &= RFREG_MASK;
++
++	rtw_write32_mask(rtwdev, direct_addr, mask, data);
++
++	return true;
++}
++
++bool rtw_phy_write_rf_reg_mix(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			      u32 addr, u32 mask, u32 data)
++{
++	if (addr != 0x00)
++		return rtw_phy_write_rf_reg(rtwdev, rf_path, addr, mask, data);
++
++	return rtw_phy_write_rf_reg_sipi(rtwdev, rf_path, addr, mask, data);
++}
++
++void rtw_phy_setup_phy_cond(struct rtw_dev *rtwdev, u32 pkg)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw_phy_cond cond = {0};
++
++	cond.cut = hal->cut_version ? hal->cut_version : 15;
++	cond.pkg = pkg ? pkg : 15;
++	cond.plat = 0x04;
++	cond.rfe = efuse->rfe_option;
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_USB:
++		cond.intf = INTF_USB;
++		break;
++	case RTW_HCI_TYPE_SDIO:
++		cond.intf = INTF_SDIO;
++		break;
++	case RTW_HCI_TYPE_PCIE:
++	default:
++		cond.intf = INTF_PCIE;
++		break;
++	}
++
++	hal->phy_cond = cond;
++
++	rtw_dbg(rtwdev, "phy cond=0x%08x\n", *((u32 *)&hal->phy_cond));
++}
++
++static bool check_positive(struct rtw_dev *rtwdev, struct rtw_phy_cond cond)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_phy_cond drv_cond = hal->phy_cond;
++
++	if (cond.cut && cond.cut != drv_cond.cut)
++		return false;
++
++	if (cond.pkg && cond.pkg != drv_cond.pkg)
++		return false;
++
++	if (cond.intf && cond.intf != drv_cond.intf)
++		return false;
++
++	if (cond.rfe != drv_cond.rfe)
++		return false;
++
++	return true;
++}
++
++void rtw_parse_tbl_phy_cond(struct rtw_dev *rtwdev, const struct rtw_table *tbl)
++{
++	const union phy_table_tile *p = tbl->data;
++	const union phy_table_tile *end = p + tbl->size / 2;
++	struct rtw_phy_cond pos_cond = {0};
++	bool is_matched = true, is_skipped = false;
++
++	BUILD_BUG_ON(sizeof(union phy_table_tile) != sizeof(struct phy_cfg_pair));
++
++	for (; p < end; p++) {
++		if (p->cond.pos) {
++			switch (p->cond.branch) {
++			case BRANCH_ENDIF:
++				is_matched = true;
++				is_skipped = false;
++				break;
++			case BRANCH_ELSE:
++				is_matched = is_skipped ? false : true;
++				break;
++			case BRANCH_IF:
++			case BRANCH_ELIF:
++			default:
++				pos_cond = p->cond;
++				break;
++			}
++		} else if (p->cond.neg) {
++			if (!is_skipped) {
++				if (check_positive(rtwdev, pos_cond)) {
++					is_matched = true;
++					is_skipped = true;
++				} else {
++					is_matched = false;
++					is_skipped = false;
++				}
++			} else {
++				is_matched = false;
++			}
++		} else if (is_matched) {
++			(*tbl->do_cfg)(rtwdev, tbl, p->cfg.addr, p->cfg.data);
++		}
++	}
++}
++
++void rtw_parse_tbl_bb_pg(struct rtw_dev *rtwdev, const struct rtw_table *tbl)
++{
++	const struct phy_pg_cfg_pair *p = tbl->data;
++	const struct phy_pg_cfg_pair *end = p + tbl->size / 6;
++
++	BUILD_BUG_ON(sizeof(struct phy_pg_cfg_pair) != sizeof(u32) * 6);
++
++	for (; p < end; p++) {
++		if (p->addr == 0xfe || p->addr == 0xffe) {
++			msleep(50);
++			continue;
++		}
++		phy_store_tx_power_by_rate(rtwdev, p->band, p->rf_path,
++					   p->tx_num, p->addr, p->bitmask,
++					   p->data);
++	}
++}
++
++void rtw_parse_tbl_txpwr_lmt(struct rtw_dev *rtwdev,
++			     const struct rtw_table *tbl)
++{
++	const struct txpwr_lmt_cfg_pair *p = tbl->data;
++	const struct txpwr_lmt_cfg_pair *end = p + tbl->size / 6;
++
++	BUILD_BUG_ON(sizeof(struct txpwr_lmt_cfg_pair) != sizeof(u8) * 6);
++
++	for (; p < end; p++) {
++		phy_set_tx_power_limit(rtwdev, p->regd, p->band,
++				       p->bw, p->rs,
++				       p->ch, p->txpwr_lmt);
++	}
++}
++
++void rtw_phy_cfg_mac(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data)
++{
++	rtw_write8(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_agc(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data)
++{
++	rtw_write32(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_bb(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data)
++{
++	if (addr == 0xfe)
++		msleep(50);
++	else if (addr == 0xfd)
++		mdelay(5);
++	else if (addr == 0xfc)
++		mdelay(1);
++	else if (addr == 0xfb)
++		usleep_range(50, 60);
++	else if (addr == 0xfa)
++		udelay(5);
++	else if (addr == 0xf9)
++		udelay(1);
++	else
++		rtw_write32(rtwdev, addr, data);
++}
++
++void rtw_phy_cfg_rf(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data)
++{
++	if (addr == 0xffe) {
++		msleep(50);
++	} else if (addr == 0xfe) {
++		usleep_range(100, 110);
++	} else {
++		rtw_write_rf(rtwdev, tbl->rf_path, addr, RFREG_MASK, data);
++		udelay(1);
++	}
++}
++
++void rtw_phy_load_tables(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 rf_path;
++
++	rtw_load_table(rtwdev, chip->mac_tbl);
++	rtw_load_table(rtwdev, chip->bb_tbl);
++	rtw_load_table(rtwdev, chip->agc_tbl);
++
++	for (rf_path = 0; rf_path < rtwdev->hal.rf_path_num; rf_path++) {
++		const struct rtw_table *tbl;
++
++		tbl = chip->rf_tbl[rf_path];
++		rtw_load_table(rtwdev, tbl);
++	}
++}
++
++#define bcd_to_dec_pwr_by_rate(val, i) \
++	({ \
++		typeof(val) __val_ = val; \
++		typeof(i) __i_ = i; \
++		((s8)((((__val_ >> (__i_ * 8 + 4)) & 0xF)) * 10 + \
++		       ((__val_ >> (__i_ * 8)) & 0xF))); \
++	 })
++
++#define RTW_MAX_POWER_INDEX		0x3F
++
++static u8 cck_rates[] = {DESC_RATE1M, DESC_RATE2M, DESC_RATE5_5M, DESC_RATE11M};
++static u8 ofdm_rates[] = {DESC_RATE6M,  DESC_RATE9M,  DESC_RATE12M,
++			  DESC_RATE18M, DESC_RATE24M, DESC_RATE36M,
++			  DESC_RATE48M, DESC_RATE54M};
++static u8 ht_1s_rates[] = {DESC_RATEMCS0, DESC_RATEMCS1, DESC_RATEMCS2,
++			   DESC_RATEMCS3, DESC_RATEMCS4, DESC_RATEMCS5,
++			   DESC_RATEMCS6, DESC_RATEMCS7};
++static u8 ht_2s_rates[] = {DESC_RATEMCS8,  DESC_RATEMCS9,  DESC_RATEMCS10,
++			   DESC_RATEMCS11, DESC_RATEMCS12, DESC_RATEMCS13,
++			   DESC_RATEMCS14, DESC_RATEMCS15};
++static u8 vht_1s_rates[] = {DESC_RATEVHT1SS_MCS0, DESC_RATEVHT1SS_MCS1,
++			    DESC_RATEVHT1SS_MCS2, DESC_RATEVHT1SS_MCS3,
++			    DESC_RATEVHT1SS_MCS4, DESC_RATEVHT1SS_MCS5,
++			    DESC_RATEVHT1SS_MCS6, DESC_RATEVHT1SS_MCS7,
++			    DESC_RATEVHT1SS_MCS8, DESC_RATEVHT1SS_MCS9};
++static u8 vht_2s_rates[] = {DESC_RATEVHT2SS_MCS0, DESC_RATEVHT2SS_MCS1,
++			    DESC_RATEVHT2SS_MCS2, DESC_RATEVHT2SS_MCS3,
++			    DESC_RATEVHT2SS_MCS4, DESC_RATEVHT2SS_MCS5,
++			    DESC_RATEVHT2SS_MCS6, DESC_RATEVHT2SS_MCS7,
++			    DESC_RATEVHT2SS_MCS8, DESC_RATEVHT2SS_MCS9};
++static u8 cck_size = ARRAY_SIZE(cck_rates);
++static u8 ofdm_size = ARRAY_SIZE(ofdm_rates);
++static u8 ht_1s_size = ARRAY_SIZE(ht_1s_rates);
++static u8 ht_2s_size = ARRAY_SIZE(ht_2s_rates);
++static u8 vht_1s_size = ARRAY_SIZE(vht_1s_rates);
++static u8 vht_2s_size = ARRAY_SIZE(vht_2s_rates);
++
++static const u8 rtw_channel_idx_5g[RTW_MAX_CHANNEL_NUM_5G] = {
++	36,  38,  40,  42,  44,  46,  48, /* Band 1 */
++	52,  54,  56,  58,  60,  62,  64, /* Band 2 */
++	100, 102, 104, 106, 108, 110, 112, /* Band 3 */
++	116, 118, 120, 122, 124, 126, 128, /* Band 3 */
++	132, 134, 136, 138, 140, 142, 144, /* Band 3 */
++	149, 151, 153, 155, 157, 159, 161, /* Band 4 */
++	165, 167, 169, 171, 173, 175, 177}; /* Band 4 */
++
++static int rtw_channel_to_idx(u8 band, u8 channel)
++{
++	int ch_idx;
++	u8 n_channel;
++
++	if (band == PHY_BAND_2G) {
++		ch_idx = channel - 1;
++		n_channel = RTW_MAX_CHANNEL_NUM_2G;
++	} else if (band == PHY_BAND_5G) {
++		n_channel = RTW_MAX_CHANNEL_NUM_5G;
++		for (ch_idx = 0; ch_idx < n_channel; ch_idx++)
++			if (rtw_channel_idx_5g[ch_idx] == channel)
++				break;
++	} else {
 +		return -1;
 +	}
 +
-+	for (i = 0 ; i < buf_size ; i += 8) {
-+		if (i % page_size == 0)
-+			seq_printf(m, "PAGE %d\n", (i + offset) / page_size);
-+		seq_printf(m, "%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
-+			   *(buf + i), *(buf + i + 1),
-+			   *(buf + i + 2), *(buf + i + 3),
-+			   *(buf + i + 4), *(buf + i + 5),
-+			   *(buf + i + 6), *(buf + i + 7));
-+	}
-+	vfree(buf);
++	if (ch_idx >= n_channel)
++		return -1;
 +
-+	return 0;
++	return ch_idx;
 +}
 +
-+static ssize_t rtw_debugfs_set_rsvd_page(struct file *filp,
-+					 const char __user *buffer,
-+					 size_t count, loff_t *loff)
++static u8 rtw_get_channel_group(u8 channel)
 +{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 offset, page_num;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
-+
-+	num = sscanf(tmp, "%d %d", &offset, &page_num);
-+
-+	if (num != 2) {
-+		rtw_warn(rtwdev, "invalid arguments\n");
-+		return num;
-+	}
-+
-+	debugfs_priv->rsvd_page.page_offset = offset;
-+	debugfs_priv->rsvd_page.page_num = page_num;
-+
-+	return count;
-+}
-+
-+static ssize_t rtw_debugfs_set_single_input(struct file *filp,
-+					    const char __user *buffer,
-+					    size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 input;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+
-+	num = kstrtoint(tmp, 0, &input);
-+
-+	if (num) {
-+		rtw_warn(rtwdev, "kstrtoint failed\n");
-+		return num;
-+	}
-+
-+	debugfs_priv->cb_data = input;
-+
-+	return count;
-+}
-+
-+static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
-+					 const char __user *buffer,
-+					 size_t count, loff_t *loff)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 addr, val, len;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
-+
-+	/* write BB/MAC register */
-+	num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
-+
-+	if (num !=  3)
-+		return count;
-+
-+	switch (len) {
-+	case 1:
-+		rtw_dbg(rtwdev, "reg write8 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write8(rtwdev, addr, (u8)val);
-+		break;
-+	case 2:
-+		rtw_dbg(rtwdev, "reg write16 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write16(rtwdev, addr, (u16)val);
-+		break;
-+	case 4:
-+		rtw_dbg(rtwdev, "reg write32 0x%03x: 0x%08x\n", addr, val);
-+		rtw_write32(rtwdev, addr, (u32)val);
-+		break;
++	switch (channel) {
 +	default:
-+		rtw_dbg(rtwdev, "error write length = %d", len);
++		WARN_ON(1);
++	case 1:
++	case 2:
++	case 36:
++	case 38:
++	case 40:
++	case 42:
++		return 0;
++	case 3:
++	case 4:
++	case 5:
++	case 44:
++	case 46:
++	case 48:
++	case 50:
++		return 1;
++	case 6:
++	case 7:
++	case 8:
++	case 52:
++	case 54:
++	case 56:
++	case 58:
++		return 2;
++	case 9:
++	case 10:
++	case 11:
++	case 60:
++	case 62:
++	case 64:
++		return 3;
++	case 12:
++	case 13:
++	case 100:
++	case 102:
++	case 104:
++	case 106:
++		return 4;
++	case 14:
++	case 108:
++	case 110:
++	case 112:
++	case 114:
++		return 5;
++	case 116:
++	case 118:
++	case 120:
++	case 122:
++		return 6;
++	case 124:
++	case 126:
++	case 128:
++	case 130:
++		return 7;
++	case 132:
++	case 134:
++	case 136:
++	case 138:
++		return 8;
++	case 140:
++	case 142:
++	case 144:
++		return 9;
++	case 149:
++	case 151:
++	case 153:
++	case 155:
++		return 10;
++	case 157:
++	case 159:
++	case 161:
++		return 11;
++	case 165:
++	case 167:
++	case 169:
++	case 171:
++		return 12;
++	case 173:
++	case 175:
++	case 177:
++		return 13;
++	}
++}
++
++static u8 phy_get_2g_tx_power_index(struct rtw_2g_txpwr_idx *pwr_idx_2g,
++				    enum rtw_bandwidth bandwidth,
++				    u8 rate, u8 group)
++{
++	u8 tx_power;
++	bool mcs_rate;
++	bool above_2ss;
++
++	if (rate <= DESC_RATE11M)
++		tx_power = pwr_idx_2g->cck_base[group];
++	else
++		tx_power = pwr_idx_2g->bw40_base[group];
++
++	if (rate >= DESC_RATE6M && rate <= DESC_RATE54M)
++		tx_power += pwr_idx_2g->ht_1s_diff.ofdm;
++
++	mcs_rate = (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS15) ||
++		   (rate >= DESC_RATEVHT1SS_MCS0 &&
++		    rate <= DESC_RATEVHT2SS_MCS9);
++	above_2ss = (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15) ||
++		    (rate >= DESC_RATEVHT2SS_MCS0);
++
++	if (!mcs_rate)
++		return tx_power;
++
++	switch (bandwidth) {
++	default:
++		WARN_ON(1);
++	case RTW_CHANNEL_WIDTH_20:
++		tx_power += pwr_idx_2g->ht_1s_diff.bw20;
++		if (above_2ss)
++			tx_power += pwr_idx_2g->ht_2s_diff.bw20;
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		/* bw40 is the base power */
++		if (above_2ss)
++			tx_power += pwr_idx_2g->ht_2s_diff.bw40;
 +		break;
 +	}
 +
-+	return count;
++	return tx_power;
 +}
 +
-+static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
++static u8 phy_get_5g_tx_power_index(struct rtw_5g_txpwr_idx *pwr_idx_5g,
++				    enum rtw_bandwidth bandwidth,
++				    u8 rate, u8 group)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = filp->private_data;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 path, addr, mask, val;
-+	int num;
++	u8 tx_power;
++	u8 upper, lower;
++	bool mcs_rate;
++	bool above_2ss;
 +
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 4);
++	tx_power = pwr_idx_5g->bw40_base[group];
 +
-+	num = sscanf(tmp, "%x %x %x %x", &path, &addr, &mask, &val);
++	mcs_rate = (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS15) ||
++		   (rate >= DESC_RATEVHT1SS_MCS0 &&
++		    rate <= DESC_RATEVHT2SS_MCS9);
++	above_2ss = (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15) ||
++		    (rate >= DESC_RATEVHT2SS_MCS0);
 +
-+	if (num !=  4) {
-+		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
-+		return count;
++	if (!mcs_rate) {
++		tx_power += pwr_idx_5g->ht_1s_diff.ofdm;
++		return tx_power;
 +	}
 +
-+	rtw_write_rf(rtwdev, path, addr, mask, val);
-+	rtw_dbg(rtwdev, "write_rf path:%d addr:0x%08x mask:0x%08x, val:0x%08x\n",
-+		path, addr, mask, val);
++	switch (bandwidth) {
++	default:
++		WARN_ON(1);
++	case RTW_CHANNEL_WIDTH_20:
++		tx_power += pwr_idx_5g->ht_1s_diff.bw20;
++		if (above_2ss)
++			tx_power += pwr_idx_5g->ht_2s_diff.bw20;
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		/* bw40 is the base power */
++		if (above_2ss)
++			tx_power += pwr_idx_5g->ht_2s_diff.bw40;
++		break;
++	case RTW_CHANNEL_WIDTH_80:
++		/* the base idx of bw80 is the average of bw40+/bw40- */
++		lower = pwr_idx_5g->bw40_base[group];
++		upper = pwr_idx_5g->bw40_base[group + 1];
 +
-+	return count;
-+}
-+
-+static ssize_t rtw_debugfs_set_rf_read(struct file *filp,
-+				       const char __user *buffer,
-+				       size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	char tmp[32 + 1];
-+	u32 path, addr, mask;
-+	int num;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
-+
-+	num = sscanf(tmp, "%x %x %x", &path, &addr, &mask);
-+
-+	if (num !=  3) {
-+		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
-+		return count;
++		tx_power = (lower + upper) / 2;
++		tx_power += pwr_idx_5g->vht_1s_diff.bw80;
++		if (above_2ss)
++			tx_power += pwr_idx_5g->vht_2s_diff.bw80;
++		break;
 +	}
 +
-+	debugfs_priv->rf_path = path;
-+	debugfs_priv->rf_addr = addr;
-+	debugfs_priv->rf_mask = mask;
-+
-+	return count;
++	return tx_power;
 +}
 +
-+static int rtw_debug_get_mac_page(struct seq_file *m, void *v)
++/* set tx power level by path for each rates, note that the order of the rates
++ * are *very* important, bacause 8822B/8821C combines every four bytes of tx
++ * power index into a four-byte power index register, and calls set_tx_agc to
++ * write these values into hardware
++ */
++static
++void phy_set_tx_power_level_by_path(struct rtw_dev *rtwdev, u8 ch, u8 path)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val;
-+	u32 page = debugfs_priv->cb_data;
-+	int i, n;
-+	int max = 0xff;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 rs;
 +
-+	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
-+	for (n = 0; n <= max; ) {
-+		seq_printf(m, "\n%8.8x  ", n + page);
-+		for (i = 0; i < 4 && n <= max; i++, n += 4)
-+			seq_printf(m, "%8.8x    ",
-+				   rtw_read32(rtwdev, (page | n)));
-+	}
-+	seq_puts(m, "\n");
-+	return 0;
++	/* do not need cck rates if we are not in 2.4G */
++	if (hal->current_band_type == RTW_BAND_2G)
++		rs = RTW_RATE_SECTION_CCK;
++	else
++		rs = RTW_RATE_SECTION_OFDM;
++
++	for (; rs < RTW_RATE_SECTION_MAX; rs++)
++		phy_set_tx_power_index_by_rs(rtwdev, ch, path, rs);
 +}
 +
-+static int rtw_debug_get_bb_page(struct seq_file *m, void *v)
++void rtw_phy_set_tx_power_level(struct rtw_dev *rtwdev, u8 channel)
 +{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 val;
-+	u32 page = debugfs_priv->cb_data;
-+	int i, n;
-+	int max = 0xff;
-+
-+	val = rtw_read32(rtwdev, debugfs_priv->cb_data);
-+	for (n = 0; n <= max; ) {
-+		seq_printf(m, "\n%8.8x  ", n + page);
-+		for (i = 0; i < 4 && n <= max; i++, n += 4)
-+			seq_printf(m, "%8.8x    ",
-+				   rtw_read32(rtwdev, (page | n)));
-+	}
-+	seq_puts(m, "\n");
-+	return 0;
-+}
-+
-+static int rtw_debug_get_rf_dump(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	u32 addr, offset, data;
++	struct rtw_hal *hal = &rtwdev->hal;
 +	u8 path;
 +
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		seq_printf(m, "RF path:%d\n", path);
-+		for (addr = 0; addr < 0x100; addr += 4) {
-+			seq_printf(m, "%8.8x  ", addr);
-+			for (offset = 0; offset < 4; offset++) {
-+				data = rtw_read_rf(rtwdev, path, addr + offset,
-+						   0xffffffff);
-+				seq_printf(m, "%8.8x    ", data);
-+			}
-+			seq_puts(m, "\n");
-+		}
-+		seq_puts(m, "\n");
++	mutex_lock(&hal->tx_power_mutex);
++
++	for (path = 0; path < hal->rf_path_num; path++)
++		phy_set_tx_power_level_by_path(rtwdev, channel, path);
++
++	mutex_unlock(&hal->tx_power_mutex);
++}
++
++s8 phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
++			  enum rtw_bandwidth bandwidth, u8 rf_path,
++			  u8 rate, u8 channel);
++
++static
++u8 phy_get_tx_power_index(void *adapter, u8 rf_path, u8 rate,
++			  enum rtw_bandwidth bandwidth, u8 channel)
++{
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_txpwr_idx *pwr_idx;
++	u8 tx_power;
++	u8 group;
++	u8 band;
++	s8 offset, limit;
++
++	pwr_idx = &rtwdev->efuse.txpwr_idx_table[rf_path];
++	group = rtw_get_channel_group(channel);
++
++	/* base power index for 2.4G/5G */
++	if (channel <= 14) {
++		band = PHY_BAND_2G;
++		tx_power = phy_get_2g_tx_power_index(&pwr_idx->pwr_idx_2g,
++						     bandwidth, rate, group);
++		offset = hal->tx_pwr_by_rate_offset_2g[rf_path][rate];
++	} else {
++		band = PHY_BAND_5G;
++		tx_power = phy_get_5g_tx_power_index(&pwr_idx->pwr_idx_5g,
++						     bandwidth, rate, group);
++		offset = hal->tx_pwr_by_rate_offset_5g[rf_path][rate];
 +	}
 +
-+	return 0;
++	limit = phy_get_tx_power_limit(rtwdev, band, bandwidth, rf_path,
++				       rate, channel);
++
++	if (offset > limit)
++		offset = limit;
++
++	tx_power += offset;
++
++	if (tx_power > RTW_MAX_POWER_INDEX)
++		tx_power = RTW_MAX_POWER_INDEX;
++
++	return tx_power;
 +}
 +
-+#define rtw_debug_impl_mac(page, addr)				\
-+static struct rtw_debugfs_priv rtw_debug_priv_mac_ ##page = {	\
-+	.cb_read = rtw_debug_get_mac_page,			\
-+	.cb_data = addr,					\
-+}
-+
-+rtw_debug_impl_mac(0, 0x0000);
-+rtw_debug_impl_mac(1, 0x0100);
-+rtw_debug_impl_mac(2, 0x0200);
-+rtw_debug_impl_mac(3, 0x0300);
-+rtw_debug_impl_mac(4, 0x0400);
-+rtw_debug_impl_mac(5, 0x0500);
-+rtw_debug_impl_mac(6, 0x0600);
-+rtw_debug_impl_mac(7, 0x0700);
-+rtw_debug_impl_mac(10, 0x1000);
-+rtw_debug_impl_mac(11, 0x1100);
-+rtw_debug_impl_mac(12, 0x1200);
-+rtw_debug_impl_mac(13, 0x1300);
-+rtw_debug_impl_mac(14, 0x1400);
-+rtw_debug_impl_mac(15, 0x1500);
-+rtw_debug_impl_mac(16, 0x1600);
-+rtw_debug_impl_mac(17, 0x1700);
-+
-+#define rtw_debug_impl_bb(page, addr)			\
-+static struct rtw_debugfs_priv rtw_debug_priv_bb_ ##page = {	\
-+	.cb_read = rtw_debug_get_bb_page,			\
-+	.cb_data = addr,					\
-+}
-+
-+rtw_debug_impl_bb(8, 0x0800);
-+rtw_debug_impl_bb(9, 0x0900);
-+rtw_debug_impl_bb(a, 0x0a00);
-+rtw_debug_impl_bb(b, 0x0b00);
-+rtw_debug_impl_bb(c, 0x0c00);
-+rtw_debug_impl_bb(d, 0x0d00);
-+rtw_debug_impl_bb(e, 0x0e00);
-+rtw_debug_impl_bb(f, 0x0f00);
-+rtw_debug_impl_bb(18, 0x1800);
-+rtw_debug_impl_bb(19, 0x1900);
-+rtw_debug_impl_bb(1a, 0x1a00);
-+rtw_debug_impl_bb(1b, 0x1b00);
-+rtw_debug_impl_bb(1c, 0x1c00);
-+rtw_debug_impl_bb(1d, 0x1d00);
-+rtw_debug_impl_bb(1e, 0x1e00);
-+rtw_debug_impl_bb(1f, 0x1f00);
-+rtw_debug_impl_bb(2c, 0x2c00);
-+rtw_debug_impl_bb(2d, 0x2d00);
-+rtw_debug_impl_bb(40, 0x4000);
-+rtw_debug_impl_bb(41, 0x4100);
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_dump = {
-+	.cb_read = rtw_debug_get_rf_dump,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_write_reg = {
-+	.cb_write = rtw_debugfs_set_write_reg,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_write = {
-+	.cb_write = rtw_debugfs_set_rf_write,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rf_read = {
-+	.cb_write = rtw_debugfs_set_rf_read,
-+	.cb_read = rtw_debugfs_get_rf_read,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_read_reg = {
-+	.cb_write = rtw_debugfs_set_read_reg,
-+	.cb_read = rtw_debugfs_get_read_reg,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_dump_cam = {
-+	.cb_write = rtw_debugfs_set_single_input,
-+	.cb_read = rtw_debugfs_get_dump_cam,
-+};
-+
-+static struct rtw_debugfs_priv rtw_debug_priv_rsvd_page = {
-+	.cb_write = rtw_debugfs_set_rsvd_page,
-+	.cb_read = rtw_debugfs_get_rsvd_page,
-+};
-+
-+#define rtw_debugfs_add_core(name, mode, fopname, parent)		\
-+	do {								\
-+		rtw_debug_priv_ ##name.rtwdev = rtwdev;			\
-+		if (!debugfs_create_file(#name, mode,			\
-+					 parent, &rtw_debug_priv_ ##name,\
-+					 &file_ops_ ##fopname))		\
-+			pr_debug("Unable to initialize debugfs:%s\n",	\
-+			       #name);					\
-+	} while (0)
-+
-+#define rtw_debugfs_add_w(name)						\
-+	rtw_debugfs_add_core(name, S_IFREG | 0222, common_write, debugfs_topdir)
-+#define rtw_debugfs_add_rw(name)					\
-+	rtw_debugfs_add_core(name, S_IFREG | 0666, single_rw, debugfs_topdir)
-+#define rtw_debugfs_add_r(name)						\
-+	rtw_debugfs_add_core(name, S_IFREG | 0444, single_r, debugfs_topdir)
-+
-+static struct dentry *debugfs_topdir;
-+
-+void rtw_debugfs_init(struct rtw_dev *rtwdev)
++void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs)
 +{
-+	debugfs_topdir = debugfs_create_dir("rtw88", NULL);
-+
-+	rtw_debugfs_add_w(write_reg);
-+	rtw_debugfs_add_rw(read_reg);
-+	rtw_debugfs_add_w(rf_write);
-+	rtw_debugfs_add_rw(rf_read);
-+	rtw_debugfs_add_rw(dump_cam);
-+	rtw_debugfs_add_rw(rsvd_page);
-+	rtw_debugfs_add_r(mac_0);
-+	rtw_debugfs_add_r(mac_1);
-+	rtw_debugfs_add_r(mac_2);
-+	rtw_debugfs_add_r(mac_3);
-+	rtw_debugfs_add_r(mac_4);
-+	rtw_debugfs_add_r(mac_5);
-+	rtw_debugfs_add_r(mac_6);
-+	rtw_debugfs_add_r(mac_7);
-+	rtw_debugfs_add_r(bb_8);
-+	rtw_debugfs_add_r(bb_9);
-+	rtw_debugfs_add_r(bb_a);
-+	rtw_debugfs_add_r(bb_b);
-+	rtw_debugfs_add_r(bb_c);
-+	rtw_debugfs_add_r(bb_d);
-+	rtw_debugfs_add_r(bb_e);
-+	rtw_debugfs_add_r(bb_f);
-+	rtw_debugfs_add_r(mac_10);
-+	rtw_debugfs_add_r(mac_11);
-+	rtw_debugfs_add_r(mac_12);
-+	rtw_debugfs_add_r(mac_13);
-+	rtw_debugfs_add_r(mac_14);
-+	rtw_debugfs_add_r(mac_15);
-+	rtw_debugfs_add_r(mac_16);
-+	rtw_debugfs_add_r(mac_17);
-+	rtw_debugfs_add_r(bb_18);
-+	rtw_debugfs_add_r(bb_19);
-+	rtw_debugfs_add_r(bb_1a);
-+	rtw_debugfs_add_r(bb_1b);
-+	rtw_debugfs_add_r(bb_1c);
-+	rtw_debugfs_add_r(bb_1d);
-+	rtw_debugfs_add_r(bb_1e);
-+	rtw_debugfs_add_r(bb_1f);
-+	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) {
-+		rtw_debugfs_add_r(bb_2c);
-+		rtw_debugfs_add_r(bb_2d);
-+		rtw_debugfs_add_r(bb_40);
-+		rtw_debugfs_add_r(bb_41);
-+	}
-+	rtw_debugfs_add_r(rf_dump);
-+}
-+
-+void rtw_debugfs_deinit(void)
-+{
-+	debugfs_remove_recursive(debugfs_topdir);
-+	debugfs_topdir = NULL;
-+}
-+
-+#endif /* CONFIG_RTW88_DEBUGFS */
-+
-+#ifdef CONFIG_RTW88_DEBUG
-+
-+void __rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...)
-+{
-+	struct va_format vaf = {
-+		.fmt = fmt,
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	u8 *rates;
++	u8 size;
++	u8 rate;
++	u8 pwr_idx;
++	u8 bw;
++	int i;
++	u8 *rate_sections[RTW_RATE_SECTION_MAX] = {
++		cck_rates, ofdm_rates, ht_1s_rates, ht_2s_rates,
++		vht_1s_rates, vht_2s_rates,
 +	};
-+	va_list args;
++	u8 sizes[RTW_RATE_SECTION_MAX] = {
++		cck_size, ofdm_size, ht_1s_size, ht_2s_size,
++		vht_1s_size, vht_2s_size,
++	};
 +
-+	va_start(args, fmt);
-+	vaf.va = &args;
++	if (rs >= RTW_RATE_SECTION_MAX)
++		return;
 +
-+	if (net_ratelimit())
-+		dev_dbg(rtwdev->dev, "%pV", &vaf);
-+
-+	va_end(args);
++	rates = rate_sections[rs];
++	size = sizes[rs];
++	bw = hal->current_band_width;
++	for (i = 0; i < size; i++) {
++		rate = rates[i];
++		pwr_idx = phy_get_tx_power_index(adapter, path, rate, bw, ch);
++		chip->ops->set_tx_power_index(rtwdev, pwr_idx, path, rate);
++	}
 +}
-+EXPORT_SYMBOL(__rtw_dbg);
 +
-+#define __rtw_fn(fn)							\
-+void __rtw_ ##fn(struct rtw_dev *rtwdev, const char *fmt, ...)		\
-+{									\
-+	struct va_format vaf = {					\
-+		.fmt = fmt,						\
-+	};								\
-+	va_list args;							\
-+									\
-+	va_start(args, fmt);						\
-+	vaf.va = &args;							\
-+	dev_ ##fn(rtwdev->dev, "%pV", &vaf);				\
-+	va_end(args);							\
-+}									\
-+EXPORT_SYMBOL(__rtw_ ##fn);
++static void phy_get_rate_values_of_txpwr_by_rate(struct rtw_dev *rtwdev,
++						 u32 addr, u32 mask,
++						 u32 val, u8 *rate,
++						 u8 *pwr_by_rate, u8 *rate_num)
++{
++	int i;
 +
-+__rtw_fn(info)
-+__rtw_fn(warn)
-+__rtw_fn(err)
++	switch (addr) {
++	case 0xE00:
++	case 0x830:
++		rate[0] = DESC_RATE6M;
++		rate[1] = DESC_RATE9M;
++		rate[2] = DESC_RATE12M;
++		rate[3] = DESC_RATE18M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xE04:
++	case 0x834:
++		rate[0] = DESC_RATE24M;
++		rate[1] = DESC_RATE36M;
++		rate[2] = DESC_RATE48M;
++		rate[3] = DESC_RATE54M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xE08:
++		rate[0] = DESC_RATE1M;
++		pwr_by_rate[0] = bcd_to_dec_pwr_by_rate(val, 1);
++		*rate_num = 1;
++		break;
++	case 0x86C:
++		if (mask == 0xffffff00) {
++			rate[0] = DESC_RATE2M;
++			rate[1] = DESC_RATE5_5M;
++			rate[2] = DESC_RATE11M;
++			for (i = 1; i < 4; ++i)
++				pwr_by_rate[i - 1] =
++					bcd_to_dec_pwr_by_rate(val, i);
++			*rate_num = 3;
++		} else if (mask == 0x000000ff) {
++			rate[0] = DESC_RATE11M;
++			pwr_by_rate[0] = bcd_to_dec_pwr_by_rate(val, 0);
++			*rate_num = 1;
++		}
++		break;
++	case 0xE10:
++	case 0x83C:
++		rate[0] = DESC_RATEMCS0;
++		rate[1] = DESC_RATEMCS1;
++		rate[2] = DESC_RATEMCS2;
++		rate[3] = DESC_RATEMCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xE14:
++	case 0x848:
++		rate[0] = DESC_RATEMCS4;
++		rate[1] = DESC_RATEMCS5;
++		rate[2] = DESC_RATEMCS6;
++		rate[3] = DESC_RATEMCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xE18:
++	case 0x84C:
++		rate[0] = DESC_RATEMCS8;
++		rate[1] = DESC_RATEMCS9;
++		rate[2] = DESC_RATEMCS10;
++		rate[3] = DESC_RATEMCS11;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xE1C:
++	case 0x868:
++		rate[0] = DESC_RATEMCS12;
++		rate[1] = DESC_RATEMCS13;
++		rate[2] = DESC_RATEMCS14;
++		rate[3] = DESC_RATEMCS15;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
 +
-+#undef __rtw_fn
++		break;
++	case 0x838:
++		rate[0] = DESC_RATE1M;
++		rate[1] = DESC_RATE2M;
++		rate[2] = DESC_RATE5_5M;
++		for (i = 1; i < 4; ++i)
++			pwr_by_rate[i - 1] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 3;
++		break;
++	case 0xC20:
++	case 0xE20:
++	case 0x1820:
++	case 0x1A20:
++		rate[0] = DESC_RATE1M;
++		rate[1] = DESC_RATE2M;
++		rate[2] = DESC_RATE5_5M;
++		rate[3] = DESC_RATE11M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC24:
++	case 0xE24:
++	case 0x1824:
++	case 0x1A24:
++		rate[0] = DESC_RATE6M;
++		rate[1] = DESC_RATE9M;
++		rate[2] = DESC_RATE12M;
++		rate[3] = DESC_RATE18M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC28:
++	case 0xE28:
++	case 0x1828:
++	case 0x1A28:
++		rate[0] = DESC_RATE24M;
++		rate[1] = DESC_RATE36M;
++		rate[2] = DESC_RATE48M;
++		rate[3] = DESC_RATE54M;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC2C:
++	case 0xE2C:
++	case 0x182C:
++	case 0x1A2C:
++		rate[0] = DESC_RATEMCS0;
++		rate[1] = DESC_RATEMCS1;
++		rate[2] = DESC_RATEMCS2;
++		rate[3] = DESC_RATEMCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC30:
++	case 0xE30:
++	case 0x1830:
++	case 0x1A30:
++		rate[0] = DESC_RATEMCS4;
++		rate[1] = DESC_RATEMCS5;
++		rate[2] = DESC_RATEMCS6;
++		rate[3] = DESC_RATEMCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC34:
++	case 0xE34:
++	case 0x1834:
++	case 0x1A34:
++		rate[0] = DESC_RATEMCS8;
++		rate[1] = DESC_RATEMCS9;
++		rate[2] = DESC_RATEMCS10;
++		rate[3] = DESC_RATEMCS11;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC38:
++	case 0xE38:
++	case 0x1838:
++	case 0x1A38:
++		rate[0] = DESC_RATEMCS12;
++		rate[1] = DESC_RATEMCS13;
++		rate[2] = DESC_RATEMCS14;
++		rate[3] = DESC_RATEMCS15;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC3C:
++	case 0xE3C:
++	case 0x183C:
++	case 0x1A3C:
++		rate[0] = DESC_RATEVHT1SS_MCS0;
++		rate[1] = DESC_RATEVHT1SS_MCS1;
++		rate[2] = DESC_RATEVHT1SS_MCS2;
++		rate[3] = DESC_RATEVHT1SS_MCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC40:
++	case 0xE40:
++	case 0x1840:
++	case 0x1A40:
++		rate[0] = DESC_RATEVHT1SS_MCS4;
++		rate[1] = DESC_RATEVHT1SS_MCS5;
++		rate[2] = DESC_RATEVHT1SS_MCS6;
++		rate[3] = DESC_RATEVHT1SS_MCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC44:
++	case 0xE44:
++	case 0x1844:
++	case 0x1A44:
++		rate[0] = DESC_RATEVHT1SS_MCS8;
++		rate[1] = DESC_RATEVHT1SS_MCS9;
++		rate[2] = DESC_RATEVHT2SS_MCS0;
++		rate[3] = DESC_RATEVHT2SS_MCS1;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC48:
++	case 0xE48:
++	case 0x1848:
++	case 0x1A48:
++		rate[0] = DESC_RATEVHT2SS_MCS2;
++		rate[1] = DESC_RATEVHT2SS_MCS3;
++		rate[2] = DESC_RATEVHT2SS_MCS4;
++		rate[3] = DESC_RATEVHT2SS_MCS5;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xC4C:
++	case 0xE4C:
++	case 0x184C:
++	case 0x1A4C:
++		rate[0] = DESC_RATEVHT2SS_MCS6;
++		rate[1] = DESC_RATEVHT2SS_MCS7;
++		rate[2] = DESC_RATEVHT2SS_MCS8;
++		rate[3] = DESC_RATEVHT2SS_MCS9;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xCD8:
++	case 0xED8:
++	case 0x18D8:
++	case 0x1AD8:
++		rate[0] = DESC_RATEMCS16;
++		rate[1] = DESC_RATEMCS17;
++		rate[2] = DESC_RATEMCS18;
++		rate[3] = DESC_RATEMCS19;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xCDC:
++	case 0xEDC:
++	case 0x18DC:
++	case 0x1ADC:
++		rate[0] = DESC_RATEMCS20;
++		rate[1] = DESC_RATEMCS21;
++		rate[2] = DESC_RATEMCS22;
++		rate[3] = DESC_RATEMCS23;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE0:
++	case 0xEE0:
++	case 0x18E0:
++	case 0x1AE0:
++		rate[0] = DESC_RATEVHT3SS_MCS0;
++		rate[1] = DESC_RATEVHT3SS_MCS1;
++		rate[2] = DESC_RATEVHT3SS_MCS2;
++		rate[3] = DESC_RATEVHT3SS_MCS3;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE4:
++	case 0xEE4:
++	case 0x18E4:
++	case 0x1AE4:
++		rate[0] = DESC_RATEVHT3SS_MCS4;
++		rate[1] = DESC_RATEVHT3SS_MCS5;
++		rate[2] = DESC_RATEVHT3SS_MCS6;
++		rate[3] = DESC_RATEVHT3SS_MCS7;
++		for (i = 0; i < 4; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 4;
++		break;
++	case 0xCE8:
++	case 0xEE8:
++	case 0x18E8:
++	case 0x1AE8:
++		rate[0] = DESC_RATEVHT3SS_MCS8;
++		rate[1] = DESC_RATEVHT3SS_MCS9;
++		for (i = 0; i < 2; ++i)
++			pwr_by_rate[i] = bcd_to_dec_pwr_by_rate(val, i);
++		*rate_num = 2;
++		break;
++	default:
++		rtw_warn(rtwdev, "invalid tx power index addr 0x%08x\n", addr);
++		break;
++	}
++}
 +
-+#endif /* CONFIG_RTW88_DEBUG */
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
++void phy_store_tx_power_by_rate(void *adapter, u32 band, u32 rfpath, u32 txnum,
++				u32 regaddr, u32 bitmask, u32 data)
++{
++	struct rtw_dev *rtwdev = adapter;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 rate_num = 0;
++	u8 rate;
++	u8 rates[RTW_RF_PATH_MAX] = {0};
++	s8 offset;
++	s8 pwr_by_rate[RTW_RF_PATH_MAX] = {0};
++	int i;
++
++	phy_get_rate_values_of_txpwr_by_rate(rtwdev, regaddr, bitmask, data,
++					     rates, pwr_by_rate, &rate_num);
++
++	if (WARN_ON(rfpath >= RTW_RF_PATH_MAX ||
++		    (band != PHY_BAND_2G && band != PHY_BAND_5G) ||
++		    rate_num > RTW_RF_PATH_MAX))
++		return;
++
++	for (i = 0; i < rate_num; i++) {
++		offset = pwr_by_rate[i];
++		rate = rates[i];
++		if (band == PHY_BAND_2G)
++			hal->tx_pwr_by_rate_offset_2g[rfpath][rate] = offset;
++		else if (band == PHY_BAND_5G)
++			hal->tx_pwr_by_rate_offset_5g[rfpath][rate] = offset;
++		else
++			continue;
++	}
++}
++
++static
++void phy_tx_power_by_rate_config_by_path(struct rtw_hal *hal, u8 path,
++					 u8 rs, u8 size, u8 *rates)
++{
++	u8 rate;
++	u8 base_idx, rate_idx;
++	s8 base_2g, base_5g;
++
++	if (rs >= RTW_RATE_SECTION_VHT_1S)
++		base_idx = rates[size - 3];
++	else
++		base_idx = rates[size - 1];
++	base_2g = hal->tx_pwr_by_rate_offset_2g[path][base_idx];
++	base_5g = hal->tx_pwr_by_rate_offset_5g[path][base_idx];
++	hal->tx_pwr_by_rate_base_2g[path][rs] = base_2g;
++	hal->tx_pwr_by_rate_base_5g[path][rs] = base_5g;
++	for (rate = 0; rate < size; rate++) {
++		rate_idx = rates[rate];
++		hal->tx_pwr_by_rate_offset_2g[path][rate_idx] -= base_2g;
++		hal->tx_pwr_by_rate_offset_5g[path][rate_idx] -= base_5g;
++	}
++}
++
++void rtw_phy_tx_power_by_rate_config(struct rtw_hal *hal)
++{
++	u8 path;
++
++	for (path = 0; path < RTW_RF_PATH_MAX; path++) {
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_CCK,
++						    cck_size, cck_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_OFDM,
++						    ofdm_size, ofdm_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_HT_1S,
++						    ht_1s_size, ht_1s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_HT_2S,
++						    ht_2s_size, ht_2s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_VHT_1S,
++						    vht_1s_size, vht_1s_rates);
++		phy_tx_power_by_rate_config_by_path(hal, path,
++						    RTW_RATE_SECTION_VHT_2S,
++						    vht_2s_size, vht_2s_rates);
++	}
++}
++
++static void
++phy_tx_power_limit_config(struct rtw_hal *hal, u8 regd, u8 bw, u8 rs)
++{
++	s8 base, orig;
++	u8 ch;
++
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++) {
++		base = hal->tx_pwr_by_rate_base_2g[0][rs];
++		orig = hal->tx_pwr_limit_2g[regd][bw][rs][ch];
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch] -= base;
++	}
++
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++) {
++		base = hal->tx_pwr_by_rate_base_5g[0][rs];
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch] -= base;
++	}
++}
++
++void rtw_phy_tx_power_limit_config(struct rtw_hal *hal)
++{
++	u8 regd, bw, rs;
++
++	for (regd = 0; regd < RTW_REGD_MAX; regd++)
++		for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
++			for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
++				phy_tx_power_limit_config(hal, regd, bw, rs);
++}
++
++static s8 tx_power_limit_world_wide(struct rtw_hal *hal, u8 bw, u8 rs, u8 ch)
++{
++	s8 power_limit;
++	s8 min = RTW_MAX_POWER_INDEX;
++	int i;
++
++	for (i = 0; i < RTW_REGD_WW; i++) {
++		power_limit = hal->tx_pwr_limit_2g[i][bw][rs][ch];
++		if (power_limit < min)
++			min = power_limit;
++	}
++
++	return min;
++}
++
++s8 phy_get_tx_power_limit(struct rtw_dev *rtwdev, u8 band,
++			  enum rtw_bandwidth bw, u8 rf_path,
++			  u8 rate, u8 channel)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	s8 power_limit;
++	u8 rs;
++	int ch_idx;
++
++	if (rate >= DESC_RATE1M && rate <= DESC_RATE11M)
++		rs = RTW_RATE_SECTION_CCK;
++	else if (rate >= DESC_RATE6M && rate <= DESC_RATE54M)
++		rs = RTW_RATE_SECTION_OFDM;
++	else if (rate >= DESC_RATEMCS0 && rate <= DESC_RATEMCS7)
++		rs = RTW_RATE_SECTION_HT_1S;
++	else if (rate >= DESC_RATEMCS8 && rate <= DESC_RATEMCS15)
++		rs = RTW_RATE_SECTION_HT_2S;
++	else if (rate >= DESC_RATEVHT1SS_MCS0 && rate <= DESC_RATEVHT1SS_MCS9)
++		rs = RTW_RATE_SECTION_VHT_1S;
++	else if (rate >= DESC_RATEVHT2SS_MCS0 && rate <= DESC_RATEVHT2SS_MCS9)
++		rs = RTW_RATE_SECTION_VHT_2S;
++	else
++		goto err;
++
++	ch_idx = rtw_channel_to_idx(band, channel);
++	if (ch_idx < 0)
++		goto err;
++
++	power_limit = tx_power_limit_world_wide(hal, bw, rs, ch_idx);
++
++	return power_limit;
++
++err:
++	WARN(1, "invalid arguments, band=%d, bw=%d, path=%d, rate=%d, ch=%d\n",
++	     band, bw, rf_path, rate, channel);
++	return RTW_MAX_POWER_INDEX;
++}
++
++void phy_set_tx_power_limit(struct rtw_dev *rtwdev, u8 regd, u8 band,
++			    u8 bw, u8 rs, u8 ch, s8 pwr_limit)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	int ch_idx;
++
++	pwr_limit = clamp_t(s8, pwr_limit,
++			    -RTW_MAX_POWER_INDEX, RTW_MAX_POWER_INDEX);
++	ch_idx = rtw_channel_to_idx(band, ch);
++
++	if (regd >= RTW_REGD_MAX || bw >= RTW_CHANNEL_WIDTH_MAX ||
++	    rs >= RTW_RATE_SECTION_MAX || ch_idx < 0) {
++		WARN(1,
++		     "wrong txpwr_lmt regd=%u, band=%u bw=%u, rs=%u, ch_idx=%u, pwr_limit=%d",
++		     regd, band, bw, rs, ch_idx, pwr_limit);
++		return;
++	}
++
++	if (band == PHY_BAND_2G)
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch_idx] = pwr_limit;
++	else if (band == PHY_BAND_5G)
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch_idx] = pwr_limit;
++}
++
++static
++void rtw_hw_tx_power_limit_init(struct rtw_hal *hal, u8 regd, u8 bw, u8 rs)
++{
++	u8 ch;
++
++	/* 2.4G channels */
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_2G; ch++)
++		hal->tx_pwr_limit_2g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++
++	/* 5G channels */
++	for (ch = 0; ch < RTW_MAX_CHANNEL_NUM_5G; ch++)
++		hal->tx_pwr_limit_5g[regd][bw][rs][ch] = RTW_MAX_POWER_INDEX;
++}
++
++void rtw_hw_init_tx_power(struct rtw_hal *hal)
++{
++	u8 regd, path, rate, rs, bw;
++
++	/* init tx power by rate offset */
++	for (path = 0; path < RTW_RF_PATH_MAX; path++) {
++		for (rate = 0; rate < DESC_RATE_MAX; rate++) {
++			hal->tx_pwr_by_rate_offset_2g[path][rate] = 0;
++			hal->tx_pwr_by_rate_offset_5g[path][rate] = 0;
++		}
++	}
++
++	/* init tx power limit */
++	for (regd = 0; regd < RTW_REGD_MAX; regd++)
++		for (bw = 0; bw < RTW_CHANNEL_WIDTH_MAX; bw++)
++			for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
++				rtw_hw_tx_power_limit_init(hal, regd, bw, rs);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
 new file mode 100644
-index 0000000..34af500
+index 0000000..2e26372
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/debug.h
-@@ -0,0 +1,45 @@
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -0,0 +1,125 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2018  Realtek Corporation.
 + */
 +
-+#ifndef __RTW_DEBUG_H
-+#define __RTW_DEBUG_H
++#ifndef __RTW_PHY_H_
++#define __RTW_PHY_H_
 +
-+#ifdef CONFIG_RTW88_DEBUGFS
++#include "debug.h"
 +
-+void rtw_debugfs_init(struct rtw_dev *rtwdev);
-+void rtw_debugfs_deinit(void);
++void rtw_phy_init(struct rtw_dev *rtwdev);
++void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev);
++u8 rtw_phy_rf_power_2_rssi(s8 *rf_power, u8 path_num);
++u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++		    u32 addr, u32 mask);
++bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			       u32 addr, u32 mask, u32 data);
++bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			  u32 addr, u32 mask, u32 data);
++bool rtw_phy_write_rf_reg_mix(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			      u32 addr, u32 mask, u32 data);
++void phy_store_tx_power_by_rate(void *adapter, u32 band, u32 rfpath, u32 txnum,
++				u32 regaddr, u32 bitmask, u32 data);
++void phy_set_tx_power_limit(struct rtw_dev *rtwdev, u8 regd, u8 band,
++			    u8 bw, u8 rs, u8 ch, s8 pwr_limit);
++void phy_set_tx_power_index_by_rs(void *adapter, u8 ch, u8 path, u8 rs);
++void rtw_phy_setup_phy_cond(struct rtw_dev *rtwdev, u32 pkg);
++void rtw_parse_tbl_phy_cond(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_parse_tbl_bb_pg(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_parse_tbl_txpwr_lmt(struct rtw_dev *rtwdev, const struct rtw_table *tbl);
++void rtw_phy_cfg_mac(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data);
++void rtw_phy_cfg_agc(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		     u32 addr, u32 data);
++void rtw_phy_cfg_bb(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data);
++void rtw_phy_cfg_rf(struct rtw_dev *rtwdev, const struct rtw_table *tbl,
++		    u32 addr, u32 data);
++void rtw_hw_init_tx_power(struct rtw_hal *hal);
++void rtw_phy_load_tables(struct rtw_dev *rtwdev);
++void rtw_phy_set_tx_power_level(struct rtw_dev *rtwdev, u8 channel);
++void rtw_phy_tx_power_by_rate_config(struct rtw_hal *hal);
++void rtw_phy_tx_power_limit_config(struct rtw_hal *hal);
 +
-+#else
++#define RTW_DECL_TABLE_PHY_COND_CORE(name, cfg, path)	\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_phy_cond,		\
++	.do_cfg = cfg,					\
++	.rf_path = path,				\
++}
 +
-+static inline void rtw_debugfs_init(struct rtw_dev *rtwdev) {}
-+static inline void rtw_debugfs_deinit(void) {}
++#define RTW_DECL_TABLE_PHY_COND(name, cfg)		\
++	RTW_DECL_TABLE_PHY_COND_CORE(name, cfg, 0)
 +
-+#endif /* CONFIG_RTW88_DEBUGFS */
++#define RTW_DECL_TABLE_RF_RADIO(name, path)		\
++	RTW_DECL_TABLE_PHY_COND_CORE(name, rtw_phy_cfg_rf, RF_PATH_ ## path)
 +
-+#ifdef CONFIG_RTW88_DEBUG
++#define RTW_DECL_TABLE_BB_PG(name)			\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_bb_pg,			\
++}
 +
-+__printf(2, 3)
-+void __rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...);
-+__printf(2, 3)
-+void __rtw_info(struct rtw_dev *rtwdev, const char *fmt, ...);
-+__printf(2, 3)
-+void __rtw_warn(struct rtw_dev *rtwdev, const char *fmt, ...);
-+__printf(2, 3)
-+void __rtw_err(struct rtw_dev *rtwdev, const char *fmt, ...);
++#define RTW_DECL_TABLE_TXPWR_LMT(name)			\
++const struct rtw_table name ## _tbl = {			\
++	.data = name,					\
++	.size = ARRAY_SIZE(name),			\
++	.parse = rtw_parse_tbl_txpwr_lmt,		\
++}
 +
-+#define rtw_dbg(rtwdev, a...) __rtw_dbg(rtwdev, ##a)
-+#define rtw_info(rtwdev, a...) __rtw_info(rtwdev, ##a)
-+#define rtw_warn(rtwdev, a...) __rtw_warn(rtwdev, ##a)
-+#define rtw_err(rtwdev, a...) __rtw_err(rtwdev, ##a)
++static inline const struct rtw_rfe_def *rtw_get_rfe_def(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	const struct rtw_rfe_def *rfe_def = NULL;
 +
-+#else
++	if (chip->rfe_defs_size == 0)
++		return NULL;
 +
-+static inline void rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...) {}
-+static inline void rtw_info(struct rtw_dev *rtwdev, const char *fmt, ...) {}
-+static inline void rtw_warn(struct rtw_dev *rtwdev, const char *fmt, ...) {}
-+static inline void rtw_err(struct rtw_dev *rtwdev, const char *fmt, ...) {}
++	if (efuse->rfe_option < chip->rfe_defs_size)
++		rfe_def = &chip->rfe_defs[efuse->rfe_option];
 +
-+#endif /* CONFIG_RTW88_DEBUG */
++	rtw_dbg(rtwdev, "use rfe_def[%d]\n", efuse->rfe_option);
++	return rfe_def;
++}
++
++static inline int rtw_check_supported_rfe(struct rtw_dev *rtwdev)
++{
++	const struct rtw_rfe_def *rfe_def = rtw_get_rfe_def(rtwdev);
++
++	if (!rfe_def || !rfe_def->phy_pg_tbl || !rfe_def->txpwr_lmt_tbl) {
++		rtw_err(rtwdev, "rfe %d isn't supported\n",
++			rtwdev->efuse.rfe_option);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi);
++
++#define	MASKBYTE0		0xff
++#define	MASKBYTE1		0xff00
++#define	MASKBYTE2		0xff0000
++#define	MASKBYTE3		0xff000000
++#define	MASKHWORD		0xffff0000
++#define	MASKLWORD		0x0000ffff
++#define	MASKDWORD		0xffffffff
++#define RFREG_MASK		0xfffff
++
++#define	MASK7BITS		0x7f
++#define	MASK12BITS		0xfff
++#define	MASKH4BITS		0xf0000000
++#define	MASK20BITS		0xfffff
++#define	MASK24BITS		0xffffff
++
++#define MASKH3BYTES		0xffffff00
++#define MASKL3BYTES		0x00ffffff
++#define MASKBYTE2HIGHNIBBLE	0x00f00000
++#define MASKBYTE3LOWNIBBLE	0x0f000000
++#define	MASKL3BYTES		0x00ffffff
 +
 +#endif
 -- 
