@@ -2,95 +2,142 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB185C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 12:23:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5444AC64EBC
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 13:32:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7755020835
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 12:23:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7755020835
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+	by mail.kernel.org (Postfix) with ESMTP id 25FA42098A
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 13:32:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 25FA42098A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726712AbeJCTME (ORCPT
+        id S1726861AbeJCUUg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 15:12:04 -0400
-Received: from gateway21.websitewelcome.com ([192.185.45.154]:23917 "EHLO
-        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726670AbeJCTME (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 15:12:04 -0400
-X-Greylist: delayed 1372 seconds by postgrey-1.27 at vger.kernel.org; Wed, 03 Oct 2018 15:12:03 EDT
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway21.websitewelcome.com (Postfix) with ESMTP id 2FDE34012422D
-        for <linux-wireless@vger.kernel.org>; Wed,  3 Oct 2018 07:01:05 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id 7fpxgO0OWRPoj7fpxghQxj; Wed, 03 Oct 2018 07:01:05 -0500
-X-Authority-Reason: nr=8
-Received: from 174.206.93.92.rev.sfr.net ([92.93.206.174]:36048 helo=embeddedor)
-        by gator4166.hostgator.com with esmtpa (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1g7fpw-001nFy-GP; Wed, 03 Oct 2018 07:01:04 -0500
-Date:   Wed, 3 Oct 2018 14:01:02 +0200
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Michael Buesch <m@bues.ch>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ssb: chipcommon: fix fall-through annotation
-Message-ID: <20181003120102.GA22824@embeddedor.com>
+        Wed, 3 Oct 2018 16:20:36 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47260 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726720AbeJCUUg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 16:20:36 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A83423097028;
+        Wed,  3 Oct 2018 13:32:10 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 133B95D6A6;
+        Wed,  3 Oct 2018 13:32:07 +0000 (UTC)
+Date:   Wed, 3 Oct 2018 15:32:06 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 06/10] mt76x2: move mt76x2_dev in mt76x02_util.h
+Message-ID: <20181003133205.GA16914@redhat.com>
+References: <20181001221908.16005-7-lorenzo.bianconi@redhat.com>
+ <20181003104334.GB2250@redhat.com>
+ <CAJ0CqmWTZJ+Q_O++8DijdExwbsJEqEqxinHCe8OYocBTRTDZLw@mail.gmail.com>
+ <20181003111217.GC2250@redhat.com>
+ <5D5747FB-2C2E-481F-B361-2FA054E4D6E8@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 92.93.206.174
-X-Source-L: No
-X-Exim-ID: 1g7fpw-001nFy-GP
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 174.206.93.92.rev.sfr.net (embeddedor) [92.93.206.174]:36048
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 2
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5D5747FB-2C2E-481F-B361-2FA054E4D6E8@nbd.name>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Wed, 03 Oct 2018 13:32:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Replace "Fallthough" with a proper "fall through" annotation.
+On Wed, Oct 03, 2018 at 01:49:23PM +0200, Felix Fietkau wrote:
+> 
+> 
+> > On 3. Oct 2018, at 13:12, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > 
+> > On Wed, Oct 03, 2018 at 01:01:40PM +0200, Lorenzo Bianconi wrote:
+> >>> 
+> >>> On Tue, Oct 02, 2018 at 12:19:04AM +0200, Lorenzo Bianconi wrote:
+> >>>> Move mt76x2_dev in mt76x02_util.h and rename it in mt76x02_dev
+> >>>> in order to be shared between mt76x2 and mt76x0 driver
+> >>> <snip>
+> >>>> +struct mt76x02_dev {
+> >>>> +     struct mt76_dev mt76; /* must be first */
+> >>>> +
+> >>>> +     struct mac_address macaddr_list[8];
+> >>>> +
+> >>>> +     struct mutex mutex;
+> >>>> +
+> >>>> +     u8 txdone_seq;
+> >>>> +     DECLARE_KFIFO_PTR(txstatus_fifo, struct mt76x02_tx_status);
+> >>>> +
+> >>>> +     struct sk_buff *rx_head;
+> >>>> +
+> >>>> +     struct tasklet_struct tx_tasklet;
+> >>>> +     struct tasklet_struct pre_tbtt_tasklet;
+> >>>> +     struct delayed_work cal_work;
+> >>>> +     struct delayed_work mac_work;
+> >>>> +
+> >>>> +     u32 aggr_stats[32];
+> >>>> +
+> >>>> +     struct sk_buff *beacons[8];
+> >>>> +     u8 beacon_mask;
+> >>>> +     u8 beacon_data_mask;
+> >>>> +
+> >>>> +     u8 tbtt_count;
+> >>>> +     u16 beacon_int;
+> >>>> +
+> >>>> +     struct mt76x02_calibration cal;
+> >>>> +
+> >>>> +     s8 target_power;
+> >>>> +     s8 target_power_delta[2];
+> >>>> +     bool enable_tpc;
+> >>>> +
+> >>>> +     u8 coverage_class;
+> >>>> +     u8 slottime;
+> >>>> +
+> >>>> +     struct mt76x02_dfs_pattern_detector dfs_pd;
+> >>>> +};
+> >>>> +
+> >>> <snip>
+> >>>> static bool
+> >>>> -mt76x2_has_cal_free_data(struct mt76x2_dev *dev, u8 *efuse)
+> >>>> +mt76x2_has_cal_free_data(struct mt76x02_dev *dev, u8 *efuse)
+> >>> 
+> >>> I don't think this is right approach. I would rather prefer to have
+> >>> common data structures embeded in mt76x2_dev and mt76x0_dev
+> >>> structures to have chip sepcific fields/data separated.
+> >>> 
+> >> 
+> >> The reason of this patch is that mt76x0_dev fields are already in mt76x2_dev
+> >> so I guess there is no need to have different structures. Moreover in
+> >> this way we can
+> >> remove a lot of duplicated code between mt76x0 and mt76x2 drivers.
+> > 
+> > But you can still create additional structures i.e.
+> > 
+> > mt76x02_power {
+> >    s8 target_power;
+> >    s8 target_power_delta[2];
+> >    bool enable_tpc;
+> > }
+> > 
+> > mt76x02_conf {
+> >    u8 coverage_class;
+> >         u8 slottime;
+> > }
+> > 
+> > put them into mt76xN_dev and still remove dupicated code ?
+> Quite often, mt76_dev would be needed as well for register access, which means extra parameters for a lot of functions.
+> I think Lorenzo’s approach makes the code a lot more concise, and makes it easier to share more code between mt76x0 and mt76x2.
 
-This fix is part of the ongoing efforts to enabling
--Wimplicit-fallthrough
+I think this could be solved very easly by container_of() macro if
+there will be one mt76x02_dev struct just after mt76_dev.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/ssb/driver_chipcommon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index 99a4656..3861cb6 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -425,7 +425,7 @@ void ssb_chipco_get_clockcontrol(struct ssb_chipcommon *cc,
- 			*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_M2);
- 			break;
- 		}
--		/* Fallthough */
-+		/* Fall through */
- 	default:
- 		*m = chipco_read32(cc, SSB_CHIPCO_CLOCK_SB);
- 	}
--- 
-2.7.4
-
+Regerds
+Stanislaw
