@@ -6,478 +6,617 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C492C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC566C65BA7
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 279BD20684
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 07:49:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 279BD20684
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 8C3B1213A2
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:03:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C3B1213A2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727352AbeJCOgY (ORCPT
+        id S1727080AbeJCOuQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 10:36:24 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:54225 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727254AbeJCOgX (ORCPT
+        Wed, 3 Oct 2018 10:50:16 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:48180 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726941AbeJCOuQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 10:36:23 -0400
-Received: by mail-wm1-f65.google.com with SMTP id b19-v6so4677541wme.3
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Oct 2018 00:49:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=YFrFJnODE9rS1WJM+FAytWlICuFIN6VS3o+tZ8SSpRE=;
-        b=R0dKKCaYw9M8nrwfYqeyJCIBchmPSs0505uRyBXmEVcdU3TS5fuXOXgZy2s5Vtk2dD
-         vaS06tLa1VG8wxLaNKQgA5tEZWESczDdGNBvLeta0rQIksDI0a4BxFERnCznCBP7mXte
-         e7P+JOri9bUTfXBFHlo1sKACZiHCrVahKhl4kseRFXpNMBAi9QtXomUTpyhQpwXTNrXj
-         +7VocmlFctA0ZBlk8Q1Gri72/9R0+Q9oRVATBnhshS0ip86EusIEBj6y37GHG8T7WnXC
-         TXGLV3aRZkjDa4zxgeFtrWgwiwkB8e5/+Lx6dXruEXmyM//2gQp26MerDF95zfpzXsF7
-         36jA==
-X-Gm-Message-State: ABuFfojq50qqzY9kWdcEtN//lNSqncN5WPmjVd61ebL8Qnk5K//waW9I
-        7Oa5uoJgdgb3gqAaqbythyxWFQ==
-X-Google-Smtp-Source: ACcGV63X99LcPmYMGpdKcTaZCST9eyO9kjdEGoiplRtPaKLO+EB6+RQx2IoVELUUbfMOhnoMWkxVkQ==
-X-Received: by 2002:a1c:3288:: with SMTP id y130-v6mr533977wmy.11.1538552946882;
-        Wed, 03 Oct 2018 00:49:06 -0700 (PDT)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id y3sm421878wrw.11.2018.10.03.00.49.05
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 03 Oct 2018 00:49:06 -0700 (PDT)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [RFC 8/9] mt76: move irq handler in mt76x02-lib moudle
-Date:   Wed,  3 Oct 2018 09:48:50 +0200
-Message-Id: <417a57b5c3aa9de2f75fa91c869b045d22b6149d.1538552703.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <cover.1538552703.git.lorenzo.bianconi@redhat.com>
-References: <cover.1538552703.git.lorenzo.bianconi@redhat.com>
+        Wed, 3 Oct 2018 10:50:16 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9382hb1026277, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9382hb1026277
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Wed, 3 Oct 2018 16:02:43 +0800
+Received: from localhost.localdomain (172.21.68.143) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.408.0; Wed, 3 Oct 2018 16:02:42 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <Larry.Finger@lwfinger.net>, <pkshih@realtek.com>,
+        <tehuang@realtek.com>, <sgruszka@redhat.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [RFC v2 04/12] rtw88: trx files
+Date:   Wed, 3 Oct 2018 16:02:20 +0800
+Message-ID: <1538553748-26364-5-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
+References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.143]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76x02_irq_handler handler in mt76x02_mmio.c in order to be
-reused in mt76x0 driver. Move mt76x02_rx_poll_complete routine in
-mt76x02-lib module. Moreover remove pci_core.c and mt76x2/trace.{c,h}
-since are empty files
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+trx files for Realtek 802.11ac wireless network chips
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |  2 +
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 62 +++++++++++++++
- .../wireless/mediatek/mt76/mt76x02_trace.h    | 23 ++++++
- .../wireless/mediatek/mt76/mt76x2/Makefile    |  3 +-
- .../wireless/mediatek/mt76/mt76x2/mt76x2.h    |  3 -
- .../net/wireless/mediatek/mt76/mt76x2/pci.c   |  3 +-
- .../wireless/mediatek/mt76/mt76x2/pci_core.c  | 78 -------------------
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_mac.c   |  1 -
- .../wireless/mediatek/mt76/mt76x2/pci_trace.c | 23 ------
- .../net/wireless/mediatek/mt76/mt76x2/trace.h | 67 ----------------
- 11 files changed, 90 insertions(+), 177 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/pci_trace.c
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/trace.h
+ drivers/net/wireless/realtek/rtw88/rx.c | 144 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rx.h |  30 ++++
+ drivers/net/wireless/realtek/rtw88/tx.c | 271 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/tx.h |  81 ++++++++++
+ 4 files changed, 526 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index d4dd4547bb06..65174817ebc4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -146,6 +146,8 @@ void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb);
- bool mt76x02_tx_status_data(struct mt76_dev *dev, u8 *update);
- void mt76x02_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- 			  struct sk_buff *skb);
-+void mt76x02_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q);
-+irqreturn_t mt76x02_irq_handler(int irq, void *dev_instance);
- void mt76x02_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
- 		struct sk_buff *skb);
- int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index bb609b775de9..1b945079c802 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -16,8 +16,10 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/irq.h>
- 
- #include "mt76x02.h"
-+#include "mt76x02_trace.h"
- 
- static int
- mt76x02_init_tx_queue(struct mt76x02_dev *dev, struct mt76_queue *q,
-@@ -136,6 +138,66 @@ int mt76x02_dma_init(struct mt76x02_dev *dev)
- }
- EXPORT_SYMBOL_GPL(mt76x02_dma_init);
- 
-+void mt76x02_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+new file mode 100644
+index 0000000..83214db
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rx.c
+@@ -0,0 +1,144 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "rx.h"
++#include "ps.h"
++
++void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb)
 +{
-+	struct mt76x02_dev *dev;
++	struct ieee80211_hdr *hdr;
++	struct rtw_vif *rtwvif;
 +
-+	dev = container_of(mdev, struct mt76x02_dev, mt76);
-+	mt76x02_irq_enable(dev, MT_INT_RX_DONE(q));
++	hdr = (struct ieee80211_hdr *)skb->data;
++
++	if (!ieee80211_is_data(hdr->frame_control))
++		return;
++
++	if (!is_broadcast_ether_addr(hdr->addr1) &&
++	    !is_multicast_ether_addr(hdr->addr1)) {
++		rtwdev->stats.rx_unicast += skb->len;
++		rtwdev->stats.rx_cnt++;
++		if (vif) {
++			rtwvif = (struct rtw_vif *)vif->drv_priv;
++			rtwvif->stats.rx_unicast += skb->len;
++			rtwvif->stats.rx_cnt++;
++			if (rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
++				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
++		}
++	}
 +}
-+EXPORT_SYMBOL_GPL(mt76x02_rx_poll_complete);
++EXPORT_SYMBOL(rtw_rx_stats);
 +
-+irqreturn_t mt76x02_irq_handler(int irq, void *dev_instance)
++static void rtw_rx_rssi_add(struct rtw_dev *rtwdev,
++			    struct rtw_rx_pkt_stat *pkt_stat,
++			    struct ieee80211_hdr *hdr)
 +{
-+	struct mt76x02_dev *dev = dev_instance;
-+	u32 intr;
++	struct ieee80211_vif *vif;
++	struct rtw_vif *rtwvif;
++	struct rtw_sta_info *si;
++	__le16 fc = hdr->frame_control;
++	u8 *bssid;
++	u8 macid = RTW_BC_MC_MACID;
++	bool match_bssid = false;
++	bool is_packet_match_bssid;
++	bool if_addr_match;
++	bool hw_err;
++	bool ctl;
 +
-+	intr = mt76_rr(dev, MT_INT_SOURCE_CSR);
-+	mt76_wr(dev, MT_INT_SOURCE_CSR, intr);
++	rcu_read_lock();
 +
-+	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mt76.state))
-+		return IRQ_NONE;
++	bssid = get_hdr_bssid(hdr);
++	rtwvif = get_hdr_vif(rtwdev, hdr);
++	vif = rtwvif ? rtwvif->vif : NULL;
++	pkt_stat->vif = vif;
++	if (unlikely(is_broadcast_ether_addr(hdr->addr1) ||
++		     is_multicast_ether_addr(hdr->addr1)))
++		match_bssid = get_hdr_match_bssid(rtwdev, hdr, bssid);
++	else if (vif)
++		match_bssid = ether_addr_equal(vif->bss_conf.bssid, bssid);
++	si = get_hdr_sta(rtwdev, vif, hdr);
++	macid = si ? si->mac_id : RTW_BC_MC_MACID;
++	pkt_stat->mac_id = macid;
++	pkt_stat->si = si;
 +
-+	trace_dev_irq(dev, intr, dev->mt76.mmio.irqmask);
++	if_addr_match = !!vif;
++	hw_err = pkt_stat->crc_err || pkt_stat->icv_err;
++	ctl = ieee80211_is_ctl(fc);
++	is_packet_match_bssid = !hw_err && !ctl && match_bssid;
 +
-+	intr &= dev->mt76.mmio.irqmask;
++	if (((match_bssid && if_addr_match) || ieee80211_is_beacon(fc)) &&
++	    (!hw_err && !ctl) && (pkt_stat->phy_status && pkt_stat->si))
++		ewma_rssi_add(&pkt_stat->si->avg_rssi, pkt_stat->rssi);
 +
-+	if (intr & MT_INT_TX_DONE_ALL) {
-+		mt76x02_irq_disable(dev, MT_INT_TX_DONE_ALL);
-+		tasklet_schedule(&dev->tx_tasklet);
-+	}
-+
-+	if (intr & MT_INT_RX_DONE(0)) {
-+		mt76x02_irq_disable(dev, MT_INT_RX_DONE(0));
-+		napi_schedule(&dev->mt76.napi[0]);
-+	}
-+
-+	if (intr & MT_INT_RX_DONE(1)) {
-+		mt76x02_irq_disable(dev, MT_INT_RX_DONE(1));
-+		napi_schedule(&dev->mt76.napi[1]);
-+	}
-+
-+	if (intr & MT_INT_PRE_TBTT)
-+		tasklet_schedule(&dev->pre_tbtt_tasklet);
-+
-+	/* send buffered multicast frames now */
-+	if (intr & MT_INT_TBTT)
-+		mt76_queue_kick(dev, &dev->mt76.q_tx[MT_TXQ_PSD]);
-+
-+	if (intr & MT_INT_TX_STAT) {
-+		mt76x02_mac_poll_tx_status(dev, true);
-+		tasklet_schedule(&dev->tx_tasklet);
-+	}
-+
-+	if (intr & MT_INT_GPTIMER) {
-+		mt76x02_irq_disable(dev, MT_INT_GPTIMER);
-+		tasklet_schedule(&dev->dfs_pd.dfs_tasklet);
-+	}
-+
-+	return IRQ_HANDLED;
++	rcu_read_unlock();
 +}
-+EXPORT_SYMBOL_GPL(mt76x02_irq_handler);
 +
- void mt76x02_set_irq_mask(struct mt76x02_dev *dev, u32 clear, u32 set)
- {
- 	unsigned long flags;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h b/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-index a18f26d857e4..713f12d3c8de 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-@@ -110,6 +110,29 @@ TRACE_EVENT(mac_txstat_fetch,
- 	)
- );
- 
-+TRACE_EVENT(dev_irq,
-+	TP_PROTO(struct mt76x02_dev *dev, u32 val, u32 mask),
++void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
++			   struct rtw_rx_pkt_stat *pkt_stat,
++			   struct ieee80211_hdr *hdr,
++			   struct ieee80211_rx_status *rx_status,
++			   u8 *phy_status)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
 +
-+	TP_ARGS(dev, val, mask),
++	memset(rx_status, 0, sizeof(*rx_status));
++	rx_status->freq = hw->conf.chandef.chan->center_freq;
++	rx_status->band = hw->conf.chandef.chan->band;
++	if (pkt_stat->crc_err)
++		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
++	if (pkt_stat->decrypted)
++		rx_status->flag |= RX_FLAG_DECRYPTED;
 +
-+	TP_STRUCT__entry(
-+		DEV_ENTRY
-+		__field(u32, val)
-+		__field(u32, mask)
-+	),
++	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0)
++		rx_status->encoding = RX_ENC_VHT;
++	else if (pkt_stat->rate >= DESC_RATEMCS0)
++		rx_status->encoding = RX_ENC_HT;
 +
-+	TP_fast_assign(
-+		DEV_ASSIGN;
-+		__entry->val = val;
-+		__entry->mask = mask;
-+	),
++	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0 &&
++	    pkt_stat->rate <= DESC_RATEVHT1SS_MCS9) {
++		rx_status->nss = 1;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT1SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT2SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT2SS_MCS9) {
++		rx_status->nss = 2;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT2SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT3SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT3SS_MCS9) {
++		rx_status->nss = 3;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT3SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT4SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT4SS_MCS9) {
++		rx_status->nss = 4;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT4SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEMCS0 &&
++		   pkt_stat->rate <= DESC_RATEMCS15) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEMCS0;
++	} else if (rx_status->band == NL80211_BAND_5GHZ &&
++		   pkt_stat->rate >= DESC_RATE6M &&
++		   pkt_stat->rate <= DESC_RATE54M) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATE6M;
++	} else if (rx_status->band == NL80211_BAND_2GHZ &&
++		   pkt_stat->rate >= DESC_RATE1M &&
++		   pkt_stat->rate <= DESC_RATE54M) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATE1M;
++	} else {
++		rx_status->rate_idx = 0;
++	}
 +
-+	TP_printk(
-+		DEV_PR_FMT " %08x & %08x",
-+		DEV_PR_ARG, __entry->val, __entry->mask
-+	)
-+);
++	rx_status->flag |= RX_FLAG_MACTIME_START;
++	rx_status->mactime = pkt_stat->tsf_low;
 +
- #endif
- 
- #undef TRACE_INCLUDE_PATH
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/Makefile b/drivers/net/wireless/mediatek/mt76/mt76x2/Makefile
-index 66f8b8ee6bc4..b71bb1049170 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/Makefile
-@@ -7,8 +7,7 @@ mt76x2-common-y := \
- 
- mt76x2e-y := \
- 	pci.o pci_main.o pci_init.o pci_tx.o \
--	pci_core.o pci_mac.o pci_mcu.o pci_phy.o \
--	pci_dfs.o pci_trace.o
-+	pci_mac.o pci_mcu.o pci_phy.o pci_dfs.o
- 
- mt76x2u-y := \
- 	usb.o usb_init.o usb_main.o usb_mac.o usb_mcu.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-index fc70711ea9e4..cbec8c6f1b2d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
-@@ -60,7 +60,6 @@ int mt76x2_register_device(struct mt76x02_dev *dev);
- void mt76x2_init_debugfs(struct mt76x02_dev *dev);
- void mt76x2_init_device(struct mt76x02_dev *dev);
- 
--irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance);
- void mt76x2_phy_power_on(struct mt76x02_dev *dev);
- int mt76x2_init_hardware(struct mt76x02_dev *dev);
- void mt76x2_stop_hardware(struct mt76x02_dev *dev);
-@@ -87,8 +86,6 @@ void mt76x2_mac_set_tx_protection(struct mt76x02_dev *dev, u32 val);
- 
- void mt76x2_pre_tbtt_tasklet(unsigned long arg);
- 
--void mt76x2_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q);
--
- void mt76x2_sta_ps(struct mt76_dev *dev, struct ieee80211_sta *sta, bool ps);
- 
- void mt76x2_update_channel(struct mt76_dev *mdev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-index 1fcf23dad06f..92432fe97312 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-@@ -19,7 +19,6 @@
- #include <linux/pci.h>
- 
- #include "mt76x2.h"
--#include "trace.h"
- 
- static const struct pci_device_id mt76pci_device_table[] = {
- 	{ PCI_DEVICE(0x14c3, 0x7662) },
-@@ -58,7 +57,7 @@ mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	dev->mt76.rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	dev_info(dev->mt76.dev, "ASIC revision: %08x\n", dev->mt76.rev);
- 
--	ret = devm_request_irq(dev->mt76.dev, pdev->irq, mt76x2_irq_handler,
-+	ret = devm_request_irq(dev->mt76.dev, pdev->irq, mt76x02_irq_handler,
- 			       IRQF_SHARED, KBUILD_MODNAME, dev);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
-deleted file mode 100644
-index 775ff0a43010..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_core.c
-+++ /dev/null
-@@ -1,78 +0,0 @@
--/*
-- * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include <linux/delay.h>
--#include "mt76x2.h"
--#include "trace.h"
--
--void mt76x2_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
--{
--	struct mt76x02_dev *dev;
--
--	dev = container_of(mdev, struct mt76x02_dev, mt76);
--	mt76x02_irq_enable(dev, MT_INT_RX_DONE(q));
--}
--
--irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance)
--{
--	struct mt76x02_dev *dev = dev_instance;
--	u32 intr;
--
--	intr = mt76_rr(dev, MT_INT_SOURCE_CSR);
--	mt76_wr(dev, MT_INT_SOURCE_CSR, intr);
--
--	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mt76.state))
--		return IRQ_NONE;
--
--	trace_dev_irq(dev, intr, dev->mt76.mmio.irqmask);
--
--	intr &= dev->mt76.mmio.irqmask;
--
--	if (intr & MT_INT_TX_DONE_ALL) {
--		mt76x02_irq_disable(dev, MT_INT_TX_DONE_ALL);
--		tasklet_schedule(&dev->tx_tasklet);
--	}
--
--	if (intr & MT_INT_RX_DONE(0)) {
--		mt76x02_irq_disable(dev, MT_INT_RX_DONE(0));
--		napi_schedule(&dev->mt76.napi[0]);
--	}
--
--	if (intr & MT_INT_RX_DONE(1)) {
--		mt76x02_irq_disable(dev, MT_INT_RX_DONE(1));
--		napi_schedule(&dev->mt76.napi[1]);
--	}
--
--	if (intr & MT_INT_PRE_TBTT)
--		tasklet_schedule(&dev->pre_tbtt_tasklet);
--
--	/* send buffered multicast frames now */
--	if (intr & MT_INT_TBTT)
--		mt76_queue_kick(dev, &dev->mt76.q_tx[MT_TXQ_PSD]);
--
--	if (intr & MT_INT_TX_STAT) {
--		mt76x02_mac_poll_tx_status(dev, true);
--		tasklet_schedule(&dev->tx_tasklet);
--	}
--
--	if (intr & MT_INT_GPTIMER) {
--		mt76x02_irq_disable(dev, MT_INT_GPTIMER);
--		tasklet_schedule(&dev->dfs_pd.dfs_tasklet);
--	}
--
--	return IRQ_HANDLED;
--}
--
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index 88f2aa257274..f229c6eb65dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -358,7 +358,7 @@ struct mt76x02_dev *mt76x2_alloc_device(struct device *pdev)
- 		.tx_prepare_skb = mt76x02_tx_prepare_skb,
- 		.tx_complete_skb = mt76x02_tx_complete_skb,
- 		.rx_skb = mt76x02_queue_rx_skb,
--		.rx_poll_complete = mt76x2_rx_poll_complete,
-+		.rx_poll_complete = mt76x02_rx_poll_complete,
- 		.sta_ps = mt76x2_sta_ps,
- 	};
- 	struct mt76x02_dev *dev;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-index c7484aa543fa..08366c5988ea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-@@ -18,7 +18,6 @@
- #include "mt76x2.h"
- #include "mcu.h"
- #include "eeprom.h"
--#include "trace.h"
- 
- void mt76x2_mac_set_bssid(struct mt76x02_dev *dev, u8 idx, const u8 *addr)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_trace.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_trace.c
-deleted file mode 100644
-index ea4ab8729ae4..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_trace.c
-+++ /dev/null
-@@ -1,23 +0,0 @@
--/*
-- * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include <linux/module.h>
--
--#ifndef __CHECKER__
--#define CREATE_TRACE_POINTS
--#include "trace.h"
--
--#endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/trace.h b/drivers/net/wireless/mediatek/mt76/mt76x2/trace.h
-deleted file mode 100644
-index 86a4703ddbc1..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/trace.h
-+++ /dev/null
-@@ -1,67 +0,0 @@
--/*
-- * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#if !defined(__MT76x2_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
--#define __MT76x2_TRACE_H
--
--#include <linux/tracepoint.h>
--#include "mt76x2.h"
--
--#undef TRACE_SYSTEM
--#define TRACE_SYSTEM mt76x2
--
--#define MAXNAME		32
--#define DEV_ENTRY	__array(char, wiphy_name, 32)
--#define DEV_ASSIGN	strlcpy(__entry->wiphy_name, wiphy_name(mt76_hw(dev)->wiphy), MAXNAME)
--#define DEV_PR_FMT	"%s"
--#define DEV_PR_ARG	__entry->wiphy_name
--
--#define TXID_ENTRY	__field(u8, wcid) __field(u8, pktid)
--#define TXID_ASSIGN	__entry->wcid = wcid; __entry->pktid = pktid
--#define TXID_PR_FMT	" [%d:%d]"
--#define TXID_PR_ARG	__entry->wcid, __entry->pktid
--
--TRACE_EVENT(dev_irq,
--	TP_PROTO(struct mt76x02_dev *dev, u32 val, u32 mask),
--
--	TP_ARGS(dev, val, mask),
--
--	TP_STRUCT__entry(
--		DEV_ENTRY
--		__field(u32, val)
--		__field(u32, mask)
--	),
--
--	TP_fast_assign(
--		DEV_ASSIGN;
--		__entry->val = val;
--		__entry->mask = mask;
--	),
--
--	TP_printk(
--		DEV_PR_FMT " %08x & %08x",
--		DEV_PR_ARG, __entry->val, __entry->mask
--	)
--);
--
--#endif
--
--#undef TRACE_INCLUDE_PATH
--#define TRACE_INCLUDE_PATH .
--#undef TRACE_INCLUDE_FILE
--#define TRACE_INCLUDE_FILE trace
--
--#include <trace/define_trace.h>
++	if (pkt_stat->bw == RTW_CHANNEL_WIDTH_80)
++		rx_status->bw = RATE_INFO_BW_80;
++	else if (pkt_stat->bw == RTW_CHANNEL_WIDTH_40)
++		rx_status->bw = RATE_INFO_BW_40;
++	else
++		rx_status->bw = RATE_INFO_BW_20;
++
++	rx_status->signal = pkt_stat->signal_power;
++
++	rtw_rx_rssi_add(rtwdev, pkt_stat, hdr);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.h b/drivers/net/wireless/realtek/rtw88/rx.h
+new file mode 100644
+index 0000000..9a71ffb
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rx.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_RX_H_
++#define __RTW_RX_H_
++
++#define GET_RX_DESC_PHYST(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 26, 1)
++#define GET_RX_DESC_ICV_ERR(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 15, 1)
++#define GET_RX_DESC_CRC32(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 14, 1)
++#define GET_RX_DESC_SWDEC(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 27, 1)
++#define GET_RX_DESC_C2H(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x08, 28, 1)
++#define GET_RX_DESC_PKT_LEN(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 0, 14)
++#define GET_RX_DESC_DRV_INFO_SIZE(rxdesc) \
++	LE_BITS_TO_4BYTE((rxdesc) + 0x00, 16, 4)
++#define GET_RX_DESC_SHIFT(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x00, 24, 2)
++#define GET_RX_DESC_RX_RATE(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x0C, 0, 7)
++#define GET_RX_DESC_MACID(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x04, 0, 7)
++#define GET_RX_DESC_PPDU_CNT(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x08, 29, 2)
++#define GET_RX_DESC_TSFL(rxdesc) LE_BITS_TO_4BYTE((rxdesc) + 0x14, 0, 32)
++
++void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb);
++void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
++			   struct rtw_rx_pkt_stat *pkt_stat,
++			   struct ieee80211_hdr *hdr,
++			   struct ieee80211_rx_status *rx_status,
++			   u8 *phy_status);
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+new file mode 100644
+index 0000000..eb70123
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -0,0 +1,271 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "tx.h"
++#include "ps.h"
++
++static
++void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	struct rtw_vif *rtwvif;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++
++	if (!ieee80211_is_data(hdr->frame_control))
++		return;
++
++	if (!is_broadcast_ether_addr(hdr->addr1) &&
++	    !is_multicast_ether_addr(hdr->addr1)) {
++		rtwdev->stats.tx_unicast += skb->len;
++		rtwdev->stats.tx_cnt++;
++		if (vif) {
++			rtwvif = (struct rtw_vif *)vif->drv_priv;
++			rtwvif->stats.tx_unicast += skb->len;
++			rtwvif->stats.tx_cnt++;
++			if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD)
++				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
++		}
++	}
++}
++
++void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
++{
++	u8 *buf = skb->data;
++
++	SET_TX_DESC_TXPKTSIZE(buf, pkt_info->tx_pkt_size);
++	SET_TX_DESC_OFFSET(buf, pkt_info->offset);
++	SET_TX_DESC_PKT_OFFSET(buf, pkt_info->pkt_offset);
++	SET_TX_DESC_QSEL(buf, pkt_info->qsel);
++	SET_TX_DESC_BMC(buf, pkt_info->bmc);
++	SET_TX_DESC_RATE_ID(buf, pkt_info->rate_id);
++	SET_TX_DESC_DATARATE(buf, pkt_info->rate);
++	SET_TX_DESC_DISDATAFB(buf, pkt_info->dis_rate_fallback);
++	SET_TX_DESC_USE_RATE(buf, pkt_info->use_rate);
++	SET_TX_DESC_SEC_TYPE(buf, pkt_info->sec_type);
++	SET_TX_DESC_DATA_BW(buf, pkt_info->bw);
++	SET_TX_DESC_SW_SEQ(buf, pkt_info->seq);
++	SET_TX_DESC_MAX_AGG_NUM(buf, pkt_info->ampdu_factor);
++	SET_TX_DESC_AMPDU_DENSITY(buf, pkt_info->ampdu_density);
++	SET_TX_DESC_DATA_STBC(buf, pkt_info->stbc);
++	SET_TX_DESC_DATA_LDPC(buf, pkt_info->ldpc);
++	SET_TX_DESC_AGG_EN(buf, pkt_info->ampdu_en);
++	SET_TX_DESC_LS(buf, 1);
++	SET_TX_DESC_DATA_SHORT(buf, pkt_info->short_gi);
++}
++EXPORT_SYMBOL(rtw_tx_fill_tx_desc);
++
++static u8 get_tx_ampdu_factor(struct ieee80211_sta *sta)
++{
++	u8 exp = sta->ht_cap.ampdu_factor;
++
++	/* the least ampdu factor is 8K, and the value in the tx desc is the
++	 * max aggregation num, which represents val * 2 packets can be
++	 * aggregated in an AMPDU, so here we should use 8/2=4 as the base
++	 */
++	return (BIT(2) << exp) - 1;
++}
++
++static u8 get_tx_ampdu_density(struct ieee80211_sta *sta)
++{
++	return sta->ht_cap.ampdu_density;
++}
++
++static u8 get_highest_ht_tx_rate(struct rtw_dev *rtwdev,
++				 struct ieee80211_sta *sta)
++{
++	u8 rate;
++
++	if (rtwdev->hal.rf_type == RF_2T2R && sta->ht_cap.mcs.rx_mask[1] != 0)
++		rate = DESC_RATEMCS15;
++	else
++		rate = DESC_RATEMCS7;
++
++	return rate;
++}
++
++static u8 get_highest_vht_tx_rate(struct rtw_dev *rtwdev,
++				  struct ieee80211_sta *sta)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u8 rate;
++	u16 tx_mcs_map;
++
++	tx_mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.tx_mcs_map);
++	if (efuse->hw_cap.nss == 1) {
++		switch (tx_mcs_map & 0x3) {
++		case IEEE80211_VHT_MCS_SUPPORT_0_7:
++			rate = DESC_RATEVHT1SS_MCS7;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_8:
++			rate = DESC_RATEVHT1SS_MCS8;
++			break;
++		default:
++		case IEEE80211_VHT_MCS_SUPPORT_0_9:
++			rate = DESC_RATEVHT1SS_MCS9;
++			break;
++		}
++	} else if (efuse->hw_cap.nss >= 2) {
++		switch ((tx_mcs_map & 0xc) >> 2) {
++		case IEEE80211_VHT_MCS_SUPPORT_0_7:
++			rate = DESC_RATEVHT2SS_MCS7;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_8:
++			rate = DESC_RATEVHT2SS_MCS8;
++			break;
++		default:
++		case IEEE80211_VHT_MCS_SUPPORT_0_9:
++			rate = DESC_RATEVHT2SS_MCS9;
++			break;
++		}
++	} else {
++		rate = DESC_RATEVHT1SS_MCS9;
++	}
++
++	return rate;
++}
++
++static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
++					struct rtw_tx_pkt_info *pkt_info,
++					struct ieee80211_tx_control *control,
++					struct sk_buff *skb)
++{
++	pkt_info->use_rate = true;
++	pkt_info->rate_id = 6;
++	pkt_info->dis_rate_fallback = true;
++}
++
++static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
++					struct rtw_tx_pkt_info *pkt_info,
++					struct ieee80211_tx_control *control,
++					struct sk_buff *skb)
++{
++	struct ieee80211_sta *sta = control->sta;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct rtw_sta_info *si;
++	u16 seq;
++	u8 ampdu_factor = 0;
++	u8 ampdu_density = 0;
++	bool ampdu_en = false;
++	u8 rate = DESC_RATE6M;
++	u8 rate_id = 6;
++	u8 bw = RTW_CHANNEL_WIDTH_20;
++	bool stbc = false;
++	bool ldpc = false;
++
++	seq = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
++
++	/* for broadcast/multicast, use default values */
++	if (!sta)
++		goto out;
++
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		ampdu_en = true;
++		ampdu_factor = get_tx_ampdu_factor(sta);
++		ampdu_density = get_tx_ampdu_density(sta);
++	}
++
++	if (sta->vht_cap.vht_supported)
++		rate = get_highest_vht_tx_rate(rtwdev, sta);
++	else if (sta->ht_cap.ht_supported)
++		rate = get_highest_ht_tx_rate(rtwdev, sta);
++	else if (sta->supp_rates[0] <= 0xf)
++		rate = DESC_RATE11M;
++	else
++		rate = DESC_RATE54M;
++
++	si = (struct rtw_sta_info *)sta->drv_priv;
++
++	bw = si->bw_mode;
++	rate_id = si->rate_id;
++	stbc = si->stbc_en;
++	ldpc = si->ldpc_en;
++
++out:
++	pkt_info->seq = seq;
++	pkt_info->ampdu_factor = ampdu_factor;
++	pkt_info->ampdu_density = ampdu_density;
++	pkt_info->ampdu_en = ampdu_en;
++	pkt_info->rate = rate;
++	pkt_info->rate_id = rate_id;
++	pkt_info->bw = bw;
++	pkt_info->stbc = stbc;
++	pkt_info->ldpc = ldpc;
++}
++
++void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
++			    struct rtw_tx_pkt_info *pkt_info,
++			    struct ieee80211_tx_control *control,
++			    struct sk_buff *skb)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct rtw_sta_info *si;
++	struct ieee80211_vif *vif = NULL;
++	__le16 fc = hdr->frame_control;
++	u8 sec_type = 0;
++	bool bmc;
++
++	if (control->sta) {
++		si = (struct rtw_sta_info *)control->sta->drv_priv;
++		vif = si->vif;
++	}
++
++	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
++		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, control, skb);
++	else if (ieee80211_is_data(fc))
++		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, control, skb);
++
++	if (info->control.hw_key) {
++		struct ieee80211_key_conf *key = info->control.hw_key;
++
++		switch (key->cipher) {
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++		case WLAN_CIPHER_SUITE_TKIP:
++			sec_type = 0x01;
++			break;
++		case WLAN_CIPHER_SUITE_CCMP:
++			sec_type = 0x03;
++			break;
++		default:
++			break;
++		}
++	}
++
++	bmc = is_broadcast_ether_addr(hdr->addr1) ||
++	      is_multicast_ether_addr(hdr->addr1);
++
++	pkt_info->bmc = bmc;
++	pkt_info->sec_type = sec_type;
++	pkt_info->tx_pkt_size = skb->len;
++	pkt_info->offset = chip->tx_pkt_desc_sz;
++	pkt_info->qsel = skb->priority;
++
++	/* maybe merge with tx status ? */
++	rtw_tx_stats(rtwdev, vif, skb);
++}
++
++void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
++				   struct rtw_tx_pkt_info *pkt_info,
++				   struct sk_buff *skb)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	bool bmc;
++
++	bmc = is_broadcast_ether_addr(hdr->addr1) ||
++	      is_multicast_ether_addr(hdr->addr1);
++	pkt_info->use_rate = true;
++	pkt_info->rate_id = 6;
++	pkt_info->dis_rate_fallback = true;
++	pkt_info->bmc = bmc;
++	pkt_info->tx_pkt_size = skb->len;
++	pkt_info->offset = chip->tx_pkt_desc_sz;
++	pkt_info->qsel = skb->priority;
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+new file mode 100644
+index 0000000..f1b6686
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -0,0 +1,81 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_TX_H_
++#define __RTW_TX_H_
++
++#define RTK_TX_MAX_AGG_NUM_MASK		0x1f
++
++#define SET_TX_DESC_TXPKTSIZE(txdesc, value)                                   \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 0, 16, value)
++#define SET_TX_DESC_OFFSET(txdesc, value)                                      \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 16, 8, value)
++#define SET_TX_DESC_PKT_OFFSET(txdesc, value)                                  \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 24, 5, value)
++#define SET_TX_DESC_QSEL(txdesc, value)                                        \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 8, 5, value)
++#define SET_TX_DESC_BMC(txdesc, value)                                         \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 24, 1, value)
++#define SET_TX_DESC_RATE_ID(txdesc, value)                                     \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 16, 5, value)
++#define SET_TX_DESC_DATARATE(txdesc, value)                                    \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x10, 0, 7, value)
++#define SET_TX_DESC_DISDATAFB(txdesc, value)                                   \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 10, 1, value)
++#define SET_TX_DESC_USE_RATE(txdesc, value)                                    \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 8, 1, value)
++#define SET_TX_DESC_SEC_TYPE(txdesc, value)                                    \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x04, 22, 2, value)
++#define SET_TX_DESC_DATA_BW(txdesc, value)                                     \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 5, 2, value)
++#define SET_TX_DESC_SW_SEQ(txdesc, value)                                      \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x24, 12, 12, value)
++#define SET_TX_DESC_MAX_AGG_NUM(txdesc, value)                                 \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x0C, 17, 5, value)
++#define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x08, 20, 3, value)
++#define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 8, 2, value)
++#define SET_TX_DESC_DATA_LDPC(txdesc, value)                                   \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 7, 1, value)
++#define SET_TX_DESC_AGG_EN(txdesc, value)                                      \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x08, 12, 1, value)
++#define SET_TX_DESC_LS(txdesc, value)                                          \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x00, 26, 1, value)
++#define SET_TX_DESC_DATA_SHORT(txdesc, value)				       \
++	SET_BITS_TO_LE_4BYTE((txdesc) + 0x14, 4, 1, value)
++
++enum rtw_tx_desc_queue_select {
++	TX_DESC_QSEL_TID0	= 0,
++	TX_DESC_QSEL_TID1	= 1,
++	TX_DESC_QSEL_TID2	= 2,
++	TX_DESC_QSEL_TID3	= 3,
++	TX_DESC_QSEL_TID4	= 4,
++	TX_DESC_QSEL_TID5	= 5,
++	TX_DESC_QSEL_TID6	= 6,
++	TX_DESC_QSEL_TID7	= 7,
++	TX_DESC_QSEL_TID8	= 8,
++	TX_DESC_QSEL_TID9	= 9,
++	TX_DESC_QSEL_TID10	= 10,
++	TX_DESC_QSEL_TID11	= 11,
++	TX_DESC_QSEL_TID12	= 12,
++	TX_DESC_QSEL_TID13	= 13,
++	TX_DESC_QSEL_TID14	= 14,
++	TX_DESC_QSEL_TID15	= 15,
++	TX_DESC_QSEL_BEACON	= 16,
++	TX_DESC_QSEL_HIGH	= 17,
++	TX_DESC_QSEL_MGMT	= 18,
++	TX_DESC_QSEL_H2C	= 19,
++};
++
++void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
++			    struct rtw_tx_pkt_info *pkt_info,
++			    struct ieee80211_tx_control *control,
++			    struct sk_buff *skb);
++void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
++void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
++				   struct rtw_tx_pkt_info *pkt_info,
++				   struct sk_buff *skb);
++
++#endif
 -- 
-2.17.1
+2.7.4
 
