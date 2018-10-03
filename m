@@ -2,94 +2,101 @@ Return-Path: <SRS0=nRo4=MP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A10A0C00449
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 068D4C00449
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:58:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A95320684
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:41:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C00712089F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Oct 2018 08:58:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="n2+DPPfC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3A95320684
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AW/azU4X";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AW/azU4X"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C00712089F
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbeJCP2m (ORCPT
+        id S1727438AbeJCPpp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Oct 2018 11:28:42 -0400
-Received: from mail.toke.dk ([52.28.52.200]:50531 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727001AbeJCP2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Oct 2018 11:28:41 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1538556077; bh=XelobgcAyHyNTIb7hBc/SCUKZ2qrU4b5tBJr0Fqe5Ig=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=n2+DPPfCs9h8hgljoYtu69JBwoXgp4FdlhwmVusIVFy03b4DKb4mn1vf41L9lkiiB
-         wzO+72gURrhKHiCq5iR8a0HWqSqWPCkEv23vU86Hh5qi6wbvAYDPGereQaC6msZ0N1
-         QqKrO0S8yX09wTnORFJGob/OXU6BfFJVvpi/Z7q37HGl1qduknnqJMQo/EsAtNOr+1
-         qvkA/GYEtt9mrudx1nSL0YuuS5mgo6pEoPAxoO/O2dv51qkWzdSFCoIDfmZ2PNPRJL
-         CuaoD8FHXb3/l7K/96z3Fiui4UGX20uJdZ8QMVNy6Q8A5lvfRz28F2bbrQl0S06HKP
-         C7quJJsckB6Sw==
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     Jonathan Morton <chromatix99@gmail.com>, Kan Yan <kyan@google.com>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless-owner@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [Make-wifi-fast] [PATCH RFC v4 3/4] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <08dabe69e625c11f70b217ae9695c7f4@codeaurora.org>
-References: <153711966150.9231.13481453399723518107.stgit@alrua-x1> <153711973134.9231.18038849900399644494.stgit@alrua-x1.karlstad.toke.dk> <826b6251746ee4d280d532f4ecdc5aa3@codeaurora.org> <87pnx0haud.fsf@toke.dk> <8f7145bf5abe50194bced025a5e739b9@codeaurora.org> <863bc54fbf04441d38dd53f523300a7e@codeaurora.org> <93015743-5D16-4D79-948F-E2F46CF2450A@toke.dk> <7ba8513b0ec5a7c35b396c7739fc2d7d@codeaurora.org> <87zhw2eyfo.fsf@toke.dk> <5d961a5f61de45b85b1b037bcef9270d@codeaurora.org> <44B09168-C08F-4C85-8D74-D576CCC79880@gmail.com> <586459da6ec36edc2284df8533915d62@codeaurora.org> <4929C006-3452-4C17-9500-8D7485EB538E@toke.dk> <0531def170ef7f9cadcf85a6dc9af22b@codeaurora.org> <87a7nwbvwu.fsf@toke.dk> <a5a7e11d6913c32385cc74ea3d0e1c76@codeaurora.org> <877ej0b2d8.fsf@toke.dk> <30cf3754fa970aa1af11791c2625a7c9@codeaurora.org> <08dabe69e625c11f70b217ae9695c7f4@codeaurora.org>
-Date:   Wed, 03 Oct 2018 10:41:16 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87d0sre82b.fsf@toke.dk>
+        Wed, 3 Oct 2018 11:45:45 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:47470 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727356AbeJCPpo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Oct 2018 11:45:44 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id D7D3560B26; Wed,  3 Oct 2018 08:58:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538557097;
+        bh=9sLkJeVZxASo88LzjXeNPiYhrRSeXdIYCGwbFaDyeSU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=AW/azU4XWyHQ767er9lWK8S/pbRzYP+2d5tF3QB7ItmXaBFL3Tbu80sJUDQSZ/FCb
+         kIwoSlNhZfqMyhUoGKMmfW386l+iGWFbMRNpElOmDQ5IqoyjPFxNsIEgPunucSuQfT
+         MytVvf3tuLL28zWEmhCGQzsun6+Um6SgbJ0XAukA=
+Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5619460B26;
+        Wed,  3 Oct 2018 08:58:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538557097;
+        bh=9sLkJeVZxASo88LzjXeNPiYhrRSeXdIYCGwbFaDyeSU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=AW/azU4XWyHQ767er9lWK8S/pbRzYP+2d5tF3QB7ItmXaBFL3Tbu80sJUDQSZ/FCb
+         kIwoSlNhZfqMyhUoGKMmfW386l+iGWFbMRNpElOmDQ5IqoyjPFxNsIEgPunucSuQfT
+         MytVvf3tuLL28zWEmhCGQzsun6+Um6SgbJ0XAukA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5619460B26
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Luciano Coelho <luciano.coelho@intel.com>
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        linux-kernel@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3] iwlwifi: Load firmware exclusively for Intel WiFi
+References: <20181003071513.13004-3-kai.heng.feng@canonical.com>
+        <2787bccf20b6f647de9f4cafae5fd223e771b167.camel@intel.com>
+Date:   Wed, 03 Oct 2018 11:58:12 +0300
+In-Reply-To: <2787bccf20b6f647de9f4cafae5fd223e771b167.camel@intel.com>
+        (Luciano Coelho's message of "Wed, 03 Oct 2018 10:24:44 +0300")
+Message-ID: <87bm8bjtjv.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+Luciano Coelho <luciano.coelho@intel.com> writes:
 
-> On 2018-10-02 16:07, Rajkumar Manoharan wrote:
->> On 2018-10-02 12:00, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
->>>> I noticed a race condition b/w sta cleanup and kick_airtime tasklet.
->>>>>> How do you plan to exit kick_airtime gracefully during sta_cleanup?
->>>>>=20
->>>>> Ah, right, there's a lot of stuff going on before we get to=20
->>>>> purge_txq.
->>>>> Hmm, I guess we should either make sure we remove the station from
->>>>> active_txqs earlier in the sta cleanup process, or maybe it'd enough=
-=20
->>>>> to
->>>>> just check the removed flag in the tasklet?
->>>>>=20
->>>>> Does the below patch fix the issue?
->>>>>=20
->>>>=20
->>>> No. Attaching backtrace. Any clue?
->>>=20
->>> Ah, that's my bad. Just having a 'continue' there can make the=20
->>> function
->>> loop forever. Oops. Try something like this instead?
->>>=20
->>=20
->> But 'continue' also used in other places. Will give a try but I think=20
->> that
->> calling drv_wake_tx_queue within iteration is dangerous as it alters
->> the list. no?
->>=20
-> How about below change? Just schedule first txq and remaining will be
-> scheduled later by driver upon tx-compl.
+>> +#if IS_ENABLED(CONFIG_BT_INTEL)
+>> +		if (firmware_unlock_func) {
+>> +			firmware_unlock_func();
+>> +			symbol_put(btintel_firmware_lock);
+>> +			firmware_lock_func = NULL;
+>> +			symbol_put(btintel_firmware_unlock);
+>> +			firmware_unlock_func = NULL;
+>> +		}
+>> +#endif
+>> +	}
+>>  	else
+>>  		ret = iwl_pcie_load_given_ucode(trans, fw);
+>>  
+>
+> I'm not sure I like adding this BT-specific stuff here, especially not
+> without a detailed explanation.
 
-Your mail client seems to be mangling the patch somewhat, but I think I
-see what your intention is. And yeah, just waking a single TXQ and
-letting TX-completion do the rest is a good idea; will fold that into
-the next version :)
+This looks like an ugly hack and the commit log tells nothing. This
+really needs strong justifications to even consider doing something like
+this.
 
--Toke
+-- 
+Kalle Valo
