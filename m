@@ -2,95 +2,77 @@ Return-Path: <SRS0=EqeY=MQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69404C64EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 17:32:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AAFFC64EBC
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 19:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 327952084D
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 17:32:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2C7320877
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 19:07:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KW1zrQH2";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZBwc8Gug"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 327952084D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZtokSSzd"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C2C7320877
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=google.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727484AbeJEA0h (ORCPT
+        id S1727443AbeJECBj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Oct 2018 20:26:37 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:37682 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727422AbeJEA0h (ORCPT
+        Thu, 4 Oct 2018 22:01:39 -0400
+Received: from mail-qt1-f173.google.com ([209.85.160.173]:37214 "EHLO
+        mail-qt1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727354AbeJECBj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Oct 2018 20:26:37 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5AF9A60B26; Thu,  4 Oct 2018 17:32:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538674341;
-        bh=HZWlOqY/B1+e/EPI2N+IOOsiuro4QsN6HtDutWSQ+WY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=KW1zrQH2PgGwmwuXlMaRAViXXOSVGDD1z88Evv0wrKPCtvH9ykWz3+P0kNWQPkML8
-         R5a/BqK8tgrY6DytaHiWci4Tf20GO3d+w4gi/xFHI1xu+GN7Aux+UHz0ONgwCm3ZW6
-         GEVVPtmaCiRnCuFRcYqJYYQQjJWXKp/eO3i3ozmQ=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id C3B1460BE8;
-        Thu,  4 Oct 2018 17:32:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538674340;
-        bh=HZWlOqY/B1+e/EPI2N+IOOsiuro4QsN6HtDutWSQ+WY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ZBwc8Gugq8wNBYDa1PcwDbKcrQuvrrfRSu7LY5WDPixLzgJk5MtKrTs4X59UfUfVT
-         rN88g7rzIT2M61rqkaAUlI4EMDsemX8gVrI+W+vVNi8miPYF7Gyy4+B8noGM5DvHy1
-         2NGRBd87Ad8GZ28BwO2RovJGGUUc3QPLSzJtW6WY=
+        Thu, 4 Oct 2018 22:01:39 -0400
+Received: by mail-qt1-f173.google.com with SMTP id d14-v6so2528989qto.4
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2018 12:07:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=wVGBbmrFOlm2YIm2TJFkaef2wa2zeHznealWeEB055o=;
+        b=ZtokSSzd9tRGt/KJxdFVNG8JEsw2IqjeMmwzlroQYKvhF8BEauH8Gvp1VQIJ7ZzV9t
+         Kejy8JqLQ/3lLKYH1K6+Rci4P6T0DOFjbfBUUouvqMp6oqlQAu+KtRCJgRhWJdWzRPii
+         odVF/djXT1UzyqKOrYT9qdGo3ls9spRTTKk7jl/wI3lemClAsZ4qVi5MffZFoCpIdDJW
+         K3oil25K9VSNOGy+phoUsXQ08zzLq3iH2efzP7PxCJPXvemc/Bq7mA2m5Pb+u9xfQa/F
+         ZSD3q3qskOvN92gWX/9gRDt/kcAGRsb52JbpwOzdI3dQilJaWFIzOGid3msSOrvf7tKL
+         YCmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=wVGBbmrFOlm2YIm2TJFkaef2wa2zeHznealWeEB055o=;
+        b=TnVIHkgUw0Bg/QA9lyaSi04QHJ1PKlYRI/Cx3adIWxuOVglkGKX4VZKkhg+cVH8teV
+         xbJ0KyBtwKCIQ1f/0m7pLhxmyNqemLDFldZw9VE8TfgMNFTqb47Z45BWYkG3B512X8+V
+         YSFU6PvdL+8KWLzbb+5iKoqQGphdNa/g9JeXLMvVvm3LYrISMRW/3dva5b0a06UcbAe1
+         npxP7iIVRJBnimnHmgYrPJx3mRTC5NatFIYLN3ZPEUbmI3SAxlNzFhHXJZmHjI8PRdTB
+         dvXObbSmXMLLkuBHVlj7Ue9lxfZtrj3rKQ9TJ+TR9QNuKwHKXAPan2p/6XoqCP+tc0Y1
+         3NNw==
+X-Gm-Message-State: ABuFfoiTmKHxFxYQj78KJcHq9nt3SX5NSAMBq/ieeFk89BqwKSHE+Q+g
+        CHeFeBVbc6VBqN2S7YfC4Hq6yEgSxZlprH2cKeCQ3IdWKYY=
+X-Google-Smtp-Source: ACcGV61dfEah72oYB8UqxMCHRPuEksE8ylDETN58VPYCy0LExkyimMmrhvV02Nz4gzFWkuVKvG7sCmTCX+1eDPFUhwQ=
+X-Received: by 2002:a0c:a8cc:: with SMTP id h12-v6mr6701676qvc.161.1538680021849;
+ Thu, 04 Oct 2018 12:07:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 04 Oct 2018 23:02:20 +0530
-From:   bankita@codeaurora.org
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Jouni Malinen <jouni@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Add per peer statistics to compute FCS error
- rate
-In-Reply-To: <1538389142.3126.29.camel@sipsolutions.net>
-References: <1538060517-32208-1-git-send-email-jouni@codeaurora.org>
- <1538389142.3126.29.camel@sipsolutions.net>
-Message-ID: <a4d0af139d550a248ecd280798bbdd2a@codeaurora.org>
-X-Sender: bankita@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+From:   Matthew Wang <matthewmwang@google.com>
+Date:   Thu, 4 Oct 2018 12:06:50 -0700
+Message-ID: <CAAooHFeLWrY_wmCp-HWqygh8gnKsfpoPCky7SykOBKZgXkb8OQ@mail.gmail.com>
+Subject: Flag for detecting 802.11r Fast BSS Transition support
+To:     linux-wireless@vger.kernel.org
+Cc:     Brian Norris <briannorris@google.com>,
+        Kirtika Ruchandani <kirtika@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-01 15:49, Johannes Berg wrote:
-> On Thu, 2018-09-27 at 18:01 +0300, Jouni Malinen wrote:
->> From: Ankita Bajaj <bankita@codeaurora.org>
->> 
->> Add support for drivers to report the total number of MPDUs received
->> and the number of MPDUs received with an FCS error from a specific
->> peer. These counters will be incremented only when the TA of the
->> frame matches the MAC address of the peer irrespective of FCS
->> error.
+Hi,
 
-We do have rx_packets field but it is for MMPDUs and MSDUs which might 
-not reflect the number of MPDUs in all cases. Hence we introduced new 
-field for MPDU count.
+I'm wondering if there is a flag for detecting firmware/driver support
+for FT. It seems like checking for SME support is a pretty good proxy
+for this, but there is a non-mac80211 driver that can do FT as well
+(ath/wil6210). It would be great if anyone knows of a feature flag
+specifically for FT.
 
-> Hmm. The error one seems mostly reasonable, I guess, but do we really
-> not having anything that's the total number of MPDUs already?
-> 
-> And then, I guess, what exactly would you want there? We might not
-> always even be able to provide that?
-
-> I'm also left wondering what the application here is -
-
-These two fields together will help to find bad rx link with a specific 
-peer. This information can be used for example to steer the client to a 
-different BSS.
-
-Ankita
+Thanks,
+Matthew
