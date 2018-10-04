@@ -2,94 +2,107 @@ Return-Path: <SRS0=EqeY=MQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3CA7C64EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 10:05:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE7C4C64EB8
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 10:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75BC82082A
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 10:05:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 75BC82082A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id B5DAC2082A
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 10:05:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IiJ0PdCA";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ak+aoK7n"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B5DAC2082A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728064AbeJDQ54 (ORCPT
+        id S1728192AbeJDQ5q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Oct 2018 12:57:56 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:59784 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727822AbeJDQ54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Oct 2018 12:57:56 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Thu, 4 Oct 2018 12:57:46 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:52350 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727758AbeJDQ5p (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Oct 2018 12:57:45 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 7BA4960B26; Thu,  4 Oct 2018 10:05:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538647513;
+        bh=YreLcI82fpjiE1hcoZzqzJwALxy5ORnOxNYV3swoyT8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=IiJ0PdCADeK4acu+hx5Enry8eIsKWQANF7/Tfi6yQ8taUBK3KUTxzIGh4W6P/eqvN
+         7VF5UCKW2fhL87MzJubu+3pQppRKGnufv1oHT4i8C18rkU625/HCC4v1zWQSE9ZH7g
+         mRyv5lXAyjdXbHNY0pT+P2MdqDqa757CjJIDbEUQ=
+Received: from x230.qca.qualcomm.com (85-76-114-39-nat.elisa-mobile.fi [85.76.114.39])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 36BCC30832D8;
-        Thu,  4 Oct 2018 10:05:24 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.45])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5A3F418256;
-        Thu,  4 Oct 2018 10:05:21 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Subject: [PATCH 5/5] mt76x0: use bus helper to identify rf access method
-Date:   Thu,  4 Oct 2018 12:04:55 +0200
-Message-Id: <1538647495-15213-6-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1538647495-15213-1-git-send-email-sgruszka@redhat.com>
-References: <1538647495-15213-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Thu, 04 Oct 2018 10:05:24 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C80EB60B72;
+        Thu,  4 Oct 2018 10:05:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538647512;
+        bh=YreLcI82fpjiE1hcoZzqzJwALxy5ORnOxNYV3swoyT8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Ak+aoK7nMUyYSxZTinQvFn6VRLWUnxlvOSNmDolvctgS4TBVOA3HinM4lAbqXIoXo
+         rtn3daQ+13G4kzUmoVLJ9LtesuB9OsfUg7bvzzE46KWMR7GgrsqRXPljvQSHlsCuLQ
+         81yKWVyGKnwoJBhe1BcGV79Ga1nnEptnm/tTwUq0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C80EB60B72
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lance Roy <ldr709@gmail.com>
+Cc:     linux-kernel@vger.kernel.org,
+        "Paul E. McKenney" <paulmck@linux.ibm.com>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 08/16] wireless: Replace spin_is_locked() with lockdep
+References: <20181003053902.6910-1-ldr709@gmail.com>
+        <20181003053902.6910-9-ldr709@gmail.com>
+        <877eizjt5j.fsf@kamboji.qca.qualcomm.com>
+        <20181004065720.GE896@E570.localdomain>
+Date:   Thu, 04 Oct 2018 13:05:08 +0300
+In-Reply-To: <20181004065720.GE896@E570.localdomain> (Lance Roy's message of
+        "Wed, 3 Oct 2018 23:57:20 -0700")
+Message-ID: <87in2i2fjf.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use mt76_is_usb() to identify RF access method instead of
-MT76_STATE_MCU_RUNNING flag and add warning since MCU has
-to be initialized before we can access RF registers via MCU.
+Lance Roy <ldr709@gmail.com> writes:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+> On Wed, Oct 03, 2018 at 12:06:48PM +0300, Kalle Valo wrote:
+>> Lance Roy <ldr709@gmail.com> writes:
+>>
+>> > lockdep_assert_held() is better suited to checking locking requirements,
+>> > since it won't get confused when someone else holds the lock. This is
+>> > also a step towards possibly removing spin_is_locked().
+>> >
+>> > Signed-off-by: Lance Roy <ldr709@gmail.com>
+>> > Cc: Daniel Drake <dsd@gentoo.org>
+>> > Cc: Ulrich Kunitz <kune@deine-taler.de>
+>> > Cc: Kalle Valo <kvalo@codeaurora.org>
+>> > Cc: "David S. Miller" <davem@davemloft.net>
+>> > Cc: <linux-wireless@vger.kernel.org>
+>> > Cc: <netdev@vger.kernel.org>
+>> > ---
+>> >  drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> Should I take this or is it going through some other tree?
+>
+> Sure you can take this if you like. If not, Paul McKenney will take it in his
+> tree.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index 8e4194e59398..202f436eb358 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -111,12 +111,14 @@ static int mt76x0_rf_csr_rr(struct mt76x02_dev *dev, u32 offset)
- static int
- rf_wr(struct mt76x02_dev *dev, u32 offset, u8 val)
- {
--	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state)) {
-+	if (mt76_is_usb(dev)) {
- 		struct mt76_reg_pair pair = {
- 			.reg = offset,
- 			.value = val,
- 		};
- 
-+		WARN_ON_ONCE(!test_bit(MT76_STATE_MCU_RUNNING,
-+			     &dev->mt76.state));
- 		return mt76_wr_rp(dev, MT_MCU_MEMMAP_RF, &pair, 1);
- 	} else {
- 		return mt76x0_rf_csr_wr(dev, offset, val);
-@@ -129,11 +131,13 @@ static int mt76x0_rf_csr_rr(struct mt76x02_dev *dev, u32 offset)
- 	int ret;
- 	u32 val;
- 
--	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state)) {
-+	if (mt76_is_usb(dev)) {
- 		struct mt76_reg_pair pair = {
- 			.reg = offset,
- 		};
- 
-+		WARN_ON_ONCE(!test_bit(MT76_STATE_MCU_RUNNING,
-+			     &dev->mt76.state));
- 		ret = mt76_rd_rp(dev, MT_MCU_MEMMAP_RF, &pair, 1);
- 		val = pair.value;
- 	} else {
+Ok, then I'll take this to wireless-drivers-next. And I'll change the
+title prefix to "zd1211rw: ".
+
 -- 
-1.9.3
-
+Kalle Valo
