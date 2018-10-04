@@ -6,68 +6,66 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 199B7C64EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 181BFC64EB8
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:32:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D23E420652
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:30:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03B921470
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:32:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dgHk831n";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dgHk831n"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D23E420652
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WZ2bYXrq";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WZ2bYXrq"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D03B921470
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727819AbeJDTXn (ORCPT
+        id S1727589AbeJDTZk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Oct 2018 15:23:43 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:33858 "EHLO
+        Thu, 4 Oct 2018 15:25:40 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:37352 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727483AbeJDTXm (ORCPT
+        with ESMTP id S1727407AbeJDTZk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Oct 2018 15:23:42 -0400
+        Thu, 4 Oct 2018 15:25:40 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id BBA7F60C8A; Thu,  4 Oct 2018 12:30:37 +0000 (UTC)
+        id 894236043F; Thu,  4 Oct 2018 12:32:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538656237;
-        bh=8ebnf39hFGmdUqDwnfXkXAIfckDT/vueoayWFMBXim8=;
+        s=default; t=1538656354;
+        bh=fkZgPKUx85va0qO9cHeCcrrXL1SWssODtSCLBa1xMmA=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=dgHk831niV48a4TYeW4zyP/jVzoId6j1wJiIyEQN3iMWweC2U5zAZ/pCBUiQ5afxj
-         kBl9w7h/DcccGWaDSmGZw3FmSkjp9BCHzyKlcfdwRY0FiTlQka+PFl5xAOuDQOD5KA
-         JIXrrqS+QB4ezAKMGXZXb45DcQIH8mOy4rKe0DT0=
+        b=WZ2bYXrqaBUQsSoYlZYqu7QnbM/gxYAljseBQcsDuugivcp1P3oa4f7VujXBukAAI
+         NSyfMMCOVZQiTCVe2EJs/mzdz7o7uIWvGdjGzANvZuHGYrRXKK9zd/tP4j2hikvcYk
+         Sy/MCycZ9jAam/Zn4Oz8h9yfLAfeZ/cWPiaZVnoA=
 Received: from x230.qca.qualcomm.com (85-76-114-39-nat.elisa-mobile.fi [85.76.114.39])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id ADD7E6043F;
-        Thu,  4 Oct 2018 12:30:35 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 90D1660C6A;
+        Thu,  4 Oct 2018 12:32:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538656237;
-        bh=8ebnf39hFGmdUqDwnfXkXAIfckDT/vueoayWFMBXim8=;
+        s=default; t=1538656354;
+        bh=fkZgPKUx85va0qO9cHeCcrrXL1SWssODtSCLBa1xMmA=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=dgHk831niV48a4TYeW4zyP/jVzoId6j1wJiIyEQN3iMWweC2U5zAZ/pCBUiQ5afxj
-         kBl9w7h/DcccGWaDSmGZw3FmSkjp9BCHzyKlcfdwRY0FiTlQka+PFl5xAOuDQOD5KA
-         JIXrrqS+QB4ezAKMGXZXb45DcQIH8mOy4rKe0DT0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ADD7E6043F
+        b=WZ2bYXrqaBUQsSoYlZYqu7QnbM/gxYAljseBQcsDuugivcp1P3oa4f7VujXBukAAI
+         NSyfMMCOVZQiTCVe2EJs/mzdz7o7uIWvGdjGzANvZuHGYrRXKK9zd/tP4j2hikvcYk
+         Sy/MCycZ9jAam/Zn4Oz8h9yfLAfeZ/cWPiaZVnoA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 90D1660C6A
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>, yhchuang@realtek.com,
+        linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        tehuang@realtek.com
 Subject: Re: [PATCH 01/12] rtwlan: main files
 References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
         <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
         <20180927135040.GA4712@redhat.com>
-        <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
-        <20180928092918.GC8323@redhat.com>
-        <F7CD281DE3E379468C6D07993EA72F84D17280C5@RTITMBSVM01.realtek.com.tw>
-Date:   Thu, 04 Oct 2018 15:30:33 +0300
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D17280C5@RTITMBSVM01.realtek.com.tw>
-        (Tony Chuang's message of "Tue, 2 Oct 2018 09:35:35 +0000")
-Message-ID: <87woqx28t2.fsf@codeaurora.org>
+        <a6b6803e-fd18-81f4-6465-d573aa5c9e2a@lwfinger.net>
+        <20180928090803.GB8323@redhat.com>
+Date:   Thu, 04 Oct 2018 15:32:30 +0300
+In-Reply-To: <20180928090803.GB8323@redhat.com> (Stanislaw Gruszka's message
+        of "Fri, 28 Sep 2018 11:08:03 +0200")
+Message-ID: <87sh1l28pt.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -76,23 +74,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tony Chuang <yhchuang@realtek.com> writes:
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-> Hi Kale & Stanislaw,
+> On Thu, Sep 27, 2018 at 10:40:44AM -0500, Larry Finger wrote:
+>> On 9/27/18 8:50 AM, Stanislaw Gruszka wrote:
+>> --snip
+>> 
+>> > 
+>> > > +#define BIT_LEN_MASK_32(__bitlen) (0xFFFFFFFF >> (32 - (__bitlen)))
+>> > > +#define BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)                          \
+>> > > +	(BIT_LEN_MASK_32(__bitlen) << (__bitoffset))
+>> > > +#define LE_P4BYTE_TO_HOST_4BYTE(__start) (le32_to_cpu(*((__le32 *)(__start))))
+>> > > +#define LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen)               \
+>> > > +	(LE_P4BYTE_TO_HOST_4BYTE(__start) &                                    \
+>> > > +	 (~BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)))
+>> > > +#define LE_BITS_TO_4BYTE(__start, __bitoffset, __bitlen)                       \
+>> > > +	((LE_P4BYTE_TO_HOST_4BYTE(__start) >> (__bitoffset)) &                 \
+>> > > +	 BIT_LEN_MASK_32(__bitlen))
+>> > > +#define SET_BITS_TO_LE_4BYTE(__start, __bitoffset, __bitlen, __value)          \
+>> > > +	do {                                                                   \
+>> > > +		*((__le32 *)(__start)) = \
+>> > > +		cpu_to_le32( \
+>> > > +		LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen) |     \
+>> > > +		((((u32)__value) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset))\
+>> > > +		);                                                             \
+>> > > +	} while (0)
+
+This is horrible.
+
+>> Stanislaw,
+>> 
+>> I have never loved these macros, and it took a lot of time to get them to be
+>> endian correct. Could you point me to a method that would overwrite a
+>> portion of a 32-bit little-endian word that would be correct for both
+>> little- and big-endian machines? Keep in mind that Kalle hates the use of
+>> compile tests on __LITTLE_ENDIAN.
 >
-> I am working on the driver code and making some changes that Stanislaw
-> have mentioned. And I expected that I will finish them tomorrow, what
-> should I do after I finished them?
+> Maybe something like this (not tested)
 >
-> Should I send an RFCv2, or start a new RFC for it ?
+> #define SET_LE32(reg, off, len, val) \
+> 	((reg & cpu_to_le32(~GENMASK(off + len - 1, off))) | cpu_to_le32(val << off))
+>
+> ?
+>
+> There are plenty of bitops and endian primitives in kernel, it's
+> very very unlikly you need custom macros for handle that.
 
-Like Stanislaw said, RFCv2 is the right thing to do and I see that you
-did that already.
-
-> Because our driver will be renamed from rtwlan to rtw88 for
-> 8822B/8822C
-
-I like rtw88, a good choise.
+Indeed, try avoiding reinventing wheel as much as possible.
 
 -- 
 Kalle Valo
