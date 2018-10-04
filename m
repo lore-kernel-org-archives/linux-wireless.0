@@ -1,71 +1,75 @@
 Return-Path: <SRS0=EqeY=MQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Level: *
+X-Spam-Status: No, score=1.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLACK
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 181BFC64EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 368E4C64EB8
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:35:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D03B921470
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:32:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFF43205C9
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 12:35:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WZ2bYXrq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WZ2bYXrq"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D03B921470
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NwnSH+zD";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SZFw+z04"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EFF43205C9
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727589AbeJDTZk (ORCPT
+        id S1727751AbeJDT26 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Oct 2018 15:25:40 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:37352 "EHLO
+        Thu, 4 Oct 2018 15:28:58 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:42576 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727407AbeJDTZk (ORCPT
+        with ESMTP id S1727407AbeJDT26 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Oct 2018 15:25:40 -0400
+        Thu, 4 Oct 2018 15:28:58 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 894236043F; Thu,  4 Oct 2018 12:32:34 +0000 (UTC)
+        id 06FA560D0C; Thu,  4 Oct 2018 12:35:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538656354;
-        bh=fkZgPKUx85va0qO9cHeCcrrXL1SWssODtSCLBa1xMmA=;
+        s=default; t=1538656551;
+        bh=J8ei9hNhp5ttGxqhKWlEgJA7N5pRcXKtEpQYpJFhdYY=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=WZ2bYXrqaBUQsSoYlZYqu7QnbM/gxYAljseBQcsDuugivcp1P3oa4f7VujXBukAAI
-         NSyfMMCOVZQiTCVe2EJs/mzdz7o7uIWvGdjGzANvZuHGYrRXKK9zd/tP4j2hikvcYk
-         Sy/MCycZ9jAam/Zn4Oz8h9yfLAfeZ/cWPiaZVnoA=
+        b=NwnSH+zD7PdR/Z/LgpMbSJU6gby7IBrDFNgafp9OYLJ75P1GJZzDPbVhwmNbzHMn5
+         L8bODwahF2fBAu3p4RFoy3pnZqpqDo5NrFVdzrRl0vYDV31oVYbOg8YRA85ZwQrmfu
+         YEZANkWqKtYfQ2LoQmZsMi7OXuOor74V+B0BSCpo=
 Received: from x230.qca.qualcomm.com (85-76-114-39-nat.elisa-mobile.fi [85.76.114.39])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 90D1660C6A;
-        Thu,  4 Oct 2018 12:32:32 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6413C60D3B;
+        Thu,  4 Oct 2018 12:35:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538656354;
-        bh=fkZgPKUx85va0qO9cHeCcrrXL1SWssODtSCLBa1xMmA=;
+        s=default; t=1538656549;
+        bh=J8ei9hNhp5ttGxqhKWlEgJA7N5pRcXKtEpQYpJFhdYY=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=WZ2bYXrqaBUQsSoYlZYqu7QnbM/gxYAljseBQcsDuugivcp1P3oa4f7VujXBukAAI
-         NSyfMMCOVZQiTCVe2EJs/mzdz7o7uIWvGdjGzANvZuHGYrRXKK9zd/tP4j2hikvcYk
-         Sy/MCycZ9jAam/Zn4Oz8h9yfLAfeZ/cWPiaZVnoA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 90D1660C6A
+        b=SZFw+z04jFs5XrHqcaFsHttxpX2aQgqdUMuOIksmGLIjN7U6ySz1iS+DTgrHzrg/m
+         EgKWJQcKd3kEZp5TA03oF/bt9VNQUjgn6hEPMiSMbso+2aLRk2loiwbWH+hireaUeK
+         qkfPNg+5I4stO+ZptKb2kkSzqQIswq2xqrlnBjrM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6413C60D3B
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Larry Finger <Larry.Finger@lwfinger.net>, yhchuang@realtek.com,
-        linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        tehuang@realtek.com
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Tony Chuang <yhchuang@realtek.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>
 Subject: Re: [PATCH 01/12] rtwlan: main files
 References: <1537509847-21087-1-git-send-email-yhchuang@realtek.com>
         <1537509847-21087-2-git-send-email-yhchuang@realtek.com>
         <20180927135040.GA4712@redhat.com>
-        <a6b6803e-fd18-81f4-6465-d573aa5c9e2a@lwfinger.net>
-        <20180928090803.GB8323@redhat.com>
-Date:   Thu, 04 Oct 2018 15:32:30 +0300
-In-Reply-To: <20180928090803.GB8323@redhat.com> (Stanislaw Gruszka's message
-        of "Fri, 28 Sep 2018 11:08:03 +0200")
-Message-ID: <87sh1l28pt.fsf@codeaurora.org>
+        <F7CD281DE3E379468C6D07993EA72F84D08D9F56@RTITMBSVM01.realtek.com.tw>
+        <20180928092918.GC8323@redhat.com>
+        <F7CD281DE3E379468C6D07993EA72F84D08DB7E3@RTITMBSVM01.realtek.com.tw>
+        <20181002102957.GB25116@redhat.com>
+        <a54dec4e-1164-f9c5-c791-3396a239eeba@lwfinger.net>
+Date:   Thu, 04 Oct 2018 15:35:44 +0300
+In-Reply-To: <a54dec4e-1164-f9c5-c791-3396a239eeba@lwfinger.net> (Larry
+        Finger's message of "Tue, 2 Oct 2018 10:23:44 -0500")
+Message-ID: <87o9c928kf.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -74,53 +78,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> On Thu, Sep 27, 2018 at 10:40:44AM -0500, Larry Finger wrote:
->> On 9/27/18 8:50 AM, Stanislaw Gruszka wrote:
->> --snip
->> 
->> > 
->> > > +#define BIT_LEN_MASK_32(__bitlen) (0xFFFFFFFF >> (32 - (__bitlen)))
->> > > +#define BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)                          \
->> > > +	(BIT_LEN_MASK_32(__bitlen) << (__bitoffset))
->> > > +#define LE_P4BYTE_TO_HOST_4BYTE(__start) (le32_to_cpu(*((__le32 *)(__start))))
->> > > +#define LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen)               \
->> > > +	(LE_P4BYTE_TO_HOST_4BYTE(__start) &                                    \
->> > > +	 (~BIT_OFFSET_LEN_MASK_32(__bitoffset, __bitlen)))
->> > > +#define LE_BITS_TO_4BYTE(__start, __bitoffset, __bitlen)                       \
->> > > +	((LE_P4BYTE_TO_HOST_4BYTE(__start) >> (__bitoffset)) &                 \
->> > > +	 BIT_LEN_MASK_32(__bitlen))
->> > > +#define SET_BITS_TO_LE_4BYTE(__start, __bitoffset, __bitlen, __value)          \
->> > > +	do {                                                                   \
->> > > +		*((__le32 *)(__start)) = \
->> > > +		cpu_to_le32( \
->> > > +		LE_BITS_CLEARED_TO_4BYTE(__start, __bitoffset, __bitlen) |     \
->> > > +		((((u32)__value) & BIT_LEN_MASK_32(__bitlen)) << (__bitoffset))\
->> > > +		);                                                             \
->> > > +	} while (0)
+> On 10/2/18 5:29 AM, Stanislaw Gruszka wrote:
+>> On Fri, Sep 28, 2018 at 11:32:41AM +0000, Tony Chuang wrote:
+>>>> 	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
+>>>> 		dev_kfree_skb_any(skb)
+>>>>
+>>>> just to remove 'return;' and out label.
+>>>
+>>>
+>>> OK, but why not use ieee80211_free_txskb, should it be better for mac80211?
+>>
+>> Yes, it is better as it also do some extra thing for dropped frame.
+>>
+>>>>> OK, but I think this is needed, our tables have different forms ....
+>>>>
+>>>> Not sure if that is better solution, but could the tables be pre-prarsed
+>>>> by user-space program and then embed in the driver in ready to send
+>>>> to the hardware from ?
+>>>>
+>>>> Also there are lot of redundancy in those tables, for example:
+>>>>
+>>>> +	0x81C, 0xFF000003,
+>>>> +	0x81C, 0xF5000003,
+>>>> +	0x81C, 0xF4020003,
+>>>> +	0x81C, 0xF3040003,
+>>>> +	0x81C, 0xF2060003,
+>>>> +	0x81C, 0xF1080003,
+>>>> +	0x81C, 0xF00A0003,
+>>>> +	0x81C, 0xEF0C0003,
+>>>> +	0x81C, 0xEE0E0003,
+>>>> +	0x81C, 0xED100003,
+>>>> +	0x81C, 0xEC120003,
+>>>> +	0x81C, 0xEB140003,
+>>>> +	0x81C, 0xEA160003,
+>>>> +	0x81C, 0xE9180003,
+>>>> +	0x81C, 0xE81A0003,
+>>>> +	0x81C, 0xE71C0003,
+>>>> +	0x81C, 0xE61E0003,
+>>>> +	0x81C, 0xE5200003,
+>>>>
+>>>> 0x81C and 0003 repeats in many lines.
+>>>>
+>>>> This seems to be parse data, not that we have to write 0x81C
+>>>> register many times. Would be possible to remove the redundancy?
+>>>
+>>>
+>>> No, they cannot be removed, the sequence matters.
+>>> And it is really writing to 0x81C ...
+>>> It is really magic, I cannot believe to this, too.
+>>
+>> This is contradiction for what I asked you before, i.e. doing parsing
+>> in user space, but since we have this parsing mechanism in the driver
+>> perhaps the tables can be coded in some more compact way, for example:
+>>
+>> { prefix, suffix, len, {data} }
+>>
+>> { 0x81C, 0x0003, N ,
+>>    { 0xFF02 , 0xF500 , .... , 0xE520 } }
+>>
+>> The rtw8822b_table.c file is quite big.
+>
+> You might also consider having these tables as a configuration file
+> read from the firmware directory.
 
-This is horrible.
-
->> Stanislaw,
->> 
->> I have never loved these macros, and it took a lot of time to get them to be
->> endian correct. Could you point me to a method that would overwrite a
->> portion of a 32-bit little-endian word that would be correct for both
->> little- and big-endian machines? Keep in mind that Kalle hates the use of
->> compile tests on __LITTLE_ENDIAN.
->
-> Maybe something like this (not tested)
->
-> #define SET_LE32(reg, off, len, val) \
-> 	((reg & cpu_to_le32(~GENMASK(off + len - 1, off))) | cpu_to_le32(val << off))
->
-> ?
->
-> There are plenty of bitops and endian primitives in kernel, it's
-> very very unlikly you need custom macros for handle that.
-
-Indeed, try avoiding reinventing wheel as much as possible.
+Configuration files for upstream drivers is something I would like to
+avoid until we have a generic solution. That seems to come up now and
+then but there does not seem to be any consensus how it should be
+implemented.
 
 -- 
 Kalle Valo
