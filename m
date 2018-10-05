@@ -2,292 +2,259 @@ Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D24C00449
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 14:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92324C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 18:10:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B4D32084D
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 14:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A25B213A2
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 18:10:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="buOxxdbY"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7B4D32084D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JrfzeFpu"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3A25B213A2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728898AbeJEVdd (ORCPT
+        id S1728021AbeJFBKU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 17:33:33 -0400
-Received: from mail-eopbgr720080.outbound.protection.outlook.com ([40.107.72.80]:31520
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727968AbeJEVdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 17:33:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JvNxa39nNGOlzAfvUT4nrygkZtLNiFUp9GKD3SZyRVw=;
- b=buOxxdbYNnlB8CXThJgGKS2gg2u1epRseUucgrWD3RDU19Z/Pk6m9B7D6zuDiG+uupkdOZlGAQsx5FyL36V5nZQOktZW6pA1C2dFBnTOQ1aPFQE6midETbArI4Op+mMoFEeRxFvZjUMtkuJWhrF0lcdIDXw3cjnUQJjcjw9qiDU=
-Received: from BYAPR05MB4597.namprd05.prod.outlook.com (52.135.233.18) by
- BYAPR05MB4615.namprd05.prod.outlook.com (52.135.233.24) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1207.11; Fri, 5 Oct 2018 14:33:34 +0000
-Received: from BYAPR05MB4597.namprd05.prod.outlook.com
- ([fe80::fc58:438:5b30:9373]) by BYAPR05MB4597.namprd05.prod.outlook.com
- ([fe80::fc58:438:5b30:9373%4]) with mapi id 15.20.1207.021; Fri, 5 Oct 2018
- 14:33:34 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     Cody Schuffelen <schuffelen@google.com>
-CC:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-Subject: Re: [PATCH net-next v3] wireless-drivers: rtnetlink wifi simulation
- device
-Thread-Topic: [PATCH net-next v3] wireless-drivers: rtnetlink wifi simulation
- device
-Thread-Index: AQHUXBznuCllGId5gkCyxGUX3pr0aaUQuIQA
-Date:   Fri, 5 Oct 2018 14:33:34 +0000
-Message-ID: <20181005143323.ezyd2x6x5ymlb7rg@bars>
-References: <20181004195906.201895-1-schuffelen@google.com>
-In-Reply-To: <20181004195906.201895-1-schuffelen@google.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6PR0402CA0009.eurprd04.prod.outlook.com
- (2603:10a6:209::22) To BYAPR05MB4597.namprd05.prod.outlook.com
- (2603:10b6:a03:4c::18)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR05MB4615;6:VF0H+UXBEg5ttXnKHAh7uMUo6jGrSycYK5+H2FzshlOk+HR9vCXLBTM9s1ArZ9X75ky025bobEmiV/Drvy9YTIIJODwumPDMV2bRl2U6A4uV7WNz6f8ga9qWsSUKPExW8KWJFXX6iogSXRP1P3r0cZlSoWGhfuWpa3ietFIr/V6hSgkOhXGprPx/sHrSalawmAXrdDC70zccqba7OYxAib/hG/+JdoeO4NxmKrta8ckQqTm2tSv+kNKMTWwuJ3iHTv7AjN7PQmuU7+xFbujhBfRmhZch7KnUL9a25BKRO8uQ4Hb2AJVYt148ZPxR2b+ViXvCxAxPfmvhD6wqUqW0w28v3jgQXPdwhZ5/+tBye4zQMYE21XJb0Xic3V65bvUseD9qsXmb1sptX/GqX8UOswabxR2RohroTHQRTNJWaIJs+GhBHAA4Iz+XcrPcSMMnJmjbBLvhbfx99W+C3U1d0w==;5:qyxrn8peCZv7ILaVyal+lTJ98NBHf4E1JPCIwusyXuYflfIZnAyoN/XkUM8GOlOc9gwRsWy8H4SV3ipxbnHrCkBEcBoKmXVF2ue7b2L9798iYAT2zGNFBpafv+1KpKHwb8vlPFFZ6t5I5fxJDS4XvSleB+jW1y3xc4dERWIFzv0=;7:U4AKJ4LAiktyb2uB89/MxFu4yiFcr/ejbU+TabXgDV1WT2AIe4FVlz+K269nM7q1LtFTl438Z2FP1cqxvDBNL1UMq8J2igNq1DIze90oSiZufe8X/Ckmy4RhZfb5eic+7SLM1PHiGbLxetwKqkBHG2mvlw7Nzf3bTxSjj4nWoGwTfMACcqn7FLnoZ6aWzhHE8FLqAG79JYQTwZlukpWIJkRT9hSTQV4b8CIR+GwhdF1wU6u1P408i8a3+72A1UM2
-x-ms-office365-filtering-correlation-id: c3e39206-70ef-486e-9128-08d62acf8751
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BYAPR05MB4615;
-x-ms-traffictypediagnostic: BYAPR05MB4615:
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
-x-microsoft-antispam-prvs: <BYAPR05MB461531C95C5ACB5730FFFE36A3EB0@BYAPR05MB4615.namprd05.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(21532816269658);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(5005006)(8121501046)(3002001)(10201501046)(93006095)(93001095)(3231355)(944501410)(52105095)(149066)(150057)(6041310)(20161123558120)(20161123560045)(20161123564045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991048);SRVR:BYAPR05MB4615;BCL:0;PCL:0;RULEID:;SRVR:BYAPR05MB4615;
-x-forefront-prvs: 0816F1D86E
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(136003)(39850400004)(396003)(346002)(376002)(366004)(199004)(189003)(229853002)(446003)(106356001)(14454004)(11346002)(1076002)(105586002)(476003)(305945005)(6246003)(478600001)(7736002)(2906002)(3846002)(6116002)(186003)(25786009)(102836004)(4326008)(6506007)(54906003)(68736007)(81166006)(486006)(575784001)(26005)(52116002)(386003)(6436002)(8936002)(33896004)(2900100001)(71190400001)(6512007)(9686003)(76176011)(99286004)(53936002)(66066001)(71200400001)(97736004)(86362001)(5250100002)(6486002)(256004)(8676002)(81156014)(33716001)(5660300001)(14444005)(6916009)(316002);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4615;H:BYAPR05MB4597.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 0AASuXsu3/bpouCqV9Pv0Z3LRKsVAsiSJq+gdPAWQcRk5rMH85E3Lje4+Zz5OTtyiz8dOli2ain/nC1g4JIm7qgyhMRBKT+zHWkkMSmUchmmxHr8aUv4xmrd+W0yVLiClKsM5v1nsrD8CEK4yMG19Yk8zUKYJzu25YTHCqjM+4y6zztZshVz9r6ERAC76SJqaAvmaRaDA7O86FnTgQ907VMqttvfQZ/yWkFr2tuWNSlyxGOhVXnBN7jWVa4LAngrXrVyM5VRgGOg7ok5MFT4BL9vcgtfNd70hz5LAntoda+udenv8TE35ObrBWbffuu755ArpZbRshL+7YVBbnXc88JG6vSRzHz26w+e7YRLSis=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A0C73C402B4DBD4F908E872E3EFB1BE4@namprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        Fri, 5 Oct 2018 21:10:20 -0400
+Received: from nbd.name ([46.4.11.11]:46930 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727941AbeJFBKU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Oct 2018 21:10:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Date:
+        Message-ID:Cc:To:Subject:From:Sender:Reply-To:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=212uHCz2QFuTh9coplP+D29DvX5lP5tMIocHBI5saBk=; b=JrfzeFpuegGqp1t3W/iBOnJSnQ
+        LYpLn9qYGwLNdYHBSUnu1vnQTcm32LvMG6P5uJifvyVefwTBgrlz+KdhTLH4Eb333aoWmda+9Ohir
+        77u6Nz3hkl+lP8CDbSWVVWep/lcIDfuz0wTeU+5g3gJP4n+SmSqWqKWp/k0vS/qBxPAw=;
+From:   Felix Fietkau <nbd@nbd.name>
+Subject: pull request: mt76 2018-10-05
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <783b92c4-0fba-35d8-9fdb-2c3462aa9f7f@nbd.name>
+Date:   Fri, 5 Oct 2018 20:10:27 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c3e39206-70ef-486e-9128-08d62acf8751
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2018 14:33:34.4636
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB4615
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Cody,
+Hi Kalle,
 
->  drivers/net/wireless/Kconfig     |   7 +
->  drivers/net/wireless/Makefile    |   2 +
->  drivers/net/wireless/virt_wifi.c | 618 +++++++++++++++++++++++++++++++
->  3 files changed, 627 insertions(+)
->  create mode 100644 drivers/net/wireless/virt_wifi.c
+Here's another large batch of mt76 code cleanup / deduplication / fixes
 
-I did a quick check of your patch using checkpatch kernel tool,
-here is a summary of its output:
+- Felix
 
-$ ./scripts/checkpatch.pl --strict test.patch
-...
-total: 165 errors, 428 warnings, 9 checks, 634 lines checked
+The following changes since commit e1c02eb16a9c742178874a7d1a08d300981715fb:
 
-Most part of those complaints is about either whitespaces or code
-idents. I am not sure whether this is a patch itself or email client.
-So could you please take a look and run checkpatch on your side.
+  qtnfmac: implement dump_station support for STA mode (2018-10-05 14:01:44 +0300)
 
-> +static void virt_wifi_scan_result(struct work_struct *work)
-> +{
-> +       const union {
-> +               struct {
-> +                       u8 tag;
-> +                       u8 len;
-> +                       u8 ssid[8];
-> +               } __packed parts;
-> +               u8 data[10];
-> +       } ssid =3D { .parts =3D {
-> +               .tag =3D WLAN_EID_SSID, .len =3D 8, .ssid =3D "VirtWifi" =
-}
-> +       };
-> +       struct cfg80211_bss *informed_bss;
-> +       struct virt_wifi_priv *priv =3D
-> +               container_of(work, struct virt_wifi_priv,
-> +                            scan_result.work);
-> +       struct wiphy *wiphy =3D priv_to_wiphy(priv);
-> +       struct cfg80211_inform_bss mock_inform_bss =3D {
-> +               .chan =3D &channel_5ghz,
-> +               .scan_width =3D NL80211_BSS_CHAN_WIDTH_20,
-> +               .signal =3D -60,
-> +               .boottime_ns =3D ktime_get_boot_ns(),
-> +       };
-> +       struct cfg80211_scan_info scan_info =3D {};
-> +
-> +       informed_bss =3D
-> +               cfg80211_inform_bss_data(wiphy, &mock_inform_bss,
-> +                                        CFG80211_BSS_FTYPE_PRESP,
-> +                                        fake_router_bssid,
-> +                                        mock_inform_bss.boottime_ns,
-> +                                        WLAN_CAPABILITY_ESS, 0, ssid.dat=
-a,
-> +                                        sizeof(ssid), GFP_KERNEL);
+are available in the Git repository at:
 
-It is possible to simplify this part switching to cfg80211_inform_bss
-function: this function wraps your scan data in into cfg80211_inform_bss
-structure internally using some reasonable defaults, e.g. channel width.
+  https://github.com/nbd168/wireless tags/mt76-for-kvalo-2018-10-05
 
-Besides, signal strength for scan entries should be passed in mBm units,
-so use DBM_TO_MBM macro. For instance, with your current code 'iw' tool
-produces the following output:
-$ sudo iw dev wlan0 scan
-	...
-	signal: 0.-60 dBm
-	...
+for you to fetch changes up to 06ac97c2e58c7b32bf950ac53976c4260687d386:
 
-> +static void virt_wifi_connect_complete(struct work_struct *work)
-> +{
-> +       struct virt_wifi_priv *priv =3D
-> +               container_of(work, struct virt_wifi_priv, connect.work);
-> +       u8 *requested_bss =3D priv->connect_requested_bss;
-> +       bool has_addr =3D !is_zero_ether_addr(requested_bss);
-> +       bool right_addr =3D ether_addr_equal(requested_bss, fake_router_b=
-ssid);
-> +       u16 status =3D WLAN_STATUS_SUCCESS;
-> +
-> +       rtnl_lock();
-> +       if (!priv->netdev_is_up || (has_addr && !right_addr))
-> +               status =3D WLAN_STATUS_UNSPECIFIED_FAILURE;
-> +       else
-> +               priv->is_connected =3D true;
-> +
-> +       cfg80211_connect_result(priv->netdev, requested_bss, NULL, 0, NUL=
-L, 0,
-> +                               status, GFP_KERNEL);
-> +       rtnl_unlock();
-> +}
+  mt76x0: pci: report firmware version using ethtool (2018-10-05 20:05:46 +0200)
 
-Carrier state for wireless device depends on its connection state.
-E.g., carrier is set when wireless connection succeeds and cleared
-when device disconnects. So use netif_carrier_on/netif_carrier_off
-calls in connect/disconnect handlers to set correct carrier state.
-IIUC the following locations look reasonable:
- - netif_carrier_off on init
- - netif_carrier_on in virt_wifi_connect_complete on success
- - netif_carrier_off in virt_wifi_disconnect
+----------------------------------------------------------------
+mt76 patches for 4.20
 
-> +static void virt_wifi_disconnect_complete(struct work_struct *work)
-> +{
-> +       struct virt_wifi_priv *priv =3D
-> +               container_of(work, struct virt_wifi_priv, disconnect.work=
-);
-> +
-> +       cfg80211_disconnected(priv->netdev, priv->disconnect_reason, NULL=
-, 0,
-> +                             true, GFP_KERNEL);
-> +       priv->is_connected =3D false;
-> +}
+* unify code between mt76x0, mt76x2
+* mt76x0 fixes
+* another fix for rx buffer allocation regression on usb
+* move mt76x2 source files to mt76x2 folder
+* more work on mt76x0e support
 
-Why do you need delayed disconnect processing ? IIUC it can be dropped
-and cfg80211_disconnected call can be moved to virt_wifi_disconnect.
+----------------------------------------------------------------
+Colin Ian King (1):
+      mt76: fix header guard macro define names
 
-> +
-> +static int virt_wifi_get_station(struct wiphy *wiphy,
-> +                                struct net_device *dev,
-> +                                const u8 *mac,
-> +                                struct station_info *sinfo)
-> +{
-> +       wiphy_debug(wiphy, "get_station\n");
-> +
-> +       if (!ether_addr_equal(mac, fake_router_bssid))
-> +               return -ENOENT;
-> +
-> +       sinfo->filled =3D BIT(NL80211_STA_INFO_TX_PACKETS) |
-> +               BIT(NL80211_STA_INFO_TX_FAILED) | BIT(NL80211_STA_INFO_SI=
-GNAL) |
-> +               BIT(NL80211_STA_INFO_TX_BITRATE);
+Lorenzo Bianconi (31):
+      mt76x0: pci: add mt76x0e_cleanup routine
+      mt76x2: move mt76x2 source files to mt76x2 folder
+      mt76: usb: fix hw initialization sequence
+      mt76x0: usb: stop cal/mac workqueues at hw stop
+      mt76: move mt76x02_tx_get_max_txpwr_adj in mt76x02_util.c
+      mt76: add get_tx_txpwr_adj function pointer to mt76_driver_ops
+      mt76: move mt76x02_mac_write_txwi in mt76x02-lib module
+      mt76: usb: use mt76x02u_tx_prepare_skb to fill txwi
+      mt76x0: init: remove unnecessary configurations
+      mt76: move mt76x02_phy_get_min_avg_rssi in mt76x02_phy.c
+      mt76: move mt76x02_rx_get_sta and mt76x02_rx_get_sta_wcid in mt76x02_util.h
+      mt76x0: mac: use sta ewma estimation for rssi tracking
+      mt76x0: remove unused variable in mt76x0_dev
+      mt76x0: remove hw_atomic_mutex mutex in mt76x0_dev
+      mt76x2: move mt76x2_dev in mt76x02_util.h
+      mt76x0: merge mt76x0_dev in mt76x02_dev
+      mt76: move mt76x02_mac_process_rx in mt76x02-lib module
+      mt76: unify rxwi parsing between mt76x2 and mt76x0 drivers
+      mt76: move mt76x02_tx in mt76x02-lib module
+      mt76: move txrx shared routines in mt76x02_txrx.c
+      mt76: rename mt76x02_util.h in mt76x02.h
+      mt76x2: remove leftover function declatarions
+      mt76: move tpc routines in mt76x02-lib module
+      mt76: move mt76x02_tx_prepare_skb in mt76x02_txrx.c
+      mt76: usb: move mt76x02u_tx_complete_skb in mt76x02_usb_core.c
+      mt76: move mt76x02_mac_poll_tx_status in mt76x02-lib moudle
+      mt76: move mt76x02_tx_complete in mt76x02-lib module
+      mt76: use mt76x02_dev instead of mt76_dev in mt76x02_mmio.c
+      mt76: move tx_tasklet management in mt76x02-lib moudle
+      mt76: move irq handler in mt76x02-lib moudle
+      mt76x0: pci: report firmware version using ethtool
 
-Recently some of NL80211_STA_INFO_ attribute types has been modified to
-use BIT_ULL macro. Could you please check commit 22d0d2fafca93ba1d92a
-for details and modify your coded if needed.
+Stanislaw Gruszka (1):
+      mt76: fix frag length allocation for usb
 
-> +       sinfo->tx_packets =3D 1;
-
-Only one packet, really ? Not sure if you plan to use the output of 'iw'
-or any other tool. If yes, then it probably makes sense to use stats
-from the original network link. Otherwise, your 'iw' output is
-going to look like this:
-
-$ iw dev wlan0 station dump
-	...
-	tx packets:	1
-	...
-
-> +       sinfo->tx_failed =3D 0;
-
-...
-
-> +static int virt_wifi_dump_station(struct wiphy *wiphy,
-> +                                 struct net_device *dev,
-> +                                 int idx,
-> +                                 u8 *mac,
-> +                                 struct station_info *sinfo)
-> +{
-> +       wiphy_debug(wiphy, "dump_station\n");
-> +
-> +       if (idx !=3D 0)
-> +               return -ENOENT;
-> +
-> +       ether_addr_copy(mac, fake_router_bssid);
-> +       return virt_wifi_get_station(wiphy, dev, fake_router_bssid, sinfo=
-);
-> +}
-
-Callback dump_station should return AP data only when STA is connected.
-Currently your driver returns fake AP data even when it is not
-connected.
-
-> +static const struct cfg80211_ops virt_wifi_cfg80211_ops =3D {
-> +       .scan =3D virt_wifi_scan,
-> +
-> +       .connect =3D virt_wifi_connect,
-> +       .disconnect =3D virt_wifi_disconnect,
-> +
-> +       .get_station =3D virt_wifi_get_station,
-> +       .dump_station =3D virt_wifi_dump_station,
-> +};
-
-Hey, this minimal cfg80211 implementation works fine with wpa_supplicant
-and open AP config. By the way, if you plan to add more features, then
-I would suggest to consider the following cfg80211 callbacks:
-- change_station, get_channel
-  to provide more info in connected state, e.g. compare the output
-  of the following commands between your virtual interface and=20
-  actual wireless interface:
-  $ iw dev wlan0 link
-  $ iw dev wlan0 info
-
-- stubs for add_key, del_key to enable encrypted AP simulation
-
-Regards,
-Sergey
+ drivers/net/wireless/mediatek/mt76/Kconfig                                 |  43 +-------------
+ drivers/net/wireless/mediatek/mt76/Makefile                                |  26 ++-------
+ drivers/net/wireless/mediatek/mt76/mt76.h                                  |   6 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/Kconfig                          |  20 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76x0/Makefile                         |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/debugfs.c                        |   4 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c                         |  28 ++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.h                         |  18 ++----
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c                           |  50 ++++++----------
+ drivers/net/wireless/mediatek/mt76/mt76x0/initvals.h                       |   3 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.c                            |  82 +++-----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/mac.h                            |  20 -------
+ drivers/net/wireless/mediatek/mt76/mt76x0/main.c                           |  19 +++---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h                            |   8 +--
+ drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h                         | 135 +++++++-----------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c                            |  44 +++++++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci_mcu.c                        |   5 +-
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c                            | 112 +++++++++++++----------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/trace.h                          |   1 -
+ drivers/net/wireless/mediatek/mt76/mt76x0/tx.c                             | 101 --------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c                            |  68 +++++++++-------------
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb_mcu.c                        |   6 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02.h                               | 208 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/{mt76x2_dfs.h => mt76x02_dfs.h}         |  40 ++++++-------
+ drivers/net/wireless/mediatek/mt76/mt76x02_dma.h                           |   8 +--
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c                           | 239 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.h                           |  32 ++++++++--
+ drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h                           |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c                          | 179 +++++++++++++++++++++++++++++++++++++++++++-------------
+ drivers/net/wireless/mediatek/mt76/mt76x02_phy.c                           |  48 +++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_phy.h                           |   1 +
+ drivers/net/wireless/mediatek/mt76/{mt76x2_trace.c => mt76x02_trace.c}     |   2 +-
+ drivers/net/wireless/mediatek/mt76/{mt76x2_trace.h => mt76x02_trace.h}     |  31 +++++-----
+ drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c                          | 203 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb.h                           |   9 ++-
+ drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c                      |  57 ++++++++++++++++--
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c                          |  55 +-----------------
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.h                          |  78 -------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2.h                                | 210 ------------------------------------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2/Kconfig                          |  20 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2/Makefile                         |  16 +++++
+ drivers/net/wireless/mediatek/mt76/{mt76x2_debugfs.c => mt76x2/debugfs.c}  |  12 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x2/dfs.h                            |  26 +++++++++
+ drivers/net/wireless/mediatek/mt76/{mt76x2_eeprom.c => mt76x2/eeprom.c}    |  42 ++++++++------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_eeprom.h => mt76x2/eeprom.h}    |  12 ++--
+ drivers/net/wireless/mediatek/mt76/{mt76x2_init_common.c => mt76x2/init.c} |  14 ++---
+ drivers/net/wireless/mediatek/mt76/{mt76x2_common.c => mt76x2/mac.c}       |  46 +++++++++------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_dma.c => mt76x2/mac.h}          |  32 +++++-----
+ drivers/net/wireless/mediatek/mt76/{mt76x2_mcu_common.c => mt76x2/mcu.c}   |  13 ++---
+ drivers/net/wireless/mediatek/mt76/{mt76x2_mcu.h => mt76x2/mcu.h}          |   6 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h                         | 107 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/{ => mt76x2}/mt76x2u.h                  |  41 ++++++-------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_pci.c => mt76x2/pci.c}          |   7 +--
+ drivers/net/wireless/mediatek/mt76/{mt76x2_dfs.c => mt76x2/pci_dfs.c}      | 146 +++++++++++++++++++++++-----------------------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_init.c => mt76x2/pci_init.c}    |  70 +++++++++-------------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_mac.c => mt76x2/pci_mac.c}      |  99 +++++--------------------------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_main.c => mt76x2/pci_main.c}    |  31 +++++-----
+ drivers/net/wireless/mediatek/mt76/{mt76x2_mcu.c => mt76x2/pci_mcu.c}      |  11 ++--
+ drivers/net/wireless/mediatek/mt76/{mt76x2_phy.c => mt76x2/pci_phy.c}      |  35 +++++------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_tx.c => mt76x2/pci_tx.c}        |  43 ++------------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_phy_common.c => mt76x2/phy.c}   |  71 ++++------------------
+ drivers/net/wireless/mediatek/mt76/{mt76x2_usb.c => mt76x2/usb.c}          |  10 ++--
+ drivers/net/wireless/mediatek/mt76/{mt76x2u_init.c => mt76x2/usb_init.c}   |  40 ++++++-------
+ drivers/net/wireless/mediatek/mt76/{mt76x2u_mac.c => mt76x2/usb_mac.c}     |  14 ++---
+ drivers/net/wireless/mediatek/mt76/{mt76x2u_main.c => mt76x2/usb_main.c}   |  19 +++---
+ drivers/net/wireless/mediatek/mt76/{mt76x2u_mcu.c => mt76x2/usb_mcu.c}     |  20 +++----
+ drivers/net/wireless/mediatek/mt76/{mt76x2u_phy.c => mt76x2/usb_phy.c}     |  15 ++---
+ drivers/net/wireless/mediatek/mt76/mt76x2_core.c                           |  76 ------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h                            |  64 --------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c                     | 239 ---------------------------------------------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c                      | 118 -------------------------------------
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c                          |  53 -----------------
+ drivers/net/wireless/mediatek/mt76/usb.c                                   |   2 +-
+ 73 files changed, 1685 insertions(+), 2088 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Kconfig
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mac.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02.h
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_dfs.h => mt76x02_dfs.h} (76%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_trace.c => mt76x02_trace.c} (97%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_trace.h => mt76x02_trace.h} (86%)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x02_util.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/Makefile
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_debugfs.c => mt76x2/debugfs.c} (92%)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/dfs.h
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_eeprom.c => mt76x2/eeprom.c} (91%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_eeprom.h => mt76x2/eeprom.h} (83%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_init_common.c => mt76x2/init.c} (95%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_common.c => mt76x2/mac.c} (53%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_dma.c => mt76x2/mac.h} (59%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_mcu_common.c => mt76x2/mcu.c} (90%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_mcu.h => mt76x2/mcu.h} (93%)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2.h
+ rename drivers/net/wireless/mediatek/mt76/{ => mt76x2}/mt76x2u.h (55%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_pci.c => mt76x2/pci.c} (93%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_dfs.c => mt76x2/pci_dfs.c} (84%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_init.c => mt76x2/pci_init.c} (87%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_mac.c => mt76x2/pci_mac.c} (66%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_main.c => mt76x2/pci_main.c} (91%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_mcu.c => mt76x2/pci_mcu.c} (95%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_phy.c => mt76x2/pci_phy.c} (92%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_tx.c => mt76x2/pci_tx.c} (75%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_phy_common.c => mt76x2/phy.c} (82%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2_usb.c => mt76x2/usb.c} (95%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2u_init.c => mt76x2/usb_init.c} (88%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2u_mac.c => mt76x2/usb_mac.c} (94%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2u_main.c => mt76x2/usb_main.c} (92%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2u_mcu.c => mt76x2/usb_mcu.c} (93%)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2u_phy.c => mt76x2/usb_phy.c} (94%)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_core.c
