@@ -2,112 +2,101 @@ Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 127E6C00449
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 06:00:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21605C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 07:20:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAFCB20834
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 06:00:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VutF82Yf";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fobbn11v"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CAFCB20834
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id D1EC720875
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 07:20:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D1EC720875
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727670AbeJEM5m (ORCPT
+        id S1728210AbeJEOSR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 08:57:42 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59566 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726979AbeJEM5m (ORCPT
+        Fri, 5 Oct 2018 10:18:17 -0400
+Received: from gateway21.websitewelcome.com ([192.185.45.176]:39249 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727768AbeJEOSR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 08:57:42 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CA294607A2; Fri,  5 Oct 2018 06:00:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538719231;
-        bh=474H3jlSxufe7PU2oyiGaC4NdtYROAR5gCLVpkM1Qt0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=VutF82YfsAuwLVFZdoTqeTzL3mjLMHtY1SnTxxTVOwEMnuEfCn+PeVZja6aNPBd8X
-         ev856jq03Ql7GoXII7L+tKBd1rm5CCzEi19NuvsGwjujnZ9cljYSUVlWVpyeNGHLNH
-         rHUMRPifglYLJAUC9CIWYi6cALKttPGYaVHC6ISs=
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 05821607A2;
-        Fri,  5 Oct 2018 06:00:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538719231;
-        bh=474H3jlSxufe7PU2oyiGaC4NdtYROAR5gCLVpkM1Qt0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=fobbn11v6xZvTMa6TilnRrys/QSw4fLPr865YBCOwl1I9zSlMaJCweWb1D7rny75u
-         Em15Qlhf27i8Rt17ye/KOw8LYMu6T3bl2tW9uCKZZskuS5seYHK7YOF092GtX/2e5X
-         CWNrhSGU7sfzOEko/cqGiFDZzmh+Ue0RJz9GrMlk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 05821607A2
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Fri, 5 Oct 2018 10:18:17 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id 8D378400C745E
+        for <linux-wireless@vger.kernel.org>; Fri,  5 Oct 2018 02:20:52 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id 8KPsgKn5fBcCX8KPsgesJP; Fri, 05 Oct 2018 02:20:52 -0500
+X-Authority-Reason: nr=8
+Received: from 174.206.93.92.rev.sfr.net ([92.93.206.174]:32938 helo=embeddedor)
+        by gator4166.hostgator.com with esmtpa (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1g8KPr-002ehE-Ug; Fri, 05 Oct 2018 02:20:52 -0500
+Date:   Fri, 5 Oct 2018 09:20:50 +0200
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     Samuel Ortiz <sameo@linux.intel.com>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] NFC: pn533: mark expected switch fall-throughs
+Message-ID: <20181005072050.GA12182@embeddedor.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [RFC 2/2] ath10k: Add QCA vendor command/attr support to
- filterneighbor BSS frames
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1530791512-6915-3-git-send-email-periyasa@codeaurora.org>
-References: <1530791512-6915-3-git-send-email-periyasa@codeaurora.org>
-To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>,
-        johannes@sipsolutions.net
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181005060031.CA294607A2@smtp.codeaurora.org>
-Date:   Fri,  5 Oct 2018 06:00:31 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 92.93.206.174
+X-Source-L: No
+X-Exim-ID: 1g8KPr-002ehE-Ug
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 174.206.93.92.rev.sfr.net (embeddedor) [92.93.206.174]:32938
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 11
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-> Add operations to allow an AP to capture frames from stations that
-> are active on the operating channel, but not associated to the current AP.
-> Operations include add/delete the filter and get the statistics
-> information of the unassociated stations.
-> 
-> User can able to add/delete two type of filters,
-> 	1. BSSID
-> 	2. STA MAC address
-> 
-> BSSID filter achieved by HW through vdev_set_neighbor_rx_param WMI command.
-> Local device able to capture all frames of the specified BSS using the above
-> WMI command. STA filter achieved by SW through RX addr2 matching with
-> unassociated station rhash table list keyed by MAC address. rhash table used
-> for efficient search. rhash table can grow/shrink by the add/delete STA
-> filter request.
-> 
-> Hardware tested: QCA9984, QCA4019 and QCA9888
-> Firmware tested: 10.4-3.6-xxxxx
-> 
-> NOTE: Tested with debug firmware
-> 
-> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Addresses-Coverity-ID: 1230487 ("Missing break in switch")
+Addresses-Coverity-ID: 1230488 ("Missing break in switch")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/nfc/pn533/pn533.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-So I'm not sure what to do with this. A bpf type of filtering system in
-mac80211 would be nice but then again we cannot benefit from HW offloading.
-Johannes, what do you think?
-
-Here are the full patches:
-
-https://patchwork.kernel.org/patch/10508821/
-
-https://patchwork.kernel.org/patch/10508823/
-
+diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
+index a0cc1cc..5961f14 100644
+--- a/drivers/nfc/pn533/pn533.c
++++ b/drivers/nfc/pn533/pn533.c
+@@ -2147,6 +2147,7 @@ static int pn533_transceive(struct nfc_dev *nfc_dev,
+ 
+ 			break;
+ 		}
++		/* fall through */
+ 	default:
+ 		/* jumbo frame ? */
+ 		if (skb->len > PN533_CMD_DATAEXCH_DATA_MAXLEN) {
+@@ -2273,6 +2274,7 @@ static void pn533_wq_mi_recv(struct work_struct *work)
+ 
+ 			break;
+ 		}
++		/* fall through */
+ 	default:
+ 		skb_put_u8(skb, 1); /*TG*/
+ 
 -- 
-https://patchwork.kernel.org/patch/10508823/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
 
