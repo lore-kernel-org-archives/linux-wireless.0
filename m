@@ -2,133 +2,82 @@ Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B40D7C64EB8
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 02:33:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B223C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 04:04:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72FBE2084D
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 02:33:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 72FBE2084D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	by mail.kernel.org (Postfix) with ESMTP id EF9832084D
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 04:04:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EF9832084D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727506AbeJEJ3m (ORCPT
+        id S1727693AbeJELBM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 05:29:42 -0400
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:19372 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726865AbeJEJ3m (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 05:29:42 -0400
-X-IronPort-AV: E=Sophos;i="5.54,342,1534834800"; 
-   d="scan'208";a="21182432"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 04 Oct 2018 19:33:09 -0700
-Received: from ajaysk-VirtualBox (10.10.76.4) by CHN-SV-EXCH01.mchp-main.com
- (10.10.76.37) with Microsoft SMTP Server id 14.3.352.0; Thu, 4 Oct 2018
- 19:33:08 -0700
-Date:   Fri, 5 Oct 2018 08:03:00 +0530
-From:   Ajay Singh <ajay.kathat@microchip.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Nicolas Ferre - M43238" <Nicolas.Ferre@microchip.com>,
-        Ganesh Krishna - C00112 <Ganesh.Krishna@microchip.com>,
-        Adham Abozaeid - C43058 <Adham.Abozaeid@microchip.com>,
-        Aditya Shankar - I16078 <Aditya.Shankar@microchip.com>
-Subject: Re: feedback on mainlining wilc1000 staging driver
-Message-ID: <20181005080300.5030f616@ajaysk-VirtualBox>
-In-Reply-To: <871s953nhu.fsf@codeaurora.org>
-References: <20180816015243.545cd009@ajaysk-VirtualBox>
-        <87sh3etwoj.fsf@purkki.adurom.net>
-        <87o9e2twe9.fsf@purkki.adurom.net>
-        <20180817100233.7f1c00d9@ajaysk-VirtualBox>
-        <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
-        <5B768574.6060009@broadcom.com>
-        <87y3d5tmod.fsf@kamboji.qca.qualcomm.com>
-        <20180817143911.5f0ee545@ajaysk-VirtualBox>
-        <87r2ipnxxa.fsf@kamboji.qca.qualcomm.com>
-        <20180926155743.032caa37@ajaysk-VirtualBox>
-        <871s953nhu.fsf@codeaurora.org>
-Organization: Microchip Technology
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Fri, 5 Oct 2018 07:01:12 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:59759 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726844AbeJELBL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Oct 2018 07:01:11 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id EB25BB11B0350;
+        Fri,  5 Oct 2018 12:04:19 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.399.0; Fri, 5 Oct 2018 12:04:12 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Colin Ian King <colin.king@canonical.com>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] b43: remove set but not used variable 'wl'
+Date:   Fri, 5 Oct 2018 04:15:45 +0000
+Message-ID: <1538712945-141866-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-On Thu, 4 Oct 2018 15:27:57 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
+drivers/net/wireless/broadcom/b43/main.c: In function 'b43_one_core_detach':
+drivers/net/wireless/broadcom/b43/main.c:5496:17: warning:
+ variable 'wl' set but not used [-Wunused-but-set-variable]
+ 
+After commit 644aa4d62096 ("b43: remove list of IEEE 802.11 devices")
+'wl' is not used any more.
 
-> Ajay Singh <ajay.kathat@microchip.com> writes:
-> 
-> > Hi Kalle,
-> >
-> > On Thu, 23 Aug 2018 16:37:45 +0530
-> > Kalle Valo <kvalo@codeaurora.org> wrote:
-> >
-> >> Ajay Singh <ajay.kathat@microchip.com> writes:
-> >> 
-> >> >> >>> We need help to review and identify if there are any pending
-> >> >> >>> items for wilc1000 driver, so we can address those issues
-> >> >> >>> and make it ready to move to the wireless subsystem.    
-> >> >> >>
-> >> >> >> I think the best way to get that forward is to submit a patch
-> >> >> >> (or patchset) to linux-wireless, that's the easiest for
-> >> >> >> reviewers.    
-> >> >> >
-> >> >> > For brcm80211 drivers we used a single patch introducing it
-> >> >> > under the wireless drivers folder. Because it was quite a
-> >> >> > sizable patch we parked it on the wireless wiki page. Had a
-> >> >> > few iterations doing it like that.    
-> >> >> 
-> >> >> Another option is to split it so that there's one patch per
-> >> >> file, should be even pretty easy to automate that. It's just so
-> >> >> much easier to comment on a patch submitted by email compared
-> >> >> to the reviewer manually copying code and then commenting it,
-> >> >> yuck. 
-> >> >
-> >> > Sure. I will prepare a patch per file send for review as its
-> >> > easy to review.
-> >> >
-> >> > As Greg suggested, I will wait for the merge window to close and
-> >> > after completing pending patches to staging, I will start the
-> >> > review.
-> >> >
-> >> > For my understanding, the patches for review will be based on
-> >> > wireless-testing branch.  
-> >> 
-> >> In this case I think wireless-drivers-next is the safest choise,
-> >> wireless-testing also has other trees which might cause conflicts
-> >> etc.
-> >
-> > I have submitted a patch series for wilc1000 driver, single file
-> > per patch and its based on wireless-drivers-next. 
-> > I hope its done correctly, please provide inputs so we can
-> > address and make this driver ready for mainline.
-> 
-> Thanks, I see it in patchwork:
-> 
-> https://patchwork.kernel.org/project/linux-wireless/list/?series=23251&state=*&order=date
-> 
-> Do note that we have also another new driver (rtwlan/rtw88) under
-> review so review from the wireless folks might take some time.
-> 
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/broadcom/b43/main.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks for the update.
-Btw I could see our driver was added to the pending branch. Just
-curious, could you please share details about how the pending branch is
-used ?
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index 4daa1ce..74be3c8 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -5493,13 +5493,11 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
+ static void b43_one_core_detach(struct b43_bus_dev *dev)
+ {
+ 	struct b43_wldev *wldev;
+-	struct b43_wl *wl;
+ 
+ 	/* Do not cancel ieee80211-workqueue based work here.
+ 	 * See comment in b43_remove(). */
+ 
+ 	wldev = b43_bus_get_wldev(dev);
+-	wl = wldev->wl;
+ 	b43_debugfs_remove_device(wldev);
+ 	b43_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
 
-Regards,
-Ajay
