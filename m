@@ -4,39 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB8E5C65BBA
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 19:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0293C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 19:16:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE02A21473
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 19:14:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BE02A21473
+	by mail.kernel.org (Postfix) with ESMTP id 5B82C2084D
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 19:16:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5B82C2084D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728802AbeJFCOs (ORCPT
+        id S1728278AbeJFCQK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 22:14:48 -0400
-Received: from gateway33.websitewelcome.com ([192.185.145.23]:37342 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728147AbeJFCOs (ORCPT
+        Fri, 5 Oct 2018 22:16:10 -0400
+Received: from gateway34.websitewelcome.com ([192.185.148.109]:21302 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728042AbeJFCQK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 22:14:48 -0400
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 4947D2B352
-        for <linux-wireless@vger.kernel.org>; Fri,  5 Oct 2018 14:14:41 -0500 (CDT)
+        Fri, 5 Oct 2018 22:16:10 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id EA0CF225B327
+        for <linux-wireless@vger.kernel.org>; Fri,  5 Oct 2018 14:16:03 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id 8VYfg86ljaSey8VYfgV1A4; Fri, 05 Oct 2018 14:14:41 -0500
+        id 8VZzgRuKjSjJA8VZzgzjAS; Fri, 05 Oct 2018 14:16:03 -0500
 X-Authority-Reason: nr=8
-Received: from 174.206.93.92.rev.sfr.net ([92.93.206.174]:53710 helo=[192.168.43.69])
+Received: from 174.206.93.92.rev.sfr.net ([92.93.206.174]:53750 helo=[192.168.43.69])
         by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1g8VYe-000HT9-J7; Fri, 05 Oct 2018 14:14:40 -0500
+        id 1g8VZx-000I9Z-Gr; Fri, 05 Oct 2018 14:16:02 -0500
 Subject: Re: [PATCH] ath10k: htt_rx: Fix signedness bug in
  ath10k_update_per_peer_tx_stats
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 To:     Ben Greear <greearb@candelatech.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>
@@ -44,7 +45,7 @@ Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20181005184245.GA11700@embeddedor.com>
  <3a55bec6-d20d-f500-e741-b228a86b7117@candelatech.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+ <dd75a8aa-b87c-e325-cc1d-a0efe3664a32@embeddedor.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
  xsFNBFssHAwBEADIy3ZoPq3z5UpsUknd2v+IQud4TMJnJLTeXgTf4biSDSrXn73JQgsISBwG
@@ -89,12 +90,12 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
  GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
  VtSixD1uOgytAP7RWS474w==
-Message-ID: <dd75a8aa-b87c-e325-cc1d-a0efe3664a32@embeddedor.com>
-Date:   Fri, 5 Oct 2018 21:14:27 +0200
+Message-ID: <fcc51fdd-fc31-9d2c-2e68-4ceecbb86129@embeddedor.com>
+Date:   Fri, 5 Oct 2018 21:15:49 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.2.1
 MIME-Version: 1.0
-In-Reply-To: <3a55bec6-d20d-f500-e741-b228a86b7117@candelatech.com>
+In-Reply-To: <dd75a8aa-b87c-e325-cc1d-a0efe3664a32@embeddedor.com>
 Content-Type: text/plain; charset=windows-1252
 Content-Language: en-GB
 Content-Transfer-Encoding: 8bit
@@ -106,13 +107,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 92.93.206.174
 X-Source-L: No
-X-Exim-ID: 1g8VYe-000HT9-J7
+X-Exim-ID: 1g8VZx-000I9Z-Gr
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: 174.206.93.92.rev.sfr.net ([192.168.43.69]) [92.93.206.174]:53710
+X-Source-Sender: 174.206.93.92.rev.sfr.net ([192.168.43.69]) [92.93.206.174]:53750
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 5
+X-Email-Count: 12
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -122,67 +123,73 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 10/5/18 9:09 PM, Ben Greear wrote:
-> On 10/05/2018 11:42 AM, Gustavo A. R. Silva wrote:
->> Currently, the error handling for the call to function
->> ath10k_get_legacy_rate_idx() doesn't work because
->> *rate_idx* is of type u8 (8 bits, unsigned), which
->> makes it impossible for it to hold a value less
->> than 0.
->>
->> Fix this by changing the type of variable *rate_idx*
->> to s8 (8 bits, signed).
-> 
-> There are more than 127 rates, are you sure this is doing
-> what you want?
-> 
-
-Based on the following function, rate_idx can only hold values from 0 to 11
-
-static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
-{
-        static const u8 legacy_rates[] = {1, 2, 5, 11, 6, 9, 12,
-                                          18, 24, 36, 48, 54};
-        int i;
-
-        for (i = 0; i < ARRAY_SIZE(legacy_rates); i++) {
-                if (rate == legacy_rates[i])
-                        return i;
-        }
-
-        ath10k_warn(ar, "Invalid legacy rate %hhd peer stats", rate);
-        return -EINVAL;
-}
-
-Thanks
---
-Gustavo
-
-> Thanks,
-> Ben
-> 
->>
->> Addresses-Coverity-ID: 1473914 ("Unsigned compared against 0")
->> Fixes: 0189dbd71cbd ("ath10k: get the legacy rate index to update the txrate table")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> index f240525..edd0e74 100644
->> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->> @@ -2753,7 +2753,8 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
->>                  struct ath10k_per_peer_tx_stats *peer_stats)
->>  {
->>      struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
->> -    u8 rate = 0, rate_idx = 0, sgi;
->> +    u8 rate = 0, sgi;
->> +    s8 rate_idx = 0;
->>      struct rate_info txrate;
->>
->>      lockdep_assert_held(&ar->data_lock);
->>
+On 10/5/18 9:14 PM, Gustavo A. R. Silva wrote:
 > 
 > 
+> On 10/5/18 9:09 PM, Ben Greear wrote:
+>> On 10/05/2018 11:42 AM, Gustavo A. R. Silva wrote:
+>>> Currently, the error handling for the call to function
+>>> ath10k_get_legacy_rate_idx() doesn't work because
+>>> *rate_idx* is of type u8 (8 bits, unsigned), which
+>>> makes it impossible for it to hold a value less
+>>> than 0.
+>>>
+>>> Fix this by changing the type of variable *rate_idx*
+>>> to s8 (8 bits, signed).
+>>
+>> There are more than 127 rates, are you sure this is doing
+>> what you want?
+>>
+> 
+> Based on the following function, rate_idx can only hold values from 0 to 11
+> 
+
+... and of course -EINVAL too
+
+> static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
+> {
+>         static const u8 legacy_rates[] = {1, 2, 5, 11, 6, 9, 12,
+>                                           18, 24, 36, 48, 54};
+>         int i;
+> 
+>         for (i = 0; i < ARRAY_SIZE(legacy_rates); i++) {
+>                 if (rate == legacy_rates[i])
+>                         return i;
+>         }
+> 
+>         ath10k_warn(ar, "Invalid legacy rate %hhd peer stats", rate);
+>         return -EINVAL;
+> }
+> 
+> Thanks
+> --
+> Gustavo
+> 
+>> Thanks,
+>> Ben
+>>
+>>>
+>>> Addresses-Coverity-ID: 1473914 ("Unsigned compared against 0")
+>>> Fixes: 0189dbd71cbd ("ath10k: get the legacy rate index to update the txrate table")
+>>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> index f240525..edd0e74 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> @@ -2753,7 +2753,8 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+>>>                  struct ath10k_per_peer_tx_stats *peer_stats)
+>>>  {
+>>>      struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+>>> -    u8 rate = 0, rate_idx = 0, sgi;
+>>> +    u8 rate = 0, sgi;
+>>> +    s8 rate_idx = 0;
+>>>      struct rate_info txrate;
+>>>
+>>>      lockdep_assert_held(&ar->data_lock);
+>>>
+>>
+>>
