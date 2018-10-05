@@ -6,38 +6,37 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED4B0C00449
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 09:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B30C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 09:56:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EFED20652
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 09:56:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A90120652
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 09:56:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Bb0mMgao"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9EFED20652
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HFhbOL9X"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0A90120652
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727711AbeJEQyg (ORCPT
+        id S1727734AbeJEQyw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 12:54:36 -0400
-Received: from nbd.name ([46.4.11.11]:53076 "EHLO nbd.name"
+        Fri, 5 Oct 2018 12:54:52 -0400
+Received: from nbd.name ([46.4.11.11]:53096 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727036AbeJEQyg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 12:54:36 -0400
+        id S1727036AbeJEQyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Oct 2018 12:54:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=X1vYD0kClKDgw2q2xRkyXMtLl3tgIO2mrlcRuwfD+WQ=; b=Bb0mMgaobI42runyqK3rQY8ZQQ
-        iFx3SLL3UCoydNQcd7lw3K9duvW60jXQbNkbW4Ipa2YPXqin2tFGoe3LYYqQWINrRZAV0mTBN7K4o
-        iE3ZpfyJUwU1zXLnOB+IBwFqZtf8sTywQnclq2d7paXvG4m15TBYUywQVog4dQmjF2FU=;
-Subject: Re: [PATCH v2 00/10] unify rxwi parsing between mt76x0 and mt76x2
- drivers
+        bh=UKLobnRSNu6aS8N6ai3gCt2l949iQ7BIxxnOfNS+LRw=; b=HFhbOL9XgV6yr+l/P3WizUDLO0
+        9NbP2Wnv/0xe01cIQSC93RjDWhBJheOBucz1eP+4NTJaWFhmHQemzpXaWzN1Xim2SFWMB29nGu3dM
+        IGqN4QSrT3eTU3wk9JrVtrdYFrhjJDM3qeDKiF8eiR1cQyKfaqNS/vjPWSIPGtXKU6f0=;
+Subject: Re: [PATCH v2 0/3] split code in mt76x02_util.{c,h}
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <20181004215312.3094-1-lorenzo.bianconi@redhat.com>
+References: <cover.1538726002.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <0593ab38-d865-c54b-9962-c3b42751e414@nbd.name>
-Date:   Fri, 5 Oct 2018 11:56:32 +0200
+Message-ID: <cdd5b28e-bcd2-fafc-176b-644333084366@nbd.name>
+Date:   Fri, 5 Oct 2018 11:56:48 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <20181004215312.3094-1-lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1538726002.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,11 +76,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-04 23:53, Lorenzo Bianconi wrote:
-> Merge mt76x0_dev and mt76x2_dev in mt76x02_dev and remove duplicated code.
-> Move mt76x02_mac_process_rx routine in mt76x02-lib module in order to
-> unify rxwi parsing between mt76x0 and mt76x2 drivers.
-> Move mt76x02_tx in mt76x02-lib module and remove duplicated code
+On 2018-10-05 10:00, Lorenzo Bianconi wrote:
+> Move shared tx/rx code in mt76x02_txrx.c. Moreover rename
+> mt76x02_util.h in mt76x02.h since now it contains most
+> relevant mt76x02 data structures
+
 Merged, thanks.
 
 - Felix
