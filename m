@@ -1,94 +1,134 @@
-Return-Path: <SRS0=EqeY=MQ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C4C5C64EB8
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 23:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B40D7C64EB8
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 02:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2557420645
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Oct 2018 23:51:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p1eq6gDY"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2557420645
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 72FBE2084D
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 02:33:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 72FBE2084D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726078AbeJEGro (ORCPT
+        id S1727506AbeJEJ3m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 02:47:44 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:35060 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725788AbeJEGro (ORCPT
+        Fri, 5 Oct 2018 05:29:42 -0400
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:19372 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726865AbeJEJ3m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 02:47:44 -0400
-Received: by mail-wr1-f68.google.com with SMTP id w5-v6so11700009wrt.2
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Oct 2018 16:51:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Ov8zJcIKjYSgobL+Z+SbfiUp9GE/rSOO9O6m++fQAhA=;
-        b=p1eq6gDY0A/NkDL5ksq/v7MasXCdZhvudosoY+dtL7LBi4SzPmXpef6I19w+5zPoSo
-         +5czdrYKwkvuCdiqFuQHpvFoT1q9FOI/OR5kMEk6zQiF+8c3DFvTKzj8HmXxhOj6GQGk
-         Hz81xPipzsgQ4LLph9pZJV4beBQ373mifW9/UwXTC5HQA+uj0DsDKH5bR+W8tBH34XvY
-         1amUNNgf3baIRWXGvN/vaaMLPmFOpq/BYw3fDov3V9NhVJAaf5exZQDYQ9mUnaxV4Ojd
-         adBtDxvV6zEdJV4wWITViJ0OPcFT172HukHBBdoQVeTHNvJ30uPMI8VkHk/o1TQuX3xm
-         Qx+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Ov8zJcIKjYSgobL+Z+SbfiUp9GE/rSOO9O6m++fQAhA=;
-        b=TzmjnYcQpJUMyowH5819VqJcMVxcI8/fhzadEl4vsrJJe+dfuxknqfNm5aDb5VbCai
-         UsEcLOBbZJs+Cm66q/YPaEpBbd7MppVVv61G3nPuD+dk6MOWHF0dxOohUtdBr5Hupr5h
-         HCPNdaZnfn1+Moxk/c840WKDk1ohkxunjBrZtFybz6dC4kc4MNB65SFnewzNkK7gVXV/
-         9FRfwzewvgGIb01yGTxsLhXBR8Xej4SyppFgmXKeBMXRggHWUnmMNaAhHVgCLDVKJ/mH
-         8qrMMGHXRtpRHqy2grZuzrJ3cNrbF5GTAWn94dItq5PrFgNd/KSx3jdViuwOUcsAFRT7
-         miTQ==
-X-Gm-Message-State: ABuFfoh70dl0Qda9DFaw4vg7Tmc5St72BUgcAIRNHH/QO3ijIV5+nmwD
-        FnhTzMgZoDFc36TwevyBNhI=
-X-Google-Smtp-Source: ACcGV615SIYtWivJQ6GFIn5CQGjS9stDWyVrv7e0DIrhPrGD8njGk1cgaZzBFrNtZEDrJ1ITlRLLpw==
-X-Received: by 2002:adf:e58e:: with SMTP id l14-v6mr6416328wrm.321.1538697108916;
-        Thu, 04 Oct 2018 16:51:48 -0700 (PDT)
-Received: from localhost.localdomain ([31.147.208.18])
-        by smtp.googlemail.com with ESMTPSA id a105-v6sm12071029wrc.23.2018.10.04.16.51.48
-        (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Thu, 04 Oct 2018 16:51:48 -0700 (PDT)
-From:   =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To:     sgruszka@redhat.com
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/5] rt2800mmio txdone/interrupts/flush rework
-Date:   Fri,  5 Oct 2018 01:51:42 +0200
-Message-Id: <1538697102-3764-1-git-send-email-pozega.tomislav@gmail.com>
-X-Mailer: git-send-email 1.7.0.4
-In-Reply-To: <1537957497-7790-1-git-send-email-sgruszka@redhat.com>
-References: <1537957497-7790-1-git-send-email-sgruszka@redhat.com>
+        Fri, 5 Oct 2018 05:29:42 -0400
+X-IronPort-AV: E=Sophos;i="5.54,342,1534834800"; 
+   d="scan'208";a="21182432"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 04 Oct 2018 19:33:09 -0700
+Received: from ajaysk-VirtualBox (10.10.76.4) by CHN-SV-EXCH01.mchp-main.com
+ (10.10.76.37) with Microsoft SMTP Server id 14.3.352.0; Thu, 4 Oct 2018
+ 19:33:08 -0700
+Date:   Fri, 5 Oct 2018 08:03:00 +0530
+From:   Ajay Singh <ajay.kathat@microchip.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Nicolas Ferre - M43238" <Nicolas.Ferre@microchip.com>,
+        Ganesh Krishna - C00112 <Ganesh.Krishna@microchip.com>,
+        Adham Abozaeid - C43058 <Adham.Abozaeid@microchip.com>,
+        Aditya Shankar - I16078 <Aditya.Shankar@microchip.com>
+Subject: Re: feedback on mainlining wilc1000 staging driver
+Message-ID: <20181005080300.5030f616@ajaysk-VirtualBox>
+In-Reply-To: <871s953nhu.fsf@codeaurora.org>
+References: <20180816015243.545cd009@ajaysk-VirtualBox>
+        <87sh3etwoj.fsf@purkki.adurom.net>
+        <87o9e2twe9.fsf@purkki.adurom.net>
+        <20180817100233.7f1c00d9@ajaysk-VirtualBox>
+        <8736vdv3f5.fsf@kamboji.qca.qualcomm.com>
+        <5B768574.6060009@broadcom.com>
+        <87y3d5tmod.fsf@kamboji.qca.qualcomm.com>
+        <20180817143911.5f0ee545@ajaysk-VirtualBox>
+        <87r2ipnxxa.fsf@kamboji.qca.qualcomm.com>
+        <20180926155743.032caa37@ajaysk-VirtualBox>
+        <871s953nhu.fsf@codeaurora.org>
+Organization: Microchip Technology
+X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi
+Hi Kalle,
 
-As suspected this changeset causes throughput regression.
+On Thu, 4 Oct 2018 15:27:57 +0300
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-Below screenshots show iperf test from MS150N (RF5370) device connected to RT3070 adapter running AP mode:
+> Ajay Singh <ajay.kathat@microchip.com> writes:
+> 
+> > Hi Kalle,
+> >
+> > On Thu, 23 Aug 2018 16:37:45 +0530
+> > Kalle Valo <kvalo@codeaurora.org> wrote:
+> >
+> >> Ajay Singh <ajay.kathat@microchip.com> writes:
+> >> 
+> >> >> >>> We need help to review and identify if there are any pending
+> >> >> >>> items for wilc1000 driver, so we can address those issues
+> >> >> >>> and make it ready to move to the wireless subsystem.    
+> >> >> >>
+> >> >> >> I think the best way to get that forward is to submit a patch
+> >> >> >> (or patchset) to linux-wireless, that's the easiest for
+> >> >> >> reviewers.    
+> >> >> >
+> >> >> > For brcm80211 drivers we used a single patch introducing it
+> >> >> > under the wireless drivers folder. Because it was quite a
+> >> >> > sizable patch we parked it on the wireless wiki page. Had a
+> >> >> > few iterations doing it like that.    
+> >> >> 
+> >> >> Another option is to split it so that there's one patch per
+> >> >> file, should be even pretty easy to automate that. It's just so
+> >> >> much easier to comment on a patch submitted by email compared
+> >> >> to the reviewer manually copying code and then commenting it,
+> >> >> yuck. 
+> >> >
+> >> > Sure. I will prepare a patch per file send for review as its
+> >> > easy to review.
+> >> >
+> >> > As Greg suggested, I will wait for the merge window to close and
+> >> > after completing pending patches to staging, I will start the
+> >> > review.
+> >> >
+> >> > For my understanding, the patches for review will be based on
+> >> > wireless-testing branch.  
+> >> 
+> >> In this case I think wireless-drivers-next is the safest choise,
+> >> wireless-testing also has other trees which might cause conflicts
+> >> etc.
+> >
+> > I have submitted a patch series for wilc1000 driver, single file
+> > per patch and its based on wireless-drivers-next. 
+> > I hope its done correctly, please provide inputs so we can
+> > address and make this driver ready for mainline.
+> 
+> Thanks, I see it in patchwork:
+> 
+> https://patchwork.kernel.org/project/linux-wireless/list/?series=23251&state=*&order=date
+> 
+> Do note that we have also another new driver (rtwlan/rtw88) under
+> review so review from the wireless folks might take some time.
+> 
 
-This is with standard openwrt build without any rt2x00 changes:
+Thanks for the update.
+Btw I could see our driver was added to the pending branch. Just
+curious, could you please share details about how the pending branch is
+used ?
 
-[url=https://postimg.cc/BtYQLf6r][img]https://i.postimg.cc/BtYQLf6r/shot-2018-10-04_17-23-56.jpg[/img][/url]
-
-And this printscreen show iperf test with your changes:
-
-[url=https://postimg.cc/D8Sf1p48][img]https://i.postimg.cc/D8Sf1p48/shot-2018-10-04_17-42-09.jpg[/img][/url]
-
-Atheros card connected to RT3070 iperf test difference was negligible (1Mbps or less) on bodhi system, but
-it started to throw out reorder messages on my standard ubuntu after your changes:
-
-[url=https://postimg.cc/SjJbP2SP][img]https://i.postimg.cc/SjJbP2SP/Screenshot.png[/img][/url]
-
-My advice: stop sending low-quality patches and do some testing before submission.
+Regards,
+Ajay
