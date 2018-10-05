@@ -2,108 +2,87 @@ Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D7BC65BA7
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C431C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 11:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95F78206B2
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:56:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 95F78206B2
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id B1AC3206B2
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 11:04:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VnhdIbi8";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Y/Rwb8cL"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B1AC3206B2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727965AbeJERyY (ORCPT
+        id S1727845AbeJESDE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 13:54:24 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:54914 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727974AbeJERyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 13:54:24 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 8BF3DF554DC26;
-        Fri,  5 Oct 2018 18:56:00 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.399.0; Fri, 5 Oct 2018 18:55:55 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     Maya Erez <merez@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>
-CC:     YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>, <wil6210@qti.qualcomm.com>,
-        <kernel-janitors@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH] wil6210: fix debugfs_simple_attr.cocci warnings
-Date:   Fri, 5 Oct 2018 11:07:26 +0000
-Message-ID: <1538737646-118337-1-git-send-email-yuehaibing@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+        Fri, 5 Oct 2018 14:03:04 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:45494 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727581AbeJESDE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Oct 2018 14:03:04 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 392D66079C; Fri,  5 Oct 2018 11:04:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538737487;
+        bh=lw/cJP7gEoDa1aLjzfVI5aIFss4J699VTwAh2hN2AIU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=VnhdIbi8Gw/XszCUZtvPQQFj36WbGAAKQAKO69h/W5WFUO1YcMFOqIK/ftTgOjyB7
+         P6Uu2K0TUUmOuXYTPQ8uQWoYct9cEIZtpaJaPV1lzahv7lwhYg7zBlYtrG38NWrtGT
+         h/+a0Y/fII7AeME1gUOJ2WCZDD6sz85SXtBGQ4to=
+Received: from x230.qca.qualcomm.com (37-33-66-17.bb.dnainternet.fi [37.33.66.17])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0FD166053D;
+        Fri,  5 Oct 2018 11:04:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538737486;
+        bh=lw/cJP7gEoDa1aLjzfVI5aIFss4J699VTwAh2hN2AIU=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Y/Rwb8cLnWCXcg+BW1AtAZE9s0b7AW4KFmiwLCoZZ0nXRSm/86BciZ9yXFQiaoM+J
+         sGvqbX+G1ZbJQQneIqzDqBBlYiDS5Yk+duKrA4QelKkhvxin+AfMNOg6W057qCNHYQ
+         LZMvO4RBNUymszV6xpQZUAi+ukZY88lTMEiAvBn0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0FD166053D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     Maya Erez <merez@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <wil6210@qti.qualcomm.com>, <kernel-janitors@vger.kernel.org>,
+        <netdev@vger.kernel.org>
+Subject: Re: [PATCH] wil6210: fix debugfs_simple_attr.cocci warnings
+References: <1538737646-118337-1-git-send-email-yuehaibing@huawei.com>
+Date:   Fri, 05 Oct 2018 14:04:42 +0300
+In-Reply-To: <1538737646-118337-1-git-send-email-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Fri, 5 Oct 2018 11:07:26 +0000")
+Message-ID: <877eiw1wol.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use DEFINE_DEBUGFS_ATTRIBUTE rather than DEFINE_SIMPLE_ATTRIBUTE
-for debugfs files.
+YueHaibing <yuehaibing@huawei.com> writes:
 
-Semantic patch information:
-Rationale: DEFINE_SIMPLE_ATTRIBUTE + debugfs_create_file()
-imposes some significant overhead as compared to
-DEFINE_DEBUGFS_ATTRIBUTE + debugfs_create_file_unsafe().
+> Use DEFINE_DEBUGFS_ATTRIBUTE rather than DEFINE_SIMPLE_ATTRIBUTE
+> for debugfs files.
+>
+> Semantic patch information:
+> Rationale: DEFINE_SIMPLE_ATTRIBUTE + debugfs_create_file()
+> imposes some significant overhead as compared to
+> DEFINE_DEBUGFS_ATTRIBUTE + debugfs_create_file_unsafe().
+>
+> Generated by: scripts/coccinelle/api/debugfs/debugfs_simple_attr.cocci
 
-Generated by: scripts/coccinelle/api/debugfs/debugfs_simple_attr.cocci
+Just out of curiosity, what kind of overhead are we talking about here?
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 66ffae2..aa50813 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -416,8 +416,8 @@ static int wil_debugfs_iomem_x32_get(void *data, u64 *val)
- 	return 0;
- }
- 
--DEFINE_SIMPLE_ATTRIBUTE(fops_iomem_x32, wil_debugfs_iomem_x32_get,
--			wil_debugfs_iomem_x32_set, "0x%08llx\n");
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_iomem_x32, wil_debugfs_iomem_x32_get,
-+			 wil_debugfs_iomem_x32_set, "0x%08llx\n");
- 
- static struct dentry *wil_debugfs_create_iomem_x32(const char *name,
- 						   umode_t mode,
-@@ -432,7 +432,8 @@ static struct dentry *wil_debugfs_create_iomem_x32(const char *name,
- 	data->wil = wil;
- 	data->offset = value;
- 
--	file = debugfs_create_file(name, mode, parent, data, &fops_iomem_x32);
-+	file = debugfs_create_file_unsafe(name, mode, parent, data,
-+					  &fops_iomem_x32);
- 	if (!IS_ERR_OR_NULL(file))
- 		wil->dbg_data.iomem_data_count++;
- 
-@@ -451,14 +452,15 @@ static int wil_debugfs_ulong_get(void *data, u64 *val)
- 	return 0;
- }
- 
--DEFINE_SIMPLE_ATTRIBUTE(wil_fops_ulong, wil_debugfs_ulong_get,
--			wil_debugfs_ulong_set, "0x%llx\n");
-+DEFINE_DEBUGFS_ATTRIBUTE(wil_fops_ulong, wil_debugfs_ulong_get,
-+			 wil_debugfs_ulong_set, "0x%llx\n");
- 
- static struct dentry *wil_debugfs_create_ulong(const char *name, umode_t mode,
- 					       struct dentry *parent,
- 					       ulong *value)
- {
--	return debugfs_create_file(name, mode, parent, value, &wil_fops_ulong);
-+	return debugfs_create_file_unsafe(name, mode, parent, value,
-+					  &wil_fops_ulong);
- }
- 
- /**
-
+-- 
+Kalle Valo
