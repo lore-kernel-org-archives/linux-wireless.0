@@ -2,51 +2,53 @@ Return-Path: <SRS0=2ErG=MR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F62C65BA9
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17270C00449
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DAA7B20645
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:11:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDE9E20645
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Oct 2018 10:12:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="xXYXQUoh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DAA7B20645
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="ngKeIVW1"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BDE9E20645
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728175AbeJERJx (ORCPT
+        id S1727758AbeJERKZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Oct 2018 13:09:53 -0400
-Received: from mail-eopbgr730079.outbound.protection.outlook.com ([40.107.73.79]:1696
-        "EHLO NAM05-DM3-obe.outbound.protection.outlook.com"
+        Fri, 5 Oct 2018 13:10:25 -0400
+Received: from mail-sn1nam01on0065.outbound.protection.outlook.com ([104.47.32.65]:3040
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727616AbeJERJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Oct 2018 13:09:53 -0400
+        id S1727354AbeJERKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Oct 2018 13:10:25 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UWNcrcZGMxXagv5p8mieH+yUzC6JS575msfJJpBHBGA=;
- b=xXYXQUohdMgIT1uF7eGEu5mLibn322+05BCqkH0tZCcyk1vdV4qolXmFEz7P1S12vXe14lJcP+NsbnUZmRN+BgW9rf5Z9gNK/CjxhKqsn75rkBcjsuHLLix+LVP3DZxRr2Ez2/FJv25upKvO0JexuSoic6U77UfweuU7uMCgGf8=
+ bh=JlSkaE+yQZLKAYzAsOTKaJjjSOUZfwInx8SvaA4kVY8=;
+ b=ngKeIVW1lbO2O/RIXLC9CH87blcE2xi6VE1V1nUpnHmMrr9XRxPIp3UETG8ef/VNnZlSndNUMgv4mQ6RVs0PdjdlmbUX2wJFd6ClBkMI2/KQLJri2lfhZXaIY3C2nVdy/CQfPeaVEUTDT5dIacgpupz9ln5InQxYmaxdUZ9VzqY=
 Received: from BYAPR05MB4597.namprd05.prod.outlook.com (52.135.233.18) by
  BYAPR05MB4439.namprd05.prod.outlook.com (52.135.203.13) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1207.13; Fri, 5 Oct 2018 10:11:42 +0000
+ 15.20.1207.13; Fri, 5 Oct 2018 10:11:45 +0000
 Received: from BYAPR05MB4597.namprd05.prod.outlook.com
  ([fe80::fc58:438:5b30:9373]) by BYAPR05MB4597.namprd05.prod.outlook.com
  ([fe80::fc58:438:5b30:9373%4]) with mapi id 15.20.1207.021; Fri, 5 Oct 2018
- 10:11:41 +0000
+ 10:11:45 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH v2 10/13] qtnfmac: add support for scan flush
-Thread-Topic: [PATCH v2 10/13] qtnfmac: add support for scan flush
-Thread-Index: AQHUXJPPPivQXcDrdEWD0AOO6N3x0g==
-Date:   Fri, 5 Oct 2018 10:11:41 +0000
-Message-ID: <20181005101114.3013-11-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH v2 12/13] qtnfmac: drop redundant data copy in control path
+Thread-Topic: [PATCH v2 12/13] qtnfmac: drop redundant data copy in control
+ path
+Thread-Index: AQHUXJPRg67aDI8ig0WVAbmEnxP4yQ==
+Date:   Fri, 5 Oct 2018 10:11:45 +0000
+Message-ID: <20181005101114.3013-13-sergey.matyukevich.os@quantenna.com>
 References: <20181005101114.3013-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20181005101114.3013-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -61,27 +63,27 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR05MB4439;6:+AwZFoaYAwjQ8Hqr0QwtkEqeoH4Ui78GtK31nTaUbw0YbqBD/Hl3bJ4mITz8tBwDosPPP8RFk9FphaFp6GbKPh2KpGixgbdcvFeTpZzptYNfWM8E/uphRk9mWd0ssEKU/QZYVxRXe0CHlA2BcOoe9/fe/afich3pF5z+0XVhZfD0YXTO9MzGC6conwy7PWaNiqINOZYhqET/RrJCFHaePaZpVcY0r6Y2rH2SN6NVpnpJN+ihOUr/uH1vqhhrfKcw50gY3U50FbTqGwFcu1NhNjU7NcdK1uQzwnYT1NFhX2KfpdImgtmyUfIl9WxsCHG2gafIulTqjToiUHHNX3tqWhVGUEI2iyvNB8Bfyog+O7H//Rlg15y0Apd5xlRcBzt1i2HoX2G2mTpr1+fAwj+n9CRd28eeQrERbytohX30QYZHULRzZ9Mdf+LwhdBlI6tbzFmu4ITdfYJCwUehf84PyQ==;5:2WNry/4OTma8wagEiuqo8wt/gjzu91YkRFloMPQBODX8epjLJIr+oEmXNuVg6ptj9wygE0AOdXnQ6onzD0kg6a0W9+BS2+pBJEkZog1ls+c0uX/1az/k3pFbfdToA1sL9T2Z+usIHd3kwt3a6thhMOKb2KN8dJIaDZHYFuqsIN8=;7:NSq/9IlZKBZipqGYWIg1UQ01pmaT/pywjdL/FJyq+jsJsA49Ju2m6fu4UpMhIqLozvKXFje5XMFKQedUem7iAixmCqGgshUsiRjBOH4AexQDMtsjqDa6GrKSc0LmoIhPI2LoxzkvurHcS5GziXFY1pF2unqcCFZVB6k+1BSAblClQsJ5YHZepl3Qjcbb2fpx8Kecw4ZEfkQgg6HcEcjTNASMhc4maCMpMlvFl23Yua5nUnBl3pfggVpJsR8HthB2
-x-ms-office365-filtering-correlation-id: 4e79ee3e-307f-4495-c1ba-08d62aaaf228
+x-microsoft-exchange-diagnostics: 1;BYAPR05MB4439;6:7JQnzgNIDHqBWdzRfIo2JoXFZh5loJ/hqLCHPiZg5jKNQy7KCT4pppe3sU0QWUKnIFO1AVb38aHHf/VYwJKVgPYG1h/dayBOb8mPLfgFO2fvhfleG7ki8NwtPoxQcB0fq//jGiTX2HMqfncdFnu6SRLqvf2mao4xKYf5OrX2Gv5RlZ1fRHcmVpG1GP92LwmU4uFy5wYECA8eU1tQ/22LkZHfiWML1eI+THITyRkHsXjpndxTIReNRMo0qumbtS87R2UsShF5UggFUkTYjLuZxSfcMJipRCA84g14xiLLVYju3K5SqVtU8cawSAieE7/bKchC28eZtnCIWiNYX33qu78xanRfLzcB3Ol2dwj7KaO3nHZHNttf42aHDBJXR4hrb8FRDwdqPP3IQ2ZdgUnrFo80EVpCDcz72B28zJBT1eBqViP56N3ENgLeppS6L3YcaCD07HM5JK6udYHaCbPXFA==;5:bxmA3/fHrUtSdgzlBvXqIYK9gXbeBDJEuBSqTL6aQjc5M8qQ1yVudvQJPUO99fVAVSoxpn5cnSm9bax2czAccLcZlt2LBg7sorCw9aoKvUAHxtqTeh5Xtdf2HXdYcx2cijPGQO6bqPdz2xeiRs8DJH5vSw3RcWLju9ry0UHIp/w=;7:JS9k6K9YdZp5SbzwNZaiIuRaZU+QRJ9j1Czjn8xh98VEt6/oVXZ8KCSL/v7WRtfNQKomsdEZcazWhZhoXUoRm2JMQ82qPz+HF11Lnfsd+owD4VkGaPzQbjF9aUVRsFwDaDhWVwNf0ikixNfSoNIdNJq1CULy0yCHwDvwv/VkZMo0Qc/pMIuEEbuTTnM3O5wKydudn+aiQQikuTCi0+H4qDg++uh/+rAg2eELdEKWMstsQSZ6dsVK6dTB2djGn5XC
+x-ms-office365-filtering-correlation-id: 98bdb181-bc2c-4ceb-0bc5-08d62aaaf434
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BYAPR05MB4439;
 x-ms-traffictypediagnostic: BYAPR05MB4439:
-x-microsoft-antispam-prvs: <BYAPR05MB44390949718A645C7FD3FA59A3EB0@BYAPR05MB4439.namprd05.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR05MB443929BEAC1E89CE1C3AFB5BA3EB0@BYAPR05MB4439.namprd05.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:;
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(10201501046)(93006095)(93001095)(3002001)(149066)(150057)(6041310)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123564045)(201708071742011)(7699051);SRVR:BYAPR05MB4439;BCL:0;PCL:0;RULEID:;SRVR:BYAPR05MB4439;
 x-forefront-prvs: 0816F1D86E
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(39850400004)(396003)(366004)(136003)(189003)(199004)(305945005)(7736002)(26005)(1076002)(186003)(103116003)(2906002)(36756003)(2616005)(54906003)(256004)(86362001)(476003)(11346002)(446003)(14454004)(486006)(6512007)(2351001)(316002)(106356001)(105586002)(8936002)(81156014)(81166006)(97736004)(8676002)(478600001)(53936002)(66066001)(5250100002)(5640700003)(6436002)(2900100001)(68736007)(2501003)(4326008)(71190400001)(6486002)(76176011)(71200400001)(102836004)(6506007)(386003)(5660300001)(6916009)(3846002)(99286004)(52116002)(6116002)(107886003)(25786009);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4439;H:BYAPR05MB4597.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(39850400004)(396003)(366004)(136003)(189003)(199004)(305945005)(7736002)(26005)(1076002)(186003)(103116003)(2906002)(36756003)(2616005)(54906003)(256004)(86362001)(476003)(11346002)(446003)(14454004)(486006)(575784001)(6512007)(2351001)(316002)(106356001)(105586002)(8936002)(81156014)(81166006)(97736004)(8676002)(478600001)(53936002)(66066001)(5250100002)(5640700003)(6436002)(2900100001)(68736007)(2501003)(4326008)(71190400001)(6486002)(76176011)(71200400001)(102836004)(6506007)(386003)(5660300001)(6916009)(3846002)(99286004)(52116002)(6116002)(107886003)(25786009);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR05MB4439;H:BYAPR05MB4597.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: AgeRe30lYAqY6mjd0H2rMxRdIbBE0NfT25PxWY8gQ1xlcs5u/d/oQDdf4LZYTV7MwoOY8OQNusPVzxXWvx8N8gz5Zvle2srqiXpBGzb5swYhoZ965Lfqqb31rkpbAPWAieH08YZ/HMpYQSHizsaX4Ly5DmE3j7OwZyNpeV6QoiLJXDZgVKqkuVViEHskAKA2mVjiOw2SAoBFDF5vNhn/Wocr1i5t8TeZjfOg+o7Q9bTR+E1WlDoCbIL4oRsJwfxXxE3AvH2seZIhwV/ZZLI+cR+NsJyBRRpfjDbwznQ+FafUnffdweeB/RsxCQGjFatSNUo0IcjJjahOtyW6iC1xtPpLDg5puaoooiwONDzjU2U=
+x-microsoft-antispam-message-info: oa6yggRCTjmip5imySBrKygA52/E3ZCUh6sDp3cCoOYL1Op5ANKXPSjvNsD14Ar8CYzcAuvkfiGMFZh8baBENgQF43K7XNtRZwKv/ebM08YhsOLzUytFUJwFmNsmQwYBtFLG61yQYkc7yVPP13SvmBDIYVS4d+4Z/6Z/rkc3I/YXX5WR+3Rhy5PwjYlWzIur0giGpUsPv7bQNcjRtVL0YKcT/ox0qdgRrM3nD2ylkM7HQsNxx81U4UT4B5ofbZQ874TJTtk3fOi4toIWZCsNdpmNPUAX+ht1jd26ua7VXA5dOxD+5XzaJEgseSOgC7ptF+qvBLEwD7mS+rsH+UNaRFZX4Nt0ZecyYy6zRnsTTYA=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e79ee3e-307f-4495-c1ba-08d62aaaf228
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2018 10:11:41.8050
+X-MS-Exchange-CrossTenant-Network-Message-Id: 98bdb181-bc2c-4ceb-0bc5-08d62aaaf434
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2018 10:11:45.2844
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
@@ -91,69 +93,102 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Notify firmware to flush cache before scanning when needed.
+Command responses and events from the firmware are copied twice in
+control path: at first in shm core (qtnf_shm_handle_new_data) and
+then in pcie bus drivers (qtnf_pcie_control_rx_callback). There
+is no need to copy this data twice, it can be done only once
+in rx callbacks.
 
 Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c   | 6 ++++++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h      | 1 +
- drivers/net/wireless/quantenna/qtnfmac/qlink_util.h | 8 ++++++++
- 3 files changed, 15 insertions(+)
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |  5 +++--
+ drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c   | 13 ++++++-------
+ drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h   |  4 +---
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/ne=
-t/wireless/quantenna/qtnfmac/commands.c
-index 8dbd6c45c233..8fb15cbf5005 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2197,6 +2197,12 @@ int qtnf_cmd_send_scan(struct qtnf_wmac *mac)
- 					 scan_req->mac_addr_mask);
- 	}
-=20
-+	if (scan_req->flags & NL80211_SCAN_FLAG_FLUSH) {
-+		pr_debug("MAC%u: flush cache before scan\n", mac->macid);
-+
-+		qtnf_cmd_skb_put_tlv_tag(cmd_skb, QTN_TLV_ID_SCAN_FLUSH);
-+	}
-+
- 	ret =3D qtnf_cmd_send(mac->bus, cmd_skb);
- 	if (ret)
- 		goto out;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/qlink.h
-index c5ae4ea9a47a..699157100309 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -1151,6 +1151,7 @@ enum qlink_tlv_id {
- 	QTN_TLV_ID_MAX_SCAN_SSIDS	=3D 0x0409,
- 	QTN_TLV_ID_WOWLAN_CAPAB		=3D 0x0410,
- 	QTN_TLV_ID_WOWLAN_PATTERN	=3D 0x0411,
-+	QTN_TLV_ID_SCAN_FLUSH		=3D 0x0412,
- };
-=20
- struct qlink_tlv_hdr {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h b/drivers/=
-net/wireless/quantenna/qtnfmac/qlink_util.h
-index 54caeb38917c..960d5d97492f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink_util.h
-@@ -40,6 +40,14 @@ static inline void qtnf_cmd_skb_put_tlv_arr(struct sk_bu=
-ff *skb,
- 	memcpy(hdr->val, arr, arr_len);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/n=
+et/wireless/quantenna/qtnfmac/pcie/pcie.c
+index d1637f2354a6..16795dbe475b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
+@@ -242,7 +242,8 @@ static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_p=
+riv *priv)
+ 	return 0;
  }
 =20
-+static inline void qtnf_cmd_skb_put_tlv_tag(struct sk_buff *skb, u16 tlv_i=
-d)
-+{
-+	struct qlink_tlv_hdr *hdr =3D skb_put(skb, sizeof(*hdr));
-+
-+	hdr->type =3D cpu_to_le16(tlv_id);
-+	hdr->len =3D cpu_to_le16(0);
-+}
-+
- static inline void qtnf_cmd_skb_put_tlv_u8(struct sk_buff *skb, u16 tlv_id=
+-static void qtnf_pcie_control_rx_callback(void *arg, const u8 *buf, size_t=
+ len)
++static void qtnf_pcie_control_rx_callback(void *arg, const u8 __iomem *buf=
 ,
- 					   u8 value)
++					  size_t len)
  {
+ 	struct qtnf_pcie_bus_priv *priv =3D arg;
+ 	struct qtnf_bus *bus =3D pci_get_drvdata(priv->pdev);
+@@ -260,7 +261,7 @@ static void qtnf_pcie_control_rx_callback(void *arg, co=
+nst u8 *buf, size_t len)
+ 		return;
+ 	}
+=20
+-	skb_put_data(skb, buf, len);
++	memcpy_fromio(skb_put(skb, len), buf, len);
+=20
+ 	qtnf_trans_handle_rx_ctl_packet(bus, skb);
+ }
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c b/drivers/net=
+/wireless/quantenna/qtnfmac/shm_ipc.c
+index aa106dd0a14b..2ec334199c2b 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.c
+@@ -42,19 +42,18 @@ static void qtnf_shm_handle_new_data(struct qtnf_shm_ip=
+c *ipc)
+ 	if (unlikely(size =3D=3D 0 || size > QTN_IPC_MAX_DATA_SZ)) {
+ 		pr_err("wrong rx packet size: %zu\n", size);
+ 		rx_buff_ok =3D false;
+-	} else {
+-		memcpy_fromio(ipc->rx_data, ipc->shm_region->data, size);
++	}
++
++	if (likely(rx_buff_ok)) {
++		ipc->rx_packet_count++;
++		ipc->rx_callback.fn(ipc->rx_callback.arg,
++				    ipc->shm_region->data, size);
+ 	}
+=20
+ 	writel(QTNF_SHM_IPC_ACK, &shm_reg_hdr->flags);
+ 	readl(&shm_reg_hdr->flags); /* flush PCIe write */
+=20
+ 	ipc->interrupt.fn(ipc->interrupt.arg);
+-
+-	if (likely(rx_buff_ok)) {
+-		ipc->rx_packet_count++;
+-		ipc->rx_callback.fn(ipc->rx_callback.arg, ipc->rx_data, size);
+-	}
+ }
+=20
+ static void qtnf_shm_ipc_irq_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h b/drivers/net=
+/wireless/quantenna/qtnfmac/shm_ipc.h
+index 453dd6477b12..c2a3702a9ee7 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/shm_ipc.h
+@@ -32,7 +32,7 @@ struct qtnf_shm_ipc_int {
+ };
+=20
+ struct qtnf_shm_ipc_rx_callback {
+-	void (*fn)(void *arg, const u8 *buf, size_t len);
++	void (*fn)(void *arg, const u8 __iomem *buf, size_t len);
+ 	void *arg;
+ };
+=20
+@@ -51,8 +51,6 @@ struct qtnf_shm_ipc {
+=20
+ 	u8 waiting_for_ack;
+=20
+-	u8 rx_data[QTN_IPC_MAX_DATA_SZ] __aligned(sizeof(u32));
+-
+ 	struct qtnf_shm_ipc_int interrupt;
+ 	struct qtnf_shm_ipc_rx_callback rx_callback;
+=20
 --=20
 2.11.0
 
