@@ -2,122 +2,212 @@ Return-Path: <SRS0=pQzZ=MS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C912C64EB8
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45454C64EB8
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 07:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F351E208E7
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 07:02:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="NBNNzcf+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F351E208E7
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
+	by mail.kernel.org (Postfix) with ESMTP id 0C98E2087D
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 07:29:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0C98E2087D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727851AbeJFOEt (ORCPT
+        id S1728022AbeJFObx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 6 Oct 2018 10:04:49 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:45917 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727624AbeJFOEs (ORCPT
+        Sat, 6 Oct 2018 10:31:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:55840 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727580AbeJFObx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Oct 2018 10:04:48 -0400
-Received: by mail-pf1-f193.google.com with SMTP id u12-v6so2938904pfn.12
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Oct 2018 00:02:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
-        b=NBNNzcf+XT2vcflggfwGxwcUwEbcV+4BoJavPuiIXo92PniznQvrxXkzH2mi7Ok5sm
-         ZsU/OCdsuCkHOwhUI/VGSbQ5R35qXCcRmM32NLxVnGTZx970MtD3IeYlUY0UNDQwPZVq
-         vsLh01rG+tMjRWRLgKa/cFyR39gz878jTGLoY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=yxuvBu+Fwt+lK+efudO8FJo6vyjQWM3N8/U9NFmxvos=;
-        b=KsiGsrcAMZo2UECYBULsTVWW57PBl6wQIia6mvij4NfWiP02aq8Uk1jgXOlVSLzLmo
-         UO3qgVVJ29RF5lFv+osvrCF9B0GbXxaGC6udNMzsryEt4nqONOpFePzLrv7DJjrveHFp
-         ZR1MfEuaW2vt3TdJlZJzU+ttOSXGiTTnyBzTEOAMzeMS5ekWjImXzjecrFb/Q4HntD+7
-         bgHVql+L/ASIgvBCsieAgDiEoMnFHuakA5irt7uwm10dcSNPRSerqSJZ9tBQJbfjIJd9
-         cl5Jnuo/QAZ7R5YB52QElYkA3gSFwPXf/8kvmiYpAYQp5qcWfF6X5p3xDV4EFf2rM9hX
-         KW/g==
-X-Gm-Message-State: ABuFfojgmmHyZTAQ6hV3Anco8CRfPL5keryuHyuB+Lr8jrCiKq/JIBrE
-        mCQVQtk+hmbRKYTE91Ve3OzA2Q==
-X-Google-Smtp-Source: ACcGV60dGSKOxXNr63g3bSD2U1+VM5YZuF2x7KTrzF1isi7pBVPzBtAzQZonbp4SGaT2JDqwz8iFZw==
-X-Received: by 2002:a62:1407:: with SMTP id 7-v6mr15150079pfu.28.1538809356673;
-        Sat, 06 Oct 2018 00:02:36 -0700 (PDT)
-Received: from builder (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id g123-v6sm749112pfc.67.2018.10.06.00.02.34
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sat, 06 Oct 2018 00:02:35 -0700 (PDT)
-Date:   Sat, 6 Oct 2018 00:05:21 -0700
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        qat-linux@intel.com, linux-crypto@vger.kernel.org,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/17] compat_ioctl: move more drivers to
- generic_compat_ioctl_ptrarg
-Message-ID: <20181006070521.GM12063@builder>
-References: <20180912150142.157913-1-arnd@arndb.de>
- <20180912151134.436719-1-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180912151134.436719-1-arnd@arndb.de>
-User-Agent: Mutt/1.10.0 (2018-05-17)
+        Sat, 6 Oct 2018 10:31:53 -0400
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1g8h1r-0002YF-5b; Sat, 06 Oct 2018 10:29:35 +0300
+Message-ID: <f5d3582e83112e6fb0c3b5aa1a0cb136bcc12c1e.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Sat, 06 Oct 2018 10:29:33 +0300
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-CYL9QIV2PoX6+Ow+uSYH"
+User-Agent: Evolution 3.30.1-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-10-06
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed 12 Sep 08:08 PDT 2018, Arnd Bergmann wrote:
 
-[..]
-> diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
-> index a76b963a7e50..02aefb2b2d47 100644
-> --- a/drivers/rpmsg/rpmsg_char.c
-> +++ b/drivers/rpmsg/rpmsg_char.c
-> @@ -285,7 +285,7 @@ static const struct file_operations rpmsg_eptdev_fops = {
->  	.write = rpmsg_eptdev_write,
->  	.poll = rpmsg_eptdev_poll,
->  	.unlocked_ioctl = rpmsg_eptdev_ioctl,
-> -	.compat_ioctl = rpmsg_eptdev_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
->  static ssize_t name_show(struct device *dev, struct device_attribute *attr,
-> @@ -446,7 +446,7 @@ static const struct file_operations rpmsg_ctrldev_fops = {
->  	.open = rpmsg_ctrldev_open,
->  	.release = rpmsg_ctrldev_release,
->  	.unlocked_ioctl = rpmsg_ctrldev_ioctl,
-> -	.compat_ioctl = rpmsg_ctrldev_ioctl,
-> +	.compat_ioctl = generic_compat_ioctl_ptrarg,
->  };
->  
+--=-CYL9QIV2PoX6+Ow+uSYH
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-For rpmsg part
+Hi Kalle,
 
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+This is the third batch of patches intended for v4.20.  This includes
+the last 2 patchsets I sent.  Usual development work, including some
+improvements in the HE radiotap stuff, a new FW version support and
+other small improvements and fixes.  More details about the contents in
+the tag description.
 
-Regards,
-Bjorn
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit e1c02eb16a9c742178874a7d1a08d300981715fb=
+:
+
+  qtnfmac: implement dump_station support for STA mode (2018-10-05 14:01:44=
+ +0300)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-10-06
+
+for you to fetch changes up to ea7cb8293874f8d9cf36c9e5387e2247f15373dc:
+
+  iwlwifi: dbg: make trigger functions type agnostic (2018-10-06 10:25:55 +=
+0300)
+
+----------------------------------------------------------------
+Third set of iwlwifi patches for 4.20
+
+* Fix for a race condition that caused the FW to crash;
+* HE radiotap cleanup and improvements;
+* Reorder channel optimization for scans;
+* Bumped the FW API version supported after the last API change for
+  this release;
+* Debugging improvements;
+* A few bug fixes;
+* Some cleanups in preparation for a new implementation;
+* Other small improvements, cleanups and fixes.
+
+----------------------------------------------------------------
+Ayala Beker (1):
+      iwlwifi: mvm: allow channel reorder optimization during scan
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: clear HW_RESTART_REQUESTED when stopping the interface
+
+Haim Dreyfuss (1):
+      iwlwifi: mvm Support new MCC update response
+
+Johannes Berg (16):
+      iwlwifi: mvm: remove unnecessary overload variable
+      iwlwifi: mvm: minor cleanups to HE radiotap code
+      iwlwifi: mvm: put HE SIG-B symbols/users data correctly
+      iwlwifi: mvm: pull some he_phy_data decoding into a separate function
+      iwlwifi: mvm: clean up HE radiotap RU allocation parsing
+      iwlwifi: mvm: move HE-MU LTF_NUM parsing to he_phy_data parsing
+      iwlwifi: mvm: add TXOP to HE radiotap data
+      iwlwifi: mvm: add LDPC-XSYM to HE radiotap data
+      iwlwifi: mvm: add more information to HE radiotap
+      iwlwifi: mvm: set max TX/RX A-MPDU subframes to HE limit
+      iwlwifi: pcie gen2: check iwl_pcie_gen2_set_tb() return value
+      iwlwifi: add fall through comment
+      iwlwifi: pcie: check iwl_pcie_txq_build_tfd() return value
+      iwlwifi: bump firmware API version for 9000 and 22000 series devices
+      iwlwifi: mvm: decode HE information for MU (without ext info)
+      iwlwifi: mvm: show more HE radiotap data for TB PPDUs
+
+Luca Coelho (1):
+      iwlwifi: mvm: check for n_profiles validity in EWRD ACPI
+
+Naftali Goldstein (1):
+      iwlwifi: nvm: get num of hw addresses from firmware
+
+Sara Sharon (8):
+      iwlwifi: dbg: move debug data to a struct
+      iwlwifi: dbg: refactor dump code to improve readability
+      iwlwifi: dbg: split iwl_fw_error_dump to two functions
+      iwlwifi: dbg: dump memory in a helper function
+      iwlwifi: dbg: group trigger condition to helper function
+      iwlwifi: dbg: make iwl_fw_dbg_no_trig_window trigger agnostic
+      iwlwifi: dbg: decrement occurrences for all triggers
+      iwlwifi: dbg: make trigger functions type agnostic
+
+Shahar S Matityahu (3):
+      iwlwifi: add dump collection in case alive flow fails
+      iwlwifi: runtime: add send host command op to firmware runtime op str=
+uct
+      iwlwifi: add debugfs to send host command
+
+Shaul Triebitz (1):
+      iwlwifi: pcie: avoid empty free RB queue
+
+Yisheng Xie (1):
+      iwlwifi: mvm: use match_string() helper
+
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h |  81 +++++++++-------=
+----
+ drivers/net/wireless/intel/iwlwifi/fw/api/rx.h      |   8 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h    |   5 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c         | 411 ++++++++++++++++=
+++++++++++++++++++++++++++++++++-------------------------------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h         |  45 ++++++++---
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c     |  64 ++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h  |   2 +
+ drivers/net/wireless/intel/iwlwifi/fw/file.h        |   7 +-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h         |  41 ++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h     |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c        |  77 +++++++++-------=
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c  |  10 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c    |  13 +---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c         |  12 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c   |  12 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   |  42 +++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c        |  25 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c        |  39 +++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c         |  29 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c       | 373 ++++++++++++++++=
++++++++++++++++++++++++++++++++++----------------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c       |   3 +
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c |  11 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c         |  15 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c      |  16 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c        |  32 +++++---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c   |   2 +
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c        |   2 +
+ 31 files changed, 762 insertions(+), 627 deletions(-)
+
+--=-CYL9QIV2PoX6+Ow+uSYH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlu4ZF0ACgkQoUecoho8
+xfpFGQ//WMbwgDgBI2o8Dm34kUgfUdw1d/vwc8tb3kXxg+wsIkuPAuw48Isnf5yB
+ZKKvuf4gltVtztxX3OcaY+VIgMUDsuq/wiWOyWkhH1+hV8TUZ2z+yTy0TmTNHvHY
+IQ6545t/KRgXGGC6DCD2Pr6BgLAj+1J+q4cl+jojnVRdUxLxM1i/rR1x0LqYp6jo
+farApmcEkrz1v0keyLF9R8/fNE72qhCY2V86N1ZgKatFDshlD2lSY9prSle5/brx
+s7XR4b5mfADyQlk+QdSmJLlZ3lzxnHEfDuCfYhJQ0brpLV9ED0HOTecZ4FRBVD2x
+VF9AydO5hbBtYK9JUu9wsKMpVpmDluk6ERlc+YmN5Uz5LrvPEFSOrdF6uMt8+C3R
+bgCmh9cNoCbm1QSv2frDZhWGZGixofAk6dnvbeHg/mtcVhIVUjsvdoO1OHBqWTuy
+j93xYB9GNND56D+GuoTIPCUQnff+IB48b6S9nk1lJKzlBdpPEMPigmicUvflCffI
+bL67HOOwTHRluS/0UV4oHsOEDCVLeUtTKF9lluXPgzvLwjNtWHVWrz1AVZ1H2jW0
++R3TnggYvA0+BKeLR7mG+FYmQvA/+/MaxNYt4Mt6lgAuLKQ2aNSG9bFuN4eVHmS+
+KWTCSsiiv00zUND78bBfCVpLCZFkLyOCxRihwxjwzgo4cgVMr/U=
+=jRNa
+-----END PGP SIGNATURE-----
+
+--=-CYL9QIV2PoX6+Ow+uSYH--
+
