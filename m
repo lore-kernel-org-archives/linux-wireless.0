@@ -2,44 +2,42 @@ Return-Path: <SRS0=pQzZ=MS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09626C64EB8
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 10:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 593CEC64EB8
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 10:03:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B17AD21473
-	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 10:01:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C24621473
+	for <linux-wireless@archiver.kernel.org>; Sat,  6 Oct 2018 10:03:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="n96eAc7E"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B17AD21473
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KPKRc1q4"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1C24621473
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727489AbeJFRED (ORCPT
+        id S1727719AbeJFRGD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 6 Oct 2018 13:04:03 -0400
-Received: from nbd.name ([46.4.11.11]:46656 "EHLO nbd.name"
+        Sat, 6 Oct 2018 13:06:03 -0400
+Received: from nbd.name ([46.4.11.11]:46728 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726919AbeJFRED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 6 Oct 2018 13:04:03 -0400
+        id S1726919AbeJFRGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 6 Oct 2018 13:06:02 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=sSKY6DxYb0Qfy26fVcn+svcmwUtiaBOnZGSemec5Ep0=; b=n96eAc7EcWeD8WpDpK1j2q02RT
-        1RMf5aSVh4rQdnpRR2YoHqbEJzi6YbQKRPcXTPATeN8tcSmVuuzayrL0HegNQDuZawJPbppP2gaNS
-        6nYDZ0yPWkJ1pSk21a9C8ni/yB/5ltQgTENdvwb/QpTADGy0Zqq1yjyvyIUSwT88RGOM=;
-Subject: Re: [PATCH 2/5] mt76x0: correct RF access via RF_CSR regiser.
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+        bh=Q34is24QZpKm51yD1ziGtP+TxMKFwER6+enSPZSqYkQ=; b=KPKRc1q4PR8PLVlWTbJKtbagOg
+        M1HqISj6n4pFY8uHDdbpoj59mjgDom12vxetmzHiHoLQOp7HMVbVJrz2/sgxfHpp1fwtRjN9eDHLV
+        smmkIvkLYe4esgDeMJAgm2pGb85/XtfnsEeBC+57FyAzKPs3DTMgPvVuuF81Xavmt2w8=;
+Subject: Re: [PATCH 0/5] mt76x0: phy/rf fixups for PCIe
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 References: <1538647495-15213-1-git-send-email-sgruszka@redhat.com>
- <1538647495-15213-3-git-send-email-sgruszka@redhat.com>
- <CAJ0CqmXRQ5pgx5v-DGjWsvgKZdQEncxSuUexKCdduiRU+r+A3Q@mail.gmail.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -65,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <24862e5d-1834-fc03-d5d6-ae995ef91bf6@nbd.name>
-Date:   Sat, 6 Oct 2018 12:01:21 +0200
+Message-ID: <92e3e55c-385e-060c-cbea-c3826cc2c540@nbd.name>
+Date:   Sat, 6 Oct 2018 12:03:18 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <CAJ0CqmXRQ5pgx5v-DGjWsvgKZdQEncxSuUexKCdduiRU+r+A3Q@mail.gmail.com>
+In-Reply-To: <1538647495-15213-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,32 +77,10 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-06 10:25, Lorenzo Bianconi wrote:
->>
->> PCIe version don't use MCU for RF regsisters access. We need
->> to correct RF CSR method to support up to 127 RF registers.
->>
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> ---
->>  drivers/net/wireless/mediatek/mt76/mt76x0/phy.c   | 6 ++----
->>  drivers/net/wireless/mediatek/mt76/mt76x02_regs.h | 4 ++--
->>  2 files changed, 4 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
->> index cbbfd5193d9c..da4569f00794 100644
->> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
->> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
->> @@ -37,7 +37,7 @@
->>         bank = MT_RF_BANK(offset);
->>         reg = MT_RF_REG(offset);
->>
->> -       if (WARN_ON_ONCE(reg > 64) || WARN_ON_ONCE(bank) > 8)
->> +       if (WARN_ON_ONCE(reg > 127) || WARN_ON_ONCE(bank) > 8)
-> 
-> I guess there is a typo here, it should be:
-> 
-> if (WARN_ON_ONCE(reg > 127) || WARN_ON_ONCE(bank > 8))
-It's not a regression, since that part is the same as before the patch.
-Feel free to send a separate fix.
+On 2018-10-04 12:04, Stanislaw Gruszka wrote:
+> Changes since RFC:
+> - regbase on top of mt76x02_dev change
+> - add patch to choose single reg RF access via mt76_is_usb()
+Merged, thanks.
 
 - Felix
