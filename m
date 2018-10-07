@@ -2,55 +2,55 @@ Return-Path: <SRS0=9HFQ=MT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB42C65C30
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A421DC677F5
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C8FA20882
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C8FA20882
+	by mail.kernel.org (Postfix) with ESMTP id 6177420882
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6177420882
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726406AbeJGQwO (ORCPT
+        id S1726764AbeJGQwR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Oct 2018 12:52:14 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:53125 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726152AbeJGQwO (ORCPT
+        Sun, 7 Oct 2018 12:52:17 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:46274 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726427AbeJGQwR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Oct 2018 12:52:14 -0400
-Received: by mail-wm1-f66.google.com with SMTP id 189-v6so5391840wmw.2
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2018 02:45:29 -0700 (PDT)
+        Sun, 7 Oct 2018 12:52:17 -0400
+Received: by mail-wr1-f65.google.com with SMTP id a2-v6so10552944wrc.13
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2018 02:45:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=hpw0h6YE90iluS2P7mAuYi1Cj36ZWf4PEBxGP/9Pj20=;
-        b=I4yCYa9kAvUhcniXqtrgfWkVyr5xfGm+wT2zQzn2qn3F7qNCsjSOGLIS1FaASBy3bX
-         lzAY+OV1g+L+8InGM6O923Y1bwUQTN2mfJ+PaOGaEV+VVz9kUkkAxFguowsaLAIMlyL3
-         2Zyw0hvNLRYQgnflhebP7lvuWtzf8b9ljDzfUhysYarWgnbgFxryPpaX5k92MpUBNrji
-         xVHQaf/GQcLmw2tnCa7kLlPihKKJZaZQUMEw/MCBiCXdmLSn2BnJaf6tl+zUR+1arhKW
-         xfmBVdhJ6lXvfzS4Zq4wkUIKalVp5MrVWQPXeWox4YNGsWeco0BzbQPAhMFcemjKjy6F
-         CzvA==
-X-Gm-Message-State: ABuFfohDjKBz5vpxm98Cxj1kaWw/HnC8dY7Xy9C7+NdfY7CrvmT+0GmB
-        a75jBqxrNWx6tl8uhJW/Wsb4pQB5KXI=
-X-Google-Smtp-Source: ACcGV61LX2rcLODN0nAGmFdrG/DWI6bNdUXQd7FF//ogcZIPDhk1GNjTZ+qhpwxdFYgic19H5fWxJQ==
-X-Received: by 2002:a1c:e0d7:: with SMTP id x206-v6mr11845768wmg.93.1538905529133;
-        Sun, 07 Oct 2018 02:45:29 -0700 (PDT)
+        bh=i8iuFBuVMToNRnys9XM6Bwnr1kE3e9NRv5gwZW98sww=;
+        b=SVXmZLkSw4a50mT9UqBYvKRGZqw+JoTIAtD/Ef4hq3tCfIdbNBZnmyQaivdztpv4qR
+         pGX+LS2tsphj9rFINTP4trDLYLFPUWxgFImXxHCjw8QFKAzbE1r8TEosIj8bcZVLnnbo
+         C80mYUPY0nhCuOKUeabQb8CljnNMsQNBDSp7U4d5jHwoSAS+WxuPG4LnUfJDIBHeYcYQ
+         9p7rUueDBWoQmqqu2pAWSn2B+lzoei7SQTAYR/hUMri4HxsvkmQGVGPVL3VtOzFyx73m
+         blkZrr/ulVclX3YS44hauWzEdJKcZQKRVDlmZggSkBIAjywTFfa7z/VC+8Ae7TNOOiI/
+         cjMw==
+X-Gm-Message-State: ABuFfog5kk+0kY8Gl9ZmzrTFkNxTt3a7/Loia8aKA7I5yOQfQjPntKSk
+        AN5rsXXER0ATupcdtdF6ilydGw==
+X-Google-Smtp-Source: ACcGV63MyriLzvKhJ1Su4bsN6r9d4vZ3TPry2gf+Lief5BZImXErriGOh7u6xm3jvcTWRkHBWktdSw==
+X-Received: by 2002:a5d:53c3:: with SMTP id a3-v6mr13123846wrw.191.1538905531870;
+        Sun, 07 Oct 2018 02:45:31 -0700 (PDT)
 Received: from localhost.localdomain ([151.66.32.138])
-        by smtp.gmail.com with ESMTPSA id q135-v6sm6149599wmd.4.2018.10.07.02.45.28
+        by smtp.gmail.com with ESMTPSA id q135-v6sm6149599wmd.4.2018.10.07.02.45.30
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 07 Oct 2018 02:45:28 -0700 (PDT)
+        Sun, 07 Oct 2018 02:45:31 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] use mt76x02_dev instead of mt76_dev as reference
-Date:   Sun,  7 Oct 2018 11:45:17 +0200
-Message-Id: <20181007094524.12656-1-lorenzo.bianconi@redhat.com>
+Subject: [PATCH 2/7] mt76: use mt76x02_dev instead of mt76_dev in mt76x02_phy.c
+Date:   Sun,  7 Oct 2018 11:45:19 +0200
+Message-Id: <20181007094524.12656-3-lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -59,54 +59,283 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use mt76x02_dev data structure as reference in mt76x02 code
-instead of mt76_dev one
+Use mt76x02_dev data structure as reference in mt76x02_phy.c
+instead of mt76_dev
 
-Lorenzo Bianconi (7):
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_mcu.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_phy.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_util.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_usb_mcu.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_mac.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_txrx.c
-  mt76: use mt76x02_dev instead of mt76_dev in mt76x02_eeprom.c
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   |  8 +-
+ .../net/wireless/mediatek/mt76/mt76x02_phy.c  | 89 +++++++++----------
+ .../net/wireless/mediatek/mt76/mt76x02_phy.h  |  8 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  2 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  4 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_phy.c   |  2 +-
+ 7 files changed, 56 insertions(+), 59 deletions(-)
 
- .../wireless/mediatek/mt76/mt76x0/eeprom.c    |  53 ++++---
- .../net/wireless/mediatek/mt76/mt76x0/init.c  |   4 +-
- .../net/wireless/mediatek/mt76/mt76x0/pci.c   |   4 +-
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   |  34 +++--
- .../wireless/mediatek/mt76/mt76x0/usb_mcu.c   |   7 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |  13 +-
- .../wireless/mediatek/mt76/mt76x02_eeprom.c   |  33 ++---
- .../wireless/mediatek/mt76/mt76x02_eeprom.h   |  20 +--
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 129 +++++++++---------
- .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  31 +++--
- .../net/wireless/mediatek/mt76/mt76x02_mcu.c  |  74 +++++-----
- .../net/wireless/mediatek/mt76/mt76x02_mcu.h  |  14 +-
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |   2 +-
- .../net/wireless/mediatek/mt76/mt76x02_phy.c  |  89 ++++++------
- .../net/wireless/mediatek/mt76/mt76x02_phy.h  |   8 +-
- .../net/wireless/mediatek/mt76/mt76x02_txrx.c |  29 ++--
- .../net/wireless/mediatek/mt76/mt76x02_usb.h  |   8 +-
- .../wireless/mediatek/mt76/mt76x02_usb_core.c |   3 +-
- .../wireless/mediatek/mt76/mt76x02_usb_mcu.c  |  27 ++--
- .../net/wireless/mediatek/mt76/mt76x02_util.c | 120 ++++++++--------
- .../wireless/mediatek/mt76/mt76x2/eeprom.c    |  80 +++++------
- .../wireless/mediatek/mt76/mt76x2/eeprom.h    |   2 +-
- .../net/wireless/mediatek/mt76/mt76x2/mcu.c   |   5 +-
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  18 +--
- .../wireless/mediatek/mt76/mt76x2/pci_mac.c   |   2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  |   2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_mcu.c   |   6 +-
- .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  32 ++---
- .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  17 ++-
- .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  11 +-
- .../wireless/mediatek/mt76/mt76x2/usb_mac.c   |   6 +-
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  |   4 +-
- .../wireless/mediatek/mt76/mt76x2/usb_mcu.c   |  18 ++-
- .../wireless/mediatek/mt76/mt76x2/usb_phy.c   |  28 ++--
- 34 files changed, 456 insertions(+), 477 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index d5fe248e7839..fdf1b3482fd0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -618,7 +618,7 @@ void mt76x0_phy_set_txpower(struct mt76x02_dev *dev)
+ 	dev->mt76.txpower_cur = mt76x02_get_max_rate_power(t);
+ 	mt76x02_add_rate_power_offset(t, -info[0]);
+ 
+-	mt76x02_phy_set_txpower(&dev->mt76, info[0], info[1]);
++	mt76x02_phy_set_txpower(dev, info[0], info[1]);
+ }
+ 
+ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
+@@ -815,7 +815,7 @@ static void mt76x0_dynamic_vga_tuning(struct mt76x02_dev *dev)
+ 	int avg_rssi;
+ 
+ 	init_vga = chandef->chan->band == NL80211_BAND_5GHZ ? 0x54 : 0x4E;
+-	avg_rssi = mt76x02_phy_get_min_avg_rssi(&dev->mt76);
++	avg_rssi = mt76x02_phy_get_min_avg_rssi(dev);
+ 	if (avg_rssi > -60)
+ 		init_vga -= 0x20;
+ 	else if (avg_rssi > -70)
+@@ -897,6 +897,6 @@ void mt76x0_phy_init(struct mt76x02_dev *dev)
+ 	INIT_DELAYED_WORK(&dev->cal_work, mt76x0_phy_calibrate);
+ 
+ 	mt76x0_rf_init(dev);
+-	mt76x02_phy_set_rxpath(&dev->mt76);
+-	mt76x02_phy_set_txdac(&dev->mt76);
++	mt76x02_phy_set_rxpath(dev);
++	mt76x02_phy_set_txdac(dev);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
+index d31ce1d7b689..c398471b6376 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
+@@ -17,18 +17,17 @@
+ 
+ #include <linux/kernel.h>
+ 
+-#include "mt76.h"
++#include "mt76x02.h"
+ #include "mt76x02_phy.h"
+-#include "mt76x02_mac.h"
+ 
+-void mt76x02_phy_set_rxpath(struct mt76_dev *dev)
++void mt76x02_phy_set_rxpath(struct mt76x02_dev *dev)
+ {
+ 	u32 val;
+ 
+-	val = __mt76_rr(dev, MT_BBP(AGC, 0));
++	val = mt76_rr(dev, MT_BBP(AGC, 0));
+ 	val &= ~BIT(4);
+ 
+-	switch (dev->chainmask & 0xf) {
++	switch (dev->mt76.chainmask & 0xf) {
+ 	case 2:
+ 		val |= BIT(3);
+ 		break;
+@@ -37,23 +36,23 @@ void mt76x02_phy_set_rxpath(struct mt76_dev *dev)
+ 		break;
+ 	}
+ 
+-	__mt76_wr(dev, MT_BBP(AGC, 0), val);
++	mt76_wr(dev, MT_BBP(AGC, 0), val);
+ 	mb();
+-	val = __mt76_rr(dev, MT_BBP(AGC, 0));
++	val = mt76_rr(dev, MT_BBP(AGC, 0));
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_phy_set_rxpath);
+ 
+-void mt76x02_phy_set_txdac(struct mt76_dev *dev)
++void mt76x02_phy_set_txdac(struct mt76x02_dev *dev)
+ {
+ 	int txpath;
+ 
+-	txpath = (dev->chainmask >> 8) & 0xf;
++	txpath = (dev->mt76.chainmask >> 8) & 0xf;
+ 	switch (txpath) {
+ 	case 2:
+-		__mt76_set(dev, MT_BBP(TXBE, 5), 0x3);
++		mt76_set(dev, MT_BBP(TXBE, 5), 0x3);
+ 		break;
+ 	default:
+-		__mt76_clear(dev, MT_BBP(TXBE, 5), 0x3);
++		mt76_clear(dev, MT_BBP(TXBE, 5), 0x3);
+ 		break;
+ 	}
+ }
+@@ -102,40 +101,38 @@ void mt76x02_add_rate_power_offset(struct mt76_rate_power *r, int offset)
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_add_rate_power_offset);
+ 
+-void mt76x02_phy_set_txpower(struct mt76_dev *dev, int txp_0, int txp_1)
++void mt76x02_phy_set_txpower(struct mt76x02_dev *dev, int txp_0, int txp_1)
+ {
+-	struct mt76_rate_power *t = &dev->rate_power;
+-
+-	__mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0,
+-			 txp_0);
+-	__mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1,
+-			 txp_1);
+-
+-	__mt76_wr(dev, MT_TX_PWR_CFG_0,
+-		  mt76x02_tx_power_mask(t->cck[0], t->cck[2], t->ofdm[0],
+-					t->ofdm[2]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_1,
+-		  mt76x02_tx_power_mask(t->ofdm[4], t->ofdm[6], t->ht[0],
+-					t->ht[2]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_2,
+-		  mt76x02_tx_power_mask(t->ht[4], t->ht[6], t->ht[8],
+-					t->ht[10]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_3,
+-		  mt76x02_tx_power_mask(t->ht[12], t->ht[14], t->stbc[0],
+-					t->stbc[2]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_4,
+-		  mt76x02_tx_power_mask(t->stbc[4], t->stbc[6], 0, 0));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_7,
+-		  mt76x02_tx_power_mask(t->ofdm[7], t->vht[8], t->ht[7],
+-					t->vht[9]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_8,
+-		  mt76x02_tx_power_mask(t->ht[14], 0, t->vht[8], t->vht[9]));
+-	__mt76_wr(dev, MT_TX_PWR_CFG_9,
+-		  mt76x02_tx_power_mask(t->ht[7], 0, t->stbc[8], t->stbc[9]));
++	struct mt76_rate_power *t = &dev->mt76.rate_power;
++
++	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0, txp_0);
++	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1, txp_1);
++
++	mt76_wr(dev, MT_TX_PWR_CFG_0,
++		mt76x02_tx_power_mask(t->cck[0], t->cck[2], t->ofdm[0],
++				      t->ofdm[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_1,
++		mt76x02_tx_power_mask(t->ofdm[4], t->ofdm[6], t->ht[0],
++				      t->ht[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_2,
++		mt76x02_tx_power_mask(t->ht[4], t->ht[6], t->ht[8],
++				      t->ht[10]));
++	mt76_wr(dev, MT_TX_PWR_CFG_3,
++		mt76x02_tx_power_mask(t->ht[12], t->ht[14], t->stbc[0],
++				      t->stbc[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_4,
++		mt76x02_tx_power_mask(t->stbc[4], t->stbc[6], 0, 0));
++	mt76_wr(dev, MT_TX_PWR_CFG_7,
++		mt76x02_tx_power_mask(t->ofdm[7], t->vht[8], t->ht[7],
++				      t->vht[9]));
++	mt76_wr(dev, MT_TX_PWR_CFG_8,
++		mt76x02_tx_power_mask(t->ht[14], 0, t->vht[8], t->vht[9]));
++	mt76_wr(dev, MT_TX_PWR_CFG_9,
++		mt76x02_tx_power_mask(t->ht[7], 0, t->stbc[8], t->stbc[9]));
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_phy_set_txpower);
+ 
+-int mt76x02_phy_get_min_avg_rssi(struct mt76_dev *dev)
++int mt76x02_phy_get_min_avg_rssi(struct mt76x02_dev *dev)
+ {
+ 	struct mt76x02_sta *sta;
+ 	struct mt76_wcid *wcid;
+@@ -145,8 +142,8 @@ int mt76x02_phy_get_min_avg_rssi(struct mt76_dev *dev)
+ 	local_bh_disable();
+ 	rcu_read_lock();
+ 
+-	for (i = 0; i < ARRAY_SIZE(dev->wcid_mask); i++) {
+-		unsigned long mask = dev->wcid_mask[i];
++	for (i = 0; i < ARRAY_SIZE(dev->mt76.wcid_mask); i++) {
++		unsigned long mask = dev->mt76.wcid_mask[i];
+ 
+ 		if (!mask)
+ 			continue;
+@@ -155,17 +152,17 @@ int mt76x02_phy_get_min_avg_rssi(struct mt76_dev *dev)
+ 			if (!(mask & 1))
+ 				continue;
+ 
+-			wcid = rcu_dereference(dev->wcid[j]);
++			wcid = rcu_dereference(dev->mt76.wcid[j]);
+ 			if (!wcid)
+ 				continue;
+ 
+ 			sta = container_of(wcid, struct mt76x02_sta, wcid);
+-			spin_lock(&dev->rx_lock);
++			spin_lock(&dev->mt76.rx_lock);
+ 			if (sta->inactive_count++ < 5)
+ 				cur_rssi = ewma_signal_read(&sta->rssi);
+ 			else
+ 				cur_rssi = 0;
+-			spin_unlock(&dev->rx_lock);
++			spin_unlock(&dev->mt76.rx_lock);
+ 
+ 			if (cur_rssi < min_rssi)
+ 				min_rssi = cur_rssi;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
+index e70ea6eeb077..c370b4cc68ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
+@@ -20,11 +20,11 @@
+ #include "mt76x02_regs.h"
+ 
+ void mt76x02_add_rate_power_offset(struct mt76_rate_power *r, int offset);
+-void mt76x02_phy_set_txpower(struct mt76_dev *dev, int txp_0, int txp_2);
++void mt76x02_phy_set_txpower(struct mt76x02_dev *dev, int txp_0, int txp_2);
+ void mt76x02_limit_rate_power(struct mt76_rate_power *r, int limit);
+ int mt76x02_get_max_rate_power(struct mt76_rate_power *r);
+-void mt76x02_phy_set_rxpath(struct mt76_dev *dev);
+-void mt76x02_phy_set_txdac(struct mt76_dev *dev);
+-int mt76x02_phy_get_min_avg_rssi(struct mt76_dev *dev);
++void mt76x02_phy_set_rxpath(struct mt76x02_dev *dev);
++void mt76x02_phy_set_txdac(struct mt76x02_dev *dev);
++int mt76x02_phy_get_min_avg_rssi(struct mt76x02_dev *dev);
+ 
+ #endif /* __MT76x02_PHY_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+index bdc6fba217b1..aff0363e0958 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+@@ -210,7 +210,7 @@ mt76x2_phy_update_channel_gain(struct mt76x02_dev *dev)
+ 	int low_gain;
+ 	u32 val;
+ 
+-	dev->cal.avg_rssi_all = mt76x02_phy_get_min_avg_rssi(&dev->mt76);
++	dev->cal.avg_rssi_all = mt76x02_phy_get_min_avg_rssi(dev);
+ 
+ 	low_gain = (dev->cal.avg_rssi_all > mt76x2_get_rssi_gain_thresh(dev)) +
+ 		   (dev->cal.avg_rssi_all > mt76x2_get_low_rssi_gain_thresh(dev));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+index 31bf0f891028..93bcab7cccfd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+@@ -187,7 +187,7 @@ void mt76x2_phy_set_txpower(struct mt76x02_dev *dev)
+ 	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
+ 	dev->mt76.rate_power = t;
+ 
+-	mt76x02_phy_set_txpower(&dev->mt76, txp_0, txp_1);
++	mt76x02_phy_set_txpower(dev, txp_0, txp_1);
+ }
+ EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+index 7578c7dcd62a..6214781714c4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+@@ -237,8 +237,8 @@ int mt76x2u_init_hardware(struct mt76x02_dev *dev)
+ 	if (err < 0)
+ 		return err;
+ 
+-	mt76x02_phy_set_rxpath(&dev->mt76);
+-	mt76x02_phy_set_txdac(&dev->mt76);
++	mt76x02_phy_set_rxpath(dev);
++	mt76x02_phy_set_txdac(dev);
+ 
+ 	return mt76x2u_mac_stop(dev);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+index e0ffdd51dced..c4c437770fc9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+@@ -69,7 +69,7 @@ mt76x2u_phy_update_channel_gain(struct mt76x02_dev *dev)
+ 		break;
+ 	}
+ 
+-	dev->cal.avg_rssi_all = mt76x02_phy_get_min_avg_rssi(&dev->mt76);
++	dev->cal.avg_rssi_all = mt76x02_phy_get_min_avg_rssi(dev);
+ 	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS,
+ 			      mt76_rr(dev, MT_RX_STAT_1));
+ 
 -- 
 2.19.0
 
