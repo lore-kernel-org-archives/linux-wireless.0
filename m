@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4250C67875
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECAAC65C30
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 869BD20882
-	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 869BD20882
+	by mail.kernel.org (Postfix) with ESMTP id 22CA020882
+	for <linux-wireless@archiver.kernel.org>; Sun,  7 Oct 2018 09:45:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 22CA020882
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727363AbeJGQwW (ORCPT
+        id S1727536AbeJGQw0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 7 Oct 2018 12:52:22 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:38271 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726450AbeJGQwW (ORCPT
+        Sun, 7 Oct 2018 12:52:26 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37332 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727022AbeJGQwZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 7 Oct 2018 12:52:22 -0400
-Received: by mail-wm1-f66.google.com with SMTP id 193-v6so5520312wme.3
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2018 02:45:37 -0700 (PDT)
+        Sun, 7 Oct 2018 12:52:25 -0400
+Received: by mail-wm1-f67.google.com with SMTP id 185-v6so5548068wmt.2
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Oct 2018 02:45:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Bjyf9CejPmsQU0mH5nXs+B4loSGthEGf9rUsGUH5K+c=;
-        b=YsiPvfCrwLVXzU6KF6tdVmSvKtELZvc+9SKkqm4E9aPt3f8Z/TJBg0HBxX1VTgVkI6
-         q0hSvIQbvm4vBsfU/qtfzxSKzdjMrq2pzVUm1KxYGYdV2JzMQSmOJobBBoc/gtGVtUP7
-         7DKOvqcttfWZeWs1F4eLCwV3yurzyOqeyHrBIaDYrhIHjRbYqRgSWTxCGiJ3JdyLTq5r
-         IC99skqxdkXyS6APeG5ybZfIjWRMe0Y9kWTfyNOFZ/4leMnruL3Lw6JzmkCGzAg38m6y
-         8D6u31wvTyLfxktztuB82xRpwSBSxb5senuGeTRPObl6s8ehWwIXrORQzoGXAzFdFNuU
-         3i7w==
-X-Gm-Message-State: ABuFfohouPLKU441kRlSLESvWNn606HSHyXCo048ixqWncCkzCG4UsM/
-        UbsNL01eWlrq4G+2mM5tbsArqQ==
-X-Google-Smtp-Source: ACcGV611bcsu6wx4Eiu0YTRUG9ESLJzFtKOoisj/52Y0uBMveMeCyDBBb+LiNaozNEWfAGTs5r6fZg==
-X-Received: by 2002:a1c:e388:: with SMTP id a130-v6mr11719802wmh.20.1538905535883;
-        Sun, 07 Oct 2018 02:45:35 -0700 (PDT)
+        bh=2UlHM0j1+rUsnfCH0yX2ilxlJOzlA18wVwtopUYYRo0=;
+        b=WScEfiZ+Y2ENxWm7NKQh0VTkd70ryrOudJejyPUYoL+U2T16suWiMqFbQ9pD9yaYP7
+         w0vu1phZGg0W9TWxVFdDLBLk/D3U9NTI64hspI16PFzpeoLtNpYs0rUp76/tY7G98TBT
+         urIYo9/vnO2ftA5DvUe/R3jbSxdXKpc8jg7GOZKQ8aUaYMDTHnCk8JvDlWkwUMmmU5xz
+         y1xu+oP663VUV/69xFDIUTnxMkEb7I1gp4+LFi5p1iS2i6P3wUZuNHeGQz3Y8qaH7d/c
+         TV1mnTp2h7qYgs33aRwLtV1EtIfUvJAeKU3YS+QOx/FsP6vt9fpfTzIh/shb+XR6yJWI
+         BIJw==
+X-Gm-Message-State: ABuFfogM9h67qEeij+gt1dvhxzbrKTjgQ4exQZIx/5bghiPvsskw633X
+        KzzlzIqtC+v17SoeyjAapaQGaA==
+X-Google-Smtp-Source: ACcGV60ur+DJdV05KRyAH/xNaOiR9JGqEHsxnQezDw3WCVhT54+Q/9PUxZXO3pwMPBUkq/mJQW4TDA==
+X-Received: by 2002:a1c:7ed4:: with SMTP id z203-v6mr12085179wmc.62.1538905538535;
+        Sun, 07 Oct 2018 02:45:38 -0700 (PDT)
 Received: from localhost.localdomain ([151.66.32.138])
-        by smtp.gmail.com with ESMTPSA id q135-v6sm6149599wmd.4.2018.10.07.02.45.34
+        by smtp.gmail.com with ESMTPSA id q135-v6sm6149599wmd.4.2018.10.07.02.45.37
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 07 Oct 2018 02:45:35 -0700 (PDT)
+        Sun, 07 Oct 2018 02:45:38 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 5/7] mt76: use mt76x02_dev instead of mt76_dev in mt76x02_mac.c
-Date:   Sun,  7 Oct 2018 11:45:22 +0200
-Message-Id: <20181007094524.12656-6-lorenzo.bianconi@redhat.com>
+Subject: [PATCH 7/7] mt76: use mt76x02_dev instead of mt76_dev in mt76x02_eeprom.c
+Date:   Sun,  7 Oct 2018 11:45:24 +0200
+Message-Id: <20181007094524.12656-8-lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -59,670 +59,861 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use mt76x02_dev data structure as reference in mt76x02_mac.c
+Use mt76x02_dev data structure as reference in mt76x02_eeprom.c
 instead of mt76_dev
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../wireless/mediatek/mt76/mt76x0/eeprom.c    |   3 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |   2 +-
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 132 +++++++++---------
- .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  31 ++--
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |   2 +-
- .../net/wireless/mediatek/mt76/mt76x02_txrx.c |   7 +-
- .../net/wireless/mediatek/mt76/mt76x02_usb.h  |   2 +-
- .../wireless/mediatek/mt76/mt76x02_usb_core.c |   3 +-
- .../net/wireless/mediatek/mt76/mt76x02_util.c |  24 ++--
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  |   6 +-
- .../wireless/mediatek/mt76/mt76x2/pci_mac.c   |   2 +-
- .../wireless/mediatek/mt76/mt76x2/pci_main.c  |   2 +-
- .../wireless/mediatek/mt76/mt76x2/usb_init.c  |   3 +-
- .../wireless/mediatek/mt76/mt76x2/usb_main.c  |   2 +-
- 14 files changed, 111 insertions(+), 110 deletions(-)
+ .../wireless/mediatek/mt76/mt76x0/eeprom.c    | 50 ++++++------
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   |  2 +-
+ .../wireless/mediatek/mt76/mt76x02_eeprom.c   | 33 ++++----
+ .../wireless/mediatek/mt76/mt76x02_eeprom.h   | 20 ++---
+ .../wireless/mediatek/mt76/mt76x2/eeprom.c    | 80 +++++++++----------
+ .../wireless/mediatek/mt76/mt76x2/eeprom.h    |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/mcu.c   |  5 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  6 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_mcu.c   |  2 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  8 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   | 12 +--
+ .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  2 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_mac.c   |  6 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_phy.c   |  6 +-
+ 15 files changed, 112 insertions(+), 124 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-index 5735038c0e2d..bea1af7ffa73 100644
+index bea1af7ffa73..1defb072ccbf 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
-@@ -337,8 +337,7 @@ int mt76x0_eeprom_init(struct mt76x02_dev *dev)
- 	dev_info(dev->mt76.dev, "EEPROM ver:%02hhx fae:%02hhx\n",
- 		 version, fae);
+@@ -31,8 +31,8 @@ mt76x0_efuse_physical_size_check(struct mt76x02_dev *dev)
+ 	int ret, i;
+ 	u32 start = 0, end = 0, cnt_free;
  
--	mt76x02_mac_setaddr(&dev->mt76,
--			    dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
-+	mt76x02_mac_setaddr(dev, dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
- 	mt76x0_set_chip_cap(dev);
- 	mt76x0_set_freq_offset(dev);
- 	mt76x0_set_temp_offset(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index 724c46b137e8..30a9790793d3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -143,7 +143,7 @@ void mt76x02_tx_set_txpwr_auto(struct mt76x02_dev *dev, s8 txpwr);
- int mt76x02_insert_hdr_pad(struct sk_buff *skb);
- void mt76x02_remove_hdr_pad(struct sk_buff *skb, int len);
- void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb);
--bool mt76x02_tx_status_data(struct mt76_dev *dev, u8 *update);
-+bool mt76x02_tx_status_data(struct mt76_dev *mdev, u8 *update);
- void mt76x02_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- 			  struct sk_buff *skb);
- void mt76x02_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 244245418ebb..e217dcec28d9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -45,8 +45,8 @@ mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_get_key_info);
+-	ret = mt76x02_get_efuse_data(&dev->mt76, MT_EE_USAGE_MAP_START,
+-				     data, sizeof(data), MT_EE_PHYSICAL_READ);
++	ret = mt76x02_get_efuse_data(dev, MT_EE_USAGE_MAP_START, data,
++				     sizeof(data), MT_EE_PHYSICAL_READ);
+ 	if (ret)
+ 		return ret;
  
--int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
--				struct ieee80211_key_conf *key)
-+int mt76x02_mac_shared_key_setup(struct mt76x02_dev *dev, u8 vif_idx,
-+				 u8 key_idx, struct ieee80211_key_conf *key)
+@@ -55,10 +55,10 @@ mt76x0_efuse_physical_size_check(struct mt76x02_dev *dev)
+ 
+ static void mt76x0_set_chip_cap(struct mt76x02_dev *dev)
  {
- 	enum mt76x02_cipher_type cipher;
- 	u8 key_data[32];
-@@ -56,20 +56,20 @@ int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
- 	if (cipher == MT_CIPHER_NONE && key)
- 		return -EOPNOTSUPP;
+-	u16 nic_conf0 = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_0);
+-	u16 nic_conf1 = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_1);
++	u16 nic_conf0 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
++	u16 nic_conf1 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1);
  
--	val = __mt76_rr(dev, MT_SKEY_MODE(vif_idx));
-+	val = mt76_rr(dev, MT_SKEY_MODE(vif_idx));
- 	val &= ~(MT_SKEY_MODE_MASK << MT_SKEY_MODE_SHIFT(vif_idx, key_idx));
- 	val |= cipher << MT_SKEY_MODE_SHIFT(vif_idx, key_idx);
--	__mt76_wr(dev, MT_SKEY_MODE(vif_idx), val);
-+	mt76_wr(dev, MT_SKEY_MODE(vif_idx), val);
+-	mt76x02_eeprom_parse_hw_cap(&dev->mt76);
++	mt76x02_eeprom_parse_hw_cap(dev);
+ 	dev_dbg(dev->mt76.dev, "2GHz %d 5GHz %d\n",
+ 		dev->mt76.cap.has_2ghz, dev->mt76.cap.has_5ghz);
  
--	__mt76_wr_copy(dev, MT_SKEY(vif_idx, key_idx), key_data,
--		       sizeof(key_data));
-+	mt76_wr_copy(dev, MT_SKEY(vif_idx, key_idx), key_data,
-+		     sizeof(key_data));
- 
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_shared_key_setup);
- 
--int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
--			    struct ieee80211_key_conf *key)
-+int mt76x02_mac_wcid_set_key(struct mt76x02_dev *dev, u8 idx,
-+			     struct ieee80211_key_conf *key)
+@@ -86,7 +86,7 @@ static void mt76x0_set_temp_offset(struct mt76x02_dev *dev)
  {
- 	enum mt76x02_cipher_type cipher;
- 	u8 key_data[32];
-@@ -79,25 +79,26 @@ int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
- 	if (cipher == MT_CIPHER_NONE && key)
- 		return -EOPNOTSUPP;
+ 	u8 val;
  
--	__mt76_wr_copy(dev, MT_WCID_KEY(idx), key_data, sizeof(key_data));
--	__mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PKEY_MODE, cipher);
-+	mt76_wr_copy(dev, MT_WCID_KEY(idx), key_data, sizeof(key_data));
-+	mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PKEY_MODE, cipher);
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_2G_TARGET_POWER) >> 8;
++	val = mt76x02_eeprom_get(dev, MT_EE_2G_TARGET_POWER) >> 8;
+ 	if (mt76x02_field_valid(val))
+ 		dev->cal.rx.temp_offset = mt76x02_sign_extend(val, 8);
+ 	else
+@@ -98,12 +98,12 @@ static void mt76x0_set_freq_offset(struct mt76x02_dev *dev)
+ 	struct mt76x02_rx_freq_cal *caldata = &dev->cal.rx;
+ 	u8 val;
  
- 	memset(iv_data, 0, sizeof(iv_data));
- 	if (key) {
--		__mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PAIRWISE,
--				 !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
-+		mt76_rmw_field(dev, MT_WCID_ATTR(idx), MT_WCID_ATTR_PAIRWISE,
-+			       !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
- 		iv_data[3] = key->keyidx << 6;
- 		if (cipher >= MT_CIPHER_TKIP)
- 			iv_data[3] |= 0x20;
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_FREQ_OFFSET);
++	val = mt76x02_eeprom_get(dev, MT_EE_FREQ_OFFSET);
+ 	if (!mt76x02_field_valid(val))
+ 		val = 0;
+ 	caldata->freq_offset = val;
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TSSI_BOUND4) >> 8;
++	val = mt76x02_eeprom_get(dev, MT_EE_TSSI_BOUND4) >> 8;
+ 	if (!mt76x02_field_valid(val))
+ 		val = 0;
+ 
+@@ -118,10 +118,8 @@ void mt76x0_read_rx_gain(struct mt76x02_dev *dev)
+ 	u16 rssi_offset;
+ 	int i;
+ 
+-	mt76x02_get_rx_gain(&dev->mt76, chan->band, &rssi_offset,
+-			    &lna_2g, lna_5g);
+-	caldata->lna_gain = mt76x02_get_lna_gain(&dev->mt76, &lna_2g,
+-						 lna_5g, chan);
++	mt76x02_get_rx_gain(dev, chan->band, &rssi_offset, &lna_2g, lna_5g);
++	caldata->lna_gain = mt76x02_get_lna_gain(dev, &lna_2g, lna_5g, chan);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(caldata->rssi_offset); i++) {
+ 		val = rssi_offset >> (8 * i);
+@@ -132,9 +130,9 @@ void mt76x0_read_rx_gain(struct mt76x02_dev *dev)
+ 	}
+ }
+ 
+-static s8 mt76x0_get_delta(struct mt76_dev *dev)
++static s8 mt76x0_get_delta(struct mt76x02_dev *dev)
+ {
+-	struct cfg80211_chan_def *chandef = &dev->chandef;
++	struct cfg80211_chan_def *chandef = &dev->mt76.chandef;
+ 	u8 val;
+ 
+ 	if (mt76x02_tssi_enabled(dev))
+@@ -162,54 +160,54 @@ void mt76x0_get_tx_power_per_rate(struct mt76x02_dev *dev)
+ 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+ 	bool is_2ghz = chan->band == NL80211_BAND_2GHZ;
+ 	struct mt76_rate_power *t = &dev->mt76.rate_power;
+-	s8 delta = mt76x0_get_delta(&dev->mt76);
++	s8 delta = mt76x0_get_delta(dev);
+ 	u16 val, addr;
+ 
+ 	memset(t, 0, sizeof(*t));
+ 
+ 	/* cck 1M, 2M, 5.5M, 11M */
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_BYRATE_BASE);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_BYRATE_BASE);
+ 	t->cck[0] = t->cck[1] = s6_to_s8(val);
+ 	t->cck[2] = t->cck[3] = s6_to_s8(val >> 8);
+ 
+ 	/* ofdm 6M, 9M, 12M, 18M */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 2 : 0x120;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->ofdm[0] = t->ofdm[1] = s6_to_s8(val);
+ 	t->ofdm[2] = t->ofdm[3] = s6_to_s8(val >> 8);
+ 
+ 	/* ofdm 24M, 36M, 48M, 54M */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 4 : 0x122;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->ofdm[4] = t->ofdm[5] = s6_to_s8(val);
+ 	t->ofdm[6] = t->ofdm[7] = s6_to_s8(val >> 8);
+ 
+ 	/* ht-vht mcs 1ss 0, 1, 2, 3 */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 6 : 0x124;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->ht[0] = t->ht[1] = t->vht[0] = t->vht[1] = s6_to_s8(val);
+ 	t->ht[2] = t->ht[3] = t->vht[2] = t->vht[3] = s6_to_s8(val >> 8);
+ 
+ 	/* ht-vht mcs 1ss 4, 5, 6 */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 8 : 0x126;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->ht[4] = t->ht[5] = t->vht[4] = t->vht[5] = s6_to_s8(val);
+ 	t->ht[6] = t->vht[6] = s6_to_s8(val >> 8);
+ 
+ 	/* ht-vht mcs 1ss 0, 1, 2, 3 stbc */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 14 : 0xec;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->stbc[0] = t->stbc[1] = s6_to_s8(val);
+ 	t->stbc[2] = t->stbc[3] = s6_to_s8(val >> 8);
+ 
+ 	/* ht-vht mcs 1ss 4, 5, 6 stbc */
+ 	addr = is_2ghz ? MT_EE_TX_POWER_BYRATE_BASE + 16 : 0xee;
+-	val = mt76x02_eeprom_get(&dev->mt76, addr);
++	val = mt76x02_eeprom_get(dev, addr);
+ 	t->stbc[4] = t->stbc[5] = s6_to_s8(val);
+ 	t->stbc[6] = t->stbc[7] = s6_to_s8(val >> 8);
+ 
+ 	/* vht mcs 8, 9 5GHz */
+-	val = mt76x02_eeprom_get(&dev->mt76, 0x132);
++	val = mt76x02_eeprom_get(dev, 0x132);
+ 	t->vht[7] = s6_to_s8(val);
+ 	t->vht[8] = s6_to_s8(val >> 8);
+ 
+@@ -266,7 +264,7 @@ void mt76x0_get_power_info(struct mt76x02_dev *dev, u8 *info)
+ 		addr = MT_EE_TX_POWER_0_GRP4_TSSI_SLOPE + 2 + offset;
  	}
  
--	__mt76_wr_copy(dev, MT_WCID_IV(idx), iv_data, sizeof(iv_data));
-+	mt76_wr_copy(dev, MT_WCID_IV(idx), iv_data, sizeof(iv_data));
+-	data = mt76x02_eeprom_get(&dev->mt76, addr);
++	data = mt76x02_eeprom_get(dev, addr);
  
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_key);
+ 	info[0] = data;
+ 	if (!info[0] || info[0] > 0x3f)
+@@ -312,7 +310,7 @@ static int mt76x0_load_eeprom(struct mt76x02_dev *dev)
+ 	if (found < 0)
+ 		return found;
  
--void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
-+void mt76x02_mac_wcid_setup(struct mt76x02_dev *dev, u8 idx,
-+			    u8 vif_idx, u8 *mac)
- {
- 	struct mt76_wcid_addr addr = {};
- 	u32 attr;
-@@ -105,10 +106,10 @@ void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
- 	attr = FIELD_PREP(MT_WCID_ATTR_BSS_IDX, vif_idx & 7) |
- 	       FIELD_PREP(MT_WCID_ATTR_BSS_IDX_EXT, !!(vif_idx & 8));
- 
--	__mt76_wr(dev, MT_WCID_ATTR(idx), attr);
-+	mt76_wr(dev, MT_WCID_ATTR(idx), attr);
- 
--	__mt76_wr(dev, MT_WCID_TX_RATE(idx), 0);
--	__mt76_wr(dev, MT_WCID_TX_RATE(idx) + 4, 0);
-+	mt76_wr(dev, MT_WCID_TX_RATE(idx), 0);
-+	mt76_wr(dev, MT_WCID_TX_RATE(idx) + 4, 0);
- 
- 	if (idx >= 128)
- 		return;
-@@ -116,22 +117,22 @@ void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac)
- 	if (mac)
- 		memcpy(addr.macaddr, mac, ETH_ALEN);
- 
--	__mt76_wr_copy(dev, MT_WCID_ADDR(idx), &addr, sizeof(addr));
-+	mt76_wr_copy(dev, MT_WCID_ADDR(idx), &addr, sizeof(addr));
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_setup);
- 
--void mt76x02_mac_wcid_set_drop(struct mt76_dev *dev, u8 idx, bool drop)
-+void mt76x02_mac_wcid_set_drop(struct mt76x02_dev *dev, u8 idx, bool drop)
- {
--	u32 val = __mt76_rr(dev, MT_WCID_DROP(idx));
-+	u32 val = mt76_rr(dev, MT_WCID_DROP(idx));
- 	u32 bit = MT_WCID_DROP_MASK(idx);
- 
- 	/* prevent unnecessary writes */
- 	if ((val & bit) != (bit * drop))
--		__mt76_wr(dev, MT_WCID_DROP(idx), (val & ~bit) | (bit * drop));
-+		mt76_wr(dev, MT_WCID_DROP(idx), (val & ~bit) | (bit * drop));
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_drop);
- 
--void mt76x02_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq)
-+void mt76x02_txq_init(struct mt76x02_dev *dev, struct ieee80211_txq *txq)
- {
- 	struct mt76_txq *mtxq;
- 
-@@ -151,7 +152,7 @@ void mt76x02_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq)
- 		mtxq->wcid = &mvif->group_wcid;
- 	}
- 
--	mt76_txq_init(dev, txq);
-+	mt76_txq_init(&dev->mt76, txq);
- }
- EXPORT_SYMBOL_GPL(mt76x02_txq_init);
- 
-@@ -198,8 +199,8 @@ mt76x02_mac_fill_txwi(struct mt76x02_txwi *txwi, struct sk_buff *skb,
+-	return mt76x02_get_efuse_data(&dev->mt76, 0, dev->mt76.eeprom.data,
++	return mt76x02_get_efuse_data(dev, 0, dev->mt76.eeprom.data,
+ 				      MT76X0_EEPROM_SIZE, MT_EE_READ);
  }
  
- static __le16
--mt76x02_mac_tx_rate_val(struct mt76_dev *dev,
--		       const struct ieee80211_tx_rate *rate, u8 *nss_val)
-+mt76x02_mac_tx_rate_val(struct mt76x02_dev *dev,
-+			const struct ieee80211_tx_rate *rate, u8 *nss_val)
- {
- 	u16 rateval;
- 	u8 phy, rate_idx;
-@@ -224,10 +225,10 @@ mt76x02_mac_tx_rate_val(struct mt76_dev *dev,
- 			bw = 1;
- 	} else {
- 		const struct ieee80211_rate *r;
--		int band = dev->chandef.chan->band;
-+		int band = dev->mt76.chandef.chan->band;
- 		u16 val;
- 
--		r = &dev->hw->wiphy->bands[band]->bitrates[rate->idx];
-+		r = &dev->mt76.hw->wiphy->bands[band]->bitrates[rate->idx];
- 		if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
- 			val = r->hw_value_short;
- 		else
-@@ -248,22 +249,22 @@ mt76x02_mac_tx_rate_val(struct mt76_dev *dev,
- 	return cpu_to_le16(rateval);
- }
- 
--void mt76x02_mac_wcid_set_rate(struct mt76_dev *dev, struct mt76_wcid *wcid,
--			      const struct ieee80211_tx_rate *rate)
-+void mt76x02_mac_wcid_set_rate(struct mt76x02_dev *dev, struct mt76_wcid *wcid,
-+			       const struct ieee80211_tx_rate *rate)
- {
--	spin_lock_bh(&dev->lock);
-+	spin_lock_bh(&dev->mt76.lock);
- 	wcid->tx_rate = mt76x02_mac_tx_rate_val(dev, rate, &wcid->tx_rate_nss);
- 	wcid->tx_rate_set = true;
--	spin_unlock_bh(&dev->lock);
-+	spin_unlock_bh(&dev->mt76.lock);
- }
- 
--bool mt76x02_mac_load_tx_status(struct mt76_dev *dev,
--			       struct mt76x02_tx_status *stat)
-+bool mt76x02_mac_load_tx_status(struct mt76x02_dev *dev,
-+				struct mt76x02_tx_status *stat)
- {
- 	u32 stat1, stat2;
- 
--	stat2 = __mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
--	stat1 = __mt76_rr(dev, MT_TX_STAT_FIFO);
-+	stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
-+	stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
- 
- 	stat->valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
- 	if (!stat->valid)
-@@ -339,7 +340,7 @@ mt76x02_mac_process_tx_rate(struct ieee80211_tx_rate *txrate, u16 rate,
- 	return 0;
- }
- 
--void mt76x02_mac_write_txwi(struct mt76_dev *dev, struct mt76x02_txwi *txwi,
-+void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 			    struct sk_buff *skb, struct mt76_wcid *wcid,
- 			    struct ieee80211_sta *sta, int len)
- {
-@@ -349,7 +350,7 @@ void mt76x02_mac_write_txwi(struct mt76_dev *dev, struct mt76x02_txwi *txwi,
- 	u16 rate_ht_mask = FIELD_PREP(MT_RXWI_RATE_PHY, BIT(1) | BIT(2));
- 	u8 nss;
- 	s8 txpwr_adj, max_txpwr_adj;
--	u8 ccmp_pn[8], nstreams = dev->chainmask & 0xf;
-+	u8 ccmp_pn[8], nstreams = dev->mt76.chainmask & 0xf;
- 
- 	memset(txwi, 0, sizeof(*txwi));
- 
-@@ -374,24 +375,25 @@ void mt76x02_mac_write_txwi(struct mt76_dev *dev, struct mt76x02_txwi *txwi,
- 		txwi->eiv = *((__le32 *)&ccmp_pn[1]);
- 	}
- 
--	spin_lock_bh(&dev->lock);
-+	spin_lock_bh(&dev->mt76.lock);
- 	if (wcid && (rate->idx < 0 || !rate->count)) {
- 		txwi->rate = wcid->tx_rate;
- 		max_txpwr_adj = wcid->max_txpwr_adj;
- 		nss = wcid->tx_rate_nss;
- 	} else {
- 		txwi->rate = mt76x02_mac_tx_rate_val(dev, rate, &nss);
--		max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(dev, rate);
-+		max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(&dev->mt76, rate);
- 	}
--	spin_unlock_bh(&dev->lock);
-+	spin_unlock_bh(&dev->mt76.lock);
- 
--	txpwr_adj = mt76x02_tx_get_txpwr_adj(dev, dev->txpower_conf,
-+	txpwr_adj = mt76x02_tx_get_txpwr_adj(&dev->mt76,
-+					     dev->mt76.txpower_conf,
- 					     max_txpwr_adj);
- 	txwi->ctl2 = FIELD_PREP(MT_TX_PWR_ADJ, txpwr_adj);
- 
--	if (nstreams > 1 && mt76_rev(dev) >= MT76XX_REV_E4)
-+	if (nstreams > 1 && mt76_rev(&dev->mt76) >= MT76XX_REV_E4)
- 		txwi->txstream = 0x13;
--	else if (nstreams > 1 && mt76_rev(dev) >= MT76XX_REV_E3 &&
-+	else if (nstreams > 1 && mt76_rev(&dev->mt76) >= MT76XX_REV_E3 &&
- 		 !(txwi->rate & cpu_to_le16(rate_ht_mask)))
- 		txwi->txstream = 0x93;
- 
-@@ -400,9 +402,9 @@ void mt76x02_mac_write_txwi(struct mt76_dev *dev, struct mt76x02_txwi *txwi,
- EXPORT_SYMBOL_GPL(mt76x02_mac_write_txwi);
- 
- static void
--mt76x02_mac_fill_tx_status(struct mt76_dev *dev,
--			  struct ieee80211_tx_info *info,
--			  struct mt76x02_tx_status *st, int n_frames)
-+mt76x02_mac_fill_tx_status(struct mt76x02_dev *dev,
-+			   struct ieee80211_tx_info *info,
-+			   struct mt76x02_tx_status *st, int n_frames)
- {
- 	struct ieee80211_tx_rate *rate = info->status.rates;
- 	int cur_idx, last_rate;
-@@ -413,7 +415,7 @@ mt76x02_mac_fill_tx_status(struct mt76_dev *dev,
- 
- 	last_rate = min_t(int, st->retry, IEEE80211_TX_MAX_RATES - 1);
- 	mt76x02_mac_process_tx_rate(&rate[last_rate], st->rate,
--				   dev->chandef.chan->band);
-+				    dev->mt76.chandef.chan->band);
- 	if (last_rate < IEEE80211_TX_MAX_RATES - 1)
- 		rate[last_rate + 1].idx = -1;
- 
-@@ -441,8 +443,8 @@ mt76x02_mac_fill_tx_status(struct mt76_dev *dev,
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- }
- 
--void mt76x02_send_tx_status(struct mt76_dev *dev,
--			   struct mt76x02_tx_status *stat, u8 *update)
-+void mt76x02_send_tx_status(struct mt76x02_dev *dev,
-+			    struct mt76x02_tx_status *stat, u8 *update)
- {
- 	struct ieee80211_tx_info info = {};
- 	struct ieee80211_sta *sta = NULL;
-@@ -450,8 +452,8 @@ void mt76x02_send_tx_status(struct mt76_dev *dev,
- 	struct mt76x02_sta *msta = NULL;
- 
- 	rcu_read_lock();
--	if (stat->wcid < ARRAY_SIZE(dev->wcid))
--		wcid = rcu_dereference(dev->wcid[stat->wcid]);
-+	if (stat->wcid < ARRAY_SIZE(dev->mt76.wcid))
-+		wcid = rcu_dereference(dev->mt76.wcid[stat->wcid]);
- 
- 	if (wcid) {
- 		void *priv;
-@@ -476,7 +478,7 @@ void mt76x02_send_tx_status(struct mt76_dev *dev,
- 		}
- 
- 		mt76x02_mac_fill_tx_status(dev, &info, &msta->status,
--					  msta->n_frames);
-+					   msta->n_frames);
- 
- 		msta->status = *stat;
- 		msta->n_frames = 1;
-@@ -486,7 +488,7 @@ void mt76x02_send_tx_status(struct mt76_dev *dev,
- 		*update = 1;
- 	}
- 
--	ieee80211_tx_status_noskb(dev->hw, sta, &info);
-+	ieee80211_tx_status_noskb(dev->mt76.hw, sta, &info);
- 
- out:
- 	rcu_read_unlock();
-@@ -561,21 +563,21 @@ mt76x02_mac_process_rate(struct mt76_rx_status *status, u16 rate)
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_process_rate);
- 
--void mt76x02_mac_setaddr(struct mt76_dev *dev, u8 *addr)
-+void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr)
- {
--	ether_addr_copy(dev->macaddr, addr);
-+	ether_addr_copy(dev->mt76.macaddr, addr);
- 
--	if (!is_valid_ether_addr(dev->macaddr)) {
--		eth_random_addr(dev->macaddr);
--		dev_info(dev->dev,
-+	if (!is_valid_ether_addr(dev->mt76.macaddr)) {
-+		eth_random_addr(dev->mt76.macaddr);
-+		dev_info(dev->mt76.dev,
- 			 "Invalid MAC address, using random address %pM\n",
--			 dev->macaddr);
-+			 dev->mt76.macaddr);
- 	}
- 
--	__mt76_wr(dev, MT_MAC_ADDR_DW0, get_unaligned_le32(dev->macaddr));
--	__mt76_wr(dev, MT_MAC_ADDR_DW1,
--		  get_unaligned_le16(dev->macaddr + 4) |
--		  FIELD_PREP(MT_MAC_ADDR_DW1_U2ME_MASK, 0xff));
-+	mt76_wr(dev, MT_MAC_ADDR_DW0, get_unaligned_le32(dev->mt76.macaddr));
-+	mt76_wr(dev, MT_MAC_ADDR_DW1,
-+		get_unaligned_le16(dev->mt76.macaddr + 4) |
-+		FIELD_PREP(MT_MAC_ADDR_DW1_U2ME_MASK, 0xff));
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_setaddr);
- 
-@@ -697,7 +699,7 @@ void mt76x02_mac_poll_tx_status(struct mt76x02_dev *dev, bool irq)
- 
- 	while (!irq || !kfifo_is_full(&dev->txstatus_fifo)) {
- 		spin_lock_irqsave(&dev->mt76.mmio.irq_lock, flags);
--		ret = mt76x02_mac_load_tx_status(&dev->mt76, &stat);
-+		ret = mt76x02_mac_load_tx_status(dev, &stat);
- 		spin_unlock_irqrestore(&dev->mt76.mmio.irq_lock, flags);
- 
- 		if (!ret)
-@@ -706,7 +708,7 @@ void mt76x02_mac_poll_tx_status(struct mt76x02_dev *dev, bool irq)
- 		trace_mac_txstat_fetch(dev, &stat);
- 
- 		if (!irq) {
--			mt76x02_send_tx_status(&dev->mt76, &stat, &update);
-+			mt76x02_send_tx_status(dev, &stat, &update);
- 			continue;
- 		}
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index 4f7ee4620ab5..d99c18743969 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -198,28 +198,29 @@ mt76x02_skb_tx_info(struct sk_buff *skb)
- 	return (void *)info->status.status_driver_data;
- }
- 
--void mt76x02_txq_init(struct mt76_dev *dev, struct ieee80211_txq *txq);
-+void mt76x02_txq_init(struct mt76x02_dev *dev, struct ieee80211_txq *txq);
- enum mt76x02_cipher_type
- mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data);
- 
--int mt76x02_mac_shared_key_setup(struct mt76_dev *dev, u8 vif_idx, u8 key_idx,
--				struct ieee80211_key_conf *key);
--int mt76x02_mac_wcid_set_key(struct mt76_dev *dev, u8 idx,
--			    struct ieee80211_key_conf *key);
--void mt76x02_mac_wcid_setup(struct mt76_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
--void mt76x02_mac_wcid_set_drop(struct mt76_dev *dev, u8 idx, bool drop);
--void mt76x02_mac_wcid_set_rate(struct mt76_dev *dev, struct mt76_wcid *wcid,
--			      const struct ieee80211_tx_rate *rate);
--bool mt76x02_mac_load_tx_status(struct mt76_dev *dev,
--			       struct mt76x02_tx_status *stat);
--void mt76x02_send_tx_status(struct mt76_dev *dev,
--			   struct mt76x02_tx_status *stat, u8 *update);
-+int mt76x02_mac_shared_key_setup(struct mt76x02_dev *dev, u8 vif_idx,
-+				 u8 key_idx, struct ieee80211_key_conf *key);
-+int mt76x02_mac_wcid_set_key(struct mt76x02_dev *dev, u8 idx,
-+			     struct ieee80211_key_conf *key);
-+void mt76x02_mac_wcid_setup(struct mt76x02_dev *dev, u8 idx, u8 vif_idx,
-+			    u8 *mac);
-+void mt76x02_mac_wcid_set_drop(struct mt76x02_dev *dev, u8 idx, bool drop);
-+void mt76x02_mac_wcid_set_rate(struct mt76x02_dev *dev, struct mt76_wcid *wcid,
-+			       const struct ieee80211_tx_rate *rate);
-+bool mt76x02_mac_load_tx_status(struct mt76x02_dev *dev,
-+				struct mt76x02_tx_status *stat);
-+void mt76x02_send_tx_status(struct mt76x02_dev *dev,
-+			    struct mt76x02_tx_status *stat, u8 *update);
- int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
- 			   void *rxi);
- int
- mt76x02_mac_process_rate(struct mt76_rx_status *status, u16 rate);
--void mt76x02_mac_setaddr(struct mt76_dev *dev, u8 *addr);
--void mt76x02_mac_write_txwi(struct mt76_dev *dev, struct mt76x02_txwi *txwi,
-+void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr);
-+void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 			    struct sk_buff *skb, struct mt76_wcid *wcid,
- 			    struct ieee80211_sta *sta, int len);
- void mt76x02_mac_poll_tx_status(struct mt76x02_dev *dev, bool irq);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 1b945079c802..39f092034240 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -65,7 +65,7 @@ static void mt76x02_process_tx_status_fifo(struct mt76x02_dev *dev)
- 	u8 update = 1;
- 
- 	while (kfifo_get(&dev->txstatus_fifo, &stat))
--		mt76x02_send_tx_status(&dev->mt76, &stat, &update);
-+		mt76x02_send_tx_status(dev, &stat, &update);
- }
- 
- static void mt76x02_tx_tasklet(unsigned long data)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-index 830377221739..865fa1b84086 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-@@ -157,8 +157,9 @@ void mt76x02_tx_complete(struct mt76_dev *dev, struct sk_buff *skb)
- }
- EXPORT_SYMBOL_GPL(mt76x02_tx_complete);
- 
--bool mt76x02_tx_status_data(struct mt76_dev *dev, u8 *update)
-+bool mt76x02_tx_status_data(struct mt76_dev *mdev, u8 *update)
- {
-+	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
- 	struct mt76x02_tx_status stat;
- 
- 	if (!mt76x02_mac_load_tx_status(dev, &stat))
-@@ -181,9 +182,9 @@ int mt76x02_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 	int ret;
- 
- 	if (q == &dev->mt76.q_tx[MT_TXQ_PSD] && wcid && wcid->idx < 128)
--		mt76x02_mac_wcid_set_drop(&dev->mt76, wcid->idx, false);
-+		mt76x02_mac_wcid_set_drop(dev, wcid->idx, false);
- 
--	mt76x02_mac_write_txwi(mdev, txwi, skb, wcid, sta, skb->len);
-+	mt76x02_mac_write_txwi(dev, txwi, skb, wcid, sta, skb->len);
- 
- 	ret = mt76x02_insert_hdr_pad(skb);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h b/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
-index 28aabcfd1195..0126e51d77ed 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb.h
-@@ -25,7 +25,7 @@ int mt76x02u_mcu_fw_send_data(struct mt76x02_dev *dev, const void *data,
- 			      int data_len, u32 max_payload, u32 offset);
- 
- int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags);
--int mt76x02u_tx_prepare_skb(struct mt76_dev *dev, void *data,
-+int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
- 			    struct sk_buff *skb, struct mt76_queue *q,
- 			    struct mt76_wcid *wcid, struct ieee80211_sta *sta,
- 			    u32 *tx_info);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-index 7c6c973af386..e43c53e8e6be 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-@@ -99,11 +99,12 @@ mt76x02u_set_txinfo(struct sk_buff *skb, struct mt76_wcid *wcid, u8 ep)
- 	return mt76x02u_skb_dma_info(skb, WLAN_PORT, flags);
- }
- 
--int mt76x02u_tx_prepare_skb(struct mt76_dev *dev, void *data,
-+int mt76x02u_tx_prepare_skb(struct mt76_dev *mdev, void *data,
- 			    struct sk_buff *skb, struct mt76_queue *q,
- 			    struct mt76_wcid *wcid, struct ieee80211_sta *sta,
- 			    u32 *tx_info)
- {
-+	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
- 	struct mt76x02_txwi *txwi;
- 	int err, len = skb->len;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 8263b785df5c..3351e0c7a9f7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -103,10 +103,10 @@ int mt76x02_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	msta->wcid.sta = 1;
- 	msta->wcid.idx = idx;
- 	msta->wcid.hw_key_idx = -1;
--	mt76x02_mac_wcid_setup(&dev->mt76, idx, mvif->idx, sta->addr);
--	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, false);
-+	mt76x02_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
-+	mt76x02_mac_wcid_set_drop(dev, idx, false);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
--		mt76x02_txq_init(&dev->mt76, sta->txq[i]);
-+		mt76x02_txq_init(dev, sta->txq[i]);
- 
- 	if (vif->type == NL80211_IFTYPE_AP)
- 		set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
-@@ -134,9 +134,9 @@ int mt76x02_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		mt76_txq_remove(&dev->mt76, sta->txq[i]);
--	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, true);
-+	mt76x02_mac_wcid_set_drop(dev, idx, true);
- 	mt76_wcid_free(dev->mt76.wcid_mask, idx);
--	mt76x02_mac_wcid_setup(&dev->mt76, idx, 0, NULL);
-+	mt76x02_mac_wcid_setup(dev, idx, 0, NULL);
- 	mutex_unlock(&dev->mt76.mutex);
- 
- 	return 0;
-@@ -151,7 +151,7 @@ void mt76x02_vif_init(struct mt76x02_dev *dev, struct ieee80211_vif *vif,
- 	mvif->idx = idx;
- 	mvif->group_wcid.idx = MT_VIF_WCID(idx);
- 	mvif->group_wcid.hw_key_idx = -1;
--	mt76x02_txq_init(&dev->mt76, vif->txq);
-+	mt76x02_txq_init(dev, vif->txq);
- }
- EXPORT_SYMBOL_GPL(mt76x02_vif_init);
- 
-@@ -301,17 +301,15 @@ int mt76x02_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	if (!msta) {
- 		if (key || wcid->hw_key_idx == idx) {
--			ret = mt76x02_mac_wcid_set_key(&dev->mt76,
--						       wcid->idx, key);
-+			ret = mt76x02_mac_wcid_set_key(dev, wcid->idx, key);
- 			if (ret)
- 				return ret;
- 		}
- 
--		return mt76x02_mac_shared_key_setup(&dev->mt76,
--						    mvif->idx, idx, key);
-+		return mt76x02_mac_shared_key_setup(dev, mvif->idx, idx, key);
- 	}
- 
--	return mt76x02_mac_wcid_set_key(&dev->mt76, msta->wcid.idx, key);
-+	return mt76x02_mac_wcid_set_key(dev, msta->wcid.idx, key);
- }
- EXPORT_SYMBOL_GPL(mt76x02_set_key);
- 
-@@ -363,7 +361,7 @@ void mt76x02_sta_rate_tbl_update(struct ieee80211_hw *hw,
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_sta *sta)
- {
--	struct mt76_dev *dev = hw->priv;
-+	struct mt76x02_dev *dev = hw->priv;
- 	struct mt76x02_sta *msta = (struct mt76x02_sta *) sta->drv_priv;
- 	struct ieee80211_sta_rates *rates = rcu_dereference(sta->rates);
- 	struct ieee80211_tx_rate rate = {};
-@@ -374,7 +372,7 @@ void mt76x02_sta_rate_tbl_update(struct ieee80211_hw *hw,
- 	rate.idx = rates->rate[0].idx;
- 	rate.flags = rates->rate[0].flags;
- 	mt76x02_mac_wcid_set_rate(dev, &msta->wcid, &rate);
--	msta->wcid.max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(dev, &rate);
-+	msta->wcid.max_txpwr_adj = mt76x02_tx_get_max_txpwr_adj(&dev->mt76, &rate);
- }
- EXPORT_SYMBOL_GPL(mt76x02_sta_rate_tbl_update);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index d98d1286f7c1..4e920c71cee9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -143,14 +143,14 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- 		mt76_wr(dev, MT_WCID_DROP_BASE + i * 4, 0);
- 
- 	for (i = 0; i < 256; i++)
--		mt76x02_mac_wcid_setup(&dev->mt76, i, 0, NULL);
-+		mt76x02_mac_wcid_setup(dev, i, 0, NULL);
- 
- 	for (i = 0; i < MT_MAX_VIFS; i++)
--		mt76x02_mac_wcid_setup(&dev->mt76, MT_VIF_WCID(i), i, NULL);
-+		mt76x02_mac_wcid_setup(dev, MT_VIF_WCID(i), i, NULL);
- 
- 	for (i = 0; i < 16; i++)
- 		for (k = 0; k < 4; k++)
--			mt76x02_mac_shared_key_setup(&dev->mt76, i, k, NULL);
-+			mt76x02_mac_shared_key_setup(dev, i, k, NULL);
- 
- 	for (i = 0; i < 8; i++) {
- 		mt76x2_mac_set_bssid(dev, i, null_addr);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-index 08366c5988ea..4b331ed14bb2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mac.c
-@@ -36,7 +36,7 @@ mt76_write_beacon(struct mt76x02_dev *dev, int offset, struct sk_buff *skb)
- 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x02_txwi)))
- 		return -ENOSPC;
- 
--	mt76x02_mac_write_txwi(&dev->mt76, &txwi, skb, NULL, NULL, skb->len);
-+	mt76x02_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
- 
- 	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
- 	offset += sizeof(txwi);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-index 65fef082e7cc..034a06295668 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
-@@ -172,7 +172,7 @@ mt76x2_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
- 	int idx = msta->wcid.idx;
- 
- 	mt76_stop_tx_queues(&dev->mt76, sta, true);
--	mt76x02_mac_wcid_set_drop(&dev->mt76, idx, ps);
-+	mt76x02_mac_wcid_set_drop(dev, idx, ps);
- }
- 
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-index 6214781714c4..51d3eabfa01b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-@@ -204,8 +204,7 @@ int mt76x2u_init_hardware(struct mt76x02_dev *dev)
+@@ -326,7 +324,7 @@ int mt76x0_eeprom_init(struct mt76x02_dev *dev)
  	if (err < 0)
  		return err;
  
--	mt76x02_mac_setaddr(&dev->mt76,
--			    dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
-+	mt76x02_mac_setaddr(dev, dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
- 	dev->mt76.rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
+-	data = mt76x02_eeprom_get(&dev->mt76, MT_EE_VERSION);
++	data = mt76x02_eeprom_get(dev, MT_EE_VERSION);
+ 	version = data >> 8;
+ 	fae = data;
  
- 	mt76x2u_init_beacon_offsets(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-index 87941ed3fb7c..1971a1b00038 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-@@ -50,7 +50,7 @@ static int mt76x2u_add_interface(struct ieee80211_hw *hw,
- 	struct mt76x02_dev *dev = hw->priv;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index 4b29cd52aa44..f1a1c70c4263 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -102,7 +102,7 @@ static int mt76x0e_register_device(struct mt76x02_dev *dev)
+ 		u16 val;
  
- 	if (!ether_addr_equal(dev->mt76.macaddr, vif->addr))
--		mt76x02_mac_setaddr(&dev->mt76, vif->addr);
-+		mt76x02_mac_setaddr(dev, vif->addr);
+ 		mt76_clear(dev, MT_COEXCFG0, BIT(0));
+-		val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_0);
++		val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
+ 		if (val & MT_EE_NIC_CONF_0_PA_IO_CURRENT) {
+ 			u32 data;
  
- 	mt76x02_vif_init(dev, vif, 0);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index fdf1b3482fd0..99e0a91a2f99 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -490,7 +490,7 @@ mt76x0_phy_set_chan_rf_params(struct mt76x02_dev *dev, u8 channel, u16 rf_bw_ban
+ 	mt76_wr(dev, MT_RF_MISC, mac_reg);
+ 
+ 	band = (rf_band & RF_G_BAND) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
+-	if (mt76x02_ext_pa_enabled(&dev->mt76, band)) {
++	if (mt76x02_ext_pa_enabled(dev, band)) {
+ 		/*
+ 			MT_RF_MISC (offset: 0x0518)
+ 			[2]1'b1: enable external A band PA, 1'b0: disable external A band PA
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+index d3efeb8a72b7..9390de2a323e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.c
+@@ -17,46 +17,43 @@
+ 
+ #include <asm/unaligned.h>
+ 
+-#include "mt76.h"
+ #include "mt76x02_eeprom.h"
+-#include "mt76x02_regs.h"
+ 
+ static int
+-mt76x02_efuse_read(struct mt76_dev *dev, u16 addr, u8 *data,
++mt76x02_efuse_read(struct mt76x02_dev *dev, u16 addr, u8 *data,
+ 		   enum mt76x02_eeprom_modes mode)
+ {
+ 	u32 val;
+ 	int i;
+ 
+-	val = __mt76_rr(dev, MT_EFUSE_CTRL);
++	val = mt76_rr(dev, MT_EFUSE_CTRL);
+ 	val &= ~(MT_EFUSE_CTRL_AIN |
+ 		 MT_EFUSE_CTRL_MODE);
+ 	val |= FIELD_PREP(MT_EFUSE_CTRL_AIN, addr & ~0xf);
+ 	val |= FIELD_PREP(MT_EFUSE_CTRL_MODE, mode);
+ 	val |= MT_EFUSE_CTRL_KICK;
+-	__mt76_wr(dev, MT_EFUSE_CTRL, val);
++	mt76_wr(dev, MT_EFUSE_CTRL, val);
+ 
+-	if (!__mt76_poll_msec(dev, MT_EFUSE_CTRL, MT_EFUSE_CTRL_KICK,
+-			      0, 1000))
++	if (!mt76_poll_msec(dev, MT_EFUSE_CTRL, MT_EFUSE_CTRL_KICK, 0, 1000))
+ 		return -ETIMEDOUT;
+ 
+ 	udelay(2);
+ 
+-	val = __mt76_rr(dev, MT_EFUSE_CTRL);
++	val = mt76_rr(dev, MT_EFUSE_CTRL);
+ 	if ((val & MT_EFUSE_CTRL_AOUT) == MT_EFUSE_CTRL_AOUT) {
+ 		memset(data, 0xff, 16);
+ 		return 0;
+ 	}
+ 
+ 	for (i = 0; i < 4; i++) {
+-		val = __mt76_rr(dev, MT_EFUSE_DATA(i));
++		val = mt76_rr(dev, MT_EFUSE_DATA(i));
+ 		put_unaligned_le32(val, data + 4 * i);
+ 	}
+ 
  	return 0;
+ }
+ 
+-int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
++int mt76x02_get_efuse_data(struct mt76x02_dev *dev, u16 base, void *buf,
+ 			   int len, enum mt76x02_eeprom_modes mode)
+ {
+ 	int ret, i;
+@@ -71,26 +68,26 @@ int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_get_efuse_data);
+ 
+-void mt76x02_eeprom_parse_hw_cap(struct mt76_dev *dev)
++void mt76x02_eeprom_parse_hw_cap(struct mt76x02_dev *dev)
+ {
+ 	u16 val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
+ 
+ 	switch (FIELD_GET(MT_EE_NIC_CONF_0_BOARD_TYPE, val)) {
+ 	case BOARD_TYPE_5GHZ:
+-		dev->cap.has_5ghz = true;
++		dev->mt76.cap.has_5ghz = true;
+ 		break;
+ 	case BOARD_TYPE_2GHZ:
+-		dev->cap.has_2ghz = true;
++		dev->mt76.cap.has_2ghz = true;
+ 		break;
+ 	default:
+-		dev->cap.has_2ghz = true;
+-		dev->cap.has_5ghz = true;
++		dev->mt76.cap.has_2ghz = true;
++		dev->mt76.cap.has_5ghz = true;
+ 		break;
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_eeprom_parse_hw_cap);
+ 
+-bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band)
++bool mt76x02_ext_pa_enabled(struct mt76x02_dev *dev, enum nl80211_band band)
+ {
+ 	u16 conf0 = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
+ 
+@@ -101,7 +98,7 @@ bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band)
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_ext_pa_enabled);
+ 
+-void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
++void mt76x02_get_rx_gain(struct mt76x02_dev *dev, enum nl80211_band band,
+ 			 u16 *rssi_offset, s8 *lna_2g, s8 *lna_5g)
+ {
+ 	u16 val;
+@@ -129,7 +126,7 @@ void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_get_rx_gain);
+ 
+-u8 mt76x02_get_lna_gain(struct mt76_dev *dev,
++u8 mt76x02_get_lna_gain(struct mt76x02_dev *dev,
+ 			s8 *lna_2g, s8 *lna_5g,
+ 			struct ieee80211_channel *chan)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+index bcd05f7c5f45..0fba43d569b5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_eeprom.h
+@@ -18,6 +18,8 @@
+ #ifndef __MT76x02_EEPROM_H
+ #define __MT76x02_EEPROM_H
+ 
++#include "mt76x02.h"
++
+ enum mt76x02_eeprom_field {
+ 	MT_EE_CHIP_ID =				0x000,
+ 	MT_EE_VERSION =				0x002,
+@@ -168,17 +170,17 @@ static inline s8 mt76x02_rate_power_val(u8 val)
+ }
+ 
+ static inline int
+-mt76x02_eeprom_get(struct mt76_dev *dev,
++mt76x02_eeprom_get(struct mt76x02_dev *dev,
+ 		   enum mt76x02_eeprom_field field)
+ {
+ 	if ((field & 1) || field >= __MT_EE_MAX)
+ 		return -1;
+ 
+-	return get_unaligned_le16(dev->eeprom.data + field);
++	return get_unaligned_le16(dev->mt76.eeprom.data + field);
+ }
+ 
+ static inline bool
+-mt76x02_temp_tx_alc_enabled(struct mt76_dev *dev)
++mt76x02_temp_tx_alc_enabled(struct mt76x02_dev *dev)
+ {
+ 	u16 val;
+ 
+@@ -191,21 +193,21 @@ mt76x02_temp_tx_alc_enabled(struct mt76_dev *dev)
+ }
+ 
+ static inline bool
+-mt76x02_tssi_enabled(struct mt76_dev *dev)
++mt76x02_tssi_enabled(struct mt76x02_dev *dev)
+ {
+ 	return !mt76x02_temp_tx_alc_enabled(dev) &&
+ 	       (mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1) &
+ 		MT_EE_NIC_CONF_1_TX_ALC_EN);
+ }
+ 
+-bool mt76x02_ext_pa_enabled(struct mt76_dev *dev, enum nl80211_band band);
+-int mt76x02_get_efuse_data(struct mt76_dev *dev, u16 base, void *buf,
++bool mt76x02_ext_pa_enabled(struct mt76x02_dev *dev, enum nl80211_band band);
++int mt76x02_get_efuse_data(struct mt76x02_dev *dev, u16 base, void *buf,
+ 			   int len, enum mt76x02_eeprom_modes mode);
+-void mt76x02_get_rx_gain(struct mt76_dev *dev, enum nl80211_band band,
++void mt76x02_get_rx_gain(struct mt76x02_dev *dev, enum nl80211_band band,
+ 			 u16 *rssi_offset, s8 *lna_2g, s8 *lna_5g);
+-u8 mt76x02_get_lna_gain(struct mt76_dev *dev,
++u8 mt76x02_get_lna_gain(struct mt76x02_dev *dev,
+ 			s8 *lna_2g, s8 *lna_5g,
+ 			struct ieee80211_channel *chan);
+-void mt76x02_eeprom_parse_hw_cap(struct mt76_dev *dev);
++void mt76x02_eeprom_parse_hw_cap(struct mt76x02_dev *dev);
+ 
+ #endif /* __MT76x02_EEPROM_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
+index bbab021b5f1a..5fb9532f3eed 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
+@@ -177,8 +177,8 @@ mt76x2_eeprom_load(struct mt76x02_dev *dev)
+ 
+ 	efuse = dev->mt76.otp.data;
+ 
+-	if (mt76x02_get_efuse_data(&dev->mt76, 0, efuse,
+-				   MT7662_EEPROM_SIZE, MT_EE_READ))
++	if (mt76x02_get_efuse_data(dev, 0, efuse, MT7662_EEPROM_SIZE,
++				   MT_EE_READ))
+ 		goto out;
+ 
+ 	if (found) {
+@@ -248,22 +248,22 @@ mt76x2_get_5g_rx_gain(struct mt76x02_dev *dev, u8 channel)
+ 	group = mt76x2_get_cal_channel_group(channel);
+ 	switch (group) {
+ 	case MT_CH_5G_JAPAN:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP0_1_RX_HIGH_GAIN);
+ 	case MT_CH_5G_UNII_1:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP0_1_RX_HIGH_GAIN) >> 8;
+ 	case MT_CH_5G_UNII_2:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP2_3_RX_HIGH_GAIN);
+ 	case MT_CH_5G_UNII_2E_1:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP2_3_RX_HIGH_GAIN) >> 8;
+ 	case MT_CH_5G_UNII_2E_2:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN);
+ 	default:
+-		return mt76x02_eeprom_get(&dev->mt76,
++		return mt76x02_eeprom_get(dev,
+ 					  MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN) >> 8;
+ 	}
+ }
+@@ -277,14 +277,13 @@ void mt76x2_read_rx_gain(struct mt76x02_dev *dev)
+ 	u16 val;
+ 
+ 	if (chan->band == NL80211_BAND_2GHZ)
+-		val = mt76x02_eeprom_get(&dev->mt76,
+-					 MT_EE_RF_2G_RX_HIGH_GAIN) >> 8;
++		val = mt76x02_eeprom_get(dev, MT_EE_RF_2G_RX_HIGH_GAIN) >> 8;
+ 	else
+ 		val = mt76x2_get_5g_rx_gain(dev, channel);
+ 
+ 	mt76x2_set_rx_gain_group(dev, val);
+ 
+-	mt76x02_get_rx_gain(&dev->mt76, chan->band, &val, &lna_2g, lna_5g);
++	mt76x02_get_rx_gain(dev, chan->band, &val, &lna_2g, lna_5g);
+ 	mt76x2_set_rssi_offset(dev, 0, val);
+ 	mt76x2_set_rssi_offset(dev, 1, val >> 8);
+ 
+@@ -293,7 +292,7 @@ void mt76x2_read_rx_gain(struct mt76x02_dev *dev)
+ 	dev->cal.rx.mcu_gain |= (lna_5g[1] & 0xff) << 16;
+ 	dev->cal.rx.mcu_gain |= (lna_5g[2] & 0xff) << 24;
+ 
+-	lna = mt76x02_get_lna_gain(&dev->mt76, &lna_2g, lna_5g, chan);
++	lna = mt76x02_get_lna_gain(dev, &lna_2g, lna_5g, chan);
+ 	dev->cal.rx.lna_gain = mt76x02_sign_extend(lna, 8);
+ }
+ EXPORT_SYMBOL_GPL(mt76x2_read_rx_gain);
+@@ -308,53 +307,49 @@ void mt76x2_get_rate_power(struct mt76x02_dev *dev, struct mt76_rate_power *t,
+ 
+ 	memset(t, 0, sizeof(*t));
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_CCK);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_CCK);
+ 	t->cck[0] = t->cck[1] = mt76x02_rate_power_val(val);
+ 	t->cck[2] = t->cck[3] = mt76x02_rate_power_val(val >> 8);
+ 
+ 	if (is_5ghz)
+-		val = mt76x02_eeprom_get(&dev->mt76,
+-					 MT_EE_TX_POWER_OFDM_5G_6M);
++		val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_OFDM_5G_6M);
+ 	else
+-		val = mt76x02_eeprom_get(&dev->mt76,
+-					 MT_EE_TX_POWER_OFDM_2G_6M);
++		val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_OFDM_2G_6M);
+ 	t->ofdm[0] = t->ofdm[1] = mt76x02_rate_power_val(val);
+ 	t->ofdm[2] = t->ofdm[3] = mt76x02_rate_power_val(val >> 8);
+ 
+ 	if (is_5ghz)
+-		val = mt76x02_eeprom_get(&dev->mt76,
+-					 MT_EE_TX_POWER_OFDM_5G_24M);
++		val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_OFDM_5G_24M);
+ 	else
+-		val = mt76x02_eeprom_get(&dev->mt76,
+-					 MT_EE_TX_POWER_OFDM_2G_24M);
++		val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_OFDM_2G_24M);
+ 	t->ofdm[4] = t->ofdm[5] = mt76x02_rate_power_val(val);
+ 	t->ofdm[6] = t->ofdm[7] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_HT_MCS0);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_HT_MCS0);
+ 	t->ht[0] = t->ht[1] = mt76x02_rate_power_val(val);
+ 	t->ht[2] = t->ht[3] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_HT_MCS4);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_HT_MCS4);
+ 	t->ht[4] = t->ht[5] = mt76x02_rate_power_val(val);
+ 	t->ht[6] = t->ht[7] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_HT_MCS8);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_HT_MCS8);
+ 	t->ht[8] = t->ht[9] = mt76x02_rate_power_val(val);
+ 	t->ht[10] = t->ht[11] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_HT_MCS12);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_HT_MCS12);
+ 	t->ht[12] = t->ht[13] = mt76x02_rate_power_val(val);
+ 	t->ht[14] = t->ht[15] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_VHT_MCS0);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_VHT_MCS0);
+ 	t->vht[0] = t->vht[1] = mt76x02_rate_power_val(val);
+ 	t->vht[2] = t->vht[3] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_VHT_MCS4);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_VHT_MCS4);
+ 	t->vht[4] = t->vht[5] = mt76x02_rate_power_val(val);
+ 	t->vht[6] = t->vht[7] = mt76x02_rate_power_val(val >> 8);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_VHT_MCS8);
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_VHT_MCS8);
+ 	if (!is_5ghz)
+ 		val >>= 8;
+ 	t->vht[8] = t->vht[9] = mt76x02_rate_power_val(val >> 8);
+@@ -390,7 +385,7 @@ mt76x2_get_power_info_2g(struct mt76x02_dev *dev,
+ 	t->chain[chain].target_power = data[2];
+ 	t->chain[chain].delta = mt76x02_sign_extend_optional(data[delta_idx], 7);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RF_2G_TSSI_OFF_TXPOWER);
++	val = mt76x02_eeprom_get(dev, MT_EE_RF_2G_TSSI_OFF_TXPOWER);
+ 	t->target_power = val >> 8;
+ }
+ 
+@@ -441,7 +436,7 @@ mt76x2_get_power_info_5g(struct mt76x02_dev *dev,
+ 	t->chain[chain].target_power = data[2];
+ 	t->chain[chain].delta = mt76x02_sign_extend_optional(data[delta_idx], 7);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_RF_2G_RX_HIGH_GAIN);
++	val = mt76x02_eeprom_get(dev, MT_EE_RF_2G_RX_HIGH_GAIN);
+ 	t->target_power = val & 0xff;
+ }
+ 
+@@ -453,8 +448,8 @@ void mt76x2_get_power_info(struct mt76x02_dev *dev,
+ 
+ 	memset(t, 0, sizeof(*t));
+ 
+-	bw40 = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_DELTA_BW40);
+-	bw80 = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_DELTA_BW80);
++	bw40 = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_DELTA_BW40);
++	bw80 = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_DELTA_BW80);
+ 
+ 	if (chan->band == NL80211_BAND_5GHZ) {
+ 		bw40 >>= 8;
+@@ -469,7 +464,7 @@ void mt76x2_get_power_info(struct mt76x02_dev *dev,
+ 					 MT_EE_TX_POWER_1_START_2G);
+ 	}
+ 
+-	if (mt76x02_tssi_enabled(&dev->mt76) ||
++	if (mt76x02_tssi_enabled(dev) ||
+ 	    !mt76x02_field_valid(t->target_power))
+ 		t->target_power = t->chain[0].target_power;
+ 
+@@ -486,23 +481,20 @@ int mt76x2_get_temp_comp(struct mt76x02_dev *dev, struct mt76x2_temp_comp *t)
+ 
+ 	memset(t, 0, sizeof(*t));
+ 
+-	if (!mt76x02_temp_tx_alc_enabled(&dev->mt76))
++	if (!mt76x02_temp_tx_alc_enabled(dev))
+ 		return -EINVAL;
+ 
+-	if (!mt76x02_ext_pa_enabled(&dev->mt76, band))
++	if (!mt76x02_ext_pa_enabled(dev, band))
+ 		return -EINVAL;
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_TX_POWER_EXT_PA_5G) >> 8;
++	val = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_EXT_PA_5G) >> 8;
+ 	t->temp_25_ref = val & 0x7f;
+ 	if (band == NL80211_BAND_5GHZ) {
+-		slope = mt76x02_eeprom_get(&dev->mt76,
+-					   MT_EE_RF_TEMP_COMP_SLOPE_5G);
+-		bounds = mt76x02_eeprom_get(&dev->mt76,
+-					    MT_EE_TX_POWER_EXT_PA_5G);
++		slope = mt76x02_eeprom_get(dev, MT_EE_RF_TEMP_COMP_SLOPE_5G);
++		bounds = mt76x02_eeprom_get(dev, MT_EE_TX_POWER_EXT_PA_5G);
+ 	} else {
+-		slope = mt76x02_eeprom_get(&dev->mt76,
+-					   MT_EE_RF_TEMP_COMP_SLOPE_2G);
+-		bounds = mt76x02_eeprom_get(&dev->mt76,
++		slope = mt76x02_eeprom_get(dev, MT_EE_RF_TEMP_COMP_SLOPE_2G);
++		bounds = mt76x02_eeprom_get(dev,
+ 					    MT_EE_TX_POWER_DELTA_BW80) >> 8;
+ 	}
+ 
+@@ -523,7 +515,7 @@ int mt76x2_eeprom_init(struct mt76x02_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	mt76x02_eeprom_parse_hw_cap(&dev->mt76);
++	mt76x02_eeprom_parse_hw_cap(dev);
+ 	mt76x2_eeprom_get_macaddr(dev);
+ 	mt76_eeprom_override(&dev->mt76);
+ 	dev->mt76.macaddr[0] &= ~BIT(1);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.h
+index c97b31c77d83..13bceb6aa5e4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.h
+@@ -62,7 +62,7 @@ void mt76x2_read_rx_gain(struct mt76x02_dev *dev);
+ static inline bool
+ mt76x2_has_ext_lna(struct mt76x02_dev *dev)
+ {
+-	u32 val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_1);
++	u32 val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1);
+ 
+ 	if (dev->mt76.chandef.chan->band == NL80211_BAND_2GHZ)
+ 		return val & MT_EE_NIC_CONF_1_LNA_EXT_2G;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
+index 134037a227d7..88bd62cfbdf9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.c
+@@ -59,7 +59,6 @@ EXPORT_SYMBOL_GPL(mt76x2_mcu_set_channel);
+ int mt76x2_mcu_load_cr(struct mt76x02_dev *dev, u8 type, u8 temp_level,
+ 		       u8 channel)
+ {
+-	struct mt76_dev *mdev = &dev->mt76;
+ 	struct sk_buff *skb;
+ 	struct {
+ 		u8 cr_mode;
+@@ -76,8 +75,8 @@ int mt76x2_mcu_load_cr(struct mt76x02_dev *dev, u8 type, u8 temp_level,
+ 	u32 val;
+ 
+ 	val = BIT(31);
+-	val |= (mt76x02_eeprom_get(mdev, MT_EE_NIC_CONF_0) >> 8) & 0x00ff;
+-	val |= (mt76x02_eeprom_get(mdev, MT_EE_NIC_CONF_1) << 8) & 0xff00;
++	val |= (mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0) >> 8) & 0x00ff;
++	val |= (mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_1) << 8) & 0xff00;
+ 	msg.cfg = cpu_to_le32(val);
+ 
+ 	/* first set the channel without the extension channel info */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+index 4e920c71cee9..3824290b219d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+@@ -43,7 +43,7 @@ mt76x2_fixup_xtal(struct mt76x02_dev *dev)
+ 	u16 eep_val;
+ 	s8 offset = 0;
+ 
+-	eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_XTAL_TRIM_2);
++	eep_val = mt76x02_eeprom_get(dev, MT_EE_XTAL_TRIM_2);
+ 
+ 	offset = eep_val & 0x7f;
+ 	if ((eep_val & 0xff) == 0xff)
+@@ -53,7 +53,7 @@ mt76x2_fixup_xtal(struct mt76x02_dev *dev)
+ 
+ 	eep_val >>= 8;
+ 	if (eep_val == 0x00 || eep_val == 0xff) {
+-		eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_XTAL_TRIM_1);
++		eep_val = mt76x02_eeprom_get(dev, MT_EE_XTAL_TRIM_1);
+ 		eep_val &= 0xff;
+ 
+ 		if (eep_val == 0x00 || eep_val == 0xff)
+@@ -64,7 +64,7 @@ mt76x2_fixup_xtal(struct mt76x02_dev *dev)
+ 	mt76_rmw_field(dev, MT_XO_CTRL5, MT_XO_CTRL5_C2_VAL, eep_val + offset);
+ 	mt76_set(dev, MT_XO_CTRL6, MT_XO_CTRL6_C2_CTRL);
+ 
+-	eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_2);
++	eep_val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_2);
+ 	switch (FIELD_GET(MT_EE_NIC_CONF_2_XTAL_OPTION, eep_val)) {
+ 	case 0:
+ 		mt76_wr(dev, MT_XO_CTRL7, 0x5c1fee80);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
+index 563e2c459409..d8fa9ba56437 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
+@@ -140,7 +140,7 @@ mt76pci_load_firmware(struct mt76x02_dev *dev)
+ 
+ 	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, 0);
+ 
+-	val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_2);
++	val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_2);
+ 	if (FIELD_GET(MT_EE_NIC_CONF_2_XTAL_OPTION, val) == 1)
+ 		mt76_set(dev, MT_MCU_COM_REG0, BIT(30));
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+index aff0363e0958..dbb63d4c3bad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+@@ -26,7 +26,7 @@ mt76x2_phy_tssi_init_cal(struct mt76x02_dev *dev)
+ 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+ 	u32 flag = 0;
+ 
+-	if (!mt76x02_tssi_enabled(&dev->mt76))
++	if (!mt76x02_tssi_enabled(dev))
+ 		return false;
+ 
+ 	if (mt76x2_channel_silent(dev))
+@@ -35,7 +35,7 @@ mt76x2_phy_tssi_init_cal(struct mt76x02_dev *dev)
+ 	if (chan->band == NL80211_BAND_5GHZ)
+ 		flag |= BIT(0);
+ 
+-	if (mt76x02_ext_pa_enabled(&dev->mt76, chan->band))
++	if (mt76x02_ext_pa_enabled(dev, chan->band))
+ 		flag |= BIT(8);
+ 
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_TSSI, flag, true);
+@@ -361,7 +361,7 @@ int mt76x2_phy_set_channel(struct mt76x02_dev *dev,
+ 		mt76_set(dev, MT_BBP(RXO, 13), BIT(10));
+ 
+ 	if (!dev->cal.init_cal_done) {
+-		u8 val = mt76x02_eeprom_get(&dev->mt76, MT_EE_BT_RCAL_RESULT);
++		u8 val = mt76x02_eeprom_get(dev, MT_EE_BT_RCAL_RESULT);
+ 
+ 		if (val != 0xff)
+ 			mt76x02_mcu_calibrate(dev, MCU_CAL_R, 0, true);
+@@ -391,7 +391,7 @@ int mt76x2_phy_set_channel(struct mt76x02_dev *dev,
+ 	       sizeof(dev->cal.agc_gain_cur));
+ 
+ 	/* init default values for temp compensation */
+-	if (mt76x02_tssi_enabled(&dev->mt76)) {
++	if (mt76x02_tssi_enabled(dev)) {
+ 		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
+ 			       0x38);
+ 		mt76_rmw_field(dev, MT_TX_ALC_CFG_2, MT_TX_ALC_CFG_2_TEMP_COMP,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+index 93bcab7cccfd..fd077e8d8dcb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+@@ -65,7 +65,7 @@ void mt76x2_phy_set_txpower_regs(struct mt76x02_dev *dev,
+ 		mt76_wr(dev, MT_TX_ALC_CFG_2, 0x35160a00);
+ 		mt76_wr(dev, MT_TX_ALC_CFG_3, 0x35160a06);
+ 
+-		if (mt76x02_ext_pa_enabled(&dev->mt76, band)) {
++		if (mt76x02_ext_pa_enabled(dev, band)) {
+ 			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0x0000ec00);
+ 			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0x0000ec00);
+ 		} else {
+@@ -76,7 +76,7 @@ void mt76x2_phy_set_txpower_regs(struct mt76x02_dev *dev,
+ 		pa_mode[0] = 0x0000ffff;
+ 		pa_mode[1] = 0x00ff00ff;
+ 
+-		if (mt76x02_ext_pa_enabled(&dev->mt76, band)) {
++		if (mt76x02_ext_pa_enabled(dev, band)) {
+ 			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x2f0f0400);
+ 			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x2f0f0476);
+ 		} else {
+@@ -84,7 +84,7 @@ void mt76x2_phy_set_txpower_regs(struct mt76x02_dev *dev,
+ 			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
+ 		}
+ 
+-		if (mt76x02_ext_pa_enabled(&dev->mt76, band))
++		if (mt76x02_ext_pa_enabled(dev, band))
+ 			pa_mode_adj = 0x04000000;
+ 		else
+ 			pa_mode_adj = 0;
+@@ -98,7 +98,7 @@ void mt76x2_phy_set_txpower_regs(struct mt76x02_dev *dev,
+ 	mt76_wr(dev, MT_RF_PA_MODE_CFG0, pa_mode[0]);
+ 	mt76_wr(dev, MT_RF_PA_MODE_CFG1, pa_mode[1]);
+ 
+-	if (mt76x02_ext_pa_enabled(&dev->mt76, band)) {
++	if (mt76x02_ext_pa_enabled(dev, band)) {
+ 		u32 val;
+ 
+ 		if (band == NL80211_BAND_2GHZ)
+@@ -196,7 +196,7 @@ void mt76x2_configure_tx_delay(struct mt76x02_dev *dev,
+ {
+ 	u32 cfg0, cfg1;
+ 
+-	if (mt76x02_ext_pa_enabled(&dev->mt76, band)) {
++	if (mt76x02_ext_pa_enabled(dev, band)) {
+ 		cfg0 = bw ? 0x000b0c01 : 0x00101101;
+ 		cfg1 = 0x00011414;
+ 	} else {
+@@ -275,7 +275,7 @@ void mt76x2_phy_tssi_compensate(struct mt76x02_dev *dev, bool wait)
+ 		dev->cal.tssi_comp_pending = false;
+ 		mt76x2_get_power_info(dev, &txp, chan);
+ 
+-		if (mt76x02_ext_pa_enabled(&dev->mt76, chan->band))
++		if (mt76x02_ext_pa_enabled(dev, chan->band))
+ 			t.pa_mode = 1;
+ 
+ 		t.cal_mode = BIT(1);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+index 51d3eabfa01b..13cce2937573 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
+@@ -130,7 +130,7 @@ static int mt76x2u_init_eeprom(struct mt76x02_dev *dev)
+ 		put_unaligned_le32(val, dev->mt76.eeprom.data + i);
+ 	}
+ 
+-	mt76x02_eeprom_parse_hw_cap(&dev->mt76);
++	mt76x02_eeprom_parse_hw_cap(dev);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
+index dbd635aa763b..db2194a92e67 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mac.c
+@@ -32,7 +32,7 @@ static void mt76x2u_mac_fixup_xtal(struct mt76x02_dev *dev)
+ 	s8 offset = 0;
+ 	u16 eep_val;
+ 
+-	eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_XTAL_TRIM_2);
++	eep_val = mt76x02_eeprom_get(dev, MT_EE_XTAL_TRIM_2);
+ 
+ 	offset = eep_val & 0x7f;
+ 	if ((eep_val & 0xff) == 0xff)
+@@ -42,7 +42,7 @@ static void mt76x2u_mac_fixup_xtal(struct mt76x02_dev *dev)
+ 
+ 	eep_val >>= 8;
+ 	if (eep_val == 0x00 || eep_val == 0xff) {
+-		eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_XTAL_TRIM_1);
++		eep_val = mt76x02_eeprom_get(dev, MT_EE_XTAL_TRIM_1);
+ 		eep_val &= 0xff;
+ 
+ 		if (eep_val == 0x00 || eep_val == 0xff)
+@@ -67,7 +67,7 @@ static void mt76x2u_mac_fixup_xtal(struct mt76x02_dev *dev)
+ 	/* init fce */
+ 	mt76_clear(dev, MT_FCE_L2_STUFF, MT_FCE_L2_STUFF_WR_MPDU_LEN_EN);
+ 
+-	eep_val = mt76x02_eeprom_get(&dev->mt76, MT_EE_NIC_CONF_2);
++	eep_val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_2);
+ 	switch (FIELD_GET(MT_EE_NIC_CONF_2_XTAL_OPTION, eep_val)) {
+ 	case 0:
+ 		mt76_wr(dev, MT_XO_CTRL7, 0x5c1fee80);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+index c4c437770fc9..422114de695a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
+@@ -177,7 +177,7 @@ int mt76x2u_phy_set_channel(struct mt76x02_dev *dev,
+ 		mt76_set(dev, MT_BBP(RXO, 13), BIT(10));
+ 
+ 	if (!dev->cal.init_cal_done) {
+-		u8 val = mt76x02_eeprom_get(&dev->mt76, MT_EE_BT_RCAL_RESULT);
++		u8 val = mt76x02_eeprom_get(dev, MT_EE_BT_RCAL_RESULT);
+ 
+ 		if (val != 0xff)
+ 			mt76x02_mcu_calibrate(dev, MCU_CAL_R, 0, false);
+@@ -202,7 +202,7 @@ int mt76x2u_phy_set_channel(struct mt76x02_dev *dev,
+ 	if (scan)
+ 		return 0;
+ 
+-	if (mt76x02_tssi_enabled(&dev->mt76)) {
++	if (mt76x02_tssi_enabled(dev)) {
+ 		/* init default values for temp compensation */
+ 		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
+ 			       0x38);
+@@ -217,7 +217,7 @@ int mt76x2u_phy_set_channel(struct mt76x02_dev *dev,
+ 			chan = dev->mt76.chandef.chan;
+ 			if (chan->band == NL80211_BAND_5GHZ)
+ 				flag |= BIT(0);
+-			if (mt76x02_ext_pa_enabled(&dev->mt76, chan->band))
++			if (mt76x02_ext_pa_enabled(dev, chan->band))
+ 				flag |= BIT(8);
+ 			mt76x02_mcu_calibrate(dev, MCU_CAL_TSSI, flag, false);
+ 			dev->cal.tssi_cal_done = true;
 -- 
 2.19.0
 
