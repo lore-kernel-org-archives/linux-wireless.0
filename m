@@ -2,491 +2,171 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB6D1C00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B70BC00449
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:21:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80B8D2087C
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 80B8D2087C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id 154952075C
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:21:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kwo5RfSX";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kwo5RfSX"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 154952075C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727246AbeJHP3F (ORCPT
+        id S1726113AbeJHPbu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 11:29:05 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56452 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725973AbeJHP3E (ORCPT
+        Mon, 8 Oct 2018 11:31:50 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:44378 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725973AbeJHPbt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 11:29:04 -0400
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1g9Qjj-0003w6-Gz; Mon, 08 Oct 2018 11:17:56 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  8 Oct 2018 11:17:34 +0300
-Message-Id: <20181008081735.3401-18-luca@coelho.fi>
-X-Mailer: git-send-email 2.19.0
-In-Reply-To: <20181008081735.3401-1-luca@coelho.fi>
-References: <20181008081735.3401-1-luca@coelho.fi>
+        Mon, 8 Oct 2018 11:31:49 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id C4FC96079B; Mon,  8 Oct 2018 08:21:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538986877;
+        bh=ibY0uXoZ4oYjo/4Vt7cSFaFS3WcmuUzKbqiec3E6Ea0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=kwo5RfSX4CY8hivfCVPnBZ+IkG8x/BktKJK3qBALnwZQ3Ngc6Hoinhuc045G9I31o
+         Y5DtCtnmpPh8MO6aXMGwdqF4eCx2g+MIIuL1m2b/IZ4g8LWzxH1hlbY3oGQ0JUQ1bF
+         +V5FWwAHFKXLyD1Mv8p4RBuHynHu00KF6OxtltSU=
+Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 089F6602F1;
+        Mon,  8 Oct 2018 08:21:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538986877;
+        bh=ibY0uXoZ4oYjo/4Vt7cSFaFS3WcmuUzKbqiec3E6Ea0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=kwo5RfSX4CY8hivfCVPnBZ+IkG8x/BktKJK3qBALnwZQ3Ngc6Hoinhuc045G9I31o
+         Y5DtCtnmpPh8MO6aXMGwdqF4eCx2g+MIIuL1m2b/IZ4g8LWzxH1hlbY3oGQ0JUQ1bF
+         +V5FWwAHFKXLyD1Mv8p4RBuHynHu00KF6OxtltSU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 089F6602F1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Christian Lamparter <chunkeey@gmail.com>
+Cc:     "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Subject: Re: Asus RT-AC58U boardfile (was Re: [PATCH 2/2] ath10k: search DT for qcom, ath10k-calibration-variant)
+References: <20170310080615.22958-1-sven.eckelmann@openmesh.com>
+        <3853747.Q0JJmSnsYM@debian64>
+        <87bmj9tup8.fsf@kamboji.qca.qualcomm.com>
+        <5423847.QPV7e8Q2Ao@debian64>
+Date:   Mon, 08 Oct 2018 11:21:13 +0300
+In-Reply-To: <5423847.QPV7e8Q2Ao@debian64> (Christian Lamparter's message of
+        "Mon, 29 Jan 2018 21:09:50 +0100")
+Message-ID: <87in2cetmu.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 17/18] iwlwifi: mvm: move iwl_mvm_sta_alloc_queue() down
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Christian Lamparter <chunkeey@gmail.com> writes:
 
-We want to call iwl_mvm_inactivity_check() from here in the
-next patch, so need to move the code down to be able to.
+> Sven's boarddata for the OpenMesh A42 has been accepted. \o/
+> So let's try to get the board data for the RT-AC58U merged.
+>
+> On Friday, December 8, 2017 10:50:12 AM CET Kalle Valo wrote:
+>> > I've attached the necessary bmi-board-id=16 and bmi-board-id=17 board 
+>> > files to this mail as well. So, all that needs to be done is to add
+>> > them to the board-2.bin on your codeaurora / ath10k-firmware project.
+>> >
+>> > Kalle: Can you please update the board-2.bin for the IPQ40XX on your
+>> > ath10k-firmware project on github?
+>
+> Since some time has passed since the original submission, I just stick to
+> answering the questions in the the guide from:
+> <https://wireless.wiki.kernel.org/en/users/drivers/ath10k/boardfiles>
+>
+>> description for what hardware this is
+> The hardware is the ASUS RT-AC58U [0]. It has a IPQ4018 SoC which
+> hosts two ath10k wifis. <https://www.asus.com/Networking/RT-AC58U/>
+> It's based on the qcom-ipq4019-ap.dk01.1-c2. machid: 0x8010100 .
+> the 5GHz and 2.4GHz radio components were drastically changed and
+> as a result, the device's wifis don't work very well with the reference
+> board-2.bin values. The 5GHz wifi suffers the most, the max throughput
+> tops out at 6 Mbps, even in the best possible "lab conditions".
+>
+>> origin of the board file (did you create it yourself or where you downloaded)
+>
+> These files are available in ASUS's GPL Source Code release.
+>
+> The source code can be downloaded from this site:
+> <https://www.asus.com/Networking/RT-AC58U/HelpDesk_Download/>
+> Just select "Driver & Tools" in the right frame and "Others"
+> in the "Please select OS". It's the second tab called "Source Code":
+>
+> |Version 3.0.0.4.380.8119
+> |2017/10/30  522.32 MBytes
+> |GPL of ASUS RT-AC58U for firmware 3.0.0.4.380.8119
+> (Note: If you press "Show all", it will list two older releases as well.
+> The boarddata files I sent you back then came from the original 
+> GPL_RT-AC58U_3.0.0.4.380.6516-g6772678 release. But the boarddata_*.bin
+> files have been updated since. So I'm attaching the new ones this time.)
+>
+> The zip file contains one big GPL_RT-AC58U_3.0.0.4.380.8119-gdb642b4.tgz
+> which in turn contain these these two files.
+> asuswrt/release/src/router/qca-wifi-fw.ipq40xx/RT-AC58U/boarddata_0.bin
+> asuswrt/release/src/router/qca-wifi-fw.ipq40xx/RT-AC58U/boarddata_1.bin
+>
+> I took the liberty of renaming the files to:
+>
+> boarddata_0 -> bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=ASUS-RT-AC58U.bin
+> boarddata_1 -> bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=ASUS-RT-AC58U.bin
+>
+>> ids to be used with the board file (ATH10K_BD_IE_BOARD_NAME in ath10k)
+>
+> Following OpenMesh A42 example of "VENDOR-DEVICE", I choose to go with:
+> "ASUS-RT-AC58U" as the variant string:
+>
+> full board name (ATH10K_BD_IE_BOARD_NAME):
+> bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=ASUS-RT-AC58U
+> bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=ASUS-RT-AC58U
+>
+>     {
+>         "data": "bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=ASUS-RT-AC58U.bin", 
+>         "names": [
+>             "bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=ASUS-RT-AC58U"
+>         ]
+>     }, 
+>     {
+>         "data": "bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=ASUS-RT-AC58U.bin", 
+>         "names": [
+>             "bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=ASUS-RT-AC58U"
+>         ]
+>     },   
+>
+>     (if this is appended at the end of board-2.json, please remove the
+>      last comma)
+>
+>> attach the actual board file (board.bin)
+> attached.
+>
+> just in case. These are the sha256sum:
+> d9eb177737983ed320027d50711fd17fadc8057ff0a99d1d455342ef7a7bb1af  \
+>     bus=ahb,bmi-chip-id=0,bmi-board-id=16,variant=ASUS-RT-AC58U.bin
+>
+> 24969cd91553fd915c51a8fe51c7b7e0e273679e1349b47d0a6c5ef4b4bb4a1b  \
+>     bus=ahb,bmi-chip-id=0,bmi-board-id=17,variant=ASUS-RT-AC58U.bin
+>
+> I also verified that the ASUS' firmware for the RT-AC58U 
+> (FW_RT_AC58U_30043808119.ZIP) uses the very same files.
 
-Fix a minor checkpatch complaint while at it.
+Added, thanks. But please do double check that I didn't do any mistakes.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 410 +++++++++----------
- 1 file changed, 205 insertions(+), 205 deletions(-)
+https://github.com/kvalo/ath10k-firmware/commit/4b89c2b7efef0ba663339c1a42c673e97c7562bd
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 24631866a174..8ae4fbf17f03 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -936,211 +936,6 @@ static bool iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue,
- 	return inc_ssn;
- }
- 
--static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
--				   struct ieee80211_sta *sta, u8 ac, int tid,
--				   struct ieee80211_hdr *hdr)
--{
--	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_trans_txq_scd_cfg cfg = {
--		.fifo = iwl_mvm_mac_ac_to_tx_fifo(mvm, ac),
--		.sta_id = mvmsta->sta_id,
--		.tid = tid,
--		.frame_limit = IWL_FRAME_LIMIT,
--	};
--	unsigned int wdg_timeout =
--		iwl_mvm_get_wd_timeout(mvm, mvmsta->vif, false, false);
--	u8 mac_queue = mvmsta->vif->hw_queue[ac];
--	int queue = -1;
--	bool using_inactive_queue = false, same_sta = false;
--	unsigned long disable_agg_tids = 0;
--	enum iwl_mvm_agg_state queue_state;
--	bool shared_queue = false, inc_ssn;
--	int ssn;
--	unsigned long tfd_queue_mask;
--	int ret;
--
--	lockdep_assert_held(&mvm->mutex);
--
--	if (iwl_mvm_has_new_tx_api(mvm))
--		return iwl_mvm_sta_alloc_queue_tvqm(mvm, sta, ac, tid);
--
--	spin_lock_bh(&mvmsta->lock);
--	tfd_queue_mask = mvmsta->tfd_queue_msk;
--	spin_unlock_bh(&mvmsta->lock);
--
--	spin_lock_bh(&mvm->queue_info_lock);
--
--	/*
--	 * Non-QoS, QoS NDP and MGMT frames should go to a MGMT queue, if one
--	 * exists
--	 */
--	if (!ieee80211_is_data_qos(hdr->frame_control) ||
--	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
--		queue = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
--						IWL_MVM_DQA_MIN_MGMT_QUEUE,
--						IWL_MVM_DQA_MAX_MGMT_QUEUE);
--		if (queue >= IWL_MVM_DQA_MIN_MGMT_QUEUE)
--			IWL_DEBUG_TX_QUEUES(mvm, "Found free MGMT queue #%d\n",
--					    queue);
--
--		/* If no such queue is found, we'll use a DATA queue instead */
--	}
--
--	if ((queue < 0 && mvmsta->reserved_queue != IEEE80211_INVAL_HW_QUEUE) &&
--	    (mvm->queue_info[mvmsta->reserved_queue].status ==
--	     IWL_MVM_QUEUE_RESERVED ||
--	     mvm->queue_info[mvmsta->reserved_queue].status ==
--	     IWL_MVM_QUEUE_INACTIVE)) {
--		queue = mvmsta->reserved_queue;
--		mvm->queue_info[queue].reserved = true;
--		IWL_DEBUG_TX_QUEUES(mvm, "Using reserved queue #%d\n", queue);
--	}
--
--	if (queue < 0)
--		queue = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
--						IWL_MVM_DQA_MIN_DATA_QUEUE,
--						IWL_MVM_DQA_MAX_DATA_QUEUE);
--
--	/*
--	 * Check if this queue is already allocated but inactive.
--	 * In such a case, we'll need to first free this queue before enabling
--	 * it again, so we'll mark it as reserved to make sure no new traffic
--	 * arrives on it
--	 */
--	if (queue > 0 &&
--	    mvm->queue_info[queue].status == IWL_MVM_QUEUE_INACTIVE) {
--		mvm->queue_info[queue].status = IWL_MVM_QUEUE_RESERVED;
--		using_inactive_queue = true;
--		same_sta = mvm->queue_info[queue].ra_sta_id == mvmsta->sta_id;
--		IWL_DEBUG_TX_QUEUES(mvm,
--				    "Re-assigning TXQ %d: sta_id=%d, tid=%d\n",
--				    queue, mvmsta->sta_id, tid);
--	}
--
--	/* No free queue - we'll have to share */
--	if (queue <= 0) {
--		queue = iwl_mvm_get_shared_queue(mvm, tfd_queue_mask, ac);
--		if (queue > 0) {
--			shared_queue = true;
--			mvm->queue_info[queue].status = IWL_MVM_QUEUE_SHARED;
--		}
--	}
--
--	/*
--	 * Mark TXQ as ready, even though it hasn't been fully configured yet,
--	 * to make sure no one else takes it.
--	 * This will allow avoiding re-acquiring the lock at the end of the
--	 * configuration. On error we'll mark it back as free.
--	 */
--	if ((queue > 0) && !shared_queue)
--		mvm->queue_info[queue].status = IWL_MVM_QUEUE_READY;
--
--	spin_unlock_bh(&mvm->queue_info_lock);
--
--	/* This shouldn't happen - out of queues */
--	if (WARN_ON(queue <= 0)) {
--		IWL_ERR(mvm, "No available queues for tid %d on sta_id %d\n",
--			tid, cfg.sta_id);
--		return queue;
--	}
--
--	/*
--	 * Actual en/disablement of aggregations is through the ADD_STA HCMD,
--	 * but for configuring the SCD to send A-MPDUs we need to mark the queue
--	 * as aggregatable.
--	 * Mark all DATA queues as allowing to be aggregated at some point
--	 */
--	cfg.aggregate = (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE ||
--			 queue == IWL_MVM_DQA_BSS_CLIENT_QUEUE);
--
--	/*
--	 * If this queue was previously inactive (idle) - we need to free it
--	 * first
--	 */
--	if (using_inactive_queue) {
--		ret = iwl_mvm_free_inactive_queue(mvm, queue, same_sta);
--		if (ret)
--			return ret;
--	}
--
--	IWL_DEBUG_TX_QUEUES(mvm,
--			    "Allocating %squeue #%d to sta %d on tid %d\n",
--			    shared_queue ? "shared " : "", queue,
--			    mvmsta->sta_id, tid);
--
--	if (shared_queue) {
--		/* Disable any open aggs on this queue */
--		disable_agg_tids = iwl_mvm_get_queue_agg_tids(mvm, queue);
--
--		if (disable_agg_tids) {
--			IWL_DEBUG_TX_QUEUES(mvm, "Disabling aggs on queue %d\n",
--					    queue);
--			iwl_mvm_invalidate_sta_queue(mvm, queue,
--						     disable_agg_tids, false);
--		}
--	}
--
--	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
--	inc_ssn = iwl_mvm_enable_txq(mvm, queue, mac_queue,
--				     ssn, &cfg, wdg_timeout);
--	if (inc_ssn) {
--		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
--		le16_add_cpu(&hdr->seq_ctrl, 0x10);
--	}
--
--	/*
--	 * Mark queue as shared in transport if shared
--	 * Note this has to be done after queue enablement because enablement
--	 * can also set this value, and there is no indication there to shared
--	 * queues
--	 */
--	if (shared_queue)
--		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
--
--	spin_lock_bh(&mvmsta->lock);
--	/*
--	 * This looks racy, but it is not. We have only one packet for
--	 * this ra/tid in our Tx path since we stop the Qdisc when we
--	 * need to allocate a new TFD queue.
--	 */
--	if (inc_ssn)
--		mvmsta->tid_data[tid].seq_number += 0x10;
--	mvmsta->tid_data[tid].txq_id = queue;
--	mvmsta->tid_data[tid].is_tid_active = true;
--	mvmsta->tfd_queue_msk |= BIT(queue);
--	queue_state = mvmsta->tid_data[tid].state;
--
--	if (mvmsta->reserved_queue == queue)
--		mvmsta->reserved_queue = IEEE80211_INVAL_HW_QUEUE;
--	spin_unlock_bh(&mvmsta->lock);
--
--	if (!shared_queue) {
--		ret = iwl_mvm_sta_send_to_fw(mvm, sta, true, STA_MODIFY_QUEUES);
--		if (ret)
--			goto out_err;
--
--		/* If we need to re-enable aggregations... */
--		if (queue_state == IWL_AGG_ON) {
--			ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
--			if (ret)
--				goto out_err;
--		}
--	} else {
--		/* Redirect queue, if needed */
--		ret = iwl_mvm_scd_queue_redirect(mvm, queue, tid, ac, ssn,
--						 wdg_timeout, false);
--		if (ret)
--			goto out_err;
--	}
--
--	return 0;
--
--out_err:
--	iwl_mvm_disable_txq(mvm, queue, mac_queue, tid, 0);
--
--	return ret;
--}
--
- static void iwl_mvm_change_queue_tid(struct iwl_mvm *mvm, int queue)
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
-@@ -1460,6 +1255,211 @@ static void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
- 		iwl_mvm_change_queue_tid(mvm, i);
- }
- 
-+static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
-+				   struct ieee80211_sta *sta, u8 ac, int tid,
-+				   struct ieee80211_hdr *hdr)
-+{
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+	struct iwl_trans_txq_scd_cfg cfg = {
-+		.fifo = iwl_mvm_mac_ac_to_tx_fifo(mvm, ac),
-+		.sta_id = mvmsta->sta_id,
-+		.tid = tid,
-+		.frame_limit = IWL_FRAME_LIMIT,
-+	};
-+	unsigned int wdg_timeout =
-+		iwl_mvm_get_wd_timeout(mvm, mvmsta->vif, false, false);
-+	u8 mac_queue = mvmsta->vif->hw_queue[ac];
-+	int queue = -1;
-+	bool using_inactive_queue = false, same_sta = false;
-+	unsigned long disable_agg_tids = 0;
-+	enum iwl_mvm_agg_state queue_state;
-+	bool shared_queue = false, inc_ssn;
-+	int ssn;
-+	unsigned long tfd_queue_mask;
-+	int ret;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	if (iwl_mvm_has_new_tx_api(mvm))
-+		return iwl_mvm_sta_alloc_queue_tvqm(mvm, sta, ac, tid);
-+
-+	spin_lock_bh(&mvmsta->lock);
-+	tfd_queue_mask = mvmsta->tfd_queue_msk;
-+	spin_unlock_bh(&mvmsta->lock);
-+
-+	spin_lock_bh(&mvm->queue_info_lock);
-+
-+	/*
-+	 * Non-QoS, QoS NDP and MGMT frames should go to a MGMT queue, if one
-+	 * exists
-+	 */
-+	if (!ieee80211_is_data_qos(hdr->frame_control) ||
-+	    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
-+		queue = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
-+						IWL_MVM_DQA_MIN_MGMT_QUEUE,
-+						IWL_MVM_DQA_MAX_MGMT_QUEUE);
-+		if (queue >= IWL_MVM_DQA_MIN_MGMT_QUEUE)
-+			IWL_DEBUG_TX_QUEUES(mvm, "Found free MGMT queue #%d\n",
-+					    queue);
-+
-+		/* If no such queue is found, we'll use a DATA queue instead */
-+	}
-+
-+	if ((queue < 0 && mvmsta->reserved_queue != IEEE80211_INVAL_HW_QUEUE) &&
-+	    (mvm->queue_info[mvmsta->reserved_queue].status ==
-+	     IWL_MVM_QUEUE_RESERVED ||
-+	     mvm->queue_info[mvmsta->reserved_queue].status ==
-+	     IWL_MVM_QUEUE_INACTIVE)) {
-+		queue = mvmsta->reserved_queue;
-+		mvm->queue_info[queue].reserved = true;
-+		IWL_DEBUG_TX_QUEUES(mvm, "Using reserved queue #%d\n", queue);
-+	}
-+
-+	if (queue < 0)
-+		queue = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
-+						IWL_MVM_DQA_MIN_DATA_QUEUE,
-+						IWL_MVM_DQA_MAX_DATA_QUEUE);
-+
-+	/*
-+	 * Check if this queue is already allocated but inactive.
-+	 * In such a case, we'll need to first free this queue before enabling
-+	 * it again, so we'll mark it as reserved to make sure no new traffic
-+	 * arrives on it
-+	 */
-+	if (queue > 0 &&
-+	    mvm->queue_info[queue].status == IWL_MVM_QUEUE_INACTIVE) {
-+		mvm->queue_info[queue].status = IWL_MVM_QUEUE_RESERVED;
-+		using_inactive_queue = true;
-+		same_sta = mvm->queue_info[queue].ra_sta_id == mvmsta->sta_id;
-+		IWL_DEBUG_TX_QUEUES(mvm,
-+				    "Re-assigning TXQ %d: sta_id=%d, tid=%d\n",
-+				    queue, mvmsta->sta_id, tid);
-+	}
-+
-+	/* No free queue - we'll have to share */
-+	if (queue <= 0) {
-+		queue = iwl_mvm_get_shared_queue(mvm, tfd_queue_mask, ac);
-+		if (queue > 0) {
-+			shared_queue = true;
-+			mvm->queue_info[queue].status = IWL_MVM_QUEUE_SHARED;
-+		}
-+	}
-+
-+	/*
-+	 * Mark TXQ as ready, even though it hasn't been fully configured yet,
-+	 * to make sure no one else takes it.
-+	 * This will allow avoiding re-acquiring the lock at the end of the
-+	 * configuration. On error we'll mark it back as free.
-+	 */
-+	if (queue > 0 && !shared_queue)
-+		mvm->queue_info[queue].status = IWL_MVM_QUEUE_READY;
-+
-+	spin_unlock_bh(&mvm->queue_info_lock);
-+
-+	/* This shouldn't happen - out of queues */
-+	if (WARN_ON(queue <= 0)) {
-+		IWL_ERR(mvm, "No available queues for tid %d on sta_id %d\n",
-+			tid, cfg.sta_id);
-+		return queue;
-+	}
-+
-+	/*
-+	 * Actual en/disablement of aggregations is through the ADD_STA HCMD,
-+	 * but for configuring the SCD to send A-MPDUs we need to mark the queue
-+	 * as aggregatable.
-+	 * Mark all DATA queues as allowing to be aggregated at some point
-+	 */
-+	cfg.aggregate = (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE ||
-+			 queue == IWL_MVM_DQA_BSS_CLIENT_QUEUE);
-+
-+	/*
-+	 * If this queue was previously inactive (idle) - we need to free it
-+	 * first
-+	 */
-+	if (using_inactive_queue) {
-+		ret = iwl_mvm_free_inactive_queue(mvm, queue, same_sta);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	IWL_DEBUG_TX_QUEUES(mvm,
-+			    "Allocating %squeue #%d to sta %d on tid %d\n",
-+			    shared_queue ? "shared " : "", queue,
-+			    mvmsta->sta_id, tid);
-+
-+	if (shared_queue) {
-+		/* Disable any open aggs on this queue */
-+		disable_agg_tids = iwl_mvm_get_queue_agg_tids(mvm, queue);
-+
-+		if (disable_agg_tids) {
-+			IWL_DEBUG_TX_QUEUES(mvm, "Disabling aggs on queue %d\n",
-+					    queue);
-+			iwl_mvm_invalidate_sta_queue(mvm, queue,
-+						     disable_agg_tids, false);
-+		}
-+	}
-+
-+	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
-+	inc_ssn = iwl_mvm_enable_txq(mvm, queue, mac_queue,
-+				     ssn, &cfg, wdg_timeout);
-+	if (inc_ssn) {
-+		ssn = (ssn + 1) & IEEE80211_SCTL_SEQ;
-+		le16_add_cpu(&hdr->seq_ctrl, 0x10);
-+	}
-+
-+	/*
-+	 * Mark queue as shared in transport if shared
-+	 * Note this has to be done after queue enablement because enablement
-+	 * can also set this value, and there is no indication there to shared
-+	 * queues
-+	 */
-+	if (shared_queue)
-+		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
-+
-+	spin_lock_bh(&mvmsta->lock);
-+	/*
-+	 * This looks racy, but it is not. We have only one packet for
-+	 * this ra/tid in our Tx path since we stop the Qdisc when we
-+	 * need to allocate a new TFD queue.
-+	 */
-+	if (inc_ssn)
-+		mvmsta->tid_data[tid].seq_number += 0x10;
-+	mvmsta->tid_data[tid].txq_id = queue;
-+	mvmsta->tid_data[tid].is_tid_active = true;
-+	mvmsta->tfd_queue_msk |= BIT(queue);
-+	queue_state = mvmsta->tid_data[tid].state;
-+
-+	if (mvmsta->reserved_queue == queue)
-+		mvmsta->reserved_queue = IEEE80211_INVAL_HW_QUEUE;
-+	spin_unlock_bh(&mvmsta->lock);
-+
-+	if (!shared_queue) {
-+		ret = iwl_mvm_sta_send_to_fw(mvm, sta, true, STA_MODIFY_QUEUES);
-+		if (ret)
-+			goto out_err;
-+
-+		/* If we need to re-enable aggregations... */
-+		if (queue_state == IWL_AGG_ON) {
-+			ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
-+			if (ret)
-+				goto out_err;
-+		}
-+	} else {
-+		/* Redirect queue, if needed */
-+		ret = iwl_mvm_scd_queue_redirect(mvm, queue, tid, ac, ssn,
-+						 wdg_timeout, false);
-+		if (ret)
-+			goto out_err;
-+	}
-+
-+	return 0;
-+
-+out_err:
-+	iwl_mvm_disable_txq(mvm, queue, mac_queue, tid, 0);
-+
-+	return ret;
-+}
-+
- static inline u8 iwl_mvm_tid_to_ac_queue(int tid)
- {
- 	if (tid == IWL_MAX_TID_COUNT)
 -- 
-2.19.0
-
+Kalle Valo
