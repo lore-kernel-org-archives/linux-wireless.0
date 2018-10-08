@@ -2,188 +2,105 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 255B5C00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:22:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA4CC65C20
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:36:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E80D320841
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:22:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E80D320841
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id A4BEF20858
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:36:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S4KbLZVG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S4KbLZVG"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A4BEF20858
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726967AbeJHSdk (ORCPT
+        id S1726794AbeJHSrq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 14:33:40 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:35774 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726511AbeJHSdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 14:33:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Mon, 8 Oct 2018 14:47:46 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:43374 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726689AbeJHSrq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 14:47:46 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id DAC1C60BFA; Mon,  8 Oct 2018 11:36:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538998587;
+        bh=qs6fidtiPh+LOjFE+XC75oJ3kTqMJWCZH88vfKxGc7A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=S4KbLZVGscFIGpuEuP5Q13kRJThZDbcM+netzcDBg2k9lHTp+I76HrtwvrPXH9kKl
+         kkMp/jmn+cVyXq1Xs/Pcd45Wx6NxPbyf8SSqEU3vqwWXYe3Qrcm7Ku34DMFETgdEyc
+         +62oW7dzfu+Br+Wzcz/uYbte+lbG80dNFR82oGBA=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7BA4B30832EE;
-        Mon,  8 Oct 2018 11:22:24 +0000 (UTC)
-Received: from localhost (ovpn-204-28.brq.redhat.com [10.40.204.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 72CA35DD6B;
-        Mon,  8 Oct 2018 11:22:21 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x0: remove dma.h
-Date:   Mon,  8 Oct 2018 13:22:20 +0200
-Message-Id: <1538997740-14007-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Mon, 08 Oct 2018 11:22:24 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BFFC46079B;
+        Mon,  8 Oct 2018 11:36:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1538998587;
+        bh=qs6fidtiPh+LOjFE+XC75oJ3kTqMJWCZH88vfKxGc7A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=S4KbLZVGscFIGpuEuP5Q13kRJThZDbcM+netzcDBg2k9lHTp+I76HrtwvrPXH9kKl
+         kkMp/jmn+cVyXq1Xs/Pcd45Wx6NxPbyf8SSqEU3vqwWXYe3Qrcm7Ku34DMFETgdEyc
+         +62oW7dzfu+Br+Wzcz/uYbte+lbG80dNFR82oGBA=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BFFC46079B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: Re: [PATCH 5/5] qtnfmac: add support for Topaz chipsets
+References: <20181008095551.18651-1-sergey.matyukevich.os@quantenna.com>
+        <20181008095551.18651-6-sergey.matyukevich.os@quantenna.com>
+Date:   Mon, 08 Oct 2018 14:36:24 +0300
+In-Reply-To: <20181008095551.18651-6-sergey.matyukevich.os@quantenna.com>
+        (Sergey Matyukevich's message of "Mon, 8 Oct 2018 09:56:05 +0000")
+Message-ID: <87in2cr7pj.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-dma.h is not used any longer.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x0/dma.h | 126 ------------------------
- 1 file changed, 126 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/dma.h
+> This patch adds support for QSR1000/QSR2000 family of chipsets
+> to qtnfmac_pcie platform driver.
+>
+> QSR1000/QSR2000 (aka Topaz) is a family of 80MHz, 11ac Wave2,
+> 4x4/2x4/2x2 chips, including single and dual band devices.
+> Depending on specific chip model and firmware in use, either
+> STA or both STA and AP modes are supported.
+>
+> Patch adds Topaz support to qtnfmac_pcie driver. It is possible
+> to enable both Topaz and Pearl support in kernel configuration.
+> In that case proper platform bus will be selected on probing
+> based on chip ID.
+>
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+> Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.h b/drivers/net/wireless/mediatek/mt76/mt76x0/dma.h
-deleted file mode 100644
-index 891ce1c3461f..000000000000
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/dma.h
-+++ /dev/null
-@@ -1,126 +0,0 @@
--/*
-- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-- * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- * as published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- */
--
--#ifndef __MT76X0U_DMA_H
--#define __MT76X0U_DMA_H
--
--#include <asm/unaligned.h>
--#include <linux/skbuff.h>
--
--#define MT_DMA_HDR_LEN			4
--#define MT_RX_INFO_LEN			4
--#define MT_FCE_INFO_LEN			4
--#define MT_DMA_HDRS			(MT_DMA_HDR_LEN + MT_RX_INFO_LEN)
--
--/* Common Tx DMA descriptor fields */
--#define MT_TXD_INFO_LEN		GENMASK(15, 0)
--#define MT_TXD_INFO_D_PORT	GENMASK(29, 27)
--#define MT_TXD_INFO_TYPE	GENMASK(31, 30)
--
--/* Tx DMA MCU command specific flags */
--#define MT_TXD_CMD_SEQ		GENMASK(19, 16)
--#define MT_TXD_CMD_TYPE		GENMASK(26, 20)
--
--enum mt76_msg_port {
--	WLAN_PORT,
--	CPU_RX_PORT,
--	CPU_TX_PORT,
--	HOST_PORT,
--	VIRTUAL_CPU_RX_PORT,
--	VIRTUAL_CPU_TX_PORT,
--	DISCARD,
--};
--
--enum mt76_info_type {
--	DMA_PACKET,
--	DMA_COMMAND,
--};
--
--/* Tx DMA packet specific flags */
--#define MT_TXD_PKT_INFO_NEXT_VLD	BIT(16)
--#define MT_TXD_PKT_INFO_TX_BURST	BIT(17)
--#define MT_TXD_PKT_INFO_80211		BIT(19)
--#define MT_TXD_PKT_INFO_TSO		BIT(20)
--#define MT_TXD_PKT_INFO_CSO		BIT(21)
--#define MT_TXD_PKT_INFO_WIV		BIT(24)
--#define MT_TXD_PKT_INFO_QSEL		GENMASK(26, 25)
--
--enum mt76_qsel {
--	MT_QSEL_MGMT,
--	MT_QSEL_HCCA,
--	MT_QSEL_EDCA,
--	MT_QSEL_EDCA_2,
--};
--
--
--static inline int mt76x0_dma_skb_wrap(struct sk_buff *skb,
--				       enum mt76_msg_port d_port,
--				       enum mt76_info_type type, u32 flags)
--{
--	u32 info;
--
--	/* Buffer layout:
--	 *	|   4B   | xfer len |      pad       |  4B  |
--	 *	| TXINFO | pkt/cmd  | zero pad to 4B | zero |
--	 *
--	 * length field of TXINFO should be set to 'xfer len'.
--	 */
--
--	info = flags |
--		FIELD_PREP(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
--		FIELD_PREP(MT_TXD_INFO_D_PORT, d_port) |
--		FIELD_PREP(MT_TXD_INFO_TYPE, type);
--
--	put_unaligned_le32(info, skb_push(skb, sizeof(info)));
--	return skb_put_padto(skb, round_up(skb->len, 4) + 4);
--}
--
--static inline int
--mt76x0_dma_skb_wrap_pkt(struct sk_buff *skb, enum mt76_qsel qsel, u32 flags)
--{
--	flags |= FIELD_PREP(MT_TXD_PKT_INFO_QSEL, qsel);
--	return mt76x0_dma_skb_wrap(skb, WLAN_PORT, DMA_PACKET, flags);
--}
--
--/* Common Rx DMA descriptor fields */
--#define MT_RXD_INFO_LEN			GENMASK(13, 0)
--#define MT_RXD_INFO_PCIE_INTR		BIT(24)
--#define MT_RXD_INFO_QSEL		GENMASK(26, 25)
--#define MT_RXD_INFO_PORT		GENMASK(29, 27)
--#define MT_RXD_INFO_TYPE		GENMASK(31, 30)
--
--/* Rx DMA packet specific flags */
--#define MT_RXD_PKT_INFO_UDP_ERR		BIT(16)
--#define MT_RXD_PKT_INFO_TCP_ERR		BIT(17)
--#define MT_RXD_PKT_INFO_IP_ERR		BIT(18)
--#define MT_RXD_PKT_INFO_PKT_80211	BIT(19)
--#define MT_RXD_PKT_INFO_L3L4_DONE	BIT(20)
--#define MT_RXD_PKT_INFO_MAC_LEN		GENMASK(23, 21)
--
--/* Rx DMA MCU command specific flags */
--#define MT_RXD_CMD_INFO_SELF_GEN	BIT(15)
--#define MT_RXD_CMD_INFO_CMD_SEQ		GENMASK(19, 16)
--#define MT_RXD_CMD_INFO_EVT_TYPE	GENMASK(23, 20)
--
--enum mt76_evt_type {
--	CMD_DONE,
--	CMD_ERROR,
--	CMD_RETRY,
--	EVENT_PWR_RSP,
--	EVENT_WOW_RSP,
--	EVENT_CARRIER_DETECT_RSP,
--	EVENT_DFS_DETECT_RSP,
--};
--
--#endif
+[...]
+
+> --- a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+> +++ b/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+> @@ -24,6 +24,7 @@
+>  /* PCIE Device IDs */
+>  
+>  #define	PCIE_DEVICE_ID_QTN_PEARL	(0x0008)
+> +#define	PCIE_DEVICE_ID_QTN_TOPAZ	(0x0008)
+
+Same ids for both, is this really correct?
+
 -- 
-2.7.5
-
+Kalle Valo
