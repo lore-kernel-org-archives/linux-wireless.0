@@ -2,41 +2,41 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4E27C65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9876C676C4
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1EAA20858
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EAB520652
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="TAybNIWH"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A1EAA20858
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="oHqJEpcn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6EAB520652
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727579AbeJHTC6 (ORCPT
+        id S1727797AbeJHTDO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 15:02:58 -0400
-Received: from nbd.name ([46.4.11.11]:38238 "EHLO nbd.name"
+        Mon, 8 Oct 2018 15:03:14 -0400
+Received: from nbd.name ([46.4.11.11]:38268 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726656AbeJHTC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 15:02:57 -0400
+        id S1726982AbeJHTDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 15:03:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=5GoMVWdqAMSKkwRlWQ+718kQr6/K/0d76HzyAW14d1s=; b=TAybNIWHtq+Uaz3SAjybKh41+P
-        +MbhU0ht0Yona9fzKHnhnVcIHL8YgCcoVF8MFwT7eqnxWfnNDNKjUhuRnCfDDhM1Fb7KGM412OYIu
-        o3GzdzeUHlslrWxyV35lKNGZgIaXEZ/UOkGWqwPxz9NKPAHREdJdJRGfQRQ5TkE8fMSY=;
-Subject: Re: [PATCH v2] mt76x0: pci: report firmware version using ethtool
+        bh=oF+HogiT075+Nd0/wW131XUsfhvetcCjdRGEW+xKzAM=; b=oHqJEpcns/B2lKA2QhYa/VDOtE
+        y1dHqcZCjYcw9oB5tdY2Gd/x+Wv/teiSdv9h8LbKwjXfQObHml6wlw60bG85Y1KtmoXskLrHtc/Fa
+        wWUdS90G1ShncDZKizYgVvAKZ09jry2+lElqrYp5wfjF7MwYk8F7GtcMg9luUEYgDwVA=;
+Subject: Re: [PATCH 0/3] enable sta mode in mt76x0e driver
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <20181007095116.13342-1-lorenzo.bianconi@redhat.com>
+References: <20181007095722.13577-1-lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -62,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <5abbe227-3cc4-9fa3-4a3b-111002e372ce@nbd.name>
-Date:   Mon, 8 Oct 2018 13:51:35 +0200
+Message-ID: <3e9de97c-5b45-3925-0083-7f2ecf3c10df@nbd.name>
+Date:   Mon, 8 Oct 2018 13:51:49 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <20181007095116.13342-1-lorenzo.bianconi@redhat.com>
+In-Reply-To: <20181007095722.13577-1-lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,12 +76,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-07 11:51, Lorenzo Bianconi wrote:
-> Report via ethtool fw_ver and build_ver members of mt76x02_fw_header
-> data structure similarly to what is reported in the syslog
+On 2018-10-07 11:57, Lorenzo Bianconi wrote:
+> Enable client mode in mt76x0e driver registering the device to the mac80211
+> layer. Moreover add missing mac80211 callbacks in mt76x0e_ops data structure.
+> Sta mode has been tested connecting to a 802.11ac AP on 5GHz band
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-
 Merged, thanks.
 
 - Felix
