@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25570C64EB8
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB673C64EB8
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E08EE2087C
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E08EE2087C
+	by mail.kernel.org (Postfix) with ESMTP id BB54A2087C
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:18:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BB54A2087C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727081AbeJHP2b (ORCPT
+        id S1727094AbeJHP2f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 11:28:31 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56390 "EHLO
+        Mon, 8 Oct 2018 11:28:35 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56398 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725973AbeJHP2b (ORCPT
+        with ESMTP id S1725973AbeJHP2f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 11:28:31 -0400
+        Mon, 8 Oct 2018 11:28:35 -0400
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1g9Qje-0003w6-0n; Mon, 08 Oct 2018 11:17:50 +0300
+        id 1g9Qji-0003w6-3d; Mon, 08 Oct 2018 11:17:54 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  8 Oct 2018 11:17:27 +0300
-Message-Id: <20181008081735.3401-11-luca@coelho.fi>
+Date:   Mon,  8 Oct 2018 11:17:32 +0300
+Message-Id: <20181008081735.3401-16-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20181008081735.3401-1-luca@coelho.fi>
 References: <20181008081735.3401-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/18] iwlwifi: mvm: remove per-queue hw refcount
+Subject: [PATCH 15/18] iwlwifi: mvm: make queue TID change more explicit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -48,205 +48,130 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's no need to have a hw refcount if we just mark the
-command queue with a (fake) TID; at that point, the refcount
-becomes equivalent to the hweight() of the TID bitmap.
+Instead of iterating all the queues after having potentially
+changed some queue configurations, rechecking if that was done,
+mark the ones that do need a TID change explicitly in a bitmap
+and use that to send the change to the firmware.
+
+While at it, also rename iwl_mvm_change_queue_owner() to
+iwl_mvm_change_queue_tid() since that's more obvious - the
+"kind" of owner isn't immediately clear right now.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  9 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 41 +++++++++----------
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |  2 +-
- 4 files changed, 28 insertions(+), 25 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 53 +++++++++-----------
+ 1 file changed, 25 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index c5df73231ba3..dade206d5511 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -364,7 +364,14 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	 */
- 
- 	memset(&mvm->queue_info, 0, sizeof(mvm->queue_info));
--	mvm->queue_info[IWL_MVM_DQA_CMD_QUEUE].hw_queue_refcount = 1;
-+	/*
-+	 * Set a 'fake' TID for the command queue, since we use the
-+	 * hweight() of the tid_bitmap as a refcount now. Not that
-+	 * we ever even consider the command queue as one we might
-+	 * want to reuse, but be safe nevertheless.
-+	 */
-+	mvm->queue_info[IWL_MVM_DQA_CMD_QUEUE].tid_bitmap =
-+		BIT(IWL_MAX_TID_COUNT + 2);
- 
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++)
- 		atomic_set(&mvm->mac80211_queue_stop_count[i], 0);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index f5a532dc712d..7074fd1f8ce7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -789,7 +789,6 @@ struct iwl_mvm_geo_profile {
- };
- 
- struct iwl_mvm_dqa_txq_info {
--	u8 hw_queue_refcount;
- 	u8 ra_sta_id; /* The RA this queue is mapped to, if exists */
- 	bool reserved; /* Is this the TXQ reserved for a STA */
- 	u8 mac80211_ac; /* The mac80211 AC this queue is mapped to */
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index fd33b8d148b3..ce03f9750c3a 100644
+index b30980c34fd0..ec4925c89295 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -387,7 +387,7 @@ static int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue,
+@@ -1141,7 +1141,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	return ret;
+ }
  
- 	spin_lock_bh(&mvm->queue_info_lock);
+-static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
++static void iwl_mvm_change_queue_tid(struct iwl_mvm *mvm, int queue)
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+@@ -1272,7 +1272,8 @@ static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
+ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
+ 					 struct iwl_mvm_sta *mvmsta, int queue,
+ 					 unsigned long tid_bitmap,
+-					 unsigned long *unshare_queues)
++					 unsigned long *unshare_queues,
++					 unsigned long *changetid_queues)
+ {
+ 	int tid;
  
--	if (WARN_ON(mvm->queue_info[queue].hw_queue_refcount == 0)) {
-+	if (WARN_ON(mvm->queue_info[queue].tid_bitmap == 0)) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 		return 0;
- 	}
-@@ -413,17 +413,16 @@ static int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue,
- 	if (remove_mac_queue)
- 		mvm->hw_queue_to_mac80211[queue] &=
- 			~BIT(mac80211_queue);
--	mvm->queue_info[queue].hw_queue_refcount--;
- 
--	cmd.action = mvm->queue_info[queue].hw_queue_refcount ?
-+	cmd.action = mvm->queue_info[queue].tid_bitmap ?
- 		SCD_CFG_ENABLE_QUEUE : SCD_CFG_DISABLE_QUEUE;
- 	if (cmd.action == SCD_CFG_DISABLE_QUEUE)
- 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_FREE;
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
--			    "Disabling TXQ #%d refcount=%d (mac80211 map:0x%x)\n",
-+			    "Disabling TXQ #%d tids=0x%x (mac80211 map:0x%x)\n",
- 			    queue,
--			    mvm->queue_info[queue].hw_queue_refcount,
-+			    mvm->queue_info[queue].tid_bitmap,
- 			    mvm->hw_queue_to_mac80211[queue]);
- 
- 	/* If the queue is still enabled - nothing left to do in this func */
-@@ -436,16 +435,13 @@ static int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue,
- 	cmd.tid = mvm->queue_info[queue].txq_tid;
- 
- 	/* Make sure queue info is correct even though we overwrite it */
--	WARN(mvm->queue_info[queue].hw_queue_refcount ||
--	     mvm->queue_info[queue].tid_bitmap ||
--	     mvm->hw_queue_to_mac80211[queue],
--	     "TXQ #%d info out-of-sync - refcount=%d, mac map=0x%x, tid=0x%x\n",
--	     queue, mvm->queue_info[queue].hw_queue_refcount,
-+	WARN(mvm->queue_info[queue].tid_bitmap ||
- 	     mvm->hw_queue_to_mac80211[queue],
-+	     "TXQ #%d info out-of-sync - mac map=0x%x, tids=0x%x\n",
-+	     queue, mvm->hw_queue_to_mac80211[queue],
- 	     mvm->queue_info[queue].tid_bitmap);
- 
- 	/* If we are here - the queue is freed and we can zero out these vals */
--	mvm->queue_info[queue].hw_queue_refcount = 0;
- 	mvm->queue_info[queue].tid_bitmap = 0;
- 	mvm->hw_queue_to_mac80211[queue] = 0;
- 
-@@ -722,7 +718,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
- 	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[mvm->queue_info[queue].mac80211_ac];
- 	cmd.tid = mvm->queue_info[queue].txq_tid;
- 	mq = mvm->hw_queue_to_mac80211[queue];
--	shared_queue = (mvm->queue_info[queue].hw_queue_refcount > 1);
-+	shared_queue = hweight16(mvm->queue_info[queue].tid_bitmap) > 1;
- 	spin_unlock_bh(&mvm->queue_info_lock);
- 
- 	IWL_DEBUG_TX_QUEUES(mvm, "Redirecting TXQ #%d to FIFO #%d\n",
-@@ -793,7 +789,7 @@ static int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id,
- 
- 	/* Start by looking for a free queue */
- 	for (i = minq; i <= maxq; i++)
--		if (mvm->queue_info[i].hw_queue_refcount == 0 &&
-+		if (mvm->queue_info[i].tid_bitmap == 0 &&
- 		    mvm->queue_info[i].status == IWL_MVM_QUEUE_FREE)
- 			return i;
- 
-@@ -877,7 +873,7 @@ static bool iwl_mvm_update_txq_mapping(struct iwl_mvm *mvm, int queue,
- 	}
- 
- 	/* Update mappings and refcounts */
--	if (mvm->queue_info[queue].hw_queue_refcount > 0)
-+	if (mvm->queue_info[queue].tid_bitmap)
- 		enable_queue = false;
- 
- 	if (mac80211_queue != IEEE80211_INVAL_HW_QUEUE) {
-@@ -888,7 +884,6 @@ static bool iwl_mvm_update_txq_mapping(struct iwl_mvm *mvm, int queue,
- 		mvm->hw_queue_to_mac80211[queue] |= BIT(mac80211_queue);
- 	}
- 
--	mvm->queue_info[queue].hw_queue_refcount++;
- 	mvm->queue_info[queue].tid_bitmap |= BIT(tid);
- 	mvm->queue_info[queue].ra_sta_id = sta_id;
- 
-@@ -903,8 +898,8 @@ static bool iwl_mvm_update_txq_mapping(struct iwl_mvm *mvm, int queue,
- 	}
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
--			    "Enabling TXQ #%d refcount=%d (mac80211 map:0x%x)\n",
--			    queue, mvm->queue_info[queue].hw_queue_refcount,
-+			    "Enabling TXQ #%d tids=0x%x (mac80211 map:0x%x)\n",
-+			    queue, mvm->queue_info[queue].tid_bitmap,
- 			    mvm->hw_queue_to_mac80211[queue]);
- 
- 	spin_unlock_bh(&mvm->queue_info_lock);
-@@ -1325,7 +1320,6 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
+@@ -1311,12 +1312,29 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
+ 	 */
+ 	for_each_set_bit(tid, &tid_bitmap, IWL_MAX_TID_COUNT + 1) {
+ 		int mac_queue = mvmsta->vif->hw_queue[tid_to_mac80211_ac[tid]];
++		u16 tid_bitmap;
  
  		mvmsta->tid_data[tid].txq_id = IWL_MVM_INVALID_QUEUE;
  		mvm->hw_queue_to_mac80211[queue] &= ~BIT(mac_queue);
--		mvm->queue_info[queue].hw_queue_refcount--;
  		mvm->queue_info[queue].tid_bitmap &= ~BIT(tid);
  		mvmsta->tid_data[tid].is_tid_active = false;
  
-@@ -1349,7 +1343,7 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
++		tid_bitmap = mvm->queue_info[queue].tid_bitmap;
++
++		/*
++		 * We need to take into account a situation in which a TXQ was
++		 * allocated to TID x, and then turned shared by adding TIDs y
++		 * and z. If TID x becomes inactive and is removed from the TXQ,
++		 * ownership must be given to one of the remaining TIDs.
++		 * This is mainly because if TID x continues - a new queue can't
++		 * be allocated for it as long as it is an owner of another TXQ.
++		 *
++		 * Mark this queue in the right bitmap, we'll send the command
++		 * to the firmware later.
++		 */
++		if (!(tid_bitmap & BIT(mvm->queue_info[queue].txq_tid)))
++			set_bit(queue, changetid_queues);
++
+ 		IWL_DEBUG_TX_QUEUES(mvm,
+ 				    "Removing inactive TID %d from shared Q:%d\n",
+ 				    tid, queue);
+@@ -1345,33 +1363,11 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
  	}
+ }
  
- 	/* If the queue is marked as shared - "unshare" it */
--	if (mvm->queue_info[queue].hw_queue_refcount == 1 &&
-+	if (hweight16(mvm->queue_info[queue].tid_bitmap) == 1 &&
- 	    mvm->queue_info[queue].status == IWL_MVM_QUEUE_SHARED) {
- 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_RECONFIGURING;
- 		IWL_DEBUG_TX_QUEUES(mvm, "Marking Q:%d for reconfig\n",
-@@ -1367,9 +1361,12 @@ static void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
- 		return;
+-static void iwl_mvm_reconfigure_queue(struct iwl_mvm *mvm, int queue)
+-{
+-	bool change_owner;
+-
+-	spin_lock_bh(&mvm->queue_info_lock);
+-
+-	/*
+-	 * We need to take into account a situation in which a TXQ was
+-	 * allocated to TID x, and then turned shared by adding TIDs y
+-	 * and z. If TID x becomes inactive and is removed from the TXQ,
+-	 * ownership must be given to one of the remaining TIDs.
+-	 * This is mainly because if TID x continues - a new queue can't
+-	 * be allocated for it as long as it is an owner of another TXQ.
+-	 */
+-	change_owner = !(mvm->queue_info[queue].tid_bitmap &
+-			 BIT(mvm->queue_info[queue].txq_tid)) &&
+-		       (mvm->queue_info[queue].status == IWL_MVM_QUEUE_SHARED);
+-	spin_unlock_bh(&mvm->queue_info_lock);
+-
+-	if (change_owner)
+-		iwl_mvm_change_queue_owner(mvm, queue);
+-}
+-
+ static void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
+ {
+ 	unsigned long now = jiffies;
+ 	unsigned long unshare_queues = 0;
++	unsigned long changetid_queues = 0;
+ 	int i;
  
- 	spin_lock_bh(&mvm->queue_info_lock);
--	for (i = 0; i < IWL_MAX_HW_QUEUES; i++)
--		if (mvm->queue_info[i].hw_queue_refcount > 0)
-+	/* skip the CMD queue */
-+	BUILD_BUG_ON(IWL_MVM_DQA_CMD_QUEUE != 0);
-+	for (i = 1; i < IWL_MAX_HW_QUEUES; i++) {
-+		if (mvm->queue_info[i].tid_bitmap)
- 			timeout_queues_map |= BIT(i);
-+	}
- 	spin_unlock_bh(&mvm->queue_info_lock);
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -1448,7 +1444,8 @@ static void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
+ 		spin_lock(&mvm->queue_info_lock);
+ 		iwl_mvm_remove_inactive_tids(mvm, mvmsta, i,
+ 					     inactive_tid_bitmap,
+-					     &unshare_queues);
++					     &unshare_queues,
++					     &changetid_queues);
+ 		/* only unlock sta lock - we still need the queue info lock */
+ 		spin_unlock(&mvmsta->lock);
+ 	}
+@@ -1459,8 +1456,8 @@ static void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
+ 	/* Reconfigure queues requiring reconfiguation */
+ 	for_each_set_bit(i, &unshare_queues, IWL_MAX_HW_QUEUES)
+ 		iwl_mvm_unshare_queue(mvm, i);
+-	for (i = 0; i < ARRAY_SIZE(mvm->queue_info); i++)
+-		iwl_mvm_reconfigure_queue(mvm, i);
++	for_each_set_bit(i, &changetid_queues, IWL_MAX_HW_QUEUES)
++		iwl_mvm_change_queue_tid(mvm, i);
+ }
  
- 	rcu_read_lock();
-@@ -1592,7 +1589,7 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
- 
- 	/* Make sure we have free resources for this STA */
- 	if (vif_type == NL80211_IFTYPE_STATION && !sta->tdls &&
--	    !mvm->queue_info[IWL_MVM_DQA_BSS_CLIENT_QUEUE].hw_queue_refcount &&
-+	    !mvm->queue_info[IWL_MVM_DQA_BSS_CLIENT_QUEUE].tid_bitmap &&
- 	    (mvm->queue_info[IWL_MVM_DQA_BSS_CLIENT_QUEUE].status ==
- 	     IWL_MVM_QUEUE_FREE))
- 		queue = IWL_MVM_DQA_BSS_CLIENT_QUEUE;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index dec097b72300..818e1180bbdd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -619,7 +619,7 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
- 		return -EINVAL;
- 
- 	spin_lock_bh(&mvm->queue_info_lock);
--	if (WARN(mvm->queue_info[queue].hw_queue_refcount == 0,
-+	if (WARN(mvm->queue_info[queue].tid_bitmap == 0,
- 		 "Trying to reconfig unallocated queue %d\n", queue)) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 		return -ENXIO;
+ static inline u8 iwl_mvm_tid_to_ac_queue(int tid)
 -- 
 2.19.0
 
