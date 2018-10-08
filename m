@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 977F8C65BD1
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E36C65BD1
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:56:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ACE92086D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:56:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C6782087C
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:56:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="Vb0TNCSg"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2ACE92086D
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="pidVupgu"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C6782087C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727260AbeJHRHB (ORCPT
+        id S1727402AbeJHRHG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 13:07:01 -0400
+        Mon, 8 Oct 2018 13:07:06 -0400
 Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:36736
         "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726330AbeJHRHB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 13:07:01 -0400
+        id S1726354AbeJHRHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 13:07:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nm56jvEQd3L35pimgeHw50aaSJlytKLQ/8NEp7tVzAs=;
- b=Vb0TNCSg4qnIpiUvlBaYbt0vUNutagiRVkfhVdz4mTcWgbH6XMy9/Nk8HA+7ZN7fGWJ69GIOapwsdfVm2ym9Y6fbWZY4TCuYkqsyC1yMkpQ82E7/UzLAW2j75H2AMLvhHfBztjuUzLGEOVgI2FqiYjfAvzqrS9lCyrFSXRegvgU=
+ bh=eYTvlLTNzBZQ383A0wc8jzvE+ZBQowRqHAF3DFfYwqo=;
+ b=pidVupguRslHWH31JPe2iz3jykUu0tVmnxbs7fiFtnyPBJdZMbvOL1Dsybww9chuRM/b240yh4QlBDGoijcM4GMa4KFCaV6cP1frohvFu++Q22zSayOOlcExScNYuux/cunLPcCTMR0HH9r/oD39Meu7ooAIdzJXEl3+Sd/6swQ=
 Received: from BL0PR05MB4595.namprd05.prod.outlook.com (20.177.144.212) by
  BL0PR05MB4642.namprd05.prod.outlook.com (20.177.144.223) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1207.16; Mon, 8 Oct 2018 09:56:04 +0000
+ 15.20.1207.16; Mon, 8 Oct 2018 09:56:06 +0000
 Received: from BL0PR05MB4595.namprd05.prod.outlook.com
  ([fe80::e4b8:995b:1c73:657a]) by BL0PR05MB4595.namprd05.prod.outlook.com
  ([fe80::e4b8:995b:1c73:657a%3]) with mapi id 15.20.1228.020; Mon, 8 Oct 2018
- 09:56:04 +0000
+ 09:56:06 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: [PATCH 4/5] qtnfmac_pcie: use single PCIe driver for all platforms
-Thread-Topic: [PATCH 4/5] qtnfmac_pcie: use single PCIe driver for all
- platforms
-Thread-Index: AQHUXu0gH7/F6M2cKkmJBokaVQQK7Q==
-Date:   Mon, 8 Oct 2018 09:56:04 +0000
-Message-ID: <20181008095551.18651-5-sergey.matyukevich.os@quantenna.com>
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 5/5] qtnfmac: add support for Topaz chipsets
+Thread-Topic: [PATCH 5/5] qtnfmac: add support for Topaz chipsets
+Thread-Index: AQHUXu0hlRwXnCwvVUWmMHb83zLAMQ==
+Date:   Mon, 8 Oct 2018 09:56:05 +0000
+Message-ID: <20181008095551.18651-6-sergey.matyukevich.os@quantenna.com>
 References: <20181008095551.18651-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20181008095551.18651-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -63,27 +63,27 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BL0PR05MB4642;6:Qqoj8fy1MVKN704xGAOkz+P8yUZctX0WvkLEEQPqi+9TMGIcmYnvQhW68Gns4JfghPCNeXpL/vd0BTeFHBTV834UEIb2mt9ykRN39DxCjMtuJVhkahFUZb/HEiwQWkETzC33uPMk6gNrvnUFZPinph3wxXSPNmaYWiSH2OD4FEbmtFLpIUxmg15/03clO5GW4IdPz6X4PKWd8gqgnhknQe1+F0TEt+m+1dFCpTTIhMrJueISiaFtClWfyz+UnMGFQXXJ97roWskaah7gG0MlK1GjaeZpD4hHRk4kAyO1ZuE5r1WF41PR448vW+DCcc5c4CASegYeM0wxcbrVgvrgmdie86GbbLhLDPWnYsdlw6aCDR2LpG/FtTX+LZC2pbPNxBw8x3xjmnvqj+mU2GmQCx05SPhcpAs94lIpa0PnH5ThWrkTlUWseNNwAujjTb2OJ6U6qVfexCSE0rTE8mp//w==;5:2LANHFd4lmXirVZmh/WeizoQCW0xMfOqR1X/tQXK04sX76wjjFBwhNVTi28S1TFk2swI0wec7X5Qm48Id+2Q5o8kO6Ph3NPYKWIisbN2KwZMPVDY7+rZPzI+FjPl5oIrA+4X249+30Ywijrr3BXUH4YieS1OyYM6++dg+wo/vNQ=;7:iWYQratUx5gptWsw7RFHwjWnpS9MiG/BIW0ePB7NqJzn2bEF2Pp3Vux1oGt2sWvXvP+S6Qg7Kn727/KK99kqf45BDGcxP9fnHqgfeo/xOpT1Wp+sftpQDhYyUfwbQzYmMsutV6F2+qTjOxFrAiWnxWpWma+nhUVj8NZl+/pV4tht1GQcnIIlhGE2u0BxSyvq8/SJ755U5OBCrzAA8fiUgLg3eAR3C64QAmvja6wVmhuz9uvt1wj7iX3aKKzZT+4P
-x-ms-office365-filtering-correlation-id: 7ecd61b0-aee3-422d-ca88-08d62d0442ba
+x-microsoft-exchange-diagnostics: 1;BL0PR05MB4642;6:fJScH/Qc4oPQa9j+epa8WRXag4MPnyGbeUttVTKfV+9MHq1BKGcKXbc8yhveDvqxoZpsaYE5h9ZkkXk0RLd1D51I1cZh7AycQlfQ41lBRduNoNXrmkWfL38jHBVMbpshmggxBSG9hVDYooFM7vGxif8vI/PCs1s81SEjppE2nOfDvC8aLy+bQousVatuGHgF39geX4eICSa7GEgppQeXhMwJBmM3oH28+rHomuGkXeB7O3fopjMEe+xXPAgf4Q1lFRm5b9UmeIjdGsR54u5gHz4SjgtJO4GCYOyGKCKBqSsV4dFoOakPOW+62Xd1sYdzE3nzFTRe/YCWhBiGfAI7HTw2xtMM5pq/m1xOCx47/yt74htCMsCMKnmH9SdLJUXqIj341TLpnJiRbfWF4ECeCWHV3yUyk4bInZuV/tfc4tTSNw6X3/4wnpQ3H6D3m9aimeP5dA6dw0B/L/ejTKkMkQ==;5:g8M+2z8iscuDkccr8VYxAhom0CoN4d05hRfODA59e83BH5bW96pSmVBEVDQy3nddaoNB0SVt0txX6+BGsy7dnCdlroWk6DAx8kNZlH4grQiUm6z+Q9jSLPRmygaobhXsH1krqBhrHuz2eOR63qsOaO2cL5UIztg7vUwhjedkvwU=;7:Pt03JUzvL5VTxP4JiTPXiyH2vV30AxKP5aUdJjgCixmD89OObbdiOqQHdUKV9SIziD+WU6VQhIT//lffqPMuxUzy1aOLNZUHvB1hDvJht9VcETg0OjZ1s4pfYx/D2e1alDCAp8BWgFOjShQS7LbNN5LcHOfXlFFGBF4o1ZwQ9xi6VHxx1MoausOL8GfRx4RtN1KdByR9OHeVLvIFg/uQnVI9PmHA7zA1/tKjxw3HimiPLNlK68q2yRSgt2TVQIF/
+x-ms-office365-filtering-correlation-id: fec46506-6a10-4b30-5f32-08d62d044391
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB4642;
 x-ms-traffictypediagnostic: BL0PR05MB4642:
-x-microsoft-antispam-prvs: <BL0PR05MB4642C7B5CA9C9FC563895307A3E60@BL0PR05MB4642.namprd05.prod.outlook.com>
+x-microsoft-antispam-prvs: <BL0PR05MB464286B404725CFBDFA755D0A3E60@BL0PR05MB4642.namprd05.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:;
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(10201501046)(3002001)(93006095)(93001095)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123558120)(20161123564045)(20161123560045)(201708071742011)(7699051);SRVR:BL0PR05MB4642;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB4642;
 x-forefront-prvs: 081904387B
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(39840400004)(396003)(346002)(366004)(376002)(189003)(199004)(105586002)(486006)(68736007)(2351001)(5250100002)(386003)(316002)(2501003)(446003)(2616005)(5660300001)(6916009)(103116003)(186003)(14454004)(14444005)(53936002)(575784001)(102836004)(11346002)(3846002)(256004)(305945005)(7736002)(2900100001)(8936002)(106356001)(107886003)(26005)(1076002)(6436002)(54906003)(76176011)(53946003)(478600001)(6116002)(6486002)(81156014)(25786009)(99286004)(8676002)(81166006)(476003)(52116002)(5640700003)(6506007)(71200400001)(6512007)(71190400001)(2906002)(4744004)(66066001)(4326008)(86362001)(36756003)(97736004)(579004)(559001);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB4642;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(39840400004)(396003)(346002)(366004)(376002)(189003)(199004)(105586002)(5024004)(486006)(68736007)(2351001)(5250100002)(386003)(316002)(2501003)(446003)(2616005)(5660300001)(6916009)(103116003)(186003)(14454004)(14444005)(53936002)(575784001)(102836004)(11346002)(3846002)(256004)(305945005)(7736002)(2900100001)(8936002)(106356001)(107886003)(26005)(1076002)(6436002)(54906003)(76176011)(53946003)(478600001)(6116002)(6486002)(81156014)(25786009)(99286004)(8676002)(81166006)(476003)(52116002)(5640700003)(6506007)(71200400001)(6512007)(16200700003)(71190400001)(2906002)(4744004)(66066001)(4326008)(86362001)(36756003)(97736004)(579004)(559001)(569006);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB4642;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: O1cre2fFmmTPu4EjG2gytakuUA3G0qidNLf+pslqY7CJH3EI2oD6f5Tiq/EF5AOfgOQ8W8rAhvMsqHZLgHpUz8OrOBsuDMIrdsmTfTE4TytI98wIOZhaALGZ3R//2w6Hoe2P14Ya/ilT3r7jDy2r3mPYzPNt3Uv90ECPpKZl8Nbkp62gO12gvjJw5T3dm7XPbaGwYpsm1iH4l/EJhpjAqnlE9RZ9De9w8EVwUpKRsgKwiyCQDsUPghcT78L/178oqpmownyCO8AudcWxC37Dc7mhb2pLHYyjqsIKEe4rVbYHhSSrwK1RELCXci7HUzQbcOdAogSDyNgD2kmcdtj1RAE6bThWGMcga7OV+WbwYwM=
+x-microsoft-antispam-message-info: mCtN8GZwAw+vlnvaZKM3rekAxRKwsVloYhWdLvtQQ8KnYyIz/t1JfqyNGMLFP2EUlxUw4m2MRk4ALEUfvUrF6z2pU7WYLKRj5rniSJb37wfFkGwiJvTt+mgJn5vxGKqepp7Rl6LozxteYzbqTLpJ9K6Oi+gsQv4xGDdwGfLTrSCfkXhiezCXdEHaUYCfNsrKim2MkR54STS7iFaY2sUfFegMwM4ih+n8tkgcI7RhvXeiM7ag6wAMys6vG4vpPblrC7y4FsdZqdZu3q6CkyxjUaIsnY7aD46ShQMA/mG9wBUd1X30G5e3BS91sIlqjWXYAkIlrRFtMM2o6YQhOOcjfV05PAZ6ErQECKfdbI1FlTU=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7ecd61b0-aee3-422d-ca88-08d62d0442ba
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Oct 2018 09:56:04.6379
+X-MS-Exchange-CrossTenant-Network-Message-Id: fec46506-6a10-4b30-5f32-08d62d044391
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Oct 2018 09:56:05.9973
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
@@ -93,962 +93,1558 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+This patch adds support for QSR1000/QSR2000 family of chipsets
+to qtnfmac_pcie platform driver.
 
-Single PCIe driver can identify hardware type by reading CHIP ID at
-probe time and invoking a correct initialization sequence.
+QSR1000/QSR2000 (aka Topaz) is a family of 80MHz, 11ac Wave2,
+4x4/2x4/2x2 chips, including single and dual band devices.
+Depending on specific chip model and firmware in use, either
+STA or both STA and AP modes are supported.
+
+Patch adds Topaz support to qtnfmac_pcie driver. It is possible
+to enable both Topaz and Pearl support in kernel configuration.
+In that case proper platform bus will be selected on probing
+based on chip ID.
 
 Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/Kconfig     |   8 +-
- drivers/net/wireless/quantenna/qtnfmac/Makefile    |  10 +-
- drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 281 +++++++++++++++--=
-----
- .../wireless/quantenna/qtnfmac/pcie/pcie_priv.h    |  19 +-
- .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 211 +++++-----------
- drivers/net/wireless/quantenna/qtnfmac/util.c      |  16 ++
- drivers/net/wireless/quantenna/qtnfmac/util.h      |   2 +
- 7 files changed, 298 insertions(+), 249 deletions(-)
+ drivers/net/wireless/quantenna/qtnfmac/Kconfig     |   27 +-
+ drivers/net/wireless/quantenna/qtnfmac/Makefile    |    1 +
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |    5 +
+ .../wireless/quantenna/qtnfmac/pcie/pcie_priv.h    |    1 +
+ .../wireless/quantenna/qtnfmac/pcie/topaz_pcie.c   | 1219 ++++++++++++++++=
+++++
+ .../quantenna/qtnfmac/pcie/topaz_pcie_ipc.h        |   94 ++
+ .../quantenna/qtnfmac/pcie/topaz_pcie_regs.h       |   45 +
+ .../net/wireless/quantenna/qtnfmac/qtn_hw_ids.h    |    3 +
+ drivers/net/wireless/quantenna/qtnfmac/util.c      |    2 +
+ 9 files changed, 1391 insertions(+), 6 deletions(-)
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.=
+c
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_=
+ipc.h
+ create mode 100644 drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_=
+regs.h
 
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/Kconfig b/drivers/net/w=
 ireless/quantenna/qtnfmac/Kconfig
-index b8c12a5f16b4..f43b236b7c0b 100644
+index f43b236b7c0b..df2fd0a1ab5c 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/Kconfig
 +++ b/drivers/net/wireless/quantenna/qtnfmac/Kconfig
-@@ -4,6 +4,12 @@ config QTNFMAC
- 	default m if QTNFMAC_PEARL_PCIE=3Dm
- 	default y if QTNFMAC_PEARL_PCIE=3Dy
+@@ -1,14 +1,14 @@
+ config QTNFMAC
+ 	tristate
+-	depends on QTNFMAC_PEARL_PCIE
+-	default m if QTNFMAC_PEARL_PCIE=3Dm
+-	default y if QTNFMAC_PEARL_PCIE=3Dy
++	depends on QTNFMAC_PEARL_PCIE || QTNFMAC_TOPAZ_PCIE
++	default m if QTNFMAC_PEARL_PCIE=3Dm || QTNFMAC_TOPAZ_PCIE=3Dm
++	default y if QTNFMAC_PEARL_PCIE=3Dy || QTNFMAC_TOPAZ_PCIE=3Dy
 =20
-+config QTNFMAC_PCIE
-+	tristate
-+	depends on QTNFMAC_PEARL_PCIE
-+	default m if QTNFMAC_PEARL_PCIE=3Dm
-+	default y if QTNFMAC_PEARL_PCIE=3Dy
-+
+ config QTNFMAC_PCIE
+ 	tristate
+-	depends on QTNFMAC_PEARL_PCIE
+-	default m if QTNFMAC_PEARL_PCIE=3Dm
+-	default y if QTNFMAC_PEARL_PCIE=3Dy
++	depends on QTNFMAC_PEARL_PCIE || QTNFMAC_TOPAZ_PCIE
++	default m if QTNFMAC_PEARL_PCIE=3Dm || QTNFMAC_TOPAZ_PCIE=3Dm
++	default y if QTNFMAC_PEARL_PCIE=3Dy || QTNFMAC_TOPAZ_PCIE=3Dy
+=20
  config QTNFMAC_PEARL_PCIE
  	tristate "Quantenna QSR10g PCIe support"
- 	default n
-@@ -16,4 +22,4 @@ config QTNFMAC_PEARL_PCIE
- 	  802.11ac QSR10g (aka Pearl) FullMAC chipset running over PCIe.
+@@ -23,3 +23,18 @@ config QTNFMAC_PEARL_PCIE
 =20
  	  If you choose to build it as a module, two modules will be built:
--	  qtnfmac.ko and qtnfmac_pearl_pcie.ko.
+ 	  qtnfmac.ko and qtnfmac_pcie.ko.
++
++config QTNFMAC_TOPAZ_PCIE
++	tristate "Quantenna QSR1000/QSR2000 PCIe support"
++	default n
++	depends on PCI && CFG80211
++	select QTNFMAC
++	select FW_LOADER
++	select CRC32
++	help
++	  This option adds support for wireless adapters based on Quantenna
++	  802.11ac QSR1000/QSR2000 (aka Topaz) FullMAC chipset
++	  running over PCIe.
++
++	  If you choose to build it as a module, two modules will be built:
 +	  qtnfmac.ko and qtnfmac_pcie.ko.
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/Makefile b/drivers/net/=
 wireless/quantenna/qtnfmac/Makefile
-index 17cd7adb4109..e295aa55619f 100644
+index e295aa55619f..4de95330e793 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/Makefile
 +++ b/drivers/net/wireless/quantenna/qtnfmac/Makefile
-@@ -19,11 +19,11 @@ qtnfmac-objs +=3D \
+@@ -27,3 +27,4 @@ qtnfmac_pcie-objs +=3D \
 =20
- #
-=20
--obj-$(CONFIG_QTNFMAC_PEARL_PCIE) +=3D qtnfmac_pearl_pcie.o
-+obj-$(CONFIG_QTNFMAC_PCIE) +=3D qtnfmac_pcie.o
-=20
--qtnfmac_pearl_pcie-objs +=3D \
-+qtnfmac_pcie-objs +=3D \
- 	shm_ipc.o \
--	pcie/pcie.o \
--	pcie/pearl_pcie.o
-+	pcie/pcie.o
-=20
--qtnfmac_pearl_pcie-$(CONFIG_DEBUG_FS) +=3D debug.o
-+qtnfmac_pcie-$(CONFIG_DEBUG_FS) +=3D debug.o
-+qtnfmac_pcie-$(CONFIG_QTNFMAC_PEARL_PCIE) +=3D pcie/pearl_pcie.o
+ qtnfmac_pcie-$(CONFIG_DEBUG_FS) +=3D debug.o
+ qtnfmac_pcie-$(CONFIG_QTNFMAC_PEARL_PCIE) +=3D pcie/pearl_pcie.o
++qtnfmac_pcie-$(CONFIG_QTNFMAC_TOPAZ_PCIE) +=3D pcie/topaz_pcie.o
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/n=
 et/wireless/quantenna/qtnfmac/pcie/pcie.c
-index 16795dbe475b..b589c01d9bbe 100644
+index b589c01d9bbe..a139db398fd4 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0+
- /* Copyright (c) 2018 Quantenna Communications, Inc. All rights reserved. =
-*/
-=20
-+#include <linux/module.h>
- #include <linux/printk.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
-@@ -15,14 +16,37 @@
- #include "shm_ipc.h"
- #include "core.h"
- #include "debug.h"
--
--#undef pr_fmt
--#define pr_fmt(fmt)	"qtnf_pcie: %s: " fmt, __func__
-+#include "util.h"
-+#include "qtn_hw_ids.h"
-=20
- #define QTN_SYSCTL_BAR	0
- #define QTN_SHMEM_BAR	2
- #define QTN_DMA_BAR	3
-=20
-+#define QTN_PCIE_MAX_FW_BUFSZ		(1 * 1024 * 1024)
-+
-+static bool use_msi =3D true;
-+module_param(use_msi, bool, 0644);
-+MODULE_PARM_DESC(use_msi, "set 0 to use legacy interrupt");
-+
-+static unsigned int tx_bd_size_param;
-+module_param(tx_bd_size_param, uint, 0644);
-+MODULE_PARM_DESC(tx_bd_size_param, "Tx descriptors queue size");
-+
-+static unsigned int rx_bd_size_param =3D 256;
-+module_param(rx_bd_size_param, uint, 0644);
-+MODULE_PARM_DESC(rx_bd_size_param, "Rx descriptors queue size");
-+
-+static u8 flashboot =3D 1;
-+module_param(flashboot, byte, 0644);
-+MODULE_PARM_DESC(flashboot, "set to 0 to use FW binary file on FS");
-+
-+static unsigned int fw_blksize_param =3D QTN_PCIE_MAX_FW_BUFSZ;
-+module_param(fw_blksize_param, uint, 0644);
-+MODULE_PARM_DESC(fw_blksize_param, "firmware loading block size in bytes")=
-;
-+
-+#define DRV_NAME	"qtnfmac_pcie"
-+
- int qtnf_pcie_control_tx(struct qtnf_bus *bus, struct sk_buff *skb)
- {
- 	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
-@@ -58,7 +82,7 @@ int qtnf_pcie_alloc_skb_array(struct qtnf_pcie_bus_priv *=
-priv)
- 	return 0;
- }
-=20
--void qtnf_pcie_bringup_fw_async(struct qtnf_bus *bus)
-+static void qtnf_pcie_bringup_fw_async(struct qtnf_bus *bus)
- {
- 	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
- 	struct pci_dev *pdev =3D priv->pdev;
-@@ -72,7 +96,7 @@ static int qtnf_dbg_mps_show(struct seq_file *s, void *da=
-ta)
- 	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
- 	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
-=20
--	seq_printf(s, "%d\n", priv->mps);
-+	seq_printf(s, "%d\n", pcie_get_mps(priv->pdev));
-=20
- 	return 0;
- }
-@@ -104,8 +128,7 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, void =
-*data)
- 	return 0;
- }
-=20
--void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool boot_success,
--			    const char *drv_name)
-+void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool boot_success)
- {
- 	struct qtnf_pcie_bus_priv *priv =3D get_bus_priv(bus);
- 	struct pci_dev *pdev =3D priv->pdev;
-@@ -122,7 +145,7 @@ void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool =
-boot_success,
- 	}
-=20
- 	if (boot_success) {
--		qtnf_debugfs_init(bus, drv_name);
-+		qtnf_debugfs_init(bus, DRV_NAME);
- 		qtnf_debugfs_add_entry(bus, "mps", qtnf_dbg_mps_show);
- 		qtnf_debugfs_add_entry(bus, "msi_enabled", qtnf_dbg_msi_show);
- 		qtnf_debugfs_add_entry(bus, "shm_stats", qtnf_dbg_shm_stats);
-@@ -133,9 +156,8 @@ void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool =
-boot_success,
- 	put_device(&pdev->dev);
- }
-=20
--static void qtnf_tune_pcie_mps(struct qtnf_pcie_bus_priv *priv)
-+static void qtnf_tune_pcie_mps(struct pci_dev *pdev)
- {
--	struct pci_dev *pdev =3D priv->pdev;
- 	struct pci_dev *parent;
- 	int mps_p, mps_o, mps_m, mps;
- 	int ret;
-@@ -163,12 +185,10 @@ static void qtnf_tune_pcie_mps(struct qtnf_pcie_bus_p=
-riv *priv)
- 	if (ret) {
- 		pr_err("failed to set mps to %d, keep using current %d\n",
- 		       mps, mps_o);
--		priv->mps =3D mps_o;
- 		return;
- 	}
-=20
- 	pr_debug("set mps to %d (was %d, max %d)\n", mps, mps_o, mps_m);
--	priv->mps =3D mps;
- }
-=20
- static void qtnf_pcie_init_irq(struct qtnf_pcie_bus_priv *priv, bool use_m=
-si)
-@@ -194,20 +214,20 @@ static void qtnf_pcie_init_irq(struct qtnf_pcie_bus_p=
-riv *priv, bool use_msi)
- 	}
- }
-=20
--static void __iomem *qtnf_map_bar(struct qtnf_pcie_bus_priv *priv, u8 inde=
-x)
-+static void __iomem *qtnf_map_bar(struct pci_dev *pdev, u8 index)
- {
- 	void __iomem *vaddr;
- 	dma_addr_t busaddr;
- 	size_t len;
- 	int ret;
-=20
--	ret =3D pcim_iomap_regions(priv->pdev, 1 << index, "qtnfmac_pcie");
-+	ret =3D pcim_iomap_regions(pdev, 1 << index, "qtnfmac_pcie");
- 	if (ret)
- 		return IOMEM_ERR_PTR(ret);
-=20
--	busaddr =3D pci_resource_start(priv->pdev, index);
--	len =3D pci_resource_len(priv->pdev, index);
--	vaddr =3D pcim_iomap_table(priv->pdev)[index];
-+	busaddr =3D pci_resource_start(pdev, index);
-+	len =3D pci_resource_len(pdev, index);
-+	vaddr =3D pcim_iomap_table(pdev)[index];
- 	if (!vaddr)
- 		return IOMEM_ERR_PTR(-ENOMEM);
-=20
-@@ -217,31 +237,6 @@ static void __iomem *qtnf_map_bar(struct qtnf_pcie_bus=
-_priv *priv, u8 index)
- 	return vaddr;
- }
-=20
--static int qtnf_pcie_init_memory(struct qtnf_pcie_bus_priv *priv)
--{
--	int ret =3D -ENOMEM;
--
--	priv->sysctl_bar =3D qtnf_map_bar(priv, QTN_SYSCTL_BAR);
--	if (IS_ERR(priv->sysctl_bar)) {
--		pr_err("failed to map BAR%u\n", QTN_SYSCTL_BAR);
--		return ret;
--	}
--
--	priv->dmareg_bar =3D qtnf_map_bar(priv, QTN_DMA_BAR);
--	if (IS_ERR(priv->dmareg_bar)) {
--		pr_err("failed to map BAR%u\n", QTN_DMA_BAR);
--		return ret;
--	}
--
--	priv->epmem_bar =3D qtnf_map_bar(priv, QTN_SHMEM_BAR);
--	if (IS_ERR(priv->epmem_bar)) {
--		pr_err("failed to map BAR%u\n", QTN_SHMEM_BAR);
--		return ret;
--	}
--
--	return 0;
--}
--
- static void qtnf_pcie_control_rx_callback(void *arg, const u8 __iomem *buf=
-,
- 					  size_t len)
- {
-@@ -282,27 +277,82 @@ void qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bus_priv=
- *priv,
- 			  ipc_int, &rx_callback);
- }
-=20
--int qtnf_pcie_probe(struct pci_dev *pdev, size_t priv_size,
--		    const struct qtnf_bus_ops *bus_ops, u64 dma_mask,
--		    bool use_msi)
-+static int qtnf_pcie_probe(struct pci_dev *pdev, const struct pci_device_i=
-d *id)
- {
- 	struct qtnf_pcie_bus_priv *pcie_priv;
- 	struct qtnf_bus *bus;
-+	void __iomem *sysctl_bar;
-+	void __iomem *epmem_bar;
-+	void __iomem *dmareg_bar;
-+	unsigned int chipid;
- 	int ret;
-=20
--	bus =3D devm_kzalloc(&pdev->dev,
--			   sizeof(*bus) + priv_size, GFP_KERNEL);
-+	if (!pci_is_pcie(pdev)) {
-+		pr_err("device %s is not PCI Express\n", pci_name(pdev));
-+		return -EIO;
-+	}
-+
-+	qtnf_tune_pcie_mps(pdev);
-+
-+	ret =3D pcim_enable_device(pdev);
-+	if (ret) {
-+		pr_err("failed to init PCI device %x\n", pdev->device);
-+		return ret;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	sysctl_bar =3D qtnf_map_bar(pdev, QTN_SYSCTL_BAR);
-+	if (IS_ERR(sysctl_bar)) {
-+		pr_err("failed to map BAR%u\n", QTN_SYSCTL_BAR);
-+		return ret;
-+	}
-+
-+	dmareg_bar =3D qtnf_map_bar(pdev, QTN_DMA_BAR);
-+	if (IS_ERR(dmareg_bar)) {
-+		pr_err("failed to map BAR%u\n", QTN_DMA_BAR);
-+		return ret;
-+	}
-+
-+	epmem_bar =3D qtnf_map_bar(pdev, QTN_SHMEM_BAR);
-+	if (IS_ERR(epmem_bar)) {
-+		pr_err("failed to map BAR%u\n", QTN_SHMEM_BAR);
-+		return ret;
-+	}
-+
-+	chipid =3D qtnf_chip_id_get(sysctl_bar);
-+
-+	pr_info("identified device: %s\n", qtnf_chipid_to_string(chipid));
-+
-+	switch (chipid) {
-+#if IS_ENABLED(CONFIG_QTNFMAC_PEARL_PCIE)
-+	case QTN_CHIP_ID_PEARL:
-+	case QTN_CHIP_ID_PEARL_B:
-+	case QTN_CHIP_ID_PEARL_C:
-+		bus =3D qtnf_pcie_pearl_alloc(pdev);
+@@ -332,6 +332,11 @@ static int qtnf_pcie_probe(struct pci_dev *pdev, const=
+ struct pci_device_id *id)
+ 		bus =3D qtnf_pcie_pearl_alloc(pdev);
+ 		break;
+ #endif
++#if IS_ENABLED(CONFIG_QTNFMAC_TOPAZ_PCIE)
++	case QTN_CHIP_ID_TOPAZ:
++		bus =3D qtnf_pcie_topaz_alloc(pdev);
 +		break;
 +#endif
-+	default:
-+		pr_err("unsupported chip ID 0x%x\n", chipid);
-+		return -ENOTSUPP;
-+	}
-+
- 	if (!bus)
- 		return -ENOMEM;
-=20
- 	pcie_priv =3D get_bus_priv(bus);
--
- 	pci_set_drvdata(pdev, bus);
--	bus->bus_ops =3D bus_ops;
- 	bus->dev =3D &pdev->dev;
- 	bus->fw_state =3D QTNF_FW_STATE_RESET;
- 	pcie_priv->pdev =3D pdev;
- 	pcie_priv->tx_stopped =3D 0;
-+	pcie_priv->rx_bd_num =3D rx_bd_size_param;
-+	pcie_priv->flashboot =3D flashboot;
-+
-+	if (fw_blksize_param > QTN_PCIE_MAX_FW_BUFSZ)
-+		pcie_priv->fw_blksize =3D  QTN_PCIE_MAX_FW_BUFSZ;
-+	else
-+		pcie_priv->fw_blksize =3D fw_blksize_param;
-=20
- 	mutex_init(&bus->bus_lock);
- 	spin_lock_init(&pcie_priv->tx_lock);
-@@ -317,53 +367,35 @@ int qtnf_pcie_probe(struct pci_dev *pdev, size_t priv=
-_size,
- 	pcie_priv->workqueue =3D create_singlethread_workqueue("QTNF_PCIE");
- 	if (!pcie_priv->workqueue) {
- 		pr_err("failed to alloc bus workqueue\n");
--		ret =3D -ENODEV;
--		goto err_init;
--	}
--
--	init_dummy_netdev(&bus->mux_dev);
--
--	if (!pci_is_pcie(pdev)) {
--		pr_err("device %s is not PCI Express\n", pci_name(pdev));
--		ret =3D -EIO;
--		goto err_base;
--	}
--
--	qtnf_tune_pcie_mps(pcie_priv);
--
--	ret =3D pcim_enable_device(pdev);
--	if (ret) {
--		pr_err("failed to init PCI device %x\n", pdev->device);
--		goto err_base;
--	} else {
--		pr_debug("successful init of PCI device %x\n", pdev->device);
-+		return -ENODEV;
- 	}
-=20
--	ret =3D dma_set_mask_and_coherent(&pdev->dev, dma_mask);
-+	ret =3D dma_set_mask_and_coherent(&pdev->dev,
-+					pcie_priv->dma_mask_get_cb());
- 	if (ret) {
--		pr_err("PCIE DMA coherent mask init failed\n");
--		goto err_base;
-+		pr_err("PCIE DMA coherent mask init failed 0x%llx\n",
-+		       pcie_priv->dma_mask_get_cb());
-+		goto error;
- 	}
-=20
--	pci_set_master(pdev);
-+	init_dummy_netdev(&bus->mux_dev);
- 	qtnf_pcie_init_irq(pcie_priv, use_msi);
--
--	ret =3D qtnf_pcie_init_memory(pcie_priv);
--	if (ret < 0) {
--		pr_err("PCIE memory init failed\n");
--		goto err_base;
--	}
--
-+	pcie_priv->sysctl_bar =3D sysctl_bar;
-+	pcie_priv->dmareg_bar =3D dmareg_bar;
-+	pcie_priv->epmem_bar =3D epmem_bar;
- 	pci_save_state(pdev);
-=20
-+	ret =3D pcie_priv->probe_cb(bus, tx_bd_size_param);
-+	if (ret)
-+		goto error;
-+
-+	qtnf_pcie_bringup_fw_async(bus);
- 	return 0;
-=20
--err_base:
-+error:
- 	flush_workqueue(pcie_priv->workqueue);
- 	destroy_workqueue(pcie_priv->workqueue);
--err_init:
- 	pci_set_drvdata(pdev, NULL);
--
- 	return ret;
- }
-=20
-@@ -373,8 +405,17 @@ static void qtnf_pcie_free_shm_ipc(struct qtnf_pcie_bu=
-s_priv *priv)
- 	qtnf_shm_ipc_free(&priv->shm_ipc_ep_out);
- }
-=20
--void qtnf_pcie_remove(struct qtnf_bus *bus, struct qtnf_pcie_bus_priv *pri=
-v)
-+static void qtnf_pcie_remove(struct pci_dev *dev)
- {
-+	struct qtnf_pcie_bus_priv *priv;
-+	struct qtnf_bus *bus;
-+
-+	bus =3D pci_get_drvdata(dev);
-+	if (!bus)
-+		return;
-+
-+	priv =3D get_bus_priv(bus);
-+
- 	cancel_work_sync(&bus->fw_work);
-=20
- 	if (bus->fw_state =3D=3D QTNF_FW_STATE_ACTIVE ||
-@@ -388,5 +429,77 @@ void qtnf_pcie_remove(struct qtnf_bus *bus, struct qtn=
-f_pcie_bus_priv *priv)
-=20
- 	qtnf_pcie_free_shm_ipc(priv);
- 	qtnf_debugfs_remove(bus);
-+	priv->remove_cb(bus);
- 	pci_set_drvdata(priv->pdev, NULL);
- }
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int qtnf_pcie_suspend(struct device *dev)
-+{
-+	struct qtnf_pcie_bus_priv *priv;
-+	struct qtnf_bus *bus;
-+
-+	bus =3D pci_get_drvdata(to_pci_dev(dev));
-+	if (!bus)
-+		return -EFAULT;
-+
-+	priv =3D get_bus_priv(bus);
-+	return priv->suspend_cb(bus);
-+}
-+
-+static int qtnf_pcie_resume(struct device *dev)
-+{
-+	struct qtnf_pcie_bus_priv *priv;
-+	struct qtnf_bus *bus;
-+
-+	bus =3D pci_get_drvdata(to_pci_dev(dev));
-+	if (!bus)
-+		return -EFAULT;
-+
-+	priv =3D get_bus_priv(bus);
-+	return priv->resume_cb(bus);
-+}
-+
-+/* Power Management Hooks */
-+static SIMPLE_DEV_PM_OPS(qtnf_pcie_pm_ops, qtnf_pcie_suspend,
-+			 qtnf_pcie_resume);
-+#endif
-+
-+static const struct pci_device_id qtnf_pcie_devid_table[] =3D {
-+	{
-+		PCIE_VENDOR_ID_QUANTENNA, PCIE_DEVICE_ID_QTN_PEARL,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	},
-+	{ },
-+};
-+
-+MODULE_DEVICE_TABLE(pci, qtnf_pcie_devid_table);
-+
-+static struct pci_driver qtnf_pcie_drv_data =3D {
-+	.name =3D DRV_NAME,
-+	.id_table =3D qtnf_pcie_devid_table,
-+	.probe =3D qtnf_pcie_probe,
-+	.remove =3D qtnf_pcie_remove,
-+#ifdef CONFIG_PM_SLEEP
-+	.driver =3D {
-+		.pm =3D &qtnf_pcie_pm_ops,
-+	},
-+#endif
-+};
-+
-+static int __init qtnf_pcie_register(void)
-+{
-+	return pci_register_driver(&qtnf_pcie_drv_data);
-+}
-+
-+static void __exit qtnf_pcie_exit(void)
-+{
-+	pci_unregister_driver(&qtnf_pcie_drv_data);
-+}
-+
-+module_init(qtnf_pcie_register);
-+module_exit(qtnf_pcie_exit);
-+
-+MODULE_AUTHOR("Quantenna Communications");
-+MODULE_DESCRIPTION("Quantenna PCIe bus driver for 802.11 wireless LAN.");
-+MODULE_LICENSE("GPL");
+ 	default:
+ 		pr_err("unsupported chip ID 0x%x\n", chipid);
+ 		return -ENOTSUPP;
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie_priv.h b/driv=
 ers/net/wireless/quantenna/qtnfmac/pcie/pcie_priv.h
-index 5c70fb4c0f92..7c742c56efaf 100644
+index 7c742c56efaf..bbc074e1f34d 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie_priv.h
 +++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie_priv.h
-@@ -23,9 +23,14 @@
- struct qtnf_pcie_bus_priv {
- 	struct pci_dev *pdev;
-=20
-+	int (*probe_cb)(struct qtnf_bus *bus, unsigned int tx_bd_size);
-+	void (*remove_cb)(struct qtnf_bus *bus);
-+	int (*suspend_cb)(struct qtnf_bus *bus);
-+	int (*resume_cb)(struct qtnf_bus *bus);
-+	u64 (*dma_mask_get_cb)(void);
-+
- 	spinlock_t tx_reclaim_lock;
- 	spinlock_t tx_lock;
--	int mps;
-=20
- 	struct workqueue_struct *workqueue;
- 	struct tasklet_struct reclaim_tq;
-@@ -43,6 +48,8 @@ struct qtnf_pcie_bus_priv {
- 	struct sk_buff **tx_skb;
- 	struct sk_buff **rx_skb;
-=20
-+	unsigned int fw_blksize;
-+
- 	u32 rx_bd_w_index;
- 	u32 rx_bd_r_index;
-=20
-@@ -58,21 +65,17 @@ struct qtnf_pcie_bus_priv {
-=20
- 	u8 msi_enabled;
- 	u8 tx_stopped;
-+	bool flashboot;
- };
-=20
- int qtnf_pcie_control_tx(struct qtnf_bus *bus, struct sk_buff *skb);
- int qtnf_pcie_alloc_skb_array(struct qtnf_pcie_bus_priv *priv);
--void qtnf_pcie_bringup_fw_async(struct qtnf_bus *bus);
--void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool boot_success,
--			    const char *drv_name);
-+void qtnf_pcie_fw_boot_done(struct qtnf_bus *bus, bool boot_success);
- void qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bus_priv *priv,
- 			    struct qtnf_shm_ipc_region __iomem *ipc_tx_reg,
+@@ -76,6 +76,7 @@ void qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bus_priv *pr=
+iv,
  			    struct qtnf_shm_ipc_region __iomem *ipc_rx_reg,
  			    const struct qtnf_shm_ipc_int *ipc_int);
--int qtnf_pcie_probe(struct pci_dev *pdev, size_t priv_size,
--		    const struct qtnf_bus_ops *bus_ops, u64 dma_mask,
--		    bool use_msi);
--void qtnf_pcie_remove(struct qtnf_bus *bus, struct qtnf_pcie_bus_priv *pri=
-v);
-+struct qtnf_bus *qtnf_pcie_pearl_alloc(struct pci_dev *pdev);
+ struct qtnf_bus *qtnf_pcie_pearl_alloc(struct pci_dev *pdev);
++struct qtnf_bus *qtnf_pcie_topaz_alloc(struct pci_dev *pdev);
 =20
  static inline void qtnf_non_posted_write(u32 val, void __iomem *basereg)
  {
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/dri=
-vers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-index 95c7b95c6f8a..1f5facbb8905 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-@@ -2,7 +2,6 @@
- /* Copyright (c) 2018 Quantenna Communications */
-=20
- #include <linux/kernel.h>
--#include <linux/module.h>
- #include <linux/firmware.h>
- #include <linux/pci.h>
- #include <linux/vmalloc.h>
-@@ -24,23 +23,7 @@
- #include "shm_ipc.h"
- #include "debug.h"
-=20
--static bool use_msi =3D true;
--module_param(use_msi, bool, 0644);
--MODULE_PARM_DESC(use_msi, "set 0 to use legacy interrupt");
--
--static unsigned int tx_bd_size_param =3D 32;
--module_param(tx_bd_size_param, uint, 0644);
--MODULE_PARM_DESC(tx_bd_size_param, "Tx descriptors queue size, power of tw=
-o");
--
--static unsigned int rx_bd_size_param =3D 256;
--module_param(rx_bd_size_param, uint, 0644);
--MODULE_PARM_DESC(rx_bd_size_param, "Rx descriptors queue size, power of tw=
-o");
--
--static u8 flashboot =3D 1;
--module_param(flashboot, byte, 0644);
--MODULE_PARM_DESC(flashboot, "set to 0 to use FW binary file on FS");
--
--#define DRV_NAME	"qtnfmac_pearl_pcie"
-+#define PEARL_TX_BD_SIZE_DEFAULT	32
-=20
- struct qtnf_pearl_bda {
- 	__le16 bda_len;
-@@ -415,30 +398,28 @@ static int pearl_hhbm_init(struct qtnf_pcie_pearl_sta=
-te *ps)
- 	return 0;
- }
-=20
--static int qtnf_pcie_pearl_init_xfer(struct qtnf_pcie_pearl_state *ps)
-+static int qtnf_pcie_pearl_init_xfer(struct qtnf_pcie_pearl_state *ps,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c b/dri=
+vers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
+new file mode 100644
+index 000000000000..598edb814421
+--- /dev/null
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
+@@ -0,0 +1,1219 @@
++// SPDX-License-Identifier: GPL-2.0+
++/* Copyright (c) 2018 Quantenna Communications */
++
++#include <linux/kernel.h>
++#include <linux/firmware.h>
++#include <linux/pci.h>
++#include <linux/vmalloc.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/sched.h>
++#include <linux/crc32.h>
++#include <linux/completion.h>
++#include <linux/spinlock.h>
++#include <linux/circ_buf.h>
++
++#include "pcie_priv.h"
++#include "topaz_pcie_regs.h"
++#include "topaz_pcie_ipc.h"
++#include "qtn_hw_ids.h"
++#include "core.h"
++#include "bus.h"
++#include "shm_ipc.h"
++#include "debug.h"
++
++#define TOPAZ_TX_BD_SIZE_DEFAULT	128
++
++struct qtnf_topaz_tx_bd {
++	__le32 addr;
++	__le32 info;
++} __packed;
++
++struct qtnf_topaz_rx_bd {
++	__le32 addr;
++	__le32 info;
++} __packed;
++
++struct qtnf_extra_bd_params {
++	__le32 param1;
++	__le32 param2;
++	__le32 param3;
++	__le32 param4;
++} __packed;
++
++#define QTNF_BD_PARAM_OFFSET(n)	offsetof(struct qtnf_extra_bd_params, para=
+m##n)
++
++struct vmac_pkt_info {
++	__le32 addr;
++	__le32 info;
++};
++
++struct qtnf_topaz_bda {
++	__le16	bda_len;
++	__le16	bda_version;
++	__le32	bda_bootstate;
++	__le32	bda_dma_mask;
++	__le32	bda_dma_offset;
++	__le32	bda_flags;
++	__le32	bda_img;
++	__le32	bda_img_size;
++	__le32	bda_ep2h_irqstatus;
++	__le32	bda_h2ep_irqstatus;
++	__le32	bda_msi_addr;
++	u8	reserved1[56];
++	__le32	bda_flashsz;
++	u8	bda_boardname[PCIE_BDA_NAMELEN];
++	__le32	bda_pci_pre_status;
++	__le32	bda_pci_endian;
++	__le32	bda_pci_post_status;
++	__le32	bda_h2ep_txd_budget;
++	__le32	bda_ep2h_txd_budget;
++	__le32	bda_rc_rx_bd_base;
++	__le32	bda_rc_rx_bd_num;
++	__le32	bda_rc_tx_bd_base;
++	__le32	bda_rc_tx_bd_num;
++	u8	bda_ep_link_state;
++	u8	bda_rc_link_state;
++	u8	bda_rc_msi_enabled;
++	u8	reserved2;
++	__le32	bda_ep_next_pkt;
++	struct vmac_pkt_info request[QTN_PCIE_RC_TX_QUEUE_LEN];
++	struct qtnf_shm_ipc_region bda_shm_reg1 __aligned(4096);
++	struct qtnf_shm_ipc_region bda_shm_reg2 __aligned(4096);
++} __packed;
++
++struct qtnf_pcie_topaz_state {
++	struct qtnf_pcie_bus_priv base;
++	struct qtnf_topaz_bda __iomem *bda;
++
++	dma_addr_t dma_msi_dummy;
++	u32 dma_msi_imwr;
++
++	struct qtnf_topaz_tx_bd *tx_bd_vbase;
++	struct qtnf_topaz_rx_bd *rx_bd_vbase;
++
++	__le32 __iomem *ep_next_rx_pkt;
++	__le32 __iomem *txqueue_wake;
++	__le32 __iomem *ep_pmstate;
++
++	unsigned long rx_pkt_count;
++};
++
++static void qtnf_deassert_intx(struct qtnf_pcie_topaz_state *ts)
++{
++	void __iomem *reg =3D ts->base.sysctl_bar + TOPAZ_PCIE_CFG0_OFFSET;
++	u32 cfg;
++
++	cfg =3D readl(reg);
++	cfg &=3D ~TOPAZ_ASSERT_INTX;
++	qtnf_non_posted_write(cfg, reg);
++}
++
++static inline int qtnf_topaz_intx_asserted(struct qtnf_pcie_topaz_state *t=
+s)
++{
++	void __iomem *reg =3D ts->base.sysctl_bar + TOPAZ_PCIE_CFG0_OFFSET;
++	u32 cfg =3D readl(reg);
++
++	return !!(cfg & TOPAZ_ASSERT_INTX);
++}
++
++static void qtnf_topaz_reset_ep(struct qtnf_pcie_topaz_state *ts)
++{
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_RST_EP_IRQ),
++	       TOPAZ_LH_IPC4_INT(ts->base.sysctl_bar));
++	msleep(QTN_EP_RESET_WAIT_MS);
++	pci_restore_state(ts->base.pdev);
++}
++
++static void setup_rx_irqs(struct qtnf_pcie_topaz_state *ts)
++{
++	void __iomem *reg =3D PCIE_DMA_WR_DONE_IMWR_ADDR_LOW(ts->base.dmareg_bar)=
+;
++
++	ts->dma_msi_imwr =3D readl(reg);
++}
++
++static void enable_rx_irqs(struct qtnf_pcie_topaz_state *ts)
++{
++	void __iomem *reg =3D PCIE_DMA_WR_DONE_IMWR_ADDR_LOW(ts->base.dmareg_bar)=
+;
++
++	qtnf_non_posted_write(ts->dma_msi_imwr, reg);
++}
++
++static void disable_rx_irqs(struct qtnf_pcie_topaz_state *ts)
++{
++	void __iomem *reg =3D PCIE_DMA_WR_DONE_IMWR_ADDR_LOW(ts->base.dmareg_bar)=
+;
++
++	qtnf_non_posted_write(QTN_HOST_LO32(ts->dma_msi_dummy), reg);
++}
++
++static void qtnf_topaz_ipc_gen_ep_int(void *arg)
++{
++	struct qtnf_pcie_topaz_state *ts =3D arg;
++
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_CTRL_IRQ),
++	       TOPAZ_CTL_M2L_INT(ts->base.sysctl_bar));
++}
++
++static int qtnf_is_state(__le32 __iomem *reg, u32 state)
++{
++	u32 s =3D readl(reg);
++
++	return (s =3D=3D state);
++}
++
++static void qtnf_set_state(__le32 __iomem *reg, u32 state)
++{
++	qtnf_non_posted_write(state, reg);
++}
++
++static int qtnf_poll_state(__le32 __iomem *reg, u32 state, u32 delay_in_ms=
+)
++{
++	u32 timeout =3D 0;
++
++	while ((qtnf_is_state(reg, state) =3D=3D 0)) {
++		usleep_range(1000, 1200);
++		if (++timeout > delay_in_ms)
++			return -1;
++	}
++
++	return 0;
++}
++
++static int topaz_alloc_bd_table(struct qtnf_pcie_topaz_state *ts,
++				struct qtnf_topaz_bda __iomem *bda)
++{
++	struct qtnf_extra_bd_params __iomem *extra_params;
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	dma_addr_t paddr;
++	void *vaddr;
++	int len;
++	int i;
++
++	/* bd table */
++
++	len =3D priv->tx_bd_num * sizeof(struct qtnf_topaz_tx_bd) +
++		priv->rx_bd_num * sizeof(struct qtnf_topaz_rx_bd) +
++			sizeof(struct qtnf_extra_bd_params);
++
++	vaddr =3D dmam_alloc_coherent(&priv->pdev->dev, len, &paddr, GFP_KERNEL);
++	if (!vaddr)
++		return -ENOMEM;
++
++	memset(vaddr, 0, len);
++
++	/* tx bd */
++
++	ts->tx_bd_vbase =3D vaddr;
++	qtnf_non_posted_write(paddr, &bda->bda_rc_tx_bd_base);
++
++	for (i =3D 0; i < priv->tx_bd_num; i++)
++		ts->tx_bd_vbase[i].info |=3D cpu_to_le32(QTN_BD_EMPTY);
++
++	pr_debug("TX descriptor table: vaddr=3D0x%p paddr=3D%pad\n", vaddr, &padd=
+r);
++
++	priv->tx_bd_r_index =3D 0;
++	priv->tx_bd_w_index =3D 0;
++
++	/* rx bd */
++
++	vaddr =3D ((struct qtnf_topaz_tx_bd *)vaddr) + priv->tx_bd_num;
++	paddr +=3D priv->tx_bd_num * sizeof(struct qtnf_topaz_tx_bd);
++
++	ts->rx_bd_vbase =3D vaddr;
++	qtnf_non_posted_write(paddr, &bda->bda_rc_rx_bd_base);
++
++	pr_debug("RX descriptor table: vaddr=3D0x%p paddr=3D%pad\n", vaddr, &padd=
+r);
++
++	/* extra shared params */
++
++	vaddr =3D ((struct qtnf_topaz_rx_bd *)vaddr) + priv->rx_bd_num;
++	paddr +=3D priv->rx_bd_num * sizeof(struct qtnf_topaz_rx_bd);
++
++	extra_params =3D (struct qtnf_extra_bd_params __iomem *)vaddr;
++
++	ts->ep_next_rx_pkt =3D &extra_params->param1;
++	qtnf_non_posted_write(paddr + QTNF_BD_PARAM_OFFSET(1),
++			      &bda->bda_ep_next_pkt);
++	ts->txqueue_wake =3D &extra_params->param2;
++	ts->ep_pmstate =3D &extra_params->param3;
++	ts->dma_msi_dummy =3D paddr + QTNF_BD_PARAM_OFFSET(4);
++
++	return 0;
++}
++
++static int
++topaz_skb2rbd_attach(struct qtnf_pcie_topaz_state *ts, u16 index, u32 wrap=
+)
++{
++	struct qtnf_topaz_rx_bd *rxbd =3D &ts->rx_bd_vbase[index];
++	struct sk_buff *skb;
++	dma_addr_t paddr;
++
++	skb =3D __netdev_alloc_skb_ip_align(NULL, SKB_BUF_SIZE, GFP_ATOMIC);
++	if (!skb) {
++		ts->base.rx_skb[index] =3D NULL;
++		return -ENOMEM;
++	}
++
++	ts->base.rx_skb[index] =3D skb;
++
++	paddr =3D pci_map_single(ts->base.pdev, skb->data,
++			       SKB_BUF_SIZE, PCI_DMA_FROMDEVICE);
++	if (pci_dma_mapping_error(ts->base.pdev, paddr)) {
++		pr_err("skb mapping error: %pad\n", &paddr);
++		return -ENOMEM;
++	}
++
++	rxbd->addr =3D cpu_to_le32(QTN_HOST_LO32(paddr));
++	rxbd->info =3D cpu_to_le32(QTN_BD_EMPTY | wrap);
++
++	ts->base.rx_bd_w_index =3D index;
++
++	return 0;
++}
++
++static int topaz_alloc_rx_buffers(struct qtnf_pcie_topaz_state *ts)
++{
++	u16 i;
++	int ret =3D 0;
++
++	memset(ts->rx_bd_vbase, 0x0,
++	       ts->base.rx_bd_num * sizeof(struct qtnf_topaz_rx_bd));
++
++	for (i =3D 0; i < ts->base.rx_bd_num; i++) {
++		ret =3D topaz_skb2rbd_attach(ts, i, 0);
++		if (ret)
++			break;
++	}
++
++	ts->rx_bd_vbase[ts->base.rx_bd_num - 1].info |=3D
++						cpu_to_le32(QTN_BD_WRAP);
++
++	return ret;
++}
++
++/* all rx/tx activity should have ceased before calling this function */
++static void qtnf_topaz_free_xfer_buffers(struct qtnf_pcie_topaz_state *ts)
++{
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	struct qtnf_topaz_rx_bd *rxbd;
++	struct qtnf_topaz_tx_bd *txbd;
++	struct sk_buff *skb;
++	dma_addr_t paddr;
++	int i;
++
++	/* free rx buffers */
++	for (i =3D 0; i < priv->rx_bd_num; i++) {
++		if (priv->rx_skb && priv->rx_skb[i]) {
++			rxbd =3D &ts->rx_bd_vbase[i];
++			skb =3D priv->rx_skb[i];
++			paddr =3D QTN_HOST_ADDR(0x0, le32_to_cpu(rxbd->addr));
++			pci_unmap_single(priv->pdev, paddr, SKB_BUF_SIZE,
++					 PCI_DMA_FROMDEVICE);
++			dev_kfree_skb_any(skb);
++			priv->rx_skb[i] =3D NULL;
++			rxbd->addr =3D 0;
++			rxbd->info =3D 0;
++		}
++	}
++
++	/* free tx buffers */
++	for (i =3D 0; i < priv->tx_bd_num; i++) {
++		if (priv->tx_skb && priv->tx_skb[i]) {
++			txbd =3D &ts->tx_bd_vbase[i];
++			skb =3D priv->tx_skb[i];
++			paddr =3D QTN_HOST_ADDR(0x0, le32_to_cpu(txbd->addr));
++			pci_unmap_single(priv->pdev, paddr, SKB_BUF_SIZE,
++					 PCI_DMA_TODEVICE);
++			dev_kfree_skb_any(skb);
++			priv->tx_skb[i] =3D NULL;
++			txbd->addr =3D 0;
++			txbd->info =3D 0;
++		}
++	}
++}
++
++static int qtnf_pcie_topaz_init_xfer(struct qtnf_pcie_topaz_state *ts,
 +				     unsigned int tx_bd_size)
- {
- 	struct qtnf_pcie_bus_priv *priv =3D &ps->base;
- 	int ret;
- 	u32 val;
-=20
--	priv->tx_bd_num =3D tx_bd_size_param;
--	priv->rx_bd_num =3D rx_bd_size_param;
--	priv->rx_bd_w_index =3D 0;
--	priv->rx_bd_r_index =3D 0;
++{
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	int ret;
++
 +	if (tx_bd_size =3D=3D 0)
-+		tx_bd_size =3D PEARL_TX_BD_SIZE_DEFAULT;
-=20
--	if (!priv->tx_bd_num || !is_power_of_2(priv->tx_bd_num)) {
--		pr_err("tx_bd_size_param %u is not power of two\n",
--		       priv->tx_bd_num);
--		return -EINVAL;
--	}
-+	val =3D tx_bd_size * sizeof(struct qtnf_pearl_tx_bd);
-=20
--	val =3D priv->tx_bd_num * sizeof(struct qtnf_pearl_tx_bd);
--	if (val > PCIE_HHBM_MAX_SIZE) {
--		pr_err("tx_bd_size_param %u is too large\n",
--		       priv->tx_bd_num);
--		return -EINVAL;
-+	if (!is_power_of_2(tx_bd_size) || val > PCIE_HHBM_MAX_SIZE) {
-+		pr_warn("bad tx_bd_size value %u\n", tx_bd_size);
-+		priv->tx_bd_num =3D PEARL_TX_BD_SIZE_DEFAULT;
-+	} else {
-+		priv->tx_bd_num =3D tx_bd_size;
- 	}
-=20
++		tx_bd_size =3D TOPAZ_TX_BD_SIZE_DEFAULT;
++
++	/* check TX BD queue max length according to struct qtnf_topaz_bda */
++	if (tx_bd_size > QTN_PCIE_RC_TX_QUEUE_LEN) {
++		pr_warn("TX BD queue cannot exceed %d\n",
++			QTN_PCIE_RC_TX_QUEUE_LEN);
++		tx_bd_size =3D QTN_PCIE_RC_TX_QUEUE_LEN;
++	}
++
++	priv->tx_bd_num =3D tx_bd_size;
++	qtnf_non_posted_write(priv->tx_bd_num, &bda->bda_rc_tx_bd_num);
++	qtnf_non_posted_write(priv->rx_bd_num, &bda->bda_rc_rx_bd_num);
++
 +	priv->rx_bd_w_index =3D 0;
 +	priv->rx_bd_r_index =3D 0;
 +
- 	if (!priv->rx_bd_num || !is_power_of_2(priv->rx_bd_num)) {
- 		pr_err("rx_bd_size_param %u is not power of two\n",
- 		       priv->rx_bd_num);
-@@ -1006,7 +987,7 @@ static void qtnf_pearl_fw_work_handler(struct work_str=
-uct *work)
- 	const char *fwname =3D QTN_PCI_PEARL_FW_NAME;
- 	bool fw_boot_success =3D false;
-=20
--	if (flashboot) {
-+	if (ps->base.flashboot) {
- 		state |=3D QTN_RC_FW_FLASHBOOT;
- 	} else {
- 		ret =3D request_firmware(&fw, fwname, &pdev->dev);
-@@ -1022,7 +1003,7 @@ static void qtnf_pearl_fw_work_handler(struct work_st=
-ruct *work)
- 			    QTN_FW_DL_TIMEOUT_MS)) {
- 		pr_err("card is not ready\n");
-=20
--		if (!flashboot)
-+		if (!ps->base.flashboot)
- 			release_firmware(fw);
-=20
- 		goto fw_load_exit;
-@@ -1030,7 +1011,7 @@ static void qtnf_pearl_fw_work_handler(struct work_st=
-ruct *work)
-=20
- 	qtnf_clear_state(&ps->bda->bda_ep_state, QTN_EP_FW_LOADRDY);
-=20
--	if (flashboot) {
-+	if (ps->base.flashboot) {
- 		pr_info("booting firmware from flash\n");
-=20
- 	} else {
-@@ -1061,7 +1042,7 @@ static void qtnf_pearl_fw_work_handler(struct work_st=
-ruct *work)
- 	fw_boot_success =3D true;
-=20
- fw_load_exit:
--	qtnf_pcie_fw_boot_done(bus, fw_boot_success, DRV_NAME);
-+	qtnf_pcie_fw_boot_done(bus, fw_boot_success);
-=20
- 	if (fw_boot_success) {
- 		qtnf_debugfs_add_entry(bus, "hdp_stats", qtnf_dbg_hdp_stats);
-@@ -1077,74 +1058,34 @@ static void qtnf_pearl_reclaim_tasklet_fn(unsigned =
-long data)
- 	qtnf_en_txdone_irq(ps);
- }
-=20
--static int qtnf_pearl_check_chip_id(struct qtnf_pcie_pearl_state *ps)
-+static u64 qtnf_pearl_dma_mask_get(void)
- {
--	unsigned int chipid;
--
--	chipid =3D qtnf_chip_id_get(ps->base.sysctl_bar);
--
--	switch (chipid) {
--	case QTN_CHIP_ID_PEARL:
--	case QTN_CHIP_ID_PEARL_B:
--	case QTN_CHIP_ID_PEARL_C:
--		pr_info("chip ID is 0x%x\n", chipid);
--		break;
--	default:
--		pr_err("incorrect chip ID 0x%x\n", chipid);
--		return -ENODEV;
--	}
--
--	return 0;
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+	return DMA_BIT_MASK(64);
-+#else
-+	return DMA_BIT_MASK(32);
-+#endif
- }
-=20
--static int qtnf_pcie_pearl_probe(struct pci_dev *pdev,
--				 const struct pci_device_id *id)
-+static int qtnf_pcie_pearl_probe(struct qtnf_bus *bus, unsigned int tx_bd_=
-size)
- {
- 	struct qtnf_shm_ipc_int ipc_int;
--	struct qtnf_pcie_pearl_state *ps;
--	struct qtnf_bus *bus;
-+	struct qtnf_pcie_pearl_state *ps =3D get_bus_priv(bus);
-+	struct pci_dev *pdev =3D ps->base.pdev;
- 	int ret;
--	u64 dma_mask;
--
--#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
--	dma_mask =3D DMA_BIT_MASK(64);
--#else
--	dma_mask =3D DMA_BIT_MASK(32);
--#endif
--
--	ret =3D qtnf_pcie_probe(pdev, sizeof(*ps), &qtnf_pcie_pearl_bus_ops,
--			      dma_mask, use_msi);
--	if (ret)
--		return ret;
--
--	bus =3D pci_get_drvdata(pdev);
--	ps =3D get_bus_priv(bus);
-=20
-+	bus->bus_ops =3D &qtnf_pcie_pearl_bus_ops;
- 	spin_lock_init(&ps->irq_lock);
--
--	tasklet_init(&ps->base.reclaim_tq, qtnf_pearl_reclaim_tasklet_fn,
--		     (unsigned long)ps);
--	netif_napi_add(&bus->mux_dev, &bus->mux_napi,
--		       qtnf_pcie_pearl_rx_poll, 10);
- 	INIT_WORK(&bus->fw_work, qtnf_pearl_fw_work_handler);
-=20
- 	ps->pcie_reg_base =3D ps->base.dmareg_bar;
- 	ps->bda =3D ps->base.epmem_bar;
- 	writel(ps->base.msi_enabled, &ps->bda->bda_rc_msi_enabled);
-=20
--	ipc_int.fn =3D qtnf_pcie_pearl_ipc_gen_ep_int;
--	ipc_int.arg =3D ps;
--	qtnf_pcie_init_shm_ipc(&ps->base, &ps->bda->bda_shm_reg1,
--			       &ps->bda->bda_shm_reg2, &ipc_int);
--
--	ret =3D qtnf_pearl_check_chip_id(ps);
--	if (ret)
--		goto error;
--
--	ret =3D qtnf_pcie_pearl_init_xfer(ps);
-+	ret =3D qtnf_pcie_pearl_init_xfer(ps, tx_bd_size);
- 	if (ret) {
- 		pr_err("PCIE xfer init failed\n");
--		goto error;
++	ret =3D qtnf_pcie_alloc_skb_array(priv);
++	if (ret) {
++		pr_err("failed to allocate skb array\n");
 +		return ret;
- 	}
-=20
- 	/* init default irq settings */
-@@ -1155,95 +1096,63 @@ static int qtnf_pcie_pearl_probe(struct pci_dev *pd=
-ev,
-=20
- 	ret =3D devm_request_irq(&pdev->dev, pdev->irq,
- 			       &qtnf_pcie_pearl_interrupt, 0,
--			       "qtnf_pcie_irq", (void *)bus);
-+			       "qtnf_pearl_irq", (void *)bus);
- 	if (ret) {
- 		pr_err("failed to request pcie irq %d\n", pdev->irq);
--		goto err_xfer;
-+		qtnf_pearl_free_xfer_buffers(ps);
-+		return ret;
- 	}
-=20
--	qtnf_pcie_bringup_fw_async(bus);
--
--	return 0;
-+	tasklet_init(&ps->base.reclaim_tq, qtnf_pearl_reclaim_tasklet_fn,
-+		     (unsigned long)ps);
-+	netif_napi_add(&bus->mux_dev, &bus->mux_napi,
-+		       qtnf_pcie_pearl_rx_poll, 10);
-=20
--err_xfer:
--	qtnf_pearl_free_xfer_buffers(ps);
--error:
--	qtnf_pcie_remove(bus, &ps->base);
-+	ipc_int.fn =3D qtnf_pcie_pearl_ipc_gen_ep_int;
-+	ipc_int.arg =3D ps;
-+	qtnf_pcie_init_shm_ipc(&ps->base, &ps->bda->bda_shm_reg1,
-+			       &ps->bda->bda_shm_reg2, &ipc_int);
-=20
--	return ret;
-+	return 0;
- }
-=20
--static void qtnf_pcie_pearl_remove(struct pci_dev *pdev)
-+static void qtnf_pcie_pearl_remove(struct qtnf_bus *bus)
- {
--	struct qtnf_pcie_pearl_state *ps;
--	struct qtnf_bus *bus;
--
--	bus =3D pci_get_drvdata(pdev);
--	if (!bus)
--		return;
--
--	ps =3D get_bus_priv(bus);
-+	struct qtnf_pcie_pearl_state *ps =3D get_bus_priv(bus);
-=20
--	qtnf_pcie_remove(bus, &ps->base);
- 	qtnf_pearl_reset_ep(ps);
- 	qtnf_pearl_free_xfer_buffers(ps);
- }
-=20
- #ifdef CONFIG_PM_SLEEP
--static int qtnf_pcie_pearl_suspend(struct device *dev)
-+static int qtnf_pcie_pearl_suspend(struct qtnf_bus *bus)
- {
- 	return -EOPNOTSUPP;
- }
-=20
--static int qtnf_pcie_pearl_resume(struct device *dev)
-+static int qtnf_pcie_pearl_resume(struct qtnf_bus *bus)
- {
- 	return 0;
- }
--#endif /* CONFIG_PM_SLEEP */
--
--#ifdef CONFIG_PM_SLEEP
--/* Power Management Hooks */
--static SIMPLE_DEV_PM_OPS(qtnf_pcie_pearl_pm_ops, qtnf_pcie_pearl_suspend,
--			 qtnf_pcie_pearl_resume);
- #endif
-=20
--static const struct pci_device_id qtnf_pcie_devid_table[] =3D {
--	{
--		PCIE_VENDOR_ID_QUANTENNA, PCIE_DEVICE_ID_QTN_PEARL,
--		PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	},
--	{ },
--};
-+struct qtnf_bus *qtnf_pcie_pearl_alloc(struct pci_dev *pdev)
-+{
-+	struct qtnf_bus *bus;
-+	struct qtnf_pcie_pearl_state *ps;
-=20
--MODULE_DEVICE_TABLE(pci, qtnf_pcie_devid_table);
-+	bus =3D devm_kzalloc(&pdev->dev, sizeof(*bus) + sizeof(*ps), GFP_KERNEL);
-+	if (!bus)
-+		return NULL;
-=20
--static struct pci_driver qtnf_pcie_pearl_drv_data =3D {
--	.name =3D DRV_NAME,
--	.id_table =3D qtnf_pcie_devid_table,
--	.probe =3D qtnf_pcie_pearl_probe,
--	.remove =3D qtnf_pcie_pearl_remove,
-+	ps =3D get_bus_priv(bus);
-+	ps->base.probe_cb =3D qtnf_pcie_pearl_probe;
-+	ps->base.remove_cb =3D qtnf_pcie_pearl_remove;
-+	ps->base.dma_mask_get_cb =3D qtnf_pearl_dma_mask_get;
- #ifdef CONFIG_PM_SLEEP
--	.driver =3D {
--		.pm =3D &qtnf_pcie_pearl_pm_ops,
--	},
-+	ps->base.resume_cb =3D qtnf_pcie_pearl_resume;
-+	ps->base.suspend_cb =3D qtnf_pcie_pearl_suspend;
- #endif
--};
--
--static int __init qtnf_pcie_pearl_register(void)
--{
--	pr_info("register Quantenna QSR10g FullMAC PCIE driver\n");
--	return pci_register_driver(&qtnf_pcie_pearl_drv_data);
--}
-=20
--static void __exit qtnf_pcie_pearl_exit(void)
--{
--	pr_info("unregister Quantenna QSR10g FullMAC PCIE driver\n");
--	pci_unregister_driver(&qtnf_pcie_pearl_drv_data);
-+	return bus;
- }
--
--module_init(qtnf_pcie_pearl_register);
--module_exit(qtnf_pcie_pearl_exit);
--
--MODULE_AUTHOR("Quantenna Communications");
--MODULE_DESCRIPTION("Quantenna QSR10g PCIe bus driver for 802.11 wireless L=
-AN.");
--MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wi=
-reless/quantenna/qtnfmac/util.c
-index e745733ba417..dfe3fe8a42c1 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
-@@ -15,6 +15,7 @@
-  */
-=20
- #include "util.h"
-+#include "qtn_hw_ids.h"
-=20
- void qtnf_sta_list_init(struct qtnf_sta_list *list)
- {
-@@ -116,3 +117,18 @@ void qtnf_sta_list_free(struct qtnf_sta_list *list)
-=20
- 	INIT_LIST_HEAD(&list->head);
- }
++	}
 +
-+const char *qtnf_chipid_to_string(unsigned long chip_id)
++	ret =3D topaz_alloc_bd_table(ts, bda);
++	if (ret) {
++		pr_err("failed to allocate bd table\n");
++		return ret;
++	}
++
++	ret =3D topaz_alloc_rx_buffers(ts);
++	if (ret) {
++		pr_err("failed to allocate rx buffers\n");
++		return ret;
++	}
++
++	return ret;
++}
++
++static void qtnf_topaz_data_tx_reclaim(struct qtnf_pcie_topaz_state *ts)
 +{
-+	switch (chip_id) {
-+	case QTN_CHIP_ID_PEARL:
-+		return "Pearl revA";
-+	case QTN_CHIP_ID_PEARL_B:
-+		return "Pearl revB";
-+	case QTN_CHIP_ID_PEARL_C:
-+		return "Pearl revC";
-+	default:
-+		return "unknown";
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	struct qtnf_topaz_tx_bd *txbd;
++	struct sk_buff *skb;
++	unsigned long flags;
++	dma_addr_t paddr;
++	u32 tx_done_index;
++	int count =3D 0;
++	int i;
++
++	spin_lock_irqsave(&priv->tx_reclaim_lock, flags);
++
++	tx_done_index =3D readl(ts->ep_next_rx_pkt);
++	i =3D priv->tx_bd_r_index;
++
++	if (CIRC_CNT(priv->tx_bd_w_index, tx_done_index, priv->tx_bd_num))
++		writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_TX_DONE_IRQ),
++		       TOPAZ_LH_IPC4_INT(priv->sysctl_bar));
++
++	while (CIRC_CNT(tx_done_index, i, priv->tx_bd_num)) {
++		skb =3D priv->tx_skb[i];
++
++		if (likely(skb)) {
++			txbd =3D &ts->tx_bd_vbase[i];
++			paddr =3D QTN_HOST_ADDR(0x0, le32_to_cpu(txbd->addr));
++			pci_unmap_single(priv->pdev, paddr, skb->len,
++					 PCI_DMA_TODEVICE);
++
++			if (skb->dev) {
++				qtnf_update_tx_stats(skb->dev, skb);
++				if (unlikely(priv->tx_stopped)) {
++					qtnf_wake_all_queues(skb->dev);
++					priv->tx_stopped =3D 0;
++				}
++			}
++
++			dev_kfree_skb_any(skb);
++		}
++
++		priv->tx_skb[i] =3D NULL;
++		count++;
++
++		if (++i >=3D priv->tx_bd_num)
++			i =3D 0;
++	}
++
++	priv->tx_reclaim_done +=3D count;
++	priv->tx_reclaim_req++;
++	priv->tx_bd_r_index =3D i;
++
++	spin_unlock_irqrestore(&priv->tx_reclaim_lock, flags);
++}
++
++static void qtnf_try_stop_xmit(struct qtnf_bus *bus, struct net_device *nd=
+ev)
++{
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++
++	if (ndev) {
++		netif_tx_stop_all_queues(ndev);
++		ts->base.tx_stopped =3D 1;
++	}
++
++	writel(0x0, ts->txqueue_wake);
++
++	/* sync up tx queue status before generating interrupt */
++	dma_wmb();
++
++	/* send irq to card: tx stopped */
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_TX_STOP_IRQ),
++	       TOPAZ_LH_IPC4_INT(ts->base.sysctl_bar));
++
++	/* schedule reclaim attempt */
++	tasklet_hi_schedule(&ts->base.reclaim_tq);
++}
++
++static void qtnf_try_wake_xmit(struct qtnf_bus *bus, struct net_device *nd=
+ev)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++	int ready;
++
++	ready =3D readl(ts->txqueue_wake);
++	if (ready) {
++		netif_wake_queue(ndev);
++	} else {
++		/* re-send irq to card: tx stopped */
++		writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_TX_STOP_IRQ),
++		       TOPAZ_LH_IPC4_INT(ts->base.sysctl_bar));
 +	}
 +}
-+EXPORT_SYMBOL_GPL(qtnf_chipid_to_string);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.h b/drivers/net/wi=
-reless/quantenna/qtnfmac/util.h
-index 0d4d92b11540..b8744baac332 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/util.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/util.h
-@@ -20,6 +20,8 @@
- #include <linux/kernel.h>
- #include "core.h"
-=20
-+const char *qtnf_chipid_to_string(unsigned long chip_id);
 +
- void qtnf_sta_list_init(struct qtnf_sta_list *list);
++static int qtnf_tx_queue_ready(struct qtnf_pcie_topaz_state *ts)
++{
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++
++	if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
++			priv->tx_bd_num)) {
++		qtnf_topaz_data_tx_reclaim(ts);
++
++		if (!CIRC_SPACE(priv->tx_bd_w_index, priv->tx_bd_r_index,
++				priv->tx_bd_num)) {
++			priv->tx_full_count++;
++			return 0;
++		}
++	}
++
++	return 1;
++}
++
++static int qtnf_pcie_data_tx(struct qtnf_bus *bus, struct sk_buff *skb)
++{
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	struct qtnf_topaz_tx_bd *txbd;
++	dma_addr_t skb_paddr;
++	unsigned long flags;
++	int ret =3D 0;
++	int len;
++	int i;
++
++	spin_lock_irqsave(&priv->tx_lock, flags);
++
++	if (!qtnf_tx_queue_ready(ts)) {
++		qtnf_try_stop_xmit(bus, skb->dev);
++		spin_unlock_irqrestore(&priv->tx_lock, flags);
++		return NETDEV_TX_BUSY;
++	}
++
++	i =3D priv->tx_bd_w_index;
++	priv->tx_skb[i] =3D skb;
++	len =3D skb->len;
++
++	skb_paddr =3D pci_map_single(priv->pdev, skb->data,
++				   skb->len, PCI_DMA_TODEVICE);
++	if (pci_dma_mapping_error(priv->pdev, skb_paddr)) {
++		ret =3D -ENOMEM;
++		goto tx_done;
++	}
++
++	txbd =3D &ts->tx_bd_vbase[i];
++	txbd->addr =3D cpu_to_le32(QTN_HOST_LO32(skb_paddr));
++
++	writel(QTN_HOST_LO32(skb_paddr), &bda->request[i].addr);
++	writel(len | QTN_PCIE_TX_VALID_PKT, &bda->request[i].info);
++
++	/* sync up descriptor updates before generating interrupt */
++	dma_wmb();
++
++	/* generate irq to card: tx done */
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_TX_DONE_IRQ),
++	       TOPAZ_LH_IPC4_INT(priv->sysctl_bar));
++
++	if (++i >=3D priv->tx_bd_num)
++		i =3D 0;
++
++	priv->tx_bd_w_index =3D i;
++
++tx_done:
++	if (ret) {
++		if (skb->dev)
++			skb->dev->stats.tx_dropped++;
++		dev_kfree_skb_any(skb);
++	}
++
++	priv->tx_done_count++;
++	spin_unlock_irqrestore(&priv->tx_lock, flags);
++
++	qtnf_topaz_data_tx_reclaim(ts);
++
++	return NETDEV_TX_OK;
++}
++
++static irqreturn_t qtnf_pcie_topaz_interrupt(int irq, void *data)
++{
++	struct qtnf_bus *bus =3D (struct qtnf_bus *)data;
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++
++	if (!priv->msi_enabled && !qtnf_topaz_intx_asserted(ts))
++		return IRQ_NONE;
++
++	priv->pcie_irq_count++;
++
++	qtnf_shm_ipc_irq_handler(&priv->shm_ipc_ep_in);
++	qtnf_shm_ipc_irq_handler(&priv->shm_ipc_ep_out);
++
++	if (napi_schedule_prep(&bus->mux_napi)) {
++		disable_rx_irqs(ts);
++		__napi_schedule(&bus->mux_napi);
++	}
++
++	tasklet_hi_schedule(&priv->reclaim_tq);
++
++	if (!priv->msi_enabled)
++		qtnf_deassert_intx(ts);
++
++	return IRQ_HANDLED;
++}
++
++static int qtnf_rx_data_ready(struct qtnf_pcie_topaz_state *ts)
++{
++	u16 index =3D ts->base.rx_bd_r_index;
++	struct qtnf_topaz_rx_bd *rxbd;
++	u32 descw;
++
++	rxbd =3D &ts->rx_bd_vbase[index];
++	descw =3D le32_to_cpu(rxbd->info);
++
++	if (descw & QTN_BD_EMPTY)
++		return 0;
++
++	return 1;
++}
++
++static int qtnf_topaz_rx_poll(struct napi_struct *napi, int budget)
++{
++	struct qtnf_bus *bus =3D container_of(napi, struct qtnf_bus, mux_napi);
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	struct net_device *ndev =3D NULL;
++	struct sk_buff *skb =3D NULL;
++	int processed =3D 0;
++	struct qtnf_topaz_rx_bd *rxbd;
++	dma_addr_t skb_paddr;
++	int consume;
++	u32 descw;
++	u32 poffset;
++	u32 psize;
++	u16 r_idx;
++	u16 w_idx;
++	int ret;
++
++	while (processed < budget) {
++		if (!qtnf_rx_data_ready(ts))
++			goto rx_out;
++
++		r_idx =3D priv->rx_bd_r_index;
++		rxbd =3D &ts->rx_bd_vbase[r_idx];
++		descw =3D le32_to_cpu(rxbd->info);
++
++		skb =3D priv->rx_skb[r_idx];
++		poffset =3D QTN_GET_OFFSET(descw);
++		psize =3D QTN_GET_LEN(descw);
++		consume =3D 1;
++
++		if (descw & QTN_BD_EMPTY) {
++			pr_warn("skip invalid rxbd[%d]\n", r_idx);
++			consume =3D 0;
++		}
++
++		if (!skb) {
++			pr_warn("skip missing rx_skb[%d]\n", r_idx);
++			consume =3D 0;
++		}
++
++		if (skb && (skb_tailroom(skb) <  psize)) {
++			pr_err("skip packet with invalid length: %u > %u\n",
++			       psize, skb_tailroom(skb));
++			consume =3D 0;
++		}
++
++		if (skb) {
++			skb_paddr =3D QTN_HOST_ADDR(0x0, le32_to_cpu(rxbd->addr));
++			pci_unmap_single(priv->pdev, skb_paddr, SKB_BUF_SIZE,
++					 PCI_DMA_FROMDEVICE);
++		}
++
++		if (consume) {
++			skb_reserve(skb, poffset);
++			skb_put(skb, psize);
++			ndev =3D qtnf_classify_skb(bus, skb);
++			if (likely(ndev)) {
++				qtnf_update_rx_stats(ndev, skb);
++				skb->protocol =3D eth_type_trans(skb, ndev);
++				netif_receive_skb(skb);
++			} else {
++				pr_debug("drop untagged skb\n");
++				bus->mux_dev.stats.rx_dropped++;
++				dev_kfree_skb_any(skb);
++			}
++		} else {
++			if (skb) {
++				bus->mux_dev.stats.rx_dropped++;
++				dev_kfree_skb_any(skb);
++			}
++		}
++
++		/* notify card about recv packets once per several packets */
++		if (((++ts->rx_pkt_count) & RX_DONE_INTR_MSK) =3D=3D 0)
++			writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_RX_DONE_IRQ),
++			       TOPAZ_LH_IPC4_INT(priv->sysctl_bar));
++
++		priv->rx_skb[r_idx] =3D NULL;
++		if (++r_idx >=3D priv->rx_bd_num)
++			r_idx =3D 0;
++
++		priv->rx_bd_r_index =3D r_idx;
++
++		/* repalce processed buffer by a new one */
++		w_idx =3D priv->rx_bd_w_index;
++		while (CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
++				  priv->rx_bd_num) > 0) {
++			if (++w_idx >=3D priv->rx_bd_num)
++				w_idx =3D 0;
++
++			ret =3D topaz_skb2rbd_attach(ts, w_idx,
++						   descw & QTN_BD_WRAP);
++			if (ret) {
++				pr_err("failed to allocate new rx_skb[%d]\n",
++				       w_idx);
++				break;
++			}
++		}
++
++		processed++;
++	}
++
++rx_out:
++	if (processed < budget) {
++		napi_complete(napi);
++		enable_rx_irqs(ts);
++	}
++
++	return processed;
++}
++
++static void
++qtnf_pcie_data_tx_timeout(struct qtnf_bus *bus, struct net_device *ndev)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++
++	qtnf_try_wake_xmit(bus, ndev);
++	tasklet_hi_schedule(&ts->base.reclaim_tq);
++}
++
++static void qtnf_pcie_data_rx_start(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++
++	napi_enable(&bus->mux_napi);
++	enable_rx_irqs(ts);
++}
++
++static void qtnf_pcie_data_rx_stop(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++
++	disable_rx_irqs(ts);
++	napi_disable(&bus->mux_napi);
++}
++
++static const struct qtnf_bus_ops qtnf_pcie_topaz_bus_ops =3D {
++	/* control path methods */
++	.control_tx	=3D qtnf_pcie_control_tx,
++
++	/* data path methods */
++	.data_tx		=3D qtnf_pcie_data_tx,
++	.data_tx_timeout	=3D qtnf_pcie_data_tx_timeout,
++	.data_rx_start		=3D qtnf_pcie_data_rx_start,
++	.data_rx_stop		=3D qtnf_pcie_data_rx_stop,
++};
++
++static int qtnf_dbg_irq_stats(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++
++	seq_printf(s, "pcie_irq_count(%u)\n", ts->base.pcie_irq_count);
++
++	return 0;
++}
++
++static int qtnf_dbg_pkt_stats(struct seq_file *s, void *data)
++{
++	struct qtnf_bus *bus =3D dev_get_drvdata(s->private);
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++	struct qtnf_pcie_bus_priv *priv =3D &ts->base;
++	u32 tx_done_index =3D readl(ts->ep_next_rx_pkt);
++
++	seq_printf(s, "tx_full_count(%u)\n", priv->tx_full_count);
++	seq_printf(s, "tx_done_count(%u)\n", priv->tx_done_count);
++	seq_printf(s, "tx_reclaim_done(%u)\n", priv->tx_reclaim_done);
++	seq_printf(s, "tx_reclaim_req(%u)\n", priv->tx_reclaim_req);
++
++	seq_printf(s, "tx_bd_r_index(%u)\n", priv->tx_bd_r_index);
++	seq_printf(s, "tx_done_index(%u)\n", tx_done_index);
++	seq_printf(s, "tx_bd_w_index(%u)\n", priv->tx_bd_w_index);
++
++	seq_printf(s, "tx host queue len(%u)\n",
++		   CIRC_CNT(priv->tx_bd_w_index, priv->tx_bd_r_index,
++			    priv->tx_bd_num));
++	seq_printf(s, "tx reclaim queue len(%u)\n",
++		   CIRC_CNT(tx_done_index, priv->tx_bd_r_index,
++			    priv->tx_bd_num));
++	seq_printf(s, "tx card queue len(%u)\n",
++		   CIRC_CNT(priv->tx_bd_w_index, tx_done_index,
++			    priv->tx_bd_num));
++
++	seq_printf(s, "rx_bd_r_index(%u)\n", priv->rx_bd_r_index);
++	seq_printf(s, "rx_bd_w_index(%u)\n", priv->rx_bd_w_index);
++	seq_printf(s, "rx alloc queue len(%u)\n",
++		   CIRC_SPACE(priv->rx_bd_w_index, priv->rx_bd_r_index,
++			      priv->rx_bd_num));
++
++	return 0;
++}
++
++static void qtnf_reset_dma_offset(struct qtnf_pcie_topaz_state *ts)
++{
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	u32 offset =3D readl(&bda->bda_dma_offset);
++
++	if ((offset & PCIE_DMA_OFFSET_ERROR_MASK) !=3D PCIE_DMA_OFFSET_ERROR)
++		return;
++
++	writel(0x0, &bda->bda_dma_offset);
++}
++
++static int qtnf_pcie_endian_detect(struct qtnf_pcie_topaz_state *ts)
++{
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	u32 timeout =3D 0;
++	u32 endian;
++	int ret =3D 0;
++
++	writel(QTN_PCI_ENDIAN_DETECT_DATA, &bda->bda_pci_endian);
++
++	/* flush endian modifications before status update */
++	dma_wmb();
++
++	writel(QTN_PCI_ENDIAN_VALID_STATUS, &bda->bda_pci_pre_status);
++
++	while (readl(&bda->bda_pci_post_status) !=3D
++	       QTN_PCI_ENDIAN_VALID_STATUS) {
++		usleep_range(1000, 1200);
++		if (++timeout > QTN_FW_DL_TIMEOUT_MS) {
++			pr_err("card endianness detection timed out\n");
++			ret =3D -ETIMEDOUT;
++			goto endian_out;
++		}
++	}
++
++	/* do not read before status is updated */
++	dma_rmb();
++
++	endian =3D readl(&bda->bda_pci_endian);
++	WARN(endian !=3D QTN_PCI_LITTLE_ENDIAN,
++	     "%s: unexpected card endianness", __func__);
++
++endian_out:
++	writel(0, &bda->bda_pci_pre_status);
++	writel(0, &bda->bda_pci_post_status);
++	writel(0, &bda->bda_pci_endian);
++
++	return ret;
++}
++
++static int qtnf_pre_init_ep(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	u32 flags;
++	int ret;
++
++	ret =3D qtnf_pcie_endian_detect(ts);
++	if (ret < 0) {
++		pr_err("failed to detect card endianness\n");
++		return ret;
++	}
++
++	writeb(ts->base.msi_enabled, &ts->bda->bda_rc_msi_enabled);
++	qtnf_reset_dma_offset(ts);
++
++	/* notify card about driver type and boot mode */
++	flags =3D readl(&bda->bda_flags) | QTN_BDA_HOST_QLINK_DRV;
++
++	if (ts->base.flashboot)
++		flags |=3D QTN_BDA_FLASH_BOOT;
++	else
++		flags &=3D ~QTN_BDA_FLASH_BOOT;
++
++	writel(flags, &bda->bda_flags);
++
++	qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_HOST_RDY);
++	if (qtnf_poll_state(&ts->bda->bda_bootstate, QTN_BDA_FW_TARGET_RDY,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("card is not ready to boot...\n");
++		return -ETIMEDOUT;
++	}
++
++	return ret;
++}
++
++static int qtnf_post_init_ep(struct qtnf_pcie_topaz_state *ts)
++{
++	struct pci_dev *pdev =3D ts->base.pdev;
++
++	setup_rx_irqs(ts);
++	disable_rx_irqs(ts);
++
++	if (qtnf_poll_state(&ts->bda->bda_bootstate, QTN_BDA_FW_QLINK_DONE,
++			    QTN_FW_QLINK_TIMEOUT_MS))
++		return -ETIMEDOUT;
++
++	enable_irq(pdev->irq);
++	return 0;
++}
++
++static int
++qtnf_ep_fw_load(struct qtnf_pcie_topaz_state *ts, const u8 *fw, u32 fw_siz=
+e)
++{
++	struct qtnf_topaz_bda __iomem *bda =3D ts->bda;
++	struct pci_dev *pdev =3D ts->base.pdev;
++	u32 remaining =3D fw_size;
++	u8 *curr =3D (u8 *)fw;
++	u32 blksize;
++	u32 nblocks;
++	u32 offset;
++	u32 count;
++	u32 size;
++	dma_addr_t paddr;
++	void *data;
++	int ret =3D 0;
++
++	pr_debug("FW upload started: fw_addr =3D 0x%p, size=3D%d\n", fw, fw_size)=
+;
++
++	blksize =3D ts->base.fw_blksize;
++
++	if (blksize < PAGE_SIZE)
++		blksize =3D PAGE_SIZE;
++
++	while (blksize >=3D PAGE_SIZE) {
++		pr_debug("allocating %u bytes to upload FW\n", blksize);
++		data =3D dma_alloc_coherent(&pdev->dev, blksize,
++					  &paddr, GFP_KERNEL);
++		if (data)
++			break;
++		blksize /=3D 2;
++	}
++
++	if (!data) {
++		pr_err("failed to allocate DMA buffer for FW upload\n");
++		ret =3D -ENOMEM;
++		goto fw_load_out;
++	}
++
++	nblocks =3D NBLOCKS(fw_size, blksize);
++	offset =3D readl(&bda->bda_dma_offset);
++
++	qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_HOST_LOAD);
++	if (qtnf_poll_state(&ts->bda->bda_bootstate, QTN_BDA_FW_EP_RDY,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("card is not ready to download FW\n");
++		ret =3D -ETIMEDOUT;
++		goto fw_load_map;
++	}
++
++	for (count =3D 0 ; count < nblocks; count++) {
++		size =3D (remaining > blksize) ? blksize : remaining;
++
++		memcpy(data, curr, size);
++		qtnf_non_posted_write(paddr + offset, &bda->bda_img);
++		qtnf_non_posted_write(size, &bda->bda_img_size);
++
++		pr_debug("chunk[%u] VA[0x%p] PA[%pad] sz[%u]\n",
++			 count, (void *)curr, &paddr, size);
++
++		qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_BLOCK_RDY);
++		if (qtnf_poll_state(&ts->bda->bda_bootstate,
++				    QTN_BDA_FW_BLOCK_DONE,
++				    QTN_FW_DL_TIMEOUT_MS)) {
++			pr_err("confirmation for block #%d timed out\n", count);
++			ret =3D -ETIMEDOUT;
++			goto fw_load_map;
++		}
++
++		remaining =3D (remaining < size) ? remaining : (remaining - size);
++		curr +=3D size;
++	}
++
++	/* upload completion mark: zero-sized block */
++	qtnf_non_posted_write(0, &bda->bda_img);
++	qtnf_non_posted_write(0, &bda->bda_img_size);
++
++	qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_BLOCK_RDY);
++	if (qtnf_poll_state(&ts->bda->bda_bootstate, QTN_BDA_FW_BLOCK_DONE,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("confirmation for the last block timed out\n");
++		ret =3D -ETIMEDOUT;
++		goto fw_load_map;
++	}
++
++	/* RC is done */
++	qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_BLOCK_END);
++	if (qtnf_poll_state(&ts->bda->bda_bootstate, QTN_BDA_FW_LOAD_DONE,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("confirmation for FW upload completion timed out\n");
++		ret =3D -ETIMEDOUT;
++		goto fw_load_map;
++	}
++
++	pr_debug("FW upload completed: totally sent %d blocks\n", count);
++
++fw_load_map:
++	dma_free_coherent(&pdev->dev, blksize, data, paddr);
++
++fw_load_out:
++	return ret;
++}
++
++static int qtnf_topaz_fw_upload(struct qtnf_pcie_topaz_state *ts,
++				const char *fwname)
++{
++	const struct firmware *fw;
++	struct pci_dev *pdev =3D ts->base.pdev;
++	int ret;
++
++	if (qtnf_poll_state(&ts->bda->bda_bootstate,
++			    QTN_BDA_FW_LOAD_RDY,
++			    QTN_FW_DL_TIMEOUT_MS)) {
++		pr_err("%s: card is not ready\n", fwname);
++		return -1;
++	}
++
++	pr_info("starting firmware upload: %s\n", fwname);
++
++	ret =3D request_firmware(&fw, fwname, &pdev->dev);
++	if (ret < 0) {
++		pr_err("%s: request_firmware error %d\n", fwname, ret);
++		return -1;
++	}
++
++	ret =3D qtnf_ep_fw_load(ts, fw->data, fw->size);
++	release_firmware(fw);
++
++	if (ret)
++		pr_err("%s: FW upload error\n", fwname);
++
++	return ret;
++}
++
++static void qtnf_topaz_fw_work_handler(struct work_struct *work)
++{
++	struct qtnf_bus *bus =3D container_of(work, struct qtnf_bus, fw_work);
++	struct qtnf_pcie_topaz_state *ts =3D (void *)get_bus_priv(bus);
++	int ret;
++	int bootloader_needed =3D readl(&ts->bda->bda_flags) & QTN_BDA_XMIT_UBOOT=
+;
++
++	qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_TARGET_BOOT);
++
++	if (bootloader_needed) {
++		ret =3D qtnf_topaz_fw_upload(ts, QTN_PCI_TOPAZ_BOOTLD_NAME);
++		if (ret)
++			goto fw_load_exit;
++
++		ret =3D qtnf_pre_init_ep(bus);
++		if (ret)
++			goto fw_load_exit;
++
++		qtnf_set_state(&ts->bda->bda_bootstate,
++			       QTN_BDA_FW_TARGET_BOOT);
++	}
++
++	if (ts->base.flashboot) {
++		pr_info("booting firmware from flash\n");
++
++		ret =3D qtnf_poll_state(&ts->bda->bda_bootstate,
++				      QTN_BDA_FW_FLASH_BOOT,
++				      QTN_FW_DL_TIMEOUT_MS);
++		if (ret)
++			goto fw_load_exit;
++	} else {
++		ret =3D qtnf_topaz_fw_upload(ts, QTN_PCI_TOPAZ_FW_NAME);
++		if (ret)
++			goto fw_load_exit;
++
++		qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_START);
++		ret =3D qtnf_poll_state(&ts->bda->bda_bootstate,
++				      QTN_BDA_FW_CONFIG,
++				      QTN_FW_QLINK_TIMEOUT_MS);
++		if (ret) {
++			pr_err("FW bringup timed out\n");
++			goto fw_load_exit;
++		}
++
++		qtnf_set_state(&ts->bda->bda_bootstate, QTN_BDA_FW_RUN);
++		ret =3D qtnf_poll_state(&ts->bda->bda_bootstate,
++				      QTN_BDA_FW_RUNNING,
++				      QTN_FW_QLINK_TIMEOUT_MS);
++		if (ret) {
++			pr_err("card bringup timed out\n");
++			goto fw_load_exit;
++		}
++	}
++
++	pr_info("firmware is up and running\n");
++
++	ret =3D qtnf_post_init_ep(ts);
++	if (ret)
++		pr_err("FW runtime failure\n");
++
++fw_load_exit:
++	qtnf_pcie_fw_boot_done(bus, ret ? false : true);
++
++	if (ret =3D=3D 0) {
++		qtnf_debugfs_add_entry(bus, "pkt_stats", qtnf_dbg_pkt_stats);
++		qtnf_debugfs_add_entry(bus, "irq_stats", qtnf_dbg_irq_stats);
++	}
++}
++
++static void qtnf_reclaim_tasklet_fn(unsigned long data)
++{
++	struct qtnf_pcie_topaz_state *ts =3D (void *)data;
++
++	qtnf_topaz_data_tx_reclaim(ts);
++}
++
++static u64 qtnf_topaz_dma_mask_get(void)
++{
++	return DMA_BIT_MASK(32);
++}
++
++static int qtnf_pcie_topaz_probe(struct qtnf_bus *bus, unsigned int tx_bd_=
+num)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++	struct pci_dev *pdev =3D ts->base.pdev;
++	struct qtnf_shm_ipc_int ipc_int;
++	unsigned long irqflags;
++	int ret;
++
++	bus->bus_ops =3D &qtnf_pcie_topaz_bus_ops;
++	INIT_WORK(&bus->fw_work, qtnf_topaz_fw_work_handler);
++	ts->bda =3D ts->base.epmem_bar;
++
++	/* assign host msi irq before card init */
++	if (ts->base.msi_enabled)
++		irqflags =3D IRQF_NOBALANCING;
++	else
++		irqflags =3D IRQF_NOBALANCING | IRQF_SHARED;
++
++	ret =3D devm_request_irq(&pdev->dev, pdev->irq,
++			       &qtnf_pcie_topaz_interrupt,
++			       irqflags, "qtnf_topaz_irq", (void *)bus);
++	if (ret) {
++		pr_err("failed to request pcie irq %d\n", pdev->irq);
++		return ret;
++	}
++
++	disable_irq(pdev->irq);
++
++	ret =3D qtnf_pre_init_ep(bus);
++	if (ret) {
++		pr_err("failed to init card\n");
++		return ret;
++	}
++
++	ret =3D qtnf_pcie_topaz_init_xfer(ts, tx_bd_num);
++	if (ret) {
++		pr_err("PCIE xfer init failed\n");
++		return ret;
++	}
++
++	tasklet_init(&ts->base.reclaim_tq, qtnf_reclaim_tasklet_fn,
++		     (unsigned long)ts);
++	netif_napi_add(&bus->mux_dev, &bus->mux_napi,
++		       qtnf_topaz_rx_poll, 10);
++
++	ipc_int.fn =3D qtnf_topaz_ipc_gen_ep_int;
++	ipc_int.arg =3D ts;
++	qtnf_pcie_init_shm_ipc(&ts->base, &ts->bda->bda_shm_reg1,
++			       &ts->bda->bda_shm_reg2, &ipc_int);
++
++	return 0;
++}
++
++static void qtnf_pcie_topaz_remove(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++
++	qtnf_topaz_reset_ep(ts);
++	qtnf_topaz_free_xfer_buffers(ts);
++}
++
++#ifdef CONFIG_PM_SLEEP
++static int qtnf_pcie_topaz_suspend(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++	struct pci_dev *pdev =3D ts->base.pdev;
++
++	writel((u32 __force)PCI_D3hot, ts->ep_pmstate);
++	dma_wmb();
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_PM_EP_IRQ),
++	       TOPAZ_LH_IPC4_INT(ts->base.sysctl_bar));
++
++	pci_save_state(pdev);
++	pci_enable_wake(pdev, PCI_D3hot, 1);
++	pci_set_power_state(pdev, PCI_D3hot);
++
++	return 0;
++}
++
++static int qtnf_pcie_topaz_resume(struct qtnf_bus *bus)
++{
++	struct qtnf_pcie_topaz_state *ts =3D get_bus_priv(bus);
++	struct pci_dev *pdev =3D ts->base.pdev;
++
++	pci_set_power_state(pdev, PCI_D0);
++	pci_restore_state(pdev);
++	pci_enable_wake(pdev, PCI_D0, 0);
++
++	writel((u32 __force)PCI_D0, ts->ep_pmstate);
++	dma_wmb();
++	writel(TOPAZ_IPC_IRQ_WORD(TOPAZ_RC_PM_EP_IRQ),
++	       TOPAZ_LH_IPC4_INT(ts->base.sysctl_bar));
++
++	return 0;
++}
++#endif
++
++struct qtnf_bus *qtnf_pcie_topaz_alloc(struct pci_dev *pdev)
++{
++	struct qtnf_bus *bus;
++	struct qtnf_pcie_topaz_state *ts;
++
++	bus =3D devm_kzalloc(&pdev->dev, sizeof(*bus) + sizeof(*ts), GFP_KERNEL);
++	if (!bus)
++		return NULL;
++
++	ts =3D get_bus_priv(bus);
++	ts->base.probe_cb =3D qtnf_pcie_topaz_probe;
++	ts->base.remove_cb =3D qtnf_pcie_topaz_remove;
++	ts->base.dma_mask_get_cb =3D qtnf_topaz_dma_mask_get;
++#ifdef CONFIG_PM_SLEEP
++	ts->base.resume_cb =3D qtnf_pcie_topaz_resume;
++	ts->base.suspend_cb =3D qtnf_pcie_topaz_suspend;
++#endif
++
++	return bus;
++}
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_ipc.h b=
+/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_ipc.h
+new file mode 100644
+index 000000000000..eb30e9d08de2
+--- /dev/null
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_ipc.h
+@@ -0,0 +1,94 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright (c) 2018 Quantenna Communications */
++
++#ifndef _QTN_FMAC_PCIE_IPC_H_
++#define _QTN_FMAC_PCIE_IPC_H_
++
++#include <linux/types.h>
++
++#include "shm_ipc_defs.h"
++
++/* EP/RC status and flags */
++#define QTN_BDA_PCIE_INIT		0x01
++#define QTN_BDA_PCIE_RDY		0x02
++#define QTN_BDA_FW_LOAD_RDY		0x03
++#define QTN_BDA_FW_LOAD_DONE		0x04
++#define QTN_BDA_FW_START		0x05
++#define QTN_BDA_FW_RUN			0x06
++#define QTN_BDA_FW_HOST_RDY		0x07
++#define QTN_BDA_FW_TARGET_RDY		0x11
++#define QTN_BDA_FW_TARGET_BOOT		0x12
++#define QTN_BDA_FW_FLASH_BOOT		0x13
++#define QTN_BDA_FW_QLINK_DONE		0x14
++#define QTN_BDA_FW_HOST_LOAD		0x08
++#define QTN_BDA_FW_BLOCK_DONE		0x09
++#define QTN_BDA_FW_BLOCK_RDY		0x0A
++#define QTN_BDA_FW_EP_RDY		0x0B
++#define QTN_BDA_FW_BLOCK_END		0x0C
++#define QTN_BDA_FW_CONFIG		0x0D
++#define QTN_BDA_FW_RUNNING		0x0E
++#define QTN_BDA_PCIE_FAIL		0x82
++#define QTN_BDA_FW_LOAD_FAIL		0x85
++
++#define QTN_BDA_RCMODE			BIT(1)
++#define QTN_BDA_MSI			BIT(2)
++#define QTN_BDA_HOST_CALCMD		BIT(3)
++#define QTN_BDA_FLASH_PRESENT		BIT(4)
++#define QTN_BDA_FLASH_BOOT		BIT(5)
++#define QTN_BDA_XMIT_UBOOT		BIT(6)
++#define QTN_BDA_HOST_QLINK_DRV		BIT(7)
++#define QTN_BDA_TARGET_FBOOT_ERR	BIT(8)
++#define QTN_BDA_TARGET_FWLOAD_ERR	BIT(9)
++#define QTN_BDA_HOST_NOFW_ERR		BIT(12)
++#define QTN_BDA_HOST_MEMALLOC_ERR	BIT(13)
++#define QTN_BDA_HOST_MEMMAP_ERR		BIT(14)
++#define QTN_BDA_VER(x)			(((x) >> 4) & 0xFF)
++#define QTN_BDA_ERROR_MASK		0xFF00
++
++/* registers and shmem address macros */
++#if BITS_PER_LONG =3D=3D 64
++#define QTN_HOST_HI32(a)	((u32)(((u64)a) >> 32))
++#define QTN_HOST_LO32(a)	((u32)(((u64)a) & 0xffffffffUL))
++#define QTN_HOST_ADDR(h, l)	((((u64)h) << 32) | ((u64)l))
++#elif BITS_PER_LONG =3D=3D 32
++#define QTN_HOST_HI32(a)	0
++#define QTN_HOST_LO32(a)	((u32)(((u32)a) & 0xffffffffUL))
++#define QTN_HOST_ADDR(h, l)	((u32)l)
++#else
++#error Unexpected BITS_PER_LONG value
++#endif
++
++#define QTN_PCIE_BDA_VERSION		0x1001
++
++#define PCIE_BDA_NAMELEN		32
++
++#define QTN_PCIE_RC_TX_QUEUE_LEN	256
++#define QTN_PCIE_TX_VALID_PKT		0x80000000
++#define QTN_PCIE_PKT_LEN_MASK		0xffff
++
++#define QTN_BD_EMPTY		((uint32_t)0x00000001)
++#define QTN_BD_WRAP		((uint32_t)0x00000002)
++#define QTN_BD_MASK_LEN		((uint32_t)0xFFFF0000)
++#define QTN_BD_MASK_OFFSET	((uint32_t)0x0000FF00)
++
++#define QTN_GET_LEN(x)		(((x) >> 16) & 0xFFFF)
++#define QTN_GET_OFFSET(x)	(((x) >> 8) & 0xFF)
++#define QTN_SET_LEN(len)	(((len) & 0xFFFF) << 16)
++#define QTN_SET_OFFSET(of)	(((of) & 0xFF) << 8)
++
++#define RX_DONE_INTR_MSK	((0x1 << 6) - 1)
++
++#define PCIE_DMA_OFFSET_ERROR		0xFFFF
++#define PCIE_DMA_OFFSET_ERROR_MASK	0xFFFF
++
++#define QTN_PCI_ENDIAN_DETECT_DATA	0x12345678
++#define QTN_PCI_ENDIAN_REVERSE_DATA	0x78563412
++#define QTN_PCI_ENDIAN_VALID_STATUS	0x3c3c3c3c
++#define QTN_PCI_ENDIAN_INVALID_STATUS	0
++#define QTN_PCI_LITTLE_ENDIAN		0
++#define QTN_PCI_BIG_ENDIAN		0xffffffff
++
++#define NBLOCKS(size, blksize)		\
++	((size) / (blksize) + (((size) % (blksize) > 0) ? 1 : 0))
++
++#endif /* _QTN_FMAC_PCIE_IPC_H_ */
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_regs.h =
+b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_regs.h
+new file mode 100644
+index 000000000000..4782e1ed3c2c
+--- /dev/null
++++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie_regs.h
+@@ -0,0 +1,45 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/* Copyright (c) 2018 Quantenna Communications */
++
++#ifndef __TOPAZ_PCIE_H
++#define __TOPAZ_PCIE_H
++
++/* Topaz PCIe DMA registers */
++#define PCIE_DMA_WR_INTR_STATUS(base)		((base) + 0x9bc)
++#define PCIE_DMA_WR_INTR_MASK(base)		((base) + 0x9c4)
++#define PCIE_DMA_WR_INTR_CLR(base)		((base) + 0x9c8)
++#define PCIE_DMA_WR_ERR_STATUS(base)		((base) + 0x9cc)
++#define PCIE_DMA_WR_DONE_IMWR_ADDR_LOW(base)	((base) + 0x9D0)
++#define PCIE_DMA_WR_DONE_IMWR_ADDR_HIGH(base)	((base) + 0x9d4)
++
++#define PCIE_DMA_RD_INTR_STATUS(base)		((base) + 0x310)
++#define PCIE_DMA_RD_INTR_MASK(base)		((base) + 0x319)
++#define PCIE_DMA_RD_INTR_CLR(base)		((base) + 0x31c)
++#define PCIE_DMA_RD_ERR_STATUS_LOW(base)	((base) + 0x324)
++#define PCIE_DMA_RD_ERR_STATUS_HIGH(base)	((base) + 0x328)
++#define PCIE_DMA_RD_DONE_IMWR_ADDR_LOW(base)	((base) + 0x33c)
++#define PCIE_DMA_RD_DONE_IMWR_ADDR_HIGH(base)	((base) + 0x340)
++
++/* Topaz LHost IPC4 interrupt */
++#define TOPAZ_LH_IPC4_INT(base)			((base) + 0x13C)
++#define TOPAZ_LH_IPC4_INT_MASK(base)		((base) + 0x140)
++
++#define TOPAZ_RC_TX_DONE_IRQ			(0)
++#define TOPAZ_RC_RST_EP_IRQ			(1)
++#define TOPAZ_RC_TX_STOP_IRQ			(2)
++#define TOPAZ_RC_RX_DONE_IRQ			(3)
++#define TOPAZ_RC_PM_EP_IRQ			(4)
++
++/* Topaz LHost M2L interrupt */
++#define TOPAZ_CTL_M2L_INT(base)			((base) + 0x2C)
++#define TOPAZ_CTL_M2L_INT_MASK(base)		((base) + 0x30)
++
++#define TOPAZ_RC_CTRL_IRQ			(6)
++
++#define TOPAZ_IPC_IRQ_WORD(irq)			(BIT(irq) | BIT(irq + 16))
++
++/* PCIe legacy INTx */
++#define TOPAZ_PCIE_CFG0_OFFSET	(0x6C)
++#define TOPAZ_ASSERT_INTX	BIT(9)
++
++#endif /* __TOPAZ_PCIE_H */
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h b/drivers/=
+net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+index 1fe798a9a667..165fcbb41255 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
+@@ -24,6 +24,7 @@
+ /* PCIE Device IDs */
 =20
- struct qtnf_sta_node *qtnf_sta_list_lookup(struct qtnf_sta_list *list,
+ #define	PCIE_DEVICE_ID_QTN_PEARL	(0x0008)
++#define	PCIE_DEVICE_ID_QTN_TOPAZ	(0x0008)
+=20
+ #define QTN_REG_SYS_CTRL_CSR		0x14
+ #define QTN_CHIP_ID_MASK		0xF0
+@@ -35,6 +36,8 @@
+ /* FW names */
+=20
+ #define QTN_PCI_PEARL_FW_NAME		"qtn/fmac_qsr10g.img"
++#define QTN_PCI_TOPAZ_FW_NAME		"qtn/fmac_qsr1000.img"
++#define QTN_PCI_TOPAZ_BOOTLD_NAME	"qtn/uboot_qsr1000.img"
+=20
+ static inline unsigned int qtnf_chip_id_get(const void __iomem *regs_base)
+ {
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/util.c b/drivers/net/wi=
+reless/quantenna/qtnfmac/util.c
+index dfe3fe8a42c1..3bc96b264769 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/util.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/util.c
+@@ -121,6 +121,8 @@ void qtnf_sta_list_free(struct qtnf_sta_list *list)
+ const char *qtnf_chipid_to_string(unsigned long chip_id)
+ {
+ 	switch (chip_id) {
++	case QTN_CHIP_ID_TOPAZ:
++		return "Topaz";
+ 	case QTN_CHIP_ID_PEARL:
+ 		return "Pearl revA";
+ 	case QTN_CHIP_ID_PEARL_B:
 --=20
 2.11.0
 
