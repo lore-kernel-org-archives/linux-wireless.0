@@ -2,156 +2,135 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A83CC00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 06:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98EB0C00449
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 07:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D39FB2087D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 06:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 496BA20645
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 07:38:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jmSJ5rL8";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jmSJ5rL8"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D39FB2087D
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YeXUEq8m";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YeXUEq8m"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 496BA20645
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726445AbeJHNsQ (ORCPT
+        id S1726065AbeJHOsp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 09:48:16 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53856 "EHLO
+        Mon, 8 Oct 2018 10:48:45 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:36922 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725857AbeJHNsQ (ORCPT
+        with ESMTP id S1725925AbeJHOsp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 09:48:16 -0400
+        Mon, 8 Oct 2018 10:48:45 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E723060B7A; Mon,  8 Oct 2018 06:38:06 +0000 (UTC)
+        id CADE7607BD; Mon,  8 Oct 2018 07:38:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538980686;
-        bh=bLa+d8B/HbsCXOz0+asoAEMIjDjycZnp74unzUQET8E=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jmSJ5rL8ZbEZ0xD+u1/uxhh8SF1CFRYkJgc26RQu42+jAWxtuGjmj8Ngrt3Ylf23F
-         Xb4fhqAl2O/U3D9Yp2/3U/y0GW95iWHx9HXr+uutl23cVKk2O910Ik9qGe6N8/fReI
-         Tl7UgKb67aZE5BwkKwFPc0Ljgp3KHodTo2rkx9rs=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 20D4E60769;
-        Mon,  8 Oct 2018 06:38:06 +0000 (UTC)
+        s=default; t=1538984302;
+        bh=XUgxxf+GYh695ff4+eF5pH285wFXQ8vKNTSp2qxdY9o=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YeXUEq8m2xgUna/PIbgMFtYv5wMNQ8kTC7FWmIyQQ8EYj9pU2Vj+uUM7e0/RcERvY
+         bWgVb/dNZb8AzGoR30g8BYKHoVyihFhXo3MTGJrHMf6PbVTjW4ijYB4/hdWlSyt8m3
+         pXQjlT8pL9YmlJ6MO1HyIMIAiF1MUazomugqsCyE=
+Received: from x230.qca.qualcomm.com (188-67-121-187.bb.dnainternet.fi [188.67.121.187])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 157D560769;
+        Mon,  8 Oct 2018 07:38:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538980686;
-        bh=bLa+d8B/HbsCXOz0+asoAEMIjDjycZnp74unzUQET8E=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jmSJ5rL8ZbEZ0xD+u1/uxhh8SF1CFRYkJgc26RQu42+jAWxtuGjmj8Ngrt3Ylf23F
-         Xb4fhqAl2O/U3D9Yp2/3U/y0GW95iWHx9HXr+uutl23cVKk2O910Ik9qGe6N8/fReI
-         Tl7UgKb67aZE5BwkKwFPc0Ljgp3KHodTo2rkx9rs=
+        s=default; t=1538984302;
+        bh=XUgxxf+GYh695ff4+eF5pH285wFXQ8vKNTSp2qxdY9o=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YeXUEq8m2xgUna/PIbgMFtYv5wMNQ8kTC7FWmIyQQ8EYj9pU2Vj+uUM7e0/RcERvY
+         bWgVb/dNZb8AzGoR30g8BYKHoVyihFhXo3MTGJrHMf6PbVTjW4ijYB4/hdWlSyt8m3
+         pXQjlT8pL9YmlJ6MO1HyIMIAiF1MUazomugqsCyE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 157D560769
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Ajay Singh <ajay.kathat@microchip.com>
+Cc:     <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: Re: [RFC 00/19] wilc: added driver for wilc module
+References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
+        <87zhvrdz0q.fsf@kamboji.qca.qualcomm.com>
+        <20181008104757.5e27eacb@ajaysk-VirtualBox>
+Date:   Mon, 08 Oct 2018 10:38:16 +0300
+In-Reply-To: <20181008104757.5e27eacb@ajaysk-VirtualBox> (Ajay Singh's message
+        of "Mon, 8 Oct 2018 10:47:57 +0530")
+Message-ID: <87o9c4zy53.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Mon, 08 Oct 2018 12:08:06 +0530
-From:   Anilkumar Kolli <akolli@codeaurora.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     Ben Greear <greearb@candelatech.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH] ath10k: htt_rx: Fix signedness bug in
- ath10k_update_per_peer_tx_stats
-In-Reply-To: <fcc51fdd-fc31-9d2c-2e68-4ceecbb86129@embeddedor.com>
-References: <20181005184245.GA11700@embeddedor.com>
- <3a55bec6-d20d-f500-e741-b228a86b7117@candelatech.com>
- <dd75a8aa-b87c-e325-cc1d-a0efe3664a32@embeddedor.com>
- <fcc51fdd-fc31-9d2c-2e68-4ceecbb86129@embeddedor.com>
-Message-ID: <af44d03892b3d51df391760af7af0382@codeaurora.org>
-X-Sender: akolli@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-06 00:45, Gustavo A. R. Silva wrote:
-> On 10/5/18 9:14 PM, Gustavo A. R. Silva wrote:
->> 
->> 
->> On 10/5/18 9:09 PM, Ben Greear wrote:
->>> On 10/05/2018 11:42 AM, Gustavo A. R. Silva wrote:
->>>> Currently, the error handling for the call to function
->>>> ath10k_get_legacy_rate_idx() doesn't work because
->>>> *rate_idx* is of type u8 (8 bits, unsigned), which
->>>> makes it impossible for it to hold a value less
->>>> than 0.
->>>> 
->>>> Fix this by changing the type of variable *rate_idx*
->>>> to s8 (8 bits, signed).
->>> 
->>> There are more than 127 rates, are you sure this is doing
->>> what you want?
->>> 
->> 
->> Based on the following function, rate_idx can only hold values from 0 
->> to 11
->> 
-> 
-> ... and of course -EINVAL too
-> 
->> static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 
->> rate)
->> {
->>         static const u8 legacy_rates[] = {1, 2, 5, 11, 6, 9, 12,
->>                                           18, 24, 36, 48, 54};
->>         int i;
->> 
->>         for (i = 0; i < ARRAY_SIZE(legacy_rates); i++) {
->>                 if (rate == legacy_rates[i])
->>                         return i;
->>         }
->> 
->>         ath10k_warn(ar, "Invalid legacy rate %hhd peer stats", rate);
->>         return -EINVAL;
->> }
->> 
->> Thanks
->> --
->> Gustavo
->> 
->>> Thanks,
->>> Ben
->>> 
->>>> 
->>>> Addresses-Coverity-ID: 1473914 ("Unsigned compared against 0")
->>>> Fixes: 0189dbd71cbd ("ath10k: get the legacy rate index to update 
->>>> the txrate table")
->>>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->>>> ---
->>>>  drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ++-
->>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>> 
->>>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c 
->>>> b/drivers/net/wireless/ath/ath10k/htt_rx.c
->>>> index f240525..edd0e74 100644
->>>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->>>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->>>> @@ -2753,7 +2753,8 @@ ath10k_update_per_peer_tx_stats(struct ath10k 
->>>> *ar,
->>>>                  struct ath10k_per_peer_tx_stats *peer_stats)
->>>>  {
->>>>      struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
->>>> -    u8 rate = 0, rate_idx = 0, sgi;
->>>> +    u8 rate = 0, sgi;
->>>> +    s8 rate_idx = 0;
->>>>      struct rate_info txrate;
->>>> 
->>>>      lockdep_assert_held(&ar->data_lock);
->>>> 
->>> 
->>> 
+Ajay Singh <ajay.kathat@microchip.com> writes:
 
-I have sent a patch to address this,
-https://patchwork.kernel.org/patch/10611943/
+> On Sat, 6 Oct 2018 15:45:41 +0300
+> Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+>> Ajay Singh <ajay.kathat@microchip.com> writes:
+>>=20
+>> > This patch set contains the driver files from
+>> > 'driver/staging/wilc1000'. Renamed the driver from 'wilc1000' to
+>> > 'wilc' to have generic name, as the same driver will be used by
+>> > other wilc family members.=20=20
+>>=20
+>> I'm worried that the name 'wilc' is just too generic, I liked the
+>> original name wilc1000 much more. Quite often when we have a new
+>> generation of wireless devices there's also a new driver, so in the
+>> long run I'm worried that a generic name like 'wilc' could be a
+>> source of confusion. I think it's much smaller problem if
+>> 'wilc1000' (the driver) also supports wilc3000 (the device), people
+>> are already used to that.=20
+>
+> I also thought about retaining the same wilc1000 name, which has be
+> used for quite some time now. But as we are moving this driver
+> to '/driver/net/wireless/' freshly so thought it=E2=80=99s better to chan=
+ge in
+> the first commit.
+>
+> As you know, 'wilc1000' name is used for folder name as well as module
+> name (i.e wilc1000.ko and wilc1000-spi.ko/wilc1000-sdio.ko). WILC3000 is
+> going to use the same modules(.ko).
 
-Thanks
-Anil.
+So just to be clear, this sounds good to me.
+
+> Do you think its good approach to have 'wilc1000' folder but only remove
+> =E2=80=98wilc1000=E2=80=99 prefix from .ko modules names in Makefile (i.e=
+ wilc.ko and
+> wilc-spio.ko/wilc-sdio.ko). So these .ko becomes generic and give clear
+> name to be used with both wilc1000 and wilc3000 modules.
+
+But this I think is confusing. The driver should use the same name
+everywhere, both in folder name ('wilc1000/') and in the module name
+('wilc1000-*.ko').
+
+If I'm understanding correctly you are worried that 'wilc1000-spi.ko'
+also supports wilc3000 devices, but I don't see that as a problem. I
+think it's very common (not just in wireless) that the marketing names
+don't always match with driver names.
+
+> Also should I submit the v2 version by retaining old name or wait for
+> few more comments to include in that.
+
+I haven't had a chance to review the driver and apparently nobody else
+either. So I recommend waiting for review comments before submitting v2.
+
+Also I suggest that you don't make any changes from the staging version,
+like you did the rename. I think it's simplest to submit the code as it
+is now in staging. And once you get review comments, first submit the
+changes to staging and then send v2 for new review.
+
+--=20
+Kalle Valo
