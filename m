@@ -2,200 +2,116 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5766EC677D4
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 15:53:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B333C65C20
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 17:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1317A20890
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 15:53:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 531182064E
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 17:51:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QuYCuyg1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1317A20890
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="VU31EoP+"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 531182064E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726573AbeJHXGI (ORCPT
+        id S1726442AbeJIBE2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 19:06:08 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:34176 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726379AbeJHXGH (ORCPT
+        Mon, 8 Oct 2018 21:04:28 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:38345 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726291AbeJIBE1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 19:06:07 -0400
-Received: by mail-ot1-f67.google.com with SMTP id i12-v6so20417432otl.1;
-        Mon, 08 Oct 2018 08:53:44 -0700 (PDT)
+        Mon, 8 Oct 2018 21:04:27 -0400
+Received: by mail-pg1-f193.google.com with SMTP id f8-v6so1754689pgq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2018 10:51:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xgcFrayUMiyqhcI9wRtyyi9GoM8fznnVQDQtwVhO39A=;
-        b=QuYCuyg1eVdezNXe+bLfpigm54SEwuJyaPMbSScnHlz2Tg5sa+sOFz39RfErbDNqoU
-         HRnYgSAe59os02JQNa7FtFQMA6X3GhWUAJ2dCYTU8AZM2nyX8rilcWfNZs8iToYJst4G
-         P9tievS4HIWgxqd2ves+lGiYOgvdTA5qLTKRbZdV/h7DFMNTvKbB5cCTId8RS1yydadr
-         oEsjNWj3WoK1NLXuw5uIcTqEanulGBX8NR2IGHu9akQIn0dEFe8xLP8le4y5zzWc9d4r
-         a4G2tjtCEUovgr3UEmdPfXJczMZ53R5S9H9rVzkrNKnujd9MTPPF3YvyIiSP+SEqlcJo
-         JmrA==
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=90O4pIvTELFsKTsz8g+Cwd1Kw+Qu5XmA1l345IEbUR8=;
+        b=VU31EoP+6NrA4YA0dCGJNKriOhPUyyZIeJfPGz6NLlJaNFz8YsW4b+LM+PyQxEYO5n
+         aecjT+u1YKeWyVNpcU4t3GUrA7HsWKe3XzFh233zU7AekJVZ4rKDes7ebTRPcn2dF8Jz
+         TatqvQkMTj+0S2AwhilZvtSogK4uXA34wdCnM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=xgcFrayUMiyqhcI9wRtyyi9GoM8fznnVQDQtwVhO39A=;
-        b=bfDGef89cA+h2MqcIv7Emv+Lg9F0NAlIPkcYn3lvd7n3JbZShHa9vuSsToFD4agRFA
-         lRkmW1VWKREnuzJjAgFCUFYZYmuqS6bE35VLJfzX3G3CDYnYztntTaseNhhfs49snpUN
-         Yq6EqZ8pP9UjmOlro4pzZUxZR77uh71CDglO7bDhc2Rjv9u30RGGHg2s07fmwTZA6lDs
-         h68MtkhjqJrbU+aQ1XqZkZxoBei+GqglBy9CrRZzwkaVVB51aO7hOqvCW4fx5tqKhaQX
-         ks51nyhOh7FZheIJ9zGSREr9JuNF/LPOkVZ61odNH0y20xlQcGosFESQfAN2NRIxTOMm
-         lsQg==
-X-Gm-Message-State: ABuFfogBq0m7gANgKIX8wmV5HBc0IbidcFDTKeUbbZiFBF+rs0OcZ8OH
-        15rVGio/oqT/oRLUgRa68x8YY6gT
-X-Google-Smtp-Source: ACcGV63L5kKq2txJnFPculwW65X5iQ12ETLvKPxtvJ6dZrIVgQ1MvIzPYBX9OhCWeuiIbqO4j24lHw==
-X-Received: by 2002:a9d:beb:: with SMTP id 98-v6mr3607033oth.364.1539014024225;
-        Mon, 08 Oct 2018 08:53:44 -0700 (PDT)
-Received: from [192.168.1.107] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id b49sm8308186otb.33.2018.10.08.08.53.42
+        bh=90O4pIvTELFsKTsz8g+Cwd1Kw+Qu5XmA1l345IEbUR8=;
+        b=AS+EQc6wXmRtUBf0wnKK8VAnGedbvIgoesD+8fiqM7yTsnruZMoJwj0xYC3wBmeyjV
+         YBhs0PHe2dXh3ElpNMd3WgXvlsATJqBUkY/pV+b3PrykNkPYBnrjk9gFoz20/v8ZWst6
+         LsVnuy1bfOWDxdGKXegQUHfUXLjTGOxjwEj1U5tHl9qB1OkDmig0MzdN1/JROfaXiP5O
+         kgvIu4WZtEulKUCqUqmSEV0PL2A2XwgxTPujq/B+OSJFA0i47Cu5O8gJQEe0F4VPGzcu
+         19jKAB+AMViCf8Zl1eNbVRBkORRl33RT9uEMZ6vPzUnNxVSfmlobJqczFWmUdOO+hzdP
+         JDsg==
+X-Gm-Message-State: ABuFfohzydaHIB15+2w8lKaXDNDxBDP0HuRf0ZtNZMEPu6sSWwcZ+Xif
+        faXOeQs1ipmTrHzl7Ytpz+mokt9ZYPTKkA==
+X-Google-Smtp-Source: ACcGV62lScesfblWEsBk4jPCcAWF2dP8/oN1auDrpZG9qFf+44sPVi1N/4EaJnQwnu+OsbInO1/ElQ==
+X-Received: by 2002:a63:4107:: with SMTP id o7-v6mr22358793pga.256.1539021096548;
+        Mon, 08 Oct 2018 10:51:36 -0700 (PDT)
+Received: from smtp.gmail.com ([2620:15c:202:1:299d:6b87:5478:d28a])
+        by smtp.gmail.com with ESMTPSA id q127-v6sm18287522pgq.19.2018.10.08.10.51.34
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 08 Oct 2018 08:53:42 -0700 (PDT)
-Subject: Re: [PATCH] rtlwifi: rtl8821ae: replace
- _rtl8821ae_mrate_idx_to_arfr_id with generic version
-To:     Colin King <colin.king@canonical.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20181008085028.23874-1-colin.king@canonical.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <aac8eec4-d4e7-93c3-d42c-8960d16629d6@lwfinger.net>
-Date:   Mon, 8 Oct 2018 10:53:41 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.0
+        Mon, 08 Oct 2018 10:51:35 -0700 (PDT)
+From:   Brian Norris <briannorris@chromium.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH iw] iw: fix enum warnings
+Date:   Mon,  8 Oct 2018 10:51:26 -0700
+Message-Id: <20181008175126.82965-1-briannorris@chromium.org>
+X-Mailer: git-send-email 2.19.0.605.g01d371f741-goog
 MIME-Version: 1.0
-In-Reply-To: <20181008085028.23874-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/8/18 3:50 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Function _rtl8821ae_mrate_idx_to_arfr_id is functionally identical to
-> the generic version rtl_mrate_idx_to_arfr_id, so remove
-> _rtl8821ae_mrate_idx_to_arfr_id and use the generic one instead.
-> 
-> This also fixes a missing break statement found by CoverityScan in
-> _rtl8821ae_mrate_idx_to_arfr_id, namely: CID#1167237 ("Missing break
-> in switch")
-> 
-> Thanks to Joe Perches for spotting this when I submitted an earlier patch.
-> 
-> Fixes: 3c05bedb5fef ("Staging: rtl8812ae: Add Realtek 8821 PCI WIFI driver")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 71 +------------------
->   1 file changed, 1 insertion(+), 70 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> index 317c1b3101da..ba258318ee9f 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> @@ -3404,75 +3404,6 @@ static void rtl8821ae_update_hal_rate_table(struct ieee80211_hw *hw,
->   		 "%x\n", rtl_read_dword(rtlpriv, REG_ARFR0));
->   }
->   
-> -static u8 _rtl8821ae_mrate_idx_to_arfr_id(
-> -	struct ieee80211_hw *hw, u8 rate_index,
-> -	enum wireless_mode wirelessmode)
-> -{
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	struct rtl_phy *rtlphy = &rtlpriv->phy;
-> -	u8 ret = 0;
-> -	switch (rate_index) {
-> -	case RATR_INX_WIRELESS_NGB:
-> -		if (rtlphy->rf_type == RF_1T1R)
-> -			ret = 1;
-> -		else
-> -			ret = 0;
-> -		; break;
-> -	case RATR_INX_WIRELESS_N:
-> -	case RATR_INX_WIRELESS_NG:
-> -		if (rtlphy->rf_type == RF_1T1R)
-> -			ret = 5;
-> -		else
-> -			ret = 4;
-> -		; break;
-> -	case RATR_INX_WIRELESS_NB:
-> -		if (rtlphy->rf_type == RF_1T1R)
-> -			ret = 3;
-> -		else
-> -			ret = 2;
-> -		; break;
-> -	case RATR_INX_WIRELESS_GB:
-> -		ret = 6;
-> -		break;
-> -	case RATR_INX_WIRELESS_G:
-> -		ret = 7;
-> -		break;
-> -	case RATR_INX_WIRELESS_B:
-> -		ret = 8;
-> -		break;
-> -	case RATR_INX_WIRELESS_MC:
-> -		if ((wirelessmode == WIRELESS_MODE_B)
-> -			|| (wirelessmode == WIRELESS_MODE_G)
-> -			|| (wirelessmode == WIRELESS_MODE_N_24G)
-> -			|| (wirelessmode == WIRELESS_MODE_AC_24G))
-> -			ret = 6;
-> -		else
-> -			ret = 7;
-> -	case RATR_INX_WIRELESS_AC_5N:
-> -		if (rtlphy->rf_type == RF_1T1R)
-> -			ret = 10;
-> -		else
-> -			ret = 9;
-> -		break;
-> -	case RATR_INX_WIRELESS_AC_24N:
-> -		if (rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_80) {
-> -			if (rtlphy->rf_type == RF_1T1R)
-> -				ret = 10;
-> -			else
-> -				ret = 9;
-> -		} else {
-> -			if (rtlphy->rf_type == RF_1T1R)
-> -				ret = 11;
-> -			else
-> -				ret = 12;
-> -		}
-> -		break;
-> -	default:
-> -		ret = 0; break;
-> -	}
-> -	return ret;
-> -}
-> -
->   static u32 _rtl8821ae_rate_to_bitmap_2ssvht(__le16 vht_rate)
->   {
->   	u8 i, j, tmp_rate;
-> @@ -3761,7 +3692,7 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
->   		break;
->   	}
->   
-> -	ratr_index = _rtl8821ae_mrate_idx_to_arfr_id(hw, ratr_index, wirelessmode);
-> +	ratr_index = rtl_mrate_idx_to_arfr_id(hw, ratr_index, wirelessmode);
->   	sta_entry->ratr_index = ratr_index;
->   	ratr_bitmap = _rtl8821ae_set_ra_vht_ratr_bitmap(hw, wirelessmode,
->   							ratr_bitmap);
-> 
+clang warns about the misuse of enums:
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+reg.c:246:26: warning: implicit conversion from enumeration type 'enum command_identify_by' to different enumeration type 'enum id_input' [-Wenum-conversion]
+        err = handle_cmd(state, CIB_NONE, 2, dump_args);
+              ~~~~~~~~~~        ^~~~~~~~
+info.c:645:26: warning: implicit conversion from enumeration type 'enum command_identify_by' to different enumeration type 'enum id_input' [-Wenum-conversion]
+        err = handle_cmd(state, CIB_NONE, 2, feat_args);
+              ~~~~~~~~~~        ^~~~~~~~
 
-Thanks,
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ info.c | 2 +-
+ reg.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Larry
+diff --git a/info.c b/info.c
+index fbf3ee095f9c..d0577e32552e 100644
+--- a/info.c
++++ b/info.c
+@@ -718,7 +718,7 @@ static int handle_info(struct nl80211_state *state,
+ 	char *feat_args[] = { "features", "-q" };
+ 	int err;
+ 
+-	err = handle_cmd(state, CIB_NONE, 2, feat_args);
++	err = handle_cmd(state, II_NONE, 2, feat_args);
+ 	if (!err && nl80211_has_split_wiphy) {
+ 		nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
+ 		nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
+diff --git a/reg.c b/reg.c
+index cadff3884c04..a2368df39009 100644
+--- a/reg.c
++++ b/reg.c
+@@ -243,7 +243,7 @@ static int handle_reg_get(struct nl80211_state *state,
+ 	char *dump_args[] = { "reg", "dump" };
+ 	int err;
+ 
+-	err = handle_cmd(state, CIB_NONE, 2, dump_args);
++	err = handle_cmd(state, II_NONE, 2, dump_args);
+ 	/*
+ 	 * dump might fail since it's not supported on older kernels,
+ 	 * in that case the handler is still registered already
+-- 
+2.19.0.605.g01d371f741-goog
 
