@@ -6,158 +6,148 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C5CC00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:17:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC976C65BD1
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:17:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 007D82087D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:17:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 007D82087D
+	by mail.kernel.org (Postfix) with ESMTP id 910622087C
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 08:17:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 910622087C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726810AbeJHP2P (ORCPT
+        id S1727029AbeJHP2S (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 11:28:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56302 "EHLO
+        Mon, 8 Oct 2018 11:28:18 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56330 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726113AbeJHP2P (ORCPT
+        with ESMTP id S1726793AbeJHP2S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 11:28:15 -0400
+        Mon, 8 Oct 2018 11:28:18 -0400
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1g9QjX-0003w6-KO; Mon, 08 Oct 2018 11:17:44 +0300
+        id 1g9QjZ-0003w6-8w; Mon, 08 Oct 2018 11:17:46 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Mon,  8 Oct 2018 11:17:21 +0300
-Message-Id: <20181008081735.3401-5-luca@coelho.fi>
+Date:   Mon,  8 Oct 2018 11:17:23 +0300
+Message-Id: <20181008081735.3401-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <20181008081735.3401-1-luca@coelho.fi>
 References: <20181008081735.3401-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/18] iwlwifi: mvm: introduce a new fragmented scan type: fast balance
+Subject: [PATCH 06/18] iwlwifi: dump debug data before stop device
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Fast balance scan is similar to SCAN_TYPE_MILD, but this scan is
-fragmented and has shorter out of operating channel time,
-and therefore better match low latency scenarios.
+Debug data dump is not working in flows that stop the device is used
+in their error handling. During these flows the op mode mutex is
+locked until the device stops.  Because of that, any assert generated
+from the firmware can be handled only after the device already
+stopped.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Since dumping cannot occour after stopping the device, split the the
+dump function to two parts, Part that handles locking, and the part
+that starts the actual dumping and call the second part in the op mode
+stop device function.
+
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 24 +++++++++++++------
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c  | 27 +++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h  |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  5 ++++
+ 3 files changed, 26 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index f44c716b1130..c16757051f16 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1154,14 +1154,14 @@ int iwl_fw_start_dbg_conf(struct iwl_fw_runtime *fwrt, u8 conf_id)
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_start_dbg_conf);
+ 
+-void iwl_fw_error_dump_wk(struct work_struct *work)
++/* this function assumes dump_start was called beforehand and dump_end will be
++ * called afterwards
++ */
++void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt)
+ {
+-	struct iwl_fw_runtime *fwrt =
+-		container_of(work, struct iwl_fw_runtime, dump.wk.work);
+ 	struct iwl_fw_dbg_params params = {0};
+ 
+-	if (fwrt->ops && fwrt->ops->dump_start &&
+-	    fwrt->ops->dump_start(fwrt->ops_ctx))
++	if (!test_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
+ 		return;
+ 
+ 	if (fwrt->ops && fwrt->ops->fw_running &&
+@@ -1169,7 +1169,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
+ 		IWL_ERR(fwrt, "Firmware not running - cannot dump error\n");
+ 		iwl_fw_free_dump_desc(fwrt);
+ 		clear_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status);
+-		goto out;
++		return;
+ 	}
+ 
+ 	iwl_fw_dbg_stop_recording(fwrt, &params);
+@@ -1183,7 +1183,20 @@ void iwl_fw_error_dump_wk(struct work_struct *work)
+ 		udelay(500);
+ 		iwl_fw_dbg_restart_recording(fwrt, &params);
+ 	}
+-out:
++}
++IWL_EXPORT_SYMBOL(iwl_fw_dbg_collect_sync);
++
++void iwl_fw_error_dump_wk(struct work_struct *work)
++{
++	struct iwl_fw_runtime *fwrt =
++		container_of(work, struct iwl_fw_runtime, dump.wk.work);
++
++	if (fwrt->ops && fwrt->ops->dump_start &&
++	    fwrt->ops->dump_start(fwrt->ops_ctx))
++		return;
++
++	iwl_fw_dbg_collect_sync(fwrt);
++
+ 	if (fwrt->ops && fwrt->ops->dump_end)
+ 		fwrt->ops->dump_end(fwrt->ops_ctx);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index d9578dcec24c..6f8d3256f7b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -367,4 +367,5 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
+ 
+ void iwl_fw_alive_error_dump(struct iwl_fw_runtime *fwrt);
++void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt);
+ #endif  /* __iwl_fw_dbg_h__ */
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 8f71eeed50d9..6f927052aeaf 100644
+index 6f927052aeaf..ff1ba84f3aa6 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -512,6 +512,7 @@ enum iwl_mvm_scan_type {
- 	IWL_SCAN_TYPE_WILD,
- 	IWL_SCAN_TYPE_MILD,
- 	IWL_SCAN_TYPE_FRAGMENTED,
-+	IWL_SCAN_TYPE_FAST_BALANCE,
- };
+@@ -1906,6 +1906,11 @@ static inline u32 iwl_mvm_flushable_queues(struct iwl_mvm *mvm)
  
- enum iwl_mvm_sched_scan_pass_all_states {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index ffcd0ca86041..b43bf116c7e8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -110,6 +110,10 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- 		.suspend_time = 95,
- 		.max_out_time = 44,
- 	},
-+	[IWL_SCAN_TYPE_FAST_BALANCE] = {
-+		.suspend_time = 30,
-+		.max_out_time = 37,
-+	},
- };
- 
- struct iwl_mvm_scan_params {
-@@ -860,6 +864,12 @@ static inline bool iwl_mvm_is_regular_scan(struct iwl_mvm_scan_params *params)
- 		params->scan_plans[0].iterations == 1;
- }
- 
-+static bool iwl_mvm_is_scan_fragmented(enum iwl_mvm_scan_type type)
-+{
-+	return (type == IWL_SCAN_TYPE_FRAGMENTED ||
-+		type == IWL_SCAN_TYPE_FAST_BALANCE);
-+}
-+
- static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
- 				   struct iwl_mvm_scan_params *params,
- 				   struct ieee80211_vif *vif)
-@@ -872,7 +882,7 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
- 	if (params->n_ssids == 1 && params->ssids[0].ssid_len != 0)
- 		flags |= IWL_MVM_LMAC_SCAN_FLAG_PRE_CONNECTION;
- 
--	if (params->type == IWL_SCAN_TYPE_FRAGMENTED)
-+	if (iwl_mvm_is_scan_fragmented(params->type))
- 		flags |= IWL_MVM_LMAC_SCAN_FLAG_FRAGMENTED;
- 
- 	if (iwl_mvm_rrm_scan_needed(mvm) &&
-@@ -895,7 +905,7 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
- 
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
--	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
-+	    !iwl_mvm_is_scan_fragmented(params->type))
- 		flags |= IWL_MVM_LMAC_SCAN_FLAG_EXTENDED_DWELL;
- 
- 	return flags;
-@@ -1162,7 +1172,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 		 SCAN_CONFIG_FLAG_SET_MAC_ADDR |
- 		 SCAN_CONFIG_FLAG_SET_CHANNEL_FLAGS |
- 		 SCAN_CONFIG_N_CHANNELS(num_channels) |
--		 (type == IWL_SCAN_TYPE_FRAGMENTED ?
-+		 (iwl_mvm_is_scan_fragmented(type) ?
- 		  SCAN_CONFIG_FLAG_SET_FRAGMENTED :
- 		  SCAN_CONFIG_FLAG_CLEAR_FRAGMENTED);
- 
-@@ -1177,7 +1187,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	 */
- 	if (iwl_mvm_cdb_scan_api(mvm)) {
- 		if (iwl_mvm_is_cdb_supported(mvm))
--			flags |= (hb_type == IWL_SCAN_TYPE_FRAGMENTED) ?
-+			flags |= (iwl_mvm_is_scan_fragmented(hb_type)) ?
- 				 SCAN_CONFIG_FLAG_SET_LMAC2_FRAGMENTED :
- 				 SCAN_CONFIG_FLAG_CLEAR_LMAC2_FRAGMENTED;
- 		iwl_mvm_fill_scan_config(mvm, cfg, flags, channel_flags);
-@@ -1338,11 +1348,11 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 	if (params->n_ssids == 1 && params->ssids[0].ssid_len != 0)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PRE_CONNECT;
- 
--	if (params->type == IWL_SCAN_TYPE_FRAGMENTED)
-+	if (iwl_mvm_is_scan_fragmented(params->type))
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_FRAGMENTED;
- 
- 	if (iwl_mvm_is_cdb_supported(mvm) &&
--	    params->hb_type == IWL_SCAN_TYPE_FRAGMENTED)
-+	    iwl_mvm_is_scan_fragmented(params->hb_type))
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED;
- 
- 	if (iwl_mvm_rrm_scan_needed(mvm) &&
-@@ -1380,7 +1390,7 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 	 */
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
--	    params->type != IWL_SCAN_TYPE_FRAGMENTED &&
-+	    !iwl_mvm_is_scan_fragmented(params->type) &&
- 	    !iwl_mvm_is_adaptive_dwell_supported(mvm) &&
- 	    !iwl_mvm_is_oce_supported(mvm))
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL;
+ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ {
++	lockdep_assert_held(&mvm->mutex);
++	/* calling this function without using dump_start/end since at this
++	 * point we already hold the op mode mutex
++	 */
++	iwl_fw_dbg_collect_sync(&mvm->fwrt);
+ 	iwl_fw_cancel_timestamp(&mvm->fwrt);
+ 	iwl_free_fw_paging(&mvm->fwrt);
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
 -- 
 2.19.0
 
