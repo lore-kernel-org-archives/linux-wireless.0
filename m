@@ -2,91 +2,103 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLACK autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A12C00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A6FC00449
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:35:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC4BE204FD
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:34:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CC4BE204FD
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id ABFB520878
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:35:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ABFB520878
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727635AbeJHQp0 (ORCPT
+        id S1727127AbeJHQqQ convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 12:45:26 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60890 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726354AbeJHQp0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 12:45:26 -0400
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 383EA3082A27;
-        Mon,  8 Oct 2018 09:34:38 +0000 (UTC)
-Received: from localhost (ovpn-204-38.brq.redhat.com [10.40.204.38])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C005E2016BF3;
-        Mon,  8 Oct 2018 09:34:37 +0000 (UTC)
-Date:   Mon, 8 Oct 2018 11:34:36 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Mon, 8 Oct 2018 12:46:16 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:56510 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726330AbeJHQqQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 12:46:16 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w989ZFpD005516, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas11.realtek.com.tw[172.21.6.12])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w989ZFpD005516
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Mon, 8 Oct 2018 17:35:15 +0800
+Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
+ RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
+ 14.03.0399.000; Mon, 8 Oct 2018 17:35:14 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC:     "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
         Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v2 03/12] rtw88: hci files
-Message-ID: <20181008093435.GE1961@redhat.com>
+Subject: RE: [RFC v2 04/12] rtw88: trx files
+Thread-Topic: [RFC v2 04/12] rtw88: trx files
+Thread-Index: AQHUXXCabc6Uk9/+60ywbjX8pm9S+KUUjvoAgACHIyA=
+Date:   Mon, 8 Oct 2018 09:35:13 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D172BED1@RTITMBSVM01.realtek.com.tw>
 References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
- <1538553748-26364-4-git-send-email-yhchuang@realtek.com>
- <20181004130212.GC16819@redhat.com>
- <F7CD281DE3E379468C6D07993EA72F84D172A54A@RTITMBSVM01.realtek.com.tw>
+ <1538553748-26364-5-git-send-email-yhchuang@realtek.com>
+ <20181004131908.GD16819@redhat.com>
+ <F7CD281DE3E379468C6D07993EA72F84D172A2BC@RTITMBSVM01.realtek.com.tw>
+ <878t3bfe7o.fsf@kamboji.qca.qualcomm.com> <20181008091915.GC1961@redhat.com>
+In-Reply-To: <20181008091915.GC1961@redhat.com>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.123]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D172A54A@RTITMBSVM01.realtek.com.tw>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.25
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Mon, 08 Oct 2018 09:34:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Oct 05, 2018 at 12:07:06PM +0000, Tony Chuang wrote:
-> > > +static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
-> > > +			      struct rtw_pci_rx_ring *rx_ring,
-> > > +			      u32 idx)
-> > > +{
-> > > +	struct rtw_chip_info *chip = rtwdev->chip;
-> > > +	struct rtw_pci_rx_buffer_desc *buf_desc;
-> > > +	u32 desc_sz = chip->rx_buf_desc_sz;
-> > > +	u16 total_pkt_size;
-> > > +	int i;
-> > > +
-> > > +	buf_desc = (struct rtw_pci_rx_buffer_desc *)(rx_ring->r.head +
-> > > +						     idx * desc_sz);
-> > > +	for (i = 0; i < 20; i++) {
-> > > +		total_pkt_size = le16_to_cpu(buf_desc->total_pkt_size);
-> > > +		if (total_pkt_size)
-> > > +			return;
-> > > +	}
-> > > +
-> > > +	if (i >= 20)
-> > > +		rtw_warn(rtwdev, "pci bus timeout, drop packet\n");
-> > This is not right, most likely you need to use
-> > dma_sync_single_for_cpu() .
+> -----Original Message-----
+> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> Sent: Monday, October 08, 2018 5:19 PM
+> To: Kalle Valo
+> Cc: Tony Chuang; Larry.Finger@lwfinger.net; Pkshih; Andy Huang;
+> linux-wireless@vger.kernel.org
+> Subject: Re: [RFC v2 04/12] rtw88: trx files
 > 
-> Not really understand how dma_sync_single_for_cpu() works.
-> Can you show me if possible?
+> On Sat, Oct 06, 2018 at 03:32:11PM +0300, Kalle Valo wrote:
+> > Tony Chuang <yhchuang@realtek.com> writes:
+> >
+> > >> > +	pkt_info->bmc = bmc;
+> > >> > +	pkt_info->sec_type = sec_type;
+> > >> > +	pkt_info->tx_pkt_size = skb->len;
+> > >> > +	pkt_info->offset = chip->tx_pkt_desc_sz;
+> > >> > +	pkt_info->qsel = skb->priority;
+> > >>
+> > >> Shouldn't be qsel somehow mapped from skb->priority ?
+> > >
+> > > Firmware handles it.
+> >
+> > What if meaning of skb->priority changes in the future? I don't think
+> > it's safe to provide kernel internal values to firmware, you should do
+> > some kind of mapping in the driver.
+> 
+> We already have some functions that do mapping:
+> rtw_hw_queue_mapping(struct sk_buff *skb)
+> and
+> rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
+> Preasumly they should be used here as well.
+> 
+> Stanislaw
+> 
 
-dma_sync_single_for_cpu() and dma_sync_single_for_device() 
-transfer dma buffer ownership to respectivly CPU and device.
-It is well documented in:
-Documentation/DMA-API-HOWTO.txt:  
-Documentation/DMA-API.txt
+Stanislaw is right, PCI will get the qsel again and overwrite it.
+Maybe we should remove the extra qsel code in tx.c
+BTW, skb->priority is mapped to TID 0-15 in mac80211, and that's
+what we want to provide to the firmware.
 
-Thanks
-Stanislaw
+Yan-Hsuan Chuang
