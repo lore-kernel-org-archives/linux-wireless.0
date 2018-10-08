@@ -2,105 +2,73 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA4CC65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F141C65C20
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:46:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4BEF20858
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0BD720858
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:46:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S4KbLZVG";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S4KbLZVG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A4BEF20858
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Xwj5Q9Em"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D0BD720858
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726794AbeJHSrq (ORCPT
+        id S1727732AbeJHS5e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 14:47:46 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:43374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726689AbeJHSrq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 14:47:46 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DAC1C60BFA; Mon,  8 Oct 2018 11:36:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538998587;
-        bh=qs6fidtiPh+LOjFE+XC75oJ3kTqMJWCZH88vfKxGc7A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=S4KbLZVGscFIGpuEuP5Q13kRJThZDbcM+netzcDBg2k9lHTp+I76HrtwvrPXH9kKl
-         kkMp/jmn+cVyXq1Xs/Pcd45Wx6NxPbyf8SSqEU3vqwWXYe3Qrcm7Ku34DMFETgdEyc
-         +62oW7dzfu+Br+Wzcz/uYbte+lbG80dNFR82oGBA=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BFFC46079B;
-        Mon,  8 Oct 2018 11:36:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1538998587;
-        bh=qs6fidtiPh+LOjFE+XC75oJ3kTqMJWCZH88vfKxGc7A=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=S4KbLZVGscFIGpuEuP5Q13kRJThZDbcM+netzcDBg2k9lHTp+I76HrtwvrPXH9kKl
-         kkMp/jmn+cVyXq1Xs/Pcd45Wx6NxPbyf8SSqEU3vqwWXYe3Qrcm7Ku34DMFETgdEyc
-         +62oW7dzfu+Br+Wzcz/uYbte+lbG80dNFR82oGBA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BFFC46079B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>
-Subject: Re: [PATCH 5/5] qtnfmac: add support for Topaz chipsets
-References: <20181008095551.18651-1-sergey.matyukevich.os@quantenna.com>
-        <20181008095551.18651-6-sergey.matyukevich.os@quantenna.com>
-Date:   Mon, 08 Oct 2018 14:36:24 +0300
-In-Reply-To: <20181008095551.18651-6-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Mon, 8 Oct 2018 09:56:05 +0000")
-Message-ID: <87in2cr7pj.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 8 Oct 2018 14:57:34 -0400
+Received: from nbd.name ([46.4.11.11]:38028 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726689AbeJHS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 14:57:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
+        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=n/n32ISV6ZSHZmYsJcD31D/f/cKoIt+bqKvrn75C2nQ=; b=Xwj5Q9EmhhxlKWpb4zxF1cFEpZ
+        2gisMyL535rUYfbdw/Y9CuDDVpIf1DLgTIhoOmClh1fsNl1Iq/gCGI9wM1Vy/xSk74+7LVYWHTYKH
+        xmL3Tv/MZ+4iSSEZRDoPynvF0ZcAsni46xDDwMz4ZQXmoFBF6/MWMKJsgEa9mYa/UYKE=;
+Received: by maeck.lan (Postfix, from userid 501)
+        id 730353EAA62C; Mon,  8 Oct 2018 13:46:12 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: do not store aggregation sequence number for null-data frames
+Date:   Mon,  8 Oct 2018 13:46:12 +0200
+Message-Id: <20181008114612.44544-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Fixes a rare corner case where a BlockAckReq might get the wrong
+sequence number.
 
-> This patch adds support for QSR1000/QSR2000 family of chipsets
-> to qtnfmac_pcie platform driver.
->
-> QSR1000/QSR2000 (aka Topaz) is a family of 80MHz, 11ac Wave2,
-> 4x4/2x4/2x2 chips, including single and dual band devices.
-> Depending on specific chip model and firmware in use, either
-> STA or both STA and AP modes are supported.
->
-> Patch adds Topaz support to qtnfmac_pcie driver. It is possible
-> to enable both Topaz and Pearl support in kernel configuration.
-> In that case proper platform bus will be selected on probing
-> based on chip ID.
->
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-[...]
-
-> --- a/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/qtn_hw_ids.h
-> @@ -24,6 +24,7 @@
->  /* PCIE Device IDs */
->  
->  #define	PCIE_DEVICE_ID_QTN_PEARL	(0x0008)
-> +#define	PCIE_DEVICE_ID_QTN_TOPAZ	(0x0008)
-
-Same ids for both, is this really correct?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index bf0e9e666bc4..7cbce03aa65b 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -96,7 +96,8 @@ mt76_check_agg_ssn(struct mt76_txq *mtxq, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
++	if (!ieee80211_is_data_qos(hdr->frame_control) ||
++	    !ieee80211_is_data_present(hdr->frame_control))
+ 		return;
+ 
+ 	mtxq->agg_ssn = le16_to_cpu(hdr->seq_ctrl) + 0x10;
 -- 
-Kalle Valo
+2.17.0
+
