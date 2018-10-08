@@ -2,87 +2,86 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7DDEC00449
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56517C00449
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:19:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FB2A2086D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:16:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6FB2A2086D
+	by mail.kernel.org (Postfix) with ESMTP id 19B302086D
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 09:19:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 19B302086D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726964AbeJHQ0u (ORCPT
+        id S1727042AbeJHQaD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 12:26:50 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:55496 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726123AbeJHQ0u (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 12:26:50 -0400
-Received: by mail-wm1-f66.google.com with SMTP id 206-v6so7365955wmb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Oct 2018 02:16:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=DIJv+yZKE52f0A6IO3wdlj9sz7NaIdiVUVIfM8ii56E=;
-        b=ieOh7fmIoesAnsdOJ6yTR/4tCE6L3RyGs89izdQpc/Bv6D5iiba++7GE8EE7paT2MS
-         WnF/jm1HDE9327/oNvG0oO3JiQ1ELXhN34RrOI9DRl+b2XA7V9UdLWV3KvuoCf/Lwv/e
-         dm01nnI2WawRgbZcYJTUuVXRnDTStaWZJXblDTcazaBAb4/etHRGBQDxzx6kgmAuJ6bo
-         +2h8lxI9Y3qYsdcrTKeSJBjpEf+qt69TeWWu0TW76ZdlzWdjx764xVYIRrRxFuJCwWjZ
-         32820kSBHukRfNtxi+awxC2i7mzkxa2qSAHODk6Se7bU+IKEjbCCqH9gZETe3NBvasjV
-         qDrA==
-X-Gm-Message-State: ABuFfohW4Fdh1PI7DTqu/R5wcW5y/EBMilbRBR1yi9rIMVbwyxHoY+xL
-        TrUdQsQOlEhITaN56c/PQszPMA==
-X-Google-Smtp-Source: ACcGV63LRP1GEJtOCUI/mD3mvLFZuBkf7DaC9x+1+GWKblUAT1cVmH+U2l7oTW3qYPBEZw0RFWGI8Q==
-X-Received: by 2002:a1c:84cd:: with SMTP id g196-v6mr14715827wmd.38.1538990165136;
-        Mon, 08 Oct 2018 02:16:05 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id q16-v6sm12836169wrn.41.2018.10.08.02.16.04
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 08 Oct 2018 02:16:04 -0700 (PDT)
-Date:   Mon, 8 Oct 2018 11:16:02 +0200
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] split code in mt76x02_util.{c,h}
-Message-ID: <20181008091601.GA15297@localhost.localdomain>
-References: <20181001223429.21061-1-lorenzo.bianconi@redhat.com>
- <1538987449.3687.1.camel@sipsolutions.net>
+        Mon, 8 Oct 2018 12:30:03 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:1079 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726123AbeJHQaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 12:30:02 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0DF624E34A;
+        Mon,  8 Oct 2018 09:19:18 +0000 (UTC)
+Received: from localhost (ovpn-204-38.brq.redhat.com [10.40.204.38])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 937045B0A0;
+        Mon,  8 Oct 2018 09:19:17 +0000 (UTC)
+Date:   Mon, 8 Oct 2018 11:19:16 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Tony Chuang <yhchuang@realtek.com>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2 04/12] rtw88: trx files
+Message-ID: <20181008091915.GC1961@redhat.com>
+References: <1538553748-26364-1-git-send-email-yhchuang@realtek.com>
+ <1538553748-26364-5-git-send-email-yhchuang@realtek.com>
+ <20181004131908.GD16819@redhat.com>
+ <F7CD281DE3E379468C6D07993EA72F84D172A2BC@RTITMBSVM01.realtek.com.tw>
+ <878t3bfe7o.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1538987449.3687.1.camel@sipsolutions.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <878t3bfe7o.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Mon, 08 Oct 2018 09:19:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Lorenzo,
+On Sat, Oct 06, 2018 at 03:32:11PM +0300, Kalle Valo wrote:
+> Tony Chuang <yhchuang@realtek.com> writes:
 > 
-
-Hi Johannes,
-
-> It would help - also for patchwork tracking - if you could thread your
-> patch series properly.
+> >> > +	pkt_info->bmc = bmc;
+> >> > +	pkt_info->sec_type = sec_type;
+> >> > +	pkt_info->tx_pkt_size = skb->len;
+> >> > +	pkt_info->offset = chip->tx_pkt_desc_sz;
+> >> > +	pkt_info->qsel = skb->priority;
+> >> 
+> >> Shouldn't be qsel somehow mapped from skb->priority ?
+> >
+> > Firmware handles it.
 > 
-> FWIW, that should be the default in git send-email, so I think you need
-> to either update your version or change its configuration. Unless you
-> weren't using --compose option and sent the 0/N manually beforehand or
-> something?
-> 
+> What if meaning of skb->priority changes in the future? I don't think
+> it's safe to provide kernel internal values to firmware, you should do
+> some kind of mapping in the driver.
 
-I sent this series from a different machine so I guess it is not configured
-properly, I will double check. Thx for the info.
+We already have some functions that do mapping:
 
-Regards,
-Lorenzo
+rtw_hw_queue_mapping(struct sk_buff *skb)
 
-> johannes
-> 
-> On Tue, 2018-10-02 at 00:34 +0200, Lorenzo Bianconi wrote:
+and
+
+rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
+
+Preasumly they should be used here as well.
+
+Thanks
+Stanislaw
