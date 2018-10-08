@@ -2,87 +2,100 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE56C65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 14:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37940C677D4
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 14:06:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EB832077C
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 14:00:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7EB832077C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id 075E320858
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 14:06:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 075E320858
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726291AbeJHVMa (ORCPT
+        id S1726291AbeJHVRz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 17:12:30 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:56214 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726056AbeJHVMa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 17:12:30 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1g9W5G-0007XS-JZ; Mon, 08 Oct 2018 16:00:30 +0200
-Message-ID: <1539007219.3687.38.camel@sipsolutions.net>
-Subject: Re: [RFC v3 12/12] rtw88: Kconfig & Makefile
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     yhchuang@realtek.com, kvalo@codeaurora.org
-Cc:     Larry.Finger@lwfinger.net, pkshih@realtek.com, tehuang@realtek.com,
-        sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Date:   Mon, 08 Oct 2018 16:00:19 +0200
-In-Reply-To: <1538565659-29530-13-git-send-email-yhchuang@realtek.com> (sfid-20181003_132143_363210_BDF3D2A2)
-References: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
-         <1538565659-29530-13-git-send-email-yhchuang@realtek.com>
-         (sfid-20181003_132143_363210_BDF3D2A2)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
-Mime-Version: 1.0
+        Mon, 8 Oct 2018 17:17:55 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13604 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726056AbeJHVRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 17:17:55 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 2668B977E0368;
+        Mon,  8 Oct 2018 22:05:45 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.399.0; Mon, 8 Oct 2018 22:05:37 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC:     YueHaibing <yuehaibing@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] rtl8xxxu: Remove set but not used variables 'usedesc40' and 'seq_number'
+Date:   Mon, 8 Oct 2018 14:16:59 +0000
+Message-ID: <1539008219-149058-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-10-03 at 19:20 +0800, yhchuang@realtek.com wrote:
-> 
-> +config RTW88_CORE
-> +	tristate
-> +	depends on RTW88
-> +
-> +config RTW88_PCI
-> +	tristate
-> +	depends on RTW88_CORE && PCI
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Those "depends on" lines are misleading, I don't think select honours
-that?
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_tx':
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4925:7: warning:
+ variable 'usedesc40' set but not used [-Wunused-but-set-variable]
 
-> +++ b/drivers/net/wireless/realtek/rtw88/Makefile
-> @@ -0,0 +1,19 @@
-> +obj-$(CONFIG_RTW88_CORE)	+= rtw88.o
-> +rtw88-y += main.o \
-> +	   mac80211.o \
-> +	   debug.o \
-> +	   tx.o \
-> +	   rx.o \
-> +	   mac.o \
-> +	   phy.o \
-> +	   efuse.o \
-> +	   fw.o \
-> +	   ps.o \
-> +	   sec.o \
-> +	   regd.o
-> +
-> +rtw88-$(CONFIG_RTW88_8822BE)	+= rtw8822b.o rtw8822b_table.o
-> +rtw88-$(CONFIG_RTW88_8822CE)	+= rtw8822c.o rtw8822c_table.o
-> +
-> +obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
-> +rtwpci-objs			:= pci.o
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4921:6: warning:
+ variable 'seq_number' set but not used [-Wunused-but-set-variable]
 
-This is a weird split? Why even bother with two modules if everything
-goes into the main "rtw88" module except for a single file?
+'usedesc40' and 'seq_number' are not used any more after
+commit b59415c2dd08 ("rtl8xxxu: Split filling of TX descriptors into separate functions")
 
-johannes
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 73f6fc0..56040b1 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4918,11 +4918,10 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	struct device *dev = &priv->udev->dev;
+ 	u32 queue, rts_rate;
+ 	u16 pktlen = skb->len;
+-	u16 seq_number;
+ 	u16 rate_flag = tx_info->control.rates[0].flags;
+ 	int tx_desc_size = priv->fops->tx_desc_size;
+ 	int ret;
+-	bool usedesc40, ampdu_enable, sgi = false, short_preamble = false;
++	bool ampdu_enable, sgi = false, short_preamble = false;
+ 
+ 	if (skb_headroom(skb) < tx_desc_size) {
+ 		dev_warn(dev,
+@@ -4946,7 +4945,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	if (ieee80211_is_action(hdr->frame_control))
+ 		rtl8xxxu_dump_action(dev, hdr);
+ 
+-	usedesc40 = (tx_desc_size == 40);
+ 	tx_info->rate_driver_data[0] = hw;
+ 
+ 	if (control && control->sta)
+@@ -5013,7 +5011,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	else
+ 		rts_rate = 0;
+ 
+-	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+ 	priv->fops->fill_txdesc(hw, hdr, tx_info, tx_desc, sgi, short_preamble,
+ 				ampdu_enable, rts_rate);
+
