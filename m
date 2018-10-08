@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F036DC65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DDCC65C20
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:52:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B71A120652
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:52:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F7A820652
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:52:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="II8Q7UQB"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B71A120652
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="F5cIR69u"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F7A820652
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727875AbeJHTD0 (ORCPT
+        id S1727879AbeJHTDi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 15:03:26 -0400
-Received: from nbd.name ([46.4.11.11]:38280 "EHLO nbd.name"
+        Mon, 8 Oct 2018 15:03:38 -0400
+Received: from nbd.name ([46.4.11.11]:38288 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727850AbeJHTD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 15:03:26 -0400
+        id S1727579AbeJHTDi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 15:03:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=cb1247p1IzaG1vcclTYFJc1O8RIb/B+RB1/PerNaJ84=; b=II8Q7UQBbi+wF8KsuTtRiGpVPc
-        Om5Q45JEbkgnw39hVMW0VmRw2SKQHXbWrhLcQcIr9l6zFui6xzJwWVOzeMMYArR2CNDyqKZ4vdRqv
-        C8/FwEXKWYOYVKVfnj1LCI65o/6Kk13VWHh5/SC3NgAiFGS9/e3cUCrRkISQU9FHiAkw=;
-Subject: Re: [PATCH] mt76: reserve enough room for USB tx skbs
+        bh=TB27hqpTTb5rKmRENNjh79IHE32mAIRS3Kv/DtUaIzA=; b=F5cIR69uvnDcpg1ZY2GEF/9Wqz
+        BaOw5AEtMngJ73ODJahbaGakPDzdujFe8pOIRzWdx7mU4AO7uI2kDyqMetoQ12pe7Fz6oHvosM0MW
+        YPyWL4OFTRaXNss894WoKF+Arids7hz4pDLCTHPX71922SOXkXHJltUwPO7KMCkHnToU=;
+Subject: Re: [PATCH] mt76x0: remove dma.h
 To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         linux-wireless@vger.kernel.org
-References: <1538997720-13926-1-git-send-email-sgruszka@redhat.com>
+References: <1538997740-14007-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <9abea702-a6f4-a63a-75d2-0458a00b4e8b@nbd.name>
-Date:   Mon, 8 Oct 2018 13:52:02 +0200
+Message-ID: <b70f4a4e-ac38-26e4-09df-e59307057366@nbd.name>
+Date:   Mon, 8 Oct 2018 13:52:15 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <1538997720-13926-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1538997740-14007-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,8 +78,7 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 2018-10-08 13:22, Stanislaw Gruszka wrote:
-> Reserve enough room for USB skb, so we don not need to check
-> the room every time we send frame.
+> dma.h is not used any longer.
 > 
 > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
