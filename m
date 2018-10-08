@@ -2,41 +2,41 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D68A5C65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5C8DC676C4
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97F6220858
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BE7320858
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 11:51:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="e2bzKY5t"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 97F6220858
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="rORbV0jW"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8BE7320858
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727583AbeJHTCd (ORCPT
+        id S1727657AbeJHTCo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 15:02:33 -0400
-Received: from nbd.name ([46.4.11.11]:38186 "EHLO nbd.name"
+        Mon, 8 Oct 2018 15:02:44 -0400
+Received: from nbd.name ([46.4.11.11]:38220 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726689AbeJHTCd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 15:02:33 -0400
+        id S1726689AbeJHTCo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 15:02:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=FHhhEGGMJHF3a6/WXqjPP21D8YLJY8pCKC7osXFcnSw=; b=e2bzKY5tv7yjtwQEtZyVmQQUOP
-        y/QMXA8qBy7bNja7ab+wDY+r/D3p6L9057JIzqhraSPDMC9i6eLM8pIgS/PvH0H1mAX+xqu6uJRor
-        u2/mP9Q5MU7l/b5vlw1nHa7jMXI4Qa6Bjt8UIqprFcRnmA2yvWpXTNRXfNZahb5EbHE4=;
-Subject: Re: [PATCH] mt76x0: phy: fix bank check in mt76x0_rf_csr_{wr,rr}
+        bh=1MT/6+TbOa00S5u6zzj1eepxVsXjCxGRfOmPQT9Qh8c=; b=rORbV0jWyTjr5TUgUHImerwN3h
+        fiSlYngzzI8D8i7lPL8ODTnaF06QQaYGiQv9O4gR3WdqohPXansn+IsSS0TorT7t2EAbcNq1GqD4U
+        OM3RKYRzOIlyQd4Q7sE2+GPI41N9hU84XyKxFuA5N7sOKlFMCHHWxCIev3DVFEdFYCWQ=;
+Subject: Re: [PATCH 0/7] use mt76x02_dev instead of mt76_dev as reference
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <20181007093740.11994-1-lorenzo.bianconi@redhat.com>
+References: <20181007094524.12656-1-lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -62,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <149112d3-e071-2606-1384-baa7b6577ee3@nbd.name>
-Date:   Mon, 8 Oct 2018 13:51:09 +0200
+Message-ID: <edbb97e4-d4f7-a522-842b-c46be222088c@nbd.name>
+Date:   Mon, 8 Oct 2018 13:51:21 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <20181007093740.11994-1-lorenzo.bianconi@redhat.com>
+In-Reply-To: <20181007094524.12656-1-lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,14 +76,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-07 11:37, Lorenzo Bianconi wrote:
-> Fix typo in bank check in mt76x0_rf_csr_{wr,rr} routines.
-> This issue has never been hit since mt76x0_rf_csr_{wr,rr}
-> are actually used just by pci code
-> 
-> Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+On 2018-10-07 11:45, Lorenzo Bianconi wrote:
+> Use mt76x02_dev data structure as reference in mt76x02 code
+> instead of mt76_dev one
 
 Merged, thanks.
 
 - Felix
+
