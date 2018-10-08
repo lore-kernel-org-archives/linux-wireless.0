@@ -2,67 +2,104 @@ Return-Path: <SRS0=RoeA=MU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6885C65C20
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 18:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99693C65C20
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 18:11:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C8BE2064E
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 18:02:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C8BE2064E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=davemloft.net
+	by mail.kernel.org (Postfix) with ESMTP id 2BC962085B
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Oct 2018 18:11:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="cmv4FEKI"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2BC962085B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726579AbeJIBPZ (ORCPT
+        id S1726415AbeJIBYo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Oct 2018 21:15:25 -0400
-Received: from shards.monkeyblade.net ([23.128.96.9]:57522 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726383AbeJIBPZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Oct 2018 21:15:25 -0400
-Received: from localhost (c-67-183-145-105.hsd1.wa.comcast.net [67.183.145.105])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id EC3011000173E;
-        Mon,  8 Oct 2018 11:02:30 -0700 (PDT)
-Date:   Mon, 08 Oct 2018 11:02:30 -0700 (PDT)
-Message-Id: <20181008.110230.1232459474222849074.davem@davemloft.net>
-To:     yuehaibing@huawei.com
-Cc:     kvalo@codeaurora.org, nbd@nbd.name, lorenzo.bianconi@redhat.com,
-        sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next] mt76x0: pci: fix set external PA I/O current
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <1539004909-195005-1-git-send-email-yuehaibing@huawei.com>
-References: <1539004909-195005-1-git-send-email-yuehaibing@huawei.com>
-X-Mailer: Mew version 6.7 on Emacs 26 / Mule 6.0 (HANACHIRUSATO)
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 8 Oct 2018 21:24:44 -0400
+Received: from nbd.name ([46.4.11.11]:52392 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726291AbeJIBYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Oct 2018 21:24:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=+hoUrZdrZXEATX99MPs9IBwfkkx8onqWykXikkUTtmg=; b=cmv4FEKIZdOTbJWb3iz4B0S9TV
+        o05T1zVxnlxa1gLYrrJXS1+YQxEkbK50wMaEJaHE5JvKlfOBFPmLR7E4hbefEyshZfVyZYIPd0Tjq
+        2NuWbdU02EV1glKfAgIliIy5OFRD9Vw1LaAzEhsiAibSAgfhFwSujDVbgs7QjtixYiiY=;
+Subject: Re: [PATCH] mt76x0: phy: fix restore phase in
+ mt76x0_phy_recalibrate_after_assoc
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+References: <cover.1539001391.git.lorenzo.bianconi@redhat.com>
+ <ff6672828b7e970124a425304ad734d58133a6ff.1539001391.git.lorenzo.bianconi@redhat.com>
+From:   Felix Fietkau <nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <636edb3c-a2dc-306d-8ddd-8b91ebafd4f1@nbd.name>
+Date:   Mon, 8 Oct 2018 20:11:45 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
+MIME-Version: 1.0
+In-Reply-To: <ff6672828b7e970124a425304ad734d58133a6ff.1539001391.git.lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 08 Oct 2018 11:02:31 -0700 (PDT)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
-Date: Mon, 8 Oct 2018 13:21:49 +0000
+On 2018-10-08 14:40, Lorenzo Bianconi wrote:
+> Fix restore value configured in 0x2124 register in
+> mt76x0_phy_recalibrate_after_assoc routine.
+> 
+> Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> index 99e0a91a2f99..d18942e54048 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+> @@ -734,8 +734,7 @@ void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev)
+>  	usleep_range(500, 700);
+>  
+>  	reg_val = mt76_rr(dev, 0x2124);
+> -	reg_val &= 0xffffff7e;
+> -	mt76_wr(dev, 0x2124, reg_val);
+> +	mt76_wr(dev, 0x2124, 0xffffff7e);
+I'm pretty sure you can drop the mt76_rr as well. Also, you can refer to
+0x2124 as MT_BBP(IBI, 9).
 
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/mediatek/mt76/mt76x0/pci.c: In function 'mt76x0e_register_device':
-> drivers/net/wireless/mediatek/mt76/mt76x0/pci.c:107:8: warning:
->  variable 'data' set but not used [-Wunused-but-set-variable]
-> 
-> It seems correct value to write is 'data'
-> 
-> Fixes: 2b2cb40bcd7d ("mt76x0: pci: add hw initialization at bootstrap")
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-
-Wireless changes should be marked as appropriate in the Subject line
-for targetting the wireless GIT tree, not "net-next".
+- Felix
