@@ -2,86 +2,100 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43625C64EB8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B7AC64EB8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:57:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBC392075C
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:55:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kl0Rv4cE"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EBC392075C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 86CB72089D
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:57:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 86CB72089D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726103AbeJIQLR (ORCPT
+        id S1726613AbeJIQNN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 12:11:17 -0400
-Received: from nbd.name ([46.4.11.11]:55656 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725861AbeJIQLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 12:11:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=utFZ55n4FfpQ2fqunt4IlOj43oHybVG7L+55MbVC8tY=; b=kl0Rv4cEW3ERHns3QL6Jkeo0PW
-        OJHwoT8Szzddu6SRBSLkrkN3Kv89tizw9vU6rfDbgxyBJB+NPqC8MJ26TM6trn/Jbu8vncOBU8Kkv
-        NvaUNWckGui4+QSMEOIBnQKImAfwAt+t4LxNVrKN1zRQ9tqtFL0zajbfxUgyUCK4sAGo=;
-Received: by maeck.lan (Postfix, from userid 501)
-        id 1B7413EB1D7C; Tue,  9 Oct 2018 10:55:20 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     yuehaibing@huawei.com, lorenzo.bianconi@redhat.com
-Subject: [PATCH] mt76: mt76x0e: another fix for the external PA current setting
-Date:   Tue,  9 Oct 2018 10:55:20 +0200
-Message-Id: <20181009085520.61804-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        Tue, 9 Oct 2018 12:13:13 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:46630 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725855AbeJIQNN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 12:13:13 -0400
+Received: by mail-wr1-f67.google.com with SMTP id n11-v6so792337wru.13
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 01:57:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=3XmQiT6bjcn5igtfUnfP+hhhgIXQuNpV4GSqp+q5P7k=;
+        b=f8YsMhJsiWcniwWMLXyOpiSVTR8e2pAJgXmR3xnQl8Gsjwp9Z1MPUEuOJ5rJUVkwOa
+         SdKAZqYxpJVK3oXLScDl3Zc2wMZe76G/iVrNnU6EGrOCIm1TzYsJM53khgHrX2mZ+bQ4
+         TZHJb+be11l8TYe31qsW9LUeWWHhi8lLmkgTXi5dzxoKN+DozsOozBzRODbuvGQ0ihL7
+         rv64pusI6fo61iVIyG6MXkUG5vplzNttS6nh+d6pktXeENKlA14LaZ1k1/k/SErhQRwL
+         sVnAK0iibN/WLGqE1GD5X4R5bASoTV9SdLVoLztsSP5ysMIkF5ZUcXLe8+Olce0spSdH
+         t62Q==
+X-Gm-Message-State: ABuFfoioZPMV8CuQEheWy3l4vaUW06e1gNWA+bJDdteYX4sF2BdUoQF+
+        qsusCr6hkzPjYfaxqcGYtYxHvA==
+X-Google-Smtp-Source: ACcGV617o9u1BcsnokAldvck1DWqJL2M/AvVc2nbfKWWGbWGj4MZuZoptrygiEWevI/MEiaoX4EqfQ==
+X-Received: by 2002:adf:fa4e:: with SMTP id y14-v6mr19612305wrr.155.1539075439591;
+        Tue, 09 Oct 2018 01:57:19 -0700 (PDT)
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id e67-v6sm13407869wmd.41.2018.10.09.01.57.18
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 09 Oct 2018 01:57:19 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mt76x0: phy: fix restore phase in mt76x0_phy_recalibrate_after_assoc
+Date:   Tue,  9 Oct 2018 10:57:06 +0200
+Message-Id: <f3efae19baefd102fa2f08f12982c1199ba51997.1539074999.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1539074999.git.lorenzo.bianconi@redhat.com>
+References: <cover.1539074999.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-- Use the register number define instead of a magic value
-- Fix inverted bit test (override needs to be applied if the bit is not set)
+Fix restore value configured in MT_BBP(IBI, 9) register in
+mt76x0_phy_recalibrate_after_assoc routine.
 
-Fixes: 2b2cb40bcd7d ("mt76x0: pci: add hw initialization at bootstrap")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+Changes since v1:
+- use proper register name
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index cc8af17dc9c7..fd2dc7efeea3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -111,17 +111,10 @@ static int mt76x0e_register_device(struct mt76x02_dev *dev)
- 		u16 val;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index 99e0a91a2f99..29bc4e4623cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -733,9 +733,8 @@ void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev)
+ 	mt76_wr(dev, MT_TX_ALC_CFG_0, 0);
+ 	usleep_range(500, 700);
  
- 		mt76_clear(dev, MT_COEXCFG0, BIT(0));
-+
- 		val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
--		if (val & MT_EE_NIC_CONF_0_PA_IO_CURRENT) {
--			u32 data;
--
--			/* set external PA I/O
--			 * current to 16mA
--			 */
--			data = mt76_rr(dev, 0x11c);
--			data |= 0xc03;
--			mt76_wr(dev, 0x11c, data);
--		}
-+		if (!(val & MT_EE_NIC_CONF_0_PA_IO_CURRENT))
-+			mt76_set(dev, MT_XO_CTRL7, 0xc03);
- 	}
+-	reg_val = mt76_rr(dev, 0x2124);
+-	reg_val &= 0xffffff7e;
+-	mt76_wr(dev, 0x2124, reg_val);
++	reg_val = mt76_rr(dev, MT_BBP(IBI, 9));
++	mt76_wr(dev, MT_BBP(IBI, 9), 0xffffff7e);
  
- 	mt76_clear(dev, 0x110, BIT(9));
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_RXDCOC, 0, false);
+ 
+@@ -746,7 +745,7 @@ void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev)
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_RXIQ, is_5ghz, false);
+ 	mt76x02_mcu_calibrate(dev, MCU_CAL_RX_GROUP_DELAY, is_5ghz, false);
+ 
+-	mt76_wr(dev, 0x2124, reg_val);
++	mt76_wr(dev, MT_BBP(IBI, 9), reg_val);
+ 	mt76_wr(dev, MT_TX_ALC_CFG_0, tx_alc);
+ 	msleep(100);
+ 
 -- 
-2.17.0
+2.17.1
 
