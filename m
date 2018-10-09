@@ -6,77 +6,76 @@ X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA17ECDE3A
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 18:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D3EECDE3A
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 19:12:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C51C214C4
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 18:59:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 197E7213A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 19:12:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DZQ2Vxrc"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0C51C214C4
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eNBqJZql"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 197E7213A2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726607AbeJJCRy (ORCPT
+        id S1727219AbeJJCbV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 22:17:54 -0400
-Received: from mail-yw1-f67.google.com ([209.85.161.67]:33190 "EHLO
-        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726445AbeJJCRy (ORCPT
+        Tue, 9 Oct 2018 22:31:21 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46683 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726488AbeJJCbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 22:17:54 -0400
-Received: by mail-yw1-f67.google.com with SMTP id m127-v6so1126850ywb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 11:59:30 -0700 (PDT)
+        Tue, 9 Oct 2018 22:31:21 -0400
+Received: by mail-wr1-f66.google.com with SMTP id n11-v6so2930618wru.13
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 12:12:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=zqK6U1P4AhXWWh5YdH/nvJy4Pva1ZhMflVkM8G3RCwM=;
-        b=DZQ2VxrcjvqIRee88PCL8tKb+mqYTscls2trKvFnOUOOITZApRQ5cHS6mzjKTCiXpJ
-         TJ0wnZ1HclQYKdnFBx5XRLQzk9UGUUBH34mh4sFnIK1hXEhkWC8x0Nt96yXkqIGpVlf6
-         e62m7LOhOYybrX6ONuHMFGrJIxRXdheKAMBDY=
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=bMTdBFo8J38VHZPRPcajIt+3bcuve/xBzOLN44PkFiI=;
+        b=eNBqJZqlRkguoW//2S5jpioRlYDOvswRKGmGSCuR2i0OyequJW6rbjCdamA5INK+Jr
+         gxs2fXn1Upc0hbCPjkgxeQsdvNa2c9bfRCo8Dz3aoIY9VSmc232oLFUGbRERWn3nIMok
+         2oIYoTvO0jbNBJ5SHwVAbwWwBRwLgiTxLzKnU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=zqK6U1P4AhXWWh5YdH/nvJy4Pva1ZhMflVkM8G3RCwM=;
-        b=f15eTbxBfJLNpgbobLjdzPByKTAh7NTXNJhVGILq7QTzAKfpn+L5Jnc3ch1RNOUWgr
-         OceWA62CbXRvH9BcMX08Gs5Jky3s5sJlZaar4J72xifs70IrGAEiZlIl4g+z2vx0OhiS
-         DqzKj2XlIzUlovqVvRajLxUjYAiivoIqwXp+s/7jE9zg6GMvc7sMBqAtMt9VBZnPmjt+
-         6aYgDLWp4cIHeehrU42AQNKQnUFgxxDG9MBOMUvO15OPHQf39XDBa60mhETN37g4phXQ
-         At/rluF8+7rAJKIzdGBDXADk6NCUg6hBYe5/csTdYg3Nmi50piyFnYNeZ6SxAeSr8D0C
-         UoHQ==
-X-Gm-Message-State: ABuFfogyJz7c+CK5efV5Dz3mRdum24vFPjmfY0yKpXkz+A2ySEIHtXGA
-        D7EMpFiUgs5tb59Q8XRtTh5fnP/TUxet3QUFsBLoHA==
-X-Google-Smtp-Source: ACcGV626FFnQ9jTWnCnDgFogzXhC1CCCs4UPTmRYJN9kMH3gWgk+BNdrrmaoD2NR/2IHljfPU0xsNkZ/d83VravlfhQ=
-X-Received: by 2002:a81:2fd4:: with SMTP id v203-v6mr16281384ywv.199.1539111570402;
- Tue, 09 Oct 2018 11:59:30 -0700 (PDT)
-MIME-Version: 1.0
-References: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
-In-Reply-To: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
-From:   Franky Lin <franky.lin@broadcom.com>
-Date:   Tue, 9 Oct 2018 11:59:19 -0700
-Message-ID: <CA+8PC_dkJAPR2C0DsOWRb__RrijbZZ43MM1gtKGjsMxdTGwsZQ@mail.gmail.com>
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=bMTdBFo8J38VHZPRPcajIt+3bcuve/xBzOLN44PkFiI=;
+        b=WZpvdTFPUjz9nwXUIBPkuPVhA6zQJuC9c+tuyD7bfW9RlGQJUo+lSCdf++OJaq4kKS
+         r5dbU+l8YKnAxFZwnNBI/nBfHt79HS5CKRuOR2L6zoXD2Fj+UFBA9CRs8FFVU+MBtWwc
+         P7WBBL+atAHs5c9b5anuOV3fZLq34mJxcREJrVuecwM8L19SPgDq9PrvbDiFJFHwwDYR
+         coWobucBBzmAQoQZPgjts5qL9poah+cbSaXCjyCUbzj0dHLoK8a7uS+ryr25Bgqh72gc
+         qXOelzVlRUy75KclBWW4DHew5/KTLQqFO+E+TsU4DA7zh1ixcHzJa5XWmLv637y1H0on
+         oaAg==
+X-Gm-Message-State: ABuFfogLEYy+oXjoi2tQ12JiYldcqSCQGMAAe8IgjPQncWa4t2BQ4C8o
+        6Uvm+fubcWm4br09HPEdTr6W+A==
+X-Google-Smtp-Source: ACcGV62rR5tK9mjc2lA6A6lvREU9YXGG3eIVJAHe01ekrCiqNWjbjPYMhK1KKfvl0strU3Fja3gIbw==
+X-Received: by 2002:adf:9464:: with SMTP id 91-v6mr21475429wrq.200.1539112374176;
+        Tue, 09 Oct 2018 12:12:54 -0700 (PDT)
+Received: from [10.177.251.77] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id e14-v6sm18096040wrs.69.2018.10.09.12.12.52
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 09 Oct 2018 12:12:53 -0700 (PDT)
 Subject: Re: brcmfmac with BCM4359 on arm64 (RK3399) and SDIO
-To:     christoph.muellner@theobroma-systems.com
-Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To:     =?UTF-8?Q?Christoph_M=c3=bcllner?= 
+        <christoph.muellner@theobroma-systems.com>
+References: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0f42282d-c579-bb4f-8931-87bb91c904e2@broadcom.com>
+Date:   Tue, 9 Oct 2018 21:12:51 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
+MIME-Version: 1.0
+In-Reply-To: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Christoph,
-
-On Tue, Oct 9, 2018 at 11:10 AM Christoph M=C3=BCllner
-<christoph.muellner@theobroma-systems.com> wrote:
->
+On 10/9/2018 8:10 PM, Christoph Müllner wrote:
 > Hi Arend,
 >
 > recently I got an SDIO module, which includes a BCM4359.
@@ -90,6 +89,10 @@ On Tue, Oct 9, 2018 at 11:10 AM Christoph M=C3=BCllner
 > tried brcmfmac on Linux 4.19-rc7. As the BCM4359 is not in
 > the list of supported SDIO devices, but is supported USB device,
 > I've created a patch (attached), which adds the support for that device.
+
+Okay. However, I should say that there is no BCM4359 USB device. 
+Regardless the patch looks okay.
+
 > Additionally I've patched my DTS to include the WL_REG_ON
 > pin as part of mmc-pwrseq-simple's reset-gpios and added
 > a bcm4329-fmac node in the mmc node.
@@ -98,56 +101,47 @@ On Tue, Oct 9, 2018 at 11:10 AM Christoph M=C3=BCllner
 > that the BCM4359 has been found, but loading the nvram file
 > continuously fails:
 >
-> > [    5.993741] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac435=
-9-sdio for chip BCM4359/9
-> > [...]
-> > [    7.987167] brcmfmac: brcmf_sdiod_ramrw: membytes transfer failed
-> > [    8.008715] brcmfmac: brcmf_sdio_verifymemory: error -84 on reading =
-2048 membytes at 0x0025f1f0
-> > [    8.021182] brcmfmac: brcmf_sdio_download_firmware: dongle nvram fil=
-e download failed
-
-Does it always fail at nvram verification? If so please help to get
-the address and varsz in brcmf_sdio_download_nvram. Also their
-equivalent in bcmdhd which should be varaddr and varsize in
-dhdsdio_write_vars.
-
-Thanks,
---Franky
-
-> That -84 means EILSEQ, which is the error value, which represents
-> a CRC error during SDIO data exchange (returned by the function dw_mci_da=
-ta_complete()
-> in the MMC driver).
+>> [    5.993741] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac4359-sdio for chip BCM4359/9
+>> [...]
+>> [    7.987167] brcmfmac: brcmf_sdiod_ramrw: membytes transfer failed
+>> [    8.008715] brcmfmac: brcmf_sdio_verifymemory: error -84 on reading 2048 membytes at 0x0025f1f0
+>> [    8.021182] brcmfmac: brcmf_sdio_download_firmware: dongle nvram file download failed
 >
-> To address this, I've reduced the clock speed (in several steps) to 400 k=
-Hz
-> (and verified the clock signal on an oscilloscope), but the issue persist=
-s.
+> That -84 means EILSEQ, which is the error value, which represents
+> a CRC error during SDIO data exchange (returned by the function dw_mci_data_complete()
+> in the MMC driver).
+
+Whenever I see -84 my suspicion are about power-supply for the chip. 
+However, it may also be the mmc host driver not adhering to so-called 
+"card busy" indication, which is in the SDIO spec.
+
+> To address this, I've reduced the clock speed (in several steps) to 400 kHz
+> (and verified the clock signal on an oscilloscope), but the issue persists.
 > I've also tried to use Linux 4.14.74, where I see the same issue.
 >
-> I can confirm that the MMC interface works in general (I can use an SD ca=
-rd
+> I can confirm that the MMC interface works in general (I can use an SD card
 > to host my rootfs).
->
-> FWIW I'm using the same exact same firmware and nvram file for the DHD dr=
-iver
+
+SD and SDIO are not the same thing. More importantly you have it working 
+with bcmdhd on a vendor kernel. So start from there.
+
+> FWIW I'm using the same exact same firmware and nvram file for the DHD driver
 > and the brcmfmac.
->
+
+Noted.
+
 > Do you have any ideas how to debug this issue?
->
+
+Would focus on getting logs from bcmdhd.
+
+Regards,
+Arend
+
 > Thanks,
 > Christoph
 >
 >
 >
-> --
-> Christoph M=C3=BCllner
-> Theobroma Systems Design und Consulting GmbH
-> Seestadtstra=C3=9Fe 27 (Aspern IQ), 1220 Wien, Austria
-> Phone: +43 1 236 98 93-409, Fax: +43 1 236 98 93-9
-> http://www.theobroma-systems.com
 >
 >
->
->
+
