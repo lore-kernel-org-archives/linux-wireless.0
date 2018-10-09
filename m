@@ -2,90 +2,77 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7DFC6787A
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 01:34:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13CEBC00449
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 02:43:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDFA9213A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 01:34:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DDFA9213A2
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id A3D8C213A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 02:43:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A3D8C213A2
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbeJIItT (ORCPT
+        id S1726761AbeJIJ5m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 04:49:19 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:13204 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726434AbeJIItT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 04:49:19 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 7197BF02F36C1;
-        Tue,  9 Oct 2018 09:34:47 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.399.0; Tue, 9 Oct 2018 09:34:40 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
-        "Lorenzo Bianconi" <lorenzo.bianconi@redhat.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-CC:     YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] mt76x0: pci: fix set external PA I/O current
-Date:   Tue, 9 Oct 2018 01:45:59 +0000
-Message-ID: <1539049559-178175-1-git-send-email-yuehaibing@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1539004909-195005-1-git-send-email-yuehaibing@huawei.com>
-References: <1539004909-195005-1-git-send-email-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+        Tue, 9 Oct 2018 05:57:42 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:53838 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726642AbeJIJ5m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 05:57:42 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w992gW7t011914, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcas12.realtek.com.tw[172.21.6.16])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w992gW7t011914
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Tue, 9 Oct 2018 10:42:32 +0800
+Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
+ RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 9 Oct 2018
+ 10:42:32 +0800
+From:   Tony Chuang <yhchuang@realtek.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC:     "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC v3 08/12] rtw88: debug files
+Thread-Topic: [RFC v3 08/12] rtw88: debug files
+Thread-Index: AQHUXwroUCwuva2cvE+MjaIlByUtB6UWNShQ
+Date:   Tue, 9 Oct 2018 02:42:31 +0000
+Message-ID: <F7CD281DE3E379468C6D07993EA72F84D172C6EE@RTITMBSVM01.realtek.com.tw>
+References: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
+         <1538565659-29530-9-git-send-email-yhchuang@realtek.com>
+         (sfid-20181003_132144_335644_0E0FC8A8)
+ <201810081446.w98EkN0r017815@rtits1.realtek.com.tw>
+In-Reply-To: <201810081446.w98EkN0r017815@rtits1.realtek.com.tw>
+Accept-Language: zh-TW, en-US
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.68.123]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
-
-drivers/net/wireless/mediatek/mt76/mt76x0/pci.c: In function 'mt76x0e_register_device':
-drivers/net/wireless/mediatek/mt76/mt76x0/pci.c:107:8: warning:
- variable 'data' set but not used [-Wunused-but-set-variable]
-
-It seems correct value to write is 'data'
-
-Fixes: 2b2cb40bcd7d ("mt76x0: pci: add hw initialization at bootstrap")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
-v2: remove 'net-next' from patch title
----
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index 87997cd..0426c68 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -106,12 +106,12 @@ static int mt76x0e_register_device(struct mt76x02_dev *dev)
- 		if (val & MT_EE_NIC_CONF_0_PA_IO_CURRENT) {
- 			u32 data;
- 
--			/* set external external PA I/O
-+			/* set external PA I/O
- 			 * current to 16mA
- 			 */
- 			data = mt76_rr(dev, 0x11c);
--			val |= 0xc03;
--			mt76_wr(dev, 0x11c, val);
-+			data |= 0xc03;
-+			mt76_wr(dev, 0x11c, data);
- 		}
- 	}
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBb
+bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IE1vbmRheSwgT2N0b2Jl
+ciAwOCwgMjAxOCA5OjI5IFBNDQo+IFRvOiBUb255IENodWFuZzsga3ZhbG9AY29kZWF1cm9yYS5v
+cmcNCj4gQ2M6IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7IFBrc2hpaDsgQW5keSBIdWFuZzsg
+c2dydXN6a2FAcmVkaGF0LmNvbTsNCj4gbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+
+IFN1YmplY3Q6IFJlOiBbUkZDIHYzIDA4LzEyXSBydHc4ODogZGVidWcgZmlsZXMNCj4gDQo+IE9u
+IFdlZCwgMjAxOC0xMC0wMyBhdCAxOToyMCArMDgwMCwgeWhjaHVhbmdAcmVhbHRlay5jb20gd3Jv
+dGU6DQo+ID4NCj4gPiArc3RhdGljIHN0cnVjdCBkZW50cnkgKmRlYnVnZnNfdG9wZGlyOw0KPiA+
+ICsNCj4gPiArdm9pZCBydHdfZGVidWdmc19pbml0KHN0cnVjdCBydHdfZGV2ICpydHdkZXYpDQo+
+ID4gK3sNCj4gPiArCWRlYnVnZnNfdG9wZGlyID0gZGVidWdmc19jcmVhdGVfZGlyKCJydHc4OCIs
+IE5VTEwpOw0KPiANCj4gWW91IHJlYWxseSBjYW4ndCBkbyB0aGlzLCBhbGwgaGVsbCB3aWxsIGJy
+ZWFrIGxvc2UgaWYgeW91IGV2ZXIgcGx1ZyB0d28NCj4gZGV2aWNlcyBpbnRvIHRoZSBzYW1lIHN5
+c3RlbS4NCj4gDQo+IGpvaGFubmVzDQo+IA0KDQpSaWdodCwgc2hvdWxkIHB1dCBpdCB1bmRlciBy
+dHdkZXYuDQoNCllhbi1Ic3VhbiBDaHVhbmcNCg==
