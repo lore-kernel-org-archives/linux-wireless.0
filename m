@@ -2,130 +2,242 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30AA6C64EB8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 17:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DD35ECDFAC
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 17:44:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3850214DA
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 17:15:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="hdoP9fxj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C3850214DA
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	by mail.kernel.org (Postfix) with ESMTP id 41CBE2064E
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 17:44:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 41CBE2064E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbeJJAdp (ORCPT
+        id S1727291AbeJJBCw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 20:33:45 -0400
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1522 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726485AbeJJAdp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 20:33:45 -0400
+        Tue, 9 Oct 2018 21:02:52 -0400
+Received: from mga07.intel.com ([134.134.136.100]:52517 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726434AbeJJBCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 21:02:52 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 09 Oct 2018 10:44:46 -0700
+X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.54,361,1534834800"; 
-   d="scan'208";a="21409301"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES128-SHA; 09 Oct 2018 10:15:46 -0700
-Received: from NAM04-CO1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.37) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Tue, 9 Oct 2018 10:15:46 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector1-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=guU2+XZZH9tU5roCFBWQBLS0wpprHxw9LiyWAwCiXso=;
- b=hdoP9fxj6DUEeyPPVESzSmED5vx6149jSfdEi3u6kqorohm9uWWKKXpGdHSr3QwB398+Z5T8HS7yOkz32i0yaTbbCiGINdHdPh0yNWgeRDuUq130swRXqnyrmDx2EEGF5McyC78t2t+2xIb5HRaUSC++hfKrDq8rRgRGugcnIHI=
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com (10.160.135.27) by
- DM2PR11MB0076.namprd11.prod.outlook.com (10.160.28.21) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1207.23; Tue, 9 Oct 2018 17:15:43 +0000
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::c495:fe35:c61f:f850]) by DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::c495:fe35:c61f:f850%3]) with mapi id 15.20.1207.024; Tue, 9 Oct 2018
- 17:15:43 +0000
-From:   <Adham.Abozaeid@microchip.com>
-To:     <johannes@sipsolutions.net>, <Ajay.Kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC:     <kvalo@codeaurora.org>, <gregkh@linuxfoundation.org>,
-        <Ganesh.Krishna@microchip.com>, <Aditya.Shankar@microchip.com>,
-        <Venkateswara.Kaja@microchip.com>, <Claudiu.Beznea@microchip.com>
-Subject: Re: [PATCH 12/19] wilc: add wilc_wfi_cfgoperations.c
-Thread-Topic: [PATCH 12/19] wilc: add wilc_wfi_cfgoperations.c
-Thread-Index: AQHUVYNjmo/tPFE0lEmad1H8ViJjG6UVg8bJgADg4gCAADsvAIAAnIiA
-Date:   Tue, 9 Oct 2018 17:15:42 +0000
-Message-ID: <5BBCE23B.6050003@microchip.com>
-References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
-         <1537957525-11467-13-git-send-email-ajay.kathat@microchip.com>
-         (sfid-20180926_122625_015616_502D99E2)
- <1539010630.3687.86.camel@sipsolutions.net>
-         <5BBC2D46.1060903@microchip.com>
- <1539071724.3687.87.camel@sipsolutions.net>
-In-Reply-To: <1539071724.3687.87.camel@sipsolutions.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [198.175.253.81]
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20100101
- Thunderbird/24.2.0
-x-clientproxiedby: DM5PR20CA0020.namprd20.prod.outlook.com
- (2603:10b6:3:93::30) To DM2PR11MB0255.namprd11.prod.outlook.com
- (2a01:111:e400:3c24::27)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DM2PR11MB0076;6:v07rOYxJRH1UCh6Iz+D0fc4nM22b99O5f51ReOo5fFXuJZs6CqIe27NabZ0xsdKjYVe8ot2ZvolikKZd+wHKNieMz5dasweVSTGpPgHnR/8VuzV6Z5hneuVcJ/17ywS/08j3ziAVF3ojeVRTT79N5KVbnnck4oDvkejHhhDDdhj3KM03ntu1SgZQmDCYNasDhpyMMRglSD5Tw2yL91ow8tgENFnUpCxvBUPiVPQ/8xJlgKwl7wbBPDWTUKw0g4R5FQo+1HWmmWf/pb1LLmRe/ZXb1TYK3G3/4vgyl0WB5rBi0JPQtud6adaSiGi16yptl8oo3GLKhOMqleVcdCBm1zCc2rQVdVYfIUDtqPrhfJNDOQH4kfkxNdN0JHsE5ePZemIjGl95rZvk2zj5VuLZ1hzSc+9T6yLrYfPCj9B+F3rJm08MyxDXf6ztULgH+eJRqGou2z9rJwDOzcwxBP49/Q==;5:eDWUFGPIafXlwWhxl4gmNHFL6HQum/ep2UaJjocibR+FO0fzGC1wJR1rKfjLjArUFJKGObD9FNgnn4SAPBo32Q3MPZCA2NR/0RHb70bTx3M37SSzcSBB1VRuY1kyYh6QNCWQ8kn2/7v9wCikfmTrlzBEhDZOO+QNllfHu8mrwqQ=;7:4lNQoxL+ce4Q2fNeQztSG6Fj8A5tScXgD3YLe1ba/IsCVMlQE5RKeoF7PcDuh1NUyoW/cs3j7Xkj6pWx7kfdxy/hnjTi4M71/7jglyOjy1Zkkdo74ccP+4BkqzwR7t04IFw94a9E+l8s3A+7HG96DqYPpdQBTuWBjW6YuR7M723i+rnDGzkoKwoqq7uiC8bityqDbjYCmDHNhftccNgBgi+fxIyEQHFRwvRjkkPEEQBcg7wja92vyBZKo9a2XG1S
-x-ms-office365-filtering-correlation-id: 8076b8e1-2b2c-45d2-a234-08d62e0ad76d
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:DM2PR11MB0076;
-x-ms-traffictypediagnostic: DM2PR11MB0076:
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Adham.Abozaeid@microchip.com; 
-x-microsoft-antispam-prvs: <DM2PR11MB007610382F9C3DD7975AB2048DE70@DM2PR11MB0076.namprd11.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(93006095)(93001095)(10201501046)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991055);SRVR:DM2PR11MB0076;BCL:0;PCL:0;RULEID:;SRVR:DM2PR11MB0076;
-x-forefront-prvs: 08200063E9
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(376002)(346002)(136003)(366004)(396003)(199004)(189003)(52314003)(81156014)(71190400001)(476003)(86362001)(105586002)(106356001)(64126003)(54906003)(2906002)(14454004)(36756003)(6486002)(229853002)(97736004)(6436002)(14444005)(256004)(52116002)(102836004)(76176011)(87266011)(99286004)(26005)(186003)(65816011)(58126008)(71200400001)(486006)(80316001)(446003)(11346002)(2616005)(6512007)(7736002)(305945005)(33656002)(59896002)(93886005)(316002)(6246003)(53936002)(110136005)(2900100001)(5250100002)(107886003)(25786009)(4326008)(2501003)(478600001)(8936002)(6116002)(66066001)(68736007)(65956001)(65806001)(3846002)(53546011)(8676002)(5660300001)(6506007)(81166006)(72206003)(386003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM2PR11MB0076;H:DM2PR11MB0255.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: inH5C0vvi/JzruZ9kVEsZ/6DNAnxqCH6QQjXBYiKLEm+H4q3/pgnfIt9sKH8KxCO8ISZdslDjXmTMRbYMEvMurYxh/OSTlzEVbn7cnfXXF+TqiGZrq/TNAkidrc0PV6StILfgaEH0ea0qKwJObEg34Cg8vs+5VsR8cDkjx0Hn1FwLAI2iPvK4AxFnIDUubiK7DZoIMCEZRS3m7O61n4pXAEnWrbxH7Kfk2GWJPUW2q0fkU0desRsqkO2UkB+ghTZCQ+euYjVGzrUaQhufsHBvQFKam/FLYQW+fDAGeWd8gv+Wj7ungr3EH3TnparNFW3tZBDPQVncR5iPVchDXoYNbbWP+qHbvfoED/sWDISI+8=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1FBE5A70A0DB4144B57C01B98C84503A@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8076b8e1-2b2c-45d2-a234-08d62e0ad76d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Oct 2018 17:15:42.7768
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM2PR11MB0076
-X-OriginatorOrg: microchip.com
+   d="scan'208";a="77459756"
+Received: from jprestwo.jf.intel.com ([10.54.74.38])
+  by fmsmga008.fm.intel.com with ESMTP; 09 Oct 2018 10:44:46 -0700
+From:   James Prestwood <james.prestwood@linux.intel.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     James Prestwood <james.prestwood@linux.intel.com>
+Subject: [PATCH] mac80211_hwsim: allow setting custom features/iftypes
+Date:   Tue,  9 Oct 2018 10:48:29 -0700
+Message-Id: <20181009174829.15163-1-james.prestwood@linux.intel.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-DQoNCk9uIDEwLzA5LzIwMTggMTI6NTUgQU0sIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+IE9uIFR1
-ZSwgMjAxOC0xMC0wOSBhdCAwNDoyMyArMDAwMCwgQWRoYW0uQWJvemFlaWRAbWljcm9jaGlwLmNv
-bSB3cm90ZToNCj4+DQo+Pj4gSSBkb24ndCBrbm93IHdoYXQgeW91IG5lZWQgdGhlIHNoYWRvdyBz
-dHVmZiBmb3IsIGJ1dCB5b3Ugc2hvdWxkIHJlbW92ZQ0KPj4+IGl0IGFueXdheSwgYW5kIHVzZSB0
-aGUgY2ZnODAyMTEgZnVuY3Rpb25hbGl0eSBpbnN0ZWFkLiBJZiBub3QNCj4+PiBzdWZmaWNpZW50
-LCBwcm9wb3NlIHBhdGNoZXMgdG8gaW1wcm92ZSBpdD8NCj4+DQo+PiBUaGUgcG9pbnQgYmVoaW5k
-IHVzaW5nIGEgc2hhZG93IGJ1ZmZlciB3YXMgdG8ga2VlcCB0aGUgc2NhbiByZXN1bHRzDQo+PiBj
-b25zaXN0ZW50IGJldHdlZW4gY29uc2VjdXRpdmUgc2NhbnMsIGFuZCBzbW9vdGggb3V0IHRoZSBj
-YXNlcyB3aGVyZQ0KPj4gYW4gQVAgaXNuJ3QgZm91bmQgbW9tZW50YXJpbHkgZHVyaW5nIHNjYW5u
-aW5nLg0KPj4gSW4gdGhpcyBpbXBsZW1lbnRhdGlvbiwgQVBzIGZvdW5kIGR1cmluZyBzY2Fubmlu
-ZyBhcmUgYWRkZWQgdG8gdGhlDQo+PiBzaGFkb3cgbGlzdCwgYW5kIHJlbW92ZWQgaWYgbm90IGZv
-dW5kIGFnYWluIGZvciBhIHBlcmlvZCBvZiB0aW1lLg0KPj4NCj4+IEknbSBub3QgbXVjaCBpbiBm
-YXZvdXIgb2YgdGhpcyBpbXBsZW1lbnRhdGlvbiBuZWl0aGVyIHNpbmNlIGl0DQo+PiBjb21wbGlj
-YXRlcyB0aGUgZHJpdmVyJ3MgbG9naWMsIGJ1dCBpdCB3YXMgc2VydmluZyB0aGUgcHVycG9zZS4N
-Cj4gDQo+IFlvdSByZWFsbHkgc2hvdWxkIHJlbW92ZSBpdCAtIGNmZzgwMjExICphbmQqIHdwYV9z
-IGFscmVhZHkgZG8gdGhpcyBpZg0KPiByZXF1aXJlZC4NCj4gDQo+IGpvaGFubmVzDQo+IA0KDQpU
-aGFua3MgSm9oYW5uZXMgZm9yIHRoZSB0aXAuIEkgZGlkIHNvbWUgcmVzZWFyY2gsIGFuZCBJIGJl
-bGlldmUgeW91IGFyZQ0KcmVmZXJyaW5nIHRvIHVzaW5nIGJzc19leHBpcmVfYWdlIGFuZCBic3Nf
-ZXhwaXJlX2NvdW50Lg0KV2UnbGwgZ28gYWhlYWQgYW5kIHJlbW92ZSB0aGF0Lg0KDQpUaGFua3Ms
-DQpBZGhhbQ0K
+The current driver hard codes various features, ext features and supported
+interface types when a new radio is created. This patch adds several new
+hwsim attributes so user space can specify specific features the radio should
+have:
+
+- HWSIM_ATTR_FEATURE_SUPPORT
+	Bit field of nl80211_feature_flags flags
+- HWSIM_ATTR_EXT_FEATURE_SUPPORT
+	Variable length bit field where bits map to nl80211_ext_feature_index
+	values.
+- HWSIM_ATTR_IFTYPE_SUPPORT
+	Nested attribute of flags containing all supported interface types.
+	Each flag attribute sets support for an interface type.
+
+Each attribute data format matches a corresponding NL80211 attribute:
+
+HWSIM_ATTR_FEATURE_SUPPORT --> NL80211_ATTR_FEATURE_FLAGS
+HWSIM_ATTR_EXT_FEATURE_SUPPORT --> NL80211_ATTR_EXT_FEATURES
+HWSIM_ATTR_IFTYPE_SUPPORT --> NL80211_ATTR_SUPPORTED_IFTYPES
+---
+ drivers/net/wireless/mac80211_hwsim.c | 95 +++++++++++++++++++++++----
+ drivers/net/wireless/mac80211_hwsim.h | 10 +++
+ 2 files changed, 91 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 18e819d964f1..727e61cf154c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -641,8 +641,30 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
+ 	[HWSIM_ATTR_NO_VIF] = { .type = NLA_FLAG },
+ 	[HWSIM_ATTR_FREQ] = { .type = NLA_U32 },
+ 	[HWSIM_ATTR_PERM_ADDR] = { .type = NLA_UNSPEC, .len = ETH_ALEN },
++	[HWSIM_ATTR_FEATURE_SUPPORT] = { .type = NLA_U32 },
++	[HWSIM_ATTR_EXT_FEATURE_SUPPORT] = { .type = NLA_BINARY },
++	[HWSIM_ATTR_IFTYPE_SUPPORT] = { .type = NLA_NESTED },
+ };
+ 
++/* policy for iftype support flags */
++static const struct nla_policy
++hwsim_iftype_support_policy[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_UNSPECIFIED] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_ADHOC] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_STATION] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_AP] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_AP_VLAN] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_WDS] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_MONITOR] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_MESH_POINT] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_P2P_CLIENT] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_P2P_GO] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_P2P_DEVICE] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_OCB] = { .type = NLA_FLAG },
++	[NL80211_IFTYPE_NAN] = { .type = NLA_FLAG },
++};
++
++
+ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 				    struct sk_buff *skb,
+ 				    struct ieee80211_channel *chan);
+@@ -2413,6 +2435,9 @@ struct hwsim_new_radio_params {
+ 	const char *hwname;
+ 	bool no_vif;
+ 	const u8 *perm_addr;
++	u32 features;
++	u8 ext_features[DIV_ROUND_UP(NUM_NL80211_EXT_FEATURES, 8)];
++	u32 iftypes;
+ };
+ 
+ static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
+@@ -2631,12 +2656,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	hw->queues = 5;
+ 	hw->offchannel_tx_hw_queue = 4;
+-	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-				     BIT(NL80211_IFTYPE_AP) |
+-				     BIT(NL80211_IFTYPE_P2P_CLIENT) |
+-				     BIT(NL80211_IFTYPE_P2P_GO) |
+-				     BIT(NL80211_IFTYPE_ADHOC) |
+-				     BIT(NL80211_IFTYPE_MESH_POINT);
++
++	hw->wiphy->interface_modes = param->iftypes;
+ 
+ 	if (param->p2p_device)
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_DEVICE);
+@@ -2658,12 +2679,10 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+ 			    WIPHY_FLAG_AP_UAPSD |
+ 			    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+-	hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR |
+-			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
+-			       NL80211_FEATURE_STATIC_SMPS |
+-			       NL80211_FEATURE_DYNAMIC_SMPS |
+-			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+-	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
++
++	hw->wiphy->features |= param->features;
++	memcpy(hw->wiphy->ext_features, param->ext_features,
++				DIV_ROUND_UP(NUM_NL80211_EXT_FEATURES, 8));
+ 
+ 	/* ask mac80211 to reserve space for magic */
+ 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
+@@ -2767,8 +2786,6 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	if (param->no_vif)
+ 		ieee80211_hw_set(hw, NO_AUTO_VIF);
+ 
+-	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+-
+ 	err = ieee80211_register_hw(hw);
+ 	if (err < 0) {
+ 		pr_debug("mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
+@@ -3244,6 +3261,56 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 		param.perm_addr = nla_data(info->attrs[HWSIM_ATTR_PERM_ADDR]);
+ 	}
+ 
++	if (info->attrs[HWSIM_ATTR_FEATURE_SUPPORT])
++		param.features = nla_get_u32(
++				info->attrs[HWSIM_ATTR_FEATURE_SUPPORT]);
++	else
++		param.features = NL80211_FEATURE_ACTIVE_MONITOR |
++				NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
++				NL80211_FEATURE_STATIC_SMPS |
++				NL80211_FEATURE_DYNAMIC_SMPS |
++				NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
++
++	if (info->attrs[HWSIM_ATTR_EXT_FEATURE_SUPPORT]) {
++		if (nla_len(info->attrs[HWSIM_ATTR_EXT_FEATURE_SUPPORT]) !=
++				DIV_ROUND_UP(NUM_NL80211_EXT_FEATURES, 8))
++			return -EINVAL;
++
++		memcpy(param.ext_features,
++			nla_data(info->attrs[HWSIM_ATTR_EXT_FEATURE_SUPPORT]),
++			DIV_ROUND_UP(NUM_NL80211_EXT_FEATURES, 8));
++	} else {
++		param.ext_features[NL80211_EXT_FEATURE_VHT_IBSS / 8] |=
++				BIT(NL80211_EXT_FEATURE_VHT_IBSS % 8);
++		param.ext_features[NL80211_EXT_FEATURE_CQM_RSSI_LIST / 8] |=
++				BIT(NL80211_EXT_FEATURE_CQM_RSSI_LIST % 8);
++	}
++
++	if (info->attrs[HWSIM_ATTR_IFTYPE_SUPPORT]) {
++		int i;
++		struct nlattr *types[NUM_NL80211_IFTYPES];
++		int err = nla_parse_nested(types,
++					NUM_NL80211_IFTYPES - 1,
++					info->attrs[HWSIM_ATTR_IFTYPE_SUPPORT],
++					hwsim_iftype_support_policy,
++					info->extack);
++		if (err) {
++			kfree(hwname);
++			return err;
++		}
++
++		for (i = 0; i < NUM_NL80211_IFTYPES; i++) {
++			if (nla_get_flag(types[i]))
++				param.iftypes |= BIT(i);
++		}
++	} else
++		param.iftypes = BIT(NL80211_IFTYPE_STATION) |
++				BIT(NL80211_IFTYPE_AP) |
++				BIT(NL80211_IFTYPE_P2P_CLIENT) |
++				BIT(NL80211_IFTYPE_P2P_GO) |
++				BIT(NL80211_IFTYPE_ADHOC) |
++				BIT(NL80211_IFTYPE_MESH_POINT);
++
+ 	ret = mac80211_hwsim_new_radio(info, &param);
+ 	kfree(hwname);
+ 	return ret;
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 0fe3199f8c72..aea242eb4746 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -132,6 +132,13 @@ enum {
+  * @HWSIM_ATTR_TX_INFO_FLAGS: additional flags for corresponding
+  *	rates of %HWSIM_ATTR_TX_INFO
+  * @HWSIM_ATTR_PERM_ADDR: permanent mac address of new radio
++ * @HWSIM_ATTR_FEATURE_SUPPORT: bit mask of supported features (u32 attribute)
++ * 	Matches data format of %NL80211_ATTR_FEATURE_FLAGS
++ * @HWSIM_ATTR_EXT_FEATURE_SUPPORT: variable length bit field. Matches data
++ * 	format of %NL80211_ATTR_EXT_FEATURES
++ * @HWSIM_ATTR_IFTYPE_SUPPORT: nested attribute containing flag attributes.
++ * 	Each flag either sets the support for each iftype. Matches format of
++ * 	%NL80211_ATTR_SUPPORTED_IFTYPES
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -160,6 +167,9 @@ enum {
+ 	HWSIM_ATTR_PAD,
+ 	HWSIM_ATTR_TX_INFO_FLAGS,
+ 	HWSIM_ATTR_PERM_ADDR,
++	HWSIM_ATTR_FEATURE_SUPPORT,
++	HWSIM_ATTR_EXT_FEATURE_SUPPORT,
++	HWSIM_ATTR_IFTYPE_SUPPORT,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+-- 
+2.17.1
+
