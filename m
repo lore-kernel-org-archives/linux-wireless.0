@@ -2,39 +2,38 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E2BC64EB8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9989C64EAD
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28762214C4
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AC18214C4
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="WiIpL7oh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 28762214C4
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="vUJ1nV9Q"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6AC18214C4
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726989AbeJITtp (ORCPT
+        id S1727005AbeJITtq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 15:49:45 -0400
-Received: from mail.toke.dk ([52.28.52.200]:45889 "EHLO mail.toke.dk"
+        Tue, 9 Oct 2018 15:49:46 -0400
+Received: from mail.toke.dk ([52.28.52.200]:48769 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726445AbeJITto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 15:49:44 -0400
-Subject: [PATCH RFC v5 0/4] Move TXQ scheduling and airtime fairness into
- mac80211
+        id S1726491AbeJITtq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 15:49:46 -0400
+Subject: [PATCH RFC v5 1/4] mac80211: Add TXQ scheduling API
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1539088379; bh=PYhap6e+LgD62xbHKx4Nu3IyDknvyOQdZS7G1S+BixM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=WiIpL7ohG5GHLHjxtU+jxp4t+gGwh+FzOYFm2nLkQuINZYER5RFWKQFEwtyBVoFJ1
-         M9wHM+4NTSvLv8ClKQstZmuNun8mSuE7KQ2RbyPi0KphaZlt+XfS9wzT353o0oxcFf
-         Z90Uh8Ptzix3PwlmqId1dIyBsxQ3hN6m+J1PsTB5ApfhvC4TpkE5zQ65teuHth/Wn7
-         4EY2VQSdkvWPyXoATW1oH3mlrItvhFuRqnBz3Erdd2EcWKZj9c3vjk6UW9BDF2acTa
-         DLZdcsrn0+LnlCEoAki31lS8RvAb3dQgGgMyq4Fyocw020QQgcmf+GcTVVUhMgbGrV
-         i001nCOIT5QSA==
+        t=1539088379; bh=t0Y4vQmFwizJGipOXa0T3QxYPyvzkiNLjYRLrCuRT4U=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=vUJ1nV9QfQPPyxqVK/gbELGvXA6ydA/S2Lzc1GHTOFsCm0TYj5Dul0C6jfO3ayhMi
+         Wl4EJ+vH3OsmlSgnvCtwEZQcu30APPHqXmaguVt38s5zstVAI1k2yHTztoa4ulWoQv
+         AWJOO9spqxhj+mV1UXLRJrC/+QCWSEoHiLWCuQ4nfdoPth2sXWMgkXjQSVpvDQvcxi
+         VNCNdoSf7eDbP2/fL6QsarJVE5bN3FTuzALnx5ckWfH1HgWplXy7NN4SxEczMWPdM3
+         x1QgdywpNQhJBrsqRIyvGXwwDXG3p5KnnvgIvzehsoUdrtfarlohwxxCBVXsFekcj6
+         FPBdag4N4+ytw==
 From:   Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 To:     linux-wireless@vger.kernel.org
 Cc:     make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
@@ -42,7 +41,9 @@ Cc:     make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
         Kan Yan <kyan@google.com>
 Date:   Tue, 09 Oct 2018 14:32:58 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
+Message-ID: <153908837886.9471.518436019121334882.stgit@alrua-kau>
+In-Reply-To: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
+References: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -51,64 +52,305 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Another updated version, addressing a few issues with the previous
-version.
+This adds an API to mac80211 to handle scheduling of TXQs. The interface
+between driver and mac80211 for TXQ handling is changed by adding two new
+functions: ieee80211_next_txq(), which will return the next TXQ to schedule
+in the current round-robin rotation, and ieee80211_return_txq(), which the
+driver uses to indicate that it has finished scheduling a TXQ (which will
+then be put back in the scheduling rotation if it isn't empty).
 
-- Moved the airtime deficit queue wakeup code to its own tasklet to
-  lower overhead.
+The driver must call ieee80211_txq_schedule_start() at the start of each
+scheduling session, and ieee80211_txq_schedule_end() at the end. The API
+then guarantees that the same TXQ is not returned twice in the same
+session (so a driver can loop on ieee80211_next_txq() without worrying
+about breaking the loop.
 
-- Change the tasklet to just wake a single queue on each invocation,
-  relying to TX completion to continue transmissions.
+Usage of the new API is optional, so drivers can be ported one at a time.
+In this patch, the actual scheduling performed by mac80211 is simple
+round-robin, but a subsequent commit adds airtime fairness awareness to the
+scheduler.
 
-- Don't try to re-schedule TXQs of stations that are being removed.
-
-- A few cleanups and fixes.
-
-The one thing I didn't change was to add another callback that the
-driver can use to trigger the tasklet. Since it's now in its own
-tasklet, hopefully the overhead is low enough that we can just call it
-on every end_schedule(); and I'd rather not complicate the driver API
-further.
-
-Thanks to Rajkumar for testing the previous version. I thought I'd have
-time to test this version myself and was planning to send as a non-RFC
-PATCH after that, but that time didn't materialise. So I thought it was
-better to send another RFC version instead of everyone having to suffer
-from my tardiness :)
-
--Toke
-
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 ---
+ include/net/mac80211.h     |   61 +++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/agg-tx.c      |    2 +
+ net/mac80211/driver-ops.h  |    9 ++++++
+ net/mac80211/ieee80211_i.h |    9 ++++++
+ net/mac80211/main.c        |    5 ++++
+ net/mac80211/sta_info.c    |    2 +
+ net/mac80211/tx.c          |   59 ++++++++++++++++++++++++++++++++++++++++++-
+ 7 files changed, 140 insertions(+), 7 deletions(-)
 
-Toke Høiland-Jørgensen (4):
-      mac80211: Add TXQ scheduling API
-      cfg80211: Add airtime statistics and settings
-      mac80211: Add airtime accounting and scheduling to TXQs
-      ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
-
-
- drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
- drivers/net/wireless/ath/ath9k/debug.c     |    3 
- drivers/net/wireless/ath/ath9k/debug.h     |    8 -
- drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
- drivers/net/wireless/ath/ath9k/init.c      |    3 
- drivers/net/wireless/ath/ath9k/recv.c      |    9 -
- drivers/net/wireless/ath/ath9k/xmit.c      |  244 ++++++++--------------------
- include/net/cfg80211.h                     |   10 +
- include/net/mac80211.h                     |  113 +++++++++++++
- include/uapi/linux/nl80211.h               |   15 ++
- net/mac80211/agg-tx.c                      |    2 
- net/mac80211/cfg.c                         |    3 
- net/mac80211/debugfs.c                     |    3 
- net/mac80211/debugfs_sta.c                 |   51 ++++++
- net/mac80211/driver-ops.h                  |    9 +
- net/mac80211/ieee80211_i.h                 |   14 ++
- net/mac80211/main.c                        |   11 +
- net/mac80211/sta_info.c                    |   54 ++++++
- net/mac80211/sta_info.h                    |   13 +
- net/mac80211/status.c                      |    6 +
- net/mac80211/tx.c                          |  137 ++++++++++++++++
- net/mac80211/util.c                        |   75 +++++++++
- net/wireless/nl80211.c                     |   29 +++
- 23 files changed, 603 insertions(+), 277 deletions(-)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c4fadbafbf21..469e88a32f94 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -108,9 +108,15 @@
+  * The driver is expected to initialize its private per-queue data for stations
+  * and interfaces in the .add_interface and .sta_add ops.
+  *
+- * The driver can't access the queue directly. To dequeue a frame, it calls
+- * ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a queue, it
+- * calls the .wake_tx_queue driver op.
++ * The driver can't access the queue directly. To dequeue a frame from a
++ * txq, it calls ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a
++ * queue, it calls the .wake_tx_queue driver op.
++ *
++ * Drivers can optionally delegate responsibility for scheduling queues to
++ * mac80211, to take advantage of airtime fairness accounting. In this case, to
++ * obtain the next queue to pull frames from, the driver calls
++ * ieee80211_next_txq(). The driver is then expected to return the txq using
++ * ieee80211_return_txq().
+  *
+  * For AP powersave TIM handling, the driver only needs to indicate if it has
+  * buffered packets in the driver specific data structures by calling
+@@ -6045,13 +6051,60 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
+  * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
+- * @txq: pointer obtained from station or virtual interface
++ * @txq: pointer obtained from station or virtual interface, or from
++ *       ieee80211_next_txq()
+  *
+  * Returns the skb if successful, %NULL if no frame was available.
+  */
+ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 				     struct ieee80211_txq *txq);
+ 
++/**
++ * ieee80211_next_txq - get next tx queue to pull packets from
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @ac: AC number to return packets from.
++ *
++ * Should only be called between calls to ieee80211_txq_schedule_start()
++ * and ieee80211_txq_schedule_end().
++ * Returns the next txq if successful, %NULL if no queue is eligible. If a txq
++ * is returned, it should be returned with ieee80211_return_txq() after the
++ * driver has finished scheduling it.
++ */
++struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac);
++
++/**
++ * ieee80211_return_txq - return a TXQ previously acquired by ieee80211_next_txq()
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @txq: pointer obtained from station or virtual interface
++ *
++ * Should only be called between calls to ieee80211_txq_schedule_start()
++ * and ieee80211_txq_schedule_end().
++ */
++void ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
++
++/**
++ * ieee80211_txq_schedule_start - acquire locks for safe scheduling of an AC
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @ac: AC number to acquire locks for
++ *
++ * Acquire locks needed to schedule TXQs from the given AC. Should be called
++ * before ieee80211_next_txq() or ieee80211_return_txq().
++ */
++void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac);
++
++/**
++ * ieee80211_txq_schedule_end - release locks for safe scheduling of an AC
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @ac: AC number to acquire locks for
++ *
++ * Release locks previously acquired by ieee80211_txq_schedule_end().
++ */
++void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac);
++
+ /**
+  * ieee80211_txq_get_depth - get pending frame/byte count of given txq
+  *
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 69e831bc317b..e94b1a0407af 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -229,7 +229,7 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
+ 	clear_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+ 	local_bh_disable();
+ 	rcu_read_lock();
+-	drv_wake_tx_queue(sta->sdata->local, txqi);
++	schedule_and_wake_txq(sta->sdata->local, txqi);
+ 	rcu_read_unlock();
+ 	local_bh_enable();
+ }
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e42c641b6190..0d47dadee747 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1173,6 +1173,15 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
+ 
++static inline void schedule_and_wake_txq(struct ieee80211_local *local,
++					 struct txq_info *txqi)
++{
++	spin_lock_bh(&local->active_txq_lock[txqi->txq.ac]);
++	ieee80211_return_txq(&local->hw, &txqi->txq);
++	spin_unlock_bh(&local->active_txq_lock[txqi->txq.ac]);
++	drv_wake_tx_queue(local, txqi);
++}
++
+ static inline int drv_can_aggregate_in_amsdu(struct ieee80211_local *local,
+ 					     struct sk_buff *head,
+ 					     struct sk_buff *skb)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f40a2167935f..976531717902 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -829,6 +829,8 @@ enum txq_info_flags {
+  *	a fq_flow which is already owned by a different tin
+  * @def_cvars: codel vars for @def_flow
+  * @frags: used to keep fragments created after dequeue
++ * @schedule_order: used with ieee80211_local->active_txqs
++ * @schedule_round: counter to prevent infinite loops on TXQ scheduling
+  */
+ struct txq_info {
+ 	struct fq_tin tin;
+@@ -836,6 +838,8 @@ struct txq_info {
+ 	struct codel_vars def_cvars;
+ 	struct codel_stats cstats;
+ 	struct sk_buff_head frags;
++	struct list_head schedule_order;
++	u16 schedule_round;
+ 	unsigned long flags;
+ 
+ 	/* keep last! */
+@@ -1127,6 +1131,11 @@ struct ieee80211_local {
+ 	struct codel_vars *cvars;
+ 	struct codel_params cparams;
+ 
++	/* protects active_txqs and txqi->schedule_order */
++	spinlock_t active_txq_lock[IEEE80211_NUM_ACS];
++	struct list_head active_txqs[IEEE80211_NUM_ACS];
++	u16 schedule_round[IEEE80211_NUM_ACS];
++
+ 	const struct ieee80211_ops *ops;
+ 
+ 	/*
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 77381017bac7..d9315de90b48 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -663,6 +663,11 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	spin_lock_init(&local->rx_path_lock);
+ 	spin_lock_init(&local->queue_stop_reason_lock);
+ 
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		INIT_LIST_HEAD(&local->active_txqs[i]);
++		spin_lock_init(&local->active_txq_lock[i]);
++	}
++
+ 	INIT_LIST_HEAD(&local->chanctx_list);
+ 	mutex_init(&local->chanctx_mtx);
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index fb8c2252ac0e..c2f5cb7df54f 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1249,7 +1249,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 		if (!sta->sta.txq[i] || !txq_has_queue(sta->sta.txq[i]))
+ 			continue;
+ 
+-		drv_wake_tx_queue(local, to_txq_info(sta->sta.txq[i]));
++		schedule_and_wake_txq(local, to_txq_info(sta->sta.txq[i]));
+ 	}
+ 
+ 	skb_queue_head_init(&pending);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c42bfa1dcd2c..1e071121cb44 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1445,6 +1445,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 	codel_vars_init(&txqi->def_cvars);
+ 	codel_stats_init(&txqi->cstats);
+ 	__skb_queue_head_init(&txqi->frags);
++	INIT_LIST_HEAD(&txqi->schedule_order);
+ 
+ 	txqi->txq.vif = &sdata->vif;
+ 
+@@ -1485,6 +1486,9 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 
+ 	fq_tin_reset(fq, tin, fq_skb_free_func);
+ 	ieee80211_purge_tx_queue(&local->hw, &txqi->frags);
++	spin_lock_bh(&local->active_txq_lock[txqi->txq.ac]);
++	list_del_init(&txqi->schedule_order);
++	spin_unlock_bh(&local->active_txq_lock[txqi->txq.ac]);
+ }
+ 
+ void ieee80211_txq_set_params(struct ieee80211_local *local)
+@@ -1601,7 +1605,7 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
+ 	ieee80211_txq_enqueue(local, txqi, skb);
+ 	spin_unlock_bh(&fq->lock);
+ 
+-	drv_wake_tx_queue(local, txqi);
++	schedule_and_wake_txq(local, txqi);
+ 
+ 	return true;
+ }
+@@ -3623,6 +3627,59 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_tx_dequeue);
+ 
++struct ieee80211_txq *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct txq_info *txqi = NULL;
++
++	lockdep_assert_held(&local->active_txq_lock[ac]);
++
++	txqi = list_first_entry_or_null(&local->active_txqs[ac],
++					struct txq_info,
++					schedule_order);
++
++	if (!txqi || txqi->schedule_round == local->schedule_round[ac])
++		return NULL;
++
++	list_del_init(&txqi->schedule_order);
++	txqi->schedule_round = local->schedule_round[ac];
++	return &txqi->txq;
++}
++EXPORT_SYMBOL(ieee80211_next_txq);
++
++void ieee80211_return_txq(struct ieee80211_hw *hw,
++			    struct ieee80211_txq *txq)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct txq_info *txqi = to_txq_info(txq);
++
++	lockdep_assert_held(&local->active_txq_lock[txq->ac]);
++
++	if (list_empty(&txqi->schedule_order) &&
++	    (!skb_queue_empty(&txqi->frags) || txqi->tin.backlog_packets))
++		list_add_tail(&txqi->schedule_order,
++			      &local->active_txqs[txq->ac]);
++
++}
++EXPORT_SYMBOL(ieee80211_return_txq);
++
++void ieee80211_txq_schedule_start(struct ieee80211_hw *hw, u8 ac)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	spin_lock_bh(&local->active_txq_lock[ac]);
++	local->schedule_round[ac]++;
++}
++EXPORT_SYMBOL(ieee80211_txq_schedule_start);
++
++void ieee80211_txq_schedule_end(struct ieee80211_hw *hw, u8 ac)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	spin_unlock_bh(&local->active_txq_lock[ac]);
++}
++EXPORT_SYMBOL(ieee80211_txq_schedule_end);
++
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags)
 
