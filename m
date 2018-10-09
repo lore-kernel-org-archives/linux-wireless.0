@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0EDC64EAD
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E181CC64EAD
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFFE62087D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EFFE62087D
+	by mail.kernel.org (Postfix) with ESMTP id AB9202087D
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AB9202087D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726485AbeJIUEr (ORCPT
+        id S1726496AbeJIUEt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 16:04:47 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51758 "EHLO mx1.redhat.com"
+        Tue, 9 Oct 2018 16:04:49 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:58058 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726415AbeJIUEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 16:04:47 -0400
+        id S1726415AbeJIUEt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 16:04:49 -0400
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 49FD730014B8;
-        Tue,  9 Oct 2018 12:47:59 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4D952C07C56C;
+        Tue,  9 Oct 2018 12:48:01 +0000 (UTC)
 Received: from shalem.localdomain.com (unknown [10.36.118.57])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 434D1106A78E;
-        Tue,  9 Oct 2018 12:47:56 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8860310027CE;
+        Tue,  9 Oct 2018 12:47:59 +0000 (UTC)
 From:   Hans de Goede <hdegoede@redhat.com>
 To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -39,116 +39,142 @@ To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Wright Feng <wright.feng@cypress.com>
 Cc:     Hans de Goede <hdegoede@redhat.com>,
         linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH 1/6] brcmfmac: Remove firmware-loading code duplication
-Date:   Tue,  9 Oct 2018 14:47:50 +0200
-Message-Id: <20181009124755.25402-1-hdegoede@redhat.com>
+Subject: [PATCH 2/6] brcmfmac: Remove recursion from firmware load error handling
+Date:   Tue,  9 Oct 2018 14:47:51 +0200
+Message-Id: <20181009124755.25402-2-hdegoede@redhat.com>
+In-Reply-To: <20181009124755.25402-1-hdegoede@redhat.com>
+References: <20181009124755.25402-1-hdegoede@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 09 Oct 2018 12:47:59 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 09 Oct 2018 12:48:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-brcmf_fw_request_next_item and brcmf_fw_request_done both have identical
-code to complete the fw-request depending on the item-type.
+Before this commit brcmf_fw_request_done would call
+brcmf_fw_request_next_item to load the next item, which on an error would
+call brcmf_fw_request_done, which if the error is recoverable (*) will
+then continue calling brcmf_fw_request_next_item for the next item again
+which on an error will call brcmf_fw_request_done again...
 
-This commit adds a new brcmf_fw_complete_request helper removing this code
-duplication.
+This does not blow up because we only have a limited number of items so
+we never recurse too deep. But the recursion is still quite ugly and
+frankly is giving me a headache, so lets fix this.
+
+This commit fixes this by removing brcmf_fw_request_next_item and by
+making brcmf_fw_get_firmwares and brcmf_fw_request_done directly call
+firmware_request_nowait resp. firmware_request themselves.
+
+*) brcmf_fw_request_nvram_done fallback path succeeds or
+   BRCMF_FW_REQF_OPTIONAL is set
 
 Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 62 +++++++++----------
- 1 file changed, 31 insertions(+), 31 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/firmware.c    | 65 ++++++-------------
+ 1 file changed, 19 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 9095b830ae4d..784c84f0e9e7 100644
+index 784c84f0e9e7..08aaf99fee34 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -504,6 +504,34 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	return -ENOENT;
+@@ -532,33 +532,6 @@ static int brcmf_fw_complete_request(const struct firmware *fw,
+ 	return (cur->flags & BRCMF_FW_REQF_OPTIONAL) ? 0 : ret;
  }
  
-+static int brcmf_fw_complete_request(const struct firmware *fw,
-+				     struct brcmf_fw *fwctx)
-+{
-+	struct brcmf_fw_item *cur = &fwctx->req->items[fwctx->curpos];
-+	int ret = 0;
-+
-+	brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path, fw ? "" : "not ");
-+
-+	switch (cur->type) {
-+	case BRCMF_FW_TYPE_NVRAM:
-+		ret = brcmf_fw_request_nvram_done(fw, fwctx);
-+		break;
-+	case BRCMF_FW_TYPE_BINARY:
-+		if (fw)
-+			cur->binary = fw;
-+		else
-+			ret = -ENOENT;
-+		break;
-+	default:
-+		/* something fishy here so bail out early */
-+		brcmf_err("unknown fw type: %d\n", cur->type);
-+		release_firmware(fw);
-+		ret = -EINVAL;
-+	}
-+
-+	return (cur->flags & BRCMF_FW_REQF_OPTIONAL) ? 0 : ret;
-+}
-+
- static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
- {
- 	struct brcmf_fw_item *cur;
-@@ -525,15 +553,7 @@ static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
- 	if (ret < 0) {
- 		brcmf_fw_request_done(NULL, fwctx);
- 	} else if (!async && fw) {
--		brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path,
--			  fw ? "" : "not ");
--		if (cur->type == BRCMF_FW_TYPE_BINARY)
--			cur->binary = fw;
--		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
--			brcmf_fw_request_nvram_done(fw, fwctx);
--		else
--			release_firmware(fw);
+-static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
+-{
+-	struct brcmf_fw_item *cur;
+-	const struct firmware *fw = NULL;
+-	int ret;
 -
-+		brcmf_fw_complete_request(fw, fwctx);
- 		return -EAGAIN;
- 	}
- 	return 0;
-@@ -547,28 +567,8 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
- 
+-	cur = &fwctx->req->items[fwctx->curpos];
+-
+-	brcmf_dbg(TRACE, "%srequest for %s\n", async ? "async " : "",
+-		  cur->path);
+-
+-	if (async)
+-		ret = request_firmware_nowait(THIS_MODULE, true, cur->path,
+-					      fwctx->dev, GFP_KERNEL, fwctx,
+-					      brcmf_fw_request_done);
+-	else
+-		ret = request_firmware(&fw, cur->path, fwctx->dev);
+-
+-	if (ret < 0) {
+-		brcmf_fw_request_done(NULL, fwctx);
+-	} else if (!async && fw) {
+-		brcmf_fw_complete_request(fw, fwctx);
+-		return -EAGAIN;
+-	}
+-	return 0;
+-}
+-
+ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+@@ -568,26 +541,19 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
  	cur = &fwctx->req->items[fwctx->curpos];
  
--	brcmf_dbg(TRACE, "enter: firmware %s %sfound\n", cur->path,
--		  fw ? "" : "not ");
--
--	if (!fw)
--		ret = -ENOENT;
--
--	switch (cur->type) {
--	case BRCMF_FW_TYPE_NVRAM:
--		ret = brcmf_fw_request_nvram_done(fw, fwctx);
--		break;
--	case BRCMF_FW_TYPE_BINARY:
--		cur->binary = fw;
--		break;
--	default:
--		/* something fishy here so bail out early */
--		brcmf_err("unknown fw type: %d\n", cur->type);
--		release_firmware(fw);
--		ret = -EINVAL;
+ 	ret = brcmf_fw_complete_request(fw, fwctx);
+-	if (ret < 0)
 -		goto fail;
--	}
 -
--	if (ret < 0 && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
-+	ret = brcmf_fw_complete_request(fw, fwctx);
-+	if (ret < 0)
- 		goto fail;
+-	do {
+-		if (++fwctx->curpos == fwctx->req->n_items) {
+-			ret = 0;
+-			goto done;
+-		}
  
- 	do {
+-		ret = brcmf_fw_request_next_item(fwctx, false);
+-	} while (ret == -EAGAIN);
+-
+-	return;
++	while (ret == 0 && ++fwctx->curpos < fwctx->req->n_items) {
++		cur = &fwctx->req->items[fwctx->curpos];
++		request_firmware(&fw, cur->path, fwctx->dev);
++		ret = brcmf_fw_complete_request(fw, ctx);
++	}
+ 
+-fail:
+-	brcmf_dbg(TRACE, "failed err=%d: dev=%s, fw=%s\n", ret,
+-		  dev_name(fwctx->dev), cur->path);
+-	brcmf_fw_free_request(fwctx->req);
+-	fwctx->req = NULL;
+-done:
++	if (ret) {
++		brcmf_dbg(TRACE, "failed err=%d: dev=%s, fw=%s\n", ret,
++			  dev_name(fwctx->dev), cur->path);
++		brcmf_fw_free_request(fwctx->req);
++		fwctx->req = NULL;
++	}
+ 	fwctx->done(fwctx->dev, ret, fwctx->req);
+ 	kfree(fwctx);
+ }
+@@ -611,7 +577,9 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 			   void (*fw_cb)(struct device *dev, int err,
+ 					 struct brcmf_fw_request *req))
+ {
++	struct brcmf_fw_item *first = &req->items[0];
+ 	struct brcmf_fw *fwctx;
++	int ret;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+ 	if (!fw_cb)
+@@ -628,7 +596,12 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	fwctx->req = req;
+ 	fwctx->done = fw_cb;
+ 
+-	brcmf_fw_request_next_item(fwctx, true);
++	ret = request_firmware_nowait(THIS_MODULE, true, first->path,
++				      fwctx->dev, GFP_KERNEL, fwctx,
++				      brcmf_fw_request_done);
++	if (ret < 0)
++		brcmf_fw_request_done(NULL, fwctx);
++
+ 	return 0;
+ }
+ 
 -- 
 2.19.0
 
