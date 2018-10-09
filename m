@@ -2,89 +2,86 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D552C64EAD
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43625C64EB8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2E862077C
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:48:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F2E862077C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id EBC392075C
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 08:55:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kl0Rv4cE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EBC392075C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbeJIQES (ORCPT
+        id S1726103AbeJIQLR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 12:04:18 -0400
-Received: from mail-wr1-f47.google.com ([209.85.221.47]:38090 "EHLO
-        mail-wr1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726057AbeJIQES (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 12:04:18 -0400
-Received: by mail-wr1-f47.google.com with SMTP id a13-v6so870354wrt.5
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 01:48:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ZOa1UH1E/nff7u9fkSdXRw3GkKV7jZgWzbSsPo3xVyE=;
-        b=YDUNauVBePVK1G8VrieEath1J6qpWdESPCJlWSWHgrI4mfmYwc8CyKaWa11Wkcz9zw
-         0dkubJtzBiq+SIvC4vSGr84+gjqLUILNxnk282f/xdp4Ie6JznAlHPw4gW5aCNyZ2Qvs
-         m6t0Ut6ikN8UEtastCaQN/XpdJqb3RAq4bmJOiwXs9hNJu6GLApQUFO3k144kbNVsDNs
-         RdlEygxjZ4ICsh+YrR9UDYXw0tGydLQukzboIMO+LClbJLAGnJe2vWAHoeC+afdnqG0x
-         SEnCwy9b80TwiGk3HwkcSLD56qYD7dTQ47U11ehsk0LiS6F7jt9SMdPVTWfuZ0dDBhAy
-         K3ig==
-X-Gm-Message-State: ABuFfohdzme+BZGGwHcTkqhFV29eh7adve+kFPfyREnYiw3IWHlts5Dm
-        MAgcg9IhcleIIRCrcTObKBvxh7enPNw=
-X-Google-Smtp-Source: ACcGV60TSUeK8y+E0plw7y8H8prKGpJGqDH1TEddFjRfanIcouBNlKjn/2Q5oak/uMoYLHqbauoX4A==
-X-Received: by 2002:a5d:540d:: with SMTP id g13-v6mr19008368wrv.4.1539074906981;
-        Tue, 09 Oct 2018 01:48:26 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id e133-v6sm17224140wma.42.2018.10.09.01.48.26
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 09 Oct 2018 01:48:26 -0700 (PDT)
-Date:   Tue, 9 Oct 2018 10:48:21 +0200
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76x0: phy: fix restore phase in
- mt76x0_phy_recalibrate_after_assoc
-Message-ID: <20181009084820.GA16331@localhost.localdomain>
-References: <cover.1539001391.git.lorenzo.bianconi@redhat.com>
- <ff6672828b7e970124a425304ad734d58133a6ff.1539001391.git.lorenzo.bianconi@redhat.com>
- <636edb3c-a2dc-306d-8ddd-8b91ebafd4f1@nbd.name>
- <20181009073545.GA21027@redhat.com>
- <a0683f63-31d6-5cd7-b375-e45d1815e0c7@nbd.name>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a0683f63-31d6-5cd7-b375-e45d1815e0c7@nbd.name>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Tue, 9 Oct 2018 12:11:17 -0400
+Received: from nbd.name ([46.4.11.11]:55656 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725861AbeJIQLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 12:11:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=utFZ55n4FfpQ2fqunt4IlOj43oHybVG7L+55MbVC8tY=; b=kl0Rv4cEW3ERHns3QL6Jkeo0PW
+        OJHwoT8Szzddu6SRBSLkrkN3Kv89tizw9vU6rfDbgxyBJB+NPqC8MJ26TM6trn/Jbu8vncOBU8Kkv
+        NvaUNWckGui4+QSMEOIBnQKImAfwAt+t4LxNVrKN1zRQ9tqtFL0zajbfxUgyUCK4sAGo=;
+Received: by maeck.lan (Postfix, from userid 501)
+        id 1B7413EB1D7C; Tue,  9 Oct 2018 10:55:20 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     yuehaibing@huawei.com, lorenzo.bianconi@redhat.com
+Subject: [PATCH] mt76: mt76x0e: another fix for the external PA current setting
+Date:   Tue,  9 Oct 2018 10:55:20 +0200
+Message-Id: <20181009085520.61804-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> > I think is needed we do:
-> > 
-> > 	reg_val = mt76_rr(dev, 0x2124); 
-> > 	mt76_wr(dev, 0x2124, 0xffffff7e);
-> > 
-> > 	CALIBRATE
-> > 
-> > 	mt76_wr(dev, 0x2124, reg_val);
-> > 
-> > so seems we have to restore orginal value after calibration.
-> > 
-> > Referencing as MT_BBP(IBI, 9) is obviously fine.
-> Yes, that makes more sense.
-> 
-> - Felix
+- Use the register number define instead of a magic value
+- Fix inverted bit test (override needs to be applied if the bit is not set)
 
-Ack, I will send v2 with proper register name.
+Fixes: 2b2cb40bcd7d ("mt76x0: pci: add hw initialization at bootstrap")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-Regards,
-Lorenzo
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index cc8af17dc9c7..fd2dc7efeea3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -111,17 +111,10 @@ static int mt76x0e_register_device(struct mt76x02_dev *dev)
+ 		u16 val;
+ 
+ 		mt76_clear(dev, MT_COEXCFG0, BIT(0));
++
+ 		val = mt76x02_eeprom_get(dev, MT_EE_NIC_CONF_0);
+-		if (val & MT_EE_NIC_CONF_0_PA_IO_CURRENT) {
+-			u32 data;
+-
+-			/* set external PA I/O
+-			 * current to 16mA
+-			 */
+-			data = mt76_rr(dev, 0x11c);
+-			data |= 0xc03;
+-			mt76_wr(dev, 0x11c, data);
+-		}
++		if (!(val & MT_EE_NIC_CONF_0_PA_IO_CURRENT))
++			mt76_set(dev, MT_XO_CTRL7, 0xc03);
+ 	}
+ 
+ 	mt76_clear(dev, 0x110, BIT(9));
+-- 
+2.17.0
+
