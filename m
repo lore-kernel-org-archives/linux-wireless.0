@@ -2,98 +2,153 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71A5EC64EAD
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0EDC64EAD
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28EC82087D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:47:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 28EC82087D
+	by mail.kernel.org (Postfix) with ESMTP id EFFE62087D
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:48:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EFFE62087D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726451AbeJIUEh (ORCPT
+        id S1726485AbeJIUEr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 16:04:37 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51556 "EHLO mx1.redhat.com"
+        Tue, 9 Oct 2018 16:04:47 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51758 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726415AbeJIUEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 16:04:37 -0400
+        id S1726415AbeJIUEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 16:04:47 -0400
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8FD13308424A;
-        Tue,  9 Oct 2018 12:47:49 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.52])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 29A74106A78E;
-        Tue,  9 Oct 2018 12:47:49 +0000 (UTC)
-Date:   Tue, 9 Oct 2018 14:47:48 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Daniel Golle <daniel@makrotopia.org>
-Cc:     linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
-        Felix Fietkau <nbd@nbd.name>,
-        Tomislav =?utf-8?Q?Po=C5=BEega?= <pozega.tomislav@gmail.com>
-Subject: Re: [PATCH v3 2/4] rt2x00: remove confusing AGC register
-Message-ID: <20181009124747.GA31203@redhat.com>
-References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
- <1539086170-32528-2-git-send-email-sgruszka@redhat.com>
- <20181009122720.GB2458@makrotopia.org>
+        by mx1.redhat.com (Postfix) with ESMTPS id 49FD730014B8;
+        Tue,  9 Oct 2018 12:47:59 +0000 (UTC)
+Received: from shalem.localdomain.com (unknown [10.36.118.57])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 434D1106A78E;
+        Tue,  9 Oct 2018 12:47:56 +0000 (UTC)
+From:   Hans de Goede <hdegoede@redhat.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH 1/6] brcmfmac: Remove firmware-loading code duplication
+Date:   Tue,  9 Oct 2018 14:47:50 +0200
+Message-Id: <20181009124755.25402-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181009122720.GB2458@makrotopia.org>
-User-Agent: Mutt/1.8.3 (2017-05-23)
+Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 09 Oct 2018 12:47:49 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 09 Oct 2018 12:47:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi
+brcmf_fw_request_next_item and brcmf_fw_request_done both have identical
+code to complete the fw-request depending on the item-type.
 
-On Tue, Oct 09, 2018 at 02:27:22PM +0200, Daniel Golle wrote:
-> On Tue, Oct 09, 2018 at 01:56:08PM +0200,  Gruszka wrote:
-> > Register 66 was causing issues on RT6352 if set to the same value as
-> > in MTK driver. With 1c reg value device was working fine in both HT20
-> > and HT40 modes.
-> 
-> My guess is that this may change once we add proper TSSI which involes
-> parts of AGC init as well. I suggest to add a comment in the code to
-> reflect that.
+This commit adds a new brcmf_fw_complete_request helper removing this code
+duplication.
 
-I don't understand what you suggest, could you be more specific ?
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c    | 62 +++++++++----------
+ 1 file changed, 31 insertions(+), 31 deletions(-)
 
-> > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > index 1a2bf6c49b82..3a04eaef8511 100644
-> > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > @@ -3981,11 +3981,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
-> >  		rt2800_bbp_write(rt2x00dev, 196, reg);
-> >  
-> >  		/* AGC init */
-> > -		if (rt2x00_rt(rt2x00dev, RT6352))
-> > -			reg = 0x04;
-> > -		else
-> > -			reg = rf->channel <= 14 ? 0x1c : 0x24;
-> > -
-> > +		reg = rf->channel <= 14 ? 0x1c : 0x24;
-> >  		reg += 2 * rt2x00dev->lna_gain;
-> 
-> We can summerize the two lines into
-> 		reg = 0x1c + (2 * rt2x00dev->lna_gain);
-> which is also what is was before introducing support for MT7620.
-
-I think you mean
-
-reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2 * rt2x00dev->lna_gain; 
-
-to do not break 5GHz support for RT5592.  I can change that in
-separate patch, since this one in not technically wrong.
-
-Thanks
-Stanislaw
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 9095b830ae4d..784c84f0e9e7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -504,6 +504,34 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 	return -ENOENT;
+ }
+ 
++static int brcmf_fw_complete_request(const struct firmware *fw,
++				     struct brcmf_fw *fwctx)
++{
++	struct brcmf_fw_item *cur = &fwctx->req->items[fwctx->curpos];
++	int ret = 0;
++
++	brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path, fw ? "" : "not ");
++
++	switch (cur->type) {
++	case BRCMF_FW_TYPE_NVRAM:
++		ret = brcmf_fw_request_nvram_done(fw, fwctx);
++		break;
++	case BRCMF_FW_TYPE_BINARY:
++		if (fw)
++			cur->binary = fw;
++		else
++			ret = -ENOENT;
++		break;
++	default:
++		/* something fishy here so bail out early */
++		brcmf_err("unknown fw type: %d\n", cur->type);
++		release_firmware(fw);
++		ret = -EINVAL;
++	}
++
++	return (cur->flags & BRCMF_FW_REQF_OPTIONAL) ? 0 : ret;
++}
++
+ static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
+ {
+ 	struct brcmf_fw_item *cur;
+@@ -525,15 +553,7 @@ static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
+ 	if (ret < 0) {
+ 		brcmf_fw_request_done(NULL, fwctx);
+ 	} else if (!async && fw) {
+-		brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path,
+-			  fw ? "" : "not ");
+-		if (cur->type == BRCMF_FW_TYPE_BINARY)
+-			cur->binary = fw;
+-		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
+-			brcmf_fw_request_nvram_done(fw, fwctx);
+-		else
+-			release_firmware(fw);
+-
++		brcmf_fw_complete_request(fw, fwctx);
+ 		return -EAGAIN;
+ 	}
+ 	return 0;
+@@ -547,28 +567,8 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+ 
+ 	cur = &fwctx->req->items[fwctx->curpos];
+ 
+-	brcmf_dbg(TRACE, "enter: firmware %s %sfound\n", cur->path,
+-		  fw ? "" : "not ");
+-
+-	if (!fw)
+-		ret = -ENOENT;
+-
+-	switch (cur->type) {
+-	case BRCMF_FW_TYPE_NVRAM:
+-		ret = brcmf_fw_request_nvram_done(fw, fwctx);
+-		break;
+-	case BRCMF_FW_TYPE_BINARY:
+-		cur->binary = fw;
+-		break;
+-	default:
+-		/* something fishy here so bail out early */
+-		brcmf_err("unknown fw type: %d\n", cur->type);
+-		release_firmware(fw);
+-		ret = -EINVAL;
+-		goto fail;
+-	}
+-
+-	if (ret < 0 && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
++	ret = brcmf_fw_complete_request(fw, fwctx);
++	if (ret < 0)
+ 		goto fail;
+ 
+ 	do {
+-- 
+2.19.0
 
