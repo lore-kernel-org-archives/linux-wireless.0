@@ -2,88 +2,113 @@ Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B23FC64EB8
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:23:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E2BC64EB8
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A140204FD
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:23:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28762214C4
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 12:33:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Lm0eRegG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4A140204FD
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="WiIpL7oh"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 28762214C4
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726468AbeJITju (ORCPT
+        id S1726989AbeJITtp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Oct 2018 15:39:50 -0400
-Received: from nbd.name ([46.4.11.11]:35480 "EHLO nbd.name"
+        Tue, 9 Oct 2018 15:49:45 -0400
+Received: from mail.toke.dk ([52.28.52.200]:45889 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726160AbeJITju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Oct 2018 15:39:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=13YZcYTo1sPF4Di8J5dkXfvPotSCI7W8gVFNeLxXddw=; b=Lm0eRegGjfIxxJ0OmSG2O5LnHu
-        wSORymRZCtoVZ1cir877O8M/II6dL6xnzsC6MtNHf169QHZbvqnFLoRKzhvE79EzMtgfIS/ORFk/P
-        thzSLtehuXa3OTh+e8eSAxo/C9tzNlU6rWA5HPQg7IHx8tMMP/6GY2gVukciXMAMJP1A=;
-Subject: Re: [PATCH v2] mt76x0: phy: fix restore phase in
- mt76x0_phy_recalibrate_after_assoc
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539074999.git.lorenzo.bianconi@redhat.com>
- <f3efae19baefd102fa2f08f12982c1199ba51997.1539074999.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <51359a80-c562-04fd-9d2e-c75f9425a43e@nbd.name>
-Date:   Tue, 9 Oct 2018 14:23:06 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        id S1726445AbeJITto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Oct 2018 15:49:44 -0400
+Subject: [PATCH RFC v5 0/4] Move TXQ scheduling and airtime fairness into
+ mac80211
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1539088379; bh=PYhap6e+LgD62xbHKx4Nu3IyDknvyOQdZS7G1S+BixM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=WiIpL7ohG5GHLHjxtU+jxp4t+gGwh+FzOYFm2nLkQuINZYER5RFWKQFEwtyBVoFJ1
+         M9wHM+4NTSvLv8ClKQstZmuNun8mSuE7KQ2RbyPi0KphaZlt+XfS9wzT353o0oxcFf
+         Z90Uh8Ptzix3PwlmqId1dIyBsxQ3hN6m+J1PsTB5ApfhvC4TpkE5zQ65teuHth/Wn7
+         4EY2VQSdkvWPyXoATW1oH3mlrItvhFuRqnBz3Erdd2EcWKZj9c3vjk6UW9BDF2acTa
+         DLZdcsrn0+LnlCEoAki31lS8RvAb3dQgGgMyq4Fyocw020QQgcmf+GcTVVUhMgbGrV
+         i001nCOIT5QSA==
+From:   Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To:     linux-wireless@vger.kernel.org
+Cc:     make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kan Yan <kyan@google.com>
+Date:   Tue, 09 Oct 2018 14:32:58 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
 MIME-Version: 1.0
-In-Reply-To: <f3efae19baefd102fa2f08f12982c1199ba51997.1539074999.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-09 10:57, Lorenzo Bianconi wrote:
-> Fix restore value configured in MT_BBP(IBI, 9) register in
-> mt76x0_phy_recalibrate_after_assoc routine.
-> 
-> Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Merged, thanks.
+Another updated version, addressing a few issues with the previous
+version.
 
-- Felix
+- Moved the airtime deficit queue wakeup code to its own tasklet to
+  lower overhead.
+
+- Change the tasklet to just wake a single queue on each invocation,
+  relying to TX completion to continue transmissions.
+
+- Don't try to re-schedule TXQs of stations that are being removed.
+
+- A few cleanups and fixes.
+
+The one thing I didn't change was to add another callback that the
+driver can use to trigger the tasklet. Since it's now in its own
+tasklet, hopefully the overhead is low enough that we can just call it
+on every end_schedule(); and I'd rather not complicate the driver API
+further.
+
+Thanks to Rajkumar for testing the previous version. I thought I'd have
+time to test this version myself and was planning to send as a non-RFC
+PATCH after that, but that time didn't materialise. So I thought it was
+better to send another RFC version instead of everyone having to suffer
+from my tardiness :)
+
+-Toke
+
+---
+
+Toke Høiland-Jørgensen (4):
+      mac80211: Add TXQ scheduling API
+      cfg80211: Add airtime statistics and settings
+      mac80211: Add airtime accounting and scheduling to TXQs
+      ath9k: Switch to mac80211 TXQ scheduling and airtime APIs
+
+
+ drivers/net/wireless/ath/ath9k/ath9k.h     |   14 --
+ drivers/net/wireless/ath/ath9k/debug.c     |    3 
+ drivers/net/wireless/ath/ath9k/debug.h     |    8 -
+ drivers/net/wireless/ath/ath9k/debug_sta.c |   54 ------
+ drivers/net/wireless/ath/ath9k/init.c      |    3 
+ drivers/net/wireless/ath/ath9k/recv.c      |    9 -
+ drivers/net/wireless/ath/ath9k/xmit.c      |  244 ++++++++--------------------
+ include/net/cfg80211.h                     |   10 +
+ include/net/mac80211.h                     |  113 +++++++++++++
+ include/uapi/linux/nl80211.h               |   15 ++
+ net/mac80211/agg-tx.c                      |    2 
+ net/mac80211/cfg.c                         |    3 
+ net/mac80211/debugfs.c                     |    3 
+ net/mac80211/debugfs_sta.c                 |   51 ++++++
+ net/mac80211/driver-ops.h                  |    9 +
+ net/mac80211/ieee80211_i.h                 |   14 ++
+ net/mac80211/main.c                        |   11 +
+ net/mac80211/sta_info.c                    |   54 ++++++
+ net/mac80211/sta_info.h                    |   13 +
+ net/mac80211/status.c                      |    6 +
+ net/mac80211/tx.c                          |  137 ++++++++++++++++
+ net/mac80211/util.c                        |   75 +++++++++
+ net/wireless/nl80211.c                     |   29 +++
+ 23 files changed, 603 insertions(+), 277 deletions(-)
+
