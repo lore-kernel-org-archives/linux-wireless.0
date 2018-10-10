@@ -2,102 +2,131 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2133C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6D9C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:14:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 669CC21479
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:09:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RHSYD0EA";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RHSYD0EA"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 669CC21479
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 450A421479
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:14:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 450A421479
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726492AbeJJOaa (ORCPT
+        id S1726491AbeJJOfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 10:30:30 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:58364 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725837AbeJJOaa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 10:30:30 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AB16E60C4D; Wed, 10 Oct 2018 07:09:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539155383;
-        bh=VCT9uqRVXFx3c8XcIAAHcvCX1aNZHvUPAkvVFQBUHM8=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=RHSYD0EA+eOmjqU2UnW9r/rIcNODSh7qJFzdvRD6ArkZbwaDBKMefLf4idqF65vx3
-         Sg/dh/J4aZhsZ/oYPLc8DTTqmTOOXucXmAvHUXXMthEuZpCBVlTgtR/royA8ExtgM7
-         Z58HhTHbQ5R+nTjOSoYenZRRKngrEMR0y/uHjPAc=
-Received: from x230.qca.qualcomm.com (188-67-121-187.bb.dnainternet.fi [188.67.121.187])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Wed, 10 Oct 2018 10:35:42 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:60046 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726476AbeJJOfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 10:35:42 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E27D6086B;
-        Wed, 10 Oct 2018 07:09:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539155383;
-        bh=VCT9uqRVXFx3c8XcIAAHcvCX1aNZHvUPAkvVFQBUHM8=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=RHSYD0EA+eOmjqU2UnW9r/rIcNODSh7qJFzdvRD6ArkZbwaDBKMefLf4idqF65vx3
-         Sg/dh/J4aZhsZ/oYPLc8DTTqmTOOXucXmAvHUXXMthEuZpCBVlTgtR/royA8ExtgM7
-         Z58HhTHbQ5R+nTjOSoYenZRRKngrEMR0y/uHjPAc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6E27D6086B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH 5/6] brcmfmac: Set board_type from DMI on x86 based machines
-References: <20181009124755.25402-1-hdegoede@redhat.com>
-        <20181009124755.25402-5-hdegoede@redhat.com>
-Date:   Wed, 10 Oct 2018 10:09:38 +0300
-In-Reply-To: <20181009124755.25402-5-hdegoede@redhat.com> (Hans de Goede's
-        message of "Tue, 9 Oct 2018 14:47:54 +0200")
-Message-ID: <87murmxop9.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mx1.redhat.com (Postfix) with ESMTPS id C62CD301A3BC;
+        Wed, 10 Oct 2018 07:14:53 +0000 (UTC)
+Received: from localhost (ovpn-204-219.brq.redhat.com [10.40.204.219])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1E1A328DCD;
+        Wed, 10 Oct 2018 07:14:52 +0000 (UTC)
+Date:   Wed, 10 Oct 2018 09:14:52 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
+Message-ID: <20181010071451.GA9140@redhat.com>
+References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
+ <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
+ <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Wed, 10 Oct 2018 07:14:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hans de Goede <hdegoede@redhat.com> writes:
+On Wed, Oct 10, 2018 at 01:27:31AM +0200, Tom Psyborg wrote:
+> On 09/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > There is dupliceted 'if (rt2x00_rt(rt2x00dev, RT6352))' entry that couses
+> > we do not perform proper register initaliztion for RT6352 (MT7620 SOCs).
+> >
+> > Reported-by: Tomislav Požega <pozega.tomislav@gmail.com>
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > index daf20d7424ac..170e7c87f7bc 100644
+> > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> > @@ -5451,8 +5451,7 @@ static int rt2800_init_registers(struct rt2x00_dev
+> > *rt2x00dev)
+> >  					      0x00000000);
+> >  		}
+> >  	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
+> > -		   rt2x00_rt(rt2x00dev, RT5392) ||
+> > -		   rt2x00_rt(rt2x00dev, RT6352)) {
+> > +		   rt2x00_rt(rt2x00dev, RT5392)) {
+> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+> > --
+> > 2.7.5
+> >
+> >
+> 
+> 
+> have you got chance to test
+> https://github.com/psyborg55/linux/commit/24b46d482590a87553df1de0b5c8032f363cb7cf
+>  ?
+> 
+>  using this code to determine 7620 soc
+> 
+>  if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
+>          rt = RT6352;
+> 
+>  somehow did not work in rt2800_init_registers routine. i could verify
+>  that by removing tx_sw_cfg registers from rt6352 and the wifi would
+>  still work, unless removed them from rt5390 also
 
-> For x86 based machines, set the board_type used for nvram file selection
-> based on the DMI sys-vendor and product-name strings.
->
-> Since on some models these strings are too generic, this commit also adds
-> a quirk table overriding the strings for models listed in that table.
->
-> The board_type setting is used to load the board-specific nvram file with
-> a board-specific name so that we can ship files for each supported board
-> in linux-firmware.
->
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+I tested by adding additional printk("Init RT6352 registers\n"); in 
+if (rt2x00_rt(rt2x00dev, RT6352)) branch. The message was printed:
 
-[...]
+[   68.049946] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
+[   68.065392] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 7620 detected
+[   68.079777] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+[   68.177760] kmodloader: done loading kernel modules from /etc/modules.d/*
+[   68.825758] urandom_read: 5 callbacks suppressed
+[   68.825768] random: jshn: uninitialized urandom read (4 bytes read)
+[   77.792400] 8021q: adding VLAN 0 to HW filter on device eth0
+[   77.825045] br-lan: port 1(eth0.1) entered blocking state
+[   77.836032] br-lan: port 1(eth0.1) entered disabled state
+[   77.847156] device eth0.1 entered promiscuous mode
+[   77.856739] device eth0 entered promiscuous mode
+[   77.931043] br-lan: port 1(eth0.1) entered blocking state
+[   77.941861] br-lan: port 1(eth0.1) entered forwarding state
+[   77.953171] IPv6: ADDRCONF(NETDEV_UP): br-lan: link is not ready
+[   78.849852] IPv6: ADDRCONF(NETDEV_CHANGE): br-lan: link becomes ready
+[   82.302306] Init RT6352 registers
 
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
-> @@ -0,0 +1,104 @@
-> +// SPDX-License-Identifier: ISC
+Perhaps rt2x00_is_soc(rt2x00dev) does not work on this particular system
+that you have and device is configured as RT5390 ? I.e. maybe this is
+PCIe device. This should be printed in :
 
-I don't see the ISC file in LICENSES directory[1] and I don't feel
-comfortable taking SPDX tags which which don't have a license file.
+ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/LICENSES
+line, you should have 'RT chipset 5390' instead.
 
--- 
-Kalle Valo
+Thanks
+Stanislaw
