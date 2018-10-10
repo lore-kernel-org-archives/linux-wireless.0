@@ -2,118 +2,114 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9CA7C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 12:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0028FC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 13:11:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 772BF20644
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 12:45:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 772BF20644
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id B94082085B
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 13:11:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GWvwLi/M";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XqhwpiWX"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B94082085B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbeJJUHR (ORCPT
+        id S1726836AbeJJUdL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 16:07:17 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:47426 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726636AbeJJUHQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 16:07:16 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Wed, 10 Oct 2018 16:33:11 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53270 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726600AbeJJUdL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 16:33:11 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 17F0960C4D; Wed, 10 Oct 2018 13:11:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1539177063;
+        bh=sU7J+GcygeKi5Q7Z/OcuHjEMF7iPJOQNXp+uC2Uoj9w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=GWvwLi/MJ822SP+lG+tEDGRMDm+j623IhLVOsfVDZ+60NDaURBVtEnRW4IEdqcCss
+         wtJhoTzLjoBJs+nq/shQYOADv7LFr1/iI5kyqRldckOiSJXX3Z4SGL4oRlIQ5u74Xf
+         jpiT8kKCFfKwWXHKHdcKYFntqwNLeO5nYO5a2upE=
+Received: from x230.qca.qualcomm.com (188-67-121-187.bb.dnainternet.fi [188.67.121.187])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E362E3084256;
-        Wed, 10 Oct 2018 12:45:15 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.54])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3DDFA6B8D5;
-        Wed, 10 Oct 2018 12:45:15 +0000 (UTC)
-Date:   Wed, 10 Oct 2018 14:45:09 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Daniel Golle <daniel@makrotopia.org>
-Cc:     Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
-Message-ID: <20181010124508.GA22330@redhat.com>
-References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
- <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
- <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
- <20181010071451.GA9140@redhat.com>
- <20181010120657.GA1185@makrotopia.org>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B98A46063F;
+        Wed, 10 Oct 2018 13:11:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1539177062;
+        bh=sU7J+GcygeKi5Q7Z/OcuHjEMF7iPJOQNXp+uC2Uoj9w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XqhwpiWX1/1TsIZyApw/1BChcYlsdukeDc3hiWl4l2OxJ96DCz4fLQ2lJ3d5irWBS
+         enlokVsOA6WqBU+LJpM1EYoEwN/vo+TWg7FVcLjS51eNVyDht9p2DcyhfwDyfSVFg6
+         t/zC0Bbn5i2PfInj+d5vNxQvjYx/R2dx29mmkwnM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B98A46063F
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     linux-firmware@kernel.org
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PULL] ath10k firmware 2018-10-10
+Date:   Wed, 10 Oct 2018 16:10:59 +0300
+Message-ID: <87ftxevtek.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010120657.GA1185@makrotopia.org>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Wed, 10 Oct 2018 12:45:16 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello
+Hi linux-firmware maintainers,
 
-On Wed, Oct 10, 2018 at 02:06:58PM +0200, Daniel Golle wrote:
-> > > https://github.com/psyborg55/linux/commit/24b46d482590a87553df1de0b5c8032f363cb7cf
-> > >  ?
-> > > 
-> > >  using this code to determine 7620 soc
-> > > 
-> > >  if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
-> > >          rt = RT6352;
-> > > 
-> > >  somehow did not work in rt2800_init_registers routine. i could verify
-> > >  that by removing tx_sw_cfg registers from rt6352 and the wifi would
-> > >  still work, unless removed them from rt5390 also
-> > 
-> > I tested by adding additional printk("Init RT6352 registers\n"); in 
-> > if (rt2x00_rt(rt2x00dev, RT6352)) branch. The message was printed:
-> > 
-> > [   68.049946] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
-> > [   68.065392] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 7620 detected
-> > [   68.079777] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> > [   68.177760] kmodloader: done loading kernel modules from /etc/modules.d/*
-> > [   68.825758] urandom_read: 5 callbacks suppressed
-> > [   68.825768] random: jshn: uninitialized urandom read (4 bytes read)
-> > [   77.792400] 8021q: adding VLAN 0 to HW filter on device eth0
-> > [   77.825045] br-lan: port 1(eth0.1) entered blocking state
-> > [   77.836032] br-lan: port 1(eth0.1) entered disabled state
-> > [   77.847156] device eth0.1 entered promiscuous mode
-> > [   77.856739] device eth0 entered promiscuous mode
-> > [   77.931043] br-lan: port 1(eth0.1) entered blocking state
-> > [   77.941861] br-lan: port 1(eth0.1) entered forwarding state
-> > [   77.953171] IPv6: ADDRCONF(NETDEV_UP): br-lan: link is not ready
-> > [   78.849852] IPv6: ADDRCONF(NETDEV_CHANGE): br-lan: link becomes ready
-> > [   82.302306] Init RT6352 registers
-> > 
-> > Perhaps rt2x00_is_soc(rt2x00dev) does not work on this particular system
-> > that you have and device is configured as RT5390 ? I.e. maybe this is
-> > PCIe device. This should be printed in :
-> > 
-> > ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
-> > 
-> > line, you should have 'RT chipset 5390' instead.
-> 
-> RT6352 is the pre-mediatek-merge name of MT7620A/N. It is always a SoC.
-> The RF part of both MT7620A and MT7620N identifies as RT5390. The
-> vendor driver also uses an equivalent check to destinguish between the
-> actual PCIe/USB RT5390xx and RT6352, see
-> 
-> https://github.com/i80s/mtk-sources/blob/master/mt7620/src/include/rtmp_chip.h#L114
+here are ath10k firmware updates which have been accumulating the last 6
+months or so. Please let me know if there are any problems.
 
-Yes , but this does not explain why things do not work as
-expected for Tomislav, which IIUC use RT5390 configuration.
+Kalle
 
-Perhaps the check:
+The following changes since commit c6b6265d718d118e28e1ce8f91769aa886b54c94:
 
-	if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
-		rt = RT6352;
+  Merge tag 'iwlwifi-fw-2018-10-03' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware (2018-10-08 09:23:53 -0400)
 
-should be some how modified to work on Tomislav's hardware ?
+are available in the git repository at:
 
-Thanks
-Stanislaw
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/linux-firmware.git ath10k-20181010
+
+for you to fetch changes up to eaceb79a5a27ef37f85d1a5585b209361330b4bb:
+
+  ath10k: QCA9984 hw1.0: update board-2.bin (2018-10-10 15:14:05 +0300)
+
+----------------------------------------------------------------
+Kalle Valo (10):
+      ath10k: QCA4019 hw1.0: update firmware-5.bin to 10.4-3.6-00140
+      ath10k: QCA4019 hw1.0: update board-2.bin
+      ath10k: QCA6174 hw3.0: update firmware-6.bin to RM.4.4.1.c2-00057-QCARMSWP-1
+      ath10k: QCA9377 hw1.0: add firmware-6.bin to WLAN.TF.2.1-00021-QCARMSWP-1
+      ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00041
+      ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.6-00140
+      ath10k: QCA9888 hw2.0: update board-2.bin
+      ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00041
+      ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.6.0.1-00003
+      ath10k: QCA9984 hw1.0: update board-2.bin
+
+ WHENCE                                            |   15 +-
+ ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin 133452 -> 449316 bytes
+ ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin 568636 -> 583344 bytes
+ ath10k/QCA6174/hw3.0/firmware-6.bin               |  Bin 730788 -> 731276 bytes
+ ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  502 +-------
+ ath10k/QCA9377/hw1.0/firmware-6.bin               |  Bin 0 -> 751436 bytes
+ ath10k/QCA9377/hw1.0/notice_ath10k_firmware-6.txt | 1352 +++++++++++++++++++++
+ ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin 237584 -> 237660 bytes
+ ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin 72788 -> 84928 bytes
+ ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin 659708 -> 675492 bytes
+ ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin 248108 -> 248200 bytes
+ ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin 121264 -> 171916 bytes
+ ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin 647380 -> 662084 bytes
+ 13 files changed, 1423 insertions(+), 446 deletions(-)
+ create mode 100644 ath10k/QCA9377/hw1.0/firmware-6.bin
+ create mode 100644 ath10k/QCA9377/hw1.0/notice_ath10k_firmware-6.txt
