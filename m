@@ -2,257 +2,198 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71207C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 21:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 483E9C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 23:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1319020870
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 21:22:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D57A72087A
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 23:20:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QSbfPj5Q";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bHc4+PnJ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1319020870
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ru1dONuY";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pB+GejwC"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D57A72087A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbeJKEqC (ORCPT
+        id S1726249AbeJKGo1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 00:46:02 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38508 "EHLO
+        Thu, 11 Oct 2018 02:44:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:35988 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725886AbeJKEpy (ORCPT
+        with ESMTP id S1726135AbeJKGo1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 00:45:54 -0400
+        Thu, 11 Oct 2018 02:44:27 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id EFAC460C89; Wed, 10 Oct 2018 21:21:48 +0000 (UTC)
+        id 34B5F60B73; Wed, 10 Oct 2018 23:20:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539206513;
-        bh=FdUyj0Kk8glyuQvxo9pcQLqKLOW4zqxY/HQ00MFVL3k=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QSbfPj5QghcC7ZGTuPY4wsARhEw0lRdlbd8P9UDLaU99eaTJTrPIlbZErRzl0v9cJ
-         AqD4bLSXL7IVyrprOhdAiT0yKiuy5LrSJy6Y/8xSX4/sABH4TYWJURg2pMK5hqeXd9
-         uVMDoper+SjDMVWHnOCiDBIQYsoQnUbY1AcKyVb4=
-Received: from jouni.codeaurora.org (188-67-66-156.bb.dnainternet.fi [188.67.66.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: jouni@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B050360C86;
-        Wed, 10 Oct 2018 21:21:45 +0000 (UTC)
+        s=default; t=1539213603;
+        bh=KQaTuEil+2UWfKjJJVRaRHxtCICkycyy9f/m66Uz59o=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Ru1dONuY7M7peuA+KrNc+sDEOnnAG/dq0a9SjWpU7Cjx+Hqvq6eW5MGXl49zvA23+
+         Q+7qx/c2q4VjUhOFZg/LBapTAL0eqzbstgggZqXfXJ9f9vsa/C8SRpNZP/TSxrlCA2
+         eA5VqVH96Q2q05o3aQrpJu+yCcrcXwYjeESQKUvU=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 42DBE60249;
+        Wed, 10 Oct 2018 23:20:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539206507;
-        bh=FdUyj0Kk8glyuQvxo9pcQLqKLOW4zqxY/HQ00MFVL3k=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bHc4+PnJ1UrPp+EmL6A3HBP+mWp7aN6Om4/mWOU74FsfWq8sCs7N9OPJME4147/cY
-         gCXdE72cVrvODanR+1Wj1+ZeDUkI4A8ZIxSrZyYkF7/m6I5W00jn9XuyH5nP2skaKc
-         XbZGMGu8dIDiwtRBZ50Y+xwl+lCSy53jH0NdwI4s=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B050360C86
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
-From:   Jouni Malinen <jouni@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
+        s=default; t=1539213602;
+        bh=KQaTuEil+2UWfKjJJVRaRHxtCICkycyy9f/m66Uz59o=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=pB+GejwCY68Agsu+HrbqkPK5HTE1XVRoga24xArpvcLovoD0FOCm06jgKW7OurUnX
+         ld26MGZZsR/eFIuom/s4u5t6NdohszulnlNKxVvuyRE6irE4ngVbIqq65aLObfMbFL
+         sLTxo/sfmvqdzBk+IloITFcFZSajcF8bDmbOEqLs=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Wed, 10 Oct 2018 16:20:02 -0700
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Cc:     linux-wireless@vger.kernel.org,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 3/3] mac80211: Extend SAE authentication in infra BSS STA mode
-Date:   Thu, 11 Oct 2018 00:21:21 +0300
-Message-Id: <1539206481-8798-3-git-send-email-jouni@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1539206481-8798-1-git-send-email-jouni@codeaurora.org>
-References: <1539206481-8798-1-git-send-email-jouni@codeaurora.org>
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH RFC v5 3/4] mac80211: Add airtime accounting and
+ scheduling to TXQs
+In-Reply-To: <87zhvm832s.fsf@toke.dk>
+References: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
+ <153908837900.9471.5394468800857658136.stgit@alrua-kau>
+ <a65909ee425585a49d9e17f6504cf0ba@codeaurora.org> <87zhvm832s.fsf@toke.dk>
+Message-ID: <187bade306627912c70d800819ef0b87@codeaurora.org>
+X-Sender: rmanohar@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Previous implementation of SAE authentication in infrastructure BSS was
-somewhat restricting and not exactly clean way of handling the two
-auth() operations. This ended up removing and re-adding the STA entry
-for the AP in the middle of authentication and also messing up
-authentication state tracking through the sequence of four
-Authentication frames. Furthermore, this did not work if the AP ended up
-sending out SAE Confirm (auth trans #2) immediately after SAE Commit
-(auth trans #1) before the station had time to transmit its SAE Confirm.
+On 2018-10-10 04:15, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> On 2018-10-09 05:32, Toke Høiland-Jørgensen wrote:
+>>> This adds airtime accounting and scheduling to the mac80211 TXQ
+>>> scheduler. A new callback, ieee80211_sta_register_airtime(), is added
+>>> that drivers can call to report airtime usage for stations.
+>>> 
+>>> When airtime information is present, mac80211 will schedule TXQs
+>>> (through ieee80211_next_txq()) in a way that enforces airtime 
+>>> fairness
+>>> between active stations. This scheduling works the same way as the
+>>> ath9k
+>>> in-driver airtime fairness scheduling. If no airtime usage is 
+>>> reported
+>>> by the driver, the scheduler will default to round-robin scheduling.
+>>> 
+>>> For drivers that don't control TXQ scheduling in software, a new API
+>>> function, ieee80211_txq_may_transmit(), is added which the driver can
+>>> use
+>>> to check if the TXQ is eligible for transmission, or should be
+>>> throttled to
+>>> enforce fairness. Calls to this function must also be enclosed in
+>>> ieee80211_txq_schedule_{start,end}() calls to ensure proper locking.
+>>> TXQs
+>>> that are throttled by ieee802111_txq_may_transmit() will be woken up
+>>> again
+>>> by a check added to the ieee80211_wake_txqs() tasklet.
+>>> 
+>> 
+>> Toke,
+>> 
+>> I am observing soft lockup issues again with this new series while
+>> running traffic with 50 clients. I am continuing testing with earlier
+>> series along with snippet I shared.
+> 
+> Are these new lockups (that was not in your patched previous version),
+> or did I just not get all your lock-related fixes incorporated?
+> 
+>> When driver operates in pull-mode, throttled txqs are marked and
+>> refilled in airtime_tasklet. This is causing major throughput drops
+>> and packet loss and I am suspecting the latency in replenishing
+>> deficit. Whereas in push-mode or in ath9k model, refill happens
+>> quicker at every packet indication as well as tx completion.
+> 
+> Yeah, the tasklet shouldn't be the main source of deficit replenishing.
+> Can see why that would give bad performance :)
+> 
+>> I am planning to get rid of tasklet completely as it is only meant for
+>> pull-mode. It would be better to refill in may_transmit() itself.
+> 
+> Hmm, right. So the way to do this correctly (from a fairness point of
+> view) would be something like this (in max_tx()):
+> 
+> if (this_txq.stn.deficit > 0)
+>   return true;
+> 
+> else if (any queued TXQ currently have positive deficit)
+>   return false; /* other TXQ should try may_tx() later and get 
+> permission */
+> 
+> else /* all deficits < 0 */
+>   return replenish_deficits(this_txq);
+> 
+> And replenish_deficits() would be something like:
+> 
+> replenish_deficits(this_txq) {
+> repeat:
+>   for (txq in queued txqs) {
+>     txq.stn.deficit += stn.weight;
+>     if (txq.stn.deficit > 0 && !wake_txq)
+>       wake_txq = txq;
+>   }
+>   if not wake_txq:
+>     goto repeat;
+> 
+>   if (this_txq.stn.deficit > 0)
+>     return true;
+>   else
+>     drv_wake_tx_queue(wake_txq);
+> }
+> 
+> The wake_tx_queue call may have to be delegated to a tasklet still, to
+> avoid the infinite recursion problem I mentioned earlier. But the
+> tasklet could be made simpler and wouldn't have to be called so 
+> often...
+> 
+> Does the above make sense?
+> 
+Hmm... mine is bit different. txqs are refilled only once for all txqs.
+It will give more opportunity for non-served txqs. drv_wake_tx_queue 
+won't be
+called from may_tx as the driver anyway will not push packets in 
+pull-mode.
 
-Clean up authentication state handling for the SAE case to allow two
-rounds of auth() calls without dropping all state between those
-operations. Track peer Confirmed status and mark authentication
-completed only once both ends have confirmed.
+bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+                                 struct ieee80211_txq *txq)
+{
+         struct ieee80211_local *local = hw_to_local(hw);
+         struct txq_info *txqi = to_txq_info(txq);
+         struct sta_info *sta;
+         u8 ac = txq->ac;
 
-ieee80211_mgd_auth() check for EBUSY cases is now handling only the
-pending association (ifmgd->assoc_data) while all pending authentication
-(ifmgd->auth_data) cases are allowed to proceed to allow user space to
-start a new connection attempt from scratch even if the previously
-requested authentication is still waiting completion. This is needed to
-avoid making SAE error cases with retries take excessive amount of time
-with no means for the user space to stop that (apart from setting the
-netdev down).
+         lockdep_assert_held(&local->active_txq_lock[ac]);
 
-As an extra bonus, the end of ieee80211_rx_mgmt_auth() can be cleaned up
-to avoid the extra copy of the cfg80211_rx_mlme_mgmt() call for ongoing
-SAE authentication since the new ieee80211_mark_sta_auth() helper
-function can handle both completion of authentication and updates to the
-STA entry under the same condition and there is no need to return from
-the function between those operations.
+         if (!txqi->txq.sta)
+                 goto out;
 
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 70 +++++++++++++++++++++++++++++++---------------
- 2 files changed, 48 insertions(+), 23 deletions(-)
+         sta = container_of(txqi->txq.sta, struct sta_info, sta);
+         if (sta->airtime[ac].deficit >= 0)
+                 goto out;
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f40a216..10a0506 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -377,6 +377,7 @@ struct ieee80211_mgd_auth_data {
- 	u8 key[WLAN_KEY_LEN_WEP104];
- 	u8 key_len, key_idx;
- 	bool done;
-+	bool peer_confirmed;
- 	bool timeout_started;
- 
- 	u16 sae_trans, sae_status;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1818dbc..d2bc8d5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2764,8 +2764,15 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
- static bool ieee80211_mark_sta_auth(struct ieee80211_sub_if_data *sdata,
- 				    const u8 *bssid)
- {
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct sta_info *sta;
- 
-+	sdata_info(sdata, "authenticated\n");
-+	ifmgd->auth_data->done = true;
-+	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
-+	ifmgd->auth_data->timeout_started = true;
-+	run_again(sdata, ifmgd->auth_data->timeout);
-+
- 	/* move station state to auth */
- 	mutex_lock(&sdata->local->sta_mtx);
- 	sta = sta_info_get(sdata, bssid);
-@@ -2811,7 +2818,11 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	status_code = le16_to_cpu(mgmt->u.auth.status_code);
- 
- 	if (auth_alg != ifmgd->auth_data->algorithm ||
--	    auth_transaction != ifmgd->auth_data->expected_transaction) {
-+	    (auth_alg != WLAN_AUTH_SAE &&
-+	     auth_transaction != ifmgd->auth_data->expected_transaction) ||
-+	    (auth_alg == WLAN_AUTH_SAE &&
-+	     (auth_transaction < ifmgd->auth_data->expected_transaction ||
-+	      auth_transaction > 2))) {
- 		sdata_info(sdata, "%pM unexpected authentication state: alg %d (expected %d) transact %d (expected %d)\n",
- 			   mgmt->sa, auth_alg, ifmgd->auth_data->algorithm,
- 			   auth_transaction,
-@@ -2854,25 +2865,17 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	event.u.mlme.status = MLME_SUCCESS;
- 	drv_event_callback(sdata->local, sdata, &event);
--	sdata_info(sdata, "authenticated\n");
--	ifmgd->auth_data->done = true;
--	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
--	ifmgd->auth_data->timeout_started = true;
--	run_again(sdata, ifmgd->auth_data->timeout);
--
--	if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
--	    ifmgd->auth_data->expected_transaction != 2) {
--		/*
--		 * Report auth frame to user space for processing since another
--		 * round of Authentication frames is still needed.
--		 */
--		cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
--		return;
-+	if (ifmgd->auth_data->algorithm != WLAN_AUTH_SAE ||
-+	    (auth_transaction == 2 &&
-+	     ifmgd->auth_data->expected_transaction == 2)) {
-+		if (!ieee80211_mark_sta_auth(sdata, bssid))
-+			goto out_err;
-+	} else if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
-+		   auth_transaction == 2) {
-+		sdata_info(sdata, "SAE peer confirmed\n");
-+		ifmgd->auth_data->peer_confirmed = true;
- 	}
- 
--	if (!ieee80211_mark_sta_auth(sdata, bssid))
--		goto out_err;
--
- 	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
- 	return;
-  out_err:
-@@ -4888,6 +4891,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_mgd_auth_data *auth_data;
- 	u16 auth_alg;
- 	int err;
-+	bool cont_auth;
- 
- 	/* prepare auth data structure */
- 
-@@ -4922,8 +4926,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if ((ifmgd->auth_data && !ifmgd->auth_data->done) ||
--	    ifmgd->assoc_data)
-+	if (ifmgd->assoc_data)
- 		return -EBUSY;
- 
- 	auth_data = kzalloc(sizeof(*auth_data) + req->auth_data_len +
-@@ -4945,6 +4948,13 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 		auth_data->data_len += req->auth_data_len - 4;
- 	}
- 
-+	/* Check if continuing authentication or trying to authenticate with the
-+	 * same BSS that we were in the process of authenticating with and avoid
-+	 * removal and re-addition of the STA entry in
-+	 * ieee80211_prep_connection().
-+	 */
-+	cont_auth = ifmgd->auth_data && req->bss == ifmgd->auth_data->bss;
-+
- 	if (req->ie && req->ie_len) {
- 		memcpy(&auth_data->data[auth_data->data_len],
- 		       req->ie, req->ie_len);
-@@ -4961,12 +4971,26 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	/* try to authenticate/probe */
- 
--	if (ifmgd->auth_data)
--		ieee80211_destroy_auth_data(sdata, false);
-+	if (ifmgd->auth_data) {
-+		if (cont_auth && req->auth_type == NL80211_AUTHTYPE_SAE) {
-+			auth_data->peer_confirmed =
-+				ifmgd->auth_data->peer_confirmed;
-+		}
-+		ieee80211_destroy_auth_data(sdata, cont_auth);
-+	}
- 
- 	/* prep auth_data so we don't go into idle on disassoc */
- 	ifmgd->auth_data = auth_data;
- 
-+	/* If this is continuation of an ongoing SAE authentication exchange
-+	 * (i.e., request to send SAE Confirm) and the peer has already
-+	 * confirmed, mark authentication completed since we are about to send
-+	 * out SAE Confirm.
-+	 */
-+	if (cont_auth && req->auth_type == NL80211_AUTHTYPE_SAE &&
-+	    auth_data->peer_confirmed && auth_data->sae_trans == 2)
-+		ieee80211_mark_sta_auth(sdata, req->bss->bssid);
-+
- 	if (ifmgd->associated) {
- 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 
-@@ -4984,7 +5008,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata_info(sdata, "authenticate with %pM\n", req->bss->bssid);
- 
--	err = ieee80211_prep_connection(sdata, req->bss, false, false);
-+	err = ieee80211_prep_connection(sdata, req->bss, cont_auth, false);
- 	if (err)
- 		goto err_clear;
- 
--- 
-2.7.4
+         list_for_each_entry(txqi, &local->active_txqs[ac], 
+schedule_order) {
+                 if (!txqi->txq.sta)
+                         continue;
+                 sta = container_of(txqi->txq.sta, struct sta_info, sta);
+                 sta->airtime[ac].deficit += sta->airtime_weight;
+         }
 
+         return false;
+
+  out:
+         list_del_init(&txqi->schedule_order);
+         return true;
+}
+
+-Rajkumar
