@@ -2,134 +2,113 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8344C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 18:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BD4BC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 18:20:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9A372087A
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 18:14:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A9A372087A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id C806520870
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 18:20:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="TMY/9kv2"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C806520870
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbeJKBhP (ORCPT
+        id S1726822AbeJKBnr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 21:37:15 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:44656 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbeJKBhP (ORCPT
+        Wed, 10 Oct 2018 21:43:47 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:37991 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726525AbeJKBnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 21:37:15 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gAIzN-0007tm-CE; Wed, 10 Oct 2018 20:13:42 +0200
-Message-ID: <1539195207.3687.178.camel@sipsolutions.net>
-Subject: Re: Question on FIELD_PREP() for static array
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Joe Perches <joe@perches.com>, John Garry <john.garry@huawei.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        jakub.kicinski@netronome.com, yamada.masahiro@socionext.com,
-        Arnd Bergmann <arnd@arndb.de>, viro@zeniv.linux.org.uk,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name
-Date:   Wed, 10 Oct 2018 20:13:27 +0200
-In-Reply-To: <40fd3d963820bf96547fa9b5e8c171c6a339674e.camel@perches.com>
-References: <c8594a75-964b-01b0-382e-88bcb5b462f2@huawei.com>
-         <40fd3d963820bf96547fa9b5e8c171c6a339674e.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 10 Oct 2018 21:43:47 -0400
+Received: by mail-pg1-f196.google.com with SMTP id f8-v6so2894725pgq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 11:20:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=yNLXc3iVhOJyB04HuAAZiLWd2kTCaI4POOJZElAQ23w=;
+        b=TMY/9kv2cllOVMpbbaJhv1ZlcwgsJw07PcH6/woO3zcr1bTJyHFAlc3wQChEcxB/4O
+         maqvPzzk4v3FXo3eHcjjMVJXbsXVuhOt+eV+Fi1JiVkiQAbL1Ld9mr05Zm/E/GMbpJq/
+         NKYM6L000nuJSkS6CL5hCm+0g6bFWCoBjuVaE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=yNLXc3iVhOJyB04HuAAZiLWd2kTCaI4POOJZElAQ23w=;
+        b=a07on0wuYknZepEiRWdtn9yYpESAHLQRiAyk1jhpRUDFor/G4iUtcWWUQv2GOpG+yT
+         NlWa6fE5rCkpDduKiihZCdmvPCMlNMBVusKpEwdLVzkgw2ncApyuPkYNvxSmrDxJTIvs
+         92Z/u3L9e9IuK0y+Q+O+Io1yTvgbrZH9H3vGvt5Xogq15a6xWSYiJ1nGo0frSjX31VQh
+         CRpQdEYhvulpitNiGwJ3p1nr3HBOZeVHK1tsdrz28+PaNMg4pQqSssngpUWvYLrruL4r
+         EytEKoD9cZdiq2NL3OKH9aqe/oOeE6EH/IliWxDpYBED2ooKdfywK+F48/9VdAttAp4f
+         /bsA==
+X-Gm-Message-State: ABuFfoiUugP4TOJlHdJ1gtybE2kVqOTQ28+V0GZKaa3ZiOeQ+qVRQtnf
+        Y/oBczJGYa5Y0GkqcxGJXVXfcQ==
+X-Google-Smtp-Source: ACcGV63O85MDTODohvoFv3A+UB8jMj3vt9OBMKkmBlotXy+TTelRrYGjFtS8JGk13aKlKmy6AEYpaA==
+X-Received: by 2002:a62:c60a:: with SMTP id m10-v6mr35222967pfg.15.1539195628341;
+        Wed, 10 Oct 2018 11:20:28 -0700 (PDT)
+Received: from ban.mtv.corp.google.com ([2620:15c:202:1:299d:6b87:5478:d28a])
+        by smtp.gmail.com with ESMTPSA id a86-v6sm35027314pfg.106.2018.10.10.11.20.26
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 10 Oct 2018 11:20:26 -0700 (PDT)
+Date:   Wed, 10 Oct 2018 11:20:25 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Carl Huang <cjhuang@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] ath10k: allocate small size dma memory in
+ ath10k_pci_diag_write_mem
+Message-ID: <20181010182023.GA26746@ban.mtv.corp.google.com>
+References: <1539171269-23944-1-git-send-email-cjhuang@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1539171269-23944-1-git-send-email-cjhuang@codeaurora.org>
+User-Agent: Mutt/1.10.1+48 (1f3a9df87d11) (2018-07-22)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2018-10-10 at 10:33 -0700, Joe Perches wrote:
-> 
-> > Specifically it doesn't like the __BF_FIELD_CHECK() in FIELD_PREP().
-> > 
-> > Any ideas on compiler trickery we could do with the FIELD_PREP() 
-> > definition to avoid this issue (i.e. enforce the check but only use the 
-> > constant value)?
-> 
-> Perhaps __bf_shf should not use __builtin_ffsll.
+Hi Carl,
 
-__bf_shf() is a constant expression, and is fine in this context.
+On Wed, Oct 10, 2018 at 07:34:29PM +0800, Carl Huang wrote:
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -1071,10 +1071,9 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  	struct ath10k_ce *ce = ath10k_ce_priv(ar);
+>  	int ret = 0;
+>  	u32 *buf;
+> -	unsigned int completed_nbytes, orig_nbytes, remaining_bytes;
+> +	unsigned int completed_nbytes, alloc_nbytes, remaining_bytes;
+>  	struct ath10k_ce_pipe *ce_diag;
+>  	void *data_buf = NULL;
+> -	u32 ce_data;	/* Host buffer address in CE space */
+>  	dma_addr_t ce_data_base = 0;
+>  	int i;
+>  
 
-The problem is the use of the compound statement here:
+...
 
-static int x[2] = {
-	({ (void)(0); 1; }),
-	0,
-}
+> @@ -1128,7 +1127,7 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  		 * Request CE to send caller-supplied data that
+>  		 * was copied to bounce buffer to Target(!) address.
+>  		 */
+> -		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)ce_data,
+> +		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)ce_data_base,
 
-similarly fails to compile.
+The (u32) cast isn't necessary, is it? ath10k_ce_send_nolock() takes a
+dma_addr_t for the 3rd argument.
 
-I've recently run into a similar situation, namely in
-include/net/netlink.h, and the applicable way to solve it here would be
-something like this:
+Incidentally, that'd probably help if you start supporting PCI devices
+with >32-bit addressing.
 
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-index 3f1ef4450a7c..0680d641923f 100644
---- a/include/linux/bitfield.h
-+++ b/include/linux/bitfield.h
-@@ -49,19 +49,16 @@
- 
- #define __bf_shf(x) (__builtin_ffsll(x) - 1)
- 
-+#define BUILD_BUG_ON_RET_ZERO(cond) (sizeof(char[1 - 2*!!(cond)]) - 1)
-+#define BUILD_BUG_ON_NOT_POW2_RET_ZERO(n)	BUILD_BUG_ON_RET_ZERO(((n) & ((n) - 1)) != 0)
-+
- #define __BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
--	({								\
--		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
--				 _pfx "mask is not constant");		\
--		BUILD_BUG_ON_MSG((_mask) == 0, _pfx "mask is zero");	\
--		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
--				 ~((_mask) >> __bf_shf(_mask)) & (_val) : 0, \
--				 _pfx "value too large for the field"); \
--		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
--				 _pfx "type of reg too small for mask"); \
--		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
--					      (1ULL << __bf_shf(_mask))); \
--	})
-+	BUILD_BUG_ON_RET_ZERO(!__builtin_constant_p(_mask)) +		\
-+	BUILD_BUG_ON_RET_ZERO((_mask) == 0) +				\
-+	BUILD_BUG_ON_RET_ZERO(__builtin_constant_p(_val) ?		\
-+			      ~((_mask) >> __bf_shf(_mask)) & (_val) : 0) + \
-+	BUILD_BUG_ON_RET_ZERO((_mask) > (typeof(_reg))~0ull) +	\
-+	BUILD_BUG_ON_NOT_POW2_RET_ZERO((_mask) + (1ULL << __bf_shf(_mask)))
- 
- /**
-  * FIELD_FIT() - check if value fits in the field
-@@ -85,10 +82,8 @@
-  * be combined with other fields of the bitfield using logical OR.
-  */
- #define FIELD_PREP(_mask, _val)						\
--	({								\
--		__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
--		((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask);	\
--	})
-+	(__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ") +		\
-+	 (((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask)))
- 
- /**
-  * FIELD_GET() - extract a bitfield element
+Brian
 
-
-Note that this is an incomplete patch - everything but FIELD_PREP will
-not compile with this.
-
-Also, BUILD_BUG_ON_RET_ZERO and BUILD_BUG_ON_NOT_POW2_RET_ZERO should
-probably have better names, or perhaps do the positive way that I did in
-__NLA_ENSURE, e.g. CONST_ASSERT()/CONST_ASSERT_IS_POWER_OF_2()? I guess
-they should go to build_bug.h as well...
-
-johannes
+>  					    nbytes, 0, 0);
+>  		if (ret != 0)
+>  			goto done;
+...
