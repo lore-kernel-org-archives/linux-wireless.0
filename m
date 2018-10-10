@@ -2,131 +2,198 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6D9C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C583DC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:16:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 450A421479
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:14:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 450A421479
+	by mail.kernel.org (Postfix) with ESMTP id 7AE6521479
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:16:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7AE6521479
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726491AbeJJOfm (ORCPT
+        id S1726525AbeJJOhN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 10:35:42 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60046 "EHLO mx1.redhat.com"
+        Wed, 10 Oct 2018 10:37:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:30137 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726476AbeJJOfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 10:35:42 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        id S1726479AbeJJOhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 10:37:12 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C62CD301A3BC;
-        Wed, 10 Oct 2018 07:14:53 +0000 (UTC)
-Received: from localhost (ovpn-204-219.brq.redhat.com [10.40.204.219])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1E1A328DCD;
-        Wed, 10 Oct 2018 07:14:52 +0000 (UTC)
-Date:   Wed, 10 Oct 2018 09:14:52 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
-Message-ID: <20181010071451.GA9140@redhat.com>
-References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
- <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
- <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 6906C4E915;
+        Wed, 10 Oct 2018 07:16:24 +0000 (UTC)
+Received: from shalem.localdomain.com (ovpn-116-109.ams2.redhat.com [10.36.116.109])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 762EC10018FF;
+        Wed, 10 Oct 2018 07:16:22 +0000 (UTC)
+From:   Hans de Goede <hdegoede@redhat.com>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH v3] brcmfmac: Add support for getting nvram contents from EFI variables
+Date:   Wed, 10 Oct 2018 09:16:20 +0200
+Message-Id: <20181010071620.14197-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Wed, 10 Oct 2018 07:14:54 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 10 Oct 2018 07:16:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 01:27:31AM +0200, Tom Psyborg wrote:
-> On 09/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > There is dupliceted 'if (rt2x00_rt(rt2x00dev, RT6352))' entry that couses
-> > we do not perform proper register initaliztion for RT6352 (MT7620 SOCs).
-> >
-> > Reported-by: Tomislav Požega <pozega.tomislav@gmail.com>
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> >  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > index daf20d7424ac..170e7c87f7bc 100644
-> > --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> > @@ -5451,8 +5451,7 @@ static int rt2800_init_registers(struct rt2x00_dev
-> > *rt2x00dev)
-> >  					      0x00000000);
-> >  		}
-> >  	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > -		   rt2x00_rt(rt2x00dev, RT5392) ||
-> > -		   rt2x00_rt(rt2x00dev, RT6352)) {
-> > +		   rt2x00_rt(rt2x00dev, RT5392)) {
-> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-> >  		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-> > --
-> > 2.7.5
-> >
-> >
-> 
-> 
-> have you got chance to test
-> https://github.com/psyborg55/linux/commit/24b46d482590a87553df1de0b5c8032f363cb7cf
->  ?
-> 
->  using this code to determine 7620 soc
-> 
->  if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
->          rt = RT6352;
-> 
->  somehow did not work in rt2800_init_registers routine. i could verify
->  that by removing tx_sw_cfg registers from rt6352 and the wifi would
->  still work, unless removed them from rt5390 also
+Various X86 laptops with a SDIO attached brcmfmac wifi chip, store the
+nvram contents in a special EFI variable. This commit adds support for
+getting nvram directly from this EFI variable, without the user needing
+to manually copy it.
 
-I tested by adding additional printk("Init RT6352 registers\n"); in 
-if (rt2x00_rt(rt2x00dev, RT6352)) branch. The message was printed:
+This makes Wifi / Bluetooth work out of the box on these devices instead of
+requiring manual setup.
 
-[   68.049946] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
-[   68.065392] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 7620 detected
-[   68.079777] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-[   68.177760] kmodloader: done loading kernel modules from /etc/modules.d/*
-[   68.825758] urandom_read: 5 callbacks suppressed
-[   68.825768] random: jshn: uninitialized urandom read (4 bytes read)
-[   77.792400] 8021q: adding VLAN 0 to HW filter on device eth0
-[   77.825045] br-lan: port 1(eth0.1) entered blocking state
-[   77.836032] br-lan: port 1(eth0.1) entered disabled state
-[   77.847156] device eth0.1 entered promiscuous mode
-[   77.856739] device eth0 entered promiscuous mode
-[   77.931043] br-lan: port 1(eth0.1) entered blocking state
-[   77.941861] br-lan: port 1(eth0.1) entered forwarding state
-[   77.953171] IPv6: ADDRCONF(NETDEV_UP): br-lan: link is not ready
-[   78.849852] IPv6: ADDRCONF(NETDEV_CHANGE): br-lan: link becomes ready
-[   82.302306] Init RT6352 registers
+This has been tested on the following models: Acer Iconia Tab8 w1-810,
+Acer One 10, Asus T100CHI, Asus T100HA, Asus T100TA, Asus T200TA and a
+Lenovo Mixx 2 8.
 
-Perhaps rt2x00_is_soc(rt2x00dev) does not work on this particular system
-that you have and device is configured as RT5390 ? I.e. maybe this is
-PCIe device. This should be printed in :
+Tested-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+Changes in v3:
+-Drop ccode fixup code (to be re-added in a separate commit), so that we
+ can get the main EFI nvram support merged while we figure out the ccode
+ handling
 
-ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500 detected
+Changes in v2:
+-Stop testing for asus in the dmi sys_vendor string at least the Toshiba
+ Encore uses the nvram efivar variable too
+-Use a table mapping the firmare name to the correct ccode value (XV / X2) to
+ use for the worldwide regulatory domain for that firmware, assuming the
+ firmware from linux-firmware is used. This fixes the T200TA and T100HA not
+ seeing 5GHz networks
+-Not only fixup ccode=ALL, but also ccode=XV, this is necessary since the
+ T100HA nvram efivar containts ccode=XV, but the firmware from Linux firmware
+ needs ccode=X2 for proper operation
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c    | 63 +++++++++++++++++--
+ 1 file changed, 57 insertions(+), 6 deletions(-)
 
-line, you should have 'RT chipset 5390' instead.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index b38c4b40b235..a1dfe75c835f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -14,6 +14,7 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/efi.h>
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ #include <linux/device.h>
+@@ -445,6 +446,51 @@ struct brcmf_fw {
+ 
+ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
+ 
++#ifdef CONFIG_EFI
++static u8 *brcmf_fw_nvram_from_efi(const char *path, size_t *data_len_ret)
++{
++	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
++	struct efivar_entry *nvram_efivar;
++	unsigned long data_len = 0;
++	u8 *data = NULL;
++	int err;
++
++	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
++	if (!nvram_efivar)
++		return NULL;
++
++	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
++	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
++						0xb5, 0x1f, 0x43, 0x26,
++						0x81, 0x23, 0xd1, 0x13);
++
++	err = efivar_entry_size(nvram_efivar, &data_len);
++	if (err)
++		goto fail;
++
++	data = kmalloc(data_len, GFP_KERNEL);
++	if (!data)
++		goto fail;
++
++	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
++	if (err)
++		goto fail;
++
++	brcmf_info("Using nvram EFI variable\n");
++
++	kfree(nvram_efivar);
++	*data_len_ret = data_len;
++	return data;
++
++fail:
++	kfree(data);
++	kfree(nvram_efivar);
++	return NULL;
++}
++#else
++static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
++#endif
++
+ static void brcmf_fw_free_request(struct brcmf_fw_request *req)
+ {
+ 	struct brcmf_fw_item *item;
+@@ -463,11 +509,12 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+ 	struct brcmf_fw_item *cur;
++	bool free_bcm47xx_nvram = false;
++	bool kfree_nvram = false;
+ 	u32 nvram_length = 0;
+ 	void *nvram = NULL;
+ 	u8 *data = NULL;
+ 	size_t data_len;
+-	bool raw_nvram;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+ 
+@@ -476,12 +523,13 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 	if (fw && fw->data) {
+ 		data = (u8 *)fw->data;
+ 		data_len = fw->size;
+-		raw_nvram = false;
+ 	} else {
+-		data = bcm47xx_nvram_get_contents(&data_len);
+-		if (!data && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
++		if ((data = bcm47xx_nvram_get_contents(&data_len)))
++			free_bcm47xx_nvram = true;
++		else if ((data = brcmf_fw_nvram_from_efi(cur->path, &data_len)))
++			kfree_nvram = true;
++		else if (!(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 			goto fail;
+-		raw_nvram = true;
+ 	}
+ 
+ 	if (data)
+@@ -489,8 +537,11 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 					     fwctx->req->domain_nr,
+ 					     fwctx->req->bus_nr);
+ 
+-	if (raw_nvram)
++	if (free_bcm47xx_nvram)
+ 		bcm47xx_nvram_release_contents(data);
++	if (kfree_nvram)
++		kfree(data);
++
+ 	release_firmware(fw);
+ 	if (!nvram && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 		goto fail;
+-- 
+2.19.0
 
-Thanks
-Stanislaw
