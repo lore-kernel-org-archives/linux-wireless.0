@@ -2,80 +2,114 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD9E5C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 15:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F4FC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 17:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87F072077C
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 15:46:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 87F072077C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 312C120870
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 17:10:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 312C120870
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726717AbeJJXJM (ORCPT
+        id S1727579AbeJKAdd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 19:09:12 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:32822 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726515AbeJJXJM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 19:09:12 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Wed, 10 Oct 2018 20:33:33 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:48774 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727433AbeJKAdc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 20:33:32 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7EBC27F6B2;
-        Wed, 10 Oct 2018 15:46:27 +0000 (UTC)
-Received: from localhost (ovpn-204-35.brq.redhat.com [10.40.204.35])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1B8D1822ED;
-        Wed, 10 Oct 2018 15:46:26 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-Subject: [PATCH 4/4] rt2800: comment and simplify AGC init for RT6352
-Date:   Wed, 10 Oct 2018 17:46:20 +0200
-Message-Id: <1539186380-31949-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1539186380-31949-1-git-send-email-sgruszka@redhat.com>
-References: <1539186380-31949-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Wed, 10 Oct 2018 15:46:27 +0000 (UTC)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id D53E940A5C4;
+        Wed, 10 Oct 2018 10:10:26 -0700 (PDT)
+Subject: Re: Tool to debug wifi pkt sniffs?
+To:     Dave Taht <dave.taht@gmail.com>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vu?= =?UTF-8?Q?sen?= 
+        <toke@toke.dk>
+References: <a44e3947-29a9-d7ba-abec-59bc1b92b201@candelatech.com>
+ <87pnwqaiso.fsf@toke.dk>
+ <CAA93jw768_OOUB1w81_9Ck_XgSbDG4P2nBfuptT+SLXCf3voTA@mail.gmail.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <01b77936-f6d4-271a-d7d2-0fd2cf70f7bd@candelatech.com>
+Date:   Wed, 10 Oct 2018 10:10:26 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.0
+MIME-Version: 1.0
+In-Reply-To: <CAA93jw768_OOUB1w81_9Ck_XgSbDG4P2nBfuptT+SLXCf3voTA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We do not need separate lines for calculating register values.
-Also add comment that value is different than in vendor driver.
+On 10/03/2018 01:29 PM, Dave Taht wrote:
+> On Wed, Oct 3, 2018 at 1:16 PM Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+>>
+>> Ben Greear <greearb@candelatech.com> writes:
+>>
+>>> Hello,
+>>>
+>>> I often find myself wanting to figure out what equipment is to blame (and why)
+>>> in a wifi environment.
+>>>
+>>> I am thinking writing a tool that would parse a pcap file and look at frames
+>>> in enough detail to flag block-ack bugs, rate-ctrl bugs, guess at the sniffer's
+>>> capture ability, etc.
+>>>
+>>> Does anyone have anything already written that they would like to share, or know
+>>> of projects that might already do some of this?
+>>
+>> Not sure if this fits your criteria, but Sven's tool to create airtime
+>> charts from packet sniffing data immediately came to mind:
+>>
+>> https://github.com/cloudtrax/airtime-pie-chart
+>
+> I have used that. Oy, it's a PITA. Some of kathie's code over here
+> (example: https://github.com/pollere/pping ) uses the slightly less
+> painful http://libtins.github.io/ library for parsing packets.
 
-Suggested-by: Daniel Golle <daniel@makrotopia.org>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+I couldn't find anything that did what I wanted, so I wrote my own.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index a2cdd3a5034a..7b6effaa0740 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3986,9 +3986,12 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_bbp_write(rt2x00dev, 195, 141);
- 		rt2800_bbp_write(rt2x00dev, 196, reg);
- 
--		/* AGC init */
--		reg = rf->channel <= 14 ? 0x1c : 0x24;
--		reg += 2 * rt2x00dev->lna_gain;
-+		/* AGC init.
-+		 * Despite the vendor driver using different values here for
-+		 * RT6362 chip, we use 0x1c for now. This may have to be changed
-+		 * once TSSI got implemented.
-+		 */
-+		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
- 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
- 
- 		rt2800_iq_calibrate(rt2x00dev, rf->channel);
+The (perl) code is in the wifi-diag directory of this public repo:
+
+https://github.com/greearb/lanforge-scripts
+
+The rest of the scripts in that repo are not related to the wifi-diag script, so just ignore those.
+
+Here is example output for what I have so far:
+
+https://www.candelatech.com/oss/wifi-diag/netgear-up-5s/index.html
+
+The general idea is to get a performance test going, and then use tshark or similar
+to grab a short sample (my script is slow, it can process only about 400 packets per second
+on my desktop, so a 5 sec capture at full speed takes around 5 minutes to process),
+and then pipe that decoded pcap into my script.
+
+It tries to pay attention to latencies between block-ack and next AMPDU frame,
+MCS distributions, packet-type distributions, retries, and other
+such things.  I'm guessing tweaking wmm settings (or changing QoS in the generated traffic)
+would be visible in this kind of metric, for instance.
+
+The goal is to be able to answer the question of why one AP is faster or slower than another
+when running the same test case.
+
+Feedback (and even patches) is welcome...what other things can I report that would
+be helpful?
+
+
+Thanks,
+Ben
+
 -- 
-2.7.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
