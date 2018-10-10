@@ -2,121 +2,125 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6F0FC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:57:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43E08C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 648312064E
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:57:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="b9GuCckn";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="htJV+ioB"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 648312064E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 12CB92064E
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:59:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 12CB92064E
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726791AbeJJPSn (ORCPT
+        id S1727033AbeJJPU1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 11:18:43 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59982 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbeJJPSn (ORCPT
+        Wed, 10 Oct 2018 11:20:27 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:55863 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725837AbeJJPU1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 11:18:43 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 514B060769; Wed, 10 Oct 2018 07:57:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539158265;
-        bh=Drq9ZoyggPvU77yschP3Ub5ayjGr9hUOxcYxydi+8S8=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=b9GuCcknSbGbCbSLZxAwTnUdTUYtCMrmLJzMQZ4D3w5n0mntzAgnueX0gnrdDbuXg
-         hdEBwmfQzWhASf5/64umiTqVjkqTplxclX4BtAMC98AEpNDhEjlXDqxo4jow+BeEmu
-         7Z0hUky0WffyjX8ojH2X1zGrBFh1Wbt3OTMTcXZk=
-Received: from x230.qca.qualcomm.com (188-67-121-187.bb.dnainternet.fi [188.67.121.187])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id ACF7D60769;
-        Wed, 10 Oct 2018 07:57:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539158264;
-        bh=Drq9ZoyggPvU77yschP3Ub5ayjGr9hUOxcYxydi+8S8=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=htJV+ioBlYV8btiRiw7aM5/FpD9unE6AHnCO8184ly6IKInbWxhhpjbDy/Iy4G6GO
-         9FR2x5Q4F9DAA/UDARjZ6yOANxcazpdWpwM0CcFTLnSzOm4pshNELtWVXo+HYnWtXZ
-         VvNC4uMxmGPlOQ2n8DBVbI4sVCLbsnxomWgmuae4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ACF7D60769
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+        Wed, 10 Oct 2018 11:20:27 -0400
+Received: by mail-wm1-f66.google.com with SMTP id 206-v6so4373461wmb.5
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 00:59:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bCLVxJpR0EjXaSGLfmaeF8kD1I3qO93ftJiNC9eUmIs=;
+        b=qAJi1siwzIYliknl+QNe7nojv7DyimCVGhsNgbF+y9f1pmkr3uQGFW3ogFURuFvtpG
+         drj20tRyky2EbztSUpT9y950e21h2qfRVUx9olchgdnxMNyOhAE8laVVfspq0Tku1F9l
+         2iUVqDw+Kn5N4z4nh6P9dqQTsPrNgzJyCrSyHCGvGJK0SmrSQNciOHJqK700oi6G4rG9
+         AN6MMNGiyErFbTY8nu9BxxAXEmH2ya1rdAqGVVJPORH9zPv+17zGdGme+MVuMqRSOBw7
+         lB2hJqx6gwPoUAguDUJx1MWyiy/WY0zHtrDUdpstT4lhEr5Pur8Lc0ndIQXh2ZAG9ZfN
+         aTjw==
+X-Gm-Message-State: ABuFfohilOZqXXQw1Yd8KSVI0QQooOJN0EVEuuxH1wHEHLPkAo857mlm
+        7WnCE5YEFUdmrzKi30VssvoB1RAHovE=
+X-Google-Smtp-Source: ACcGV61qvsVkrFw4C8B4g8dAl+GG6iKL8z2mSFmUv7/R0joBeCISbIGoURBvQVBcmwUdsRXRWEBNdw==
+X-Received: by 2002:a1c:6:: with SMTP id 6-v6mr4383222wma.126.1539158366948;
+        Wed, 10 Oct 2018 00:59:26 -0700 (PDT)
+Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
+        by smtp.gmail.com with ESMTPSA id 64-v6sm24206340wrr.64.2018.10.10.00.59.26
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 10 Oct 2018 00:59:26 -0700 (PDT)
+Subject: Re: [PATCH 5/6] brcmfmac: Set board_type from DMI on x86 based
+ machines
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
         linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: [PATCH 5/6] brcmfmac: Set board_type from DMI on x86 based machines
 References: <20181009124755.25402-1-hdegoede@redhat.com>
-        <20181009124755.25402-5-hdegoede@redhat.com>
-        <87murmxop9.fsf@codeaurora.org>
-        <7397e1f5-5df6-4b49-78dd-ddc9774de16b@redhat.com>
-        <12cc4f0d-38d4-bb7b-8b02-dbb57db284b3@broadcom.com>
-Date:   Wed, 10 Oct 2018 10:57:40 +0300
-In-Reply-To: <12cc4f0d-38d4-bb7b-8b02-dbb57db284b3@broadcom.com> (Arend van
-        Spriel's message of "Wed, 10 Oct 2018 09:52:15 +0200")
-Message-ID: <87efcyxmh7.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+ <20181009124755.25402-5-hdegoede@redhat.com> <87murmxop9.fsf@codeaurora.org>
+ <7397e1f5-5df6-4b49-78dd-ddc9774de16b@redhat.com>
+ <12cc4f0d-38d4-bb7b-8b02-dbb57db284b3@broadcom.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <d714db41-f885-7724-6a2d-982a969bb4ab@redhat.com>
+Date:   Wed, 10 Oct 2018 09:59:25 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <12cc4f0d-38d4-bb7b-8b02-dbb57db284b3@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Hi Arend,
 
+On 10-10-18 09:52, Arend van Spriel wrote:
 > On 10/10/2018 9:28 AM, Hans de Goede wrote:
 >> So how do you want to proceed with this, do you want me to just
 >> put the full ISC text in the header for now as the rest of brcmfmac
 >> does?
->
-> This is not entirely true as far as I know. I assume you are referring
-> to this:
->
+> 
+> This is not entirely true as far as I know. I assume you are referring to this:
+> 
 > /*
->  * Copyright (c) 2010 Broadcom Corporation
->  *
->  * Permission to use, copy, modify, and/or distribute this software for any
->  * purpose with or without fee is hereby granted, provided that the above
->  * copyright notice and this permission notice appear in all copies.
->  *
->  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
->  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE
-> FOR ANY
->  * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
->  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-> AN ACTION
->  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
->  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->  */
->
+>   * Copyright (c) 2010 Broadcom Corporation
+>   *
+>   * Permission to use, copy, modify, and/or distribute this software for any
+>   * purpose with or without fee is hereby granted, provided that the above
+>   * copyright notice and this permission notice appear in all copies.
+>   *
+>   * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+>   * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+>   * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+>   * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+>   * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+>   * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+>   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>   */
+> 
 > As far as I recall we opted for BSD license and ISC is equivalent.
 
-Oh, sorry for missing that.
+I believe it is the other way around, you opted for the ISC license
+which is more or less equivalent to the 2 clause BSD, see:
 
-> However, The BSD license are already in place so why not use that. I
-> would say BSD-2-Clause should cover it. As this is a new file I guess
-> it is up to you although I would prefer to stick with a permissive
-> license.
+https://spdx.org/licenses/BSD-2-Clause.html
+https://spdx.org/licenses/ISC
 
-From maintainer's point of view I very much prefer that a driver uses
-the same license in all files. It's very confusing if the license
-changes within different files.
+The ISC text is a 1:1 match to the license used in brcmfmac, and it seems
+sensible to me to be consistent and use the same license for all
+brcmfmac files even if the 2 are more or less equivalent.
 
--- 
-Kalle Valo
+> However, The BSD license are already in place so why not use that. I would say BSD-2-Clause should cover it. As this is a new file I guess it is up to you although I would prefer to stick with a permissive license.
+
+I've no problem with a permissive license, I will just stick with
+the ISC / same header as the rest of brcmfmac for consistency.
+
+Regards,
+
+Hans
+
+p.s.
+
+Any chance you could do a patch-review of this series?
+
