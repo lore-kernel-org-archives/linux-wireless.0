@@ -2,198 +2,115 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C583DC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A781C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:29:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7AE6521479
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:16:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7AE6521479
+	by mail.kernel.org (Postfix) with ESMTP id EF285214DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 07:29:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EF285214DA
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726525AbeJJOhN (ORCPT
+        id S1727765AbeJJOtx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 10:37:13 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:30137 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726479AbeJJOhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 10:37:12 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6906C4E915;
-        Wed, 10 Oct 2018 07:16:24 +0000 (UTC)
-Received: from shalem.localdomain.com (ovpn-116-109.ams2.redhat.com [10.36.116.109])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 762EC10018FF;
-        Wed, 10 Oct 2018 07:16:22 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Wed, 10 Oct 2018 10:49:53 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34470 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727419AbeJJOtv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 10:49:51 -0400
+Received: by mail-wr1-f66.google.com with SMTP id l6-v6so4045125wrt.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 00:29:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=vPZgsg2xXzYB8toueMQn9lqAbt02V4fxrGhnsWeelQ4=;
+        b=f/prLY1G2OgEnvNc5FgL3MVwbPcjbDoIZpaJxiYQIf0he3puIPzQIEGgNkHx5eTIUQ
+         D7wtUj7+tFUCKTOrON8utCo681GW1oCf/IH+AbM1/Fss4eeiJp05LvC0AH4HtMb00DoF
+         nI5cXw9AF0bos8CNarzLX95fshxkEZRcxANOmSqlLlp4W4y4zmY1w7/uq8zaPP+1lctQ
+         /Om+1c0EWmeVaEFsKQMh82ydwk3ubb4MAj20amWgHx54YgKihm5lRDo6JYbSfukvGyvW
+         wvumBxGgiBdvUxcbMFK//HqjnFv15jxnOEPx9tVuG06oa7r/IvEILp/tbBRK6xM4xqXQ
+         M3Pg==
+X-Gm-Message-State: ABuFfogCsKLsrgHsoyH5eWaRDjxbRRIWssfVw+Fz4HD680teBPw4mFXh
+        3YhQHaRIQTyGjzTQdZpvVW2tkg==
+X-Google-Smtp-Source: ACcGV60PlTMOv4ExwgyEvmz/ym2kZpxUGVGidjtRLJMd1qatKV05Vc/z+DJBl6nBD91febpULQxYUw==
+X-Received: by 2002:adf:81e1:: with SMTP id 88-v6mr25356448wra.19.1539156539526;
+        Wed, 10 Oct 2018 00:28:59 -0700 (PDT)
+Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
+        by smtp.gmail.com with ESMTPSA id u191-v6sm17757440wmd.31.2018.10.10.00.28.58
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 10 Oct 2018 00:28:58 -0700 (PDT)
+Subject: Re: [PATCH 5/6] brcmfmac: Set board_type from DMI on x86 based
+ machines
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Wright Feng <wright.feng@cypress.com>,
         linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v3] brcmfmac: Add support for getting nvram contents from EFI variables
-Date:   Wed, 10 Oct 2018 09:16:20 +0200
-Message-Id: <20181010071620.14197-1-hdegoede@redhat.com>
+References: <20181009124755.25402-1-hdegoede@redhat.com>
+ <20181009124755.25402-5-hdegoede@redhat.com> <87murmxop9.fsf@codeaurora.org>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <7397e1f5-5df6-4b49-78dd-ddc9774de16b@redhat.com>
+Date:   Wed, 10 Oct 2018 09:28:57 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 10 Oct 2018 07:16:24 +0000 (UTC)
+In-Reply-To: <87murmxop9.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Various X86 laptops with a SDIO attached brcmfmac wifi chip, store the
-nvram contents in a special EFI variable. This commit adds support for
-getting nvram directly from this EFI variable, without the user needing
-to manually copy it.
+Hi,
 
-This makes Wifi / Bluetooth work out of the box on these devices instead of
-requiring manual setup.
+On 10-10-18 09:09, Kalle Valo wrote:
+> Hans de Goede <hdegoede@redhat.com> writes:
+> 
+>> For x86 based machines, set the board_type used for nvram file selection
+>> based on the DMI sys-vendor and product-name strings.
+>>
+>> Since on some models these strings are too generic, this commit also adds
+>> a quirk table overriding the strings for models listed in that table.
+>>
+>> The board_type setting is used to load the board-specific nvram file with
+>> a board-specific name so that we can ship files for each supported board
+>> in linux-firmware.
+>>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> [...]
+> 
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
+>> @@ -0,0 +1,104 @@
+>> +// SPDX-License-Identifier: ISC
+> 
+> I don't see the ISC file in LICENSES directory[1] and I don't feel
+> comfortable taking SPDX tags which which don't have a license file.
 
-This has been tested on the following models: Acer Iconia Tab8 w1-810,
-Acer One 10, Asus T100CHI, Asus T100HA, Asus T100TA, Asus T200TA and a
-Lenovo Mixx 2 8.
+Ok. I need to do a patch for the LICENSES directory anyways, so I will
+also submit the ISC license upstream while at it, I will hopefully
+get around to doing that today.
 
-Tested-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
-Changes in v3:
--Drop ccode fixup code (to be re-added in a separate commit), so that we
- can get the main EFI nvram support merged while we figure out the ccode
- handling
+So how do you want to proceed with this, do you want me to just
+put the full ISC text in the header for now as the rest of brcmfmac
+does?
 
-Changes in v2:
--Stop testing for asus in the dmi sys_vendor string at least the Toshiba
- Encore uses the nvram efivar variable too
--Use a table mapping the firmare name to the correct ccode value (XV / X2) to
- use for the worldwide regulatory domain for that firmware, assuming the
- firmware from linux-firmware is used. This fixes the T200TA and T100HA not
- seeing 5GHz networks
--Not only fixup ccode=ALL, but also ccode=XV, this is necessary since the
- T100HA nvram efivar containts ccode=XV, but the firmware from Linux firmware
- needs ccode=X2 for proper operation
----
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 63 +++++++++++++++++--
- 1 file changed, 57 insertions(+), 6 deletions(-)
+Then later someone (me if I get around to it) can replace all of
+the headers with // SPDX-License-Identifier: ISC once it has been
+added under LICENSES.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index b38c4b40b235..a1dfe75c835f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -14,6 +14,7 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/efi.h>
- #include <linux/kernel.h>
- #include <linux/slab.h>
- #include <linux/device.h>
-@@ -445,6 +446,51 @@ struct brcmf_fw {
- 
- static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
- 
-+#ifdef CONFIG_EFI
-+static u8 *brcmf_fw_nvram_from_efi(const char *path, size_t *data_len_ret)
-+{
-+	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
-+	struct efivar_entry *nvram_efivar;
-+	unsigned long data_len = 0;
-+	u8 *data = NULL;
-+	int err;
-+
-+	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
-+	if (!nvram_efivar)
-+		return NULL;
-+
-+	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
-+	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
-+						0xb5, 0x1f, 0x43, 0x26,
-+						0x81, 0x23, 0xd1, 0x13);
-+
-+	err = efivar_entry_size(nvram_efivar, &data_len);
-+	if (err)
-+		goto fail;
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data)
-+		goto fail;
-+
-+	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
-+	if (err)
-+		goto fail;
-+
-+	brcmf_info("Using nvram EFI variable\n");
-+
-+	kfree(nvram_efivar);
-+	*data_len_ret = data_len;
-+	return data;
-+
-+fail:
-+	kfree(data);
-+	kfree(nvram_efivar);
-+	return NULL;
-+}
-+#else
-+static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-+#endif
-+
- static void brcmf_fw_free_request(struct brcmf_fw_request *req)
- {
- 	struct brcmf_fw_item *item;
-@@ -463,11 +509,12 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
- 	struct brcmf_fw_item *cur;
-+	bool free_bcm47xx_nvram = false;
-+	bool kfree_nvram = false;
- 	u32 nvram_length = 0;
- 	void *nvram = NULL;
- 	u8 *data = NULL;
- 	size_t data_len;
--	bool raw_nvram;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
- 
-@@ -476,12 +523,13 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	if (fw && fw->data) {
- 		data = (u8 *)fw->data;
- 		data_len = fw->size;
--		raw_nvram = false;
- 	} else {
--		data = bcm47xx_nvram_get_contents(&data_len);
--		if (!data && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
-+		if ((data = bcm47xx_nvram_get_contents(&data_len)))
-+			free_bcm47xx_nvram = true;
-+		else if ((data = brcmf_fw_nvram_from_efi(cur->path, &data_len)))
-+			kfree_nvram = true;
-+		else if (!(cur->flags & BRCMF_FW_REQF_OPTIONAL))
- 			goto fail;
--		raw_nvram = true;
- 	}
- 
- 	if (data)
-@@ -489,8 +537,11 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 					     fwctx->req->domain_nr,
- 					     fwctx->req->bus_nr);
- 
--	if (raw_nvram)
-+	if (free_bcm47xx_nvram)
- 		bcm47xx_nvram_release_contents(data);
-+	if (kfree_nvram)
-+		kfree(data);
-+
- 	release_firmware(fw);
- 	if (!nvram && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
- 		goto fail;
--- 
-2.19.0
+Regards,
+
+Hans
 
