@@ -1,121 +1,185 @@
-Return-Path: <SRS0=ggvw=MV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8867DC43441
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 23:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF7DC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 01:27:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CC87214C4
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Oct 2018 23:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 283202087D
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 01:27:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F993AAsE"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3CC87214C4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="dj4B4Rv6"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 283202087D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725757AbeJJGqv (ORCPT
+        id S1726636AbeJJIrf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 02:46:51 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:37425 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725748AbeJJGqv (ORCPT
+        Wed, 10 Oct 2018 04:47:35 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37894 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725789AbeJJIrf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 02:46:51 -0400
-Received: by mail-ot1-f67.google.com with SMTP id o14so3513656oth.4
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 16:27:32 -0700 (PDT)
+        Wed, 10 Oct 2018 04:47:35 -0400
+Received: by mail-pf1-f193.google.com with SMTP id f29-v6so1758496pff.5
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Oct 2018 18:27:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=MGmCc08bqptVb74pVMtKIhIJ6LkhHr+3sQbE2oS9Gxs=;
-        b=F993AAsEhbjnnufkz2hO6CHWEn2/5M1tHLNXEMqpr9aUPBwLKjFOraHlaBuOR1tJQl
-         NlUd5+FNNggrv4yaa/Ck/yHCrtronkWaFSqhqYxM/YZcuT/5CtkpC2376L3oTQM4s5Ut
-         5lYxle4TyIyBVRzyW53G2Lk78h0TU7XQ/80OWYghbmT95MiFco3kr+O00lEISCWW978o
-         0ajJXMDKz4l+BisA3Fv3yGJQ+eeLZqPHK4QBg3IY7q5kE197CcNmbc6LTJG9KuHRTk7y
-         hxXw5WqaATQII6nzGTlukXgeWCjtS5NzjWTgpEjKI6dW6vJTRmwygBnWEgtlRoZ9BwmW
-         A4zQ==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=/jq99VXlr+iyhEPhyN3zeWF3DJyAWRjzxKOwo9tiL5Q=;
+        b=dj4B4Rv6GUztwQXrrpwC9KdoAirqHITcrnvF4MXZiFetNa4HC3pbWjMxM2vY1SlEVv
+         afIOrBTTKlc10qhhUIe8Zx24ZU43MgiSvGTEx0aVsYIRg3aKy0bizHtrH0znjet5ftcd
+         2Q0qOOKdwxO4l2qgnyUN9Sem8FGjRnh4oH3TE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=MGmCc08bqptVb74pVMtKIhIJ6LkhHr+3sQbE2oS9Gxs=;
-        b=nvEopudxa/fTBy3Ox37od8IxMtPFRgX72c11Q6YeryGqJcYtEAgxTzFWuN2LUgCVSI
-         1q2GL4Hpo4mW63liPR6j1GUv52aZXiaGSnijPjIu6qfiFlPhPxzwTj2rkzwBc1V0fdRE
-         fDFXQpmDD1CSByQBgxlynZDWrQZS4M0E3sQuYteUMthoVGHK4vqL5H9uPgq/k8EB5x9d
-         OuIY29XautkaAU+oC6sP9biFHBhzPFKWhSQG9FnQ3IVGoKYsLdhDrqo2EdziC9kVe4ck
-         5l6B/u43oMfw8O4rTRIeZLJFO3sfNo4qUnv7EfzuwSOHbG9n11AepItHoqCijr9GN2hd
-         pORQ==
-X-Gm-Message-State: ABuFfoiDVAgSV1SsXW+MG/aNK9SGBtiLkU809n1WW78GsH0eTbvl0Owt
-        5WaLWX21yYhpS6iCOUQGSUA1X7993KhiZDEnyWM=
-X-Google-Smtp-Source: ACcGV61v348rHB0tMH1B2XnBwTn5NLDB89zNDYvXzrSefRUjfi7mpONfiOsPcbCMUxrUwRw7nqlHsOqGUuW3CNT4gps=
-X-Received: by 2002:a9d:7347:: with SMTP id l7mr11971423otk.270.1539127651938;
- Tue, 09 Oct 2018 16:27:31 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=/jq99VXlr+iyhEPhyN3zeWF3DJyAWRjzxKOwo9tiL5Q=;
+        b=S7PnWU0Sg/dWxYoGIS78dI/4oM/bdopEE80BSQHyjka3fX2gTJV5u9cR1eXRB7P2m3
+         ROP7Mtpq1hRPFzLENPJJlv37hRofM2KAwDzFWUTZ+shvVLPxKM9x4fkzdgGpVf2PzKUh
+         oyf+TtTR8KhpliYmrlCJ6ZY2CEOu6HZkLvj4Q66SmocMgSeAxg3CZIoNG4YzFjTJYJDw
+         kFBtU3AI5knr9Dw61DcrVKDCk5DW6s+Q4FMUCvHnoPaD7FK78cxutlmmmVgwpaIMFGKa
+         Fn0RrgMznsJkHfpOhc03CmRUtK2VOcjEvcXDVs7v6+zttiOLZ0bT+ML04vk4Y1IyBciC
+         e4Lg==
+X-Gm-Message-State: ABuFfohxYi8BOaeTmPIxSuo9n5sv5KIKVfwvL5cINVFC/gprUFsiDADs
+        VXhE76UEDba3OVE1czKMyN8p3g==
+X-Google-Smtp-Source: ACcGV60IwKOQWUSIXZunE6pIzh/W3bphd2HtA9cj2IoH2KY4yyAWL1USVJMaifxJWUVfw/NBZK9v1w==
+X-Received: by 2002:a65:62d5:: with SMTP id m21-v6mr28333689pgv.243.1539134870761;
+        Tue, 09 Oct 2018 18:27:50 -0700 (PDT)
+Received: from ban.mtv.corp.google.com ([2620:15c:202:1:299d:6b87:5478:d28a])
+        by smtp.gmail.com with ESMTPSA id h14-v6sm24538440pfn.80.2018.10.09.18.27.49
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 09 Oct 2018 18:27:49 -0700 (PDT)
+Date:   Tue, 9 Oct 2018 18:27:47 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Carl Huang <cjhuang@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: allocate small size dma memory in
+ ath10k_pci_diag_write_mem
+Message-ID: <20181010012745.GA31172@ban.mtv.corp.google.com>
+References: <1538992182-3717-1-git-send-email-cjhuang@codeaurora.org>
 MIME-Version: 1.0
-Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Tue, 9 Oct 2018 16:27:31 -0700 (PDT)
-In-Reply-To: <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
-References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com> <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Wed, 10 Oct 2018 01:27:31 +0200
-Message-ID: <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
-Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1538992182-3717-1-git-send-email-cjhuang@codeaurora.org>
+User-Agent: Mutt/1.10.1+48 (1f3a9df87d11) (2018-07-22)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 09/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> There is dupliceted 'if (rt2x00_rt(rt2x00dev, RT6352))' entry that couses
-> we do not perform proper register initaliztion for RT6352 (MT7620 SOCs).
->
-> Reported-by: Tomislav Po=C5=BEega <pozega.tomislav@gmail.com>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Hi Carl,
+
+On Mon, Oct 08, 2018 at 05:49:42PM +0800, Carl Huang wrote:
+> ath10k_pci_diag_write_mem may allocate big size of the dma memory
+> based on the parameter nbytes. Take firmware diag download as
+> example, the biggest size is about 500K. In some systems, the
+> allocation is likely to fail because it can't acquire such a large
+> contiguous dma memory.
+> 
+> The fix is to allocate a small size dma memory. In the loop,
+> driver copies the data to the allocated dma memory and writes to
+> the destination until all the data is written.
+> 
+> Tested with QCA6174 PCI with
+> firmware-6.bin_WLAN.RM.4.4.1-00119-QCARMSWP-1, this also affects
+> QCA9377 PCI.
+> 
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+
+Thanks for the patch! With one small comment, I think this otherwise
+looks good, so feel free to add my:
+
+Reviewed-by: Brian Norris <briannorris@chomium.org>
+
 > ---
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index daf20d7424ac..170e7c87f7bc 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -5451,8 +5451,7 @@ static int rt2800_init_registers(struct rt2x00_dev
-> *rt2x00dev)
->  					      0x00000000);
->  		}
->  	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> -		   rt2x00_rt(rt2x00dev, RT5392) ||
-> -		   rt2x00_rt(rt2x00dev, RT6352)) {
-> +		   rt2x00_rt(rt2x00dev, RT5392)) {
->  		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
->  		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
->  		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-> --
-> 2.7.5
->
->
+>  drivers/net/wireless/ath/ath10k/pci.c | 19 ++++++++++---------
+>  1 file changed, 10 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 873dbb6..1872671 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -1071,7 +1071,7 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  	struct ath10k_ce *ce = ath10k_ce_priv(ar);
+>  	int ret = 0;
+>  	u32 *buf;
+> -	unsigned int completed_nbytes, orig_nbytes, remaining_bytes;
+> +	unsigned int completed_nbytes, alloc_nbytes, remaining_bytes;
+>  	struct ath10k_ce_pipe *ce_diag;
+>  	void *data_buf = NULL;
+>  	u32 ce_data;	/* Host buffer address in CE space */
 
+^^ I don't think this is needed any more.
 
-have you got chance to test
-https://github.com/psyborg55/linux/commit/24b46d482590a87553df1de0b5c8032f3=
-63cb7cf
- ?
+> @@ -1088,9 +1088,10 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  	 *   1) 4-byte alignment
+>  	 *   2) Buffer in DMA-able space
+>  	 */
+> -	orig_nbytes = nbytes;
+> +	alloc_nbytes = min_t(unsigned int, nbytes, DIAG_TRANSFER_LIMIT);
+> +
+>  	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
+> -						       orig_nbytes,
+> +						       alloc_nbytes,
+>  						       &ce_data_base,
+>  						       GFP_ATOMIC);
+>  	if (!data_buf) {
+> @@ -1098,9 +1099,6 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  		goto done;
+>  	}
+>  
+> -	/* Copy caller's data to allocated DMA buf */
+> -	memcpy(data_buf, data, orig_nbytes);
+> -
+>  	/*
+>  	 * The address supplied by the caller is in the
+>  	 * Target CPU virtual address space.
+> @@ -1113,12 +1111,15 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  	 */
+>  	address = ath10k_pci_targ_cpu_to_ce_addr(ar, address);
+>  
+> -	remaining_bytes = orig_nbytes;
+> +	remaining_bytes = nbytes;
+>  	ce_data = ce_data_base;
 
- using this code to determine 7620 soc
+Because you no longer need to increment 'ce_data', you can just pass
+'ce_data_base' to ath10k_ce_send_nolock() now.
 
- if (rt =3D=3D RT5390 && rt2x00_is_soc(rt2x00dev))
-         rt =3D RT6352;
+Regards,
+Brian
 
- somehow did not work in rt2800_init_registers routine. i could verify
- that by removing tx_sw_cfg registers from rt6352 and the wifi would
- still work, unless removed them from rt5390 also
+>  	while (remaining_bytes) {
+>  		/* FIXME: check cast */
+>  		nbytes = min_t(int, remaining_bytes, DIAG_TRANSFER_LIMIT);
+>  
+> +		/* Copy caller's data to allocated DMA buf */
+> +		memcpy(data_buf, data, nbytes);
+> +
+>  		/* Set up to receive directly into Target(!) address */
+>  		ret = ce_diag->ops->ce_rx_post_buf(ce_diag, &address, address);
+>  		if (ret != 0)
+> @@ -1171,12 +1172,12 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+>  
+>  		remaining_bytes -= nbytes;
+>  		address += nbytes;
+> -		ce_data += nbytes;
+> +		data += nbytes;
+>  	}
+>  
+>  done:
+>  	if (data_buf) {
+> -		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
+> +		dma_free_coherent(ar->dev, alloc_nbytes, data_buf,
+>  				  ce_data_base);
+>  	}
+>  
+> -- 
+> 2.7.4
+> 
