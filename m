@@ -2,195 +2,106 @@ Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABAEEC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 14:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D2ADC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 14:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56B342087A
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 14:11:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E15ED2087A
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 14:19:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BBKIg0GR"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 56B342087A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="A8wH+vZK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E15ED2087A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726713AbeJJVde (ORCPT
+        id S1726713AbeJJVlh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 17:33:34 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:34913 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbeJJVde (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 17:33:34 -0400
-Received: by mail-ot1-f67.google.com with SMTP id 14so1463931oth.2
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 07:11:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=dGybtr+FrhsD0wOlMzW0+HGHsEZ8QinaXLPibsRpWE8=;
-        b=BBKIg0GRfolq0bfZMuVsBFUDLfaJMjO+ifRqx2tQrL7pIMPrFMcmepb2YF6dlQTfCU
-         fVqHIyF/4wFU4+fLFqluuT1H+6A47x5UbLjvpTPYQNz7T6Wt5CzYTOrXnfsHdomc5v9o
-         Y8zQOtCqKqGZaVkLvP4/dFBAP+joxBfmcmekKj0Bs641FY994MpdSRDZOgcwyreN5PXT
-         fhmK1CQnbltt6PDtSzTK/70Shpml5q6Kq0cfpofGW0mT/law0mtCk/zs/pJPWHu0/gBO
-         0qOH6YgzXkdGYYCrEEvKbcnSkUXJLefdjtulPb/RaWOjX20kjQlEGQF2CKv5ZZP3PORh
-         8d1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=dGybtr+FrhsD0wOlMzW0+HGHsEZ8QinaXLPibsRpWE8=;
-        b=mZP8txVbuVhyakKuSF4ORjn54LzgUp9EQcWgOdKDcuBpIj9NXknjnVPwAbXXh7IKoo
-         8DVPoxgbPzqQlSgxIuyz0iEHT3bXSgmM9i5asjzuIy/wvw8rlemTDJy5rU9ugqtbwptr
-         5hRjnsTQqTNksyMq7Rr6rqX/16hS78ITqKSSJ9Vh5Sg3AQJEQOhsG/GqoR6ih5gHuHRu
-         emCVT60hPfogV5RAeoBzBSanlnw6lPVHLrbMU2ax3bGkZ+115/wlHDZha/DimbaNITEV
-         a4Sq85IuxTY+5SlM3ABHkBa/US7H9Z9VSRk+i1ydgd9uk2d9Q5J2ImxKKH1+HZl7vyRl
-         M7uQ==
-X-Gm-Message-State: ABuFfohKPkR+vlVI6S9VMN87y7/06ezSlCrv25lXUEVgXTQ+6gwz/swi
-        w+6I8wZYRbLrvMEg+DmfbJipGTGOtzcnOHp2pHY=
-X-Google-Smtp-Source: ACcGV627nDh+iHaGI7Z93exdxfHvgV/xCg17MJVN2IZA82UN2P5ZyIBdz6c18kwgPeEfZ33GBU8J9NQdAMSxJaulRHc=
-X-Received: by 2002:a9d:11b2:: with SMTP id v47mr18723632otf.281.1539180672797;
- Wed, 10 Oct 2018 07:11:12 -0700 (PDT)
+        Wed, 10 Oct 2018 17:41:37 -0400
+Received: from mail-eopbgr710055.outbound.protection.outlook.com ([40.107.71.55]:64065
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726562AbeJJVlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 10 Oct 2018 17:41:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dJcP/6PFV8ur7sI6fZGWKtlWHCp0wux9yzMjLOVf6fQ=;
+ b=A8wH+vZKgy0iR0ylqTdh4/5j68gC/RrghmjBlRCSzcRRl3CRTJq9vFDbdYPMrADNC0nhtIBDkIt4J/30dOfIBqbLxx0/ZcErE0ZHvC5Uaw6oi16/Epwjus5mpRAFIlRQ2RCXE9tx6q3uBAKI/vk2xWEU99s3X0NE5iZt0ky6c60=
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com (20.177.144.212) by
+ BL0PR05MB4851.namprd05.prod.outlook.com (52.132.15.33) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1228.20; Wed, 10 Oct 2018 14:19:11 +0000
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::e4b8:995b:1c73:657a]) by BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::e4b8:995b:1c73:657a%3]) with mapi id 15.20.1228.020; Wed, 10 Oct 2018
+ 14:19:11 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [bug report] qtnfmac: cleanup and unify command error handling
+Thread-Topic: [bug report] qtnfmac: cleanup and unify command error handling
+Thread-Index: AQHUYIWez65qmsmG+0eN6mJDhh9N66UYh1uA
+Date:   Wed, 10 Oct 2018 14:19:11 +0000
+Message-ID: <20181010141904.kplmwifqimdb5fc5@bars>
+References: <20181010103952.GA14986@mwanda>
+In-Reply-To: <20181010103952.GA14986@mwanda>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM5PR0201CA0017.eurprd02.prod.outlook.com
+ (2603:10a6:203:3d::27) To BL0PR05MB4595.namprd05.prod.outlook.com
+ (2603:10b6:208:5f::20)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BL0PR05MB4851;6:SiR5yCebWytLkT8+fP138VtE7CiJWXXbBBN3mHiDC+/4GUcwqeAEtqJbKfuVVUlpDZ5Pr2iFBzfP809BRg8cQyiBIWyY6vBRnmbQ1mU8c99ELvkU8+3Ieitjl17GlVk3ZKfJKChJcJM/c7Irv1H5w1jeRybzr9RqdRWtAVQ7/bu2ThBZVvRDHHepMYOuL3Rs1gbqxg6P0nKp7x7b2Zv/+t0tNT/1ScQOvQ1xB6vtD6fPoxdbU0tGgBXbfr0EMtioaM8/r/RXPax0IksNN7YrgNeLOlzOpyOoKivnFtngVE4N2HoMIUxBCRCEfi22e8SwQVR5NceU7KwnmPPk1UFhZ6A3Pq6tlshnuCOH++cF1M96txBu0ZXYc0on32hq7HY3NGen8tLjjZoOFB2He8laliALqGJbr+8XOefkmwdQPFb3uq3hdyDkyN/4GSiCw1X0WCHVvjuid7S6kLHQYIFZrg==;5:FK3kgp9fsyjM7TOnXS3gErthGQeGROHKuNv6LtG766o4SsMNggPYzj2ATo95JqAwXqpdQ2KD3WwXJidX4Aax4b7sidVnXlV/b4ptLi5Xt6D3SomHhX5c7jtuu9mtPjFmXA2o52yIN0enGaYikTASTNWDY9W198oNmh/KYctkYsI=;7:ddgdXtlZZx7Nnj/ykZ8jcNVuhVxUfRHwgb0aJyKEFm+2E1TnKg9OO1wyTt/o/0P7IjjdLMtB75nBb4OF2QJuotRedaSfe80vRA5qnTQl1MzMRlqtwPw570fK1aRHukQIbSATDHMrKakrs+8DKTNKYEP3BvOw3XtaSjdvga7cvDqwZNfxXCPVnI9+kWCds5JZhSi8Hf+POdExAw/inM1ElLbLlzLQs+5K0JLFtFmhrie2YeCKy/LcPjkGPynrNgR2
+x-ms-office365-filtering-correlation-id: 0efa5256-c7f6-4e44-735f-08d62ebb5919
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB4851;
+x-ms-traffictypediagnostic: BL0PR05MB4851:
+x-microsoft-antispam-prvs: <BL0PR05MB4851A29CF9DE1E4DA5ED31D3A3E00@BL0PR05MB4851.namprd05.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(10201501046)(3002001)(3231355)(944501410)(52105095)(93006095)(93001095)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123558120)(201708071742011)(7699051);SRVR:BL0PR05MB4851;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB4851;
+x-forefront-prvs: 08213D42D3
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(396003)(366004)(39850400004)(136003)(376002)(346002)(189003)(199004)(51914003)(26005)(99286004)(476003)(2900100001)(1076002)(486006)(186003)(6486002)(52116002)(53936002)(6116002)(3846002)(6512007)(6436002)(229853002)(86362001)(105586002)(256004)(14444005)(6246003)(9686003)(2906002)(478600001)(5660300001)(25786009)(5250100002)(66066001)(316002)(81166006)(81156014)(102836004)(14454004)(8936002)(33716001)(6506007)(8676002)(386003)(33896004)(76176011)(68736007)(305945005)(446003)(11346002)(71200400001)(4326008)(106356001)(7736002)(71190400001)(97736004)(6916009);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB4851;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: CVDZSu6l0HUNYhM4dM4v78yvUg8tsv+R1WBwjkgYDUpRLNnc2tOqW87I0vQw+f/3uVSmwro4hU75TiJjw5FQ9AtOrLHcLYErEuSLbFdMfm20bohSrjXhhWoL4QsC4+EP4Cwpxu3QeSj3GRGYgexm4D89Y24ic7r1m8YdVRsLeHzMXsnPO4urRN91yvaanLcDjFGUAhOfwU+HJ7nEacyvZqqiV24sSkofWhCzcY3XojE6MDxmJ95+ryBFh9JOCBQYMMa+33f1cl0Xx89RQO8YsayyAEKSMEEt9E/jinzoKvq6d/DN2yQNxjM3sJuSrtH6Bv0Vgc+6RWjNIJ6Nylfhc9iZYFZWBrzVDHaaMgtbcWU=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <068A704B0837B342B2E98527FC5B6630@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Wed, 10 Oct 2018 07:11:12
- -0700 (PDT)
-In-Reply-To: <20181010124508.GA22330@redhat.com>
-References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
- <1539086170-32528-4-git-send-email-sgruszka@redhat.com> <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
- <20181010071451.GA9140@redhat.com> <20181010120657.GA1185@makrotopia.org> <20181010124508.GA22330@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Wed, 10 Oct 2018 16:11:12 +0200
-Message-ID: <CAKR_QVJbtzpu6v4bZEz2UegWiAy1Ohooy-TciZcOeR_p+Z+yYg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Daniel Golle <daniel@makrotopia.org>,
-        linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
-        Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0efa5256-c7f6-4e44-735f-08d62ebb5919
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Oct 2018 14:19:11.3262
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR05MB4851
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-case 1:
+Hello Dan,
 
-	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-		   rt2x00_rt(rt2x00dev, RT5392)) {
-		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
-		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
-		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-	} else if (rt2x00_rt(rt2x00dev, RT6352)) {
-		rt2800_register_write(rt2x00dev, MIMO_PS_CFG, 0x00000002);
-		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0x00150F0F);
-		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x06060606);
-		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
-		rt2800_register_write(rt2x00dev, TX1_BB_GAIN_ATTEN, 0x0);
-		rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN, 0x6C6C666C);
-		rt2800_register_write(rt2x00dev, TX1_RF_GAIN_ATTEN, 0x6C6C666C);
+> The patch c6ed298ffe09: "qtnfmac: cleanup and unify command error
+> handling" from Oct 5, 2018, leads to the following static checker
+> warning:
+>=20
+>         drivers/net/wireless/quantenna/qtnfmac/commands.c:132 qtnf_cmd_se=
+nd_with_reply()
+>         warn: variable dereferenced before check 'resp' (see line 117)
 
-does your 6352 wifi work?
+Thanks for the report! We will queue a fix into the next patch set.
 
-case 2:
-
-	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-		   rt2x00_rt(rt2x00dev, RT5392)) {
-	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
-		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
-		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
-		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-	} else if (rt2x00_rt(rt2x00dev, RT6352)) {
-		rt2800_register_write(rt2x00dev, MIMO_PS_CFG, 0x00000002);
-		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0x00150F0F);
-		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x06060606);
-		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
-		rt2800_register_write(rt2x00dev, TX1_BB_GAIN_ATTEN, 0x0);
-		rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN, 0x6C6C666C);
-		rt2800_register_write(rt2x00dev, TX1_RF_GAIN_ATTEN, 0x6C6C666C);
-
-does your 6352 wifi still work?
-
-
-On 10/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hello
->
-> On Wed, Oct 10, 2018 at 02:06:58PM +0200, Daniel Golle wrote:
->> > > https://github.com/psyborg55/linux/commit/24b46d482590a87553df1de0b5c8032f363cb7cf
->> > >  ?
->> > >
->> > >  using this code to determine 7620 soc
->> > >
->> > >  if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
->> > >          rt = RT6352;
->> > >
->> > >  somehow did not work in rt2800_init_registers routine. i could
->> > > verify
->> > >  that by removing tx_sw_cfg registers from rt6352 and the wifi would
->> > >  still work, unless removed them from rt5390 also
->> >
->> > I tested by adding additional printk("Init RT6352 registers\n"); in
->> > if (rt2x00_rt(rt2x00dev, RT6352)) branch. The message was printed:
->> >
->> > [   68.049946] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352,
->> > rev 0500 detected
->> > [   68.065392] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 7620
->> > detected
->> > [   68.079777] ieee80211 phy0: Selected rate control algorithm
->> > 'minstrel_ht'
->> > [   68.177760] kmodloader: done loading kernel modules from
->> > /etc/modules.d/*
->> > [   68.825758] urandom_read: 5 callbacks suppressed
->> > [   68.825768] random: jshn: uninitialized urandom read (4 bytes read)
->> > [   77.792400] 8021q: adding VLAN 0 to HW filter on device eth0
->> > [   77.825045] br-lan: port 1(eth0.1) entered blocking state
->> > [   77.836032] br-lan: port 1(eth0.1) entered disabled state
->> > [   77.847156] device eth0.1 entered promiscuous mode
->> > [   77.856739] device eth0 entered promiscuous mode
->> > [   77.931043] br-lan: port 1(eth0.1) entered blocking state
->> > [   77.941861] br-lan: port 1(eth0.1) entered forwarding state
->> > [   77.953171] IPv6: ADDRCONF(NETDEV_UP): br-lan: link is not ready
->> > [   78.849852] IPv6: ADDRCONF(NETDEV_CHANGE): br-lan: link becomes
->> > ready
->> > [   82.302306] Init RT6352 registers
->> >
->> > Perhaps rt2x00_is_soc(rt2x00dev) does not work on this particular
->> > system
->> > that you have and device is configured as RT5390 ? I.e. maybe this is
->> > PCIe device. This should be printed in :
->> >
->> > ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 6352, rev 0500
->> > detected
->> >
->> > line, you should have 'RT chipset 5390' instead.
->>
->> RT6352 is the pre-mediatek-merge name of MT7620A/N. It is always a SoC.
->> The RF part of both MT7620A and MT7620N identifies as RT5390. The
->> vendor driver also uses an equivalent check to destinguish between the
->> actual PCIe/USB RT5390xx and RT6352, see
->>
->> https://github.com/i80s/mtk-sources/blob/master/mt7620/src/include/rtmp_chip.h#L114
->
-> Yes , but this does not explain why things do not work as
-> expected for Tomislav, which IIUC use RT5390 configuration.
->
-> Perhaps the check:
->
-> 	if (rt == RT5390 && rt2x00_is_soc(rt2x00dev))
-> 		rt = RT6352;
->
-> should be some how modified to work on Tomislav's hardware ?
->
-> Thanks
-> Stanislaw
->
+Regards,
+Sergey
