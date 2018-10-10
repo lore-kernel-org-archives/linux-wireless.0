@@ -4,165 +4,147 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 438B4C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 19:13:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88CECC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 20:03:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1EE62075B
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 19:13:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15B10206B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 20:03:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZOhiGoyi"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E1EE62075B
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H6g8vZwR"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 15B10206B2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727271AbeJKCgz (ORCPT
+        id S1727469AbeJKD04 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Oct 2018 22:36:55 -0400
-Received: from mail-qt1-f179.google.com ([209.85.160.179]:45146 "EHLO
-        mail-qt1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727214AbeJKCgz (ORCPT
+        Wed, 10 Oct 2018 23:26:56 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:37314 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726911AbeJKD04 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Oct 2018 22:36:55 -0400
-Received: by mail-qt1-f179.google.com with SMTP id e10-v6so6993239qtq.12
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 12:13:24 -0700 (PDT)
+        Wed, 10 Oct 2018 23:26:56 -0400
+Received: by mail-oi1-f195.google.com with SMTP id e17-v6so5153576oib.4
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Oct 2018 13:03:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=jz5lmU4KP/qnlRUxoUZwzaow3sJYdCX8KMPU4GF39Nk=;
-        b=ZOhiGoyiLWY4lxmvOdTR9h7hrFFtd2WxHQocSyoQ7LuIdgoUw9r2y/L6Lvzd9Q4aer
-         bngqWKk4arOlx/pTj6DX1OqqTxmIONQ15MLsKkwZeuBZHRRZDqDc5s+7Ji3I2QfiduJK
-         7fT6+cOCEqUQcukpzre1flWHQHl2kECxC3ZDp/fuqhVNzXNHVueeOq3+vO5/UjmRAZZu
-         BTZEs/J+X2zR8qpCnQlHDXgWVpqlnFRIBZLHM1uRngneMKDf5NOO2OBGFvebQN5pUmRK
-         L7Qv4K0idMwAsM19FrOyiVWLoD3sTRtU6gT4jwZ7XvPPC9/QTCk3IT69L+3UqVaIX8kw
-         aB5A==
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=ETwSclotxRPBKyqpmun1EXLodV3SuMw2h7E83Dquytg=;
+        b=H6g8vZwRKmUQVpyzgPtj0jQkctFzhxaSYG7nRqTi58CpP0jS75n8Ul+wjPbtCG9F6Z
+         meNAcHJ0+I6/THzICCMXBljbgYqUQx8VAGrJKaHKrIH9k4pNnOEJhdmDvWWl+3a/d95y
+         uUu51ypfcFnpXEoTHCCx9U0l8C5WUUhBFLxz+uIV/KIHyuC7iGgkkjTW2Os98UtxQk/d
+         tvg4FxJQcCm6mrjgqm4ND0TYr1jGJdMoZfAYGiPsbhIp05V2w8O1JxcjQ0J+nWNfuXvW
+         2fPYw/IYRRM/laFVBlWMaMXTTvS0k1TFnxr+eLQMRrnzZLlpYjQLGksQ16pV8HyZWaWP
+         elKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=jz5lmU4KP/qnlRUxoUZwzaow3sJYdCX8KMPU4GF39Nk=;
-        b=fjU07sO+iCfTO0BE9Zmey/QRGLxS9bvMgNMS9Z5Y0m1gKP+siFQXTEh7KqiW0KM1L8
-         OA2KdZAqLSlf40OM3MP8gWuY9ZoXfkqjPdlrrYhAXIHe5nGZVjlEdfJYyD/Cw7nyQpQE
-         iWeL9gr96M6auKNF0a36cBtkC3E6LkcFKaqnnE6u4YuMKxyNpdJcebMA9sC0uOca9CT2
-         MD75GYY9hW13y8+6IwrdvghQj93BdNAy+bSNSBrSRSg/0InpCvCp+aji5mWz0ReM1bZX
-         fLwdOaW6NML+Vb3ZBo2UHaa4KZAk1OfgGavKwD+ncZu2iZ0du/zHK9dWTyQuy9GggQXG
-         0THQ==
-X-Gm-Message-State: ABuFfoiskuDcS3EMVmlXUeQxevMFlMjzzvy7Io3f0XK2KEIMHJZ7NIUD
-        pZpcv7S42t1rrTy1inxXtRoWTqAa2ddtN4AvPYjX0Q==
-X-Google-Smtp-Source: ACcGV610klnaT8RJFGXBRaG+A47BERM+Yw9XItYTemt9WRh+daO5S7HfprsnnKUbHjWWOGxkS8tYsnRnb3tXC64VsnI=
-X-Received: by 2002:ac8:3261:: with SMTP id y30-v6mr28510153qta.175.1539198803507;
- Wed, 10 Oct 2018 12:13:23 -0700 (PDT)
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=ETwSclotxRPBKyqpmun1EXLodV3SuMw2h7E83Dquytg=;
+        b=LdU7hXyLiVO22ARZfZ03fufAlsHp5fXOFBFn9qa9NN4W0RkBgqbtSSDTNIGOwJSE4+
+         tXSmaGBTdW6uu7mksIZO2RRZRc9tvdpYGIAaZA2uIvFSt+4cj4dLamP1UGyZP+CbXCz6
+         NP3NMxlfXOd1DnKZomUFanexpandTF7gLwMktDnOO/vhROLEHCE8VHP4BVCetODvnPY5
+         MSyB0D3ttvINXZKrgzw+YGM9zRTB7OD2cPG+8dYCMaeCzPTYEkDk87PQ+TBTE44FJxWZ
+         AZ9MzQql/mJRGAsvvdH7lCltCONXVlxPH8iUxNcCKnP45p55zAKA3Opa6ZTlTqltawvx
+         1AgA==
+X-Gm-Message-State: ABuFfoge21rM2y0b6tK53spTxKv3eMCWIR+2G5M/LYOgUCfEPxxK9A/v
+        huUo6NgrJSE3MIFwSdrPDDiLeGB8iX0U2/NfL4g=
+X-Google-Smtp-Source: ACcGV60vEeBbtw9ZAi7NYqoD49ZBCG8NW3tIsYvNbDPhmy3GxAgvXGW/nXOa+SLbTnOhL8bTcKjBN4i/jDRDKB/aBt8=
+X-Received: by 2002:aca:484a:: with SMTP id v71-v6mr2547954oia.163.1539201793014;
+ Wed, 10 Oct 2018 13:03:13 -0700 (PDT)
 MIME-Version: 1.0
-References: <a44e3947-29a9-d7ba-abec-59bc1b92b201@candelatech.com>
- <87pnwqaiso.fsf@toke.dk> <CAA93jw768_OOUB1w81_9Ck_XgSbDG4P2nBfuptT+SLXCf3voTA@mail.gmail.com>
- <01b77936-f6d4-271a-d7d2-0fd2cf70f7bd@candelatech.com>
-In-Reply-To: <01b77936-f6d4-271a-d7d2-0fd2cf70f7bd@candelatech.com>
-From:   Dave Taht <dave.taht@gmail.com>
-Date:   Wed, 10 Oct 2018 12:13:11 -0700
-Message-ID: <CAA93jw6zjyBeyK2Ln8U4QfgxxES6y7E3opR7YxCpS-khBAea=w@mail.gmail.com>
-Subject: Re: Tool to debug wifi pkt sniffs?
-To:     Ben Greear <greearb@candelatech.com>
-Cc:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        linux-wireless <linux-wireless@vger.kernel.org>
+Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Wed, 10 Oct 2018 13:03:12
+ -0700 (PDT)
+In-Reply-To: <20181010154054.GA27779@redhat.com>
+References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
+ <1539086170-32528-4-git-send-email-sgruszka@redhat.com> <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
+ <20181010071451.GA9140@redhat.com> <20181010120657.GA1185@makrotopia.org>
+ <20181010124508.GA22330@redhat.com> <CAKR_QVJbtzpu6v4bZEz2UegWiAy1Ohooy-TciZcOeR_p+Z+yYg@mail.gmail.com>
+ <20181010154054.GA27779@redhat.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Wed, 10 Oct 2018 22:03:12 +0200
+Message-ID: <CAKR_QVLjFyGtzikLTiQKhrVBSyUoPmDn2tMJqto8dyBDjoFJOQ@mail.gmail.com>
+Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
+        Felix Fietkau <nbd@nbd.name>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 10:10 AM Ben Greear <greearb@candelatech.com> wrote=
-:
->
-> On 10/03/2018 01:29 PM, Dave Taht wrote:
-> > On Wed, Oct 3, 2018 at 1:16 PM Toke H=C3=B8iland-J=C3=B8rgensen <toke@t=
-oke.dk> wrote:
-> >>
-> >> Ben Greear <greearb@candelatech.com> writes:
-> >>
-> >>> Hello,
-> >>>
-> >>> I often find myself wanting to figure out what equipment is to blame =
-(and why)
-> >>> in a wifi environment.
-> >>>
-> >>> I am thinking writing a tool that would parse a pcap file and look at=
- frames
-> >>> in enough detail to flag block-ack bugs, rate-ctrl bugs, guess at the=
- sniffer's
-> >>> capture ability, etc.
-> >>>
-> >>> Does anyone have anything already written that they would like to sha=
-re, or know
-> >>> of projects that might already do some of this?
-> >>
-> >> Not sure if this fits your criteria, but Sven's tool to create airtime
-> >> charts from packet sniffing data immediately came to mind:
-> >>
-> >> https://github.com/cloudtrax/airtime-pie-chart
-> >
-> > I have used that. Oy, it's a PITA. Some of kathie's code over here
-> > (example: https://github.com/pollere/pping ) uses the slightly less
-> > painful http://libtins.github.io/ library for parsing packets.
->
-> I couldn't find anything that did what I wanted, so I wrote my own.
->
-> The (perl) code is in the wifi-diag directory of this public repo:
->
-> https://github.com/greearb/lanforge-scripts
->
-> The rest of the scripts in that repo are not related to the wifi-diag scr=
-ipt, so just ignore those.
->
-> Here is example output for what I have so far:
->
-> https://www.candelatech.com/oss/wifi-diag/netgear-up-5s/index.html
+ok, that is strange. do you see any performance differences without
+TX_SW_CFG regs? iperf test is a good pointer.
 
-I *miss* writing in perl. :)
+this was a problem on xiaomi mini with old DD trunk builds on 4.4
+kernel and LEDE builds from last year. i ain't got no chance to try
+this on 18.06. which device you tried this on? if ipa/ilna it might
+make no difference
 
-My guess from looking at that output that that was a udp flood test.
-Do I win the internets?
-
+On 10/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Wed, Oct 10, 2018 at 04:11:12PM +0200, Tom Psyborg wrote:
+>> case 1:
+>>
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
+>> 		   rt2x00_rt(rt2x00dev, RT5392)) {
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+>> 	} else if (rt2x00_rt(rt2x00dev, RT6352)) {
+>> 		rt2800_register_write(rt2x00dev, MIMO_PS_CFG, 0x00000002);
+>> 		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0x00150F0F);
+>> 		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x06060606);
+>> 		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
+>> 		rt2800_register_write(rt2x00dev, TX1_BB_GAIN_ATTEN, 0x0);
+>> 		rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN, 0x6C6C666C);
+>> 		rt2800_register_write(rt2x00dev, TX1_RF_GAIN_ATTEN, 0x6C6C666C);
+>>
+>> does your 6352 wifi work?
+>>
+>> case 2:
+>>
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
+>> 		   rt2x00_rt(rt2x00dev, RT5392)) {
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+>> 	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
+>> 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+>> 	} else if (rt2x00_rt(rt2x00dev, RT6352)) {
+>> 		rt2800_register_write(rt2x00dev, MIMO_PS_CFG, 0x00000002);
+>> 		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0x00150F0F);
+>> 		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x06060606);
+>> 		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
+>> 		rt2800_register_write(rt2x00dev, TX1_BB_GAIN_ATTEN, 0x0);
+>> 		rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN, 0x6C6C666C);
+>> 		rt2800_register_write(rt2x00dev, TX1_RF_GAIN_ATTEN, 0x6C6C666C);
+>>
+>> does your 6352 wifi still work?
 >
-> The general idea is to get a performance test going, and then use tshark =
-or similar
-> to grab a short sample (my script is slow, it can process only about 400 =
-packets per second
-> on my desktop, so a 5 sec capture at full speed takes around 5 minutes to=
- process),
-> and then pipe that decoded pcap into my script.
+> I checked 'case 2' (on my 'rt2x00' branch on top of 'openwrt-18.06'):
 >
-> It tries to pay attention to latencies between block-ack and next AMPDU f=
-rame,
-> MCS distributions, packet-type distributions, retries, and other
-> such things.  I'm guessing tweaking wmm settings (or changing QoS in the =
-generated traffic)
-> would be visible in this kind of metric, for instance.
+> https://github.com/sgruszka/openwrt/commit/8abecc22605bd0221022673a3671201256cff72b
 >
-> The goal is to be able to answer the question of why one AP is faster or =
-slower than another
-> when running the same test case.
+> wifi still does work on my MT7620 router with above change and print
+> is correct.
 >
-> Feedback (and even patches) is welcome...what other things can I report t=
-hat would
-> be helpful?
+> If it does not work for you, we have to figure this out. Maybe there are
+> extra patches that broke things or there are some race conditions when
+> setting "rt =" . Hard to tell. Perhaps you could provide dmesg
+> from router where is does not work ?
 >
+> Thanks
+> Stanislaw
 >
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-
-
---=20
-
-Dave T=C3=A4ht
-CTO, TekLibre, LLC
-http://www.teklibre.com
-Tel: 1-831-205-9740
