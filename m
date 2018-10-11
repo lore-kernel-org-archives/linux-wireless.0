@@ -2,162 +2,155 @@ Return-Path: <SRS0=d2Dv=MX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A842C677FC
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 19:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A930C677FC
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 20:18:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CFC82075C
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 19:31:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E7B520659
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 20:18:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bMB6e+t1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4CFC82075C
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xw2Vhrgj"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0E7B520659
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726214AbeJLC7l (ORCPT
+        id S1726097AbeJLDr3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 22:59:41 -0400
-Received: from mail-qk1-f177.google.com ([209.85.222.177]:44110 "EHLO
-        mail-qk1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726036AbeJLC7l (ORCPT
+        Thu, 11 Oct 2018 23:47:29 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:38081 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726040AbeJLDr3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 22:59:41 -0400
-Received: by mail-qk1-f177.google.com with SMTP id y8-v6so6214789qka.11
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 12:31:02 -0700 (PDT)
+        Thu, 11 Oct 2018 23:47:29 -0400
+Received: by mail-pf1-f193.google.com with SMTP id f29-v6so4968591pff.5
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 13:18:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=/Zuk7R5+uxRx4erk8GrBpi2ZdJAIfx6Z3p5bEINm47k=;
-        b=bMB6e+t1UD4aYZnEwS2BtHp0BY3JGTO+QBn1IaejolXw5n960vgzBSREl1RTUd52pn
-         anuoi4h07sYU0f6DIQRrDhL+LyZNZ0EzYG5qSVuN0QW/f8EbB7p4WRzfU3RJ2Kb7WSzy
-         TrLij6BrY1J6yksEYL3OsrFRgqpBK8z1qR6Lpr64x58qUdw5hkQeG8FpzuI3Nz4PyjsD
-         elwP5EayzMmRtjnogT7mj3Mr2jvfWg/ms076t6UM/NnbfVBwSOkTva7jjYQFzC4kRXbb
-         SNtbBMKgcWQzkhEf4ZhQU9Qs+eX9s6kYmfzybCQ+A+0iBwrzru38coutrONlGtWO1Akx
-         N/Rw==
+        h=from:to:cc:subject:date:message-id;
+        bh=6vDOTArplbSoSgRTTMA3dGwknH38peuZIANetG37mPc=;
+        b=Xw2VhrgjBfVpYHhgGrkHlA3+N86uzize+QHe+4jPX09BtgGM/kMsikmqkIGmZ42DrV
+         AUDRCFJc2I9CL5QwUPSqUJxXgEuzbZ+h/3buocObRuiA4EeaChfhzDiMWX1GisNWdszT
+         P/MtkbJOfds/xK4JCrmmMFUv3717gDmBRdGxV2yX0QMWmDz3XtoXuuvG1vx02MGX6CPK
+         ti5Ea65V+GMghTwfzSW3rwfcAbSldSKahZIgmEa97vrHHTMcNNa+IdQJdslPx/FMO35K
+         voQozcBaoym+m0Lt7LG+7iZUDKqhpqTnFrmgNfafpToCWxU5INenHsszqCMWlhU8uDu3
+         mCoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=/Zuk7R5+uxRx4erk8GrBpi2ZdJAIfx6Z3p5bEINm47k=;
-        b=AcE2mMkprU8UDsioQPIdEO2h5a3lqadTf59/I8tmMrrRHuWibKM5/MRxs/eXVXwRql
-         DcgMoc5eZfA2dEKRcxNlSuYFGK4k9wLm2WcREjPVp4gxC67qQVVIcmlpvz+rC+w26KSr
-         BA097VpASpE/L5oICcENIFVxIaH9+CzjFXXxMCXZDxjpTBDSKeNn6AAnnCxMt6HA0jGa
-         yPId746laSFLqXkp7gaT2spl01lh1LRTlcCpu5H4VJskmiLUXy1/1zGOZjisO9lsnaxs
-         z3+reuACYB3X32E97IgR+8iz9VJcDQVB45yxItNuCptloKchjpqD+b5tpLuXOa9brVXs
-         GouQ==
-X-Gm-Message-State: ABuFfoilQ1T6J8OjDJ0oFf6/yrGXvHuAbzsnohzM5VmIoBf7HVGtLBLt
-        3C1BdAv3u82nPhC5kWJUnd1MYzakzE/a6BfV3g3XPQ==
-X-Google-Smtp-Source: ACcGV62BnmoYHYkiFKq4vL2Fejdv8ZB8B/+fUshQT2U4TlZThe87kDidfahQ85tkPxfv0quQAjp/a8aOkXJvwvyx4/g=
-X-Received: by 2002:a37:170d:: with SMTP id i13-v6mr2865834qkh.125.1539286261963;
- Thu, 11 Oct 2018 12:31:01 -0700 (PDT)
-MIME-Version: 1.0
-References: <edaca500-8ae2-aef4-1c9d-b754af7e899f@gmx.com>
-In-Reply-To: <edaca500-8ae2-aef4-1c9d-b754af7e899f@gmx.com>
-From:   =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-Date:   Thu, 11 Oct 2018 21:30:50 +0200
-Message-ID: <CABvG-CUJNAq=4XWf3bVYw_EF4W8zmmL7fvc=nt+Zae82Wn7yug@mail.gmail.com>
-Subject: Re: Intel 8265 unstable/asymmetric ping response time (only under Linux)
-To:     quwenruo.btrfs@gmx.com
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=6vDOTArplbSoSgRTTMA3dGwknH38peuZIANetG37mPc=;
+        b=g4tRbInu/xViuOOi67N2tMPseAJocqEuTP3PdM5V7SQCf/qZzLcnRO6PCeRfz/dZnU
+         pqlX75nw/upfOOuk3ercflZh5QF5BNbvQaCwyp3rWkGl9v6T5XwfWk0B4mRaPgTP4ZeT
+         9NattGRo6L4E9H4YB4cwNOEInI9h9gRKkXsyiT/o1SpbsCN2gZBfvEPigOu4dIbVLy5z
+         09mv68ICf6jpL8XJJ5TAtQP2zOEvqlwkUnJCNiQUV89MCxvatchGtLhHKKQJHIMkYsbT
+         jK1TYoPbLtQZd7tqMGOq4a/vP7aX2YujIQT2YG6BBFyVbENdB6W0FZX4oblWK1OlI5U/
+         Xwug==
+X-Gm-Message-State: ABuFfog2O2rcZpCI173etzwIcnGjFmxlHU+SfJYaNMEpdfKsVZvnBQBH
+        jl5CfOiM2AJe6tE7mrqH9GM=
+X-Google-Smtp-Source: ACcGV625kfPnU1NzD+hYxFx4BcbPRWRN8YlLVyuo6PTkpDUkwG7O7EtzImED1oaK4QvBTtADrKAkxA==
+X-Received: by 2002:a63:e601:: with SMTP id g1-v6mr2763936pgh.290.1539289117391;
+        Thu, 11 Oct 2018 13:18:37 -0700 (PDT)
+Received: from localhost.localdomain ([67.139.187.132])
+        by smtp.gmail.com with ESMTPSA id l71-v6sm22616152pgd.31.2018.10.11.13.18.35
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 11 Oct 2018 13:18:36 -0700 (PDT)
+From:   Dan Haab <riproute@gmail.com>
+X-Google-Original-From: Dan Haab <dan.haab@luxul.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Dan Haab <dan.haab@luxul.com>
+Subject: [PATCH] brcmfmac: support STA info struct v7
+Date:   Thu, 11 Oct 2018 14:19:01 -0600
+Message-Id: <1539289141-13689-1-git-send-email-dan.haab@luxul.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 11 Oct 2018 at 15:56, Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
->
-> Hi,
->
-> I found one pretty strange behavior for the Intel 8265/8275 wireless
-> (from ThinkPad X1 carbon)
->
-> If I ping *FROM* my router/desktop to the wireless laptop, the response
-> time is very unstable and slow, like:
-> ------
-> $ ping -4 thinkpad
-> PING thinkpad.lan (172.16.0.100) 56(84) bytes of data.
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D1 ttl=3D64 time=3D1=
-43 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D2 ttl=3D64 time=3D1=
-66 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D3 ttl=3D64 time=3D1=
-88 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D4 ttl=3D64 time=3D2=
-11 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D5 ttl=3D64 time=3D2=
-9.8 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D6 ttl=3D64 time=3D5=
-1.7 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D7 ttl=3D64 time=3D7=
-2.8 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D8 ttl=3D64 time=3D9=
-4.6 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D9 ttl=3D64 time=3D1=
-17 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D10 ttl=3D64 time=3D=
-140 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D11 ttl=3D64 time=3D=
-163 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D12 ttl=3D64 time=3D=
-186 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D13 ttl=3D64 time=3D=
-207 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D14 ttl=3D64 time=3D=
-25.1 ms
-> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D15 ttl=3D64 time=3D=
-47.6 ms
-> -----
->
-> It looks like the response time get increase by 20ms and flipped over
-> around 200ms.
-[...]
-> So is this something wrong with the wireless card or something wrong
-> with the firmware/powersaving setting of ThinkPad X1 Carbon 6th gen?
+The newest firmwares provide STA info using v7 of the struct. As v7
+isn't backward compatible, a union is needed.
 
-What you're seeing here is powersave.
+Even though brcmfmac does not use any of the new info it's important to
+provide the proper struct buffer. Without this change new firmwares will
+fallback to the very limited v3 instead of something in between such as
+v4.
 
-When you ping your laptop its wifi card may be in powersave so AP will
-store those icmp requests in a queue. The AP will start advertising
-that fact in the next beacon frame (which it broadcasts regularily).
-The wifi client can then see that there's traffic queued up for it,
-wake up, receive it and possibly reply (with icmp response in your
-case). The interval between each ping is long enough for the wifi
-client to re-enter powersave due to "nothing more to do" every time
-causing the same sequence (sleep, queue, advertise, wake, txrx).
+Signed-off-by: Dan Haab <dan.haab@luxul.com>
+---
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 39 ++++++++++++++++++----
+ 1 file changed, 32 insertions(+), 7 deletions(-)
 
-The time drift comes from the fact beacon interval tends to be
-slightly off from your ping interval. The fact it wraps around at
-~200msec for you means your AP's beacon interval is roughly that long
-as well which you can probably confirm with your AP/wifi router
-settings. Most APs tend to run 100 or 200msec (or TU, actually, which
-is 1024/1000 of msec) by default.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index d5bb81e..189d576 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -176,6 +176,8 @@
+ 
+ #define BRCMF_VHT_CAP_MCS_MAP_NSS_MAX	8
+ 
++#define BRCMF_HE_CAP_MCS_MAP_NSS_MAX	8
++
+ /* MAX_CHUNK_LEN is the maximum length for data passing to firmware in each
+  * ioctl. It is relatively small because firmware has small maximum size input
+  * playload restriction for ioctls.
+@@ -601,13 +603,36 @@ struct brcmf_sta_info_le {
+ 	__le32 rx_pkts_retried;        /* # rx with retry bit set */
+ 	__le32 tx_rate_fallback;       /* lowest fallback TX rate */
+ 
+-	/* Fields valid for ver >= 5 */
+-	struct {
+-		__le32 count;					/* # rates in this set */
+-		u8 rates[BRCMF_MAXRATES_IN_SET];		/* rates in 500kbps units w/hi bit set if basic */
+-		u8 mcs[BRCMF_MCSSET_LEN];			/* supported mcs index bit map */
+-		__le16 vht_mcs[BRCMF_VHT_CAP_MCS_MAP_NSS_MAX];	/* supported mcs index bit map per nss */
+-	} rateset_adv;
++	union {
++		struct {
++			struct {
++				__le32 count;					/* # rates in this set */
++				u8 rates[BRCMF_MAXRATES_IN_SET];		/* rates in 500kbps units w/hi bit set if basic */
++				u8 mcs[BRCMF_MCSSET_LEN];			/* supported mcs index bit map */
++				__le16 vht_mcs[BRCMF_VHT_CAP_MCS_MAP_NSS_MAX];	/* supported mcs index bit map per nss */
++			} rateset_adv;
++		} v5;
++
++		struct {
++			__le32 rx_dur_total;	/* total user RX duration (estimated) */
++			__le16 chanspec;	/** chanspec this sta is on */
++			__le16 pad;
++			struct {
++				__le16 version;					/* version */
++				__le16 len;					/* length */
++				__le32 count;					/* # rates in this set */
++				u8 rates[BRCMF_MAXRATES_IN_SET];		/* rates in 500kbps units w/hi bit set if basic */
++				u8 mcs[BRCMF_MCSSET_LEN];			/* supported mcs index bit map */
++				__le16 vht_mcs[BRCMF_VHT_CAP_MCS_MAP_NSS_MAX];	/* supported mcs index bit map per nss */
++				__le16 he_mcs[BRCMF_HE_CAP_MCS_MAP_NSS_MAX];	/* supported he mcs index bit map per nss */
++			} rateset_adv;		/* rateset along with mcs index bitmap */
++			__le16 wpauth;		/* authentication type */
++			u8 algo;		/* crypto algorithm */
++			__le32 tx_rspec;	/* Rate of last successful tx frame */
++			__le32 rx_rspec;	/* Rate of last successful rx frame */
++			__le32 wnm_cap;		/* wnm capabilities */
++		} v7;
++	};
+ };
+ 
+ struct brcmf_chanspec_list {
+-- 
+1.9.1
 
-If you run more traffic the lag will go away. I find this sort of
-behavior behavior annoying for mostly idle systems where I want to do
-remoting with ssh (or any other bursty and interactive work).
-
-You can try disabling powersave with:
-  iw wlan0 set power_save off
-
-You might need to replace wlan0 with wlpXsY depending on your system.
-You'll need root privileges to do it, e.g. via sudo, or su.
-
-Keep in mind it'll cause more power to be outputted and e.g. leave you
-with slightly shorter battery runtime. On intel compute sticks
-disabling wifi powersave can cause its fan to kick in more often due
-to thermal impact and unfortunate fan trip points.
-
-Wifi powersave might be disabled in Windows for some reason. Maybe it
-does that disable it when AC is plugged in, and if you were to plug it
-out and run off of battery only, it'd enable it and show similar
-(laggy) behavior?
-
-
-Micha=C5=82
