@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94548C32788
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 09:51:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74EC4C32788
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 09:51:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 638E12098A
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 09:51:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 638E12098A
+	by mail.kernel.org (Postfix) with ESMTP id 43A9D2087D
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 09:51:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 43A9D2087D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727510AbeJKRRm (ORCPT
+        id S1728302AbeJKRRo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 13:17:42 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:56488 "EHLO mx1.redhat.com"
+        Thu, 11 Oct 2018 13:17:44 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:17786 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726035AbeJKRRm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 13:17:42 -0400
+        id S1726035AbeJKRRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Oct 2018 13:17:44 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7C1943DD83;
-        Thu, 11 Oct 2018 09:51:10 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 80C2385362;
+        Thu, 11 Oct 2018 09:51:12 +0000 (UTC)
 Received: from shalem.localdomain.com (unknown [10.36.118.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9EF8B62A78;
-        Thu, 11 Oct 2018 09:51:08 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C00B262A78;
+        Thu, 11 Oct 2018 09:51:10 +0000 (UTC)
 From:   Hans de Goede <hdegoede@redhat.com>
 To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -39,166 +39,120 @@ To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Wright Feng <wright.feng@cypress.com>
 Cc:     Hans de Goede <hdegoede@redhat.com>,
         linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH v4 1/2] brcmfmac: Add support for getting nvram contents from EFI variables
-Date:   Thu, 11 Oct 2018 11:51:06 +0200
-Message-Id: <20181011095107.17073-1-hdegoede@redhat.com>
+Subject: [PATCH v4 2/2] brcmfmac: Fix ccode from EFI nvram when necessary
+Date:   Thu, 11 Oct 2018 11:51:07 +0200
+Message-Id: <20181011095107.17073-2-hdegoede@redhat.com>
+In-Reply-To: <20181011095107.17073-1-hdegoede@redhat.com>
+References: <20181011095107.17073-1-hdegoede@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Thu, 11 Oct 2018 09:51:10 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Thu, 11 Oct 2018 09:51:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Various X86 laptops with a SDIO attached brcmfmac wifi chip, store the
-nvram contents in a special EFI variable. This commit adds support for
-getting nvram directly from this EFI variable, without the user needing
-to manually copy it.
+In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
+to specify "worldwide" compatible settings, but these 2 ccode-s do not work
+properly.
 
-This makes Wifi / Bluetooth work out of the box on these devices instead of
-requiring manual setup.
+I've tested the different known "worldwide" ccode-s used in various nvram
+sources with the latest firmwares from linux-firmware for various brcmfmac
+models, here is a simplified (*) table with what each setting results in:
+
+ALL: 12-14 disab, U-NII-1, U-NII-2 no-IR/radar, U-NII-3
+XV:  12-14 no-IR, disables all 5G channels
+XY:  12-13 enab, 14 disab, U-NII-1 enab, U-NII-2 no-IR/radar, U-NII-3 disab
+X2:  12-13 no-IR, 14 dis, U-NII-1 no-IR, U-NII-2 no-IR/radar, U-NII-3 no-IR
+
+Where 12,13,14 are 2.4G channels 12-14 and U-NII-1/2/3 are the 3 different
+5G channel groups. no-IR is no-Initiate-Radiation, we will never send on
+these channels without first having received valid wifi traffic there.
+
+This immediately shows that both ALL and XV are not as worldwide as we want
+them to be. ALL causes channels 12 and 13 to not be available and XV causes
+all 5GHz channels to not be available. Also ALL unconditionally enables the
+U-NII-1 and U-NII-3 5G groups, while we really should be using no-IR for
+these.
+
+This commit replace XV and ALL with X2, which allows usage of chan 12-13
+and 5G channels, but only after receiving valid wifi traffic there first.
+
+Note that this configure the firmware's channel limits, the kernels own
+regulatory restrictions based on e.g. regulatory info received from the
+access-point, will be applied on top of this.
+
+This fixes channels 12+13 not working on the Asus T200TA and the Lenovo
+Mixx 2 8 and 5G channels not working on the Asus T100HA.
 
 This has been tested on the following models: Acer Iconia Tab8 w1-810,
 Acer One 10, Asus T100CHI, Asus T100HA, Asus T100TA, Asus T200TA and a
 Lenovo Mixx 2 8.
 
+*) There are some exceptions to this table:
+1) On really old firmware e.g. linux-firmware's 2011 brcmfmac4330-sdio.bin
+   ALL really means all, unconditionally enabling everything
+2) The exact meaning might be influenced by setting the regrev nvram var.
+   Specifically using ccode=XV + regrev=1 on brcmfmac43241b4 leads to:
+   12-14 no-ir, U-NII-1 no-ir, U-NII-2 no-ir/radar, U-NII-3 no-ir
+   But only on the brcmfmac43241b4 and not on e.g. the brcmfmac43340
+
 Tested-by: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
 Changes in v4:
--Drop unused path argument from brcmf_fw_nvram_from_efi(), this makes its
- prototype the same again as the empty implementation which gets used when
- CONFIG_EFI is not defined, fixing compilation without CONFIG_EFI
+-Rebase for changes to "brcmfmac: Add support for getting nvram contents
+ from EFI variables" patch
 
 Changes in v3:
--Drop ccode fixup code (to be re-added in a separate commit), so that we
- can get the main EFI nvram support merged while we figure out the ccode
- handling
-
-Changes in v2:
--Stop testing for asus in the dmi sys_vendor string at least the Toshiba
- Encore uses the nvram efivar variable too
--Use a table mapping the firmare name to the correct ccode value (XV / X2) to
- use for the worldwide regulatory domain for that firmware, assuming the
- firmware from linux-firmware is used. This fixes the T200TA and T100HA not
- seeing 5GHz networks
--Not only fixup ccode=ALL, but also ccode=XV, this is necessary since the
- T100HA nvram efivar containts ccode=XV, but the firmware from Linux firmware
- needs ccode=X2 for proper operation
+-New patch in v3 of this patch-set
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 63 +++++++++++++++++--
- 1 file changed, 57 insertions(+), 6 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/firmware.c    | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index b38c4b40b235..965ae5c24c2d 100644
+index 965ae5c24c2d..72d8c0c3c3a1 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -14,6 +14,7 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/efi.h>
- #include <linux/kernel.h>
- #include <linux/slab.h>
- #include <linux/device.h>
-@@ -445,6 +446,51 @@ struct brcmf_fw {
- 
+@@ -447,6 +447,29 @@ struct brcmf_fw {
  static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
  
-+#ifdef CONFIG_EFI
-+static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
+ #ifdef CONFIG_EFI
++/* In some cases the EFI-var stored nvram contains "ccode=ALL" or "ccode=XV"
++ * to specify "worldwide" compatible settings, but these 2 ccode-s do not work
++ * properly. "ccode=ALL" causes channels 12 and 13 to not be available,
++ * "ccode=XV" causes all 5GHz channels to not be available. So we replace both
++ * with "ccode=X2" which allows channels 12+13 and 5Ghz channels in
++ * no-Initiate-Radiation mode. This means that we will never send on these
++ * channels without first having received valid wifi traffic on the channel.
++ */
++static void brcmf_fw_fix_efi_nvram_ccode(char *data, unsigned long data_len)
 +{
-+	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
-+	struct efivar_entry *nvram_efivar;
-+	unsigned long data_len = 0;
-+	u8 *data = NULL;
-+	int err;
++	char *ccode;
 +
-+	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
-+	if (!nvram_efivar)
-+		return NULL;
++	ccode = strnstr((char *)data, "ccode=ALL", data_len);
++	if (!ccode)
++		ccode = strnstr((char *)data, "ccode=XV\r", data_len);
++	if (!ccode)
++		return;
 +
-+	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
-+	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
-+						0xb5, 0x1f, 0x43, 0x26,
-+						0x81, 0x23, 0xd1, 0x13);
-+
-+	err = efivar_entry_size(nvram_efivar, &data_len);
-+	if (err)
-+		goto fail;
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data)
-+		goto fail;
-+
-+	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
-+	if (err)
-+		goto fail;
-+
-+	brcmf_info("Using nvram EFI variable\n");
-+
-+	kfree(nvram_efivar);
-+	*data_len_ret = data_len;
-+	return data;
-+
-+fail:
-+	kfree(data);
-+	kfree(nvram_efivar);
-+	return NULL;
++	ccode[6] = 'X';
++	ccode[7] = '2';
++	ccode[8] = '\r';
 +}
-+#else
-+static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-+#endif
 +
- static void brcmf_fw_free_request(struct brcmf_fw_request *req)
+ static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
  {
- 	struct brcmf_fw_item *item;
-@@ -463,11 +509,12 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
- 	struct brcmf_fw_item *cur;
-+	bool free_bcm47xx_nvram = false;
-+	bool kfree_nvram = false;
- 	u32 nvram_length = 0;
- 	void *nvram = NULL;
- 	u8 *data = NULL;
- 	size_t data_len;
--	bool raw_nvram;
- 
- 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
- 
-@@ -476,12 +523,13 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 	if (fw && fw->data) {
- 		data = (u8 *)fw->data;
- 		data_len = fw->size;
--		raw_nvram = false;
- 	} else {
--		data = bcm47xx_nvram_get_contents(&data_len);
--		if (!data && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
-+		if ((data = bcm47xx_nvram_get_contents(&data_len)))
-+			free_bcm47xx_nvram = true;
-+		else if ((data = brcmf_fw_nvram_from_efi(&data_len)))
-+			kfree_nvram = true;
-+		else if (!(cur->flags & BRCMF_FW_REQF_OPTIONAL))
- 			goto fail;
--		raw_nvram = true;
- 	}
- 
- 	if (data)
-@@ -489,8 +537,11 @@ static int brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 					     fwctx->req->domain_nr,
- 					     fwctx->req->bus_nr);
- 
--	if (raw_nvram)
-+	if (free_bcm47xx_nvram)
- 		bcm47xx_nvram_release_contents(data);
-+	if (kfree_nvram)
-+		kfree(data);
-+
- 	release_firmware(fw);
- 	if (!nvram && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
+@@ -476,6 +499,7 @@ static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
+ 	if (err)
  		goto fail;
+ 
++	brcmf_fw_fix_efi_nvram_ccode(data, data_len);
+ 	brcmf_info("Using nvram EFI variable\n");
+ 
+ 	kfree(nvram_efivar);
 -- 
 2.19.0
 
