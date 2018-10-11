@@ -2,109 +2,166 @@ Return-Path: <SRS0=d2Dv=MX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA43EC4161D
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 14:14:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76FB5C4161D
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 14:25:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A17D820841
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 14:14:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="H/q7UeFh";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="O4qK8mkk"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A17D820841
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=kroah.com
+	by mail.kernel.org (Postfix) with ESMTP id 464A620652
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 14:25:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 464A620652
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728386AbeJKVlr (ORCPT
+        id S1728474AbeJKVw1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 17:41:47 -0400
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:50307 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726537AbeJKVlr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 17:41:47 -0400
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-        by mailout.nyi.internal (Postfix) with ESMTP id D39FF21FFC;
-        Thu, 11 Oct 2018 10:14:24 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute6.internal (MEProxy); Thu, 11 Oct 2018 10:14:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm2; bh=ikiaQ1h3K0K7hHI2Hw9ZJNJV6LY
-        PQEAyAz5+b3Hw7wE=; b=H/q7UeFhzlQO90UZFCEmZxES8Z8I27warWyYaN47cIX
-        S/dNjrhK0bDSL+SS9n8yrmdOBa4onM14RJDXb7QnRHLs8JmFW8GufZTxsj7NjNmv
-        VioQwi9jLjQ2ZzpgClMd1fWVRpPSLvoYW9dVhHJgJxt1HIsMPBHVWyvRkIKo0L+M
-        4L9coyYGTnuM6uP/qhpKPa4nN1reWJ/5Sf9lYpjz+aFfO+rktVTh32kucycg9xOd
-        YZ2a3JU45Io5oHzO94X4w/gcV5i0KwJZb4jnOq8V28UOlwxDB0LU5ByJAWZioOQE
-        PGY0EadZQrP10gxHWXrjOYFiPTmNnwH40nGBrYL3fgw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=ikiaQ1
-        h3K0K7hHI2Hw9ZJNJV6LYPQEAyAz5+b3Hw7wE=; b=O4qK8mkkDOf2lINk+qIifn
-        aDoBLQiSP8LhgGYU3o1BSU256x8TONM//7iUzgBYvImtjl4yWFPCH1L/zNvI6GLo
-        dkYhUpkXPXDfgmi4OXI1IE+TpGfgwzLlndtTxavtlxN68J50dKNt4lY56ZMmEC9o
-        dXnxXrhkrz1mlb6NGUx8gdgby43bWZnEu58+U99sk5xUdvnwG01gMYL8OcTVE4zf
-        7txG3+wC3+mruq29a60PD51X6ZO9AwvkB7snH+rqneLC3PVAxWRx23PBDidDNTpd
-        LaCY1OI8nEpcugTN3iCQOPcG+5fQtGyBsBZpU8SWyUdvpz8Ty+VqiYH5UzlLhD7Q
-        ==
-X-ME-Sender: <xms:wFq_W-aMMVNW1e9G7Eub36NVpKBWkI4ZQNUWuah4uVKOMDX6r1F6aw>
-X-ME-Proxy: <xmx:wFq_W1lgBdLOJZIhez6ClKONrhbuebB4aKfuUyub6T7wXAh2j5S0DA>
-    <xmx:wFq_W3nL7fCsyDW7sK_ymhO5snQj7x7FjnKMRF43XLV4BPOWrve-rQ>
-    <xmx:wFq_WzKya45aS-E6o46Pk2UxF0wOZkiux8fe0AqCvf7XfwgAhXp8Kw>
-    <xmx:wFq_Wzxv7nLdytFp-zymuhH3KfLG8kJf5Fdto8z63cU6ctVJArxStQ>
-    <xmx:wFq_W8tuFZygiAaE7CdAEsoxRbjtlftcoZyoHEMOjA0-m-yuM6PulA>
-    <xmx:wFq_W7LSlod5WFBW4JTTpfNGk15fVa_dCtiNzSxKPaw2newf78B-CQ>
-Received: from localhost (ip-213-127-77-176.ip.prioritytelecom.net [213.127.77.176])
-        by mail.messagingengine.com (Postfix) with ESMTPA id ADB73102EB;
-        Thu, 11 Oct 2018 10:14:23 -0400 (EDT)
-Date:   Thu, 11 Oct 2018 16:14:22 +0200
-From:   Greg KH <greg@kroah.com>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     stable@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Zhi Chen <zhichen@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org
-Subject: Re: [for -stable] commit "c82919888064 ath10k: fix scan crash due to
- incorrect length calculation"
-Message-ID: <20181011141422.GD9507@kroah.com>
-References: <20180906213620.GA72542@ban.mtv.corp.google.com>
+        Thu, 11 Oct 2018 17:52:27 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13622 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726537AbeJKVw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Oct 2018 17:52:27 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id E9F406B25A1EC;
+        Thu, 11 Oct 2018 22:24:54 +0800 (CST)
+Received: from [127.0.0.1] (10.202.226.41) by DGGEMS407-HUB.china.huawei.com
+ (10.3.19.207) with Microsoft SMTP Server id 14.3.399.0; Thu, 11 Oct 2018
+ 22:24:55 +0800
+Subject: Re: Question on FIELD_PREP() for static array
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Joe Perches <joe@perches.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <jakub.kicinski@netronome.com>, <yamada.masahiro@socionext.com>,
+        "Arnd Bergmann" <arnd@arndb.de>, <viro@zeniv.linux.org.uk>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <c8594a75-964b-01b0-382e-88bcb5b462f2@huawei.com>
+ <40fd3d963820bf96547fa9b5e8c171c6a339674e.camel@perches.com>
+ <1539195207.3687.178.camel@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>, <nbd@nbd.name>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <830ff9fb-07b1-86b6-4f57-af549a37a8c0@huawei.com>
+Date:   Thu, 11 Oct 2018 15:24:48 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180906213620.GA72542@ban.mtv.corp.google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1539195207.3687.178.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.41]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Sep 06, 2018 at 02:36:22PM -0700, Brian Norris wrote:
-> Hi Greg / stable maintainer(s),
-> 
-> IIUC, this commit is a good candidate for -stable. I just hit the bug on
-> 4.14, because of new vendor firmware that noticed the mismatched length
-> (an internal "assert"), but it seems like this is equally problematic
-> from the kernel side for as long as this code existed [1]:
-> 
-> commit c8291988806407e02a01b4b15b4504eafbcc04e0
-> Author: Zhi Chen <zhichen@codeaurora.org>
-> Date:   Mon Jun 18 17:00:39 2018 +0300
-> 
->     ath10k: fix scan crash due to incorrect length calculation
-> 
-> Thanks,
-> Brian
-> 
-> [1] I guess that would be:
-> 
-> Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
-> 
-> which was in v4.0.
+On 10/10/2018 19:13, Johannes Berg wrote:
+> On Wed, 2018-10-10 at 10:33 -0700, Joe Perches wrote:
+>>
+>>> Specifically it doesn't like the __BF_FIELD_CHECK() in FIELD_PREP().
+>>>
+>>> Any ideas on compiler trickery we could do with the FIELD_PREP()
+>>> definition to avoid this issue (i.e. enforce the check but only use the
+>>> constant value)?
+>>
 
-Thanks, now queued up.
+thanks guys
 
-greg k-h
+>> Perhaps __bf_shf should not use __builtin_ffsll.
+>
+> __bf_shf() is a constant expression, and is fine in this context.
+>
+> The problem is the use of the compound statement here:
+>
+> static int x[2] = {
+> 	({ (void)(0); 1; }),
+> 	0,
+> }
+>
+> similarly fails to compile.
+>
+> I've recently run into a similar situation, namely in
+> include/net/netlink.h, and the applicable way to solve it here would be
+> something like this:
+>
+> diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+> index 3f1ef4450a7c..0680d641923f 100644
+> --- a/include/linux/bitfield.h
+> +++ b/include/linux/bitfield.h
+> @@ -49,19 +49,16 @@
+>
+>  #define __bf_shf(x) (__builtin_ffsll(x) - 1)
+>
+> +#define BUILD_BUG_ON_RET_ZERO(cond) (sizeof(char[1 - 2*!!(cond)]) - 1)
+> +#define BUILD_BUG_ON_NOT_POW2_RET_ZERO(n)	BUILD_BUG_ON_RET_ZERO(((n) & ((n) - 1)) != 0)
+> +
+
+>  #define __BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
+> -	({								\
+> -		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
+> -				 _pfx "mask is not constant");		\
+> -		BUILD_BUG_ON_MSG((_mask) == 0, _pfx "mask is zero");	\
+> -		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
+> -				 ~((_mask) >> __bf_shf(_mask)) & (_val) : 0, \
+> -				 _pfx "value too large for the field"); \
+> -		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
+> -				 _pfx "type of reg too small for mask"); \
+> -		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
+> -					      (1ULL << __bf_shf(_mask))); \
+> -	})
+> +	BUILD_BUG_ON_RET_ZERO(!__builtin_constant_p(_mask)) +		\
+> +	BUILD_BUG_ON_RET_ZERO((_mask) == 0) +				\
+> +	BUILD_BUG_ON_RET_ZERO(__builtin_constant_p(_val) ?		\
+> +			      ~((_mask) >> __bf_shf(_mask)) & (_val) : 0) + \
+> +	BUILD_BUG_ON_RET_ZERO((_mask) > (typeof(_reg))~0ull) +	\
+> +	BUILD_BUG_ON_NOT_POW2_RET_ZERO((_mask) + (1ULL << __bf_shf(_mask)))
+>
+>  /**
+>   * FIELD_FIT() - check if value fits in the field
+> @@ -85,10 +82,8 @@
+>   * be combined with other fields of the bitfield using logical OR.
+>   */
+>  #define FIELD_PREP(_mask, _val)						\
+> -	({								\
+> -		__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
+> -		((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask);	\
+> -	})
+> +	(__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ") +		\
+> +	 (((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask)))
+>
+>  /**
+>   * FIELD_GET() - extract a bitfield element
+>
+>
+> Note that this is an incomplete patch - everything but FIELD_PREP will
+> not compile with this.
+>
+> Also, BUILD_BUG_ON_RET_ZERO and BUILD_BUG_ON_NOT_POW2_RET_ZERO should
+> probably have better names, or perhaps do the positive way that I did in
+> __NLA_ENSURE, e.g. CONST_ASSERT()/CONST_ASSERT_IS_POWER_OF_2()? I guess
+> they should go to build_bug.h as well...
+
+Seems reasonable. However I did try this and was getting compiler 
+warnings about VLA, from a non-constant being fed into 
+BUILD_BUG_ON_RET_ZERO(), related to sizeof char[]:
+drivers/iio/adc/meson_saradc.c:375:2: warning: ISO C90 forbids variable 
+length array [-Wvla]
+   regval = FIELD_PREP(MESON_SAR_ADC_CHAN_LIST_ENTRY_MASK(0),
+
+Surely __NLA_ENSURE is getting a similar issue as it uses a similar 
+principle, no? I see that this is in -next now, but could not this macro 
+or derivatives being referenced.
+
+>
+
+Much appreciated,
+John
+
+> johannes
+>
+> .
+>
+
+
