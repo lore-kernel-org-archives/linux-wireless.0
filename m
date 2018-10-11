@@ -1,199 +1,110 @@
-Return-Path: <SRS0=yLyd=MW=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=d2Dv=MX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 483E9C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 23:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 147FEC43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 00:13:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D57A72087A
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Oct 2018 23:20:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD1FE2085B
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 00:13:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ru1dONuY";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pB+GejwC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D57A72087A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="QSHTpyEy"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AD1FE2085B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=canb.auug.org.au
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbeJKGo1 (ORCPT
+        id S1726717AbeJKHiV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 02:44:27 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:35988 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726135AbeJKGo1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 02:44:27 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 34B5F60B73; Wed, 10 Oct 2018 23:20:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539213603;
-        bh=KQaTuEil+2UWfKjJJVRaRHxtCICkycyy9f/m66Uz59o=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Ru1dONuY7M7peuA+KrNc+sDEOnnAG/dq0a9SjWpU7Cjx+Hqvq6eW5MGXl49zvA23+
-         Q+7qx/c2q4VjUhOFZg/LBapTAL0eqzbstgggZqXfXJ9f9vsa/C8SRpNZP/TSxrlCA2
-         eA5VqVH96Q2q05o3aQrpJu+yCcrcXwYjeESQKUvU=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 42DBE60249;
-        Wed, 10 Oct 2018 23:20:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539213602;
-        bh=KQaTuEil+2UWfKjJJVRaRHxtCICkycyy9f/m66Uz59o=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=pB+GejwCY68Agsu+HrbqkPK5HTE1XVRoga24xArpvcLovoD0FOCm06jgKW7OurUnX
-         ld26MGZZsR/eFIuom/s4u5t6NdohszulnlNKxVvuyRE6irE4ngVbIqq65aLObfMbFL
-         sLTxo/sfmvqdzBk+IloITFcFZSajcF8bDmbOEqLs=
+        Thu, 11 Oct 2018 03:38:21 -0400
+Received: from ozlabs.org ([203.11.71.1]:33477 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726214AbeJKHiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Oct 2018 03:38:20 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ozlabs.org (Postfix) with ESMTPSA id 42VrzX6hNnz9s89;
+        Thu, 11 Oct 2018 11:13:44 +1100 (AEDT)
+Authentication-Results: ozlabs.org; dmarc=none (p=none dis=none) header.from=canb.auug.org.au
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1539216825;
+        bh=+Kj3PyVpda87BUz5UeV51sF7qi5ZTt/2ellN9+1eCMg=;
+        h=Date:From:To:Cc:Subject:From;
+        b=QSHTpyEykuGY9TN/7xzkWyOVJoXPKh3/iIgTq8mL1D4hzh56RssloGFJQdMHCg4kR
+         yfMvnQcGTrG9wiw5DMYqP6xxpBqWhqyjz5QGjBjMuJd5aHciWCsWZ8SanmUB1DZs0E
+         K4hTI3VHJXxbjkLY8I/slQBHGp5GHKFMoX0UjiS4Wtant0yr/pmeeb7znXc3QjOelR
+         uyYBv8kDCxp1FgR8E8NjLL+uuBIAL7bUUEyAnuABL2YKc8n41Xre7iDHKPzkdiIXzK
+         cZPm1K6ucvPFF6OO7JyGAj5DdwEWoU9qZtUrpsxRKADlDqzxVLjCziEHhPn9pWWQiR
+         ALYnL3mtVJb9Q==
+Date:   Thu, 11 Oct 2018 11:13:29 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Herbert Xu <herbert@gondor.apana.org.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc:     Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>
+Subject: linux-next: manual merge of the crypto tree with the mac80211-next
+ tree
+Message-ID: <20181011111329.253f0689@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 10 Oct 2018 16:20:02 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v5 3/4] mac80211: Add airtime accounting and
- scheduling to TXQs
-In-Reply-To: <87zhvm832s.fsf@toke.dk>
-References: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
- <153908837900.9471.5394468800857658136.stgit@alrua-kau>
- <a65909ee425585a49d9e17f6504cf0ba@codeaurora.org> <87zhvm832s.fsf@toke.dk>
-Message-ID: <187bade306627912c70d800819ef0b87@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/1fU=n.jS28rW_6ieTXIoUMm"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-10 04:15, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->> On 2018-10-09 05:32, Toke Høiland-Jørgensen wrote:
->>> This adds airtime accounting and scheduling to the mac80211 TXQ
->>> scheduler. A new callback, ieee80211_sta_register_airtime(), is added
->>> that drivers can call to report airtime usage for stations.
->>> 
->>> When airtime information is present, mac80211 will schedule TXQs
->>> (through ieee80211_next_txq()) in a way that enforces airtime 
->>> fairness
->>> between active stations. This scheduling works the same way as the
->>> ath9k
->>> in-driver airtime fairness scheduling. If no airtime usage is 
->>> reported
->>> by the driver, the scheduler will default to round-robin scheduling.
->>> 
->>> For drivers that don't control TXQ scheduling in software, a new API
->>> function, ieee80211_txq_may_transmit(), is added which the driver can
->>> use
->>> to check if the TXQ is eligible for transmission, or should be
->>> throttled to
->>> enforce fairness. Calls to this function must also be enclosed in
->>> ieee80211_txq_schedule_{start,end}() calls to ensure proper locking.
->>> TXQs
->>> that are throttled by ieee802111_txq_may_transmit() will be woken up
->>> again
->>> by a check added to the ieee80211_wake_txqs() tasklet.
->>> 
->> 
->> Toke,
->> 
->> I am observing soft lockup issues again with this new series while
->> running traffic with 50 clients. I am continuing testing with earlier
->> series along with snippet I shared.
-> 
-> Are these new lockups (that was not in your patched previous version),
-> or did I just not get all your lock-related fixes incorporated?
-> 
->> When driver operates in pull-mode, throttled txqs are marked and
->> refilled in airtime_tasklet. This is causing major throughput drops
->> and packet loss and I am suspecting the latency in replenishing
->> deficit. Whereas in push-mode or in ath9k model, refill happens
->> quicker at every packet indication as well as tx completion.
-> 
-> Yeah, the tasklet shouldn't be the main source of deficit replenishing.
-> Can see why that would give bad performance :)
-> 
->> I am planning to get rid of tasklet completely as it is only meant for
->> pull-mode. It would be better to refill in may_transmit() itself.
-> 
-> Hmm, right. So the way to do this correctly (from a fairness point of
-> view) would be something like this (in max_tx()):
-> 
-> if (this_txq.stn.deficit > 0)
->   return true;
-> 
-> else if (any queued TXQ currently have positive deficit)
->   return false; /* other TXQ should try may_tx() later and get 
-> permission */
-> 
-> else /* all deficits < 0 */
->   return replenish_deficits(this_txq);
-> 
-> And replenish_deficits() would be something like:
-> 
-> replenish_deficits(this_txq) {
-> repeat:
->   for (txq in queued txqs) {
->     txq.stn.deficit += stn.weight;
->     if (txq.stn.deficit > 0 && !wake_txq)
->       wake_txq = txq;
->   }
->   if not wake_txq:
->     goto repeat;
-> 
->   if (this_txq.stn.deficit > 0)
->     return true;
->   else
->     drv_wake_tx_queue(wake_txq);
-> }
-> 
-> The wake_tx_queue call may have to be delegated to a tasklet still, to
-> avoid the infinite recursion problem I mentioned earlier. But the
-> tasklet could be made simpler and wouldn't have to be called so 
-> often...
-> 
-> Does the above make sense?
-> 
-Hmm... mine is bit different. txqs are refilled only once for all txqs.
-It will give more opportunity for non-served txqs. drv_wake_tx_queue 
-won't be
-called from may_tx as the driver anyway will not push packets in 
-pull-mode.
+--Sig_/1fU=n.jS28rW_6ieTXIoUMm
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
-                                 struct ieee80211_txq *txq)
-{
-         struct ieee80211_local *local = hw_to_local(hw);
-         struct txq_info *txqi = to_txq_info(txq);
-         struct sta_info *sta;
-         u8 ac = txq->ac;
+Hi all,
 
-         lockdep_assert_held(&local->active_txq_lock[ac]);
+Today's linux-next merge of the crypto tree got conflicts in:
 
-         if (!txqi->txq.sta)
-                 goto out;
+  net/wireless/lib80211_crypt_tkip.c
+  net/wireless/lib80211_crypt_wep.c
 
-         sta = container_of(txqi->txq.sta, struct sta_info, sta);
-         if (sta->airtime[ac].deficit >= 0)
-                 goto out;
+between commit:
 
-         list_for_each_entry(txqi, &local->active_txqs[ac], 
-schedule_order) {
-                 if (!txqi->txq.sta)
-                         continue;
-                 sta = container_of(txqi->txq.sta, struct sta_info, sta);
-                 sta->airtime[ac].deficit += sta->airtime_weight;
-         }
+  b802a5d6f345 ("lib80211: don't use skcipher")
 
-         return false;
+from the mac80211-next tree and commit:
 
-  out:
-         list_del_init(&txqi->schedule_order);
-         return true;
-}
+  db20f570e17a ("lib80211: Remove VLA usage of skcipher")
 
--Rajkumar
+from the crypto tree.
+
+I fixed it up (I just used the mac80211-next versions of these 2 files
+for now) and can carry the fix as necessary. This is now fixed as far as
+linux-next is concerned, but any non trivial conflicts should be mentioned
+to your upstream maintainer when your tree is submitted for merging.
+You may also want to consider cooperating with the maintainer of the
+conflicting tree to minimise any particularly complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/1fU=n.jS28rW_6ieTXIoUMm
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlu+lakACgkQAVBC80lX
+0GxdJQgAlKiwi2EZ37gu6hi9VDDMikpTOz/6GmWDkhFBa9RfHzAwfjBCFu26VKDS
+pXF+/6rS9Hfmqi9HOMC58yuFbyZLzdhptUkjsutWIjK6mv8P9WPCvqAv8ykDaX8n
+sORcqsB9NMJ/dmkjm47T8KDt/MuEbc6qEZeyyb2rGYGmDZcDajfrNJfpvxJpIUP1
+NVFcMpSaa9lFftLzbBp/ljMRnMKXiV2vQLUoIo+mqCgnWWvkOgXQRKNRjLZV/wVN
+1d9bIds3uNrOYUbm6hYr//38dPuY1iGCSz/U3cbWSV6pWvEDpJnMLIulA8MTwkFt
+JzAUxhC5lLhVwRjytf9gIDLE/UpxMQ==
+=cOtu
+-----END PGP SIGNATURE-----
+
+--Sig_/1fU=n.jS28rW_6ieTXIoUMm--
