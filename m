@@ -2,156 +2,164 @@ Return-Path: <SRS0=d2Dv=MX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEE2C32788
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 10:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED3FC32788
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 12:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F068A20841
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 10:38:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D287D204EC
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 12:39:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="BO+v891+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F068A20841
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r7f+b0XX"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D287D204EC
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728091AbeJKSEp (ORCPT
+        id S1726964AbeJKUG2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 14:04:45 -0400
-Received: from mail.toke.dk ([52.28.52.200]:33383 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727851AbeJKSEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 14:04:44 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1539254283; bh=t/WD+Zr41cnarX5QQFhoQFX6LzR8Hmgkr7Po5Ctgcr4=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=BO+v891+TIHEQUkGRalsOdYHmSTgQr3kNGNA0WooSSVZ/D4K6810Nmkhm1V/4VLpA
-         1qq4ZnI5djuy7DIgDSlUigo4/rhMV5yFQH+/ykdz6Dc4U1WzTjVV/4mPV2n+b6pciN
-         vuiDl1eo3xuPEDQYyxrbUyeykq5usbBAYRDvzuNUgps/ZRvKhtqzbYzHLrg2qlb2S9
-         t1TQUrdyEUS3skiP2q2IXloZZRa6ALXlvW2A+Po00xS5vFFVmG6bVoJ341NYfedrX8
-         DOZ/DWBqs7cf36GITRCbsktZDDenEFrS7R0z71JYYzhqwv1xhdq9F0nPCVQYNtrMOE
-         sRtCDWuoMOiPA==
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v5 3/4] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <187bade306627912c70d800819ef0b87@codeaurora.org>
-References: <153908805217.9471.9290979918041653328.stgit@alrua-kau> <153908837900.9471.5394468800857658136.stgit@alrua-kau> <a65909ee425585a49d9e17f6504cf0ba@codeaurora.org> <87zhvm832s.fsf@toke.dk> <187bade306627912c70d800819ef0b87@codeaurora.org>
-Date:   Thu, 11 Oct 2018 12:38:02 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87pnwg93at.fsf@toke.dk>
+        Thu, 11 Oct 2018 16:06:28 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:44141 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726666AbeJKUG2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 11 Oct 2018 16:06:28 -0400
+Received: by mail-oi1-f193.google.com with SMTP id u74-v6so6868909oia.11
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 05:39:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=Auo5TLbdGRPQSaGDX36iQvqqbWbef8wig9pzIYCVE5g=;
+        b=r7f+b0XXf7F/Z5SnTDsWRANFwlSuIjGyBjoemC0/GhFKmZ11xlgUZKb1nvbrz5H4W6
+         dleLhlM2I9lN6CQFO7GtwkhCPE5g/MtmFRqnR3rI/d66+6cBSm8ibwJ5gFE7lMpkcVLc
+         WkBvrSTW2RZEdQSYgOxoUMD0k8ivLhuuIrTsJdmUlFiCeglqvkbImEPI2ZH42g0pWtGz
+         gbJh5wGWd9+VtNH1+sPb0MWYrvH02JFhuU/cO8MuQTYzhZJV7WDG6v1hf/iB+4jhSuHS
+         4srTAj8fCgEEubiYwRykhDguF+j2o/PZGBu/PtbBaWhHDMrsD+8Zr+YLDfjn8xvuBLRf
+         X32g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=Auo5TLbdGRPQSaGDX36iQvqqbWbef8wig9pzIYCVE5g=;
+        b=DmPSrn4zgNF6bhTWQu74WQjaZYKvToQ41ObbpD89rdNU7XTXNBm+WeDZFNSF/di4Hk
+         pymm8YwjN9pC+ACy2n5ffh5B9XiX2zBrcoZwUgztCEu3wbt+38Z+mQwkyr7n+U7QXjDI
+         cVJqxKQCx7zggb/vpy2+t9JMTVUFSBbC/lrGaiiEYru2rUea9NhNt+amg0IUMHIR+MFQ
+         ozuYRwvBYh4EBXpGKk+MD0VhFoSq+ygHDG0qCz64pdI9bxQ8s4LPGk3j16ye6gWF5IH1
+         leCloieeDPm7g/wEWeEafh8nJ74rXWXcib2Cz13iH5ikmlGILNcVsi96CHHd4HO+iREl
+         KatA==
+X-Gm-Message-State: ABuFfoh6Xn91nV+j/Ka4QD0awd4mKInWthtt466naJo1VLcpS1XPtFPA
+        p/Vbaz6VbZl48xEJt7AQ4ubxdyNPxpjgZ+yi7co=
+X-Google-Smtp-Source: ACcGV61ed3WZuLAiCTYet66yikKDHiHUeFMVFlpSLdRWUhHtlhA05VCtPH2LXvxjvA+PsI5D81HyAs1Oom8YgEUnWRo=
+X-Received: by 2002:aca:484a:: with SMTP id v71-v6mr771065oia.163.1539261565926;
+ Thu, 11 Oct 2018 05:39:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Thu, 11 Oct 2018 05:39:25
+ -0700 (PDT)
+In-Reply-To: <20181011100524.GA20794@redhat.com>
+References: <1539086170-32528-1-git-send-email-sgruszka@redhat.com>
+ <1539086170-32528-4-git-send-email-sgruszka@redhat.com> <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
+ <20181010071451.GA9140@redhat.com> <20181010120657.GA1185@makrotopia.org>
+ <20181010124508.GA22330@redhat.com> <CAKR_QVJbtzpu6v4bZEz2UegWiAy1Ohooy-TciZcOeR_p+Z+yYg@mail.gmail.com>
+ <20181010154054.GA27779@redhat.com> <CAKR_QVLjFyGtzikLTiQKhrVBSyUoPmDn2tMJqto8dyBDjoFJOQ@mail.gmail.com>
+ <20181011100524.GA20794@redhat.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Thu, 11 Oct 2018 14:39:25 +0200
+Message-ID: <CAKR_QVJJJKgtip3386yM1EW+3UV8e=DvFf-qtmw7vRFggS1FHg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
+        Felix Fietkau <nbd@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+so this is RX test where I assume your 7265 card is sending data. is
+that HT20 or HT40 mode and do you get regression on TX too?
 
-> On 2018-10-10 04:15, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
->>=20
->>> On 2018-10-09 05:32, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>>> This adds airtime accounting and scheduling to the mac80211 TXQ
->>>> scheduler. A new callback, ieee80211_sta_register_airtime(), is added
->>>> that drivers can call to report airtime usage for stations.
->>>>=20
->>>> When airtime information is present, mac80211 will schedule TXQs
->>>> (through ieee80211_next_txq()) in a way that enforces airtime=20
->>>> fairness
->>>> between active stations. This scheduling works the same way as the
->>>> ath9k
->>>> in-driver airtime fairness scheduling. If no airtime usage is=20
->>>> reported
->>>> by the driver, the scheduler will default to round-robin scheduling.
->>>>=20
->>>> For drivers that don't control TXQ scheduling in software, a new API
->>>> function, ieee80211_txq_may_transmit(), is added which the driver can
->>>> use
->>>> to check if the TXQ is eligible for transmission, or should be
->>>> throttled to
->>>> enforce fairness. Calls to this function must also be enclosed in
->>>> ieee80211_txq_schedule_{start,end}() calls to ensure proper locking.
->>>> TXQs
->>>> that are throttled by ieee802111_txq_may_transmit() will be woken up
->>>> again
->>>> by a check added to the ieee80211_wake_txqs() tasklet.
->>>>=20
->>>=20
->>> Toke,
->>>=20
->>> I am observing soft lockup issues again with this new series while
->>> running traffic with 50 clients. I am continuing testing with earlier
->>> series along with snippet I shared.
->>=20
->> Are these new lockups (that was not in your patched previous version),
->> or did I just not get all your lock-related fixes incorporated?
->>=20
->>> When driver operates in pull-mode, throttled txqs are marked and
->>> refilled in airtime_tasklet. This is causing major throughput drops
->>> and packet loss and I am suspecting the latency in replenishing
->>> deficit. Whereas in push-mode or in ath9k model, refill happens
->>> quicker at every packet indication as well as tx completion.
->>=20
->> Yeah, the tasklet shouldn't be the main source of deficit replenishing.
->> Can see why that would give bad performance :)
->>=20
->>> I am planning to get rid of tasklet completely as it is only meant for
->>> pull-mode. It would be better to refill in may_transmit() itself.
->>=20
->> Hmm, right. So the way to do this correctly (from a fairness point of
->> view) would be something like this (in max_tx()):
->>=20
->> if (this_txq.stn.deficit > 0)
->>   return true;
->>=20
->> else if (any queued TXQ currently have positive deficit)
->>   return false; /* other TXQ should try may_tx() later and get=20
->> permission */
->>=20
->> else /* all deficits < 0 */
->>   return replenish_deficits(this_txq);
->>=20
->> And replenish_deficits() would be something like:
->>=20
->> replenish_deficits(this_txq) {
->> repeat:
->>   for (txq in queued txqs) {
->>     txq.stn.deficit +=3D stn.weight;
->>     if (txq.stn.deficit > 0 && !wake_txq)
->>       wake_txq =3D txq;
->>   }
->>   if not wake_txq:
->>     goto repeat;
->>=20
->>   if (this_txq.stn.deficit > 0)
->>     return true;
->>   else
->>     drv_wake_tx_queue(wake_txq);
->> }
->>=20
->> The wake_tx_queue call may have to be delegated to a tasklet still, to
->> avoid the infinite recursion problem I mentioned earlier. But the
->> tasklet could be made simpler and wouldn't have to be called so=20
->> often...
->>=20
->> Does the above make sense?
->>=20
-> Hmm... mine is bit different. txqs are refilled only once for all txqs.
-> It will give more opportunity for non-served txqs. drv_wake_tx_queue=20
-> won't be
-> called from may_tx as the driver anyway will not push packets in=20
-> pull-mode.
+can you try same case 2 test but with registers set to:
 
-So, as far as I can tell, this requires the hardware to "keep trying"?
-I.e., if it just stops scheduling a TXQ after may_transmit() returns
-false, there is no guarantee that that TXQ will ever get re-awoken
-unless a new packet arrives for it?
+TX_SW_CFG0, 0x00000401
+TX_SW_CFG1, 0x000C0000
+TX_SW_CFG2, 0x00000000 (or 0x000C0408)
 
--Toke
+did you ever notice any tx power difference between nexx fw and openwrt fw?
+
+On 11/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Wed, Oct 10, 2018 at 10:03:12PM +0200, Tom Psyborg wrote:
+>> ok, that is strange. do you see any performance differences without
+>> TX_SW_CFG regs? iperf test is a good pointer.
+>>
+>> this was a problem on xiaomi mini with old DD trunk builds on 4.4
+>> kernel and LEDE builds from last year. i ain't got no chance to try
+>> this on 18.06. which device you tried this on? if ipa/ilna it might
+>> make no difference
+>
+> No diffrence for me. I have nexx wt3020 8M.
+>
+> However I notice this set couse performance regression for me.
+> When connecting to iwl 7265 . Without the set I have:
+>
+> root@LEDE:~# iperf3 -c 192.168.10.243
+> Connecting to host 192.168.10.243, port 5201
+> [  5] local 192.168.10.1 port 59304 connected to 192.168.10.243 port 5201
+> [ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+> [  5]   0.00-1.00   sec  5.37 MBytes  44.9 Mbits/sec    0    279 KBytes
+>
+> [  5]   1.00-2.00   sec  5.80 MBytes  48.8 Mbits/sec    0    494 KBytes
+>
+> [  5]   2.00-3.00   sec  6.03 MBytes  50.5 Mbits/sec    0    513 KBytes
+>
+> [  5]   3.00-4.01   sec  5.90 MBytes  49.2 Mbits/sec    0    513 KBytes
+>
+> [  5]   4.01-5.01   sec  5.90 MBytes  49.5 Mbits/sec    0    515 KBytes
+>
+> [  5]   5.01-6.00   sec  5.78 MBytes  48.9 Mbits/sec    0    515 KBytes
+>
+> [  5]   6.00-7.00   sec  5.66 MBytes  47.4 Mbits/sec    0    515 KBytes
+>
+> [  5]   7.00-8.00   sec  6.03 MBytes  50.6 Mbits/sec    0    515 KBytes
+>
+> [  5]   8.00-9.00   sec  6.09 MBytes  50.9 Mbits/sec    0    515 KBytes
+>
+> [  5]   9.00-10.00  sec  5.72 MBytes  48.2 Mbits/sec    0    515 KBytes
+>
+> - - - - - - - - - - - - - - - - - - - - - - - - -
+> [ ID] Interval           Transfer     Bitrate         Retr
+> [  5]   0.00-10.00  sec  58.3 MBytes  48.9 Mbits/sec    0
+> sender
+> [  5]   0.00-10.00  sec  58.3 MBytes  48.9 Mbits/sec
+> receiver
+>
+> With the set I have:
+>
+> root@LEDE:~# iperf3  -c 192.168.10.243
+> Connecting to host 192.168.10.243, port 5201
+> [  5] local 192.168.10.1 port 45824 connected to 192.168.10.243 port 5201
+> [ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+> [  5]   0.00-1.00   sec  3.78 MBytes  31.7 Mbits/sec    0    197 KBytes
+> [  5]   1.00-2.00   sec  3.71 MBytes  31.0 Mbits/sec    0    369 KBytes
+> [  5]   2.00-3.00   sec  3.51 MBytes  29.5 Mbits/sec    0    484 KBytes
+> [  5]   3.00-4.00   sec  3.36 MBytes  28.1 Mbits/sec    0    519 KBytes
+> [  5]   4.00-5.00   sec  4.10 MBytes  34.4 Mbits/sec    0    519 KBytes
+> [  5]   5.00-6.00   sec  3.73 MBytes  31.2 Mbits/sec    0    519 KBytes
+> [  5]   6.00-7.00   sec  4.29 MBytes  36.0 Mbits/sec    0    519 KBytes
+> [  5]   7.00-8.00   sec  4.16 MBytes  34.9 Mbits/sec    0    519 KBytes
+> [  5]   8.00-9.00   sec  4.35 MBytes  36.5 Mbits/sec    0    519 KBytes
+> [  5]   9.00-10.00  sec  4.41 MBytes  37.0 Mbits/sec    0    519 KBytes
+> - - - - - - - - - - - - - - - - - - - - - - - - -
+> [ ID] Interval           Transfer     Bitrate         Retr
+> [  5]   0.00-10.00  sec  39.4 MBytes  33.0 Mbits/sec    0
+> sender
+> [  5]   0.00-10.00  sec  39.4 MBytes  33.0 Mbits/sec
+> receiver
+>
+>
+> Stanislaw
+>
+>
