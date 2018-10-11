@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E89FBC46464
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 08:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7E4C32788
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 08:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ACF2D2085B
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 08:52:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ACF2D2085B
+	by mail.kernel.org (Postfix) with ESMTP id 3C4D02085B
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Oct 2018 08:52:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C4D02085B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728011AbeJKQSt (ORCPT
+        id S1728038AbeJKQSv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Oct 2018 12:18:49 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:56270 "EHLO
+        Thu, 11 Oct 2018 12:18:51 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:55139 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727828AbeJKQSt (ORCPT
+        with ESMTP id S1726205AbeJKQSu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Oct 2018 12:18:49 -0400
-Received: by mail-wm1-f67.google.com with SMTP id 206-v6so8137798wmb.5
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 01:52:29 -0700 (PDT)
+        Thu, 11 Oct 2018 12:18:50 -0400
+Received: by mail-wm1-f67.google.com with SMTP id r63-v6so8134887wma.4
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 01:52:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=qGb1DR+QPgU5aR00GLP50ZidPTeR1dnNpAag/8KzNv4=;
-        b=AdY1ks0T4BqRNqlFMOaXzbME+a0K37Ky3hy35+/E1IESf0c/CE3H1sjZKD/OAGYUK2
-         e2RzrQPPbU6R4EIRe6qbqMcAPxWBxkq6QnJh09NrHyCYRYX1T1ZsbBjYHEah+tB2vThv
-         y8U1Cv4EDIPz4/fOSgWqFnewiSonKAEyet4ao/MtPk32AMhzbAu/xRWTD+3DpmlisPmp
-         DtvCqUhW8AjlhK5m1Z5967kmrlvm/Amjw3n1nruu7Ty66kiOZfr4CeXUQu0hBlE/2ZU3
-         8e1JTjJ+e01RKipTp4DrTOYxc27gRC1XSuPgBH00NdUOdMPO29NuyWnMRcvYdYdFIwft
-         cKWg==
-X-Gm-Message-State: ABuFfogw6WUQ8ln6mlgNMI/AtsygXp5NfpfnGFdiLDT7Y3yPtxk46Xga
-        3C2NcQ2S7w7qAjyxJD5SQfzkTg==
-X-Google-Smtp-Source: ACcGV63rYCZc9I9N7cI/dQD1izwBn3dKDBbtZV7z88jN7ATohZf55/e3IK7/qXQJj1kd4rXsGBsPwg==
-X-Received: by 2002:a1c:e583:: with SMTP id c125-v6mr903249wmh.134.1539247949128;
-        Thu, 11 Oct 2018 01:52:29 -0700 (PDT)
+        bh=qR+uKpaaCgGMjthr8Yfn4/BLbCmOB28YTW/lMus9v4M=;
+        b=Dpb0mWLuVwX3bB20fwe7O1xXc4w3B6CDWaC90wKXWRIRrLipoX/o7MkVm4CKFMEAGr
+         FXRn78MMc1nILc56+QjmFeWzPBe1RcBoOTuUNnAUmgOQhDipqkU8xoo6vtkBbGsUO+Tq
+         IA9QvJqLi3UHX/IlZurE8rdwTkWlQMzgjxhA0LH3y5Ae11XW86Fc1Im8V09A4wSQiguS
+         hXItbJSmsBJ6HhZzuSGIG2ZOkig5s6+3T4WNEyPE8a8gEbHFyJ9LQh0cur4b9DRGosOi
+         rkVrjAuXU5lpOt+yZ1aT6dlOn96mSf/j80LQO5MUwJVhA4XhSTcpkhxGhkx1FFGhgx7+
+         2Djg==
+X-Gm-Message-State: ABuFfogHU1+hYp0nR006AIpkcTU4Mw0dKhOp3wn3cIOrOQw2Wupgm+zr
+        RC3bg6hM0lFdzRHSZSnQvtGHnw==
+X-Google-Smtp-Source: ACcGV62A8QRtvUkCGstixgaYJwKzC9Zc/dy7rKK9ABL14h9ppLwwjkHQpdgvZXE+egy/sdhngyLHvw==
+X-Received: by 2002:a1c:d712:: with SMTP id o18-v6mr917416wmg.54.1539247950095;
+        Thu, 11 Oct 2018 01:52:30 -0700 (PDT)
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id v184-v6sm950839wme.3.2018.10.11.01.52.28
+        by smtp.gmail.com with ESMTPSA id v184-v6sm950839wme.3.2018.10.11.01.52.29
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Oct 2018 01:52:28 -0700 (PDT)
+        Thu, 11 Oct 2018 01:52:29 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [RFC 07/12] mt76x0: phy: add phy/vco temperature compensation
-Date:   Thu, 11 Oct 2018 10:52:04 +0200
-Message-Id: <2dacecd91e016933bab4036b0adf325178da56bd.1539247493.git.lorenzo.bianconi@redhat.com>
+Subject: [RFC 08/12] mt76: move rssi_gain_thresh routines in mt76x02-lib module
+Date:   Thu, 11 Oct 2018 10:52:05 +0200
+Message-Id: <2f17bb0361a2759ede6d383e8d8f9250720242b3.1539247493.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <cover.1539247493.git.lorenzo.bianconi@redhat.com>
 References: <cover.1539247493.git.lorenzo.bianconi@redhat.com>
@@ -59,135 +59,101 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce phy/vco temperature calibration.
-Moreover fix configuration of register 67 on bank0
-during temperature reading and use mt76_poll utility routine
-to poll core34 register.
-Furthermore temperature compensation needs to be disabled
-if the device supports tssi compensation.
-This issue has never been hit since temperature reading is not
-actually used by usb code.
+Move mt76x2_get_rssi_gain_thresh and mt76x2_get_low_rssi_gain_thresh
+routines in mt76x02-lib module in order to be reused by mt76x0 driver
+for dynamic vga calibration
 
-Fixes: 10de7a8b4ab9 ("mt76x0: phy files")
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 50 +++++++++----------
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |  3 +-
- 2 files changed, 26 insertions(+), 27 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x02_phy.h  | 26 ++++++++++++++++
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   | 30 ++-----------------
+ 2 files changed, 28 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index 049e750457e6..5c155a3c1c77 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -14,6 +14,9 @@
-  * GNU General Public License for more details.
-  */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
+index 1a20c1852dbf..3a5ba5d209ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.h
+@@ -19,6 +19,32 @@
  
-+#include <linux/kernel.h>
-+#include <linux/etherdevice.h>
+ #include "mt76x02_regs.h"
+ 
++static inline int
++mt76x02_get_rssi_gain_thresh(struct mt76x02_dev *dev)
++{
++	switch (dev->mt76.chandef.width) {
++	case NL80211_CHAN_WIDTH_80:
++		return -62;
++	case NL80211_CHAN_WIDTH_40:
++		return -65;
++	default:
++		return -68;
++	}
++}
 +
- #include "mt76x0.h"
- #include "mcu.h"
- #include "eeprom.h"
-@@ -23,8 +26,6 @@
- #include "initvals_phy.h"
- #include "../mt76x02_phy.h"
- 
--#include <linux/etherdevice.h>
--
- static int
- mt76x0_rf_csr_wr(struct mt76x02_dev *dev, u32 offset, u8 value)
- {
-@@ -781,46 +782,42 @@ void mt76x0_agc_restore(struct mt76x02_dev *dev)
- 
- static void mt76x0_temp_sensor(struct mt76x02_dev *dev)
- {
--	u8 rf_b7_73, rf_b0_66, rf_b0_67;
--	int cycle, temp;
--	u32 val;
--	s32 sval;
-+	u32 rf_b7_73, rf_b0_66, rf_b0_67;
-+	s8 val;
- 
- 	rf_b7_73 = rf_rr(dev, MT_RF(7, 73));
- 	rf_b0_66 = rf_rr(dev, MT_RF(0, 66));
--	rf_b0_67 = rf_rr(dev, MT_RF(0, 73));
-+	rf_b0_67 = rf_rr(dev, MT_RF(0, 67));
- 
- 	rf_wr(dev, MT_RF(7, 73), 0x02);
- 	rf_wr(dev, MT_RF(0, 66), 0x23);
--	rf_wr(dev, MT_RF(0, 73), 0x01);
-+	rf_wr(dev, MT_RF(0, 67), 0x01);
- 
- 	mt76_wr(dev, MT_BBP(CORE, 34), 0x00080055);
- 
--	for (cycle = 0; cycle < 2000; cycle++) {
--		val = mt76_rr(dev, MT_BBP(CORE, 34));
--		if (!(val & 0x10))
--			break;
--		udelay(3);
--	}
--
--	if (cycle >= 2000) {
--		val &= 0x10;
--		mt76_wr(dev, MT_BBP(CORE, 34), val);
-+	if (!mt76_poll(dev, MT_BBP(CORE, 34), BIT(4), 0, 2000)) {
-+		mt76_clear(dev, MT_BBP(CORE, 34), BIT(4));
- 		goto done;
- 	}
- 
--	sval = mt76_rr(dev, MT_BBP(CORE, 35)) & 0xff;
--	if (!(sval & 0x80))
--		sval &= 0x7f; /* Positive */
--	else
--		sval |= 0xffffff00; /* Negative */
-+	val = mt76_rr(dev, MT_BBP(CORE, 35));
-+	val = (35 * (val - dev->cal.rx.temp_offset)) / 10 + 25;
- 
--	temp = (35 * (sval - dev->cal.rx.temp_offset)) / 10 + 25;
-+	if (abs(val - dev->cal.temp_vco) > 20) {
-+		mt76x02_mcu_calibrate(dev, MCU_CAL_VCO,
-+				      dev->mt76.chandef.chan->hw_value,
-+				      false);
-+		dev->cal.temp_vco = val;
++static inline int
++mt76x02_get_low_rssi_gain_thresh(struct mt76x02_dev *dev)
++{
++	switch (dev->mt76.chandef.width) {
++	case NL80211_CHAN_WIDTH_80:
++		return -76;
++	case NL80211_CHAN_WIDTH_40:
++		return -79;
++	default:
++		return -82;
 +	}
-+	if (abs(val - dev->cal.temp) > 30) {
-+		mt76x0_phy_calibrate(dev, false);
-+		dev->cal.temp = val;
-+	}
- 
- done:
- 	rf_wr(dev, MT_RF(7, 73), rf_b7_73);
- 	rf_wr(dev, MT_RF(0, 66), rf_b0_66);
--	rf_wr(dev, MT_RF(0, 73), rf_b0_67);
-+	rf_wr(dev, MT_RF(0, 67), rf_b0_67);
++}
++
+ void mt76x02_add_rate_power_offset(struct mt76_rate_power *r, int offset);
+ void mt76x02_phy_set_txpower(struct mt76x02_dev *dev, int txp_0, int txp_2);
+ void mt76x02_limit_rate_power(struct mt76_rate_power *r, int limit);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+index 55708b8e6e10..86b87d896b46 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+@@ -131,32 +131,6 @@ mt76x2_get_agc_gain(struct mt76x02_dev *dev, u8 *dest)
+ 	dest[1] = mt76_get_field(dev, MT_BBP(AGC, 9), MT_BBP_AGC_GAIN);
  }
  
- static void mt76x0_dynamic_vga_tuning(struct mt76x02_dev *dev)
-@@ -848,7 +845,8 @@ static void mt76x0_phy_calibration_work(struct work_struct *work)
- 					       cal_work.work);
+-static int
+-mt76x2_get_rssi_gain_thresh(struct mt76x02_dev *dev)
+-{
+-	switch (dev->mt76.chandef.width) {
+-	case NL80211_CHAN_WIDTH_80:
+-		return -62;
+-	case NL80211_CHAN_WIDTH_40:
+-		return -65;
+-	default:
+-		return -68;
+-	}
+-}
+-
+-static int
+-mt76x2_get_low_rssi_gain_thresh(struct mt76x02_dev *dev)
+-{
+-	switch (dev->mt76.chandef.width) {
+-	case NL80211_CHAN_WIDTH_80:
+-		return -76;
+-	case NL80211_CHAN_WIDTH_40:
+-		return -79;
+-	default:
+-		return -82;
+-	}
+-}
+-
+ static void
+ mt76x2_phy_set_gain_val(struct mt76x02_dev *dev)
+ {
+@@ -212,8 +186,8 @@ mt76x2_phy_update_channel_gain(struct mt76x02_dev *dev)
  
- 	mt76x0_dynamic_vga_tuning(dev);
--	mt76x0_temp_sensor(dev);
-+	if (!mt76x0_tssi_enabled(dev))
-+		mt76x0_temp_sensor(dev);
+ 	dev->cal.avg_rssi_all = mt76x02_phy_get_min_avg_rssi(dev);
  
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
- 				     MT_CALIBRATE_INTERVAL);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index fe731529144c..f375fdcbd2bf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -55,7 +55,8 @@ struct mt76x02_calibration {
- 	s8 agc_gain_adjust;
- 	s8 low_gain;
+-	low_gain = (dev->cal.avg_rssi_all > mt76x2_get_rssi_gain_thresh(dev)) +
+-		   (dev->cal.avg_rssi_all > mt76x2_get_low_rssi_gain_thresh(dev));
++	low_gain = (dev->cal.avg_rssi_all > mt76x02_get_rssi_gain_thresh(dev)) +
++		   (dev->cal.avg_rssi_all > mt76x02_get_low_rssi_gain_thresh(dev));
  
--	u8 temp;
-+	s8 temp_vco;
-+	s8 temp;
- 
- 	bool init_cal_done;
- 	bool tssi_cal_done;
+ 	gain_change = (dev->cal.low_gain & 2) ^ (low_gain & 2);
+ 	dev->cal.low_gain = low_gain;
 -- 
 2.17.2
 
