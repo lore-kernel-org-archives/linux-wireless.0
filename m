@@ -2,177 +2,210 @@ Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD89EC43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 11:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1639C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 11:22:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0E6D2077C
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 11:14:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A0E6D2077C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id 8E0A62086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 11:22:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LuYRM3ZO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E0A62086A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728112AbeJLSqK (ORCPT
+        id S1727781AbeJLSyO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Oct 2018 14:46:10 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:47830 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726664AbeJLSqJ (ORCPT
+        Fri, 12 Oct 2018 14:54:14 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:34531 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726664AbeJLSyO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Oct 2018 14:46:09 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gAvOU-0001mP-Mu; Fri, 12 Oct 2018 13:14:10 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2018-10-12
-Date:   Fri, 12 Oct 2018 13:13:53 +0200
-Message-Id: <20181012111354.30062-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.14.4
+        Fri, 12 Oct 2018 14:54:14 -0400
+Received: by mail-wm1-f66.google.com with SMTP id z25-v6so17833416wmf.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2018 04:22:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=dZwiZ43ukxjX48xCG2RLM42WU1upTYUXOj8DCsTRwFw=;
+        b=LuYRM3ZOSWvxYw1E/YDWOh42i5qAznBfzC99Rttr7zj0YtHQfydr6h37PXQ02mz3rx
+         GTrMt2Dh4RvKoRr6I6JWkoMm9eIIx/yyu7AD5P/v6FwQY5f1AHsLQCzZaw+/L8FyjcaT
+         c9dyJdLiqqoyxVOB73GoFz4tjvdv7FwGg5TZQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=dZwiZ43ukxjX48xCG2RLM42WU1upTYUXOj8DCsTRwFw=;
+        b=N3F9+nhaTwoOtvpp2TrDjWdjxiHWh41AR2nSmz9kwJJ+akd7ScnToK5MxiQsvc2dVS
+         2ZYGjh1PPIjQZRXIc4MDrRzL67U2ioh8wrNpn0vk5JJYxINBESLgE/As98arg9YehIJe
+         HYqGzU5OqUN0hfFEJJGsUJJTqHGWOYFuepledUFOJ1zk4DIJHNYm01JN3p+PWqw/rspE
+         7HEcEKtXFsnXsgS3zhHBc895Am9CiAjkLXzIT2/JfiC8ZN8NQF8aABSFhVeIiSe6SKzK
+         l1+lqnIXtZhoLVhpk+MrfKKI1a/tY4JHjU2qr8KhunthUqwDwLA5Mf+OEex/ifxpV38v
+         jRNg==
+X-Gm-Message-State: ABuFfoghGHysKK2WOpAaJG+VKpQGFpkY64pOwzodM1c1g7raAfs2U6iz
+        QwB0twFqHhxlaTTGZvpBXw9eng1ogGzETQ==
+X-Google-Smtp-Source: ACcGV61IIiEuL4i8a/NkDjIo7qWeZBxRP6WQRTJgZM4bTHa8qHXojIq+oKe5kZPYfYnlhJr3duzNuQ==
+X-Received: by 2002:a1c:7614:: with SMTP id r20-v6mr5080030wmc.52.1539343333817;
+        Fri, 12 Oct 2018 04:22:13 -0700 (PDT)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id g15-v6sm730229wrr.36.2018.10.12.04.22.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 12 Oct 2018 04:22:12 -0700 (PDT)
+Subject: Re: brcmfmac with BCM4359 on arm64 (RK3399) and SDIO
+To:     =?UTF-8?Q?Christoph_M=c3=bcllner?= 
+        <christoph.muellner@theobroma-systems.com>,
+        Franky Lin <franky.lin@broadcom.com>
+References: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
+ <CA+8PC_dkJAPR2C0DsOWRb__RrijbZZ43MM1gtKGjsMxdTGwsZQ@mail.gmail.com>
+ <fabdecc1-f032-789e-058f-2c62442b12c0@theobroma-systems.com>
+ <C9DFBEBB-4481-4CBA-AE10-92A20C815D4F@theobroma-systems.com>
+ <f7645f53-3e63-c888-c4a7-ece11655849d@broadcom.com>
+ <b97f6b6c-aad9-8008-aab3-bf1ab1c1f2a0@theobroma-systems.com>
+Cc:     "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <32f4abff-80e2-235f-8004-1c10a8375c34@broadcom.com>
+Date:   Fri, 12 Oct 2018 13:22:11 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
+MIME-Version: 1.0
+In-Reply-To: <b97f6b6c-aad9-8008-aab3-bf1ab1c1f2a0@theobroma-systems.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+On 10/12/2018 10:59 AM, Christoph Müllner wrote:
+>
+>
+> On 10/12/18 10:00 AM, Arend van Spriel wrote:
+>> On 10/11/2018 6:04 PM, Christoph Müllner wrote:
+>>> Hi Franky and Arend,
+>>>
+>>> today I could get a SDIO Wifi module, which includes a BCM43455.
+>>> I was able to get this up and running without any issues with the
+>>> brcmfmac
+>>> driver and a 4.19 kernel. For me that's enough evidence to say that
+>>> the SDIO
+>>> driver works.
+>>>
+>>> However, the BCM4359 still does not work.
+>>> It times out in brcmf_sdio_firmware_callback(), while enabling func2.
+>>>
+>>> I've inserted tons of debug log outputs in both, the DHD driver and the
+>>> brcmfmac driver, and compared them. Differences which I've found so far
+>>> are: a) brcmfmac strips out whitespaces from nvram contents and
+>>> b) DHD downloads firmware first and brcmfmac downloads nvram first.
+>>> I've adapted the DHD driver to behave like brcmfmac in both cases
+>>> and it still works.
+>>>
+>>> I've increased the timeout for enabling func2 from 3 seconds to 10
+>>> seconds,
+>>> but that did not help.
+>>>
+>>> Any ideas left?
+>>
+>> When enabling func2 fails it generally means the firmware crashed. I am
+>> not sure if the patch below works to get console information. It might
+>> show up empty or simply fail if firmware did not fill shared memory
+>> info, but it may be worth a try.
+>
+> I added the patch and additionally added debug output for all error
+> cases in the two called functions. Here's the output:
+>
+> [   14.746092] brcmfmac: brcmf_sdio_firmware_callback: enable F2: err=-62
+> [   14.767523] brcmfmac: brcmf_sdio_checkdied: firmware not built with
+> -assert
+> [   14.778777] brcmfmac: brcmf_sdio_checkdied: firmware trap in dongle
+> [   14.789220] brcmfmac: brcmf_sdio_readconsole: brcmf_sdio_readconsole:
+> bus->console_addr == 0!
+>
+> Do you have an educated guess, what causes the firmware crash, when
+> being loaded via the brcmfmac driver?
 
-Here's another set of updates. Note that there's a patch here
-(lib80211 skcipher removal to simplify the code) that will
-cause conflicts when merging with the crypto tree, the new
-code from this should be used. Please advise Greg/Linus unless
-the crypto tree will somehow end up in your tree first?
+Maybe we can find out with the patch below.
 
-Please pull and let me know if there's any problem.
+Regards,
+Arend
 
-Thanks,
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c 
+b/drivers/ne
+index b2e1ab5..b1a4631 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2969,21 +2969,35 @@ static int brcmf_sdio_trap_info(struct seq_file 
+*seq, str
+         if (error < 0)
+                 return error;
 
+-       seq_printf(seq,
+-                  "dongle trap info: type 0x%x @ epc 0x%08x\n"
+-                  "  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
+-                  "  lr   0x%08x pc   0x%08x offset 0x%x\n"
+-                  "  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
+-                  "  r4   0x%08x r5   0x%08x r6 0x%08x r7 0x%08x\n",
+-                  le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
+-                  le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
+-                  le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
+-                  le32_to_cpu(tr.pc), sh->trap_addr,
+-                  le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
+-                  le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
+-                  le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
+-                  le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
+-
++       if (seq)
++               seq_printf(seq,
++                          "dongle trap info: type 0x%x @ epc 0x%08x\n"
++                          "  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
++                          "  lr   0x%08x pc   0x%08x offset 0x%x\n"
++                          "  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
++                          "  r4   0x%08x r5   0x%08x r6 0x%08x r7 
+0x%08x\n",
++                          le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
++                          le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
++                          le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
++                          le32_to_cpu(tr.pc), sh->trap_addr,
++                          le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
++                          le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
++                          le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
++                          le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
++       else
++               pr_debug("dongle trap info: type 0x%x @ epc 0x%08x\n"
++                        "  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
++                        "  lr   0x%08x pc   0x%08x offset 0x%x\n"
++                        "  r0   0x%08x r1   0x%08x r2 0x%08x r3 0x%08x\n"
++                        "  r4   0x%08x r5   0x%08x r6 0x%08x r7 0x%08x\n",
++                        le32_to_cpu(tr.type), le32_to_cpu(tr.epc),
++                        le32_to_cpu(tr.cpsr), le32_to_cpu(tr.spsr),
++                        le32_to_cpu(tr.r13), le32_to_cpu(tr.r14),
++                        le32_to_cpu(tr.pc), sh->trap_addr,
++                        le32_to_cpu(tr.r0), le32_to_cpu(tr.r1),
++                        le32_to_cpu(tr.r2), le32_to_cpu(tr.r3),
++                        le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
++                        le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
+         return 0;
+  }
 
+@@ -3037,8 +3051,10 @@ static int brcmf_sdio_checkdied(struct brcmf_sdio 
+*bus)
+         else if (sh.flags & SDPCM_SHARED_ASSERT)
+                 brcmf_err("assertion in dongle\n");
 
-The following changes since commit abf1a08ff3237a27188ff8cc2904f2cea893af55:
+-       if (sh.flags & SDPCM_SHARED_TRAP)
++       if (sh.flags & SDPCM_SHARED_TRAP) {
+                 brcmf_err("firmware trap in dongle\n");
++               brcmf_sdio_trap_info(NULL, bus, &sh);
++       }
 
-  net: vhost: remove bad code line (2018-10-07 21:31:32 -0700)
+         return 0;
+  }
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-10-12
-
-for you to fetch changes up to f8252e7b5a83deee0e477fc1e31e3f06ceb35d28:
-
-  mac80211: implement ieee80211_tx_rate_update to update rate (2018-10-12 13:05:40 +0200)
-
-----------------------------------------------------------------
-Highlights:
- * merge net-next, so I can finish the hwsim workqueue removal
- * fix TXQ NULL pointer issue that was reported multiple times
- * minstrel cleanups from Felix
- * simplify lib80211 code by not using skcipher, note that this
-   will conflict with the crypto tree (and this new code here
-   should be used)
- * use new netlink policy validation in nl80211
- * fix up SAE (part of WPA3) in client-mode
- * FTM responder support in the stack
-
-----------------------------------------------------------------
-Andrew Zaborowski (1):
-      nl80211: Fix a GET_KEY reply attribute
-
-Anilkumar Kolli (1):
-      mac80211: implement ieee80211_tx_rate_update to update rate
-
-Ankita Bajaj (1):
-      nl80211: Add per peer statistics to compute FCS error rate
-
-Chaitanya T K (1):
-      mac80211: minstrel: Enable STBC and LDPC for VHT Rates
-
-Colin Ian King (1):
-      cfg80211: remove redundant check of !scan_plan
-
-Erik Stromdahl (1):
-      mac80211: fix issue with possible txq NULL pointer
-
-Felix Fietkau (8):
-      mac80211: minstrel: remove unnecessary debugfs cleanup code
-      mac80211: minstrel: merge with minstrel_ht, always enable VHT support
-      mac80211: minstrel: reduce minstrel_mcs_groups size
-      mac80211: minstrel: fix using short preamble CCK rates on HT clients
-      mac80211: minstrel: fix CCK rate group streams value
-      mac80211: minstrel: fix sampling/reporting of CCK rates in HT mode
-      mac80211: minstrel: do not sample rates 3 times slower than max_prob_rate
-      mac80211: rc80211_minstrel: remove variance / stddev calculation
-
-Johannes Berg (14):
-      cfg80211: combine duplicate wdev init code
-      cfg80211: tracing: reuse wiphy_wdev_evt for rdev_get_txq_stats
-      nl80211: remove nl80211_prepare_wdev_dump() skb argument
-      cfg80211: regulatory: make initialization more robust
-      cfg80211: move cookie_counter out of wiphy
-      nl80211: add error messages to nl80211_parse_chandef()
-      cfg80211: combine wdev/netdev unregister code
-      cfg80211: unify sending NL80211_CMD_NEW_INTERFACE
-      cfg80211: sort tracing properly
-      Merge remote-tracking branch 'net-next/master' into mac80211-next
-      lib80211: don't use skcipher
-      nl80211: use policy range validation where applicable
-      nl80211: use netlink policy validation function for elements
-      mac80211: avoid reflecting frames back to the client
-
-Jouni Malinen (3):
-      mac80211: Helper function for marking STA authenticated
-      mac80211: Move ieee80211_mgd_auth() EBUSY check to be before allocation
-      mac80211: Extend SAE authentication in infra BSS STA mode
-
-Martin Willi (1):
-      mac80211_hwsim: drop now unused work-queue from hwsim
-
-Masashi Honma (1):
-      mac80211: Remove unused initialization
-
-Pradeep Kumar Chitrapu (2):
-      cfg80211: support FTM responder configuration/statistics
-      mac80211: support FTM responder configuration/statistics
-
-Wei Yongjun (1):
-      mac80211: fix error handling in ieee80211_register_hw()
-
-zhong jiang (1):
-      cfg80211: remove unnecessary null pointer check in cfg80211_netdev_notifier_call
-
- drivers/net/wireless/mac80211_hwsim.c      |  11 +-
- include/linux/ieee80211.h                  |   1 +
- include/net/cfg80211.h                     |  62 ++-
- include/net/mac80211.h                     |  43 ++
- include/uapi/linux/nl80211.h               |  98 ++++
- net/mac80211/Kconfig                       |  17 +-
- net/mac80211/Makefile                      |  11 +-
- net/mac80211/cfg.c                         |  85 +++
- net/mac80211/driver-ops.h                  |  16 +
- net/mac80211/ieee80211_i.h                 |   1 +
- net/mac80211/main.c                        |  11 +-
- net/mac80211/mlme.c                        | 107 ++--
- net/mac80211/rate.h                        |  13 -
- net/mac80211/rc80211_minstrel.c            | 162 ------
- net/mac80211/rc80211_minstrel.h            |  35 +-
- net/mac80211/rc80211_minstrel_debugfs.c    |  68 +--
- net/mac80211/rc80211_minstrel_ht.c         | 298 +++++++----
- net/mac80211/rc80211_minstrel_ht.h         |  20 +-
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  58 +-
- net/mac80211/rx.c                          |  12 +-
- net/mac80211/status.c                      |  19 +
- net/mac80211/trace.h                       |  23 +
- net/mac80211/util.c                        |   8 +
- net/wireless/core.c                        |  83 +--
- net/wireless/core.h                        |  14 +
- net/wireless/lib80211_crypt_tkip.c         |  59 +-
- net/wireless/lib80211_crypt_wep.c          |  52 +-
- net/wireless/nl80211.c                     | 830 ++++++++++++++---------------
- net/wireless/rdev-ops.h                    |  15 +
- net/wireless/reg.c                         |   9 +
- net/wireless/trace.h                       | 233 ++++----
- 31 files changed, 1338 insertions(+), 1136 deletions(-)
