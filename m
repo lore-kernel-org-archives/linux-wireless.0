@@ -2,87 +2,101 @@ Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5EE5C6783C
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 10:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C7ADC43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 10:41:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C3DD2086A
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 10:37:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tRKchFNr"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4C3DD2086A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 6D79F2086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 10:41:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6D79F2086A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727565AbeJLSI4 (ORCPT
+        id S1727835AbeJLSNk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Oct 2018 14:08:56 -0400
-Received: from nbd.name ([46.4.11.11]:42008 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726665AbeJLSI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Oct 2018 14:08:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=BJ1u1ICmKZcJzRBVsvUIhjj4TDaE+xJe5aNI5Rylwx8=; b=tRKchFNrzwgSjY4bDIJFTX0pEE
-        HIudjfgrsIv8N+d8XtkzdFFhf2CjuaNGW0GS0uJnbNCSK2gau+etK+pbS+8A2rPdVlLv0ZX8xPLH/
-        Hd8ieiwc/sjTWVFsmu/o6JxG8KK4LAdFctDMT2WBK1nQZt9RjiLy0oDZe70+O5GqaZBc=;
-Subject: Re: [PATCH] mt76x0: phy: remove channel parameter from
- mt76x0_phy_set_chan_bbp_params
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539167134.git.lorenzo.bianconi@redhat.com>
- <3ec48695920433e323123e4aa91768df867ee6a6.1539167134.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <b23d993c-2f9a-7986-c470-d597fa8c8707@nbd.name>
-Date:   Fri, 12 Oct 2018 12:37:07 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <3ec48695920433e323123e4aa91768df867ee6a6.1539167134.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        Fri, 12 Oct 2018 14:13:40 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:47406 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726665AbeJLSNk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Oct 2018 14:13:40 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gAutD-0001Ie-32; Fri, 12 Oct 2018 12:41:51 +0200
+Message-ID: <1539340898.3141.11.camel@sipsolutions.net>
+Subject: Re: [RFC v3] cfg80211: add peer measurement with FTM API
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Lior David <liord@codeaurora.org>, luca@coelho.fi,
+        Etan Cohen <etancohen@google.com>,
+        Roy Want <roywant@google.com>,
+        Franky Lin <franky.lin@broadcom.com>
+Date:   Fri, 12 Oct 2018 12:41:38 +0200
+In-Reply-To: <dc9bc6d3-6a95-3ca5-a231-14ed3e2fe302@broadcom.com> (sfid-20181012_123207_395276_6619BC73)
+References: <20181012100827.24195-1-johannes@sipsolutions.net>
+         <dc9bc6d3-6a95-3ca5-a231-14ed3e2fe302@broadcom.com>
+         (sfid-20181012_123207_395276_6619BC73)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 (3.26.6-1.fc27) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-10 12:31, Lorenzo Bianconi wrote:
-> Remove unused channel parameter from mt76x0_phy_set_chan_bbp_params
-> routine signature
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Merged, thanks.
 
-- Felix
+> You have no recollection what happened in the earlier versions, right? :-p
+
+v1 was very incomplete, it didn't have any results reporting, etc.
+
+> > v3:
+> >  - add a bit to report "final" for partial results
+> >  - remove list keeping etc. and just unicast out the results
+> >    to the requester (big code reduction ...)
+> >  - also send complete message unicast, and as a result
+> >    remove the multicast group
+> >  - separate out struct cfg80211_pmsr_ftm_request_peer
+> >    from struct cfg80211_pmsr_request_peer
+> >  - document timeout == 0 if no timeout
+> >  - disallow setting timeout nl80211 attribute to 0,
+> >    must not include attribute for no timeout
+> 
+> All these negations make my head spin (a little). Let's look at the 
+> actual documentation further down...
+
+:-)
+
+> > +struct cfg80211_pmsr_ftm_result {
+> > +	const u8 *lci;
+> > +	const u8 *civicloc;
+> > +	unsigned int lci_len;
+> > +	unsigned int civicloc_len;
+> > +	enum nl80211_peer_measurement_ftm_failure_reasons failure_reason;
+> > +	u32 num_ftmr_attempts, num_ftmr_successes;
+> 
+> Maybe there is a good reason, but can we move the above line a bit down...
+
+The reason was to avoid having padding for alignment.
+
+> > +	NL80211_ATTR_TIMEOUT,
+> > +
+> 
+> Guess you consider reuse of the TIMEOUT attribute? 
+
+Yes, I was actually surprised we don't have one already :-)
+
+> I checked the policy 
+> definition in nl80211_policy so it disallows 0 value as mentioned in the 
+> changelog. How about adding that to the documentation here, ie. "when 
+> timeout attribute is not provided the timeout is disabled for the given 
+> operation" or something like that.
+
+Sure, that makes sense, will do.
+
+johannes
