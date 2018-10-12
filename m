@@ -2,154 +2,80 @@ Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C812BC43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2FCC43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B31820868
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:40:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8B31820868
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id 7D1B220868
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:50:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D1B220868
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727791AbeJLQMF (ORCPT
+        id S1727955AbeJLQWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Oct 2018 12:12:05 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:57664 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727370AbeJLQMF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Oct 2018 12:12:05 -0400
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gAszx-0007nq-JB; Fri, 12 Oct 2018 11:40:42 +0300
-Message-ID: <f39924d6bbc4621137cf70abe4bbfac0e5949f32.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Date:   Fri, 12 Oct 2018 11:40:40 +0300
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-pqFLjq5WRxLbnUtgo71c"
-User-Agent: Evolution 3.30.1-1 
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2018-10-12
+        Fri, 12 Oct 2018 12:22:18 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:55018 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726071AbeJLQWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Oct 2018 12:22:18 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 025D080F93;
+        Fri, 12 Oct 2018 08:50:55 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.119])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E85860BE8;
+        Fri, 12 Oct 2018 08:50:54 +0000 (UTC)
+Date:   Fri, 12 Oct 2018 10:50:53 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        linux-wireless@vger.kernel.org, Mathias Kresin <dev@kresin.me>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v3 4/4] rt2800: fix registers init for MT7620
+Message-ID: <20181012085051.GA9768@redhat.com>
+References: <1539086170-32528-4-git-send-email-sgruszka@redhat.com>
+ <CAKR_QV+0z-5ee=sbEawFSnEF2ngvJSUPpNUoY_oPK1Cfk9P0iA@mail.gmail.com>
+ <20181010071451.GA9140@redhat.com>
+ <20181010120657.GA1185@makrotopia.org>
+ <20181010124508.GA22330@redhat.com>
+ <CAKR_QVJbtzpu6v4bZEz2UegWiAy1Ohooy-TciZcOeR_p+Z+yYg@mail.gmail.com>
+ <20181010154054.GA27779@redhat.com>
+ <CAKR_QVLjFyGtzikLTiQKhrVBSyUoPmDn2tMJqto8dyBDjoFJOQ@mail.gmail.com>
+ <20181011100524.GA20794@redhat.com>
+ <CAKR_QVJJJKgtip3386yM1EW+3UV8e=DvFf-qtmw7vRFggS1FHg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKR_QVJJJKgtip3386yM1EW+3UV8e=DvFf-qtmw7vRFggS1FHg@mail.gmail.com>
+User-Agent: Mutt/1.8.3 (2017-05-23)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Fri, 12 Oct 2018 08:50:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Thu, Oct 11, 2018 at 02:39:25PM +0200, Tom Psyborg wrote:
+> so this is RX test where I assume your 7265 card is sending data. is
+> that HT20 or HT40 mode and do you get regression on TX too?
+> 
+> can you try same case 2 test but with registers set to:
+> 
+> TX_SW_CFG0, 0x00000401
+> TX_SW_CFG1, 0x000C0000
+> TX_SW_CFG2, 0x00000000 (or 0x000C0408)
+> 
+> did you ever notice any tx power difference between nexx fw and openwrt fw?
 
---=-pqFLjq5WRxLbnUtgo71c
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Changing only TX_SW_CFG* does not make any diffrence on my router,
+but this patch also start to configure other registers i.e.
+MIMO_PS_CFG and that coused performance regression. I'll repost
+without additional register programming.
 
-Hi Kalle,
-
-This is the fourth batch of patches intended for v4.20.  This includes
-only the last patchset I sent.  Usual development work, mostly queue
-handling cleanups.  More details about the contents in the tag
-description.
-
-I have sent this out before and kbuildbot reported success.
-
-Please let me know if there are any issues.
-
-Cheers,
-Luca.
-
-
-The following changes since commit abf1a08ff3237a27188ff8cc2904f2cea893af55=
-:
-
-  net: vhost: remove bad code line (2018-10-07 21:31:32 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
-gs/iwlwifi-next-for-kalle-2018-10-12
-
-for you to fetch changes up to 724fe7710ac5f4289886b90060ed67e3a4bdd584:
-
-  iwlwifi: mvm: kill INACTIVE queue state (2018-10-08 10:49:22 +0300)
-
-----------------------------------------------------------------
-Fourth set of iwlwifi patches intended for 4.20
-
-* Support for a new scan type;
-* Clean-up in the queue handling code;
-* A few bug fixes;
-
-----------------------------------------------------------------
-Ayala Beker (2):
-      iwlwifi: mvm: introduce a new fragmented scan type: fast balance
-      iwlwifi: mvm: use fast balance scan in case of DCM mode with P2P GO
-
-Johannes Berg (11):
-      iwlwifi: mvm: give TX queue info struct a name
-      iwlwifi: mvm: move queue management into sta.c
-      iwlwifi: mvm: remove per-queue hw refcount
-      iwlwifi: mvm: clean up iteration in iwl_mvm_inactivity_check()
-      iwlwifi: mvm: move queue reconfiguration into new function
-      iwlwifi: mvm: reconfigure queues during inactivity check
-      iwlwifi: mvm: remove RECONFIGURING queue state
-      iwlwifi: mvm: make queue TID change more explicit
-      iwlwifi: mvm: make iwl_mvm_scd_queue_redirect() static
-      iwlwifi: mvm: move iwl_mvm_sta_alloc_queue() down
-      iwlwifi: mvm: kill INACTIVE queue state
-
-Sara Sharon (3):
-      iwlwifi: mvm: don't send keys when entering D3
-      iwlwifi: pcie: don't pad AMSDU packets
-      iwlwifi: trace: change trace to trace one TB at a time
-
-Shahar S Matityahu (2):
-      iwlwifi: dump debug data before stop device
-      iwlwifi: mvm: move rt status check to the start of the resume flow
-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c            |  27 +++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h            |   1 +
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h |  30 +---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c            |  64 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c            |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h           |  54 +++----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c          | 115 +++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c           | 837 +++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++--------------------=
--------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h           |   8 -
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c            |  34 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c         | 420 +------------=
------------------------------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c      |  28 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c           |  29 ++--
- 13 files changed, 825 insertions(+), 831 deletions(-)
-
---=-pqFLjq5WRxLbnUtgo71c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlvAXggACgkQoUecoho8
-xfpksQ//d+W7I8kI0EL0qBrSpT3J8rHJSoEtIBEHP1XgVGspneBBXzDGHbKAaRRW
-kgAgpe6KDYI4eHo0wgSOr13jyt9T/qgxUSO3OepFcdc/dGZqHIUkFKMuFmvGN18o
-5iBCW0E6Q4gzClU4pOR7DBtVeQUR5LjLHj9nqDRpQmdDVCBvdoKN1KAGIgwKYNMf
-JW5zI28oAZ+/vTk0ZVCCjFhQQ1eGwsYlRtTltsRo6C8b1DSVa64yVVcYGbPBS08N
-gcFZt+NAL0ssaC2wN4blvkdWcvHJ8x4ZITQwMA1nAhyVtCUC8FRWyy6HX8NiAVUm
-t6QU9TTfc4tZAvI/r76vG/dPVO9MKMDqRal3wb4NMwaadMn2ai81dhMNUXMm2eMM
-y/LJxf7/AzUbjifd+1bfQBXSWcc/o+0EGpfU7fCHuxgSF4RJhnUIVypUR8mc1b2h
-A8/E0TApR2Is+w1tTp9phCyRxAWKjK6TJZk1BD5o8jxlepHE26QTTWz9YW8pkyX8
-/lCllXHXyL5Sdr9YVDmKN9yET7GrhJcKnO2QvWyddO7pgzWAS9tiZIY7B5NrCTd2
-Dafv3FXY5vW7GUXCBnmq0QXhO1tUkC3kaddEP2MaVM7ymvwCfXZ+ErXheCxuvUGu
-jsE5o6BrzyLS+CZiUTwW8CjRLOMEQAPCcpRliSmNv7A3jCduv8k=
-=sHY5
------END PGP SIGNATURE-----
-
---=-pqFLjq5WRxLbnUtgo71c--
-
+Thanks
+Stanislaw
