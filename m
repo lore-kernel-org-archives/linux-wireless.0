@@ -2,156 +2,251 @@ Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 185F2C28CF8
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 00:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D43C28CF8
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 01:34:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C363520835
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 00:08:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cJzXCtW2"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C363520835
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	by mail.kernel.org (Postfix) with ESMTP id 0CF2820835
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 01:34:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0CF2820835
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=gmx.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727195AbeJLHiR (ORCPT
+        id S1726218AbeJLJEd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Oct 2018 03:38:17 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:38414 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726376AbeJLHiR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Oct 2018 03:38:17 -0400
-Received: by mail-pf1-f194.google.com with SMTP id f29-v6so5224098pff.5
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Oct 2018 17:08:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=cD8mtAZnrwn3vT5YGMGRUty9PS2JbeDJxnzk0S4dAR0=;
-        b=cJzXCtW2AxctRXnqexgbTiwu3AHfn6Y5YZSH6BS9wz1NFBLaWzGTw6Q2oBrPsTmhia
-         XMw2x0xVOi5dyiduyybF4/bspow9MKUyBwp6tcUo5I3afzXIlsu7aVC+k8kI8+g20enB
-         ZThC+awp4GXC6H/TBTr6SbG6pgXbK2dv3m9iI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=cD8mtAZnrwn3vT5YGMGRUty9PS2JbeDJxnzk0S4dAR0=;
-        b=XhagllkpGfRBaerNYq7VwUNX5Vz3E4cuj25niK7fTSK0/aUd4KymQAc66HbDHx+ElT
-         iHKfnj1N+Fk9Ln4lcbOsz1dkwGJgkSfHe30B8/ZaKLGMkL4NHtJUcU/SxLWh7Lj8wcZy
-         Futs5i5bNVhUWshdDFAc5hQYOEyFkxtgK3RlkT1HBs/8+PXUvzDvEdTDtrgRL0kqpclJ
-         PAq7cM6d5nTRAbE1UhJesoCTMuTszxZOtAJB+0DmliVPG1j4/w5qMOO13TFnV0EK/exK
-         15qsATHWIsnxqgz6OYR8BsSynF8ipMMT9M5k5ZkmEgUOAj5woZr59lU7qww++Mmc+Lc2
-         v/uw==
-X-Gm-Message-State: ABuFfog8z9yFF4iD6QAzpKOPkW1v6OTHhivaQG9I43iJfY2nA1MqcquX
-        pPKmdHsmBHjAqA6YoEEuMlb4Tg==
-X-Google-Smtp-Source: ACcGV63Z/xdp8P3dJpoFsaLnKu2TMP6cnj/QZYAbysmErnlv3NSin+Y3tLcPpGj4Q9v00FoBMPS28A==
-X-Received: by 2002:a62:5e02:: with SMTP id s2-v6mr3809792pfb.146.1539302918364;
-        Thu, 11 Oct 2018 17:08:38 -0700 (PDT)
-Received: from localhost ([2620:15c:202:1:b6af:f85:ed6c:ac6a])
-        by smtp.gmail.com with ESMTPSA id c2-v6sm26202941pfn.95.2018.10.11.17.08.37
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Oct 2018 17:08:37 -0700 (PDT)
-Date:   Thu, 11 Oct 2018 17:08:37 -0700
-From:   Matthias Kaehlcke <mka@chromium.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-spi <linux-spi@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>, swboyd@chromium.org,
-        Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH] dt-bindings: Add bindings for aliases node
-Message-ID: <20181012000837.GP22824@google.com>
-References: <20180925210255.172734-1-mka@chromium.org>
- <20181009010711.GA1577@ban.mtv.corp.google.com>
- <CAMuHMdWe5JYp5eC2PvuG4xEud908Crhm+BhrtxPJ4Uo1-LCc4g@mail.gmail.com>
- <20181009183141.GA126050@ban.mtv.corp.google.com>
+        Fri, 12 Oct 2018 05:04:33 -0400
+Received: from mout.gmx.net ([212.227.17.20]:47129 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726053AbeJLJEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 12 Oct 2018 05:04:33 -0400
+Received: from [0.0.0.0] ([149.28.201.231]) by mail.gmx.com (mrgmx101
+ [212.227.17.174]) with ESMTPSA (Nemesis) id 0MLzXM-1g33eG49jo-007o56; Fri, 12
+ Oct 2018 03:34:34 +0200
+Received: from [0.0.0.0] ([149.28.201.231]) by mail.gmx.com (mrgmx101
+ [212.227.17.174]) with ESMTPSA (Nemesis) id 0MLzXM-1g33eG49jo-007o56; Fri, 12
+ Oct 2018 03:34:34 +0200
+Subject: Re: Intel 8265 unstable/asymmetric ping response time (only under
+ Linux)
+To:     =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+References: <edaca500-8ae2-aef4-1c9d-b754af7e899f@gmx.com>
+ <CABvG-CUJNAq=4XWf3bVYw_EF4W8zmmL7fvc=nt+Zae82Wn7yug@mail.gmail.com>
+From:   Qu Wenruo <quwenruo.btrfs@gmx.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=quwenruo.btrfs@gmx.com; prefer-encrypt=mutual; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNIlF1IFdlbnJ1byA8cXV3ZW5ydW8uYnRyZnNAZ214LmNvbT7CwJQEEwEIAD4CGwMFCwkI
+ BwIGFQgJCgsCBBYCAwECHgECF4AWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCWdWCnQUJCWYC
+ bgAKCRDCPZHzoSX+qAR8B/94VAsSNygx1C6dhb1u1Wp1Jr/lfO7QIOK/nf1PF0VpYjTQ2au8
+ ihf/RApTna31sVjBx3jzlmpy+lDoPdXwbI3Czx1PwDbdhAAjdRbvBmwM6cUWyqD+zjVm4RTG
+ rFTPi3E7828YJ71Vpda2qghOYdnC45xCcjmHh8FwReLzsV2A6FtXsvd87bq6Iw2axOHVUax2
+ FGSbardMsHrya1dC2jF2R6n0uxaIc1bWGweYsq0LXvLcvjWH+zDgzYCUB0cfb+6Ib/ipSCYp
+ 3i8BevMsTs62MOBmKz7til6Zdz0kkqDdSNOq8LgWGLOwUTqBh71+lqN2XBpTDu1eLZaNbxSI
+ ilaVzsBNBFnVga8BCACqU+th4Esy/c8BnvliFAjAfpzhI1wH76FD1MJPmAhA3DnX5JDORcga
+ CbPEwhLj1xlwTgpeT+QfDmGJ5B5BlrrQFZVE1fChEjiJvyiSAO4yQPkrPVYTI7Xj34FnscPj
+ /IrRUUka68MlHxPtFnAHr25VIuOS41lmYKYNwPNLRz9Ik6DmeTG3WJO2BQRNvXA0pXrJH1fN
+ GSsRb+pKEKHKtL1803x71zQxCwLh+zLP1iXHVM5j8gX9zqupigQR/Cel2XPS44zWcDW8r7B0
+ q1eW4Jrv0x19p4P923voqn+joIAostyNTUjCeSrUdKth9jcdlam9X2DziA/DHDFfS5eq4fEv
+ ABEBAAHCwHwEGAEIACYWIQQt33LlpaVbqJ2qQuHCPZHzoSX+qAUCWdWBrwIbDAUJA8JnAAAK
+ CRDCPZHzoSX+qA3xB/4zS8zYh3Cbm3FllKz7+RKBw/ETBibFSKedQkbJzRlZhBc+XRwF61mi
+ f0SXSdqKMbM1a98fEg8H5kV6GTo62BzvynVrf/FyT+zWbIVEuuZttMk2gWLIvbmWNyrQnzPl
+ mnjK4AEvZGIt1pk+3+N/CMEfAZH5Aqnp0PaoytRZ/1vtMXNgMxlfNnb96giC3KMR6U0E+siA
+ 4V7biIoyNoaN33t8m5FwEwd2FQDG9dAXWhG13zcm9gnk63BN3wyCQR+X5+jsfBaS4dvNzvQv
+ h8Uq/YGjCoV1ofKYh3WKMY8avjq25nlrhzD/Nto9jHp8niwr21K//pXVA81R2qaXqGbql+zo
+Message-ID: <ca5a768b-3d81-6bc3-dc28-b0b737e1a7cb@gmx.com>
+Date:   Fri, 12 Oct 2018 09:34:29 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20181009183141.GA126050@ban.mtv.corp.google.com>
-User-Agent: Mutt/1.9.2 (2017-12-15)
+In-Reply-To: <CABvG-CUJNAq=4XWf3bVYw_EF4W8zmmL7fvc=nt+Zae82Wn7yug@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="1XGZjXOCWyPeVVJey2u1KTTzz0RCrOPhM"
+X-Provags-ID: V03:K1:j5gdQKZGsWg0A3646yH6ISpqWfxIuUQlF/4KWLo6u5dPui1IRUO
+ tBUt53hUvmcy56foAixyuJqrUiD38bS3DdB9/Gp24wSxm6Uhy9VQxwYYBYUpSzEtXBmO+R/
+ vhBgBc31lq3fphWzdPMIInYYMz17/6iOnj8y27TnQ9u0/rGgHBI+ae2jNc2gxohHWdHm+RZ
+ KfXzYh8MNcTI62TvLii8Q==
+X-UI-Out-Filterresults: notjunk:1;V01:K0:cV12giIdXmo=:FOnFeV1CHhAOv2/FzJUzcE
+ GonNnjn1deQ8HPw3PGIPVltfk4/V5rrLIn1PV3cpCNWbhR2C2BiTXjUQSaz3jWcYaBZ5M0TOU
+ ZB+bnqY+3le6GMV5wECJWxKgQYZtG2RRmLWT0W6IKp+vsJFBnRHXwqXIp246vDqeL7zigx2jz
+ k4ItR4LGcwrFbbk2+a+JiZpeB0gLd2OvL6nthhVJW8OXMT44Y5ayolgIcM5ZHB6gBEUiPelyO
+ pnh9meTGC/GFKvoG++/mLyN8VfMZGXv2qk+hsdi1KOkMYos7wmOgNmbKWIb96vAurgxvt05vs
+ mVXE/rJm1qjvHVemGeCx8C02wA93soXNV2NgQkBvX6fBWICrt1tRjHaLvASgCMX9tkoNFAxCn
+ RSGpRzVMCl1WOIIP1EZPLPbe6pRKZdEdEQFEmE7b5JG+NLb7hpeAIUeAedOi+/HXVa9ZzoT4U
+ lA5qHQgii0TLwCQO1VIr4ii/bqdZv4fG6M2I5xkdYhILSaIexCeSp2wuwA8k6BtaSPkvbsmaY
+ YVWAN7V8StFawdjvsoJj+uRXtodAO068g/oEjPWjk1ZkSvFFTyZ6pPv6LfZzP4XcCRsFi85Ww
+ WDQoMxtUM+Zgs8V/U/qQiGDfp9bA535HJfMo5FGixa8la+4U3JU+tbg3cBtHBxnqINNt3RiqM
+ Bq7fSrvVlQhfnK8xG55YFz+sI7FEku6cpt484pWCC5Hp2CXA9MD13JSmJGyiB+8MAQ63KX0GR
+ cZkgyrRbB3/d6EpnmVecPobtV+AO09/QviUT+KHdbo6khHWFJw8iYMpFBrUrxI05NqTlspOs0
+ LFQM+Kp7oBsLGyFgIGkh0JbsxQuKQ==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 09, 2018 at 11:31:42AM -0700, Brian Norris wrote:
-> On Tue, Oct 09, 2018 at 09:22:07AM +0200, Geert Uytterhoeven wrote:
-> > Please note these aliases become cumbersome once you start considering
-> > (dynamic) DT overlays.  That's why I made them optional in the sh-sci
-> > serial driver, cfr. commit 7678f4c20fa7670f ("serial: sh-sci: Add support
-> > for dynamic instances").
-> 
-> Note that as I understand it, the entire point of documenting this sort
-> of thing is to help solidify the interface between a DT aware boot
-> program (e.g., bootloader) and a device tree which is provided
-> separately, to avoid memorizing node/path hierarchy. It doesn't need to
-> (and doesn't, as I read it) enforce an OS's device naming policy.
-> 
-> > Relevant parts of the commit description are:
-> > 
-> >     On DT platforms, the sh-sci driver requires the presence of "serialN"
-> >     aliases in DT, from which instance IDs are derived.  If a DT alias is
-> >     missing, the drivers fails to probe the corresponding serial port.
-> > 
-> >     This becomes cumbersome when considering DT overlays, as currently
-> >     there is no upstream support for dynamically updating the /aliases node
-> >     in DT.
-> 
-> That part is not a DT spec problem :)
-> 
-> >     Furthermore, even in the presence of such support, hardcoded
-> >     instance IDs in independent overlays are prone to conflicts.
-> > 
-> >     Hence add support for dynamic instance IDs, to be used in the absence of
-> >     a DT alias.  This makes serial ports behave similar to I2C and SPI
-> >     buses, which already support dynamic instances.
-> 
-> This seems to be a much different sort of problem. People always love
-> having predictable IDs given by the OS (myself included), but that's
-> just plain hard to do and impossible in some cases. I don't think that's
-> what this document is about though.
-> 
-> IOW, this document seems pretty consistent with the above: it doesn't
-> require the usage of aliases (and it seems silly to have a driver
-> *require* an alias) -- it just documents how one should name such an
-> alias if you expect multiple independent software components to
-> understand it.
-> 
-> > To clarify my point: R-Car M2-W has 4 different types of serial ports, for a
-> > total of 18 ports, and the two ports on a board labeled 0 and 1 may not
-> > correspond to the physical first two ports (what's "first" in a collection of
-> > 4 different types?).
-> > 
-> > Aliases may be fine for referring to the main serial console (labeled
-> > port 0 on the device, too), and the primary Ethernet interface (so U-Boot
-> > knows where to add the "local-mac-address" property), but beyond that,
-> > I think they should be avoided.
-> 
-> That's fair enough. Just because the solution isn't an all-purpose tool
-> doesn't mean it shouldn't be documented. The general concept is already
-> in ePAPR, but it's just not very specific about property names.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--1XGZjXOCWyPeVVJey2u1KTTzz0RCrOPhM
+Content-Type: multipart/mixed; boundary="aDlUQQ03cJvMHvk3YoRYwSgYbxMjeETQL";
+ protected-headers="v1"
+From: Qu Wenruo <quwenruo.btrfs@gmx.com>
+To: =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <ca5a768b-3d81-6bc3-dc28-b0b737e1a7cb@gmx.com>
+Subject: Re: Intel 8265 unstable/asymmetric ping response time (only under
+ Linux)
+References: <edaca500-8ae2-aef4-1c9d-b754af7e899f@gmx.com>
+ <CABvG-CUJNAq=4XWf3bVYw_EF4W8zmmL7fvc=nt+Zae82Wn7yug@mail.gmail.com>
+In-Reply-To: <CABvG-CUJNAq=4XWf3bVYw_EF4W8zmmL7fvc=nt+Zae82Wn7yug@mail.gmail.com>
 
-Basically what Brian said, this doc doesn't encourage the use of
-aliases, it just intends to establish a consistent naming for cases
-where aliases are needed/more useful than harmful. The misuse of
-aliases needs to be addressed in the reviews of the patches that
-introduce them.
+--aDlUQQ03cJvMHvk3YoRYwSgYbxMjeETQL
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Maybe the doc should include a recommendation to use aliases
-sparingly? I'm open to input on that from folks who have a better
-understanding of the potential pitfalls ;-)
 
-Cheers
 
-Matthias
+On 2018/10/12 =E4=B8=8A=E5=8D=883:30, Micha=C5=82 Kazior wrote:
+> On Thu, 11 Oct 2018 at 15:56, Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:=
+
+>>
+>> Hi,
+>>
+>> I found one pretty strange behavior for the Intel 8265/8275 wireless
+>> (from ThinkPad X1 carbon)
+>>
+>> If I ping *FROM* my router/desktop to the wireless laptop, the respons=
+e
+>> time is very unstable and slow, like:
+>> ------
+>> $ ping -4 thinkpad
+>> PING thinkpad.lan (172.16.0.100) 56(84) bytes of data.
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D1 ttl=3D64 time=3D=
+143 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D2 ttl=3D64 time=3D=
+166 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D3 ttl=3D64 time=3D=
+188 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D4 ttl=3D64 time=3D=
+211 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D5 ttl=3D64 time=3D=
+29.8 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D6 ttl=3D64 time=3D=
+51.7 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D7 ttl=3D64 time=3D=
+72.8 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D8 ttl=3D64 time=3D=
+94.6 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D9 ttl=3D64 time=3D=
+117 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D10 ttl=3D64 time=
+=3D140 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D11 ttl=3D64 time=
+=3D163 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D12 ttl=3D64 time=
+=3D186 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D13 ttl=3D64 time=
+=3D207 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D14 ttl=3D64 time=
+=3D25.1 ms
+>> 64 bytes from thinkpad.lan (172.16.0.100): icmp_seq=3D15 ttl=3D64 time=
+=3D47.6 ms
+>> -----
+>>
+>> It looks like the response time get increase by 20ms and flipped over
+>> around 200ms.
+> [...]
+>> So is this something wrong with the wireless card or something wrong
+>> with the firmware/powersaving setting of ThinkPad X1 Carbon 6th gen?
+>=20
+> What you're seeing here is powersave.
+>=20
+> When you ping your laptop its wifi card may be in powersave so AP will
+> store those icmp requests in a queue. The AP will start advertising
+> that fact in the next beacon frame (which it broadcasts regularily).
+> The wifi client can then see that there's traffic queued up for it,
+> wake up, receive it and possibly reply (with icmp response in your
+> case). The interval between each ping is long enough for the wifi
+> client to re-enter powersave due to "nothing more to do" every time
+> causing the same sequence (sleep, queue, advertise, wake, txrx).
+
+Thanks for your detailed explanation, this really helps me to understand
+the problem.
+
+>=20
+> The time drift comes from the fact beacon interval tends to be
+> slightly off from your ping interval. The fact it wraps around at
+> ~200msec for you means your AP's beacon interval is roughly that long
+> as well which you can probably confirm with your AP/wifi router
+> settings. Most APs tend to run 100 or 200msec (or TU, actually, which
+> is 1024/1000 of msec) by default.
+>=20
+> If you run more traffic the lag will go away. I find this sort of
+> behavior behavior annoying for mostly idle systems where I want to do
+> remoting with ssh (or any other bursty and interactive work).
+
+Yeah, completely the same case.
+
+>=20
+> You can try disabling powersave with:
+>   iw wlan0 set power_save off
+>=20
+> You might need to replace wlan0 with wlpXsY depending on your system.
+> You'll need root privileges to do it, e.g. via sudo, or su.
+
+Works like a charm.
+
+>=20
+> Keep in mind it'll cause more power to be outputted and e.g. leave you
+> with slightly shorter battery runtime. On intel compute sticks
+> disabling wifi powersave can cause its fan to kick in more often due
+> to thermal impact and unfortunate fan trip points.
+
+Not a problem for Thinkpad with better thermal paste and extra tweaked
+CPU parameters.
+
+>=20
+> Wifi powersave might be disabled in Windows for some reason. Maybe it
+> does that disable it when AC is plugged in, and if you were to plug it
+> out and run off of battery only, it'd enable it and show similar
+> (laggy) behavior?
+
+On battery, windows behaves exactly the same as Linux.
+
+I only need to add some hook for AC/battery switch for Linux.
+
+Thanks for your help!
+Qu
+
+>=20
+>=20
+> Micha=C5=82
+>=20
+
+
+--aDlUQQ03cJvMHvk3YoRYwSgYbxMjeETQL--
+
+--1XGZjXOCWyPeVVJey2u1KTTzz0RCrOPhM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEELd9y5aWlW6idqkLhwj2R86El/qgFAlu/+iUACgkQwj2R86El
+/qgvygf9FmGj9l+PyWqZy8C/Hxepm9qameargTKf//X8vLfI7ft+Wi4tFWsIX68F
+3RskzaYrFDZaiqtVkQ4uyDNaeo8+YVM9SofD9upxnaaifa1rAXip1TB46ttgXrSK
+BKHlgualU2Tv2xcOqGCnUsCGMsVzfs20dWLl9icxZq/2sMSO03dBSnM3qAaUAU4f
+i+h7HrErowfv7qMogp2xCIvHKZ4GQUSGmGhY/Q35MhAiz5wnWlMcHMr3SxdBmka1
+tK7ui/4AtM+TGvTGNUcZA01WTavcFBcdS+HgyYyTX8V/kWKBjbeh44l7y9a/uIYb
+Y0LOS8EGL8vSj64LGeEANDnM+pfMjw==
+=DxLR
+-----END PGP SIGNATURE-----
+
+--1XGZjXOCWyPeVVJey2u1KTTzz0RCrOPhM--
