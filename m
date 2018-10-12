@@ -2,138 +2,154 @@ Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B568C43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C812BC43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:40:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DF432098A
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:00:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fqrzfiyz"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0DF432098A
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	by mail.kernel.org (Postfix) with ESMTP id 8B31820868
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 08:40:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8B31820868
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727851AbeJLPbn (ORCPT
+        id S1727791AbeJLQMF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Oct 2018 11:31:43 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:37024 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727571AbeJLPbn (ORCPT
+        Fri, 12 Oct 2018 12:12:05 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57664 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727370AbeJLQMF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Oct 2018 11:31:43 -0400
-Received: by mail-ed1-f68.google.com with SMTP id c22-v6so10654163edc.4
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2018 01:00:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=lYjymLv/bqpi/c+OoCo1qiQKw8HpwgcbkPA0iWzCItA=;
-        b=fqrzfiyzj5wlmCjCkpoMZTj3E66dIPgDyUksrlOX3CsZLQWIXO9QHfLf825A3irJ03
-         m1A6PjUy4LTJY9nxb1Ld7BFq+ZZHSIZqZtCxVqRVWBtedwmC8xVjUJZ/4oJUy61RT19N
-         u9i+UZU5Rb0RFpcKuK3VeQzgBzej2ssE6/PZE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=lYjymLv/bqpi/c+OoCo1qiQKw8HpwgcbkPA0iWzCItA=;
-        b=HtIvHyVna0QxITEpnkZULnBXlI6+phe+F/QQSUTSTETDmHCyGGB4vVmQtDi6RqKGaR
-         hMai+0YFFBg1U5XTj5iNI4P+mwR03sS+QCGJ4md85nHuWcOERZMLpA6y+f8vFT8px1/y
-         3wL/4hP1d44m1rdOCFfBdSxm0pt7P0Bjn5XmG9fHErF9CotBFWyVKcIWlvJwtWReJP8X
-         Y7HiRm0TNaAC76du37MiZo0wure4VcEhduZ4RwFfSRIpxxDLqAgK2c26t8vfUVVzpjZc
-         XhidK+0blow50Hlw1BpG5YgRnuOtmoJfyzVF3UCnGA4YDXY2uzX+mJ4XXJJ4ts/iq41a
-         /VOQ==
-X-Gm-Message-State: ABuFfog0K6PQy0MkpO+fwqz7fxUaMLwvHlwnzGldQdnMRzaDAI7P+/tU
-        yU8wTE/8ZowEkiZ1Y5gdCsRHQw==
-X-Google-Smtp-Source: ACcGV60utpUwW6bWXnXQ2HpCuE2JQ8bU3yMWYOzCDQaiiEc/JAua+05QGUyCdnsrjaMpSR1/5DRwpw==
-X-Received: by 2002:a50:f573:: with SMTP id w48-v6mr7565101edm.230.1539331228734;
-        Fri, 12 Oct 2018 01:00:28 -0700 (PDT)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id z33-v6sm335952edb.85.2018.10.12.01.00.27
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 12 Oct 2018 01:00:27 -0700 (PDT)
-Subject: Re: brcmfmac with BCM4359 on arm64 (RK3399) and SDIO
-To:     =?UTF-8?Q?Christoph_M=c3=bcllner?= 
-        <christoph.muellner@theobroma-systems.com>,
-        Franky Lin <franky.lin@broadcom.com>
-References: <5C44048D-0676-48E6-9AA3-F327839F13E5@theobroma-systems.com>
- <CA+8PC_dkJAPR2C0DsOWRb__RrijbZZ43MM1gtKGjsMxdTGwsZQ@mail.gmail.com>
- <fabdecc1-f032-789e-058f-2c62442b12c0@theobroma-systems.com>
- <C9DFBEBB-4481-4CBA-AE10-92A20C815D4F@theobroma-systems.com>
-Cc:     "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f7645f53-3e63-c888-c4a7-ece11655849d@broadcom.com>
-Date:   Fri, 12 Oct 2018 10:00:26 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
-MIME-Version: 1.0
-In-Reply-To: <C9DFBEBB-4481-4CBA-AE10-92A20C815D4F@theobroma-systems.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        Fri, 12 Oct 2018 12:12:05 -0400
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gAszx-0007nq-JB; Fri, 12 Oct 2018 11:40:42 +0300
+Message-ID: <f39924d6bbc4621137cf70abe4bbfac0e5949f32.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Fri, 12 Oct 2018 11:40:40 +0300
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-pqFLjq5WRxLbnUtgo71c"
+User-Agent: Evolution 3.30.1-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-10-12
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/11/2018 6:04 PM, Christoph Müllner wrote:
-> Hi Franky and Arend,
->
-> today I could get a SDIO Wifi module, which includes a BCM43455.
-> I was able to get this up and running without any issues with the brcmfmac
-> driver and a 4.19 kernel. For me that's enough evidence to say that the SDIO
-> driver works.
->
-> However, the BCM4359 still does not work.
-> It times out in brcmf_sdio_firmware_callback(), while enabling func2.
->
-> I've inserted tons of debug log outputs in both, the DHD driver and the
-> brcmfmac driver, and compared them. Differences which I've found so far
-> are: a) brcmfmac strips out whitespaces from nvram contents and
-> b) DHD downloads firmware first and brcmfmac downloads nvram first.
-> I've adapted the DHD driver to behave like brcmfmac in both cases
-> and it still works.
->
-> I've increased the timeout for enabling func2 from 3 seconds to 10 seconds,
-> but that did not help.
->
-> Any ideas left?
 
-When enabling func2 fails it generally means the firmware crashed. I am 
-not sure if the patch below works to get console information. It might 
-show up empty or simply fail if firmware did not fill shared memory 
-info, but it may be worth a try.
+--=-pqFLjq5WRxLbnUtgo71c
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c 
-b/drivers/
-index c99a191..739dbaa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4109,7 +4109,7 @@ static void brcmf_sdio_firmware_callback(struct 
-device *d
-         } else {
-                 /* Disable F2 again */
-                 sdio_disable_func(sdiod->func2);
--               goto release;
-+               goto checkdied;
-         }
+Hi Kalle,
 
-         if (brcmf_chip_sr_capable(bus->ci)) {
-@@ -4151,6 +4151,9 @@ static void brcmf_sdio_firmware_callback(struct 
-device *d
-         /* ready */
-         return;
+This is the fourth batch of patches intended for v4.20.  This includes
+only the last patchset I sent.  Usual development work, mostly queue
+handling cleanups.  More details about the contents in the tag
+description.
 
-+checkdied:
-+       brcmf_sdio_checkdied(bus);
-+       brcmf_sdio_readconsole(bus);
-  release:
-         sdio_release_host(sdiod->func1);
-  fail:
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit abf1a08ff3237a27188ff8cc2904f2cea893af55=
+:
+
+  net: vhost: remove bad code line (2018-10-07 21:31:32 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-10-12
+
+for you to fetch changes up to 724fe7710ac5f4289886b90060ed67e3a4bdd584:
+
+  iwlwifi: mvm: kill INACTIVE queue state (2018-10-08 10:49:22 +0300)
+
+----------------------------------------------------------------
+Fourth set of iwlwifi patches intended for 4.20
+
+* Support for a new scan type;
+* Clean-up in the queue handling code;
+* A few bug fixes;
+
+----------------------------------------------------------------
+Ayala Beker (2):
+      iwlwifi: mvm: introduce a new fragmented scan type: fast balance
+      iwlwifi: mvm: use fast balance scan in case of DCM mode with P2P GO
+
+Johannes Berg (11):
+      iwlwifi: mvm: give TX queue info struct a name
+      iwlwifi: mvm: move queue management into sta.c
+      iwlwifi: mvm: remove per-queue hw refcount
+      iwlwifi: mvm: clean up iteration in iwl_mvm_inactivity_check()
+      iwlwifi: mvm: move queue reconfiguration into new function
+      iwlwifi: mvm: reconfigure queues during inactivity check
+      iwlwifi: mvm: remove RECONFIGURING queue state
+      iwlwifi: mvm: make queue TID change more explicit
+      iwlwifi: mvm: make iwl_mvm_scd_queue_redirect() static
+      iwlwifi: mvm: move iwl_mvm_sta_alloc_queue() down
+      iwlwifi: mvm: kill INACTIVE queue state
+
+Sara Sharon (3):
+      iwlwifi: mvm: don't send keys when entering D3
+      iwlwifi: pcie: don't pad AMSDU packets
+      iwlwifi: trace: change trace to trace one TB at a time
+
+Shahar S Matityahu (2):
+      iwlwifi: dump debug data before stop device
+      iwlwifi: mvm: move rt status check to the start of the resume flow
+
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c            |  27 +++-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h            |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace-data.h |  30 +---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c            |  64 +++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c            |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h           |  54 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c          | 115 +++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c           | 837 +++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++--------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h           |   8 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c            |  34 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c         | 420 +------------=
+-----------------------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c      |  28 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c           |  29 ++--
+ 13 files changed, 825 insertions(+), 831 deletions(-)
+
+--=-pqFLjq5WRxLbnUtgo71c
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlvAXggACgkQoUecoho8
+xfpksQ//d+W7I8kI0EL0qBrSpT3J8rHJSoEtIBEHP1XgVGspneBBXzDGHbKAaRRW
+kgAgpe6KDYI4eHo0wgSOr13jyt9T/qgxUSO3OepFcdc/dGZqHIUkFKMuFmvGN18o
+5iBCW0E6Q4gzClU4pOR7DBtVeQUR5LjLHj9nqDRpQmdDVCBvdoKN1KAGIgwKYNMf
+JW5zI28oAZ+/vTk0ZVCCjFhQQ1eGwsYlRtTltsRo6C8b1DSVa64yVVcYGbPBS08N
+gcFZt+NAL0ssaC2wN4blvkdWcvHJ8x4ZITQwMA1nAhyVtCUC8FRWyy6HX8NiAVUm
+t6QU9TTfc4tZAvI/r76vG/dPVO9MKMDqRal3wb4NMwaadMn2ai81dhMNUXMm2eMM
+y/LJxf7/AzUbjifd+1bfQBXSWcc/o+0EGpfU7fCHuxgSF4RJhnUIVypUR8mc1b2h
+A8/E0TApR2Is+w1tTp9phCyRxAWKjK6TJZk1BD5o8jxlepHE26QTTWz9YW8pkyX8
+/lCllXHXyL5Sdr9YVDmKN9yET7GrhJcKnO2QvWyddO7pgzWAS9tiZIY7B5NrCTd2
+Dafv3FXY5vW7GUXCBnmq0QXhO1tUkC3kaddEP2MaVM7ymvwCfXZ+ErXheCxuvUGu
+jsE5o6BrzyLS+CZiUTwW8CjRLOMEQAPCcpRliSmNv7A3jCduv8k=
+=sHY5
+-----END PGP SIGNATURE-----
+
+--=-pqFLjq5WRxLbnUtgo71c--
 
