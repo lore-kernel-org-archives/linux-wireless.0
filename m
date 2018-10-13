@@ -2,175 +2,643 @@ Return-Path: <SRS0=P1q9=MZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C140C28CF8
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 07:10:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C38CFC28CF8
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 09:01:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FE0520859
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 07:10:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nS2Rfviq"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4FE0520859
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 709F020835
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 09:01:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 709F020835
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726033AbeJMOqM (ORCPT
+        id S1727047AbeJMQhi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 10:46:12 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:39235 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725978AbeJMOqM (ORCPT
+        Sat, 13 Oct 2018 12:37:38 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:60272 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727031AbeJMQhi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 10:46:12 -0400
-Received: by mail-qk1-f195.google.com with SMTP id q5-v6so9029535qki.6;
-        Sat, 13 Oct 2018 00:10:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=8qnPKtoA3FlSwPLJt2ZYXuU85kMb5y0pX6eXGX6bcJo=;
-        b=nS2RfviqR/95ABb8etoJkhYl847ysN7AE71KFiE6W/Iu7OvOW3+7iAyGbJYz+Qtp7y
-         CrcEOsLgnAAadp2BsZ2bmP7OIS0pzCFpb3u5wZFYFaCxbcYpyAubo9kga6nZVezWemTJ
-         sAiO5pZiXk9oYDsy0+Aky2uL+eUqeBQvrIxBi+2soCfltJIhxymUpmnUu13Qlfe2j4ed
-         dWAyS4uPPrRpKkK/cvAPYfulPHjZHEXcc/6t7RqNEY8Wmsjc4WYJIOhaQsEOkU9IWnbl
-         h2Po1Vr71Tbv4dujeKPX5yeaEXBI6UH0I0SZPWd39x9+xitx6CNfu1er5F6c+cSDqNpx
-         39nQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=8qnPKtoA3FlSwPLJt2ZYXuU85kMb5y0pX6eXGX6bcJo=;
-        b=OSH6lUlFEKKLTGXjmHiQlCv2/rhUvckByq0Ws3u6tUd2xHYngPQPjFJSOrj0KyZT3Q
-         k0Aizis4wgPCqNNTo53kinKqCyxmmKeuJFcWI8Y4Dh0Z6PsQXDnw1tEemwGn4Y+BL4jc
-         U9DmKUcQOthlNp9yEIuQTM3rWuTxsYxdIDvz8GWTGdjtCdt5R5j/MADBw9AoT+DmCJ5A
-         t9+jCv5K3vBBbbraIqwZgzfUeiFQd+IPBPEzv8eBsuUimYfaxatiEKN6JvZZjYk1Iwca
-         CW7in0QsnXyyr/f2Hrlx8JxPtagH32yKfUybE3rg1F4PaEBwNua1YaoiRLQPeLn/a51Y
-         OS5w==
-X-Gm-Message-State: ABuFfojaduOE18RRPjx4VPMxf1VL4H81wKhwi5GZdmTVmMMw++maJUGH
-        J5qyebIDBgqXmt478UuaCUH1Lgz0vXoZdgOlfh0=
-X-Google-Smtp-Source: ACcGV62G8le3rkQMIeHzUAw4qKMS4nYKOCDpWD7ypCKBWcIZZOd0sGGMgFlqvu3zjdJraa/P1WxsLcjp04x14vMZr60=
-X-Received: by 2002:a37:185f:: with SMTP id j92-v6mr8321556qkh.65.1539414610668;
- Sat, 13 Oct 2018 00:10:10 -0700 (PDT)
+        Sat, 13 Oct 2018 12:37:38 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9D90ubh000977, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9D90ubh000977
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Sat, 13 Oct 2018 17:00:56 +0800
+Received: from localhost.localdomain (172.21.68.143) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.408.0; Sat, 13 Oct 2018 17:00:56 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <Larry.Finger@lwfinger.net>, <pkshih@realtek.com>,
+        <tehuang@realtek.com>, <sgruszka@redhat.com>,
+        <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: [RFC v4 04/13] rtw88: trx files
+Date:   Sat, 13 Oct 2018 17:00:36 +0800
+Message-ID: <1539421245-11847-5-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1539421245-11847-1-git-send-email-yhchuang@realtek.com>
+References: <1539421245-11847-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-References: <153908805217.9471.9290979918041653328.stgit@alrua-kau>
- <153908837900.9471.5394468800857658136.stgit@alrua-kau> <a65909ee425585a49d9e17f6504cf0ba@codeaurora.org>
- <87zhvm832s.fsf@toke.dk> <187bade306627912c70d800819ef0b87@codeaurora.org>
- <87pnwg93at.fsf@toke.dk> <7dfcb7a13a3f75f01f7b88163f2c33d6@codeaurora.org>
-In-Reply-To: <7dfcb7a13a3f75f01f7b88163f2c33d6@codeaurora.org>
-From:   Dave Taht <dave.taht@gmail.com>
-Date:   Sat, 13 Oct 2018 00:09:58 -0700
-Message-ID: <CAA93jw4ufN0i+-RpsLqHyfOjWyf3KuqY-yt8oi-OM5AT8fXF4Q@mail.gmail.com>
-Subject: Re: [Make-wifi-fast] [PATCH RFC v5 3/4] mac80211: Add airtime
- accounting and scheduling to TXQs
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        Kan Yan <kyan@google.com>,
-        Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
-        linux-wireless-owner@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.143]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Oct 12, 2018 at 12:38 AM Rajkumar Manoharan
-<rmanohar@codeaurora.org> wrote:
->
-> On 2018-10-11 03:38, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
-> > Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> >
-> >> Hmm... mine is bit different. txqs are refilled only once for all
-> >> txqs.
-> >> It will give more opportunity for non-served txqs. drv_wake_tx_queue
-> >> won't be
-> >> called from may_tx as the driver anyway will not push packets in
-> >> pull-mode.
-> >
-> > So, as far as I can tell, this requires the hardware to "keep trying"?
-> > I.e., if it just stops scheduling a TXQ after may_transmit() returns
-> > false, there is no guarantee that that TXQ will ever get re-awoken
-> > unless a new packet arrives for it?
-> >
-> That is true and even now ath10k operates the same way in pull mode. Not
-> just packet arrival, even napi poll routine tries to pushes the packets.
-> One more thing, fetch indication may pull ~4ms/8ms of packets from each
-> tid.
-> This makes deficit too low and so refilling txqs by just airtime_weight
-> becomes
-> cumbersome. In may_transmit, the deficit are incremented by 20 *
-> airtime_weight.
-> In future this will be also replaced by station specific quantum. we can
-> revisit
-> this once BQL in place. Performance issue is resolved by this approach.
-> Do you foresee any issues?
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-I'll have some time in the coming weeks to be able to test this stuff.
-I'm mostly interested
-in algorithmic correctness more than the API changes...
+trx files for Realtek 802.11ac wireless network chips
 
-Is there a version of these patches that is stable enough on ath9 or ath10k=
-?
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rx.c | 153 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rx.h |  41 +++++
+ drivers/net/wireless/realtek/rtw88/tx.c | 273 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/tx.h |  81 ++++++++++
+ 4 files changed, 548 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
 
-Do I foresee any issues? Jeeze, no, we *never* have any issues with wifi.
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+new file mode 100644
+index 0000000..e68ef1a
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rx.c
+@@ -0,0 +1,153 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "rx.h"
++#include "ps.h"
++
++void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	struct rtw_vif *rtwvif;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++
++	if (!ieee80211_is_data(hdr->frame_control))
++		return;
++
++	if (!is_broadcast_ether_addr(hdr->addr1) &&
++	    !is_multicast_ether_addr(hdr->addr1)) {
++		rtwdev->stats.rx_unicast += skb->len;
++		rtwdev->stats.rx_cnt++;
++		if (vif) {
++			rtwvif = (struct rtw_vif *)vif->drv_priv;
++			rtwvif->stats.rx_unicast += skb->len;
++			rtwvif->stats.rx_cnt++;
++			if (rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
++				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
++		}
++	}
++}
++EXPORT_SYMBOL(rtw_rx_stats);
++
++struct rtw_rx_addr_match_data {
++	struct rtw_dev *rtwdev;
++	struct ieee80211_hdr *hdr;
++	struct rtw_rx_pkt_stat *pkt_stat;
++	u8 *bssid;
++};
++
++static void rtw_rx_addr_match_iter(void *data, u8 *mac,
++				   struct ieee80211_vif *vif)
++{
++	struct rtw_rx_addr_match_data *iter_data = data;
++	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr = iter_data->hdr;
++	struct rtw_dev *rtwdev = iter_data->rtwdev;
++	struct rtw_sta_info *si;
++	struct rtw_rx_pkt_stat *pkt_stat = iter_data->pkt_stat;
++	u8 *bssid = iter_data->bssid;
++
++	if (ether_addr_equal(vif->bss_conf.bssid, bssid) &&
++	    (ether_addr_equal(vif->addr, hdr->addr1) ||
++	     ieee80211_is_beacon(hdr->frame_control)))
++		sta = ieee80211_find_sta_by_ifaddr(rtwdev->hw, hdr->addr2,
++						   vif->addr);
++	else
++		return;
++
++	if (!sta)
++		return;
++
++	si = (struct rtw_sta_info *)sta->drv_priv;
++	ewma_rssi_add(&si->avg_rssi, pkt_stat->rssi);
++}
++
++static void rtw_rx_addr_match(struct rtw_dev *rtwdev,
++			      struct rtw_rx_pkt_stat *pkt_stat,
++			      struct ieee80211_hdr *hdr)
++{
++	struct rtw_rx_addr_match_data data = {};
++
++	if (pkt_stat->crc_err || pkt_stat->icv_err || !pkt_stat->phy_status ||
++	    ieee80211_is_ctl(hdr->frame_control))
++		return;
++
++	data.rtwdev = rtwdev;
++	data.hdr = hdr;
++	data.pkt_stat = pkt_stat;
++	data.bssid = get_hdr_bssid(hdr);
++	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   rtw_rx_addr_match_iter,
++						   &data);
++}
++
++void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
++			   struct rtw_rx_pkt_stat *pkt_stat,
++			   struct ieee80211_hdr *hdr,
++			   struct ieee80211_rx_status *rx_status,
++			   u8 *phy_status)
++{
++	struct ieee80211_hw *hw = rtwdev->hw;
++
++	memset(rx_status, 0, sizeof(*rx_status));
++	rx_status->freq = hw->conf.chandef.chan->center_freq;
++	rx_status->band = hw->conf.chandef.chan->band;
++	if (pkt_stat->crc_err)
++		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
++	if (pkt_stat->decrypted)
++		rx_status->flag |= RX_FLAG_DECRYPTED;
++
++	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0)
++		rx_status->encoding = RX_ENC_VHT;
++	else if (pkt_stat->rate >= DESC_RATEMCS0)
++		rx_status->encoding = RX_ENC_HT;
++
++	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0 &&
++	    pkt_stat->rate <= DESC_RATEVHT1SS_MCS9) {
++		rx_status->nss = 1;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT1SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT2SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT2SS_MCS9) {
++		rx_status->nss = 2;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT2SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT3SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT3SS_MCS9) {
++		rx_status->nss = 3;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT3SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEVHT4SS_MCS0 &&
++		   pkt_stat->rate <= DESC_RATEVHT4SS_MCS9) {
++		rx_status->nss = 4;
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT4SS_MCS0;
++	} else if (pkt_stat->rate >= DESC_RATEMCS0 &&
++		   pkt_stat->rate <= DESC_RATEMCS15) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATEMCS0;
++	} else if (rx_status->band == NL80211_BAND_5GHZ &&
++		   pkt_stat->rate >= DESC_RATE6M &&
++		   pkt_stat->rate <= DESC_RATE54M) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATE6M;
++	} else if (rx_status->band == NL80211_BAND_2GHZ &&
++		   pkt_stat->rate >= DESC_RATE1M &&
++		   pkt_stat->rate <= DESC_RATE54M) {
++		rx_status->rate_idx = pkt_stat->rate - DESC_RATE1M;
++	} else {
++		rx_status->rate_idx = 0;
++	}
++
++	rx_status->flag |= RX_FLAG_MACTIME_START;
++	rx_status->mactime = pkt_stat->tsf_low;
++
++	if (pkt_stat->bw == RTW_CHANNEL_WIDTH_80)
++		rx_status->bw = RATE_INFO_BW_80;
++	else if (pkt_stat->bw == RTW_CHANNEL_WIDTH_40)
++		rx_status->bw = RATE_INFO_BW_40;
++	else
++		rx_status->bw = RATE_INFO_BW_20;
++
++	rx_status->signal = pkt_stat->signal_power;
++
++	rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.h b/drivers/net/wireless/realtek/rtw88/rx.h
+new file mode 100644
+index 0000000..1c187de
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rx.h
+@@ -0,0 +1,41 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_RX_H_
++#define __RTW_RX_H_
++
++#define GET_RX_DESC_PHYST(rxdesc)                                              \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(26))
++#define GET_RX_DESC_ICV_ERR(rxdesc)                                            \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(15))
++#define GET_RX_DESC_CRC32(rxdesc)                                              \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(14))
++#define GET_RX_DESC_SWDEC(rxdesc)                                              \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(27))
++#define GET_RX_DESC_C2H(rxdesc)                                                \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x02), BIT(28))
++#define GET_RX_DESC_PKT_LEN(rxdesc)                                            \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(13, 0))
++#define GET_RX_DESC_DRV_INFO_SIZE(rxdesc)                                      \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(19, 16))
++#define GET_RX_DESC_SHIFT(rxdesc)                                              \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(25, 24))
++#define GET_RX_DESC_RX_RATE(rxdesc)                                            \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x03), GENMASK(6, 0))
++#define GET_RX_DESC_MACID(rxdesc)                                              \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x01), GENMASK(6, 0))
++#define GET_RX_DESC_PPDU_CNT(rxdesc)                                           \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x02), GENMASK(30, 29))
++#define GET_RX_DESC_TSFL(rxdesc)                                               \
++	le32_get_bits(*((__le32 *)(rxdesc) + 0x05), GENMASK(31, 0))
++
++void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb);
++void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
++			   struct rtw_rx_pkt_stat *pkt_stat,
++			   struct ieee80211_hdr *hdr,
++			   struct ieee80211_rx_status *rx_status,
++			   u8 *phy_status);
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+new file mode 100644
+index 0000000..49feb02
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -0,0 +1,273 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#include "main.h"
++#include "tx.h"
++#include "ps.h"
++
++static
++void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++		  struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	struct rtw_vif *rtwvif;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++
++	if (!ieee80211_is_data(hdr->frame_control))
++		return;
++
++	if (!is_broadcast_ether_addr(hdr->addr1) &&
++	    !is_multicast_ether_addr(hdr->addr1)) {
++		rtwdev->stats.tx_unicast += skb->len;
++		rtwdev->stats.tx_cnt++;
++		if (vif) {
++			rtwvif = (struct rtw_vif *)vif->drv_priv;
++			rtwvif->stats.tx_unicast += skb->len;
++			rtwvif->stats.tx_cnt++;
++			if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD)
++				rtw_leave_lps_irqsafe(rtwdev, rtwvif);
++		}
++	}
++}
++
++void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
++{
++	__le32 *txdesc = (__le32 *)skb->data;
++
++	SET_TX_DESC_TXPKTSIZE(txdesc,  pkt_info->tx_pkt_size);
++	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
++	SET_TX_DESC_PKT_OFFSET(txdesc, pkt_info->pkt_offset);
++	SET_TX_DESC_QSEL(txdesc, pkt_info->qsel);
++	SET_TX_DESC_BMC(txdesc, pkt_info->bmc);
++	SET_TX_DESC_RATE_ID(txdesc, pkt_info->rate_id);
++	SET_TX_DESC_DATARATE(txdesc, pkt_info->rate);
++	SET_TX_DESC_DISDATAFB(txdesc, pkt_info->dis_rate_fallback);
++	SET_TX_DESC_USE_RATE(txdesc, pkt_info->use_rate);
++	SET_TX_DESC_SEC_TYPE(txdesc, pkt_info->sec_type);
++	SET_TX_DESC_DATA_BW(txdesc, pkt_info->bw);
++	SET_TX_DESC_SW_SEQ(txdesc, pkt_info->seq);
++	SET_TX_DESC_MAX_AGG_NUM(txdesc, pkt_info->ampdu_factor);
++	SET_TX_DESC_AMPDU_DENSITY(txdesc, pkt_info->ampdu_density);
++	SET_TX_DESC_DATA_STBC(txdesc, pkt_info->stbc);
++	SET_TX_DESC_DATA_LDPC(txdesc, pkt_info->ldpc);
++	SET_TX_DESC_AGG_EN(txdesc, pkt_info->ampdu_en);
++	SET_TX_DESC_LS(txdesc, pkt_info->ls);
++	SET_TX_DESC_DATA_SHORT(txdesc, pkt_info->short_gi);
++}
++EXPORT_SYMBOL(rtw_tx_fill_tx_desc);
++
++static u8 get_tx_ampdu_factor(struct ieee80211_sta *sta)
++{
++	u8 exp = sta->ht_cap.ampdu_factor;
++
++	/* the least ampdu factor is 8K, and the value in the tx desc is the
++	 * max aggregation num, which represents val * 2 packets can be
++	 * aggregated in an AMPDU, so here we should use 8/2=4 as the base
++	 */
++	return (BIT(2) << exp) - 1;
++}
++
++static u8 get_tx_ampdu_density(struct ieee80211_sta *sta)
++{
++	return sta->ht_cap.ampdu_density;
++}
++
++static u8 get_highest_ht_tx_rate(struct rtw_dev *rtwdev,
++				 struct ieee80211_sta *sta)
++{
++	u8 rate;
++
++	if (rtwdev->hal.rf_type == RF_2T2R && sta->ht_cap.mcs.rx_mask[1] != 0)
++		rate = DESC_RATEMCS15;
++	else
++		rate = DESC_RATEMCS7;
++
++	return rate;
++}
++
++static u8 get_highest_vht_tx_rate(struct rtw_dev *rtwdev,
++				  struct ieee80211_sta *sta)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	u8 rate;
++	u16 tx_mcs_map;
++
++	tx_mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.tx_mcs_map);
++	if (efuse->hw_cap.nss == 1) {
++		switch (tx_mcs_map & 0x3) {
++		case IEEE80211_VHT_MCS_SUPPORT_0_7:
++			rate = DESC_RATEVHT1SS_MCS7;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_8:
++			rate = DESC_RATEVHT1SS_MCS8;
++			break;
++		default:
++		case IEEE80211_VHT_MCS_SUPPORT_0_9:
++			rate = DESC_RATEVHT1SS_MCS9;
++			break;
++		}
++	} else if (efuse->hw_cap.nss >= 2) {
++		switch ((tx_mcs_map & 0xc) >> 2) {
++		case IEEE80211_VHT_MCS_SUPPORT_0_7:
++			rate = DESC_RATEVHT2SS_MCS7;
++			break;
++		case IEEE80211_VHT_MCS_SUPPORT_0_8:
++			rate = DESC_RATEVHT2SS_MCS8;
++			break;
++		default:
++		case IEEE80211_VHT_MCS_SUPPORT_0_9:
++			rate = DESC_RATEVHT2SS_MCS9;
++			break;
++		}
++	} else {
++		rate = DESC_RATEVHT1SS_MCS9;
++	}
++
++	return rate;
++}
++
++static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
++					struct rtw_tx_pkt_info *pkt_info,
++					struct ieee80211_tx_control *control,
++					struct sk_buff *skb)
++{
++	pkt_info->use_rate = true;
++	pkt_info->rate_id = 6;
++	pkt_info->dis_rate_fallback = true;
++}
++
++static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
++					struct rtw_tx_pkt_info *pkt_info,
++					struct ieee80211_tx_control *control,
++					struct sk_buff *skb)
++{
++	struct ieee80211_sta *sta = control->sta;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct rtw_sta_info *si;
++	u16 seq;
++	u8 ampdu_factor = 0;
++	u8 ampdu_density = 0;
++	bool ampdu_en = false;
++	u8 rate = DESC_RATE6M;
++	u8 rate_id = 6;
++	u8 bw = RTW_CHANNEL_WIDTH_20;
++	bool stbc = false;
++	bool ldpc = false;
++
++	seq = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
++
++	/* for broadcast/multicast, use default values */
++	if (!sta)
++		goto out;
++
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		ampdu_en = true;
++		ampdu_factor = get_tx_ampdu_factor(sta);
++		ampdu_density = get_tx_ampdu_density(sta);
++	}
++
++	if (sta->vht_cap.vht_supported)
++		rate = get_highest_vht_tx_rate(rtwdev, sta);
++	else if (sta->ht_cap.ht_supported)
++		rate = get_highest_ht_tx_rate(rtwdev, sta);
++	else if (sta->supp_rates[0] <= 0xf)
++		rate = DESC_RATE11M;
++	else
++		rate = DESC_RATE54M;
++
++	si = (struct rtw_sta_info *)sta->drv_priv;
++
++	bw = si->bw_mode;
++	rate_id = si->rate_id;
++	stbc = si->stbc_en;
++	ldpc = si->ldpc_en;
++
++out:
++	pkt_info->seq = seq;
++	pkt_info->ampdu_factor = ampdu_factor;
++	pkt_info->ampdu_density = ampdu_density;
++	pkt_info->ampdu_en = ampdu_en;
++	pkt_info->rate = rate;
++	pkt_info->rate_id = rate_id;
++	pkt_info->bw = bw;
++	pkt_info->stbc = stbc;
++	pkt_info->ldpc = ldpc;
++}
++
++void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
++			    struct rtw_tx_pkt_info *pkt_info,
++			    struct ieee80211_tx_control *control,
++			    struct sk_buff *skb)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct rtw_sta_info *si;
++	struct ieee80211_vif *vif = NULL;
++	__le16 fc = hdr->frame_control;
++	u8 sec_type = 0;
++	bool bmc;
++
++	if (control->sta) {
++		si = (struct rtw_sta_info *)control->sta->drv_priv;
++		vif = si->vif;
++	}
++
++	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
++		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, control, skb);
++	else if (ieee80211_is_data(fc))
++		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, control, skb);
++
++	if (info->control.hw_key) {
++		struct ieee80211_key_conf *key = info->control.hw_key;
++
++		switch (key->cipher) {
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++		case WLAN_CIPHER_SUITE_TKIP:
++			sec_type = 0x01;
++			break;
++		case WLAN_CIPHER_SUITE_CCMP:
++			sec_type = 0x03;
++			break;
++		default:
++			break;
++		}
++	}
++
++	bmc = is_broadcast_ether_addr(hdr->addr1) ||
++	      is_multicast_ether_addr(hdr->addr1);
++
++	pkt_info->bmc = bmc;
++	pkt_info->sec_type = sec_type;
++	pkt_info->tx_pkt_size = skb->len;
++	pkt_info->offset = chip->tx_pkt_desc_sz;
++	pkt_info->qsel = skb->priority;
++	pkt_info->ls = true;
++
++	/* maybe merge with tx status ? */
++	rtw_tx_stats(rtwdev, vif, skb);
++}
++
++void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
++				   struct rtw_tx_pkt_info *pkt_info,
++				   struct sk_buff *skb)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	bool bmc;
++
++	bmc = is_broadcast_ether_addr(hdr->addr1) ||
++	      is_multicast_ether_addr(hdr->addr1);
++	pkt_info->use_rate = true;
++	pkt_info->rate_id = 6;
++	pkt_info->dis_rate_fallback = true;
++	pkt_info->bmc = bmc;
++	pkt_info->tx_pkt_size = skb->len;
++	pkt_info->offset = chip->tx_pkt_desc_sz;
++	pkt_info->qsel = skb->priority;
++	pkt_info->ls = true;
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+new file mode 100644
+index 0000000..010a055
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -0,0 +1,81 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2018  Realtek Corporation.
++ */
++
++#ifndef __RTW_TX_H_
++#define __RTW_TX_H_
++
++#define RTK_TX_MAX_AGG_NUM_MASK		0x1f
++
++#define SET_TX_DESC_TXPKTSIZE(txdesc, value)                                   \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(15, 0))
++#define SET_TX_DESC_OFFSET(txdesc, value)                                      \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(23, 16))
++#define SET_TX_DESC_PKT_OFFSET(txdesc, value)                                  \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(28, 24))
++#define SET_TX_DESC_QSEL(txdesc, value)                                        \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(12, 8))
++#define SET_TX_DESC_BMC(txdesc, value)                                         \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(24))
++#define SET_TX_DESC_RATE_ID(txdesc, value)                                     \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(20, 16))
++#define SET_TX_DESC_DATARATE(txdesc, value)                                    \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x04, value, GENMASK(6, 0))
++#define SET_TX_DESC_DISDATAFB(txdesc, value)                                   \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(10))
++#define SET_TX_DESC_USE_RATE(txdesc, value)                                    \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(8))
++#define SET_TX_DESC_SEC_TYPE(txdesc, value)                                    \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(23, 22))
++#define SET_TX_DESC_DATA_BW(txdesc, value)                                     \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(6, 5))
++#define SET_TX_DESC_SW_SEQ(txdesc, value)                                      \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x09, value, GENMASK(23, 12))
++#define SET_TX_DESC_MAX_AGG_NUM(txdesc, value)                                 \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, GENMASK(21, 17))
++#define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, GENMASK(22, 20))
++#define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(9, 8))
++#define SET_TX_DESC_DATA_LDPC(txdesc, value)                                   \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(7))
++#define SET_TX_DESC_AGG_EN(txdesc, value)                                      \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(12))
++#define SET_TX_DESC_LS(txdesc, value)                                          \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(26))
++#define SET_TX_DESC_DATA_SHORT(txdesc, value)				       \
++	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(4))
++
++enum rtw_tx_desc_queue_select {
++	TX_DESC_QSEL_TID0	= 0,
++	TX_DESC_QSEL_TID1	= 1,
++	TX_DESC_QSEL_TID2	= 2,
++	TX_DESC_QSEL_TID3	= 3,
++	TX_DESC_QSEL_TID4	= 4,
++	TX_DESC_QSEL_TID5	= 5,
++	TX_DESC_QSEL_TID6	= 6,
++	TX_DESC_QSEL_TID7	= 7,
++	TX_DESC_QSEL_TID8	= 8,
++	TX_DESC_QSEL_TID9	= 9,
++	TX_DESC_QSEL_TID10	= 10,
++	TX_DESC_QSEL_TID11	= 11,
++	TX_DESC_QSEL_TID12	= 12,
++	TX_DESC_QSEL_TID13	= 13,
++	TX_DESC_QSEL_TID14	= 14,
++	TX_DESC_QSEL_TID15	= 15,
++	TX_DESC_QSEL_BEACON	= 16,
++	TX_DESC_QSEL_HIGH	= 17,
++	TX_DESC_QSEL_MGMT	= 18,
++	TX_DESC_QSEL_H2C	= 19,
++};
++
++void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
++			    struct rtw_tx_pkt_info *pkt_info,
++			    struct ieee80211_tx_control *control,
++			    struct sk_buff *skb);
++void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
++void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
++				   struct rtw_tx_pkt_info *pkt_info,
++				   struct sk_buff *skb);
++
++#endif
+-- 
+2.7.4
 
-"fetch indication may pull ~4ms/8ms of packets from each tid"
-
-made me really twitchy.
->
-> #define IEEE80211_TXQ_MAY_TX_QUANTUM  20
-> bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
->                                  struct ieee80211_txq *txq)
-> {
->          struct ieee80211_local *local =3D hw_to_local(hw);
->          struct txq_info *txqi =3D to_txq_info(txq);
->          struct sta_info *sta;
->          u8 ac =3D txq->ac;
->
->          lockdep_assert_held(&local->active_txq_lock[ac]);
->
->          if (!txqi->txq.sta)
->                  goto out;
->
->          sta =3D container_of(txqi->txq.sta, struct sta_info, sta);
->          if (sta->airtime[ac].deficit >=3D 0)
->                  goto out;
->
->          list_for_each_entry(txqi, &local->active_txqs[ac],
-> schedule_order) {
->                  if (!txqi->txq.sta)
->                          continue;
->                  sta =3D container_of(txqi->txq.sta, struct sta_info, sta=
-);
->                  sta->airtime[ac].deficit +=3D
->                          (IEEE80211_TXQ_MAY_TX_QUANTUM *
-> sta->airtime_weight);
->          }
->
->          return false;
->
->   out:
->          list_del_init(&txqi->schedule_order);
->          return true;
-> }
->
-> -Rajkumar
-> _______________________________________________
-> Make-wifi-fast mailing list
-> Make-wifi-fast@lists.bufferbloat.net
-> https://lists.bufferbloat.net/listinfo/make-wifi-fast
-
-
-
---=20
-
-Dave T=C3=A4ht
-CTO, TekLibre, LLC
-http://www.teklibre.com
-Tel: 1-831-205-9740
