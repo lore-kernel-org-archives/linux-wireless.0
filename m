@@ -2,148 +2,82 @@ Return-Path: <SRS0=P1q9=MZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D065C28CF8
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 15:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A59ADC28CF8
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 15:37:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2312B20877
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 15:23:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hgZKMaLz";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LMXQ7Uml"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2312B20877
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 76CB820644
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 15:37:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 76CB820644
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726541AbeJMXBI (ORCPT
+        id S1726689AbeJMXPM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 19:01:08 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:51894 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726294AbeJMXBI (ORCPT
+        Sat, 13 Oct 2018 19:15:12 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:35702 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726320AbeJMXPM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 19:01:08 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id ECCA460C60; Sat, 13 Oct 2018 15:23:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539444213;
-        bh=97QntL+EBWLV+4mX/R40OTde94JLHuTUzdRzRs3z63Q=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=hgZKMaLz0wMDDYO/cLOI/fc2B3moT4vxNQ3pu93G0XYG9S5Tw/pG7uTcefqu2oy9S
-         DW/DdjpT9MMswIBR3MnsqOyQA00FE0w0ZYdsdd3jKkz1HC5X8hiEJWURb8xjhCDHFe
-         inENNmMxALotAeoFt/FuGnO0tp6U+Po9IyzrmFlA=
-Received: from x230.qca.qualcomm.com (85-76-48-32-nat.elisa-mobile.fi [85.76.48.32])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 08EFE60452;
-        Sat, 13 Oct 2018 15:23:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539444212;
-        bh=97QntL+EBWLV+4mX/R40OTde94JLHuTUzdRzRs3z63Q=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=LMXQ7UmlrxMooW3A1uNQ5liX4j9t6YAqGQzNI5pSf2K3ymI+bDILZpCNq7XvnbYUk
-         aokBvLGdIBYkpKIzhTgRxJKEsg4nVkO7iDKQbPaWhvNnbNyzQC59PBdA2hPyvfwxSd
-         Aaf+6btj/UYaUP3m46IzjAU69/7xAG7DwIWhyKuM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 08EFE60452
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Joe Perches <joe@perches.com>
-Cc:     yhchuang@realtek.com, Larry.Finger@lwfinger.net,
-        pkshih@realtek.com, tehuang@realtek.com, sgruszka@redhat.com,
-        johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC v4 08/13] rtw88: debug files
-References: <1539421245-11847-1-git-send-email-yhchuang@realtek.com>
-        <1539421245-11847-9-git-send-email-yhchuang@realtek.com>
-        <a731948bf875867be4246b72a661ce71833620b8.camel@perches.com>
-Date:   Sat, 13 Oct 2018 18:23:27 +0300
-In-Reply-To: <a731948bf875867be4246b72a661ce71833620b8.camel@perches.com> (Joe
-        Perches's message of "Sat, 13 Oct 2018 07:19:31 -0700")
-Message-ID: <87y3b1vpjk.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Sat, 13 Oct 2018 19:15:12 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1gBLyt-0002gf-Dj; Sat, 13 Oct 2018 15:37:31 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi: fix spelling mistake "Initialzing" -> "Initializing"
+Date:   Sat, 13 Oct 2018 16:37:30 +0100
+Message-Id: <20181013153730.5761-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Joe Perches <joe@perches.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> On Sat, 2018-10-13 at 17:00 +0800, yhchuang@realtek.com wrote:
->> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> []
->> diff --git a/drivers/net/wireless/realtek/rtw88/debug.c
->> b/drivers/net/wireless/realtek/rtw88/debug.c
-> []
->> +#ifdef CONFIG_RTW88_DEBUG
->> +
->> +void __rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...)
->> +{
->> +	struct va_format vaf = {
->> +		.fmt = fmt,
->> +	};
->> +	va_list args;
->> +
->> +	va_start(args, fmt);
->> +	vaf.va = &args;
->> +
->> +	if (net_ratelimit())
->> +		dev_dbg(rtwdev->dev, "%pV", &vaf);
->> +
->> +	va_end(args);
->> +}
->> +EXPORT_SYMBOL(__rtw_dbg);
->> +
->> +#define __rtw_fn(fn)							\
->> +void __rtw_ ##fn(struct rtw_dev *rtwdev, const char *fmt, ...)		\
->> +{									\
->> +	struct va_format vaf = {					\
->> +		.fmt = fmt,						\
->> +	};								\
->> +	va_list args;							\
->> +									\
->> +	va_start(args, fmt);						\
->> +	vaf.va = &args;							\
->> +	dev_ ##fn(rtwdev->dev, "%pV", &vaf);				\
->> +	va_end(args);							\
->> +}									\
->> +EXPORT_SYMBOL(__rtw_ ##fn);
->> +
->> +__rtw_fn(info)
->> +__rtw_fn(warn)
->> +__rtw_fn(err)
->
-> It's very unusual to have _all_ the logging under a CONFIG_<FOO>_DEBUG
-> config guard flag.
+Trivial fix to spelling mistake in rsi_dbg debug message
 
-For wireless drivers that is actually quite typical. IIRC at least
-ath6kl, ath9k and ath10k do that, most likely also others.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Typical debugging would dynamic debugging on a per-line instance and
-> this uses a single dev_dbg for all debugging.
-
-I don't recall seeing anyone using per-line dynamic debugging with
-wireless drivers. The drivers are so complex that enabling one message
-at a time doesn't really get you anywhere, that's why we mostly group
-messages into similar groups (or levels) to make it easier to enable
-certain debug messages.
-
-> This seems unnecessarily complexity for a negative gain.
-
-I haven't reviewed the driver yet but from a quick look I don't see this
-as a problem.
-
-> Also, many callers of the rtw_<level> logging function do not include
-> a terminating newline.
->
-> Please consistently use a newline for each format.
-
-But with this I do agree.
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 612c211e21a1..449f6d23c5e3 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -210,7 +210,7 @@ int rsi_init_sdio_slave_regs(struct rsi_hw *adapter)
+ 	}
+ 
+ 	/* This tells SDIO FIFO when to start read to host */
+-	rsi_dbg(INIT_ZONE, "%s: Initialzing SDIO read start level\n", __func__);
++	rsi_dbg(INIT_ZONE, "%s: Initializing SDIO read start level\n", __func__);
+ 	byte = 0x24;
+ 
+ 	status = rsi_sdio_write_register(adapter,
+@@ -223,7 +223,7 @@ int rsi_init_sdio_slave_regs(struct rsi_hw *adapter)
+ 		return -1;
+ 	}
+ 
+-	rsi_dbg(INIT_ZONE, "%s: Initialzing FIFO ctrl registers\n", __func__);
++	rsi_dbg(INIT_ZONE, "%s: Initializing FIFO ctrl registers\n", __func__);
+ 	byte = (128 - 32);
+ 
+ 	status = rsi_sdio_write_register(adapter,
 -- 
-Kalle Valo
+2.17.1
+
