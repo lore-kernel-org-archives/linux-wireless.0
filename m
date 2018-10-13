@@ -2,100 +2,104 @@ Return-Path: <SRS0=P1q9=MZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E653C28CF8
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF5E2C28CF8
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:48:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C46020859
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:33:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90E3B20693
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:48:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jYB8kK/y";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ntNVfB+a"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0C46020859
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jaWmglcM";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jaWmglcM"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 90E3B20693
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726711AbeJNBLW (ORCPT
+        id S1726718AbeJNBZ7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 21:11:22 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50386 "EHLO
+        Sat, 13 Oct 2018 21:25:59 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:58464 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726559AbeJNBLW (ORCPT
+        with ESMTP id S1726636AbeJNBZ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 21:11:22 -0400
+        Sat, 13 Oct 2018 21:25:59 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id A37E960C60; Sat, 13 Oct 2018 17:33:20 +0000 (UTC)
+        id C575960C60; Sat, 13 Oct 2018 17:47:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539452000;
-        bh=1W1YShEk4kMCnX1FSFT/Kpd2bU2CGOrhbcjBKrYEyzs=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=jYB8kK/ywh5DJwIxZ/pvPDCi/o8I4SxYgHnt4TIK2zC/JcRWBMyCCLmeLyQOu6aOV
-         hGWC8CnXZyqDQKdtbeIkDcuL0+8YQcaDssr04HYSNkp3/fb15xv5gWzla1Di4m6gRx
-         z4TAcCS7r0KPNiTc8JXtH0Moqs2f7LcVH651K+zQ=
+        s=default; t=1539452875;
+        bh=gumKGbA5moUlYaJqUD05/O7+Mn4vG1AWhKChreuyQaw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=jaWmglcMcjML9twoQWYgrMX1mrVMVfld7oclnAtL4rwmkkdx6OPBi1167iw+bzSwG
+         GxPvVJIOL6wSblQYX4J2Y/67ui+vvD65pFcMJdVA4Ke4Z5prpb93WncRoFaYGnpdYd
+         Em5xageOIS4dpnZXlXjmE4MMS3QnWDc8vZn0+2hM=
 Received: from potku.adurom.net (88-114-240-228.elisa-laajakaista.fi [88.114.240.228])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1392360227;
-        Sat, 13 Oct 2018 17:33:17 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1F45F60209;
+        Sat, 13 Oct 2018 17:47:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539452000;
-        bh=1W1YShEk4kMCnX1FSFT/Kpd2bU2CGOrhbcjBKrYEyzs=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=ntNVfB+amCBcrTdkEwU8da/JO6LfRM6NZ98DlJCRU02ULHKywimHwSQwaul4kGeez
-         PWU+8RrdW38jT0c7LnYczjEXVV/fuy4i13tje9DlN6DglxtlTNKL45o3I90zK5NUcW
-         FPPrfqlPunS9Pbrnqh8jou6wt+P9OlQpfoQzZFnw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1392360227
+        s=default; t=1539452875;
+        bh=gumKGbA5moUlYaJqUD05/O7+Mn4vG1AWhKChreuyQaw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=jaWmglcMcjML9twoQWYgrMX1mrVMVfld7oclnAtL4rwmkkdx6OPBi1167iw+bzSwG
+         GxPvVJIOL6wSblQYX4J2Y/67ui+vvD65pFcMJdVA4Ke4Z5prpb93WncRoFaYGnpdYd
+         Em5xageOIS4dpnZXlXjmE4MMS3QnWDc8vZn0+2hM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1F45F60209
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5 1/6] ath10k: Add qmi service helpers for wcn3990 qmi
- client
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180815092637.11455-2-govinds@codeaurora.org>
-References: <20180815092637.11455-2-govinds@codeaurora.org>
-To:     Govind Singh <govinds@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, briannorris@chromium.org,
-        niklas.cassel@linaro.org, bjorn.andersson@linaro.org,
-        andy.gross@linaro.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181013173320.A37E960C60@smtp.codeaurora.org>
-Date:   Sat, 13 Oct 2018 17:33:20 +0000 (UTC)
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        Pkshih <pkshih@realtek.com>, Andy Huang <tehuang@realtek.com>,
+        "sgruszka\@redhat.com" <sgruszka@redhat.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3 01/12] rtw88: main files
+References: <1538565659-29530-1-git-send-email-yhchuang@realtek.com>
+        <1538565659-29530-2-git-send-email-yhchuang@realtek.com>
+        <201810081447.w98ElQfu018110@rtits1.realtek.com.tw>
+        <F7CD281DE3E379468C6D07993EA72F84D172DCB6@RTITMBSVM01.realtek.com.tw>
+Date:   Sat, 13 Oct 2018 20:47:45 +0300
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D172DCB6@RTITMBSVM01.realtek.com.tw>
+        (Tony Chuang's message of "Thu, 11 Oct 2018 07:23:25 +0000")
+Message-ID: <87lg7120xq.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Govind Singh <govinds@codeaurora.org> wrote:
+Tony Chuang <yhchuang@realtek.com> writes:
 
-> WLAN qmi server running in Q6 exposes host to target
-> cold boot qmi handshakes. Add WLAN QMI service helpers
-> for ath10k wcn3990 qmi client.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Acked-by: Niklas Cassel <niklas.cassel@linaro.org>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>> > +static void rtw_watch_dog_work(struct work_struct *work)
+>> > +{
+>> > +	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
+>> > +					      watch_dog_work.work);
+>> > +	struct rtw_vif *rtwvif;
+>> > +
+>> > +	if (!rtw_flag_check(rtwdev, RTW_FLAG_RUNNING))
+>> > +		return;
+>> > +
+>> > +	ieee80211_queue_delayed_work(rtwdev->hw,
+>> &rtwdev->watch_dog_work,
+>> > +				     RTW_WATCH_DOG_DELAY_TIME);
+>> 
+>> You're aware of the power cost of waking up every 2 seconds? That's a
+>> really bad idea, in general, at the very least you should use a more
+>> power efficient scheduling here to combine with other wakeups
+>> (round_jiffies_relative, or so).
+>
+> Yeah I knew it, but so far we can only work like this...
+> Will use round_jiffies_relative to combine the CPU wakeups.
 
-6 patches applied to ath-next branch of ath.git, thanks.
-
-bc17d4b90cdd ath10k: add qmi service helpers for wcn3990 qmi client
-22e8a4602738 ath10k: add support to create boardname for non-bmi target
-2b741a8aaa34 dt: bindings: add bindings for msa memory region
-cc53aabcc283 firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-35a665766737 ath10k: add debug mask for QMI layer
-ba94c753ccb4 ath10k: add QMI message handshake for wcn3990 client
+Can you elaborate more why this horrible timer is needed? And it
+definitely needs a comment in the code explaining the reason.
 
 -- 
-https://patchwork.kernel.org/patch/10566407/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Kalle Valo
