@@ -4,86 +4,87 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 854AAC71122
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBB87C28CF8
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CF6220659
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:04:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA36020659
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:05:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hRuTenvb";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V1KcGK7y"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4CF6220659
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="esBrRUtt";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RYOnefIf"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AA36020659
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbeJNAmH (ORCPT
+        id S1726736AbeJNAnG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 20:42:07 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38834 "EHLO
+        Sat, 13 Oct 2018 20:43:06 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:39340 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726464AbeJNAmH (ORCPT
+        with ESMTP id S1726464AbeJNAnG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 20:42:07 -0400
+        Sat, 13 Oct 2018 20:43:06 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5B53C60C1D; Sat, 13 Oct 2018 17:04:12 +0000 (UTC)
+        id F334860C60; Sat, 13 Oct 2018 17:05:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539450252;
-        bh=hmosFdW9vXqXrUsLpbCvcTLSlrIMSMS7Pdt9GViPVW4=;
+        s=default; t=1539450311;
+        bh=KAASbriQ5afpdaNg5tBhwJAxhqkCk20KFJKtVKsK9vI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=hRuTenvbHB62FzZ5nYhyiYyyiYGlsNw00M3IgHXLvmLcyLvGyyy+7JyoCt1rt0RbW
-         S6qCavTk9UmKTqV1OHoJOkNowW5Wbj3bTgz1pmAKBADPjUETPl+97dzthnyULkFrRA
-         3FakBmBrT0nYVQ2P08x5ONOTx5FOFNIQz665gH/U=
+        b=esBrRUttkqloC0lz1NMS8LKcZT9FlZLZ1kAcIo7xzVbN9bqEmC69wB7FoRWgz27up
+         ZD6hCQIe6n7coh7zZ45jlbL39UcBa4SsaIRwyV/QvbDCT5T/ZaCcJL+1QJV/VXacL6
+         wXKsb3xUxG0TtD/JyHdqd3ruUc9KN3pEy+ufDtyY=
 Received: from potku.adurom.net (88-114-240-228.elisa-laajakaista.fi [88.114.240.228])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 623D0601D2;
-        Sat, 13 Oct 2018 17:04:10 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8C594605A4;
+        Sat, 13 Oct 2018 17:05:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539450251;
-        bh=hmosFdW9vXqXrUsLpbCvcTLSlrIMSMS7Pdt9GViPVW4=;
+        s=default; t=1539450310;
+        bh=KAASbriQ5afpdaNg5tBhwJAxhqkCk20KFJKtVKsK9vI=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=V1KcGK7yv0oVNOtWjvFMoqY1s5K5mBWC8AytG4pHSakiqN1K+0+eXYlVRLFqy6n+F
-         Dl6XZ6/TRcO2MppZ/j5P3mJytD2Fe4v62OdazA0Wm1mm+H1jCYIRaPE1Erx24SXZin
-         YoD1st67dRteNbwJem2fyL+QOHzhq92LNechK/MM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 623D0601D2
+        b=RYOnefIfsStr5Zp+gVXnAw6qiNP8P3KiALNAN99zsg8k+mKZJPKiwrq0o/K2gigB+
+         qPVxqhtFWlznYrvpW52BeRjatkiGIm/HSZeyzvO4yAYI2oHnn3Q7Vzm2bDsneaIblT
+         2CiOUqgQHrk0E1tQW478Tc31QEXzgiqAz8pvdmyg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8C594605A4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] libertas: return errno from lbs_add_card()
+Subject: Re: [PATCH 1/5] qtnfmac: use 'help' in Kconfig
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20181007003327.2806010-1-lkundrak@v3.sk>
-References: <20181007003327.2806010-1-lkundrak@v3.sk>
-To:     Lubomir Rintel <lkundrak@v3.sk>
-Cc:     "David S. Miller" <davem@davemloft.net>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lubomir Rintel <lkundrak@v3.sk>
+In-Reply-To: <20181008095551.18651-2-sergey.matyukevich.os@quantenna.com>
+References: <20181008095551.18651-2-sergey.matyukevich.os@quantenna.com>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181013170412.5B53C60C1D@smtp.codeaurora.org>
-Date:   Sat, 13 Oct 2018 17:04:12 +0000 (UTC)
+Message-Id: <20181013170510.F334860C60@smtp.codeaurora.org>
+Date:   Sat, 13 Oct 2018 17:05:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lubomir Rintel <lkundrak@v3.sk> wrote:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
 
-> This makes the error handling somewhat cleaner -- lbs_add_card() does no
-> logner throw away the errno and lets its callers propagate it.
+> Fix checkpatch warning: use preferred 'help' option in Kconfig.
 > 
-> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
+> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-bbc2a101f06b libertas: return errno from lbs_add_card()
+db62abe51853 qtnfmac: use 'help' in Kconfig
+b458a033ca2f qtnfmac: use SPDX identifier for pcie bus layer files
+4cb5054957b2 qtnfmac_pcie: cleanup Pearl platform headers
 
 -- 
-https://patchwork.kernel.org/patch/10629357/
+https://patchwork.kernel.org/patch/10630323/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
