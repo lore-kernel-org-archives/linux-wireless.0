@@ -6,66 +6,66 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74BEC71122
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 854AAC71122
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:04:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 985A520659
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:03:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CF6220659
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 17:04:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W900DbC3";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="d+pWvTEH"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 985A520659
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hRuTenvb";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V1KcGK7y"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4CF6220659
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726892AbeJNAle (ORCPT
+        id S1726943AbeJNAmH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 20:41:34 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38554 "EHLO
+        Sat, 13 Oct 2018 20:42:07 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:38834 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726562AbeJNAle (ORCPT
+        with ESMTP id S1726464AbeJNAmH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 20:41:34 -0400
+        Sat, 13 Oct 2018 20:42:07 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0CDF960C55; Sat, 13 Oct 2018 17:03:39 +0000 (UTC)
+        id 5B53C60C1D; Sat, 13 Oct 2018 17:04:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539450219;
-        bh=Mzi2DrjLJCiBTGV8cjyos0M6xUc4WeK2yhVUvgHcIhs=;
+        s=default; t=1539450252;
+        bh=hmosFdW9vXqXrUsLpbCvcTLSlrIMSMS7Pdt9GViPVW4=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=W900DbC3C/c3GvASepft6X6G7txleJb+N2QTWdbQlti5LIo3dO7Y1Fqy8y9SYeoAT
-         fNXyL+Jz87+1c0bxPWtgR2WcmEp0UJyw9TOKUTVYDAP+19J4TPS+3AgFCUucdJHzs+
-         40njdnHfyLC/CHyEoxUHXLYtOUvx5gT1Usgu9rFY=
+        b=hRuTenvbHB62FzZ5nYhyiYyyiYGlsNw00M3IgHXLvmLcyLvGyyy+7JyoCt1rt0RbW
+         S6qCavTk9UmKTqV1OHoJOkNowW5Wbj3bTgz1pmAKBADPjUETPl+97dzthnyULkFrRA
+         3FakBmBrT0nYVQ2P08x5ONOTx5FOFNIQz665gH/U=
 Received: from potku.adurom.net (88-114-240-228.elisa-laajakaista.fi [88.114.240.228])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9A5E7601D2;
-        Sat, 13 Oct 2018 17:03:36 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 623D0601D2;
+        Sat, 13 Oct 2018 17:04:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539450218;
-        bh=Mzi2DrjLJCiBTGV8cjyos0M6xUc4WeK2yhVUvgHcIhs=;
+        s=default; t=1539450251;
+        bh=hmosFdW9vXqXrUsLpbCvcTLSlrIMSMS7Pdt9GViPVW4=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=d+pWvTEHe8zDLPfSFq9RWq5oDyjEuY5cAJclJPEtWy9EdahDr0idyVfFPNyEhvwfu
-         W/3fcexugtHbrFmserQ1o+HMPc2fjFb+LfPDUUwaH0L4v3Kd9FDMiTKTv/guH7O6K6
-         qBHhjSc7LxaYPJg3ppfTUFEreiMAMeOK1LOCbVMs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9A5E7601D2
+        b=V1KcGK7yv0oVNOtWjvFMoqY1s5K5mBWC8AytG4pHSakiqN1K+0+eXYlVRLFqy6n+F
+         Dl6XZ6/TRcO2MppZ/j5P3mJytD2Fe4v62OdazA0Wm1mm+H1jCYIRaPE1Erx24SXZin
+         YoD1st67dRteNbwJem2fyL+QOHzhq92LNechK/MM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 623D0601D2
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas: don't set URB_ZERO_PACKET on IN USB transfer
+Subject: Re: [PATCH v2] libertas: return errno from lbs_add_card()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20181006201232.2789936-1-lkundrak@v3.sk>
-References: <20181006201232.2789936-1-lkundrak@v3.sk>
+In-Reply-To: <20181007003327.2806010-1-lkundrak@v3.sk>
+References: <20181007003327.2806010-1-lkundrak@v3.sk>
 To:     Lubomir Rintel <lkundrak@v3.sk>
 Cc:     "David S. Miller" <davem@davemloft.net>,
         libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lubomir Rintel <lkundrak@v3.sk>, stable@vger.kernel.org
+        Lubomir Rintel <lkundrak@v3.sk>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181013170339.0CDF960C55@smtp.codeaurora.org>
-Date:   Sat, 13 Oct 2018 17:03:39 +0000 (UTC)
+Message-Id: <20181013170412.5B53C60C1D@smtp.codeaurora.org>
+Date:   Sat, 13 Oct 2018 17:04:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -73,50 +73,17 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Lubomir Rintel <lkundrak@v3.sk> wrote:
 
-> The USB core gets rightfully upset:
+> This makes the error handling somewhat cleaner -- lbs_add_card() does no
+> logner throw away the errno and lets its callers propagate it.
 > 
->   usb 1-1: BOGUS urb flags, 240 --> 200
->   WARNING: CPU: 0 PID: 60 at drivers/usb/core/urb.c:503 usb_submit_urb+0x2f8/0x3ed
->   Modules linked in:
->   CPU: 0 PID: 60 Comm: kworker/0:3 Not tainted 4.19.0-rc6-00319-g5206d00a45c7 #39
->   Hardware name: OLPC XO/XO, BIOS OLPC Ver 1.00.01 06/11/2014
->   Workqueue: events request_firmware_work_func
->   EIP: usb_submit_urb+0x2f8/0x3ed
->   Code: 75 06 8b 8f 80 00 00 00 8d 47 78 89 4d e4 89 55 e8 e8 35 1c f6 ff 8b 55 e8 56 52 8b 4d e4 51 50 68 e3 ce c7 c0 e8 ed 18 c6 ff <0f> 0b 83 c4 14 80 7d ef 01 74 0a 80 7d ef 03 0f 85 b8 00 00 00 8b
->   EAX: 00000025 EBX: ce7d4980 ECX: 00000000 EDX: 00000001
->   ESI: 00000200 EDI: ce7d8800 EBP: ce7f5ea8 ESP: ce7f5e70
->   DS: 007b ES: 007b FS: 0000 GS: 00e0 SS: 0068 EFLAGS: 00210292
->   CR0: 80050033 CR2: 00000000 CR3: 00e80000 CR4: 00000090
->   Call Trace:
->    ? if_usb_fw_timeo+0x64/0x64
->    __if_usb_submit_rx_urb+0x85/0xe6
->    ? if_usb_fw_timeo+0x64/0x64
->    if_usb_submit_rx_urb_fwload+0xd/0xf
->    if_usb_prog_firmware+0xc0/0x3db
->    ? _request_firmware+0x54/0x47b
->    ? _request_firmware+0x89/0x47b
->    ? if_usb_probe+0x412/0x412
->    lbs_fw_loaded+0x55/0xa6
->    ? debug_smp_processor_id+0x12/0x14
->    helper_firmware_cb+0x3c/0x3f
->    request_firmware_work_func+0x37/0x6f
->    process_one_work+0x164/0x25a
->    worker_thread+0x1c4/0x284
->    kthread+0xec/0xf1
->    ? cancel_delayed_work_sync+0xf/0xf
->    ? kthread_create_on_node+0x1a/0x1a
->    ret_from_fork+0x2e/0x38
->   ---[ end trace 3ef1e3b2dd53852f ]---
-> 
-> Cc: stable@vger.kernel.org
 > Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-6528d8804780 libertas: don't set URB_ZERO_PACKET on IN USB transfer
+bbc2a101f06b libertas: return errno from lbs_add_card()
 
 -- 
-https://patchwork.kernel.org/patch/10629305/
+https://patchwork.kernel.org/patch/10629357/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
