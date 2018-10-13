@@ -1,89 +1,104 @@
-Return-Path: <SRS0=XVRH=MY=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=P1q9=MZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCF4C6787C
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 23:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B137C71122
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 00:55:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E13D21470
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Oct 2018 23:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 429F72075B
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 Oct 2018 00:55:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="jmFSQsHG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E13D21470
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Vf2+ez73"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 429F72075B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725992AbeJMGhd (ORCPT
+        id S1727034AbeJMIag (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 Oct 2018 02:37:33 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:44607 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbeJMGhd (ORCPT
+        Sat, 13 Oct 2018 04:30:36 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:38455 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726956AbeJMIaf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 Oct 2018 02:37:33 -0400
-Received: by mail-pf1-f195.google.com with SMTP id r9-v6so6875198pff.11
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2018 16:02:54 -0700 (PDT)
+        Sat, 13 Oct 2018 04:30:35 -0400
+Received: by mail-pl1-f194.google.com with SMTP id q19-v6so3575749pll.5
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Oct 2018 17:55:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=+VMen/FA5rhnGW88kU5on0dGZ+gK/dze+3om2vk04f0=;
-        b=jmFSQsHGodocRqTb6xNSUmaF1vsS0AMSl2EZ3PtSKilIdP3JIWlYaimVqOgdoB5poi
-         baMq4pB/sRAFy0bY4Jg0DuKya0Vcgj2aNZRHK8Hret+7pd5XazSC++lB34G1OS78yorA
-         gKvOKsGXAnMcYR4ERREnz+GvTpoqxOzoCE1QE=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=szr5KLhOEepnxhuji3Nc/YMARBLGRK4oTE2y29Q5DuI=;
+        b=Vf2+ez732wRfmVM5sn8xhWJ3KJnSnR4AoDZzbC6Vwr6SxJ2oi+WphOdQ7d1JF1g/VW
+         DsWjigQ6B3oVlmy6rHzucW3S3IsbNj9y9HiY5cQzFKImG/RuJJbnS1UakIeCGlD7ip45
+         X+G/DJNufbQ4WVt1LKM36ZidXZOhb5pZ7DeB0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=+VMen/FA5rhnGW88kU5on0dGZ+gK/dze+3om2vk04f0=;
-        b=mfnWU1DVRtOVFRhQzwFjvNrkEDd75a/7lNybPLhVpnO3gRPyLCC+JFaLDHMBPSFHeY
-         FkaxDicko6T/JBdEpxsIONfmAfdUf8l3zcFPsQjPQ/TGyisD5x7miMh5VttQZmOpajtn
-         /2ZrrvP0i2W7wxea32wOIeug/+p2SKQSBqapK8t+kel3SqNrOIQVcGSZQ9HV61zreNmW
-         VYGORpC+CF3FyLEycQourWJSCo0T7PEaH1HuLeiH6BDtpJ5p1jo3m9R7mG6/5da6XYwO
-         e+vWEg22BJXxNOIMX+ymwtlCR9cwXyybAuCTE5YI+Ig+8yqur2NQD9bH6O61IKy/cXkw
-         LfEQ==
-X-Gm-Message-State: ABuFfoi6wHTiseO3TDH4exBN7TATADtbp6ddSGdTSgaQM+l3nr5aa4/n
-        AbTEO0HcQ2vzlDjWdvUJvmgPHg==
-X-Google-Smtp-Source: ACcGV63Vcep+1nzpLjyQyPZQA0yGoOh+YWFFD+gJ3Sz4svcRUhfyP20vTJhP+PUwUqQ2Te8yjk+1Jg==
-X-Received: by 2002:a63:bf46:: with SMTP id i6-v6mr7252931pgo.378.1539385374180;
-        Fri, 12 Oct 2018 16:02:54 -0700 (PDT)
-Received: from rodete-desktop-imager.corp.google.com ([2620:15c:202:1:299d:6b87:5478:d28a])
-        by smtp.gmail.com with ESMTPSA id e6-v6sm35769pfk.3.2018.10.12.16.02.52
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 12 Oct 2018 16:02:52 -0700 (PDT)
-Date:   Fri, 12 Oct 2018 16:02:50 -0700
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=szr5KLhOEepnxhuji3Nc/YMARBLGRK4oTE2y29Q5DuI=;
+        b=KYuv7Tyrz0yHsWg+iBQPqEctkWFxDTDvt5lx9xSy665BoqX3aosJiAqOUSshyA0Pl5
+         m3M/nu0fBfEArOkJ3WFuh2QOuh47Lf2tJQtCcWRDNoJmjGJBm1jshTPUd+fApIEfnWlN
+         GgsoLJnNoZ5+p2NKLqCR3frryYZwlb97+33GANCYaewSa8Umg83sVp0FTtPe7r1yt0SD
+         X9zTOpmzwdQ0Mhk1QOed6nV9WdLOxhUM9JLQU8I2I8PCzlonV84cs+NoV+I/wJvoe4dQ
+         NTzNRV0AY26ADrx56d8VyPGK5yrJ58MrMxKXISMDDRENFTYCCnFCkZj6LgGHrtlAUXtO
+         B+sQ==
+X-Gm-Message-State: ABuFfoiQYjvc12leHbnzEzsUmGTytknXZd/ddgLKqJJ42DDWpXNbfmsf
+        r1bqB3vr0vpqqgbjjMQa1RsPug==
+X-Google-Smtp-Source: ACcGV61Zu1kR1AYSCorKL4Rnwd2Ixd4lQtWeU4CYJ3liGav4XVMNIc+mMIc1AgBkcymlOtFlH5hF9g==
+X-Received: by 2002:a17:902:50e3:: with SMTP id c32-v6mr5923263plj.129.1539392134274;
+        Fri, 12 Oct 2018 17:55:34 -0700 (PDT)
+Received: from smtp.gmail.com ([2620:15c:202:1:299d:6b87:5478:d28a])
+        by smtp.gmail.com with ESMTPSA id n7-v6sm2766183pgv.63.2018.10.12.17.55.32
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 12 Oct 2018 17:55:33 -0700 (PDT)
 From:   Brian Norris <briannorris@chromium.org>
-To:     Govind Singh <govinds@codeaurora.org>
-Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        robh+dt@kernel.org, andy.gross@linaro.org,
-        linux-soc@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] Enable ath10k wcn3990 wifi driver support on
- sdm845
-Message-ID: <20181012230249.GA189259@rodete-desktop-imager.corp.google.com>
-References: <1539172376-19269-1-git-send-email-govinds@codeaurora.org>
+To:     Kalle Valo <kvalo@qca.qualcomm.com>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>,
+        Doug Anderson <dianders@chromium.org>,
+        <linux-kernel@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 4/4] ath10k: snoc: fix unbalanced clock error handling
+Date:   Fri, 12 Oct 2018 17:55:04 -0700
+Message-Id: <20181013005504.46399-4-briannorris@chromium.org>
+X-Mailer: git-send-email 2.19.1.331.ge82ca0e54c-goog
+In-Reply-To: <20181013005504.46399-1-briannorris@chromium.org>
+References: <20181013005504.46399-1-briannorris@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1539172376-19269-1-git-send-email-govinds@codeaurora.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 05:22:53PM +0530, Govind Singh wrote:
-> This series enables ath10k wifi driver support for WCN3990 target
-> on sdm845 SOC. This series also updates the missing dt binding documentation
-> and adds optional iommu property.
+Similar to regulator error handling, we should only start tearing down
+the 'i - 1' clock when clock 'i' fails to enable. Otherwise, we might
+end up with an unbalanced clock, where we never successfully enabled the
+clock, but we try to disable it anyway.
 
-For the series:
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Brian Norris <briannorris@chromium.org>
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 5a8e87339df2..a835599a8d55 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1470,7 +1470,7 @@ static int ath10k_snoc_clk_init(struct ath10k *ar)
+ 	return 0;
+ 
+ err_clock_config:
+-	for (; i >= 0; i--) {
++	for (i = i - 1; i >= 0; i--) {
+ 		clk_info = &ar_snoc->clk[i];
+ 
+ 		if (!clk_info->handle)
+-- 
+2.19.1.331.ge82ca0e54c-goog
 
-Thanks!
