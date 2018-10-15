@@ -2,143 +2,99 @@ Return-Path: <SRS0=ZQ3y=M3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE17C7112A
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 08:53:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C197C7112A
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 09:33:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FEB320644
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 08:53:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5FEB320644
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id 3011420853
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 09:33:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3011420853
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbeJOQiI (ORCPT
+        id S1726631AbeJORR6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Oct 2018 12:38:08 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:13636 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726273AbeJOQiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Oct 2018 12:38:08 -0400
-Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 79FA6F999506F;
-        Mon, 15 Oct 2018 16:53:44 +0800 (CST)
-Received: from [127.0.0.1] (10.202.226.41) by DGGEMS408-HUB.china.huawei.com
- (10.3.19.208) with Microsoft SMTP Server id 14.3.399.0; Mon, 15 Oct 2018
- 16:53:40 +0800
-Subject: Re: [PATCH] bitfield: add constant field preparation macros
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-References: <20181012194556.31004-1-johannes@sipsolutions.net>
-CC:     <linux-kernel@vger.kernel.org>, <nbd@nbd.name>,
-        Johannes Berg <johannes.berg@intel.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <d250e401-e939-c521-8e66-d9f6648db986@huawei.com>
-Date:   Mon, 15 Oct 2018 09:53:36 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.3.0
+        Mon, 15 Oct 2018 13:17:58 -0400
+Received: from mail-wm1-f53.google.com ([209.85.128.53]:50732 "EHLO
+        mail-wm1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726400AbeJORR5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Oct 2018 13:17:57 -0400
+Received: by mail-wm1-f53.google.com with SMTP id i8-v6so18048230wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2018 02:33:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=G7Ke5XmxLroKihdHemAgeFCtKAnMEqqdsFZGTlfuJuM=;
+        b=c7adGv35YFVHwVhXeRRDbn53GfeVLP8zY0xa51EHtkbtg6wxFFHb8DTdzlGJYbgTUB
+         yK9/UTzz7BICONjzwkIhw1dFE8+Zhj+WBbu0t9iJz+vFhEN2ywovaCxUq0k7mJI20Qjt
+         RG2n1TQjtdxEhtwWZPWcDzSHwqowrlt26v+F+pi6i82MqpwKAY96boBYO0RWvkA+WLYi
+         lzlsoaU5buYD8whFXDUD7y0I//oYAC0Z22hHl91vbM+FTqac+stKWDDWNB61eIeJPelY
+         dTDKd5/7EJOrni72F6DqmdODOLmxTs22oYbQIzeScCIWYgAVds9/gZa2CHIwL4kxXw+c
+         Synw==
+X-Gm-Message-State: ABuFfogg1vot9//IUOO6DRFuoYB3Us93T1QIOQv+CMrSBF+LWItdyEk4
+        FENTvV9o4eVGYztJFC5fHbWmTGsj2B8=
+X-Google-Smtp-Source: ACcGV60p4aCR0DQ0UHct51kMc4ImWgGlrobFOYnmrADlVdbqYCxGKLBvFf3zVMo25CZwDDEavSey7w==
+X-Received: by 2002:a1c:ee0c:: with SMTP id m12-v6mr13305761wmh.112.1539596008749;
+        Mon, 15 Oct 2018 02:33:28 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.57.235])
+        by smtp.gmail.com with ESMTPSA id w11-v6sm17102507wrn.65.2018.10.15.02.33.27
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 15 Oct 2018 02:33:28 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/6] unify debugfs code between mt76x0 and mt76x2
+Date:   Mon, 15 Oct 2018 11:33:10 +0200
+Message-Id: <cover.1539595605.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-In-Reply-To: <20181012194556.31004-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.41]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 12/10/2018 20:45, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> John Garry requested to be able to use FIELD_PREP() and friends
-> in constant initializers, but we cannot completely switch all of
-> the current assertions to BUILD_BUG_ON_ZERO().
->
+Unify debugfs implementation between mt76x0 and mt76x2 drivers.
+Add get_survey support to mt76x0e driver
+Add mac work support to mt76x2u driver
 
-Thanks for this.
+Lorenzo Bianconi (6):
+  mt76x0: pci: add get_survey support
+  mt76: move mt76x02_mac_work routine in mt76x02-lib module
+  mt76: move mt76x02_debugfs in mt76x02-lib module
+  mt76x0: use shared debugfs implementation
+  mt76x0: use mt76x02_mac_work as stats handler
+  mt76x2u: introduce mac workqueue support
 
-> So instead of this, add __FIELD_PREP() which is suitable in such
-> contexts, and also add __{u,le,be}{16,32,64}encode_bits() like
-> the existing versions without underscores, but again suitable in
-> constant contexts.
->
-> Requested-by: John Garry <john.garry@huawei.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  include/linux/bitfield.h | 34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
->
-> diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-> index 3f1ef4450a7c..245dfb47d201 100644
-> --- a/include/linux/bitfield.h
-> +++ b/include/linux/bitfield.h
-> @@ -63,6 +63,14 @@
->  					      (1ULL << __bf_shf(_mask))); \
->  	})
->
-> +#define __BF_CHECK_POW2(n)	BUILD_BUG_ON_ZERO(((n) & ((n) - 1)) != 0)
-> +
-> +#define __BF_FIELD_CHECK_CONST(_mask, _reg, _val)			\
-> +	(BUILD_BUG_ON_ZERO((_mask) == 0) +				\
-> +	 BUILD_BUG_ON_ZERO(~((_mask) >> __bf_shf(_mask)) & (_val)) +	\
-> +	 BUILD_BUG_ON_ZERO((_mask) > (typeof(_reg))~0ull) +		\
-> +	 __BF_CHECK_POW2((_mask) + (1ULL << __bf_shf(_mask))))
-> +
->  /**
->   * FIELD_FIT() - check if value fits in the field
->   * @_mask: shifted mask defining the field's length and position
-> @@ -90,6 +98,21 @@
->  		((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask);	\
->  	})
->
-> +/**
-> + * __FIELD_PREP() - prepare a constant bitfield element
+ drivers/net/wireless/mediatek/mt76/Makefile   |  2 +-
+ .../wireless/mediatek/mt76/mt76x0/Makefile    |  4 +-
+ .../wireless/mediatek/mt76/mt76x0/debugfs.c   | 87 -------------------
+ .../net/wireless/mediatek/mt76/mt76x0/init.c  |  5 +-
+ .../net/wireless/mediatek/mt76/mt76x0/mac.c   | 66 --------------
+ .../net/wireless/mediatek/mt76/mt76x0/main.c  |  5 ++
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  5 --
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   |  2 +
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  | 12 +--
+ .../{mt76x2/debugfs.c => mt76x02_debugfs.c}   | 22 ++---
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 56 ++++++++++++
+ .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  2 +
+ .../wireless/mediatek/mt76/mt76x2/Makefile    |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/init.c  |  2 +
+ .../net/wireless/mediatek/mt76/mt76x2/mac.h   |  2 -
+ .../wireless/mediatek/mt76/mt76x2/mt76x2.h    |  5 --
+ .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  5 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_mac.c   | 35 --------
+ .../wireless/mediatek/mt76/mt76x2/usb_init.c  |  3 +-
+ .../wireless/mediatek/mt76/mt76x2/usb_main.c  |  2 +
+ 20 files changed, 93 insertions(+), 231 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/debugfs.c
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2/debugfs.c => mt76x02_debugfs.c} (86%)
 
-My impression is that the name prefix - '__' - tells little about the 
-function. If you agree, how about even CFIELD_PREP() or 
-FIELD_PREP_CONST() or similar? I preper the latter, but becomes rather long.
-
-> + * @_mask: shifted mask defining the field's length and position
-> + * @_val:  value to put in the field
-> + *
-> + * __FIELD_PREP() masks and shifts up the value.  The result should
-> + * be combined with other fields of the bitfield using local OR.
-
-should this be 'logical OR', or indeed 'bitwise OR'?
-
-> + *
-> + * This version is suitable for use in a pure constant context, e.g.
-> + * a constant initializer.
-> + */
-> +#define __FIELD_PREP(_mask, _val)					\
-> +	((typeof(_mask))__BF_FIELD_CHECK_CONST(_mask, 0ULL, _val) +	\
-> +	 (((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask)))
-> +
->  /**
->   * FIELD_GET() - extract a bitfield element
->   * @_mask: shifted mask defining the field's length and position
-> @@ -150,4 +173,15 @@ __MAKE_OP(64)
->  #undef __MAKE_OP
->  #undef ____MAKE_OP
->
-> +#define __encode_bits(w, v, field)	__FIELD_PREP((u##w)(field), v)
-> +#define __u16_encode_bits(v, field)	__encode_bits(16, v, field)
-> +#define __le16_encode_bits(v, field)	cpu_to_le16(__encode_bits(16, v, field))
-> +#define __be16_encode_bits(v, field)	cpu_to_be16(__encode_bits(16, v, field))
-> +#define __u32_encode_bits(v, field)	__encode_bits(32, v, field)
-> +#define __le32_encode_bits(v, field)	cpu_to_le32(__encode_bits(32, v, field))
-> +#define __be32_encode_bits(v, field)	cpu_to_be32(__encode_bits(32, v, field))
-> +#define __u64_encode_bits(v, field)	__encode_bits(64, v, field)
-> +#define __le64_encode_bits(v, field)	cpu_to_le64(__encode_bits(64, v, field))
-> +#define __be64_encode_bits(v, field)	cpu_to_be64(__encode_bits(64, v, field))
-> +
->  #endif
->
-
-Thanks again,
-John
-
+-- 
+2.19.0
 
