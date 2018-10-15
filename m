@@ -2,223 +2,259 @@ Return-Path: <SRS0=ZQ3y=M3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06655C04AA5
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 12:18:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D30C04AA5
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 13:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF0DC2083C
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 12:18:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF0DC2083C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id D3A1E20652
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Oct 2018 13:11:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yy5cylGE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D3A1E20652
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726541AbeJOUD3 (ORCPT
+        id S1726623AbeJOU43 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Oct 2018 16:03:29 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37514 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726400AbeJOUD2 (ORCPT
+        Mon, 15 Oct 2018 16:56:29 -0400
+Received: from mail-ot1-f54.google.com ([209.85.210.54]:33124 "EHLO
+        mail-ot1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726581AbeJOU43 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Oct 2018 16:03:28 -0400
-Received: by mail-wm1-f68.google.com with SMTP id 185-v6so19472932wmt.2
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2018 05:18:24 -0700 (PDT)
+        Mon, 15 Oct 2018 16:56:29 -0400
+Received: by mail-ot1-f54.google.com with SMTP id q50so18837029otd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Oct 2018 06:11:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=hBB8BPRNFbY/YxYjWmYFj2lGg5rXww5LKjWt1yV6fKU=;
+        b=Yy5cylGET6/Bdt5lbHGGIXZXyVgpxR/tJlc2ejjJvVihKTT7+uYtY65qlUtPz0DyLO
+         t2duVhe5tBHuarKesgMIKxHkeRAMhYZ8CgLt+1sijMfOz6Lk7iKkw9PVA8u/KW27QrZr
+         Naa6meANteoensbwzaguulKdr9bqDoMWrFdd2q5l9sGCGwe1WME/Gw/guJNPAHuwaeOK
+         SmelEVQLOUgwV2ghRRz2sTk0DDOresuqpn0IuBW7XE497zl6MQ5M6ABH5HqVYn3sEsKX
+         KHeZPacHwnF0nUbcreKMKNZMKkI5pstHAgoZnpXBOv5NAxF+XsRG3gGX7pzNOsSFNd0r
+         9B+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=xJ6VvgsSuMqNmK8zWTsi6lxsVT/YnWSoKj5eA7rvDAg=;
-        b=X/U2fvz++kT91dxPB0GBRY3oX/iQRFCnc62ZrK55BBK7aO5giT6GSrnOvLgkEuihUk
-         vhvQrGG61LQ2gm2T6wN1CnQIGNvcNuIq/G8NjmnG+Q3KyUqec77u59d4NQQQNDPIWbQs
-         0fTw0VOuHlgzm2cZreCrSAK7jr5qHoK4hPLSYEu4EVoRRn666l+/cbYL5h4jgn38NlzR
-         4BE423RWzzP3W+HqhmZGML+ks+IV7pG6f8yeKsyGAvDA53v8S7urtuFLuPdIh1vLK+fv
-         qYMkuelIqJ9qTGEnjEvoW2N8hyqCCsT2B6UGX6XXZ9Is9JBMABsZEZQzmwL5x8Uf9mjg
-         15CA==
-X-Gm-Message-State: ABuFfoiEuwz+kPB2k0X0atvB6t6HhJcTMKiCATjFzhzI4oZf6+Pg0imG
-        ohSrv7uTeslLGKOqPHZpeXGEV6bafnw=
-X-Google-Smtp-Source: ACcGV62UATEvhJo4zv1l8591DrRjB91obwT3wwZD6V2n8oVGS8wSKj/oaR6ampYl/eDyLe0n24rqow==
-X-Received: by 2002:a1c:2dc5:: with SMTP id t188-v6mr12332571wmt.94.1539605903802;
-        Mon, 15 Oct 2018 05:18:23 -0700 (PDT)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id r16-v6sm9665210wrv.21.2018.10.15.05.18.22
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 15 Oct 2018 05:18:23 -0700 (PDT)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x0: phy: unify calibration between mt76x0u and mt76x0e
-Date:   Mon, 15 Oct 2018 14:18:05 +0200
-Message-Id: <1a6c35a4ade74f3643955f70ea4953fde56b9396.1539605745.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <cover.1539605745.git.lorenzo.bianconi@redhat.com>
-References: <cover.1539605745.git.lorenzo.bianconi@redhat.com>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=hBB8BPRNFbY/YxYjWmYFj2lGg5rXww5LKjWt1yV6fKU=;
+        b=IhVc2sJypK9fyvUS80ffCBYavREJqmmQa5WCY0M76gtMPLMGvkLExzDp83toutDf4e
+         muxJ65kzPM4bjIFKIdtPSA6Qm7Fv23Kz6wcZYL5goLsUDjhH3y/rwK51/NBF3B9TiEmf
+         h3+H7E7nKwltd7TuDBdG+2NZ7WeODCD8kIBUI4E/IAsCAFcxXPF19hLuRJ+CixCQKcIs
+         R7nM3KK9IqubfghhUl+m9WjYTbpoRrSM7+kgehbXQ2mlBfgvTFQOjfM7GPLmYV0A8ns6
+         lk33p5B7YwX5qwysY5aO7ppxItuVuAkg5s2cPwzeRLAkxIOP30K2GdAtKLzOVvqeDUdd
+         9ZiQ==
+X-Gm-Message-State: ABuFfohZb+jI0nnoR04KdYgsFaLbdPXNHN9oQEeUaJBfWkrKTmFxs2pL
+        BWaKDnAhb00rleqbU3cfH8hjwUSUm38JPt7w6rh9iw==
+X-Google-Smtp-Source: ACcGV62oirZjbIsWU7CTzMy1ESGRHEng2AK4SpHTQciCPE3OICAs/RVUPt3rxvRapU++/bFy0U2dy1e5guab+P1fVqQ=
+X-Received: by 2002:a9d:191f:: with SMTP id j31mr10482406ota.76.1539609073594;
+ Mon, 15 Oct 2018 06:11:13 -0700 (PDT)
+MIME-Version: 1.0
+From:   Nicolai <nicolai.kellerer@gmail.com>
+Date:   Mon, 15 Oct 2018 15:11:02 +0200
+Message-ID: <CAFOhvodrA0GesXMqeAP-aX+V36tyeDoC6VEW6Ji_YcAvuY2KcQ@mail.gmail.com>
+Subject: [BUG REPORT] ath10k: failed to wake target
+To:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Align phy calibration logic between mt76x0u and mt76x0e drivers
-This patch improves connection stability with low SNR
+Hello,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- .../net/wireless/mediatek/mt76/mt76x0/main.c  |  3 -
- .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  1 -
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 83 +------------------
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   |  1 +
- 4 files changed, 4 insertions(+), 84 deletions(-)
+I'm using the Lenovo Yoga 910 with Linux 4.18.13.
+After some time the Wifi connection drops and one CPU core is capped at ~90%.
+If there is anything I could do to help with debugging, just let me know.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-index e9fbbabbe7e0..fdffbdf90e59 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
-@@ -121,9 +121,6 @@ void mt76x0_bss_info_changed(struct ieee80211_hw *hw,
- 			       MT_BKOFF_SLOT_CFG_SLOTTIME, slottime);
- 	}
- 
--	if (changed & BSS_CHANGED_ASSOC)
--		mt76x0_phy_recalibrate_after_assoc(dev);
--
- 	mutex_unlock(&dev->mt76.mutex);
- }
- EXPORT_SYMBOL_GPL(mt76x0_bss_info_changed);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 85de821483cd..17ad3fa0858b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -64,7 +64,6 @@ void mt76x0_phy_init(struct mt76x02_dev *dev);
- int mt76x0_phy_wait_bbp_ready(struct mt76x02_dev *dev);
- int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
- 			    struct cfg80211_chan_def *chandef);
--void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev);
- void mt76x0_phy_set_txpower(struct mt76x02_dev *dev);
- void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index 53927547cf12..dbb92586b6e1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -212,44 +212,6 @@ int mt76x0_phy_wait_bbp_ready(struct mt76x02_dev *dev)
- 	return 0;
- }
- 
--static void mt76x0_phy_vco_cal(struct mt76x02_dev *dev, u8 channel)
--{
--	u8 val;
--
--	val = mt76x0_rf_rr(dev, MT_RF(0, 4));
--	if ((val & 0x70) != 0x30)
--		return;
--
--	/* closed loop calibarion - B0.R06.[3:0]: 1001 */
--	mt76x0_rf_rmw(dev, MT_RF(0, 6), MT_RF_VCO_BP_CLOSE_LOOP_MASK,
--		      MT_RF_VCO_BP_CLOSE_LOOP | BIT(0));
--
--	/* open loop calibration - B0.R05.[7:0]: 0x0 */
--	mt76x0_rf_wr(dev, MT_RF(0, 5), 0x0);
--
--	/* caliration mask - B0.R04.[2:0]: 000 */
--	mt76x0_rf_clear(dev, MT_RF(0, 4), MT_RF_VCO_CAL_MASK);
--
--	/* startup time - B0.R03.[2:0] startup_time: 011 */
--	mt76x0_rf_rmw(dev, MT_RF(0, 3), MT_RF_START_TIME_MASK,
--		      MT_RF_START_TIME);
--
--	/* settle_time - B0.R03.[6:4] */
--	if (channel == 3 || channel == 4 || channel == 10)
--		val = 0x50;
--	else if (channel == 2 || channel == 5 || channel == 6 ||
--		 channel == 8 || channel == 11 || channel == 12)
--		val = 0x40;
--	else
--		val = 0x60;
--	mt76x0_rf_rmw(dev, MT_RF(0, 3), MT_RF_SETTLE_TIME_MASK, val);
--
--	/* enable vco */
--	mt76x0_rf_set(dev, MT_RF(0, 4), BIT(7));
--
--	msleep(2);
--}
--
- static void
- mt76x0_phy_set_band(struct mt76x02_dev *dev, enum nl80211_band band)
- {
-@@ -670,18 +632,12 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
- 	mt76x0_phy_set_chan_bbp_params(dev, rf_bw_band);
- 	mt76x02_init_agc_gain(dev);
- 
--	if (mt76_is_usb(dev)) {
--		mt76x0_phy_vco_cal(dev, channel);
--	} else {
--		/* enable vco */
--		mt76x0_rf_set(dev, MT_RF(0, 4), BIT(7));
--	}
--
-+	/* enable vco */
-+	mt76x0_rf_set(dev, MT_RF(0, 4), BIT(7));
- 	if (scan)
- 		return 0;
- 
--	if (mt76_is_mmio(dev))
--		mt76x0_phy_calibrate(dev, false);
-+	mt76x0_phy_calibrate(dev, false);
- 	mt76x0_phy_set_txpower(dev);
- 
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
-@@ -690,39 +646,6 @@ int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
- 	return 0;
- }
- 
--void mt76x0_phy_recalibrate_after_assoc(struct mt76x02_dev *dev)
--{
--	u32 tx_alc, reg_val;
--	u8 channel = dev->mt76.chandef.chan->hw_value;
--	int is_5ghz = (dev->mt76.chandef.chan->band == NL80211_BAND_5GHZ) ? 1 : 0;
--
--	mt76x02_mcu_calibrate(dev, MCU_CAL_R, 0, false);
--
--	mt76x0_phy_vco_cal(dev, channel);
--
--	tx_alc = mt76_rr(dev, MT_TX_ALC_CFG_0);
--	mt76_wr(dev, MT_TX_ALC_CFG_0, 0);
--	usleep_range(500, 700);
--
--	reg_val = mt76_rr(dev, MT_BBP(IBI, 9));
--	mt76_wr(dev, MT_BBP(IBI, 9), 0xffffff7e);
--
--	mt76x02_mcu_calibrate(dev, MCU_CAL_RXDCOC, 0, false);
--
--	mt76x02_mcu_calibrate(dev, MCU_CAL_LC, is_5ghz, false);
--	mt76x02_mcu_calibrate(dev, MCU_CAL_LOFT, is_5ghz, false);
--	mt76x02_mcu_calibrate(dev, MCU_CAL_TXIQ, is_5ghz, false);
--	mt76x02_mcu_calibrate(dev, MCU_CAL_TX_GROUP_DELAY, is_5ghz, false);
--	mt76x02_mcu_calibrate(dev, MCU_CAL_RXIQ, is_5ghz, false);
--	mt76x02_mcu_calibrate(dev, MCU_CAL_RX_GROUP_DELAY, is_5ghz, false);
--
--	mt76_wr(dev, MT_BBP(IBI, 9), reg_val);
--	mt76_wr(dev, MT_TX_ALC_CFG_0, tx_alc);
--	msleep(100);
--
--	mt76x02_mcu_calibrate(dev, MCU_CAL_RXDCOC, 1, false);
--}
--
- static void mt76x0_phy_temp_sensor(struct mt76x02_dev *dev)
- {
- 	u8 rf_b7_73, rf_b0_66, rf_b0_67;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index a7fd36c2f633..ea517864186b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -117,6 +117,7 @@ static int mt76x0u_start(struct ieee80211_hw *hw)
- 	if (ret)
- 		goto out;
- 
-+	mt76x0_phy_calibrate(dev, true);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->mac_work,
- 				     MT_CALIBRATE_INTERVAL);
- 	ieee80211_queue_delayed_work(dev->mt76.hw, &dev->cal_work,
--- 
-2.17.2
+Thanks
 
+$ lscpi -k
+01:00.0 Network controller: Qualcomm Atheros QCA6174 802.11ac Wireless
+Network Adapter (rev 32)
+    Subsystem: Lenovo Device 0827
+    Kernel driver in use: ath10k_pci
+    Kernel modules: ath10k_pci
+
+$ sudo ethtool -i wlp1s0
+driver: ath10k_pci
+version: 4.18.13-200.fc28.x86_64
+firmware-version: WLAN.RM.4.4.1-00079-QCARMSWPZ-1
+expansion-rom-version:
+bus-info: 0000:01:00.0
+supports-statistics: yes
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no
+
+$ dmesg | grep "ath10k"
+[    4.335716] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2
+irq_mode 0 reset_mode 0
+[    4.551405] ath10k_pci 0000:01:00.0: qca6174 hw3.2 target
+0x05030000 chip_id 0x00340aff sub 17aa:0827
+[    4.551408] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+tracing 0 dfs 0 testmode 0
+[    4.551848] ath10k_pci 0000:01:00.0: firmware ver
+WLAN.RM.4.4.1-00079-QCARMSWPZ-1 api 6 features wowlan,ignore-otp crc32
+fd869beb
+[    4.617583] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id N/A
+crc32 20d869c3
+[    5.272911] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
+[    5.275912] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
+[    5.276499] ath10k_pci 0000:01:00.0: htt-ver 3.47 wmi-op 4 htt-op 3
+cal otp max-sta 32 raw 0 hwcrypto 1
+[    5.357593] ath10k_pci 0000:01:00.0 wlp1s0: renamed from wlan0
+[    6.208647] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
+[    6.211655] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
+[    7.021111] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
+[    7.024123] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
+[  479.281186] ath10k_pci 0000:01:00.0: Unknown eventid: 118809
+[  479.284099] ath10k_pci 0000:01:00.0: Unknown eventid: 90118
+[  481.069796] ath10k_pci 0000:01:00.0: failed to receive control
+response completion, polling..
+[  481.102612] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x00000001 at 0x00034430: -110
+[  481.135383] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x00034444: -110
+[  481.168154] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x0000001e at 0x00034430: -110
+[  481.200921] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x00000001 at 0x00034830: -110
+[  481.233680] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x00000001 at 0x00035430: -110
+[  481.266432] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x00035444: -110
+[  481.299199] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x0000001e at 0x00035430: -110
+[  482.797704] ath10k_pci 0000:01:00.0: ctl_resp never came in (-110)
+[  482.797718] ath10k_pci 0000:01:00.0: failed to connect to HTC: -110
+[  484.283071] ath10k_warn: 60 callbacks suppressed
+[  484.283074] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0xfffff81f at 0x00036034: -110
+[  484.315837] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003602c: -110
+[  484.348237] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0xffffffe1 at 0x0003602c: -110
+[  484.381002] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x00000000 at 0x0003a008: -110
+[  484.413766] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0x0007fc00 at 0x0003a014: -110
+[  484.446526] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a008: -110
+[  484.479289] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a000: -110
+[  484.512051] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0xfffff7ff at 0x0003a000: -110
+[  484.544820] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x00000800: -110
+[  484.577584] ath10k_pci 0000:01:00.0: failed to wake target for
+write32 of 0xffffffff at 0x00000800: -110
+[  489.311522] ath10k_warn: 144 callbacks suppressed
+[  489.311525] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.344294] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.377060] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.409828] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.442592] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.475353] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.508118] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.540884] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.573650] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  489.606418] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  490.556544] ath10k_pci 0000:01:00.0: failed to read device
+register, device is gone
+[  494.327776] ath10k_warn: 143 callbacks suppressed
+[  494.327779] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.360545] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.391132] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.421473] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.451814] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.484233] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.516996] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.549762] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.582529] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  494.615293] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  496.581039] ath10k_pci 0000:01:00.0: failed to read device
+register, device is gone
+[  498.310878] ath10k_pci 0000:01:00.0: Could not init core: -110
+[  499.342333] ath10k_warn: 143 callbacks suppressed
+[  499.342336] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.375100] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.407864] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.438455] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.468794] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.499133] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.531554] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.564322] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.597105] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  499.629874] ath10k_pci 0000:01:00.0: failed to wake target for
+read32 at 0x0003a028: -110
+[  501.621565] ath10k_pci 0000:01:00.0: failed to read device
+register, device is gone
+[  501.719847] ath10k_pci 0000:01:00.0: firmware crashed! (guid
+85ef4036-19a2-4997-9828-bc9386ee1d98)
+[  501.719851] ath10k_pci 0000:01:00.0: qca6174 hw3.2 target
+0x05030000 chip_id 0x00340aff sub 17aa:0827
+[  501.719852] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+tracing 0 dfs 0 testmode 0
+[  501.720228] ath10k_pci 0000:01:00.0: firmware ver
+WLAN.RM.4.4.1-00079-QCARMSWPZ-1 api 6 features wowlan,ignore-otp crc32
+fd869beb
+[  501.720510] ath10k_pci 0000:01:00.0: board_file api 2 bmi_id N/A
+crc32 20d869c3
+[  501.720512] ath10k_pci 0000:01:00.0: htt-ver 3.47 wmi-op 4 htt-op 3
+cal otp max-sta 32 raw 0 hwcrypto 1
+[  502.224177] ath10k_pci 0000:01:00.0: failed to read firmware dump area: -16
+[  502.224180] ath10k_pci 0000:01:00.0: Copy Engine register dump:
+[  502.355210] ath10k_pci 0000:01:00.0: [00]: 0x00034400 4294967295
+4294967295 4294967295 4294967295
+[  502.486243] ath10k_pci 0000:01:00.0: [01]: 0x00034800 4294967295
+4294967295 4294967295 4294967295
+[  502.617270] ath10k_pci 0000:01:00.0: [02]: 0x00034c00 4294967295
+4294967295 4294967295 4294967295
+[  502.748321] ath10k_pci 0000:01:00.0: [03]: 0x00035000 4294967295
+4294967295 4294967295 4294967295
+[  502.871659] ath10k_pci 0000:01:00.0: [04]: 0x00035400 4294967295
+4294967295 4294967295 4294967295
+[  503.002700] ath10k_pci 0000:01:00.0: [05]: 0x00035800 4294967295
+4294967295 4294967295 4294967295
+[  503.133734] ath10k_pci 0000:01:00.0: [06]: 0x00035c00 4294967295
+4294967295 4294967295 4294967295
+[  503.264782] ath10k_pci 0000:01:00.0: [07]: 0x00036000 4294967295
+4294967295 4294967295 4294967295
+[  503.264788] ath10k_pci 0000:01:00.0: failed to reset chip: -5
+[  503.264790] ath10k_pci 0000:01:00.0: Could not init hif: -5
+[  504.352295] ath10k_warn: 146 callbacks suppressed
