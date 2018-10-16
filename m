@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B6AC070C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64E3C04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:14:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FF07205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92650205C9
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:14:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="GXhbyJEj"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3FF07205C9
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="F3Q3NmjX"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 92650205C9
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727296AbeJPRB4 (ORCPT
+        id S1726954AbeJPRDy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 13:01:56 -0400
-Received: from nbd.name ([46.4.11.11]:57434 "EHLO nbd.name"
+        Tue, 16 Oct 2018 13:03:54 -0400
+Received: from nbd.name ([46.4.11.11]:57480 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726581AbeJPRBz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 13:01:55 -0400
+        id S1726083AbeJPRDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 13:03:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=J7sERv9Zd59c5dKydG310+KVnb02yTxmcdhZv6/BxDs=; b=GXhbyJEj2qRaLa4f5ztaLQeq2T
-        rhmpjyjAqsWYwFWKpAnW0u7bjU0wHBPRag9s6FB0Hm/fm5Hb5cmfbEM2KDjN9GLHyVPGTAbDzY8Tk
-        uF6jwt/Pgk6ngDwOdfH5ZWdOJg4MGeXynFHnSexNXXBHXz0UNfiBwmcMwaQzM6dzcx88=;
-Subject: Re: [PATCH 0/3] mt76x0: simplify rf configuration routines
+        bh=fxS8UXPcPIT3EJsM84WPCjMSw11Ld1fkWuyWz+BVYQU=; b=F3Q3NmjXdmifxGcxGXWEgmRlUr
+        Ps8xhrD3kW+QAMMsk+1tR7N9eXHqsoe8gGAmRpgqZlEjdURko7sTg5UJMLTpqQIz/KLazXJ0wFmi9
+        GGTxzV4nvQtRnHkOqjsPkNURI0jo1jnd+yyt6ib9H55938dLQgkC/IxSKyRaAtoCTdy4=;
+Subject: Re: [PATCH 0/6] unify debugfs code between mt76x0 and mt76x2
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539535586.git.lorenzo.bianconi@redhat.com>
+References: <cover.1539595605.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -62,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <788fcf29-0c74-af2c-bf62-1a9f5b148b3c@nbd.name>
-Date:   Tue, 16 Oct 2018 11:12:26 +0200
+Message-ID: <ccfebd11-b6f8-c605-4887-0bfeb8924720@nbd.name>
+Date:   Tue, 16 Oct 2018 11:14:24 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <cover.1539535586.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1539595605.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,10 +76,10 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-14 18:55, Lorenzo Bianconi wrote:
-> Simplify rf configuration using mt76x0_rf_wr, mt76x0_rf_set
-> and mt76x0_rf_clear routines. Moreover use mt76x0_phy as
-> prefix for phy routines
+On 2018-10-15 11:33, Lorenzo Bianconi wrote:
+> Unify debugfs implementation between mt76x0 and mt76x2 drivers.
+> Add get_survey support to mt76x0e driver
+> Add mac work support to mt76x2u driver
 Applied, thanks.
 
 - Felix
