@@ -2,135 +2,129 @@ Return-Path: <SRS0=k7+a=M4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71362C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 11:32:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D496FC04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 11:49:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FC1920881
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 11:32:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C2622098A
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 11:49:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KA4rOE5S"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1FC1920881
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="oQ8MCBRe"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C2622098A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbeJPTWV (ORCPT
+        id S1727093AbeJPTjj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 15:22:21 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:37558 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726718AbeJPTWV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 15:22:21 -0400
-Received: by mail-ot1-f65.google.com with SMTP id o14so22163470oth.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 04:32:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=9b8De/vaPpTTkRgGZUF7bGM/h21mOWe0OjXPKW28rG8=;
-        b=KA4rOE5SE7CpaOW/EqDwubrZUWJbrpgfTEZGBec4uLiYNQpGSr8+nk9ccmNIW0hrud
-         PWv+49fYzIs2nlWGhHdE0gZfgHXyPvtDT+hNQH99H77fMR4rhY904zUdyC/7exgHVdft
-         3/AhfBQdVP3DfVjm7Q6zWu91VJVChPbsc+ZAFm9X/HBLo3EI7isPsxTiuWjuA7GmNfRV
-         h7fZ2Dg/DvA8mGcVbY3zK+bA1bxpULVOqJOJLGshiMAHiXmN5JPmkp3SnWlUww/0du3H
-         UanwwuPB+lVYv2tP+eHdnl3iEFX4NS3NmtDZkTdkJrFMaHdxu4t5eD3Ng3VKTVRkNRUg
-         1atA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=9b8De/vaPpTTkRgGZUF7bGM/h21mOWe0OjXPKW28rG8=;
-        b=iaIxmJIwHRApUP6KB5nZmAJnUAZYRxr22/QMt4YsPesfplhJHjM0xm9QscOqdZXHse
-         HWntE+83YU/2NQoHXw0RIp8Z+CbRB1C5GPzu6qcsCQFO+nQQnVRfY2jjenpjW84uGL6u
-         nOBa8rQizOFhrgaCt1Si0PmM5RsYurRZavewsyZ3NQ9zRRRgqXhcSq5Xa0wCMK8AAqFY
-         v0/F3A++vnSx24DCCUB+X6Mzrn4g5qaGCqebt47YqCySnKtlvLi47IR9V3ui+Mp/k0gd
-         pzhtSzfdSuEE5QjL/fMVujofslGxBkhp1q0Gw882q6hsyN8FsUauShoiuP/7iqXfRJvw
-         gKjw==
-X-Gm-Message-State: ABuFfoj5CdO/7uJW0hNswUuI8LDpC7U5NiHqJIkrV5FSX020DLWgjHe5
-        klx3zyc+yGTmb10giNRsQYTDH6Gd+uR6yudgQPI=
-X-Google-Smtp-Source: ACcGV60F3X1Wvgf/AC5YuNKg/+U78ER0zbLzLK/oM8jdy7lQGNiWmhyDSDaTre6VbAYzk8LP+KKrsRXUOkt91Y92IXI=
-X-Received: by 2002:a9d:11b2:: with SMTP id v47mr12681634otf.281.1539689539556;
- Tue, 16 Oct 2018 04:32:19 -0700 (PDT)
+        Tue, 16 Oct 2018 15:39:39 -0400
+Received: from mail-dm3nam03on0043.outbound.protection.outlook.com ([104.47.41.43]:38231
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726760AbeJPTjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 15:39:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nwVj8JH1Cn7SY8PTVBFnMYeDOR9rqOISVmiPc6tfI/Y=;
+ b=oQ8MCBReH7ujO0fLERAxGBxH7kaLRkDXCPkN0FBSV8eOeAPOGWEAWA1lDvQ85ey/Pk+mQBGD1AhBf1RiOzZZURNNpcPrNwhh+g0wjx9mUxHxDTfilKvzLKG2oOUzhT9CWcotR5+YzlCODFAwTxm4YhB/ozn6KDswcDbVE3d8jpQ=
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com (20.177.144.212) by
+ BL0PR05MB5347.namprd05.prod.outlook.com (10.167.233.139) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1250.15; Tue, 16 Oct 2018 11:49:30 +0000
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156]) by BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156%2]) with mapi id 15.20.1250.020; Tue, 16 Oct 2018
+ 11:49:30 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Tamizh chelvam <tamizhr@codeaurora.org>
+CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] mac80211: Implement functionality to monitor
+ station's signal stregnth
+Thread-Topic: [PATCH 3/3] mac80211: Implement functionality to monitor
+ station's signal stregnth
+Thread-Index: AQHUZLDHbUwyLnDOoU+jm+Kn6bthk6UhwzCA
+Date:   Tue, 16 Oct 2018 11:49:30 +0000
+Message-ID: <20181016114923.wtmuhfhjzrbqn4so@bars>
+References: <1539626250-769-1-git-send-email-tamizhr@codeaurora.org>
+ <1539626250-769-4-git-send-email-tamizhr@codeaurora.org>
+In-Reply-To: <1539626250-769-4-git-send-email-tamizhr@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM6P194CA0059.EURP194.PROD.OUTLOOK.COM
+ (2603:10a6:209:84::36) To BL0PR05MB4595.namprd05.prod.outlook.com
+ (2603:10b6:208:5f::20)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BL0PR05MB5347;6:weorXg3YheA/v3ESCOe/9kCZQ5yAerYGnVYTlvZhmLYMmoaiaJZaZ3j7plSgZII7ILwpQkcUqQWqtLhpSFGuKPNjvLb0trSiCbjeCzP9TRYFviRq2hQTSijBh8e7cnMjkuA0hPk6y5Ve9hFmyiKRil3DOGj0j4aKDBincazwdxeQRha/yurl/00FizUhgYEK28ZiD1Sft8jhSH8oVikO/qaL1IjDfocGQhwanrPxoChL88zioranSpQvr6gxB75bsQ4vpdEIm8iZjR+QZOdlY9nnjrCXErlnmjZRrtbSbq8HWSTvzuk1Lq20ehdB9jE08+jwN3OBkmBY+KFlN/DVEsMO1PR1imzCl6474VRbxWF4xH3pQog5shDNUlvjXly6UkfbNupF+LPxqPd9tKAe+/Ic12rGOPLrGXuYy0DwWc8GUNodn65WZrhnn6iVqLnTlOP7VEAKCa/s51m4E4/+NA==;5:6Zu+/oM4GVk/AqQnLRaimEl9O5kzlBbHn255yeF8d3wKjLfBCtQQAzQwy9DN/SyNzowus3aiTFY5+CxLKBbfj6MYWgUuxZw9tY916iJjQPoGugKnDHZcvTovNeT3yMkNGnklwknExWc13eFKgbtA8XDQRG+DgPH6na4ACA6Krlw=;7:q6dkCe0Zb4pvMyq5/U3knSRRFI2aOLEwWDlT0RwQsRra2OdjSu/0kHoB6CME16iiDSfTV6gX2IZqvUJcyYyj2zdy09k34SNpuhlRRDHfNT1WjfQ4JeP3JkVqP2Fe4CLSH+NVAvNJ7P232JAI1ZAKFjujzZOMkg6Px00P9/gDcZVVTS1cYM+cPd/lFOVFqYC8nTlE4BTfLru7M2sYLtmpGgNgt9juDfF6aVgrOMWpkRhNEcEaSB+/d31X48y7p9Xr
+x-ms-office365-filtering-correlation-id: 49dd5391-d737-471a-4917-08d6335d6ea7
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB5347;
+x-ms-traffictypediagnostic: BL0PR05MB5347:
+x-microsoft-antispam-prvs: <BL0PR05MB5347931B21C90D51604B4DB9A3FE0@BL0PR05MB5347.namprd05.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3002001)(3231355)(944501410)(52105095)(10201501046)(93006095)(93001095)(149066)(150057)(6041310)(20161123560045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123562045)(201708071742011)(7699051);SRVR:BL0PR05MB5347;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB5347;
+x-forefront-prvs: 0827D7ACB9
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(346002)(396003)(39850400004)(376002)(366004)(136003)(189003)(199004)(8936002)(2900100001)(8676002)(97736004)(33716001)(2906002)(5660300001)(99286004)(54906003)(81156014)(105586002)(71190400001)(71200400001)(52116002)(81166006)(1076002)(53936002)(76176011)(86362001)(33896004)(3846002)(256004)(68736007)(106356001)(4326008)(229853002)(6506007)(6512007)(9686003)(386003)(11346002)(446003)(14454004)(6486002)(6916009)(486006)(102836004)(305945005)(6116002)(66066001)(25786009)(316002)(6246003)(6436002)(186003)(478600001)(7736002)(5250100002)(476003)(26005);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB5347;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: 1cIMdjIp3hNKwKkdsRYiEB68VqL4l9bLeOIt3xSNyFlOzxlIGzEEhsUQEI4w7Yg2mcIabttNKaYyMovojdwoHr+k8J2ZceWvVCOLwUgeZPnF4Fez5ssOyAPxZhSkIxxKxtO6Q2oF30zxtRuR0CXuGbuOjTXnz4lTlgCzL1xJQn3/fJq8wuMbqNC+w9dSs/DmQCiTFHyh4J5djxaJkIb9kGrbLvrLLSc/jSpjZcDpaMedg4D2u7NYMl+p8GnJABuPwKv0Aa/iVGWLratQ/4ce1ORcJ2pE4fspcLCsct4NjdL2/0fzaZg6MS7m3HfDsd8RVXA/mlaSQct0eeEyjDcCipTUtIUl2a6x7EAMLhwWWZ0=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <0762354DBD9BFB4D94815FCE5524F6A8@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Tue, 16 Oct 2018 04:32:18
- -0700 (PDT)
-In-Reply-To: <20181016080922.GB4158@redhat.com>
-References: <1539334591-9965-1-git-send-email-sgruszka@redhat.com>
- <1539334591-9965-5-git-send-email-sgruszka@redhat.com> <CAKR_QVJ60VTDjyC59BEDsRKrKR495xjGwob0QqvX333L+L+=Zg@mail.gmail.com>
- <20181012113656.GB2118@redhat.com> <CAKR_QVKU8ZFs6SC0Bm8VFKv82uNah+mZMKfCqCB+PRe6Ew2pcA@mail.gmail.com>
- <20181012120329.GD2118@redhat.com> <CAKR_QVKKiRFASfB=Rs7eUXKNt-Sqm7dTp2tBikOBatJxKvkJ0w@mail.gmail.com>
- <20181012122630.GB2668@redhat.com> <CAKR_QVLtJGzpBuz-BBi5yzFPoTUnadDdEXcwnR4XrB3DuWchjQ@mail.gmail.com>
- <20181016080922.GB4158@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 16 Oct 2018 13:32:18 +0200
-Message-ID: <CAKR_QVJ9T3EOhMoWPUv3x7-+NS54Y7cCRafM34pqve_4eV-zJQ@mail.gmail.com>
-Subject: Re: [PATCH v4 4/8] rt2800: fix registers init for MT7620
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49dd5391-d737-471a-4917-08d6335d6ea7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Oct 2018 11:49:30.4217
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR05MB5347
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 16/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Fri, Oct 12, 2018 at 02:41:41PM +0200, Tom Psyborg wrote:
->> On 12/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > On Fri, Oct 12, 2018 at 02:20:07PM +0200, Tom Psyborg wrote:
->> >> > On upstream tree where this patch is intended
->> >> > additional registers where never programmed as proper branch
->> >> > were never used, because of additional check in RT5390 branch.
->> >> >
->> >>
->> >> on my hardware additional registers were programmed in regardless of
->> >> redundant check. that why i opened whole thread on forum since i
->> >> couldn't understand how's that happening
->> >
->> > I don't understand how that possible either.
->>
->> i'd assume because device use external lna
->
-> I have no idea how this could be related. But I think I found
-> somewhat reasonable explenation where the problem is.
-> I think below code :
->
-> 	if (a || b || c) {
-> 		CODE1();
-> 	} else if (c) {
-> 		CODE2();
-> 	}
->
-> can not be deterministic and can be compiled differently depending
-> on compiler version and used options. Sometimes it could result
-> in this
->
-> 	if (a || b || c) {
-> 		CODE1();
-> 	}
->
-> and sometimes in this:
->
-> 	if (a || b) {
-> 		CODE1();
-> 	} else if (c) {
-> 		CODE2();
-> 	}
->
-> So that would explain the problems you see. And indeed patch
-> could cause regression on systems where second variant of
-> initalizing RT6352 registers was used.
->
-> Thanks
-> Stanislaw
->
+> +/*
+> + * How many frames need to have been used in average station's
+> + * signal strength before checking against the threshold
+> + */
+> +#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT     4
+> +
+> +
+>  /* there are 40 bytes if you don't need the rateset to be kept */
+>  #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
 
-Hi
+...
 
-I am sending you two builds privately so please check if there are any
-differences between the two builds and report back. Thanks.
+> +static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data=
+ *rx)
+> +{
+> +       struct sta_info *sta =3D rx->sta;
+> +       struct ieee80211_bss_conf *bss_conf =3D &rx->sdata->vif.bss_conf;
+> +       bool rssi_cross =3D  false;
+> +
+> +       if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
+> +                               NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG))
+> +               return;
+> +
+> +       sta->count_rx_signal++;
+> +       if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
+> +               return;
+
+Could you please clarify count_rx_signal processing and averaging
+approach ? I couldn't find where this counter is reset or
+modified in any other way.
+
+Regards,
+Sergey
