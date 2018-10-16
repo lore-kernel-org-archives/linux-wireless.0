@@ -6,64 +6,91 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84617C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 08:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE898C04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 08:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47359205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 08:25:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 47359205C9
+	by mail.kernel.org (Postfix) with ESMTP id A988E205C9
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 08:28:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A988E205C9
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726561AbeJPQOa (ORCPT
+        id S1726904AbeJPQRu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 12:14:30 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57506 "EHLO mx1.redhat.com"
+        Tue, 16 Oct 2018 12:17:50 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50036 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726539AbeJPQOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 12:14:30 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        id S1726539AbeJPQRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 12:17:49 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 39F67318014A;
-        Tue, 16 Oct 2018 08:25:14 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0A7A9314F9CB;
+        Tue, 16 Oct 2018 08:28:33 +0000 (UTC)
 Received: from localhost (unknown [10.43.2.63])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D0DD26248D;
-        Tue, 16 Oct 2018 08:25:13 +0000 (UTC)
-Date:   Tue, 16 Oct 2018 10:25:11 +0200
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 86259690E7;
+        Tue, 16 Oct 2018 08:28:32 +0000 (UTC)
+Date:   Tue, 16 Oct 2018 10:28:31 +0200
 From:   Stanislaw Gruszka <sgruszka@redhat.com>
 To:     yhchuang@realtek.com
 Cc:     kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
         pkshih@realtek.com, tehuang@realtek.com, johannes@sipsolutions.net,
         linux-wireless@vger.kernel.org
-Subject: Re: [RFC v4 06/13] rtw88: fw and efuse files
-Message-ID: <20181016082511.GD4158@redhat.com>
+Subject: Re: [RFC v4 00/13] rtw88: mac80211 driver for Realtek 802.11ac
+ wireless network chips
+Message-ID: <20181016082831.GB4401@redhat.com>
 References: <1539421245-11847-1-git-send-email-yhchuang@realtek.com>
- <1539421245-11847-7-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1539421245-11847-7-git-send-email-yhchuang@realtek.com>
+In-Reply-To: <1539421245-11847-1-git-send-email-yhchuang@realtek.com>
 User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Tue, 16 Oct 2018 08:25:14 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Tue, 16 Oct 2018 08:28:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Oct 13, 2018 at 05:00:38PM +0800, yhchuang@realtek.com wrote:
-> +rtw_beacon_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-> +{
-> +	struct sk_buff *skb_new;
-> +
-> +	if (vif->type != NL80211_IFTYPE_AP &&
-> +	    vif->type != NL80211_IFTYPE_ADHOC &&
-> +	    !ieee80211_vif_is_mesh(vif)) {
-> +		skb_new = alloc_skb(1, GFP_KERNEL);
-> +		skb_put(skb_new, 1);
+On Sat, Oct 13, 2018 at 05:00:32PM +0800, yhchuang@realtek.com wrote:
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+> rtw88 supports 8822BE and 8822CE chips, and will be able to support
+> multi-vif combinations in run-time.
+> 
+> For now, only PCI bus is supported, but rtw88 was originally designed
+> to optionally support three buses includes USB & SDIO. USB & SDIO modules
+> will soon be supported by rtw88, with configurable core module to fit
+> with different bus modules in the same time.
+> 
+> For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+> be selected, built, loaded into kernel. This is one of the major
+> difference from rtlwifi, which can only support specific combinations.
+> 
+> Another difference from rtlwifi is that rtw88 is designed to support
+> the latest Realtek 802.11ac wireless network chips like 8822B and
+> 8822C series. Compared to the earlier chips supported by rtlwifi like
+> the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+> have different MAC & PHY settings, such as new multi-port feature for the
+> MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+> 
+> Multi-Port feature is also supported under rtw88's software architecture.
+> rtlwifi can only support one vif in the same time, most because of the
+> hardware limitations for early chips, hence the original design of it
+> also restricts the usage of multi-vif support, so latest chipset seems not
+> take advantages from its new MAC engine.
+> 
+> However, rtw88 can run multiple vifs concurrently by holding them on
+> hardware ports provided by MAC engine, hence can easily start different
+> roles on a single device.
+> 
+> Based on the reasons mentioned before, we implemented rtw88. It had many
+> authors, they are listed here alphabetically:
+> 
+> Ping-Ke Shih <pkshih@realtek.com>
+> Tzu-En Huang <tehuang@realtek.com>
+> Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Error check.
-
-Thanks
-Stanislaw
+For the series:
+Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
