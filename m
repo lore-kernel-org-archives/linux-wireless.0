@@ -7,68 +7,69 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1927BC5ACC6
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:45:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E76C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 22:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9DC721476
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:45:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F152D2148C
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 22:53:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="MqyXIG3s"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A9DC721476
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZmcUBUKD"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F152D2148C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726922AbeJQFhh (ORCPT
+        id S1727160AbeJQGqa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 01:37:37 -0400
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:44450 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726048AbeJQFhh (ORCPT
+        Wed, 17 Oct 2018 02:46:30 -0400
+Received: from mail-vk1-f196.google.com ([209.85.221.196]:38313 "EHLO
+        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727097AbeJQGqa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 01:37:37 -0400
-Received: by mail-vs1-f66.google.com with SMTP id w194so19459189vsc.11
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 14:45:15 -0700 (PDT)
+        Wed, 17 Oct 2018 02:46:30 -0400
+Received: by mail-vk1-f196.google.com with SMTP id w123so641317vkh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 15:53:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=3ekMAaEp2McKabeQAwCAYFuaTpwFQ6JUv1EQbJUTW7A=;
-        b=MqyXIG3seo8UzBXsDpynJfzO8O/hSiJnU3XhzgIeGtgej0L+nw5ZfAh16vOA4bLiMH
-         HS2CATlW6MqLaHvKBaWhB4bq24GpbaroyuzMrnmzJdk4auw7LmdQ4OpQvWaAAofl53zJ
-         8TA4nrrvvlcC5l+TNf7aaJNaA0iBRH07LWsD0=
+        bh=jm4bxFZBK4pXMVRDJpdyn1E4FT4nGELUiGbw/4TP3vw=;
+        b=ZmcUBUKDqiaw5f5UPViUOT+u2Ba/eCc+dwCbZjwfjQQYSH3wPkPJOcwBZxeWhyeBF6
+         9mWUi0gdLD9nUOK7ri7DFNWjlozcak9yU6naA9PcXv1d5YN/UITz0KlxINqNZAtiFMUN
+         h/9sucPZT4Cav6aNlxONUtB94jDzr0+FSohVc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=3ekMAaEp2McKabeQAwCAYFuaTpwFQ6JUv1EQbJUTW7A=;
-        b=BwQetJkBpT+vsYRBBJO4NTbDJj1JM0rLHhmK6qFlYwkWqohYYJZIpL6yXx8kwQ9JOJ
-         buAl8rMEKM2j/zOGIqhQ40oWmYyMG88jwFCgcuB2dsgMKJgT7HEA4zqBIe1VsDduxXnw
-         Qe4sQ/o6x2ZJTdpW7/8FHY9S4+NFf6y6Sb+49mpK5X3HJ8AVabvxYD5rJJ/Hmn48Spa8
-         ULMcJKjNUPnkh4AP4hdGKRGmPk7FphsJqH4URXGyDWKTzKCSMiLbsKHMpAwgYv8R9cEb
-         ZLicpQkiQoWJ1TexKXSaW/nXO0cBoNSvkNp07YkTEqf7dLjfYAAa/3N+4ZDna4JUK58k
-         GIQg==
-X-Gm-Message-State: ABuFfoiaeolMT7I/F5ybsyKl/ydBrrW9RxOnW5yU5nuI4eHcq8jQBvg4
-        PaCEEhgfWTuS/uGKwDFX847G/IoCXkM=
-X-Google-Smtp-Source: ACcGV6275eWwmH7BvT8g3m8evoTY0RGXoMsUYFVsKt52EOQ2iu+2NNRj6Wp14q1FDWr8V3n08sm+eg==
-X-Received: by 2002:a67:b644:: with SMTP id e4mr9363247vsm.45.1539726315254;
-        Tue, 16 Oct 2018 14:45:15 -0700 (PDT)
-Received: from mail-vs1-f46.google.com (mail-vs1-f46.google.com. [209.85.217.46])
-        by smtp.gmail.com with ESMTPSA id l67sm2700503vsd.2.2018.10.16.14.45.13
+        bh=jm4bxFZBK4pXMVRDJpdyn1E4FT4nGELUiGbw/4TP3vw=;
+        b=FAxXNCmIzw7lKHfOQ7IkNpMbfXKJmfdHaDf33C0cqNh2hcgYwLg8ixhhTlEeIK00S/
+         JnRCj8LOPZe5p4M+6GeBPhYuDXzMOzSIBYz+KyPnhV0zxgCvQHOw5Y6vVZ8pdIywJS0n
+         wcGb3oD+TZNaOJkfJ5lgml/u4SLhTtwNI0DX4rNB+YfPDXAWOPInoREfCV9In2SYKx0z
+         Eqvg6eTg/gVcAU6Jh6fmaZuQ2Ueqea5ze1LTyhv+o2PFHKKAUTPZax97zHdQtyP0bASV
+         npVN8kgY9GFw3N1PUsEyZEcReuM5yg8bOEXUqUx+zxbBaLjxHijjhLRzWDNEgvk3S4r7
+         fKLQ==
+X-Gm-Message-State: ABuFfogVS4W/+UPjDzwgw8Sjq6OZogyIbPXsHZor8ZhRnTL4bssKx/ly
+        BeWgT0TrOX3VlgC9M0oU0UyRsnd3FLo=
+X-Google-Smtp-Source: ACcGV60WF0xST/nguKHYQ/G3cKpVuwH4iU/tFTfyirU7EU/dFyOFecawMKpb4ZhoaMoBH3ZIF5D4TQ==
+X-Received: by 2002:a1f:7cc4:: with SMTP id x187mr10059741vkc.38.1539730432548;
+        Tue, 16 Oct 2018 15:53:52 -0700 (PDT)
+Received: from mail-ua1-f42.google.com (mail-ua1-f42.google.com. [209.85.222.42])
+        by smtp.gmail.com with ESMTPSA id v85-v6sm3193728vkd.18.2018.10.16.15.53.51
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 16 Oct 2018 14:45:14 -0700 (PDT)
-Received: by mail-vs1-f46.google.com with SMTP id c205so19485097vsd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 14:45:13 -0700 (PDT)
-X-Received: by 2002:a67:1144:: with SMTP id 65mr1531744vsr.213.1539726313536;
- Tue, 16 Oct 2018 14:45:13 -0700 (PDT)
+        Tue, 16 Oct 2018 15:53:51 -0700 (PDT)
+Received: by mail-ua1-f42.google.com with SMTP id b3so4038622uak.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 15:53:51 -0700 (PDT)
+X-Received: by 2002:ab0:7291:: with SMTP id w17mr10526696uao.115.1539730430858;
+ Tue, 16 Oct 2018 15:53:50 -0700 (PDT)
 MIME-Version: 1.0
-References: <1539172376-19269-1-git-send-email-govinds@codeaurora.org> <1539172376-19269-3-git-send-email-govinds@codeaurora.org>
-In-Reply-To: <1539172376-19269-3-git-send-email-govinds@codeaurora.org>
+References: <1539172376-19269-1-git-send-email-govinds@codeaurora.org> <1539172376-19269-2-git-send-email-govinds@codeaurora.org>
+In-Reply-To: <1539172376-19269-2-git-send-email-govinds@codeaurora.org>
 From:   Doug Anderson <dianders@chromium.org>
-Date:   Tue, 16 Oct 2018 14:45:01 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=WEJoGKXy_V0KRv-kR4EBFKns_6TDqBvKN5GBKNakPR3Q@mail.gmail.com>
-Message-ID: <CAD=FV=WEJoGKXy_V0KRv-kR4EBFKns_6TDqBvKN5GBKNakPR3Q@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] dts: arm64/sdm845: Add WCN3990 WLAN module device node
+Date:   Tue, 16 Oct 2018 15:53:39 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=WP-Xx+xeCGTxSFcSrmhAv-6F3zm-0hnLxhHi84u-fUkQ@mail.gmail.com>
+Message-ID: <CAD=FV=WP-Xx+xeCGTxSFcSrmhAv-6F3zm-0hnLxhHi84u-fUkQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/3] dt: bindings: add missing dt properties for
+ WCN3990 wifi node
 To:     Govind Singh <govinds@codeaurora.org>
 Cc:     devicetree@vger.kernel.org,
         linux-arm-msm <linux-arm-msm@vger.kernel.org>,
@@ -86,79 +87,78 @@ Hi,
 
 On Wed, Oct 10, 2018 at 4:53 AM Govind Singh <govinds@codeaurora.org> wrote:
 >
-> Add device node for the ath10k SNOC platform driver probe
-> and add resources required for WCN3990 on SDM845 soc.
+> Add missing optional properties in WCN3990 wifi node.
 >
 > Signed-off-by: Govind Singh <govinds@codeaurora.org>
 > ---
->  arch/arm64/boot/dts/qcom/sdm845-mtp.dts |  8 ++++++++
->  arch/arm64/boot/dts/qcom/sdm845.dtsi    | 26 ++++++++++++++++++++++++++
->  2 files changed, 34 insertions(+)
->
-> diff --git a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
-> index eedfaf8..b89b8dd 100644
-> --- a/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
-> +++ b/arch/arm64/boot/dts/qcom/sdm845-mtp.dts
+>  .../bindings/net/wireless/qcom,ath10k.txt          | 28 ++++++++++++++++------
+>  1 file changed, 21 insertions(+), 7 deletions(-)
 
-nit: it's usually considered nicer to split the patch into two: one
-which adds the node to the SoC file and one which enables it in a
-board file.
+Point of order: please CC LKML on _all_ your patches.  Yes, it's a
+firehose.  CCing LKML allows your patches to be found on
+lore.kernel.org's patchwork and also allows people to find your
+patches via <https://lkml.kernel.org/r/MSG_ID> links.
 
 
-> +               wlan_msa_mem: reserved-memory@96700000 {
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 7fd4e8c..f831bb1 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -37,12 +37,20 @@ Optional properties:
+>  - clocks: List of clock specifiers, must contain an entry for each required
+>            entry in clock-names.
+>  - clock-names: Should contain the clock names "wifi_wcss_cmd", "wifi_wcss_ref",
+> -               "wifi_wcss_rtc".
+> -- interrupts: List of interrupt lines. Must contain an entry
+> -             for each entry in the interrupt-names property.
+> +              "wifi_wcss_rtc" for "qcom,ipq4019-wifi" compatible target and
+> +              "cxo_ref_clk_pin", "smmu_aggre2_noc_clk" for "qcom,wcn3990-wifi"
+> +              compatible target.
 
-Everything else calls this "memory@", not "reserved-memory@".
-Presumably someone (like Rob H?) thought that it should be "memory".
-Please follow the pattern.
+I always get confused with these big bindings patches that hide
+everything under a big "Optional properties" section to avoid
+specifying which properties are actually optional and which ones are
+required.
+
+After your patch and thinking about "qcom,wcn3990-wifi" in particular,
+it's unclear to me which of the following is true (or maybe something
+totally different I didn't think of)
+
+A) On wcn3990-wifi these clocks should be a required property but it's
+only listed under "Optional" because it's not used for some of the
+different WiFi drivers using this same bindings.
+
+B) On wcn3990-wifi these clocks should either both be there or neither.
+
+C) On wcm3990-wifi you can specify zero, either, or both of these
+clocks.  AKA they are independently optional.
+
+It might make sense to reorganize this bindings to make this clearer?
+...not just for clock but for interrupts / regulators as well.  Maybe
+you need to break this down into sections per class of compatible
+string, or add a list per compatible string down below?
+
+Also: even stranger is that even though you list two clocks here the
+current driver I see in linuxnext only has "cxo_ref_clk_pin".
 
 
-> +                       no-map;
-> +                       reg = <0 0x96700000 0 0x100000>;
+> +- interrupts: reference to the list of 17 interrupt no's for "qcom,ipq4019-wifi"
+> +             compatible target.
+> +             reference to the list of 12 interrupt no's for "qcom,wcn3990-wifi"
+> +             compatible target.
+> +             Must contain interrupt-names property per entry for
+> +             "qcom,ath10k", "qcom,ipq4019-wifi" compatible targets.
 
-nit: though it doesn't really matter, it'd be nice to follow the
-pattern and put "reg" above "no-map" like all the other nodes in this
-section.
+...and just to add some credence to my concerns above, "interrupts"
+are currently listed under "Optional" properties but I don't think
+that the wcn3990 driver will actually work if you don't specify any of
+the interrupts, right?  AKA for wcn3990 they are _not_ optional and
+you must have exactly 12 interrupts.
 
 
-> +               };
->         };
->
->         cpus {
-> @@ -1403,5 +1408,26 @@
->                                 status = "disabled";
->                         };
->                 };
-> +
-> +               wifi: wifi@18800000 {
-> +                       compatible = "qcom,wcn3990-wifi";
-> +                       status = "disabled";
-> +                       reg = <0x18800000 0x800000>;
-> +                       reg-names = "membase";
-> +                       memory-region = <&wlan_msa_mem>;
-> +                       interrupts =
-> +                               <0 413 0 /* CE0 */ >,
-> +                               <0 414 0 /* CE1 */ >,
-> +                               <0 415 0 /* CE2 */ >,
-> +                               <0 416 0 /* CE3 */ >,
-> +                               <0 417 0 /* CE4 */ >,
-> +                               <0 418 0 /* CE5 */ >,
-> +                               <0 420 0 /* CE6 */ >,
-> +                               <0 421 0 /* CE7 */ >,
-> +                               <0 422 0 /* CE8 */ >,
-> +                               <0 423 0 /* CE9 */ >,
-> +                               <0 424 0 /* CE10 */ >,
-> +                               <0 425 0 /* CE11 */ >;
-
-Please change all the above to look like:
-
-<GIC_SPI num IRQ_TYPE_LEVEL_HIGH>
-
-...specifically:
-* GIC_SPI is 0, but GIC_SPI is more documenting.
-* having 0 for the final element means 'IRQ_TYPE_NONE'.  On newer
-kernels commit 6ef6386ef7c1 ("irqchip/gic-v3: Loudly complain about
-the use of IRQ_TYPE_NONE") will cause loud yells if you do this.
-* I don't see what the comments about "/* CE# */ buy you.  Remove them.
-
+One separate issue I have is with your example, which you didn't
+change in this patch.  You should fix the example with the same
+feedback that I had to your patch ("dts: arm64/sdm845: Add WCN3990
+WLAN module device node").
 
 -Doug
