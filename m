@@ -2,87 +2,198 @@ Return-Path: <SRS0=k7+a=M4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80B4C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9954DC04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:31:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7389C205F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UZiJI7f7"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7389C205F4
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id A64E020869
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:31:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A64E020869
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727328AbeJPRGF (ORCPT
+        id S1727015AbeJPRUj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 13:06:05 -0400
-Received: from nbd.name ([46.4.11.11]:57566 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726711AbeJPRGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 13:06:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=cii/GH4Wf+51bPnTYIeuz463L5FonmuVfMLqcC7Ddv8=; b=UZiJI7f7e3XsZg3t57zdDDUbbE
-        UXMzZoFMe9o9MBp8pDe68UyiFFPfJtQgUmWZDJWbBC5Ss5cshoNFykAgzgKy2xCwnIWE20xgOtAlq
-        nrbUKHeCt5dhun1trv2Os5w7aFuC9xlMuYhh0sbbXXs9bdzEFXxtlZKOn2p7KQ8Otzgo=;
-Subject: Re: [PATCH] mt76x0: do not perform MCU calibration for MT7630
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-References: <1539676723-4113-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <0876e4cb-adad-e677-7b77-16baebb1439c@nbd.name>
-Date:   Tue, 16 Oct 2018 11:16:33 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <1539676723-4113-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Tue, 16 Oct 2018 13:20:39 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:52192 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726937AbeJPRUi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 13:20:38 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gCLgv-0003V2-3Q; Tue, 16 Oct 2018 11:31:05 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Lior David <liord@codeaurora.org>, luca@coelho.fi,
+        Etan Cohen <etancohen@google.com>,
+        Roy Want <roywant@google.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v4 2/2] mac80211: allow drivers to use peer measurement API
+Date:   Tue, 16 Oct 2018 11:30:49 +0200
+Message-Id: <20181016093049.28771-2-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.17.2
+In-Reply-To: <20181016093049.28771-1-johannes@sipsolutions.net>
+References: <20181016093049.28771-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-16 09:58, Stanislaw Gruszka wrote:
-> Driver works better for MT7630 without MCU calibration, which
-> looks like it can hangs the firmware. Vendor driver do not
-> perform it for MT7630 as well.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Applied, thanks.
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+There's nothing much for mac80211 to do, so only pass through
+the requests with minimal checks and tracing. The driver must
+call cfg80211's results APIs.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v4: first version - just takes the same number as the cfg80211 patch
+---
+ include/net/mac80211.h    |  7 +++++++
+ net/mac80211/cfg.c        | 22 ++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 34 ++++++++++++++++++++++++++++++++++
+ net/mac80211/trace.h      | 12 ++++++++++++
+ 4 files changed, 75 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 71985e95d2d9..e3d57e7a55cc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3623,6 +3623,9 @@ enum ieee80211_reconfig_type {
+  *	skb is always a real frame, head may or may not be an A-MSDU.
+  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
+  *	Statistics should be cumulative, currently no way to reset is provided.
++ *
++ * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep)
++ * @abort_pmsr: abort peer measurement (this call can sleep)
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3911,6 +3914,10 @@ struct ieee80211_ops {
+ 	int (*get_ftm_responder_stats)(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct cfg80211_ftm_responder_stats *ftm_stats);
++	int (*start_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			  struct cfg80211_pmsr_request *request);
++	void (*abort_pmsr)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct cfg80211_pmsr_request *request);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 51622333d460..2fccccfbbf4d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3849,6 +3849,26 @@ ieee80211_get_ftm_responder_stats(struct wiphy *wiphy,
+ 	return drv_get_ftm_responder_stats(local, sdata, ftm_stats);
+ }
+ 
++static int
++ieee80211_start_pmsr(struct wiphy *wiphy, struct wireless_dev *dev,
++		     struct cfg80211_pmsr_request *request)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(dev);
++
++	return drv_start_pmsr(local, sdata, request);
++}
++
++static void
++ieee80211_abort_pmsr(struct wiphy *wiphy, struct wireless_dev *dev,
++		     struct cfg80211_pmsr_request *request)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(dev);
++
++	return drv_abort_pmsr(local, sdata, request);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3944,4 +3964,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.tx_control_port = ieee80211_tx_control_port,
+ 	.get_txq_stats = ieee80211_get_txq_stats,
+ 	.get_ftm_responder_stats = ieee80211_get_ftm_responder_stats,
++	.start_pmsr = ieee80211_start_pmsr,
++	.abort_pmsr = ieee80211_abort_pmsr,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 0b1747a2313d..3e0d5922a440 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1199,6 +1199,40 @@ drv_get_ftm_responder_stats(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline int drv_start_pmsr(struct ieee80211_local *local,
++				 struct ieee80211_sub_if_data *sdata,
++				 struct cfg80211_pmsr_request *request)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	trace_drv_start_pmsr(local, sdata);
++
++	if (local->ops->start_pmsr)
++		ret = local->ops->start_pmsr(&local->hw, &sdata->vif, request);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
++static inline void drv_abort_pmsr(struct ieee80211_local *local,
++				  struct ieee80211_sub_if_data *sdata,
++				  struct cfg80211_pmsr_request *request)
++{
++	trace_drv_abort_pmsr(local, sdata);
++
++	might_sleep();
++	if (!check_sdata_in_driver(sdata))
++		return;
++
++	if (local->ops->abort_pmsr)
++		local->ops->abort_pmsr(&local->hw, &sdata->vif, request);
++	trace_drv_return_void(local);
++}
++
+ static inline int drv_start_nan(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				struct cfg80211_nan_conf *conf)
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 588c51a67c89..ac2f1922d469 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1882,6 +1882,18 @@ TRACE_EVENT(drv_del_nan_func,
+ 	)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_start_pmsr,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
++DEFINE_EVENT(local_sdata_evt, drv_abort_pmsr,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+-- 
+2.17.2
+
