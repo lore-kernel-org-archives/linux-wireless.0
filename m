@@ -3,43 +3,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84901C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 17:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9CCC04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 17:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5BF8020866
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 17:31:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5BF8020866
+	by mail.kernel.org (Postfix) with ESMTP id D287320645
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 17:43:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D287320645
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=canonical.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731243AbeJQBOW (ORCPT
+        id S1727272AbeJQBfS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 21:14:22 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:39803 "EHLO
+        Tue, 16 Oct 2018 21:35:18 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:40083 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730635AbeJQBOW (ORCPT
+        with ESMTP id S1727097AbeJQBfS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 21:14:22 -0400
+        Tue, 16 Oct 2018 21:35:18 -0400
 Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
         by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
         (Exim 4.76)
         (envelope-from <colin.king@canonical.com>)
-        id 1gCT3T-0000VN-RX; Tue, 16 Oct 2018 17:22:51 +0000
+        id 1gCTNf-0001sc-1I; Tue, 16 Oct 2018 17:43:43 +0000
 From:   Colin King <colin.king@canonical.com>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: mvm: fix spelling mistake "Recieved" -> "Received"
-Date:   Tue, 16 Oct 2018 18:22:51 +0100
-Message-Id: <20181016172251.1227-1-colin.king@canonical.com>
+Subject: [PATCH] brcmfmac: fix spelling mistake "Retreiving" -> "Retrieving"
+Date:   Tue, 16 Oct 2018 18:43:42 +0100
+Message-Id: <20181016174342.1867-1-colin.king@canonical.com>
 X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,26 +55,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-Trivial fix to spelling mistake in IWL_DEBUG_TE message text.
+Trivial fix to spelling mistake in brcmf_err error message.
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 505b0385d800..271db16cf0c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3351,7 +3351,7 @@ static bool iwl_mvm_rx_aux_roc(struct iwl_notif_wait_data *notif_wait,
- 	resp = (void *)pkt->data;
- 
- 	IWL_DEBUG_TE(mvm,
--		     "Aux ROC: Recieved response from ucode: status=%d uid=%d\n",
-+		     "Aux ROC: Received response from ucode: status=%d uid=%d\n",
- 		     resp->status, resp->event_unique_id);
- 
- 	te_data->uid = le32_to_cpu(resp->event_unique_id);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 94044a7a6021..9f6938f8b1ca 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -214,7 +214,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
+ 				       sizeof(ifp->mac_addr));
+ 	if (err < 0) {
+-		brcmf_err("Retreiving cur_etheraddr failed, %d\n", err);
++		brcmf_err("Retrieving cur_etheraddr failed, %d\n", err);
+ 		goto done;
+ 	}
+ 	memcpy(ifp->drvr->wiphy->perm_addr, ifp->drvr->mac, ETH_ALEN);
+@@ -269,7 +269,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	strcpy(buf, "ver");
+ 	err = brcmf_fil_iovar_data_get(ifp, "ver", buf, sizeof(buf));
+ 	if (err < 0) {
+-		brcmf_err("Retreiving version information failed, %d\n",
++		brcmf_err("Retrieving version information failed, %d\n",
+ 			  err);
+ 		goto done;
+ 	}
 -- 
 2.19.1
 
