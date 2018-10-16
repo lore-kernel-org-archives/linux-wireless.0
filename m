@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 948D2C5ACC6
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B6FC5ACCC
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:24:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 556512145D
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:24:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 556512145D
+	by mail.kernel.org (Postfix) with ESMTP id D9BC22145D
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 21:24:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D9BC22145D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727055AbeJQFQY (ORCPT
+        id S1727068AbeJQFQ2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 01:16:24 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:41782 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726697AbeJQFQY (ORCPT
+        Wed, 17 Oct 2018 01:16:28 -0400
+Received: from mail-wr1-f49.google.com ([209.85.221.49]:40139 "EHLO
+        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726697AbeJQFQ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 01:16:24 -0400
-Received: by mail-wr1-f68.google.com with SMTP id x12-v6so27216676wru.8
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 14:24:05 -0700 (PDT)
+        Wed, 17 Oct 2018 01:16:27 -0400
+Received: by mail-wr1-f49.google.com with SMTP id d2-v6so27244962wro.7
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Oct 2018 14:24:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zBarh2AOAOMe3qCnl0tRJZ/o9vM2EqfygA6d30+GKzw=;
-        b=RHHmYJizGusMb7hfHHqkUOkyXA5XStZSVZ6h9C6aK3EVKVVhUrU0/19TXWPat+BfSW
-         O/KTTPI/FPSF+BvQKIT1YAZez5TYPmQkE8A97vHY/f30zbfYCxjVjxgD3lLAhMHy1xrP
-         XM1qqvg7sEPIlABZ48AEvkKKKxwoc7RajRRPrPh8iD1lYXkyMdZAdUyFo+Rb5DSKrz+r
-         QHTJnERI98LCKla9gOBnbhl0WCVRxTTugIOxXSwGVDpY6dm1dogxmA9QKamGlBhmYlZ3
-         jgN+0RUBmgvrXBbOYkflnbKQyv0V9vlMG1XSprdOMug8aYdoBzvxnt82kjqJwtzpOHU+
-         a/iQ==
-X-Gm-Message-State: ABuFfoi/ZJkr1XfttULTo0bkbTJ9/YpFlsvLAwlGInDLEJa5ZSiMDmC4
-        zgqPJaW8CuzUjjovYlPYCSwUiTwJIZs=
-X-Google-Smtp-Source: ACcGV621iNgY7oXZ1vML9fgLbDtApwH//g1Yu7aQJCBJ4Dbfn9+5DaS8KJs+VcYwaieamC2VNpOtJQ==
-X-Received: by 2002:adf:91a4:: with SMTP id 33-v6mr20330393wri.37.1539725044697;
-        Tue, 16 Oct 2018 14:24:04 -0700 (PDT)
+        bh=99bKQ7Vd7zNrmmZZ8z0xyJLGmHgGtN5kN9clPAsZZ2Q=;
+        b=ifDuzzFKZmwHODoPsZNs+uP6azwhbFMbti4M2GU+FXjVltXDh+xjFo/UuVXRIPuipO
+         fTWVp9EKqWOtThLQemTV9Dsl8t4ftOkVqrtIQppswSJM6fge8hg8mMTddjoGzcrQ2Kij
+         aG8HD/kLmJBNCC9lin7scFGgKwWf7oda+AqMycOEOfSBR+e4rrYLLvpI3RHUdP/+HHUE
+         TL5RpAmmd030UzBrxw58wZDz3Vx+E8KXbYtbg+wFliNwhWXRz/CmS6khl1FmnFiBppSv
+         5P8bfyZDExo1fK2g7VEkMmqft7oxkILqY4IX8dEA64VCx20KP8OMinOoLpnddFhVAW6U
+         GVAw==
+X-Gm-Message-State: ABuFfojaHK6ak2LDWTk2ACdzIfK1mxZm37V0Gqc2D4cUaes28rI96E1n
+        R4sQSpIw9vnLm9JUjpPPK8p5X3279SE=
+X-Google-Smtp-Source: ACcGV62JmdM3C1GUIr97VVSHuu2QBQe8L5Lv5ayFFCjYWmeHTRoOBhYeMUCnx9ZXZKVa4JRzgf/vrQ==
+X-Received: by 2002:a5d:4dd2:: with SMTP id f18-v6mr22088690wru.80.1539725048308;
+        Tue, 16 Oct 2018 14:24:08 -0700 (PDT)
 Received: from localhost.localdomain ([151.66.57.235])
-        by smtp.gmail.com with ESMTPSA id 193-v6sm14390046wmj.21.2018.10.16.14.24.03
+        by smtp.gmail.com with ESMTPSA id 193-v6sm14390046wmj.21.2018.10.16.14.24.07
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 16 Oct 2018 14:24:04 -0700 (PDT)
+        Tue, 16 Oct 2018 14:24:07 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [RFC 8/9] mt76: introduce mt76x02_init_beacon_config routine
-Date:   Tue, 16 Oct 2018 23:23:30 +0200
-Message-Id: <336b03019b72fcb7b34003a9007101e60d1e40d6.1539723134.git.lorenzo.bianconi@redhat.com>
+Subject: [RFC 9/9] mt76x0: pci: enable AP support
+Date:   Tue, 16 Oct 2018 23:23:31 +0200
+Message-Id: <a69d12d28c6f9ed69ba6f41a36b364320f726488.1539723134.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.0
 In-Reply-To: <cover.1539723134.git.lorenzo.bianconi@redhat.com>
 References: <cover.1539723134.git.lorenzo.bianconi@redhat.com>
@@ -61,165 +61,162 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add mt76x02_init_beacon_config utility routine in mt76x02-lib
-module in order to be reused by mt76x0 driver configuring
-BSSID registers and remove duplicated code
+Add missing mac80211 callbacks to mt76x0e_ops data structure
+and add mt76x02_beacon utility routines in mt76x0_bss_info_changed
+in order to enable/disable beacon transmission
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/init.c  |  8 +----
- drivers/net/wireless/mediatek/mt76/mt76x02.h  |  2 +-
- .../net/wireless/mediatek/mt76/mt76x02_util.c | 30 +++++++++++++++++--
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  | 19 +-----------
- 4 files changed, 31 insertions(+), 28 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x0/mac.c   | 20 ------------
+ .../net/wireless/mediatek/mt76/mt76x0/main.c  | 32 +++++++++----------
+ .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  1 -
+ .../net/wireless/mediatek/mt76/mt76x0/pci.c   | 17 ++++++++++
+ 4 files changed, 32 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 0c4999342e01..dc19dc5e11d9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -136,8 +136,6 @@ static void mt76x0_init_mac_registers(struct mt76x02_dev *dev)
- {
- 	RANDOM_WRITE(dev, common_mac_reg_table);
- 
--	mt76x02_set_beacon_offsets(dev);
--
- 	/* Enable PBF and MAC clock SYS_CTRL[11:10] = 0x3 */
- 	RANDOM_WRITE(dev, mt76x0_mac_reg_table);
- 
-@@ -298,11 +296,6 @@ int mt76x0_init_hardware(struct mt76x02_dev *dev)
- 	if (ret)
- 		return ret;
- 
--	mt76_clear(dev, MT_BEACON_TIME_CFG, (MT_BEACON_TIME_CFG_TIMER_EN |
--					     MT_BEACON_TIME_CFG_SYNC_MODE |
--					     MT_BEACON_TIME_CFG_TBTT_EN |
--					     MT_BEACON_TIME_CFG_BEACON_TX));
--
- 	mt76x0_reset_counters(dev);
- 
- 	ret = mt76x0_eeprom_init(dev);
-@@ -310,6 +303,7 @@ int mt76x0_init_hardware(struct mt76x02_dev *dev)
- 		return ret;
- 
- 	mt76x0_phy_init(dev);
-+	mt76x02_init_beacon_config(dev);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+index 98d4a97f0a72..fa7f59a14a77 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mac.c
+@@ -85,26 +85,6 @@ void mt76x0_mac_set_short_preamble(struct mt76x02_dev *dev, bool short_preamb)
+ 		mt76_clear(dev, MT_AUTO_RSP_CFG, MT_AUTO_RSP_PREAMB_SHORT);
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index 1733226b657d..a4141265d7a9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -156,7 +156,7 @@ int mt76x02_get_txpower(struct ieee80211_hw *hw,
- void mt76x02_sta_ps(struct mt76_dev *dev, struct ieee80211_sta *sta, bool ps);
  
- extern const u16 mt76x02_beacon_offsets[16];
--void mt76x02_set_beacon_offsets(struct mt76x02_dev *dev);
-+void mt76x02_init_beacon_config(struct mt76x02_dev *dev);
- void mt76x02_set_irq_mask(struct mt76x02_dev *dev, u32 clear, u32 set);
- void mt76x02_mac_start(struct mt76x02_dev *dev);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 4e358066bf9b..2a81d2fc5d4d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -560,7 +560,7 @@ const u16 mt76x02_beacon_offsets[16] = {
- };
- EXPORT_SYMBOL_GPL(mt76x02_beacon_offsets);
- 
--void mt76x02_set_beacon_offsets(struct mt76x02_dev *dev)
-+static void mt76x02_set_beacon_offsets(struct mt76x02_dev *dev)
- {
- 	u16 val, base = MT_BEACON_BASE;
- 	u32 regs[4] = {};
-@@ -574,6 +574,32 @@ void mt76x02_set_beacon_offsets(struct mt76x02_dev *dev)
- 	for (i = 0; i < 4; i++)
- 		mt76_wr(dev, MT_BCN_OFFSET(i), regs[i]);
- }
--EXPORT_SYMBOL_GPL(mt76x02_set_beacon_offsets);
-+
-+void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
-+{
-+	static const u8 null_addr[ETH_ALEN] = {};
-+	int i;
-+
-+	mt76_wr(dev, MT_MAC_BSSID_DW0,
-+		get_unaligned_le32(dev->mt76.macaddr));
-+	mt76_wr(dev, MT_MAC_BSSID_DW1,
-+		get_unaligned_le16(dev->mt76.macaddr + 4) |
-+		FIELD_PREP(MT_MAC_BSSID_DW1_MBSS_MODE, 3) | /* 8 beacons */
-+		MT_MAC_BSSID_DW1_MBSS_LOCAL_BIT);
-+
-+	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
-+	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
-+		       8 << 4);
-+	mt76_wr(dev, MT_INT_TIMER_EN, 0);
-+
-+	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xffff);
-+
-+	for (i = 0; i < 8; i++) {
-+		mt76x02_mac_set_bssid(dev, i, null_addr);
-+		mt76x02_mac_set_beacon(dev, i, NULL);
-+	}
-+	mt76x02_set_beacon_offsets(dev);
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_init_beacon_config);
- 
- MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index c3c2f4441777..f561f5916625 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -79,7 +79,6 @@ mt76x2_fixup_xtal(struct mt76x02_dev *dev)
- 
- static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- {
--	static const u8 null_addr[ETH_ALEN] = {};
- 	const u8 *macaddr = dev->mt76.macaddr;
- 	u32 val;
- 	int i, k;
-@@ -123,19 +122,10 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- 	mt76_wr(dev, MT_MAC_ADDR_DW0, get_unaligned_le32(macaddr));
- 	mt76_wr(dev, MT_MAC_ADDR_DW1, get_unaligned_le16(macaddr + 4));
- 
--	mt76_wr(dev, MT_MAC_BSSID_DW0, get_unaligned_le32(macaddr));
--	mt76_wr(dev, MT_MAC_BSSID_DW1, get_unaligned_le16(macaddr + 4) |
--		FIELD_PREP(MT_MAC_BSSID_DW1_MBSS_MODE, 3) | /* 8 beacons */
--		MT_MAC_BSSID_DW1_MBSS_LOCAL_BIT);
+-void mt76x0_mac_config_tsf(struct mt76x02_dev *dev, bool enable, int interval)
+-{
+-	u32 val = mt76_rr(dev, MT_BEACON_TIME_CFG);
 -
--	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
--	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
--		       8 << 4);
- 	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_GP_TIMER,
- 		       MT_DFS_GP_INTERVAL);
--	mt76_wr(dev, MT_INT_TIMER_EN, 0);
- 
--	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xffff);
-+	mt76x02_init_beacon_config(dev);
- 	if (!hard)
- 		return 0;
- 
-@@ -152,11 +142,6 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- 		for (k = 0; k < 4; k++)
- 			mt76x02_mac_shared_key_setup(dev, i, k, NULL);
- 
--	for (i = 0; i < 8; i++) {
--		mt76x02_mac_set_bssid(dev, i, null_addr);
--		mt76x02_mac_set_beacon(dev, i, NULL);
+-	val &= ~(MT_BEACON_TIME_CFG_TIMER_EN |
+-		 MT_BEACON_TIME_CFG_SYNC_MODE |
+-		 MT_BEACON_TIME_CFG_TBTT_EN);
+-
+-	if (!enable) {
+-		mt76_wr(dev, MT_BEACON_TIME_CFG, val);
+-		return;
 -	}
 -
- 	for (i = 0; i < 16; i++)
- 		mt76_rr(dev, MT_TX_STAT_FIFO);
- 
-@@ -168,8 +153,6 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
- 		MT_CH_TIME_CFG_EIFS_AS_BUSY |
- 		FIELD_PREP(MT_CH_TIME_CFG_CH_TIMER_CLR, 1));
- 
--	mt76x02_set_beacon_offsets(dev);
+-	val &= ~MT_BEACON_TIME_CFG_INTVAL;
+-	val |= FIELD_PREP(MT_BEACON_TIME_CFG_INTVAL, interval << 4) |
+-		MT_BEACON_TIME_CFG_TIMER_EN |
+-		MT_BEACON_TIME_CFG_SYNC_MODE |
+-		MT_BEACON_TIME_CFG_TBTT_EN;
+-}
 -
- 	mt76x2_set_tx_ackto(dev);
+ void mt76x0_mac_set_ampdu_factor(struct mt76x02_dev *dev)
+ {
+ 	struct ieee80211_sta *sta;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+index 4435d8e65a00..50ef97444b58 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/main.c
+@@ -72,30 +72,23 @@ int mt76x0_config(struct ieee80211_hw *hw, u32 changed)
+ }
+ EXPORT_SYMBOL_GPL(mt76x0_config);
  
- 	return 0;
+-static void
+-mt76x0_addr_wr(struct mt76x02_dev *dev, const u32 offset, const u8 *addr)
+-{
+-	mt76_wr(dev, offset, get_unaligned_le32(addr));
+-	mt76_wr(dev, offset + 4, addr[4] | addr[5] << 8);
+-}
+-
+ void mt76x0_bss_info_changed(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_bss_conf *info, u32 changed)
+ {
++	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
+ 	struct mt76x02_dev *dev = hw->priv;
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+-	if (changed & BSS_CHANGED_BSSID) {
+-		mt76x0_addr_wr(dev, MT_MAC_BSSID_DW0, info->bssid);
++	if (changed & BSS_CHANGED_BSSID)
++		mt76x02_mac_set_bssid(dev, mvif->idx, info->bssid);
+ 
+-		/* Note: this is a hack because beacon_int is not changed
+-		 *	 on leave nor is any more appropriate event generated.
+-		 *	 rt2x00 doesn't seem to be bothered though.
+-		 */
+-		if (is_zero_ether_addr(info->bssid))
+-			mt76x0_mac_config_tsf(dev, false, 0);
++	if (changed & BSS_CHANGED_BEACON_ENABLED) {
++		tasklet_disable(&dev->pre_tbtt_tasklet);
++		mt76x02_mac_set_beacon_enable(dev, mvif->idx,
++					      info->enable_beacon);
++		tasklet_enable(&dev->pre_tbtt_tasklet);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BASIC_RATES) {
+@@ -106,8 +99,13 @@ void mt76x0_bss_info_changed(struct ieee80211_hw *hw,
+ 		mt76_wr(dev, MT_LG_FBK_CFG1, 0x00002100);
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BEACON_INT)
+-		mt76x0_mac_config_tsf(dev, true, info->beacon_int);
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		mt76_rmw_field(dev, MT_BEACON_TIME_CFG,
++			       MT_BEACON_TIME_CFG_INTVAL,
++			       info->beacon_int << 4);
++		dev->beacon_int = info->beacon_int;
++		dev->tbtt_count = 0;
++	}
+ 
+ 	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
+ 		mt76x0_mac_set_protection(dev, info->use_cts_prot,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+index 79c70c74d5d4..33d5ed47b5de 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
+@@ -67,7 +67,6 @@ void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on);
+ void mt76x0_mac_set_protection(struct mt76x02_dev *dev, bool legacy_prot,
+ 				int ht_mode);
+ void mt76x0_mac_set_short_preamble(struct mt76x02_dev *dev, bool short_preamb);
+-void mt76x0_mac_config_tsf(struct mt76x02_dev *dev, bool enable, int interval);
+ void mt76x0_mac_set_ampdu_factor(struct mt76x02_dev *dev);
+ 
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index 3e51c92c212b..33b6af55b6ed 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -68,6 +68,19 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
++static void
++mt76x0e_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++	      u32 queues, bool drop)
++{
++}
++
++static int
++mt76x0e_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++		bool set)
++{
++	return 0;
++}
++
+ static const struct ieee80211_ops mt76x0e_ops = {
+ 	.tx = mt76x02_tx,
+ 	.start = mt76x0e_start,
+@@ -76,6 +89,7 @@ static const struct ieee80211_ops mt76x0e_ops = {
+ 	.remove_interface = mt76x02_remove_interface,
+ 	.config = mt76x0_config,
+ 	.configure_filter = mt76x02_configure_filter,
++	.bss_info_changed = mt76x0_bss_info_changed,
+ 	.sta_add = mt76x02_sta_add,
+ 	.sta_remove = mt76x02_sta_remove,
+ 	.set_key = mt76x02_set_key,
+@@ -87,6 +101,9 @@ static const struct ieee80211_ops mt76x0e_ops = {
+ 	.wake_tx_queue = mt76_wake_tx_queue,
+ 	.get_survey = mt76_get_survey,
+ 	.get_txpower = mt76x02_get_txpower,
++	.flush = mt76x0e_flush,
++	.set_tim = mt76x0e_set_tim,
++	.release_buffered_frames = mt76_release_buffered_frames,
+ };
+ 
+ static int mt76x0e_register_device(struct mt76x02_dev *dev)
 -- 
 2.19.0
 
