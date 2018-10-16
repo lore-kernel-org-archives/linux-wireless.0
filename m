@@ -6,39 +6,38 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D27F8C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80B4C04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B1F1205F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7389C205F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 09:16:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hKlTFDbs"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B1F1205F4
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UZiJI7f7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7389C205F4
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727327AbeJPRFw (ORCPT
+        id S1727328AbeJPRGF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 13:05:52 -0400
-Received: from nbd.name ([46.4.11.11]:57554 "EHLO nbd.name"
+        Tue, 16 Oct 2018 13:06:05 -0400
+Received: from nbd.name ([46.4.11.11]:57566 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726711AbeJPRFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 13:05:52 -0400
+        id S1726711AbeJPRGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 13:06:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=UZh/Ep/7jUD2aH+xBTFmRVjsE+izKVyQJ82002ZA5l8=; b=hKlTFDbsp4w0/s34uAUEWZUl1H
-        T0rFbdlRddP1P559bxI/D5WF+jZ/2zl3OAmTyCUc3jHokuahK66AuqmguzrJBTk1I7RjvAeajj8qR
-        A+slsCLdpZsQ/jS3FBFyArVHhpiC7uhgvkXaDPQy8wr4sMOSkF3wIIGDU9ojIxoUavOg=;
-Subject: Re: [PATCH] mt76x0: phy: unify calibration between mt76x0u and
- mt76x0e
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539605745.git.lorenzo.bianconi@redhat.com>
- <1a6c35a4ade74f3643955f70ea4953fde56b9396.1539605745.git.lorenzo.bianconi@redhat.com>
+        bh=cii/GH4Wf+51bPnTYIeuz463L5FonmuVfMLqcC7Ddv8=; b=UZiJI7f7e3XsZg3t57zdDDUbbE
+        UXMzZoFMe9o9MBp8pDe68UyiFFPfJtQgUmWZDJWbBC5Ss5cshoNFykAgzgKy2xCwnIWE20xgOtAlq
+        nrbUKHeCt5dhun1trv2Os5w7aFuC9xlMuYhh0sbbXXs9bdzEFXxtlZKOn2p7KQ8Otzgo=;
+Subject: Re: [PATCH] mt76x0: do not perform MCU calibration for MT7630
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1539676723-4113-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -64,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <a9af7989-a80b-aa6e-0cab-cdcb649c5066@nbd.name>
-Date:   Tue, 16 Oct 2018 11:16:21 +0200
+Message-ID: <0876e4cb-adad-e677-7b77-16baebb1439c@nbd.name>
+Date:   Tue, 16 Oct 2018 11:16:33 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <1a6c35a4ade74f3643955f70ea4953fde56b9396.1539605745.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <1539676723-4113-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,11 +77,12 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-15 14:18, Lorenzo Bianconi wrote:
-> Align phy calibration logic between mt76x0u and mt76x0e drivers
-> This patch improves connection stability with low SNR
+On 2018-10-16 09:58, Stanislaw Gruszka wrote:
+> Driver works better for MT7630 without MCU calibration, which
+> looks like it can hangs the firmware. Vendor driver do not
+> perform it for MT7630 as well.
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Applied, thanks.
 
 - Felix
