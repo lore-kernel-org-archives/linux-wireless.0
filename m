@@ -2,142 +2,123 @@ Return-Path: <SRS0=k7+a=M4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61642C04EBD
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 10:20:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB359C04EBD
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 10:23:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 277E62086E
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 10:20:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C4632083C
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Oct 2018 10:23:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="y3SXdKFe"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 277E62086E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="AgZDfQqF"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C4632083C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727101AbeJPSKA (ORCPT
+        id S1727136AbeJPSNn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Oct 2018 14:10:00 -0400
-Received: from mail.toke.dk ([52.28.52.200]:59359 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727055AbeJPSKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Oct 2018 14:10:00 -0400
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1539685213; bh=5F2H2HgASlKhZ1P09d/jPbG4vVLaZ5anc5EFheaeT2U=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=y3SXdKFefYizd/Dn2boMHUB9VYEOuvDkpASFhYSzopt7rk5+k0gUCPcqlae+/jHwN
-         U4XNdDXpQ69v3LXWr2JrmYjPnKajwVrfmkgm6hzkL6RkNkth4IzcOyxHIQclvvvR5P
-         PWDhDFT2FAHctReB1GE/p/YB0TOxgHKKPm5n3xZujLkeuN+eSnrTt+Mi5LEYO7Kxrz
-         EiaTm+sBxdUp+3OhxzQ3lGkI6P0I+YB4IsdB4phP1TMguTlQDmaRsFmYMc/OJxbpTE
-         1FAHq3701t1NIlsGHJ9QlYGQjhOSy8Tc7QNAYDI891TWMFNqYu4WZbLnUfm3AxVXPU
-         nYUnyRRDKt7xQ==
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        Kan Yan <kyan@google.com>, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC v5 3/4] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <a582bd5865268ac69b0105c22dd927a3@codeaurora.org>
-References: <153908805217.9471.9290979918041653328.stgit@alrua-kau> <153908837900.9471.5394468800857658136.stgit@alrua-kau> <a65909ee425585a49d9e17f6504cf0ba@codeaurora.org> <87zhvm832s.fsf@toke.dk> <187bade306627912c70d800819ef0b87@codeaurora.org> <87pnwg93at.fsf@toke.dk> <7dfcb7a13a3f75f01f7b88163f2c33d6@codeaurora.org> <875zy7qxle.fsf@toke.dk> <a582bd5865268ac69b0105c22dd927a3@codeaurora.org>
-Date:   Tue, 16 Oct 2018 12:20:12 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87a7nery5f.fsf@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 16 Oct 2018 14:13:43 -0400
+Received: from mail-sn1nam02on0067.outbound.protection.outlook.com ([104.47.36.67]:10160
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726778AbeJPSNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Oct 2018 14:13:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6NqeA5qnLfTbo+KY+mGAYrAO+LeXL0/BwXJ2e9PRQs8=;
+ b=AgZDfQqFEUM23QJnBkYRq7EoPqU32Fg71tghPYWpf2VnQa6+F+V88QEY6a6IbBB+gn8y2fnk0Nz76+zcu4XPwcoXABPbW5Mb247TIS/JMYxh0/33yDRCcZWCPOXSWA/I3t34yrhpWjpQD18JIyqr8c/jn5BWCC1Qrg8hKBOtWJ4=
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com (20.177.144.212) by
+ BL0PR05MB5379.namprd05.prod.outlook.com (10.167.233.223) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1207.18; Tue, 16 Oct 2018 10:23:55 +0000
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156]) by BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156%2]) with mapi id 15.20.1250.020; Tue, 16 Oct 2018
+ 10:23:55 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>
+Subject: [PATCH v2 0/2] qtnfmac: add support for QSR1000/QSR2000 (aka Topaz)
+ chipsets
+Thread-Topic: [PATCH v2 0/2] qtnfmac: add support for QSR1000/QSR2000 (aka
+ Topaz) chipsets
+Thread-Index: AQHUZTpXD/LwfkFnoUOo9IBmzF3Kww==
+Date:   Tue, 16 Oct 2018 10:23:55 +0000
+Message-ID: <20181016102349.26544-1-sergey.matyukevich.os@quantenna.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM6P194CA0037.EURP194.PROD.OUTLOOK.COM
+ (2603:10a6:209:84::14) To BL0PR05MB4595.namprd05.prod.outlook.com
+ (2603:10b6:208:5f::20)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BL0PR05MB5379;6:ucQVAix/Fr/z+lO76aUN7oSPOFwBGz2lbQ41mvtVQ19utDDIUKTv4IfeCqvq3Nw8wXFz01bcnTHEKtvfwQuBb1ycSTpNlRgcMDDH2JoxCtfEzGa5O4WTzyZTya024Zawht6FcZac9AV8ISG7GsnQTwFgKQCdkovRy0Pgv80bl0vi8Yq3RnVHX0iT+G1ngd9HNtvWARG4zejE2GXIQ5T2ttAMdYHMaqBvFdlKrWYW9F4b7dk5xKA8iM9IWSk5eLl+Uh9n1DAKeZvh2olSRfWbCiGxN6BZW+/l8aKP0s5HPHKnetxv9EmhaPLOfY3P6eiGS/ExlZxT8NjboR4MwcKOwEIuFdEnFX5AIZEoDsi3/zlu6rTiUoVmlH2Izfc7w7/vt9Z64ZONn7qVS/2ScA3pqLUHC7QSTZwmRLxG2kixC/QF4JKpIcbr3C582G2Yb87Syv/kzccSMuu/IIS46096Pg==;5:njh+zQsXq73AF+wbcp2DoEIogxzkKlv5NTjTXrPt1UQrNGPryuuL/3YsgHeDLt9Gw9OsZgo+9OMB4R6C8pEXJ8JyFbkRF10eRecrZTQ89l/aqiprZT2qCwRj0uoc/a4539/XYOnJzCUx7mFPZih2fxCFzCNp7XW9XK+6idPL7zI=;7:lEiinPOXX7bNfIfVH7skHKWXS4G0upDoCMHUnF7qQNF+RMNeTCjzjzrObJUa3lX1/GA++kLmYWtP394x0aRRyWcBxAwdkfHumtfJ1vtQ68tLlNAvkZ1VsrTRLGqQg6O9wtudTuaP8GTkJJ8HL1HjmGv/31siXfnDBC6hQskMcDUHLUNfZFlg9flzL15RZjoDYuRkw2OppkQ3xpoaf/Bof+au4uRUX4mG9xPJ4j9tSY8V+gIIg4wEVPp4Rpk9H/jy
+x-ms-office365-filtering-correlation-id: e90ba3ae-e24b-4a4a-539c-08d6335179ef
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB5379;
+x-ms-traffictypediagnostic: BL0PR05MB5379:
+x-microsoft-antispam-prvs: <BL0PR05MB5379B7953F8B9ADC28D28233A3FE0@BL0PR05MB5379.namprd05.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(10201501046)(93006095)(93001095)(149066)(150057)(6041310)(20161123564045)(20161123558120)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051);SRVR:BL0PR05MB5379;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB5379;
+x-forefront-prvs: 0827D7ACB9
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(376002)(366004)(39850400004)(396003)(189003)(199004)(53936002)(68736007)(1076002)(52116002)(3846002)(478600001)(6116002)(86362001)(305945005)(107886003)(14444005)(25786009)(54906003)(36756003)(99286004)(71190400001)(6486002)(71200400001)(6436002)(5640700003)(6512007)(4326008)(7736002)(81166006)(2900100001)(103116003)(26005)(8676002)(186003)(476003)(102836004)(81156014)(8936002)(2616005)(2906002)(386003)(486006)(14454004)(316002)(66066001)(2501003)(6916009)(97736004)(105586002)(6506007)(106356001)(5660300001)(256004)(5250100002)(2351001);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB5379;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: 1mDd/lYS9rteGPBa4VUmd1/RW/OaSVcOKn2NtghpacSddvj+RmbfhxyWnS38hilAvr002FpvDIBKXscfdH1q5DyHkB8whA9EWvaCt5AVUtVyXNM+T7Ki203bMzoD8h2ZNUMEjtRPBM5eS2sWk02e9OgbJm/uIsiwrdgbkxfPJvy1MOMdEAVw+I8FIZJtQUbAxYM/HbC4NjDoXjVaoDR03N7hPbYM991/3MG4c6QUFoLGSOqjzc8x8VorOJWoFEr60KOnp3qfx823A76oKudQueW6e8bQuSFT+o+0EK2bnkMuxgeFvutu6RuvibmgPZbjNU0ERN05VehEVfnqsIiaXg640xUVA7fbOJ0jeDnJXr0=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e90ba3ae-e24b-4a4a-539c-08d6335179ef
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Oct 2018 10:23:55.5442
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR05MB5379
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+Hello Kalle and all,=20
 
-> On 2018-10-12 03:16, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>=20
->> - Just loop with the smaller quantum until one of the stations go into
->>   the positive (what we do now).
->>=20
->> - Go through all active stations, find the one that is closest being in
->>   the positive, and add that amount to the quantum. I.e., something
->>   like (assuming no station has positive deficit; if one does, you=20
->> don't
->>   want to add anything anyway):
->>=20
->>   to_add =3D -(max(stn.deficit) for stn in active stations)
->>   for stn in active stations:
->>     stn.deficit +=3D to_add + stn.weight
->>=20
-> Toke,
->
-> Sorry for the delayed response. I did lot of experiments. Below are my=20
-> observations.
-> Sorry for lengthy reply.
->
-> In current model, next_txq() is main routine that serves DRR and
-> fairness is enforced by serving only only first txq. Here the first
-> node could be either newly initiated traffic or returned node by
-> return_txq(). This works perfectly as long as the driver is running
-> any RR algo.
->
-> Whereas in ath10k, firmware runs its own RR in pull mode and builds
-> txq list based on driver's hostq table. In this case it can not be
-> simply assumed that firmware always gives fetch request for first node
-> of mac80211's txq list. i.e both RR algo could be out of sync.
+Here is the next update for qtnfmac driver. This patchset adds support
+for the previous generation of Quantenna wireless cards,
+namely QSR1000/QSR2000 family of PCIe devices.
 
-So I'm wondering why they don't sync; if the hardware is just doing RR
-scheduling, eventually it should hit the TXQ that's first in the queue
-and keep in sync after that?
+The summary of changes is as follows:
+- the last bits of pcie layer unification work:
+  -- extract remaining code that can be shared across various PCIe chips
+  -- cleanup/rename: get ready to support another chipset
+- add support for QSR1000/QSR2000 devices
 
-How are you testing, and what metrics are you using?
+Regards,
+Sergey
 
-> On an idle condition a single fetch indication can dequeue ~190 msdus
-> from each tid of give stn list.
+Changes v1 -> v2
+- simplify Kconfig options for PCIe backend driver
 
-Wow, that sounds pretty bad. Guess we need the airtime queue limits! :)
-
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wirel=
-ess/ath/ath10k/htt_rx.c
-> index 625a4ab37ea0..269ae8311056 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -2352,7 +2352,7 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10=
-k *ar, struct sk_buff *skb)
->  			num_msdus++;
->  			num_bytes +=3D ret;
->  		}
-> -		ieee80211_return_txq(hw, txq);
-> +		ieee80211_return_txq(hw, txq, true);
-
-I don't like the extra parameter; a similar one was in an earlier
-version of my patch set, but I'd prefer that mac80211 just does the
-right thing...
-
-Do I understand it correctly that push/pull mode is selected solely by
-hardware/firmware versions? Because in that case we could split it into
-two feature flags instead...
-
-> @@ -3670,13 +3670,8 @@ bool ieee80211_txq_may_transmit(struct ieee80211_h=
-w *hw,
->  	if (sta->airtime[ac].deficit >=3D 0)
->  		goto out;
->=20=20
-> -	list_for_each_entry(txqi, &local->active_txqs[ac], schedule_order) {
-> -		if (!txqi->txq.sta)
-> -			continue;
-> -		sta =3D container_of(txqi->txq.sta, struct sta_info, sta);
-> -		sta->airtime[ac].deficit +=3D
-> -			(IEEE80211_TXQ_MAY_TX_QUANTUM * sta->airtime_weight);
-> -	}
-> +	sta->airtime[ac].deficit +=3D sta->airtime_weight;
-> +	list_move_tail(&txqi->schedule_order, &local->active_txqs[ac]);
-
-I'm wondering whether this actually succeeds in achieving fairness? This
-basically allows a TXQ to be plucked from any point in the list, get a
-quantum increase and be put back on, no matter the state of other TXQs.
-
-Did you test how well the stations divide their airtime? And if so,
-under which conditions?
-
--Toke
+ Kconfig                |   15=20
+ Makefile               |    9=20
+ pcie/pcie.c            |  282 +++++++----
+ pcie/pcie_priv.h       |   20=20
+ pcie/pearl_pcie.c      |  211 ++------
+ pcie/topaz_pcie.c      | 1219 ++++++++++++++++++++++++++++++++++++++++++++=
++++++
+ pcie/topaz_pcie_ipc.h  |   94 +++
+ pcie/topaz_pcie_regs.h |   45 +
+ qtn_hw_ids.h           |    4=20
+ util.c                 |   18=20
+ util.h                 |    2=20
+ 11 files changed, 1664 insertions(+), 255 deletions(-)
