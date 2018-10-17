@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AA8BECDE32
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8F4ECDE30
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:41:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6BB03214C3
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:38:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6BB03214C3
+	by mail.kernel.org (Postfix) with ESMTP id F117A214C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:41:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F117A214C3
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727146AbeJQPc2 (ORCPT
+        id S1727097AbeJQPf1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 11:32:28 -0400
-Received: from mga07.intel.com ([134.134.136.100]:48190 "EHLO mga07.intel.com"
+        Wed, 17 Oct 2018 11:35:27 -0400
+Received: from mga14.intel.com ([192.55.52.115]:53741 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726947AbeJQPc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 11:32:28 -0400
+        id S1726994AbeJQPf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Oct 2018 11:35:26 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 00:38:05 -0700
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 00:41:03 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.54,391,1534834800"; 
-   d="scan'208";a="78659209"
+   d="scan'208";a="95927530"
 Received: from oscharmm-mobl.ger.corp.intel.com ([10.252.23.35])
-  by fmsmga007.fm.intel.com with ESMTP; 17 Oct 2018 00:38:03 -0700
-Message-ID: <7536486ceefd6ebdf174cc76d4a851b2ea77f9ce.camel@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: fix spelling mistake "Recieved" ->
- "Received"
+  by fmsmga002.fm.intel.com with ESMTP; 17 Oct 2018 00:41:01 -0700
+Message-ID: <0b871b8681af96d2ec3ca65a6f2b9f2f1650c89b.camel@intel.com>
+Subject: Re: [PATCH] iwlwifi: fix spelling mistake "registrating" ->
+ "registering"
 From:   Luciano Coelho <luciano.coelho@intel.com>
 To:     Colin King <colin.king@canonical.com>,
         Johannes Berg <johannes.berg@intel.com>,
@@ -43,9 +43,9 @@ To:     Colin King <colin.king@canonical.com>,
         "David S . Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Wed, 17 Oct 2018 10:38:01 +0300
-In-Reply-To: <20181016172251.1227-1-colin.king@canonical.com>
-References: <20181016172251.1227-1-colin.king@canonical.com>
+Date:   Wed, 17 Oct 2018 10:41:00 +0300
+In-Reply-To: <20181011095757.18475-1-colin.king@canonical.com>
+References: <20181011095757.18475-1-colin.king@canonical.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.1-1 
@@ -56,21 +56,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2018-10-16 at 18:22 +0100, Colin King wrote:
+On Thu, 2018-10-11 at 10:57 +0100, Colin King wrote:
 > From: Colin Ian King <colin.king@canonical.com>
 > 
-> Trivial fix to spelling mistake in IWL_DEBUG_TE message text.
+> Trivial fix to spelling mistake in IWL_ERR error message
 > 
 > Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
 
-Hi Colin,
-
-You already sent this patch before and it has already been applied in
-our internal tree and will reach upstream at some point.
-
-Please don't keep re-sending identical patches once I replied that it
-has been applied.
+Thanks Colin.  I've applied this in our internal tree and it will
+eventually reach the mainline, following our normal upstreaming
+process.
 
 --
 Cheers,
