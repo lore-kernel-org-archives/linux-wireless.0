@@ -2,84 +2,83 @@ Return-Path: <SRS0=hbYo=M5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C797C04EB9
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 06:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05F33ECDE30
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:16:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE40F2151D
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 06:44:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DE40F2151D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id B5C2021526
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:16:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B5C2021526
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727249AbeJQOi4 (ORCPT
+        id S1727352AbeJQPLH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 10:38:56 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59006 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727080AbeJQOi4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 10:38:56 -0400
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gCfZU-0003n9-Uk; Wed, 17 Oct 2018 09:44:45 +0300
-Message-ID: <9f63350e8f853254adeb5eb6c280ec3cfe99409e.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     =?ISO-8859-1?Q?R=E9my_Gr=FCnblatt?= <remy@grunblatt.org>,
-        linux-wireless@vger.kernel.org
-Cc:     linuxwifi@intel.com
-Date:   Wed, 17 Oct 2018 09:44:43 +0300
-In-Reply-To: <b403d919-57dd-aa2a-24f2-09d857cada5b@grunblatt.org>
-References: <b403d919-57dd-aa2a-24f2-09d857cada5b@grunblatt.org>
+        Wed, 17 Oct 2018 11:11:07 -0400
+Received: from mga01.intel.com ([192.55.52.88]:47279 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727162AbeJQPLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Oct 2018 11:11:07 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 00:16:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.54,391,1534834800"; 
+   d="scan'208";a="81850704"
+Received: from oscharmm-mobl.ger.corp.intel.com ([10.252.23.35])
+  by orsmga007.jf.intel.com with ESMTP; 17 Oct 2018 00:16:47 -0700
+Message-ID: <f98ae961fa880d9c2b9704ea252326d6cc6ab2e1.camel@intel.com>
+Subject: Re: [PATCH] iwlwifi: mvm: remove set but not used variable
+ 'he_phy_data'
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     YueHaibing <yuehaibing@huawei.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>
+Cc:     linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        netdev@vger.kernel.org
+Date:   Wed, 17 Oct 2018 10:16:45 +0300
+In-Reply-To: <1538736421-97401-1-git-send-email-yuehaibing@huawei.com>
+References: <1538736421-97401-1-git-send-email-yuehaibing@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.1-1 
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] Minor corrections of comments in the iwlwifi mvm rate
- scaling source
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2018-09-13 at 13:07 +0200, Rémy Grünblatt wrote:
-> Hi,
+On Fri, 2018-10-05 at 10:47 +0000, YueHaibing wrote:
+> Fixes gcc '-Wunused-but-set-variable' warning:
 > 
-> I believe some comments in the rate scaling source of the iwlwifi mvm
-> are wrong, as we have #define RATE_MCS_SGI_POS  13 and #define
-> RATE_MCS_SGI_MSK  (1 << RATE_MCS_SGI_POS)
+> drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c: In function
+> 'iwl_mvm_rx_mpdu_mq':
+> drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:1386:7: warning:
+>  variable 'he_phy_data' set but not used [-Wunused-but-set-variable]
+>    u64 he_phy_data;
+>    
+> 'he_phy_data' never used since be introduce in
+> commit 18ead597daa1 ("iwlwifi: support new rx_mpdu_desc api")
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
 
-Hi Remy,
+Thanks, Yue! This was a merge damage when I applied the HE patches for
+iwlwifi.
 
-Sorry for the delay, your patch was not correctly formatted and since
-this is a minor fix in a comment, it slipped through my fingers.
-
-I have made a different patch to fix this, changing the hex values for
-the tables instead, because in the example we say this is about SGI, so
-I just set the SGI bit:
-
-- * rate[0] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
-- * rate[1] 0x400D019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
-- * rate[2] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
-- * rate[3] 0x400D018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
-- * rate[4] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
-- * rate[5] 0x400D017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
-+ * rate[0] 0x400F019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
-+ * rate[1] 0x400F019 VHT | ANT: AB BW: 80Mhz MCS: 9 NSS: 2 SGI
-+ * rate[2] 0x400F018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
-+ * rate[3] 0x400F018 VHT | ANT: AB BW: 80Mhz MCS: 8 NSS: 2 SGI
-+ * rate[4] 0x400F017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
-+ * rate[5] 0x400F017 VHT | ANT: AB BW: 80Mhz MCS: 7 NSS: 2 SGI
-
-
-This is now queued in our internal tree and will reach the mainline at
-some point, following our normal process.
-
-Thanks for reporting.
+I've queued this and will send it out as part of the series for 4.21. 
+Then it will trickle down as needed.
 
 --
 Cheers,
