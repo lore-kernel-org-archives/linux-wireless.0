@@ -2,207 +2,121 @@ Return-Path: <SRS0=hbYo=M5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 389A4ECDE3B
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 21:18:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C8BECDE3B
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 22:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03587208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 21:18:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 03587208E4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 6C7E321473
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 22:02:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=globallogic.com header.i=@globallogic.com header.b="YVzTxyDs"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6C7E321473
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=globallogic.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727213AbeJRFPj (ORCPT
+        id S1727266AbeJRGAQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 01:15:39 -0400
-Received: from mga01.intel.com ([192.55.52.88]:49585 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725745AbeJRFPj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 01:15:39 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 14:13:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,393,1534834800"; 
-   d="scan'208";a="242160251"
-Received: from jprestwo.jf.intel.com ([10.54.74.38])
-  by orsmga004.jf.intel.com with ESMTP; 17 Oct 2018 14:13:07 -0700
-From:   James Prestwood <james.prestwood@linux.intel.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <james.prestwood@linux.intel.com>
-Subject: [PATCH v3 2/2] mac80211_hwsim: allow configurable cipher types
-Date:   Wed, 17 Oct 2018 14:16:24 -0700
-Message-Id: <20181017211624.7338-2-james.prestwood@linux.intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20181017211624.7338-1-james.prestwood@linux.intel.com>
-References: <20181017211624.7338-1-james.prestwood@linux.intel.com>
+        Thu, 18 Oct 2018 02:00:16 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:38103 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727245AbeJRGAQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Oct 2018 02:00:16 -0400
+Received: by mail-lf1-f67.google.com with SMTP id x24-v6so5274303lfe.5
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2018 15:02:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=globallogic.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ZlPwvpsObli1PXrobtxxhahilr9VlySHedGougIIT0A=;
+        b=YVzTxyDs/1AJ8tP7Ts25J3GyxMsMC5+6wK8CeX23b6PjTgsM13U8azmdnzaJK3GKrc
+         LmXL6Qumd2/CgztUsNiQOxbWVM/zSnACaweLn8y7YX/z1qk35TXjSXN3P1E3n+n+yLlm
+         z1cPQCZZeHRdmwoApm50teJ9nPRDAZRSTahTY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ZlPwvpsObli1PXrobtxxhahilr9VlySHedGougIIT0A=;
+        b=c7LFoMUrAR62uVvs32v7606lB+AVcrMjOLOYpKrb0yp03xMTFt2QoUujqXgjhh9bpI
+         jMsQJ9v+a31Jr5OKMM6kKq5C/wJwnpOca5wkKGKe0H5V6N7LorxwF3SaHcvz78u3eA5G
+         /KXVCnK0Ol4CaIvfnY3T2MyCV3d/sdPnjzr0DbGtAaLDfuFc20S3fH5Y4sBWFzRBytZa
+         F3iW2wDugx88EoDdtcL+Gf+WcpMDenMUOJWRyF9Lhqar/TjiM4DVQVyvTN+sMucXz3ax
+         0/T17esTBv2KIJ3q83MLN03MpEjodq7QXHSL02dmDH8J9YmUtvWFEpUtm53KB0ZNrPxz
+         hQXg==
+X-Gm-Message-State: ABuFfohP2JfE4zOAR8r9CcE+koa8om6PAAbuck7osNfmEGQV1NvDfhxv
+        z4+4FJxtI354Nxi2wG2hM9l3Gw==
+X-Google-Smtp-Source: ACcGV61FEom3RBXWrDIyxtXV1C/GijTZ8ukF0e40ggB30aa1GYj+944xrlNoexJtrMseoQgL0rPm5A==
+X-Received: by 2002:a19:505a:: with SMTP id z26-v6mr8089042lfj.120.1539813754067;
+        Wed, 17 Oct 2018 15:02:34 -0700 (PDT)
+Received: from localhost.localdomain ([185.145.182.2])
+        by smtp.gmail.com with ESMTPSA id p21-v6sm1952218lfj.94.2018.10.17.15.02.32
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 17 Oct 2018 15:02:32 -0700 (PDT)
+From:   Vasyl Vavrychuk <vasyl.vavrychuk@globallogic.com>
+X-Google-Original-From: Vasyl Vavrychuk <vvavrychuk@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Vasyl Vavrychuk <vasyl.vavrychuk@globallogic.com>
+Subject: [PATCH] mac80211_hwsim: Timer should be initialized before device registered
+Date:   Thu, 18 Oct 2018 01:02:12 +0300
+Message-Id: <20181017220212.15240-1-vvavrychuk@gmail.com>
+X-Mailer: git-send-email 2.19.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The mac80211_hwsim driver does not specify supported cipher types, which
-in turn enables all ciphers to be supported in software. (see
-net/mac80211/main.c:ieee80211_init_cipher_suites). Allowing ciphers
-to be configurable is valuable for simulating older drivers that may
-not support all ciphers.
+From: Vasyl Vavrychuk <vasyl.vavrychuk@globallogic.com>
 
-This patch adds a new attribute:
+Otherwise if network manager starts configuring Wi-Fi interface
+immidiatelly after getting notification of its creation, we will get
+NULL pointer dereference:
 
- - HWSIM_ATTR_CIPHER_SUPPORT
-	A u32 array/list of supported cipher types
+  BUG: unable to handle kernel NULL pointer dereference at           (null)
+  IP: [<ffffffff95ae94c8>] hrtimer_active+0x28/0x50
+  ...
+  Call Trace:
+   [<ffffffff95ae9997>] ? hrtimer_try_to_cancel+0x27/0x110
+   [<ffffffff95ae9a95>] ? hrtimer_cancel+0x15/0x20
+   [<ffffffffc0803bf0>] ? mac80211_hwsim_config+0x140/0x1c0 [mac80211_hwsim]
 
-This only allows enabling/disabling cipher types listed in the (new)
-"hwsim_ciphers" array in mac80211_hwsim.c. Any unknown cipher type
-will result in -EINVAL.
-
-Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
+Signed-off-by: Vasyl Vavrychuk <vasyl.vavrychuk@globallogic.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 64 +++++++++++++++++++++++++++
- drivers/net/wireless/mac80211_hwsim.h |  2 +
- 2 files changed, 66 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2799eb247b7e..69596eb255d7 100644
+index 1068757ec42e..d0e0a9f5bf98 100644
 --- a/drivers/net/wireless/mac80211_hwsim.c
 +++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -371,6 +371,20 @@ static const struct ieee80211_rate hwsim_rates[] = {
- 	{ .bitrate = 540 }
- };
+@@ -2890,6 +2890,10 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
  
-+static const u32 hwsim_ciphers[] = {
-+	WLAN_CIPHER_SUITE_WEP40,
-+	WLAN_CIPHER_SUITE_WEP104,
-+	WLAN_CIPHER_SUITE_TKIP,
-+	WLAN_CIPHER_SUITE_CCMP,
-+	WLAN_CIPHER_SUITE_CCMP_256,
-+	WLAN_CIPHER_SUITE_GCMP,
-+	WLAN_CIPHER_SUITE_GCMP_256,
-+	WLAN_CIPHER_SUITE_AES_CMAC,
-+	WLAN_CIPHER_SUITE_BIP_CMAC_256,
-+	WLAN_CIPHER_SUITE_BIP_GMAC_128,
-+	WLAN_CIPHER_SUITE_BIP_GMAC_256,
-+};
-+
- #define OUI_QCA 0x001374
- #define QCA_NL80211_SUBCMD_TEST 1
- enum qca_nl80211_vendor_subcmds {
-@@ -474,6 +488,8 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_iface_limit if_limits[3];
- 	int n_if_limits;
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
  
-+	u32 ciphers[ARRAY_SIZE(hwsim_ciphers)];
++	tasklet_hrtimer_init(&data->beacon_timer,
++			     mac80211_hwsim_beacon,
++			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
 +
- 	struct mac_address addresses[2];
- 	int channels, idx;
- 	bool use_chanctx;
-@@ -602,6 +618,7 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_FREQ] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_PERM_ADDR] = { .type = NLA_UNSPEC, .len = ETH_ALEN },
- 	[HWSIM_ATTR_IFTYPE_SUPPORT] = { .type = NLA_U32 },
-+	[HWSIM_ATTR_CIPHER_SUPPORT] = { .type = NLA_BINARY },
- };
+ 	err = ieee80211_register_hw(hw);
+ 	if (err < 0) {
+ 		pr_debug("mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
+@@ -2914,10 +2918,6 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
  
- static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-@@ -2375,6 +2392,8 @@ struct hwsim_new_radio_params {
- 	bool no_vif;
- 	const u8 *perm_addr;
- 	u32 iftypes;
-+	u32 *ciphers;
-+	u8 n_ciphers;
- };
- 
- static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
-@@ -2638,6 +2657,13 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	hw->wiphy->iface_combinations = &data->if_combination;
- 	hw->wiphy->n_iface_combinations = 1;
- 
-+	if (param->ciphers) {
-+		memcpy(data->ciphers, param->ciphers,
-+				param->n_ciphers * sizeof(u32));
-+		hw->wiphy->cipher_suites = data->ciphers;
-+		hw->wiphy->n_cipher_suites = param->n_ciphers;
-+	}
-+
- 	INIT_DELAYED_WORK(&data->roc_start, hw_roc_start);
- 	INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
- 	INIT_DELAYED_WORK(&data->hw_scan, hw_scan_work);
-@@ -3185,6 +3211,29 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 	return 0;
- }
- 
-+/* ensures ciphers only include ciphers listed in 'hwsim_ciphers' array */
-+static int hwsim_validate_ciphers(const u32 *ciphers, int n_ciphers)
-+{
-+	int i;
-+
-+	for (i = 0; i < n_ciphers; i++) {
-+		int j;
-+		int found = 0;
-+
-+		for (j = 0; j < ARRAY_SIZE(hwsim_ciphers); j++) {
-+			if (ciphers[i] == hwsim_ciphers[j]) {
-+				found = 1;
-+				break;
-+			}
-+		}
-+
-+		if (!found)
-+			return -1;
-+	}
-+
-+	return 0;
-+}
-+
- static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- {
- 	struct hwsim_new_radio_params param = { 0 };
-@@ -3267,6 +3316,21 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 		param.p2p_device = true;
- 	}
- 
-+	if (info->attrs[HWSIM_ATTR_CIPHER_SUPPORT]) {
-+		param.ciphers = nla_data(
-+					info->attrs[HWSIM_ATTR_CIPHER_SUPPORT]);
-+		param.n_ciphers = nla_len(
-+					info->attrs[HWSIM_ATTR_CIPHER_SUPPORT]);
-+
-+		if (param.n_ciphers > sizeof(hwsim_ciphers))
-+			return -EINVAL;
-+
-+		param.n_ciphers /= sizeof(u32);
-+
-+		if (hwsim_validate_ciphers(param.ciphers, param.n_ciphers))
-+			return -EINVAL;
-+	}
-+
- 	ret = mac80211_hwsim_new_radio(info, &param);
- 	kfree(hwname);
- 	return ret;
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index 3f6b670116d0..a1ef8457fad4 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -133,6 +133,7 @@ enum {
-  *	rates of %HWSIM_ATTR_TX_INFO
-  * @HWSIM_ATTR_PERM_ADDR: permanent mac address of new radio
-  * @HWSIM_ATTR_IFTYPE_SUPPORT: u32 attribute of supported interface types bits
-+ * @HWSIM_ATTR_CIPHER_SUPPORT: u32 array of supported cipher types
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -162,6 +163,7 @@ enum {
- 	HWSIM_ATTR_TX_INFO_FLAGS,
- 	HWSIM_ATTR_PERM_ADDR,
- 	HWSIM_ATTR_IFTYPE_SUPPORT,
-+	HWSIM_ATTR_CIPHER_SUPPORT,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+-	tasklet_hrtimer_init(&data->beacon_timer,
+-			     mac80211_hwsim_beacon,
+-			     CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
+-
+ 	spin_lock_bh(&hwsim_radio_lock);
+ 	err = rhashtable_insert_fast(&hwsim_radios_rht, &data->rht,
+ 				     hwsim_rht_params);
 -- 
-2.17.1
+2.19.1
 
