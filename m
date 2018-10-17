@@ -2,125 +2,76 @@ Return-Path: <SRS0=hbYo=M5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBF8ECDE30
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A2EECDE32
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B8252150D
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:21:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XYXk19eq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="X1BZFLwW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5B8252150D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id D9E392098A
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:47:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D9E392098A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726989AbeJQTRA (ORCPT
+        id S1727086AbeJQTmc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 15:17:00 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39888 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726904AbeJQTRA (ORCPT
+        Wed, 17 Oct 2018 15:42:32 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:33036 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727051AbeJQTmc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 15:17:00 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6C79E60ADD; Wed, 17 Oct 2018 11:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539775305;
-        bh=uJaykkS5I+5CHoY3O/83jqL5YUpH0qm2FhsQt9Oo5Ds=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=XYXk19eqG70GY3QrFhINMiSAaFcuiGiKPloO6Zqy1lY2CzIhdp/k/zigBk8b/HFFk
-         QnFRnhcNvoIF3RYLLDKpzbaTxOFqFPQSPFZV8wOT0qq8C/lsZTBkfnqbW6B+SAkocW
-         0FnWIn5ZB9WAcltgvD/WQ73L4mIiphc/+A+fpj9E=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 5F10460A34;
-        Wed, 17 Oct 2018 11:21:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1539775304;
-        bh=uJaykkS5I+5CHoY3O/83jqL5YUpH0qm2FhsQt9Oo5Ds=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=X1BZFLwWkE05JsOake+kHayhalyjHl5HcYlE04HYdishAcGC4qfu423Hcs5wZZvSj
-         hCIM74U/9ScDPVFl5iV85bEs2bLIPvkkg0Os1SB/4iEwMszM7QfSwSi+pG22c83IJg
-         GyXDc/AOKw7COs1MNlWrii6ey1JgQMApv6Kdsv2A=
+        Wed, 17 Oct 2018 15:42:32 -0400
+Received: by mail-wm1-f66.google.com with SMTP id y140-v6so1294656wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2018 04:47:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=GmHEFRJjj+4JJDC5mA+XlnM+XnURdfz6hoDVEef5oi0=;
+        b=iHB8x6iKKI3nqw3axRzhV37p0c0fATHuoedk2kTq78lmwWH9KucpmVqMYuoesmExmy
+         IkgaeLu6PoneB77d4j6T/4rD5CHs5egQoj1gTMhnTo7DVNmZupYLnuRTni2pfjQq3NqH
+         h9yXK8DTxX9g/7BlwBIplib3ab4dQwj9BGaPfjYNkkFMPmF4m1/CzSIHsMvJxgVJeGgD
+         mDFZKCLWTr9QGphTDPTPnZFjJQN6DUnY+PuyR2mIXsZ6uI1nwOUTeELtlLGhB8ocoBYx
+         c1qEV4yotygMsombpg3QYWNf6su6UJvLJywSBqN3BdmcwbNLyrzPQn6yDFPj6J4nAXc0
+         QVfw==
+X-Gm-Message-State: ABuFfohzp15kaKjGTZ7fs0cjkDGAYYBVtSV+KO0o4D3yWyCNBaeoBFp9
+        7+QSvThGYwcM4qH5T/sNVYls8A==
+X-Google-Smtp-Source: ACcGV62Kf6tCCfDAlS9f7kC7N04u8Drmmjoy0VUpqVq2eM4BgRzWM2CSAJgEF8qByTUdUkdYZ79S1A==
+X-Received: by 2002:a1c:13c4:: with SMTP id 187-v6mr2548611wmt.66.1539776830500;
+        Wed, 17 Oct 2018 04:47:10 -0700 (PDT)
+Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
+        by smtp.gmail.com with ESMTPSA id v76-v6sm2091485wmd.32.2018.10.17.04.47.09
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 17 Oct 2018 04:47:09 -0700 (PDT)
+Date:   Wed, 17 Oct 2018 13:47:07 +0200
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: Re: [PATCH] mt76: clean up unused leftover EXPORT_SYMBOLs
+Message-ID: <20181017114706.GB13977@localhost.localdomain>
+References: <20181017111101.19685-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 17 Oct 2018 16:51:44 +0530
-From:   Rakesh Pillai <pillair@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>
-Subject: Re: [PATCH] ath10k: Fill the channel survey results for WCN3990
- correctly
-In-Reply-To: <87murj2mc0.fsf@kamboji.qca.qualcomm.com>
-References: <1538564267-19863-1-git-send-email-pillair@codeaurora.org>
- <20181012143434.3F49060A98@smtp.codeaurora.org>
- <87murj2mc0.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <c825412eeccfee7a3ca6ebe0b9e68ea8@codeaurora.org>
-X-Sender: pillair@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181017111101.19685-1-nbd@nbd.name>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+> Make previously exported functions static where possible
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76.h         | 2 --
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mac.c  | 8 +-------
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mac.h  | 2 --
+>  drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 1 -
+>  drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c | 2 --
+>  drivers/net/wireless/mediatek/mt76/usb.c          | 6 ++----
+>  6 files changed, 3 insertions(+), 18 deletions(-)
 
-I have removed the clk_freq variable and now there will be u32 division 
-only.
-This change has been sent in v2.
-
-Thanks,
-Rakesh Pillai.
-
-On 2018-10-12 21:23, Kalle Valo wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
-> 
->> Rakesh Pillai <pillair@codeaurora.org> wrote:
->> 
->>> The host driver currently expects the channel info event to be
->>> received in pairs for all the channels, i.e. the first
->>> chan_info event for a particular channel will not have the
->>> COMPLETE flag set and the second chan_info event for the
->>> same channel will have the COMPLETE flag set.
->>> 
->>> The HL2.0 firmware sends only one channel info event per channel
->>> which is scanned without the COMPLETE flag set. After sending the
->>> chan_info_event for all the channels, the HL2.0 firmware sends a
->>> chan_info_event with COMPLETE flag set to indicate the completion
->>> of the channel info event.
->>> 
->>> The firmware does not indicate this behavior with any service bitmap
->>> and hence a new firmware feature flag is used to handle the modified
->>> parsing of the channel info events, in the host driver, for the
->>> firmware which sends single channel info event per scanned channel.
->>> 
->>> Tested HW: WCN3990
->>> Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
->>> 
->>> Co-developed-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
->>> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
->>> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
->>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->> 
->> Kbuild bot reported some errors:
->> 
->>>> ERROR: "__udivdi3" [drivers/net/wireless/ath/ath10k/ath10k_core.ko] 
->>>> undefined!
->>>> ERROR: "__divdi3" [drivers/net/wireless/ath/ath10k/ath10k_core.ko] 
->>>> undefined!
->> 
->> Need to investigate those if they are valid or problem with the bot.
-> 
-> Arnd explained the problem in the other thread:
-> 
->   "I think the problem is that 'clock_freq' is a 'u64', which means we
->    can't use a normal 32-bit division. It looks like it cannot actually
->    go beyond the range of a u32, so changing the type should be
->    sufficient."
-> 
-> Please investigate that and submit v2.
+Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
