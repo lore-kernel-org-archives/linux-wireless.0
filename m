@@ -7,214 +7,356 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD97ECDE30
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:11:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442D8ECDE32
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:20:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CC102150D
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:11:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D55B5214DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 11:20:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZvgdvNDb"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3CC102150D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="A3mt9kBv";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jLLlfKur"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D55B5214DD
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727082AbeJQTGR (ORCPT
+        id S1726996AbeJQTPh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 15:06:17 -0400
-Received: from nbd.name ([46.4.11.11]:57744 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726922AbeJQTGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 15:06:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=xy8GZ0yHpbHQy1dmCp+ZW89JxBJY1bBOByC/BbZTxdM=; b=ZvgdvNDbzRug4r4SHt9a8P1kro
-        IBzhC+3JJRDZiVYZUPn9ekxvUpI0AVGpwZNag/nN5DMTcr+dx+SF7uPDsemrcQ+YLGtG8cHO+wIKS
-        X4tLouPAgYhYgWQvld1GzzOAaKcPdQ6bHHkWFgFRdhtHj8ncNoAaOQdD4959KMpOSBN0=;
-Received: by maeck.lan (Postfix, from userid 501)
-        id 6BCF93FD2998; Wed, 17 Oct 2018 13:11:01 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     sgruszka@redhat.com, lorenzo.bianconi@redhat.com
-Subject: [PATCH] mt76: clean up unused leftover EXPORT_SYMBOLs
-Date:   Wed, 17 Oct 2018 13:11:01 +0200
-Message-Id: <20181017111101.19685-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        Wed, 17 Oct 2018 15:15:37 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:39316 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726904AbeJQTPh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Oct 2018 15:15:37 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5A3EC612F6; Wed, 17 Oct 2018 11:20:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1539775222;
+        bh=1ni316ie+9WA/S7624mzp7NkuULZnYt9t3Lwu6Q0yGg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=A3mt9kBvXTTcVcWlmOK/vEbKPbU//bQEUFrfGyrTJ/NCZugxY2CnwsXTxOXADE+Xf
+         CkEEuTm6nM6XdjKEAADS5RW24iLt7v08DWjdt59WiynDu0sD/xBz3RmQeQD8Iz2MNo
+         1awP0YiwZw25jNCpUhOmleZK9bbgdw+nITFWB5Lw=
+Received: from pillair-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pillair@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4816E60769;
+        Wed, 17 Oct 2018 11:20:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1539775221;
+        bh=1ni316ie+9WA/S7624mzp7NkuULZnYt9t3Lwu6Q0yGg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jLLlfKurRDS1sKhrHGbI6JYcfvGvsXWsJdqsIxbn/iHnxOsbqHm+jErtkKpT6ZPDz
+         xVt7cBVKcVNNhnNsyEWVi7oQ5adUYlkgcjm9F4w8BOgo7MBMd/6kSdSsPKqxZUwgJ+
+         ROWwHcG3cjm9U85sVG+I9gxX9pW20zGTc9o3f/Mo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4816E60769
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=pillair@codeaurora.org
+From:   Rakesh Pillai <pillair@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        Surabhi Vishnoi <svishnoi@codeaurora.org>
+Subject: [PATCH v2] ath10k: Fill the channel survey results for WCN3990 correctly
+Date:   Wed, 17 Oct 2018 16:50:03 +0530
+Message-Id: <1539775203-22764-1-git-send-email-pillair@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make previously exported functions static where possible
+The host driver currently expects the channel info event to be
+received in pairs for all the channels, i.e. the first
+chan_info event for a particular channel will not have the
+COMPLETE flag set and the second chan_info event for the
+same channel will have the COMPLETE flag set.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The HL2.0 firmware sends only one channel info event per channel
+which is scanned without the COMPLETE flag set. After sending the
+chan_info_event for all the channels, the HL2.0 firmware sends a
+chan_info_event with COMPLETE flag set to indicate the completion
+of the channel info event.
+
+The firmware does not indicate this behavior with any service bitmap
+and hence a new firmware feature flag is used to handle the modified
+parsing of the channel info events, in the host driver, for the
+firmware which sends single channel info event per scanned channel.
+
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Co-developed-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h         | 2 --
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c  | 8 +-------
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.h  | 2 --
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 1 -
- drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c | 2 --
- drivers/net/wireless/mediatek/mt76/usb.c          | 6 ++----
- 6 files changed, 3 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c    |   1 +
+ drivers/net/wireless/ath/ath10k/core.h    |   3 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |   3 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  10 +++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 128 +++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi.h     |  12 +++
+ 6 files changed, 120 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 3bfa7f5e3513..53ddc4fa5884 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -668,8 +668,6 @@ int mt76u_vendor_request(struct mt76_dev *dev, u8 req,
- 			 void *buf, size_t len);
- void mt76u_single_wr(struct mt76_dev *dev, const u8 req,
- 		     const u16 offset, const u32 val);
--u32 mt76u_rr(struct mt76_dev *dev, u32 addr);
--void mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val);
- int mt76u_init(struct mt76_dev *dev, struct usb_interface *intf);
- void mt76u_deinit(struct mt76_dev *dev);
- int mt76u_buf_alloc(struct mt76_dev *dev, struct mt76u_buf *buf,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 3896da690b83..899ffd026e62 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -18,7 +18,7 @@
- #include "mt76x02.h"
- #include "mt76x02_trace.h"
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 0126e0a..9d0b351 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -594,6 +594,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
+ 	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
+ 	[ATH10K_FW_FEATURE_NON_BMI] = "non-bmi",
++	[ATH10K_FW_FEATURE_SINGLE_CHAN_INFO_PER_CHANNEL] = "single-chan-info-per-channel",
+ };
  
--enum mt76x02_cipher_type
-+static enum mt76x02_cipher_type
- mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
- {
- 	memset(key_data, 0, 32);
-@@ -43,7 +43,6 @@ mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data)
- 		return MT_CIPHER_NONE;
- 	}
- }
--EXPORT_SYMBOL_GPL(mt76x02_mac_get_key_info);
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 406668a..1376fc5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -760,6 +760,9 @@ enum ath10k_fw_features {
+ 	/* Firmware load is done externally, not by bmi */
+ 	ATH10K_FW_FEATURE_NON_BMI = 19,
  
- int mt76x02_mac_shared_key_setup(struct mt76x02_dev *dev, u8 vif_idx,
- 				 u8 key_idx, struct ieee80211_key_conf *key)
-@@ -95,7 +94,6 @@ int mt76x02_mac_wcid_set_key(struct mt76x02_dev *dev, u8 idx,
++	/* Firmware sends only one chan_info event per channel */
++	ATH10K_FW_FEATURE_SINGLE_CHAN_INFO_PER_CHANNEL = 20,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 93a7b7b..4b02edc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -762,6 +762,9 @@ static int ath10k_wmi_tlv_op_pull_ch_info_ev(struct ath10k *ar,
+ 	arg->noise_floor = ev->noise_floor;
+ 	arg->rx_clear_count = ev->rx_clear_count;
+ 	arg->cycle_count = ev->cycle_count;
++	if (test_bit(ATH10K_FW_FEATURE_SINGLE_CHAN_INFO_PER_CHANNEL,
++		     ar->running_fw->fw_file.fw_features))
++		arg->mac_clk_mhz = ev->mac_clk_mhz;
  
+ 	kfree(tb);
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 6af8d9b..1454d60 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1579,6 +1579,16 @@ struct ath10k_mgmt_tx_pkt_addr {
+ 	dma_addr_t paddr;
+ };
+ 
++struct chan_info_params {
++	u32 err_code;
++	u32 freq;
++	u32 cmd_flags;
++	u32 noise_floor;
++	u32 rx_clear_count;
++	u32 cycle_count;
++	u32 mac_clk_mhz;
++};
++
+ struct wmi_tlv_mgmt_tx_compl_ev {
+ 	__le32 desc_id;
+ 	__le32 status;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 25e8fa7..659513b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2554,60 +2554,69 @@ static int ath10k_wmi_10_4_op_pull_ch_info_ev(struct ath10k *ar,
  	return 0;
  }
--EXPORT_SYMBOL_GPL(mt76x02_mac_wcid_set_key);
  
- void mt76x02_mac_wcid_setup(struct mt76x02_dev *dev, u8 idx,
- 			    u8 vif_idx, u8 *mac)
-@@ -154,7 +152,6 @@ void mt76x02_txq_init(struct mt76x02_dev *dev, struct ieee80211_txq *txq)
+-void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
++/*
++ * Handle the channel info event for firmware which only sends one
++ * chan_info event per scanned channel.
++ */
++static void ath10k_wmi_event_chan_info_unpaired(struct ath10k *ar,
++						struct chan_info_params *params)
+ {
+-	struct wmi_ch_info_ev_arg arg = {};
+ 	struct survey_info *survey;
+-	u32 err_code, freq, cmd_flags, noise_floor, rx_clear_count, cycle_count;
+-	int idx, ret;
++	int idx;
  
- 	mt76_txq_init(&dev->mt76, txq);
- }
--EXPORT_SYMBOL_GPL(mt76x02_txq_init);
- 
- static __le16
- mt76x02_mac_tx_rate_val(struct mt76x02_dev *dev,
-@@ -239,7 +236,6 @@ bool mt76x02_mac_load_tx_status(struct mt76x02_dev *dev,
- 
- 	return true;
- }
--EXPORT_SYMBOL_GPL(mt76x02_mac_load_tx_status);
- 
- static int
- mt76x02_mac_process_tx_rate(struct ieee80211_tx_rate *txrate, u16 rate,
-@@ -483,7 +479,6 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- out:
- 	rcu_read_unlock();
- }
--EXPORT_SYMBOL_GPL(mt76x02_send_tx_status);
- 
- int
- mt76x02_mac_process_rate(struct mt76_rx_status *status, u16 rate)
-@@ -705,7 +700,6 @@ void mt76x02_mac_poll_tx_status(struct mt76x02_dev *dev, bool irq)
- 		kfifo_put(&dev->txstatus_fifo, stat);
+-	ret = ath10k_wmi_pull_ch_info(ar, skb, &arg);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to parse chan info event: %d\n", ret);
++	if (params->cmd_flags & WMI_CHAN_INFO_FLAG_COMPLETE) {
++		ath10k_dbg(ar, ATH10K_DBG_WMI, "chan info report completed\n");
+ 		return;
  	}
+ 
+-	err_code = __le32_to_cpu(arg.err_code);
+-	freq = __le32_to_cpu(arg.freq);
+-	cmd_flags = __le32_to_cpu(arg.cmd_flags);
+-	noise_floor = __le32_to_cpu(arg.noise_floor);
+-	rx_clear_count = __le32_to_cpu(arg.rx_clear_count);
+-	cycle_count = __le32_to_cpu(arg.cycle_count);
++	idx = freq_to_idx(ar, params->freq);
++	if (idx >= ARRAY_SIZE(ar->survey)) {
++		ath10k_warn(ar, "chan info: invalid frequency %d (idx %d out of bounds)\n",
++			    params->freq, idx);
++		return;
++	}
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI,
+-		   "chan info err_code %d freq %d cmd_flags %d noise_floor %d rx_clear_count %d cycle_count %d\n",
+-		   err_code, freq, cmd_flags, noise_floor, rx_clear_count,
+-		   cycle_count);
++	survey = &ar->survey[idx];
+ 
+-	spin_lock_bh(&ar->data_lock);
++	if (!params->mac_clk_mhz || !survey)
++		return;
+ 
+-	switch (ar->scan.state) {
+-	case ATH10K_SCAN_IDLE:
+-	case ATH10K_SCAN_STARTING:
+-		ath10k_warn(ar, "received chan info event without a scan request, ignoring\n");
+-		goto exit;
+-	case ATH10K_SCAN_RUNNING:
+-	case ATH10K_SCAN_ABORTING:
+-		break;
+-	}
++	memset(survey, 0, sizeof(*survey));
+ 
+-	idx = freq_to_idx(ar, freq);
++	survey->noise = params->noise_floor;
++	survey->time = (params->cycle_count / params->mac_clk_mhz) / 1000;
++	survey->time_busy = (params->rx_clear_count / params->mac_clk_mhz) / 1000;
++	survey->filled |= SURVEY_INFO_NOISE_DBM | SURVEY_INFO_TIME |
++			  SURVEY_INFO_TIME_BUSY;
++}
++
++/*
++ * Handle the channel info event for firmware which sends chan_info
++ * event in pairs(start and stop events) for every scanned channel.
++ */
++static void ath10k_wmi_event_chan_info_paired(struct ath10k *ar,
++					      struct chan_info_params *params)
++{
++	struct survey_info *survey;
++	int idx;
++
++	idx = freq_to_idx(ar, params->freq);
+ 	if (idx >= ARRAY_SIZE(ar->survey)) {
+ 		ath10k_warn(ar, "chan info: invalid frequency %d (idx %d out of bounds)\n",
+-			    freq, idx);
+-		goto exit;
++			    params->freq, idx);
++		return;
+ 	}
+ 
+-	if (cmd_flags & WMI_CHAN_INFO_FLAG_COMPLETE) {
++	if (params->cmd_flags & WMI_CHAN_INFO_FLAG_COMPLETE) {
+ 		if (ar->ch_info_can_report_survey) {
+ 			survey = &ar->survey[idx];
+-			survey->noise = noise_floor;
++			survey->noise = params->noise_floor;
+ 			survey->filled = SURVEY_INFO_NOISE_DBM;
+ 
+ 			ath10k_hw_fill_survey_time(ar,
+ 						   survey,
+-						   cycle_count,
+-						   rx_clear_count,
++						   params->cycle_count,
++						   params->rx_clear_count,
+ 						   ar->survey_last_cycle_count,
+ 						   ar->survey_last_rx_clear_count);
+ 		}
+@@ -2617,11 +2626,56 @@ void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
+ 		ar->ch_info_can_report_survey = true;
+ 	}
+ 
+-	if (!(cmd_flags & WMI_CHAN_INFO_FLAG_PRE_COMPLETE)) {
+-		ar->survey_last_rx_clear_count = rx_clear_count;
+-		ar->survey_last_cycle_count = cycle_count;
++	if (!(params->cmd_flags & WMI_CHAN_INFO_FLAG_PRE_COMPLETE)) {
++		ar->survey_last_rx_clear_count = params->rx_clear_count;
++		ar->survey_last_cycle_count = params->cycle_count;
++	}
++}
++
++void ath10k_wmi_event_chan_info(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct chan_info_params ch_info_param;
++	struct wmi_ch_info_ev_arg arg = {};
++	int ret;
++
++	ret = ath10k_wmi_pull_ch_info(ar, skb, &arg);
++	if (ret) {
++		ath10k_warn(ar, "failed to parse chan info event: %d\n", ret);
++		return;
++	}
++
++	ch_info_param.err_code = __le32_to_cpu(arg.err_code);
++	ch_info_param.freq = __le32_to_cpu(arg.freq);
++	ch_info_param.cmd_flags = __le32_to_cpu(arg.cmd_flags);
++	ch_info_param.noise_floor = __le32_to_cpu(arg.noise_floor);
++	ch_info_param.rx_clear_count = __le32_to_cpu(arg.rx_clear_count);
++	ch_info_param.cycle_count = __le32_to_cpu(arg.cycle_count);
++	ch_info_param.mac_clk_mhz = __le32_to_cpu(arg.mac_clk_mhz);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "chan info err_code %d freq %d cmd_flags %d noise_floor %d rx_clear_count %d cycle_count %d\n",
++		   ch_info_param.err_code, ch_info_param.freq, ch_info_param.cmd_flags,
++		   ch_info_param.noise_floor, ch_info_param.rx_clear_count,
++		   ch_info_param.cycle_count);
++
++	spin_lock_bh(&ar->data_lock);
++
++	switch (ar->scan.state) {
++	case ATH10K_SCAN_IDLE:
++	case ATH10K_SCAN_STARTING:
++		ath10k_warn(ar, "received chan info event without a scan request, ignoring\n");
++		goto exit;
++	case ATH10K_SCAN_RUNNING:
++	case ATH10K_SCAN_ABORTING:
++		break;
+ 	}
+ 
++	if (test_bit(ATH10K_FW_FEATURE_SINGLE_CHAN_INFO_PER_CHANNEL,
++		     ar->running_fw->fw_file.fw_features))
++		ath10k_wmi_event_chan_info_unpaired(ar, &ch_info_param);
++	else
++		ath10k_wmi_event_chan_info_paired(ar, &ch_info_param);
++
+ exit:
+ 	spin_unlock_bh(&ar->data_lock);
  }
--EXPORT_SYMBOL_GPL(mt76x02_mac_poll_tx_status);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index f67c527..d70352e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6441,6 +6441,14 @@ struct wmi_chan_info_event {
+ 	__le32 noise_floor;
+ 	__le32 rx_clear_count;
+ 	__le32 cycle_count;
++	__le32 chan_tx_pwr_range;
++	__le32 chan_tx_pwr_tp;
++	__le32 rx_frame_count;
++	__le32 my_bss_rx_cycle_count;
++	__le32 rx_11b_mode_data_duration;
++	__le32 tx_frame_cnt;
++	__le32 mac_clk_mhz;
++
+ } __packed;
  
- static void
- mt76x02_mac_queue_txdone(struct mt76x02_dev *dev, struct sk_buff *skb,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index c1936e2277d1..81c16aef6a94 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -199,8 +199,6 @@ mt76x02_skb_tx_info(struct sk_buff *skb)
- }
+ struct wmi_10_4_chan_info_event {
+@@ -6669,6 +6677,10 @@ struct wmi_ch_info_ev_arg {
+ 	__le32 chan_tx_pwr_range;
+ 	__le32 chan_tx_pwr_tp;
+ 	__le32 rx_frame_count;
++	__le32 my_bss_rx_cycle_count;
++	__le32 rx_11b_mode_data_duration;
++	__le32 tx_frame_cnt;
++	__le32 mac_clk_mhz;
+ };
  
- void mt76x02_txq_init(struct mt76x02_dev *dev, struct ieee80211_txq *txq);
--enum mt76x02_cipher_type
--mt76x02_mac_get_key_info(struct ieee80211_key_conf *key, u8 *key_data);
- 
- int mt76x02_mac_shared_key_setup(struct mt76x02_dev *dev, u8 vif_idx,
- 				 u8 key_idx, struct ieee80211_key_conf *key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 39f092034240..784b76e08382 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -225,7 +225,6 @@ static void mt76x02_dma_enable(struct mt76x02_dev *dev)
- 	mt76_clear(dev, MT_WPDMA_GLO_CFG,
- 		   MT_WPDMA_GLO_CFG_TX_WRITEBACK_DONE);
- }
--EXPORT_SYMBOL_GPL(mt76x02_dma_enable);
- 
- void mt76x02_dma_cleanup(struct mt76x02_dev *dev)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-index d3de08872d6e..7ec3f8f5f228 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_txrx.c
-@@ -110,7 +110,6 @@ s8 mt76x02_tx_get_max_txpwr_adj(struct mt76x02_dev *dev,
- 
- 	return max_txpwr;
- }
--EXPORT_SYMBOL_GPL(mt76x02_tx_get_max_txpwr_adj);
- 
- s8 mt76x02_tx_get_txpwr_adj(struct mt76x02_dev *dev, s8 txpwr, s8 max_txpwr_adj)
- {
-@@ -125,7 +124,6 @@ s8 mt76x02_tx_get_txpwr_adj(struct mt76x02_dev *dev, s8 txpwr, s8 max_txpwr_adj)
- 	else
- 		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
- }
--EXPORT_SYMBOL_GPL(mt76x02_tx_get_txpwr_adj);
- 
- void mt76x02_tx_set_txpwr_auto(struct mt76x02_dev *dev, s8 txpwr)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 5f0faf07c346..4ef61d64fc36 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -100,7 +100,7 @@ static u32 __mt76u_rr(struct mt76_dev *dev, u32 addr)
- 	return data;
- }
- 
--u32 mt76u_rr(struct mt76_dev *dev, u32 addr)
-+static u32 mt76u_rr(struct mt76_dev *dev, u32 addr)
- {
- 	u32 ret;
- 
-@@ -110,7 +110,6 @@ u32 mt76u_rr(struct mt76_dev *dev, u32 addr)
- 
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(mt76u_rr);
- 
- /* should be called with usb_ctrl_mtx locked */
- static void __mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
-@@ -136,13 +135,12 @@ static void __mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
- 	trace_usb_reg_wr(dev, addr, val);
- }
- 
--void mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
-+static void mt76u_wr(struct mt76_dev *dev, u32 addr, u32 val)
- {
- 	mutex_lock(&dev->usb.usb_ctrl_mtx);
- 	__mt76u_wr(dev, addr, val);
- 	mutex_unlock(&dev->usb.usb_ctrl_mtx);
- }
--EXPORT_SYMBOL_GPL(mt76u_wr);
- 
- static u32 mt76u_rmw(struct mt76_dev *dev, u32 addr,
- 		     u32 mask, u32 val)
+ /* From 10.4 firmware, not sure all have the same values. */
 -- 
-2.17.0
+2.7.4
 
