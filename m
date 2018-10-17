@@ -3,52 +3,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05F33ECDE30
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F354CECDE30
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5C2021526
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:16:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B5C2021526
+	by mail.kernel.org (Postfix) with ESMTP id AF21D20645
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 07:25:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF21D20645
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727352AbeJQPLH (ORCPT
+        id S1727366AbeJQPTf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 11:11:07 -0400
-Received: from mga01.intel.com ([192.55.52.88]:47279 "EHLO mga01.intel.com"
+        Wed, 17 Oct 2018 11:19:35 -0400
+Received: from mga14.intel.com ([192.55.52.115]:52603 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727162AbeJQPLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 11:11:07 -0400
+        id S1727013AbeJQPTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Oct 2018 11:19:35 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 00:16:50 -0700
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 17 Oct 2018 00:25:16 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.54,391,1534834800"; 
-   d="scan'208";a="81850704"
+   d="scan'208";a="79381927"
 Received: from oscharmm-mobl.ger.corp.intel.com ([10.252.23.35])
-  by orsmga007.jf.intel.com with ESMTP; 17 Oct 2018 00:16:47 -0700
-Message-ID: <f98ae961fa880d9c2b9704ea252326d6cc6ab2e1.camel@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: remove set but not used variable
- 'he_phy_data'
+  by fmsmga008.fm.intel.com with ESMTP; 17 Oct 2018 00:25:13 -0700
+Message-ID: <4016573ae1c44a37bbf98c1225c02afd8b82e713.camel@intel.com>
+Subject: Re: [PATCH] iwlwifi: acpi: Use kmemdup rather than duplicating its
+ implementation in iwl_parse_nvm_mcc_info
 From:   Luciano Coelho <luciano.coelho@intel.com>
 To:     YueHaibing <yuehaibing@huawei.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>
-Cc:     linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        netdev@vger.kernel.org
-Date:   Wed, 17 Oct 2018 10:16:45 +0300
-In-Reply-To: <1538736421-97401-1-git-send-email-yuehaibing@huawei.com>
-References: <1538736421-97401-1-git-send-email-yuehaibing@huawei.com>
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date:   Wed, 17 Oct 2018 10:25:12 +0300
+In-Reply-To: <1538730169-145458-1-git-send-email-yuehaibing@huawei.com>
+References: <1538730169-145458-1-git-send-email-yuehaibing@huawei.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.1-1 
@@ -59,26 +54,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2018-10-05 at 10:47 +0000, YueHaibing wrote:
-> Fixes gcc '-Wunused-but-set-variable' warning:
-> 
-> drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c: In function
-> 'iwl_mvm_rx_mpdu_mq':
-> drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:1386:7: warning:
->  variable 'he_phy_data' set but not used [-Wunused-but-set-variable]
->    u64 he_phy_data;
->    
-> 'he_phy_data' never used since be introduce in
-> commit 18ead597daa1 ("iwlwifi: support new rx_mpdu_desc api")
+On Fri, 2018-10-05 at 09:02 +0000, YueHaibing wrote:
+> Use kmemdup rather than duplicating its implementation
 > 
 > Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 > ---
 
-Thanks, Yue! This was a merge damage when I applied the HE patches for
-iwlwifi.
+Thanks, YueHaibing.  I have applied this in our internal tree and it
+will eventually reach the mainline, following our normal upstreaming
+process.
 
-I've queued this and will send it out as part of the series for 4.21. 
-Then it will trickle down as needed.
+I have modified the subject and the commit message a bit.
 
 --
 Cheers,
