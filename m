@@ -2,126 +2,116 @@ Return-Path: <SRS0=hbYo=M5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20193ECDE30
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 13:26:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A005FECDE32
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 13:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA95F204EC
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 13:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6480F204EC
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Oct 2018 13:29:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MA1q9lWT"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CA95F204EC
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="et2LJDwi"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6480F204EC
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbeJQVVl (ORCPT
+        id S1727114AbeJQVY5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Oct 2018 17:21:41 -0400
-Received: from mail-ot1-f44.google.com ([209.85.210.44]:46458 "EHLO
-        mail-ot1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726990AbeJQVVl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Oct 2018 17:21:41 -0400
-Received: by mail-ot1-f44.google.com with SMTP id o21so26107868otb.13
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2018 06:26:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=snZitsOo5W5DOCgL0WkHMMnw02R1IrbgQSu5nD6+60I=;
-        b=MA1q9lWTSRkL7kTcoY8UtLCev7e1Z2LHV6ywH9wCdERvQIQJmPPH26LKe9A5TZzoeA
-         LUf69Krvi+oniVmR1ONgwnYn0M5zUKkcz5UndVCX/ercB4E842tqPwvApZUR7Fo3eH+e
-         R8xKEsFPfCGQKQTXzh1BaATvBcLEV9/G8O9Req9sT4ykP5JKRm9jVR9SZGVbJjdvZ1gb
-         mK9ZEoX+NkCBrWyE8Mrmkyz+mKmlpn9wnms0PR50bFQAbdFJtMMlvYpInxhliGXhd7yn
-         /1q+Hd0zEGnxn+/NaWHtSqP6GBsjIDnoJCzfUovZ/auBc2RHv69E0JcT8cUR+05dxIPA
-         ja9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=snZitsOo5W5DOCgL0WkHMMnw02R1IrbgQSu5nD6+60I=;
-        b=p7QSfcAWvoA06ccw/4WrkK1Uk6PDUNZjLnm17AdeJWQGWdAhuxS3/pAKfD2QCvKMJ5
-         ue6GKcVovIKneNqP7r+0BU/mog99C6Df+6QO/vXrf88M/7Is0cYfvR8fw6ArvKpHN7aE
-         G9pIvuZcZcfhekECgYilgeZ1kbN0K7lgWvxBNoOKpi25E+GKvaKCDyJk69gI8KD/H0Hs
-         NoJQL7F7o2URS0bh4wGVP7t4u0/oPA5Zy6+bzBkyxWUyFbc2Chdgg/xImVkgi1WMfyno
-         FVfOWJdwUwoBqDCyDEtJKKImFVxuar6wn/OcKu2fsWJgoXFYXGqq0dHYEBqisDfeLJnJ
-         KjSw==
-X-Gm-Message-State: ABuFfogyXwc7wotuoOpXXhzrkKYF0B9NdKN6ee6oE2NenHf0v29FPktw
-        HNgM8bLjPxDHtv4nBqq4poQKuKlvEHOGUkMEaQM=
-X-Google-Smtp-Source: ACcGV62HNo8wfHUQ6gL8861X2hTvCwW9KLocpO4L1Turkp7UqZzpjPv86/tuz6JckbI3cRgwlS0jqin9jF9w5DRWAYA=
-X-Received: by 2002:a9d:4d0a:: with SMTP id n10mr15514422otf.95.1539782759621;
- Wed, 17 Oct 2018 06:25:59 -0700 (PDT)
+        Wed, 17 Oct 2018 17:24:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40156 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726990AbeJQVY5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 17 Oct 2018 17:24:57 -0400
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 00969204EC
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2018 13:29:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1539782954;
+        bh=LzCje4B8QiI0CujTBfqBPLOlkCod6ajEX+QHvxxMj7o=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=et2LJDwiOCVmd+keM0ivtIQtdbZnHwXMHSGlUg2Sc5fKeL4dajfcWPFLlXBMga5Gb
+         qW7WHkJh1uT5+8RGNCgmOTy4EHViKhIovWqpdR3yuuLVZ63BBvdlc8dbrQ0hq03gry
+         ABcykBBfrd/wF1lLrXtBWPYKImzY69brVcFdXtwo=
+Received: by mail-qk1-f169.google.com with SMTP id q5-v6so16429668qki.6
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Oct 2018 06:29:13 -0700 (PDT)
+X-Gm-Message-State: ABuFfohTrs/rijcp9xEQrDPdDYFnAoiINCHgNJ1rVRo89k2qGJCD/dq+
+        LLt/kXcHLpN8JTYKSCKpEs0XWlfDDiwy3SuL+aY=
+X-Google-Smtp-Source: ACcGV62udXn7ctoWt/z/P1BxDqAcEtRjCFReneMlhrNj8hL6HmLzdkle1k6sSws6dCvfTZj0RLoMG9BRjiA6MZFHyi0=
+X-Received: by 2002:a37:542:: with SMTP id 63-v6mr24281662qkf.281.1539782953175;
+ Wed, 17 Oct 2018 06:29:13 -0700 (PDT)
 MIME-Version: 1.0
-Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Wed, 17 Oct 2018 06:25:58
- -0700 (PDT)
-In-Reply-To: <20181016154957.GA8730@redhat.com>
-References: <1539334591-9965-5-git-send-email-sgruszka@redhat.com>
- <CAKR_QVJ60VTDjyC59BEDsRKrKR495xjGwob0QqvX333L+L+=Zg@mail.gmail.com>
- <20181012113656.GB2118@redhat.com> <CAKR_QVKU8ZFs6SC0Bm8VFKv82uNah+mZMKfCqCB+PRe6Ew2pcA@mail.gmail.com>
- <20181012120329.GD2118@redhat.com> <CAKR_QVKKiRFASfB=Rs7eUXKNt-Sqm7dTp2tBikOBatJxKvkJ0w@mail.gmail.com>
- <20181012122630.GB2668@redhat.com> <CAKR_QVLtJGzpBuz-BBi5yzFPoTUnadDdEXcwnR4XrB3DuWchjQ@mail.gmail.com>
- <20181016080922.GB4158@redhat.com> <CAKR_QVJ9T3EOhMoWPUv3x7-+NS54Y7cCRafM34pqve_4eV-zJQ@mail.gmail.com>
- <20181016154957.GA8730@redhat.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Wed, 17 Oct 2018 15:25:58 +0200
-Message-ID: <CAKR_QV+p_BP+xvqc65gHjm8t6fRNwfTRwKixCn7DN9+LjG-n3A@mail.gmail.com>
-Subject: Re: [PATCH v4 4/8] rt2800: fix registers init for MT7620
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Golle <daniel@makrotopia.org>,
-        Mathias Kresin <dev@kresin.me>, Felix Fietkau <nbd@nbd.name>
+References: <87ftxevtek.fsf@codeaurora.org>
+In-Reply-To: <87ftxevtek.fsf@codeaurora.org>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Wed, 17 Oct 2018 09:29:01 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA48AzPShnZYcbw-j-DaydOt6U+eDU0o+tN=gf_4vBojdQ@mail.gmail.com>
+Message-ID: <CA+5PVA48AzPShnZYcbw-j-DaydOt6U+eDU0o+tN=gf_4vBojdQ@mail.gmail.com>
+Subject: Re: [PULL] ath10k firmware 2018-10-10
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Linux Firmware <linux-firmware@kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 16/10/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hello
+On Wed, Oct 10, 2018 at 9:11 AM Kalle Valo <kvalo@codeaurora.org> wrote:
 >
-> On Tue, Oct 16, 2018 at 01:32:18PM +0200, Tom Psyborg wrote:
->> I am sending you two builds privately so please check if there are any
->> differences between the two builds and report back. Thanks.
+> Hi linux-firmware maintainers,
 >
-> I extracted rt2800lib.ko module from provided images, did disassembly via:
+> here are ath10k firmware updates which have been accumulating the last 6
+> months or so. Please let me know if there are any problems.
 >
-> ./staging_dir/toolchain-mipsel_24kc_gcc-7.3.0_musl/bin/mipsel-openwrt-linux-objdump
-> \
->  -d -r --prefix-addresses ~/rt2800lib-BUILDn.ko  > ~/BUILDn.dump.txt
+> Kalle
 >
-> command and compered disassembled code. Here is difference:
+> The following changes since commit c6b6265d718d118e28e1ce8f91769aa886b54c94:
 >
-> $ diff -up  BUILD1.dump.txt BUILD2.dump.txt
-> --- BUILD1.dump.txt	2018-10-16 16:40:34.834220838 +0200
-> +++ BUILD2.dump.txt	2018-10-16 16:40:40.187219211 +0200
-> @@ -1,5 +1,5 @@
+>   Merge tag 'iwlwifi-fw-2018-10-03' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware (2018-10-08 09:23:53 -0400)
 >
-> -/home/stasiu/rt2800lib-BUILD1.ko:     file format elf32-tradlittlemips
-> +/home/stasiu/rt2800lib-BUILD2.ko:     file format elf32-tradlittlemips
+> are available in the git repository at:
 >
+>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/linux-firmware.git ath10k-20181010
 >
->  Disassembly of section .text:
-> @@ -9374,7 +9374,7 @@ Disassembly of section .text:
->  00007f80 <rt2800_clear_beacon+0x224> jalr	v0
->  00007f84 <rt2800_clear_beacon+0x228> move	a0,s0
->  00007f88 <rt2800_clear_beacon+0x22c> lhu	v1,732(s0)
-> -00007f8c <rt2800_clear_beacon+0x230> li	v0,21392
-> +00007f8c <rt2800_clear_beacon+0x230> li	v0,25426
->  00007f90 <rt2800_clear_beacon+0x234> bne	v1,v0,0000810c
-> <rt2800_clear_beacon+0x3b0>
->  00007f94 <rt2800_clear_beacon+0x238> li	a2,1025
->  00007f98 <rt2800_clear_beacon+0x23c> lw	v0,4(s0)
+> for you to fetch changes up to eaceb79a5a27ef37f85d1a5585b209361330b4bb:
 >
-> There is no difference in init_registers (which is inlined in
-> rt2800_enable_radio). The only difference is in some number
-> rt2800_clear_beacon() function.
+>   ath10k: QCA9984 hw1.0: update board-2.bin (2018-10-10 15:14:05 +0300)
 >
-> Regards
-> Stanislaw
+> ----------------------------------------------------------------
+> Kalle Valo (10):
+>       ath10k: QCA4019 hw1.0: update firmware-5.bin to 10.4-3.6-00140
+>       ath10k: QCA4019 hw1.0: update board-2.bin
+>       ath10k: QCA6174 hw3.0: update firmware-6.bin to RM.4.4.1.c2-00057-QCARMSWP-1
+>       ath10k: QCA9377 hw1.0: add firmware-6.bin to WLAN.TF.2.1-00021-QCARMSWP-1
+>       ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00041
+>       ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.6-00140
+>       ath10k: QCA9888 hw2.0: update board-2.bin
+>       ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00041
+>       ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.6.0.1-00003
+>       ath10k: QCA9984 hw1.0: update board-2.bin
 >
+>  WHENCE                                            |   15 +-
+>  ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin 133452 -> 449316 bytes
+>  ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin 568636 -> 583344 bytes
+>  ath10k/QCA6174/hw3.0/firmware-6.bin               |  Bin 730788 -> 731276 bytes
+>  ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt |  502 +-------
+>  ath10k/QCA9377/hw1.0/firmware-6.bin               |  Bin 0 -> 751436 bytes
+>  ath10k/QCA9377/hw1.0/notice_ath10k_firmware-6.txt | 1352 +++++++++++++++++++++
+>  ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin 237584 -> 237660 bytes
+>  ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin 72788 -> 84928 bytes
+>  ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin 659708 -> 675492 bytes
+>  ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin 248108 -> 248200 bytes
+>  ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin 121264 -> 171916 bytes
+>  ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin 647380 -> 662084 bytes
+>  13 files changed, 1423 insertions(+), 446 deletions(-)
+>  create mode 100644 ath10k/QCA9377/hw1.0/firmware-6.bin
+>  create mode 100644 ath10k/QCA9377/hw1.0/notice_ath10k_firmware-6.txt
 
-i meant you try it on your nexx device. and post dmesg if you can boot them
+Pulled and pushed out.  Thanks.
+
+josh
