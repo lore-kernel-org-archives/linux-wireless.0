@@ -2,89 +2,70 @@ Return-Path: <SRS0=Zpd3=M6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8214C5ACCC
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 11:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC15C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 13:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84A932086E
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 11:47:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OQs16a6w"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 84A932086E
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 1D1912098A
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 13:04:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1D1912098A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lemonage.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727649AbeJRTrw (ORCPT
+        id S1727278AbeJRVEx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 15:47:52 -0400
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:36148 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727546AbeJRTrw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 15:47:52 -0400
-Received: by mail-ua1-f68.google.com with SMTP id b3so6016109uak.3
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 04:47:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wHnjls+FuwP4z6dk3/4VLOVQp7OqMpku+jgrc7EzsQI=;
-        b=OQs16a6w8qaydocGQTc53MeYzlm8g1EXgkQJbwr6q879xVt7dnH+ajGCcDxLGJE3I9
-         T5DKXbsdq6eJnjw/9tA/eagFoFZ4UjrWJUKHtPJCvxvxTLJsGxwEfd7Wh2uwi16lAORi
-         vBQJRdCSePLSfcHpVvDtnprMXiMsJIgluZIJKj2cyf9Sb5BIqN7I85VxN1moC0d7HrQh
-         RGde/ILnzbKlcjMR93xPALOiNxI5EM3IApmeTesePtKFk/QeITaHW0ZD9xZq5Hz7dZQf
-         0JxUtvl4YuYw6YHk3st4+nGwo/GqkWZa8Kq0ESLyqk+Pw6MdXp2jEn66yNlnKpNMxMR2
-         PVmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=wHnjls+FuwP4z6dk3/4VLOVQp7OqMpku+jgrc7EzsQI=;
-        b=Gr+laXmd4D9OFSzkVHBpBNLyhFaB1r/+40/u0xJFzHGJa9zX55BzugDZmGYKqzGQoD
-         NClPovATvWsmVohcau3U5kwxdW6B+6Bs51udD3GNRCyo3VOqiVrEwhZiuhx+Hvs6vmlS
-         Eqhllct3PT+o/fL/C+7R2sg1L143lsPrhHR/AyAfnbDAAjj/cdUiAYtFRwbQc+ah+L0L
-         O44SdKT/oZ/hHb5YsVNKtVfdWQqKlHrTwsAg5Wu3vMNxqijgXeq6ZghkwUXlqLb1eZ34
-         RrPpQVwSvPNNZBglNWIa+H/dCHNe6WFSdSx+unIuX5UcDWycIsvtT2Z+kV4Ns7pbDvYE
-         grBg==
-X-Gm-Message-State: ABuFfoh/4LwsTtenY452kNFbm+3EDUXdm/ygGC/y3wrkDHyTQ2YSC096
-        kdx97Yc6LRdNRme7o0Nk7A97LMJTHZ038Y1Nk9c=
-X-Google-Smtp-Source: ACcGV60VmY1+iEWYvc+iJFXoXrjTF6QO0fp8l/QmE//uPxSCI0X/HZc0DhA+5/wBdum98U9An+/pntDM/twp8Pc1wsw=
-X-Received: by 2002:a9f:2e02:: with SMTP id t2mr4922695uaj.79.1539863233065;
- Thu, 18 Oct 2018 04:47:13 -0700 (PDT)
+        Thu, 18 Oct 2018 17:04:53 -0400
+Received: from smtp2.goneo.de ([85.220.129.33]:44092 "EHLO smtp2.goneo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727149AbeJRVEw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Oct 2018 17:04:52 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp2.goneo.de (Postfix) with ESMTP id AA70A24188A;
+        Thu, 18 Oct 2018 15:03:53 +0200 (CEST)
+X-Virus-Scanned: by goneo
+Received: from smtp2.goneo.de ([127.0.0.1])
+        by localhost (smtp2.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id h0VxCrj-4Lb7; Thu, 18 Oct 2018 15:03:52 +0200 (CEST)
+Received: from lem-wkst-02.lemonage (hq.lemonage.de [87.138.178.34])
+        by smtp2.goneo.de (Postfix) with ESMTPSA id 0143723F6CA;
+        Thu, 18 Oct 2018 15:03:51 +0200 (CEST)
+Date:   Thu, 18 Oct 2018 15:03:46 +0200
+From:   Lars Poeschel <poeschel@lemonage.de>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Samuel Ortiz <sameo@linux.intel.com>, Jiri Slaby <jslaby@suse.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] nfc: pn533: add UART phy driver
+Message-ID: <20181018130346.GA3975@lem-wkst-02.lemonage>
+References: <20181017102037.28537-1-poeschel@lemonage.de>
+ <20181017115357.GC32302@kroah.com>
 MIME-Version: 1.0
-References: <20181018083547.23262-1-johannes@sipsolutions.net>
-In-Reply-To: <20181018083547.23262-1-johannes@sipsolutions.net>
-From:   Siva Rebbagondla <siva8118@gmail.com>
-Date:   Thu, 18 Oct 2018 17:21:35 +0530
-Message-ID: <CANGSkXRMOK7dJwyRZOgBZbypvAPyV6DUEtE+2LGodtiN5=BqmQ@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: allow hardware scan to fall back to software
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Linux Wireless <linux-wireless@vger.kernel.org>,
-        sushant kumar mishra <sushant2k1513@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
-        prameela.j04cs@gmail.com,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>,
-        johannes.berg@intel.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181017115357.GC32302@kroah.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 2:06 PM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> In some cases, like in the rsi driver hardware scan offload, there
-> may be scenarios in which hardware scan might not be available or
-> desirable.
->
-> Allow drivers to cope with this by letting them fall back to software
-> scan by returning the special value 1 from the hardware scan method.
->
-Acked-and-Tested-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+On Wed, Oct 17, 2018 at 01:53:57PM +0200, Greg Kroah-Hartman wrote:
+> On Wed, Oct 17, 2018 at 12:20:35PM +0200, Lars Poeschel wrote:
+> > This adds the UART phy interface for the pn533 driver.
+> > The pn533 driver can be used through UART interface this way.
+> > It is implemented as a tty line discipline.
+> 
+> Why not use the serdev interface instead?
+
+Maybe because the most obivious is not obivious enough. ;)
+I did not know about serdev before. Thank you very much for this! I am
+almost finished migrating to serdev and everything is much cleaner and
+more simple now!
+
+I will post a follow-up with all your other comments addressed.
+
+Thanks,
+Lars
