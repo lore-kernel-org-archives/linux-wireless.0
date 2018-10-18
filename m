@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C239BECDE43
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 09:54:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C1A7C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 10:02:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E4FE21530
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 09:54:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E4FE21530
+	by mail.kernel.org (Postfix) with ESMTP id BB9F220838
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 10:02:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BB9F220838
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727947AbeJRRyo (ORCPT
+        id S1727653AbeJRSCo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 13:54:44 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:37354 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727423AbeJRRyo (ORCPT
+        Thu, 18 Oct 2018 14:02:44 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:37948 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727500AbeJRSCo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 13:54:44 -0400
-Received: by mail-wr1-f68.google.com with SMTP id q1-v6so27689wrs.4
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 02:54:30 -0700 (PDT)
+        Thu, 18 Oct 2018 14:02:44 -0400
+Received: by mail-wm1-f65.google.com with SMTP id 193-v6so5067206wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 03:02:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=JqtyxathQK4U/JUSCuGiOF2DZZNhOhiObX2OLHxNWTY=;
-        b=ke0vMEXNKrvqnn/ANKBI9sWHG4gt1+e40UEQ8iWEDmium3ONk0eFnyYaYL46uPREOy
-         HomIwFqDJPc1/J8p7GM2PMtnefa5mdJyAekcpDqSzzCTx2Rcy0OVFvAqMlI/HbncQnMY
-         9WlLd7x9YlK3sqdp1kUXYo0x4wg379IGHNDNjmxsFF+RkiKIrAjhOy1+uAUjO4ywI63z
-         BM2bIlkJCtQYQkUrfZJGk6Y3ZBS5mrapUrbtz9+gw5D3+ebNlsoy1wO3GM30fGErSAio
-         BucJCqDnHgnael4xf0cmuWa6yx+4Hh7M4b8Pl1N+tMVKpzIEDb94b3accSH0ELdMt9K0
-         AkCA==
-X-Gm-Message-State: ABuFfojJRYtFf8VTGC8ClzdVJrSpDKzNlDFmWY9GQusCScZwbmr6bsCv
-        nZxE9xdqoV2cs8doyxuTjK+rBQ==
-X-Google-Smtp-Source: ACcGV61z/skNhLFR8s7YGCDFD3HNziwUM9IesmHosNn6F10KSpBLYMjBPBFEpDfXYZwjXez9sAK1JA==
-X-Received: by 2002:a05:6000:1284:: with SMTP id f4mr7071764wrx.140.1539856469431;
-        Thu, 18 Oct 2018 02:54:29 -0700 (PDT)
+        bh=1fmkp01dfhL3y/KuxulDl7KRWgvJ0X/tKQAgE9/op4A=;
+        b=IQ0F691jGBLnGXstq+fFtpv9VRqHRlHhh8NRTOEfsrmI99vyk0xZ10IHGDMzu6Hmeo
+         Zec0eKhHXHgEc5/0QJ9I6Dja1XAceMIJbE34HJOTxVPLjVKfaNS06nSK4RtkCfUVgoxI
+         rbj3+noyzukkRiGpeWmbAAYoTviVUktn8VfVojRuwnSQUaXCSY/BePMoyoGqYAYrHelQ
+         71vzm2AokXCyrcOSyN5fyeGlAqN/3q8v3kpwuWdw7Mgz7hgJESfChbrDBYErkufT8LC2
+         MtS9Xth+I+36QXEn7EZPKiB3akMIL4QtU6PIsGWXoXgXJAkOAt1KU6hAyoiqqtg3wSUD
+         Xyzg==
+X-Gm-Message-State: ABuFfogA8HD18iH/MkjG0vn8oqB9VDfGuzaz/OhcSyKyIDfuQYzDuYos
+        t8J2O15R+NdAOpC9D074zYrnVQ==
+X-Google-Smtp-Source: ACcGV61ea9wnEn26/RiyrIE5HsGU0FBUILHynBM5aQmH9dYF7ZWrM2A2WAFPHktAGRezRw2vjvqFjw==
+X-Received: by 2002:a1c:af07:: with SMTP id y7-v6mr6945384wme.33.1539856947540;
+        Thu, 18 Oct 2018 03:02:27 -0700 (PDT)
 Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id f7-v6sm17294828wrr.68.2018.10.18.02.54.28
+        by smtp.gmail.com with ESMTPSA id l11-v6sm28276995wrn.61.2018.10.18.03.02.26
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 18 Oct 2018 02:54:29 -0700 (PDT)
-Date:   Thu, 18 Oct 2018 11:54:26 +0200
+        Thu, 18 Oct 2018 03:02:26 -0700 (PDT)
+Date:   Thu, 18 Oct 2018 12:02:24 +0200
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
 Subject: Re: [PATCH] mt76x0: antenna select corrections
-Message-ID: <20181018095426.GE4938@localhost.localdomain>
+Message-ID: <20181018100223.GF4938@localhost.localdomain>
 References: <1539850059-11886-1-git-send-email-sgruszka@redhat.com>
  <20181018091335.GB4938@localhost.localdomain>
  <20181018092146.GC2190@redhat.com>
@@ -83,12 +83,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 > https://github.com/i80s/mtk-sources 
 > which is newer version of the driver, so preasumely BIT1
 > should not be cleared. Will fix that in the patch.
-
-ack
-
-Regards,
-Lorenzo
-
 > 
 > Thanks
 > Stanislaw
+
+Btw fixing that bits:
+
+Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
