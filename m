@@ -2,82 +2,88 @@ Return-Path: <SRS0=Zpd3=M6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6B4C5ACCC
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 08:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 889D6C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 08:23:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17D75208E4
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 08:17:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17D75208E4
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 575DC208E4
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 08:23:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 575DC208E4
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727378AbeJRQRs (ORCPT
+        id S1727571AbeJRQX0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 12:17:48 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:45795 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726323AbeJRQRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 12:17:48 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B96FB4E8BC;
-        Thu, 18 Oct 2018 08:17:57 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.63])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5B76944FAE;
-        Thu, 18 Oct 2018 08:17:54 +0000 (UTC)
-Date:   Thu, 18 Oct 2018 10:17:52 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76: usb: fix static tracepoints
-Message-ID: <20181018081752.GB2190@redhat.com>
-References: <cover.1539815635.git.lorenzo.bianconi@redhat.com>
- <d9c86c268b987115f4ce08a8594e9e4da6c5f9fb.1539815635.git.lorenzo.bianconi@redhat.com>
- <20181018064521.GA2199@redhat.com>
- <20181018081350.GA4938@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181018081350.GA4938@localhost.localdomain>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Thu, 18 Oct 2018 08:17:57 +0000 (UTC)
+        Thu, 18 Oct 2018 12:23:26 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:59828 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727563AbeJRQX0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Oct 2018 12:23:26 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gD3ae-0002cf-Pd; Thu, 18 Oct 2018 10:23:32 +0200
+Message-ID: <627fbc583ac6679cc9986959d84e15467eaea897.camel@sipsolutions.net>
+Subject: Re: [PATCH 04/19] wilc: add host_interface.c
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Adham.Abozaeid@microchip.com, Ajay.Kathat@microchip.com,
+        linux-wireless@vger.kernel.org
+Cc:     kvalo@codeaurora.org, gregkh@linuxfoundation.org,
+        Ganesh.Krishna@microchip.com, Aditya.Shankar@microchip.com,
+        Venkateswara.Kaja@microchip.com, Claudiu.Beznea@microchip.com
+Date:   Thu, 18 Oct 2018 10:23:17 +0200
+In-Reply-To: <5BC11842.1050700@microchip.com>
+References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
+         <1537957525-11467-5-git-send-email-ajay.kathat@microchip.com>
+         (sfid-20180926_122554_993494_C8703D81) <1539202484.3687.188.camel@sipsolutions.net>
+         <5BC11842.1050700@microchip.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Oct 18, 2018 at 10:13:51AM +0200, Lorenzo Bianconi wrote:
-> On Oct 18, Stanislaw Gruszka wrote:
-> > On Thu, Oct 18, 2018 at 12:35:32AM +0200, Lorenzo Bianconi wrote:
-> > > Add submit_urb and rx_urb static tracepoints in mt76-usb module.
-> > > Move trace_mac_txstat_fetch in mt76x02_mac_load_tx_status routine
-> > > in order to be available to usb drivers. Moreover remove
-> > > no longer used mt76x0/trace.{c,h}
-> > > 
-> > > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> > > ---
-> > > @@ -54,7 +53,7 @@ mt76x0_rf_csr_wr(struct mt76x02_dev *dev, u32 offset, u8 value)
-> > >  		FIELD_PREP(MT_RF_CSR_CFG_REG_ID, reg) |
-> > >  		MT_RF_CSR_CFG_WR |
-> > >  		MT_RF_CSR_CFG_KICK);
-> > > -	trace_mt76x0_rf_write(&dev->mt76, bank, offset, value);
+On Fri, 2018-10-12 at 21:55 +0000, Adham.Abozaeid@microchip.com wrote:
+> 
+> Here the driver is configuring parameters in the device by sending a
+> WID command for each parameters.
+> The val pointer points to the value of the parameter to be set, and
+> here all parameters being set to 0 were sharing the dummyval variable.
+
+Ok.
+
+> Looking again at this, these constant parameters can be omitted from
+> the driver and done on the device instead.
+
+I think it's fine, just the pointers look strange. Would probably be
+different once you resolve the middle layer though.
+
+> > > +	if (conn_attr->bssid)
+> > > +		memcpy(cur_byte, conn_attr->bssid, 6);
+> > > +	cur_byte += 6;
 > > 
-> > I think tracing RF registers writes/read can still be useful.
+> > u8 bssid[ETH_ALEN];
+> > 
+> > > +	if (conn_attr->bssid)
+> > > +		memcpy(cur_byte, conn_attr->bssid, 6);
+> > > +	cur_byte += 6;
+> > 
+> > again?
 > 
-> Hi Stanislaw,
-> 
-> I removed tracing for RF registers since these operations are already tracked in
-> mt76_wr/mt76_rr so I thought they were redundant. Do you think deducing rf
-> read/write operations from mt76_{rr,wr} tracing is too convoluted? If so I
-> can reintroduce them in v2.
+> Agree. Can be changed to avoid duplication. Requires a matching change on the device.
 
-No, if we can trace RF access thats ok. ACK for patch.
+Again, like above, don't worry too much about changing the
+device/firmware. I was just pointing out it's duplicate, if that's the
+way it is then too bad, but it doesn't really matter.
 
-Thanks
-Stanislaw
+The more interesting thing here is to change it to use a struct and not
+pack it manually.
+
+johannes
+
