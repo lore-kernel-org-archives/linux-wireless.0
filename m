@@ -4,132 +4,122 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 952FBECDE43
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 17:54:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 866A8C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 18:14:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D450204FD
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 17:54:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DD1F204FD
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 18:14:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="eletsFXf"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5D450204FD
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="WkFsgM1s"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4DD1F204FD
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727188AbeJSB46 (ORCPT
+        id S1728710AbeJSCQg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 21:56:58 -0400
-Received: from mail-vk1-f195.google.com ([209.85.221.195]:37889 "EHLO
-        mail-vk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726463AbeJSB45 (ORCPT
+        Thu, 18 Oct 2018 22:16:36 -0400
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:41298 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728618AbeJSCQg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 21:56:57 -0400
-Received: by mail-vk1-f195.google.com with SMTP id w123so2227977vkh.5
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 10:54:53 -0700 (PDT)
+        Thu, 18 Oct 2018 22:16:36 -0400
+Received: by mail-ed1-f67.google.com with SMTP id x31-v6so29112931edd.8
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 11:14:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=iaBvYQ5J1frnGMFcPK3mz41HT4cWn1XQODE5HjSX4ds=;
-        b=eletsFXfU1MVK70TQOkD8aIhe5kjfL0JUp4RC/R0fejuNcwxJEs6uPxBbvsuG0mN48
-         JLvpDksy3I+AoPW2XnRBvYOTtslmRPodoUpkA6sreYE3AmSeyRkYuTBZFL444gL/L6g6
-         2zVGyL0CsN+trZxmAXs/5hMgeMTNMuQwvlekk=
+        bh=A/KKEfRpKBVdzt6/ZEwYkUdKLNjVwawVsMGIlUz+JNA=;
+        b=WkFsgM1sgGWP5YP7TdcwwevSBsHV1XUdfK8tEBKbWMTJM0GOQj1zHhVGtKrG1Euvl/
+         OzBzTuq7oQ1kyrCs2atG18BfV4Odxy1od2UUIpn9D3m5IAcVYGkdZS0lb+0fINvcL7yp
+         mCL8xucAnJqhFlNsRvoh7R7uuzMCCyll1PTPM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=iaBvYQ5J1frnGMFcPK3mz41HT4cWn1XQODE5HjSX4ds=;
-        b=r0LiQXowticErnncmS2MXieP1zs4FPAO5w23XFTsU52PnP6bFvYSQFN1d/UO5Xm27j
-         5fQJr35UYBBLrIy/sPJd7H2Vp10xdvDGPVPtbO+ytDyGDQVHmNH0rJQG0MLpXJpIahYf
-         Vi58xZAU2PekeTbK8Pc4/bnPTOS9ifGKPvTNHtbQjZ2MOGKbUxR72enYkPU2t1xjmvUd
-         Zlz1dJ+A9yBBSEwyGIYX9jsPoWXnOOl8mErNvXuOueVJ8YDOiZyDS4a+qec/oJB1rUir
-         xbkEW5vO4+Sc5xxfeTtytzwLfXPBZUf9EloTkdIo0MaRZtnFQFCCkN6X5w5a4xzTAJp0
-         tvWQ==
-X-Gm-Message-State: ABuFfoipLCcXeZiLJ0BI8t59fYWAx2JqAUly/nYBNW/BlEdMh80P+pg9
-        ZTf7c+r44wFdP1trhApsUXF0Uf///Go=
-X-Google-Smtp-Source: ACcGV60FC44eRX2mM7vXaq2nEoMva+yeop/76/2OSf9KoXCi6UR8X1Oy/LTXQCtSrX1KO9VKwzUGmQ==
-X-Received: by 2002:a1f:34c8:: with SMTP id b191mr11912551vka.52.1539885292700;
-        Thu, 18 Oct 2018 10:54:52 -0700 (PDT)
-Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com. [209.85.222.45])
-        by smtp.gmail.com with ESMTPSA id d189-v6sm3967470vsc.8.2018.10.18.10.54.51
+        bh=A/KKEfRpKBVdzt6/ZEwYkUdKLNjVwawVsMGIlUz+JNA=;
+        b=lWb+h9l4KZ0/jBvFfyTQvIMgVNIPwf/tXME0ecelYPQIUlApcDd4YNNn82pTEpuX47
+         wdiZm9RG2zEqtoHwQ19YwITlaPfq4KvBUw3BwVY1/zNhuL/CZ3kStT3evXuI0q3IxNze
+         4jU0MIqb5t8/hUILIwin7urk83q0wE+w/ZggvdWJATbFV57R+5e2raboTP4y6Oveh0O0
+         dXgDwIqi+wtImur1WHXueAQtTqwNsJ2Y66bFi5Fh/h0XAbGcm8Bz1b/gc3ByAtnw7U5S
+         WrjQof/DrCOUDzENnyM7qGa5z3n0eG4IvZohQBR+hb5b9l3MaPR78Sm90w3Iyta8oYT6
+         emtg==
+X-Gm-Message-State: ABuFfohK/m1iZjBPQTLe50sHViqlo9SDeJeEm0euJ2UbL+AgfSRqlyVI
+        LVFrhGDkkL/2drlRun4Dp4Rr7N4aowk=
+X-Google-Smtp-Source: ACcGV61GVQ3JmTRvNQNUsuGSTaCWZ0BQeFmw35RrVJhLB6U1WCQKF56BIzjrz2MocWUotvGTdm5DsQ==
+X-Received: by 2002:aa7:d9cf:: with SMTP id v15-v6mr4001426eds.25.1539886465352;
+        Thu, 18 Oct 2018 11:14:25 -0700 (PDT)
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com. [209.85.208.43])
+        by smtp.gmail.com with ESMTPSA id g13-v6sm7840810edv.48.2018.10.18.11.14.23
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 18 Oct 2018 10:54:51 -0700 (PDT)
-Received: by mail-ua1-f45.google.com with SMTP id z8so6486813uap.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 10:54:51 -0700 (PDT)
-X-Received: by 2002:a9f:344d:: with SMTP id s13mr13387364uab.27.1539885291166;
- Thu, 18 Oct 2018 10:54:51 -0700 (PDT)
+        Thu, 18 Oct 2018 11:14:23 -0700 (PDT)
+Received: by mail-ed1-f43.google.com with SMTP id r1-v6so29142565edd.7
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 11:14:23 -0700 (PDT)
+X-Received: by 2002:a17:906:1f87:: with SMTP id t7-v6mr29472685ejr.153.1539886463151;
+ Thu, 18 Oct 2018 11:14:23 -0700 (PDT)
 MIME-Version: 1.0
-References: <20181013005504.46399-1-briannorris@chromium.org> <20181013005504.46399-2-briannorris@chromium.org>
-In-Reply-To: <20181013005504.46399-2-briannorris@chromium.org>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Thu, 18 Oct 2018 10:54:39 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=U0uK25mL9_d1nVB7uBV+vR9YTqGm1iTQgzdNuZO5O5_A@mail.gmail.com>
-Message-ID: <CAD=FV=U0uK25mL9_d1nVB7uBV+vR9YTqGm1iTQgzdNuZO5O5_A@mail.gmail.com>
-Subject: Re: [PATCH 2/4] ath10k: snoc: fix unabalanced regulator error handling
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        LKML <linux-kernel@vger.kernel.org>
+References: <20181013005504.46399-1-briannorris@chromium.org>
+ <20181013005504.46399-3-briannorris@chromium.org> <CAD=FV=VvaNTqEEC8XuOZ4ekNtPaj-KO3WdENQ6evweMjp8yoew@mail.gmail.com>
+In-Reply-To: <CAD=FV=VvaNTqEEC8XuOZ4ekNtPaj-KO3WdENQ6evweMjp8yoew@mail.gmail.com>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Thu, 18 Oct 2018 11:14:11 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXM0K3dVxg-Q5gJFOQkciLo424p2HtoYgu=AYYCRBfrnCQ@mail.gmail.com>
+Message-ID: <CA+ASDXM0K3dVxg-Q5gJFOQkciLo424p2HtoYgu=AYYCRBfrnCQ@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ath10k: snoc: relax voltage requirements
+To:     Doug Anderson <dianders@chromium.org>
+Cc:     Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, govinds@codeaurora.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        swboyd@chromium.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Thu, Oct 18, 2018 at 10:56 AM Doug Anderson <dianders@chromium.org> wrote:
+> On Fri, Oct 12, 2018 at 5:55 PM Brian Norris <briannorris@chromium.org> wrote:
+> >
+> > I rarely see drivers specify precise voltage requirements like this, but
+> > if we really have to...let's at least give a little wiggle room. Board
+> > designs (and accompanying device trees) may not provide exactly the
+> > voltage listed here, and we shouldn't fail to probe just because of
+> > this.
+> >
+> > Round these ranges down to the nearest volt, and provide a 0.05V margin.
+> > The regulator should provide its own supported ranges, which will
+> > helpfully intersect with these ranges.
+> >
+> > I would just as well remove these ranges entirely, but if I understand
+> > correctly, there's some reason that QCOM SoC's like to set zero /
+> > non-zero voltages.
+>
+> Yeah, I'll try to up-prioritize working on making that better
+> (assuming others like my ideas in that area).
 
-On Fri, Oct 12, 2018 at 5:55 PM Brian Norris <briannorris@chromium.org> wrote:
-> +       if (vreg_info->settle_delay)
-> +               udelay(vreg_info->settle_delay);
+Ah, OK, so my understanding is correct? (I feel like I've bumped into
+this multiple times, but it probably didn't stick because it makes so
+little sense to me.)
 
-Not new to your patch, but this seems like a duplication of what the
-regulator framework is doing for you.  There are plenty of regulator
-properties describing lots of different types delays and that would be
-the place to put it.  Doing so makes it automatically easy for boards
-to specify a different delay if they have different ramp
-characteristics (like someone put a bigger capacitor on the line or
-somesuch).
+> >  static struct ath10k_vreg_info vreg_cfg[] = {
+> > -       {NULL, "vdd-0.8-cx-mx", 800000, 800000, 0, 0, false},
+> > -       {NULL, "vdd-1.8-xo", 1800000, 1800000, 0, 0, false},
+> > -       {NULL, "vdd-1.3-rfa", 1304000, 1304000, 0, 0, false},
+> > -       {NULL, "vdd-3.3-ch0", 3312000, 3312000, 0, 0, false},
+> > +       {NULL, "vdd-0.8-cx-mx", 800000, 850000, 0, 0, false},
+> > +       {NULL, "vdd-1.8-xo", 1800000, 1850000, 0, 0, false},
+> > +       {NULL, "vdd-1.3-rfa", 1300000, 1350000, 0, 0, false},
+> > +       {NULL, "vdd-3.3-ch0", 3300000, 3350000, 0, 0, false},
+>
+> These look fine to me.  I find it really funny that this array has all
+> those load values and they're all 0, but that's not new to your patch.
 
-At the moment it would be easy for someone to submit a patch to kill
-the settle delay in this driver this since the entire vreg_cfg table
-has 0 for the settle delay.
+Indeed, funny. It's also funny to have that 'required' field, which is
+all 'false' -- but that kinda goes to your binding review too: there's
+an overabundant use of "optional", to avoid defining real requirements
+on a per-IP basis.
 
-
-> +static int __ath10k_snoc_vreg_off(struct ath10k *ar,
-> +                                 struct ath10k_vreg_info *vreg_info)
-> +{
-> +       int ret;
-> +
-> +       ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc regulator %s being disabled\n",
-> +                  vreg_info->name);
-> +
-> +       ret = regulator_disable(vreg_info->reg);
-> +       if (ret)
-> +               ath10k_err(ar, "failed to disable regulator %s\n",
-> +                          vreg_info->name);
-> +
-> +       ret = regulator_set_load(vreg_info->reg, 0);
-> +       if (ret < 0)
-> +               ath10k_err(ar, "failed to set load %s\n", vreg_info->name);
-> +
-> +       ret = regulator_set_voltage(vreg_info->reg, 0, vreg_info->max_v);
-> +       if (ret)
-> +               ath10k_err(ar, "failed to set voltage %s\n", vreg_info->name);
-
-Not new to your patch, but ick, forcing someone to manually set the
-load / voltage of a regulator that they've turned off is silly.  It's
-only list to try to send a patch to remedy this situation.  Let me try
-to put that higher on my plate.
-
-
-...just like with the clock patch I suspect that some of this is
-duplicating the "regulator_bulk" APIs.  ...though I guess maybe we
-can't use those too easily until we can avoid setting voltage and
-current so much...  In any case, your patch overall looks good and an
-improvement.
-
-
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
+Brian
