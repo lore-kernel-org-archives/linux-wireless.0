@@ -2,93 +2,78 @@ Return-Path: <SRS0=Zpd3=M6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F44C5ACCC
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 15:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB4CC5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 15:11:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2B52098A
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 15:00:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C2B52098A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=holtmann.org
+	by mail.kernel.org (Postfix) with ESMTP id 9660F2098A
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 15:11:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="2cWZc7aF"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9660F2098A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728227AbeJRXBz convert rfc822-to-8bit (ORCPT
+        id S1727327AbeJRXM1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 19:01:55 -0400
-Received: from coyote.holtmann.net ([212.227.132.17]:36324 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727303AbeJRXBz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 19:01:55 -0400
-Received: from marcel-macbook.fritz.box (p4FF9F655.dip0.t-ipconnect.de [79.249.246.85])
-        by mail.holtmann.org (Postfix) with ESMTPSA id 224BACEF9C;
-        Thu, 18 Oct 2018 17:07:52 +0200 (CEST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 12.0 \(3445.100.39\))
-Subject: Re: [PATCH v2 1/4] nfc: pn533: add UART phy driver
-From:   Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20181018144251.30028-1-poeschel@lemonage.de>
-Date:   Thu, 18 Oct 2018 17:00:28 +0200
-Cc:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <6CB47B97-F58D-4162-98C1-8C8C88CE2914@holtmann.org>
-References: <20181018144251.30028-1-poeschel@lemonage.de>
-To:     Lars Poeschel <poeschel@lemonage.de>
-X-Mailer: Apple Mail (2.3445.100.39)
+        Thu, 18 Oct 2018 19:12:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33626 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726133AbeJRXM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Oct 2018 19:12:27 -0400
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E958821477
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 15:10:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1539875460;
+        bh=DqK2UxlfhBWloLr1KxdVwjH2lofCmNysORUBokSZznM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=2cWZc7aFFH8SD/Vam6BTx3P1UNWLZ+6+GEYcAfva4O29KT2TMJiQmnvrx8PO0yRSF
+         rklJkHLmZ5zai8F23y09u+airni6j0wv6jDvf2mPXLpnJoMVJsRCB238KRgdm5BqXh
+         3sn8o/GT8Yd7GePi1f5BkXF4GkX6ZlYlfpfpMAwo=
+Received: by mail-qk1-f181.google.com with SMTP id p6-v6so19012821qkg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Oct 2018 08:10:59 -0700 (PDT)
+X-Gm-Message-State: ABuFfogGM/5KPUwseWamSbUaedA/IWcLQGH+52vacy/SV7TREq1Q9e46
+        7pMFh5bbRlfD+ISapPuANKe8YIg9rwHHovJ8izU=
+X-Google-Smtp-Source: ACcGV63AWbUzZDd1pXPjjKH3Au99imIf1bmJk3KcyHXAvhTRg+DyEcbeCGDIDpwCVhMUU9CI56DRl3qb/I4BDOScC6M=
+X-Received: by 2002:a37:6882:: with SMTP id d124-v6mr28086090qkc.96.1539875459156;
+ Thu, 18 Oct 2018 08:10:59 -0700 (PDT)
+MIME-Version: 1.0
+References: <cover.1539421123.git.lorenzo.bianconi@redhat.com> <54125c5d41740706aa530a77cf7df48fec129c3b.1539421123.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <54125c5d41740706aa530a77cf7df48fec129c3b.1539421123.git.lorenzo.bianconi@redhat.com>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Thu, 18 Oct 2018 11:10:47 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA7jMmf9HBjpZ9mioGCiku-T2Q-=0eLYcUxN90MWJb-ufg@mail.gmail.com>
+Message-ID: <CA+5PVA7jMmf9HBjpZ9mioGCiku-T2Q-=0eLYcUxN90MWJb-ufg@mail.gmail.com>
+Subject: Re: [PATCH] linux-firmware: add firmware for mt7610e
+To:     lorenzo.bianconi@redhat.com
+Cc:     Linux Firmware <linux-firmware@kernel.org>, sean.wang@mediatek.com,
+        linux-mediatek@lists.infradead.org, Felix Fietkau <nbd@nbd.name>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Lars,
-
-> This adds the UART phy interface for the pn533 driver.
-> The pn533 driver can be used through UART interface this way.
-> It is implemented as a serdev device.
-> 
-> Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
+On Sat, Oct 13, 2018 at 5:06 AM Lorenzo Bianconi
+<lorenzo.bianconi@redhat.com> wrote:
+>
+> Add binary firmware for mt7610e based devices
+>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 > ---
-> Changes in v2:
-> - switched from tty line discipline to serdev, resulting in many
->  simplifications
-> - SPDX License Identifier
-> 
-> drivers/nfc/pn533/Kconfig  |  10 ++
-> drivers/nfc/pn533/Makefile |   2 +
-> drivers/nfc/pn533/pn533.h  |   8 ++
-> drivers/nfc/pn533/uart.c   | 283 +++++++++++++++++++++++++++++++++++++
-> 4 files changed, 303 insertions(+)
-> create mode 100644 drivers/nfc/pn533/uart.c
-> 
-> diff --git a/drivers/nfc/pn533/Kconfig b/drivers/nfc/pn533/Kconfig
-> index d94122dd30e4..da3ea2dbaa8a 100644
-> --- a/drivers/nfc/pn533/Kconfig
-> +++ b/drivers/nfc/pn533/Kconfig
-> @@ -25,3 +25,13 @@ config NFC_PN533_I2C
-> 
-> 	  If you choose to build a module, it'll be called pn533_i2c.
-> 	  Say N if unsure.
-> +
-> +config NFC_PN532_UART
-> +	tristate "NFC PN532 device support (UART)”
+>  WHENCE               |   3 ++-
+>  mediatek/mt7610e.bin | Bin 0 -> 80680 bytes
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+>  create mode 100644 mediatek/mt7610e.bin
 
-you are missing the "depends on SERIAL_DEV_BUS” here.
+Applied and pushed out.
 
-> +	select NFC_PN533
-> +	---help---
-> +	  This module adds support for the NXP pn532 UART interface.
-> +	  Select this if your platform is using the UART bus.
-> +
-> +	  If you choose to build a module, it'll be called pn532_uart.
-> +	  Say N if unsure.
-
-Regards
-
-Marcel
-
+josh
