@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 891A5C5ACCC
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 14:19:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E52F2C5ACCC
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 14:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3ACDC2098A
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 14:19:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EDE62098A
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Oct 2018 14:20:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="TAuyNxDF"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3ACDC2098A
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="rEYp3Emn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8EDE62098A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728077AbeJRWU6 (ORCPT
+        id S1727711AbeJRWVX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 Oct 2018 18:20:58 -0400
-Received: from nbd.name ([46.4.11.11]:34920 "EHLO nbd.name"
+        Thu, 18 Oct 2018 18:21:23 -0400
+Received: from nbd.name ([46.4.11.11]:34934 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727334AbeJRWU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Oct 2018 18:20:58 -0400
+        id S1726924AbeJRWVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Oct 2018 18:21:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=KzOGsubwfi/bxv8taRyBaSPL4r6v83cg32BmgpV+jM4=; b=TAuyNxDF+9DcqPxAXr13GNs0Ak
-        +WgdW1uTVYGxGoSxBExl1SgceGhZHM4J1hFuFHtWqZ5GmKgPssiJBVkE8tHK5jmYHV2kyTUSzH676
-        3eiaMAi4i5y+hQ9GX8KkWJPW7xhEUr1WTjvFtTtrYjPAHlKL3QNfLOzMh0IC/2iuRKfM=;
-Subject: Re: [PATCH] mt76: usb: fix static tracepoints
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539815635.git.lorenzo.bianconi@redhat.com>
- <d9c86c268b987115f4ce08a8594e9e4da6c5f9fb.1539815635.git.lorenzo.bianconi@redhat.com>
+        bh=qNB1BGK4fm4AQGeesTv8sdQbqONhp7qS0zozAJs2nKg=; b=rEYp3EmnewzCBidGHfspGYVoSi
+        FpBN66i5utwpjLtr7yehZUoSewT7gSKJ8WjSy7kVdowqSQj5ju3vSn+1nZ4OZ3AgiTiJr2HcZCWfD
+        HUfouOqe1+WQCBrW0B4infuG27exLg7zLFGDcBL8GvKGUk22Cun1OxgrFiDQbRsz4L3E=;
+Subject: Re: [PATCH v2] mt76x0: antenna select corrections
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1539857731-2626-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <7eca02cb-8140-0dd1-8d3e-752b7060b81a@nbd.name>
-Date:   Thu, 18 Oct 2018 16:19:42 +0200
+Message-ID: <3aabca40-4879-e0fc-d378-6b700d765ded@nbd.name>
+Date:   Thu, 18 Oct 2018 16:20:06 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <d9c86c268b987115f4ce08a8594e9e4da6c5f9fb.1539815635.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <1539857731-2626-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,13 +77,18 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-18 00:35, Lorenzo Bianconi wrote:
-> Add submit_urb and rx_urb static tracepoints in mt76-usb module.
-> Move trace_mac_txstat_fetch in mt76x02_mac_load_tx_status routine
-> in order to be available to usb drivers. Moreover remove
-> no longer used mt76x0/trace.{c,h}
+On 2018-10-18 12:15, Stanislaw Gruszka wrote:
+> Update mt76x0_phy_ant_select() to conform vendor driver, most notably
+> add dual antenna mode support, read configuration from EEPROM and
+> move ant select out of channel config to init phase. Plus small MT7630E
+> quirk for MT_CMB_CTRL register which vendor driver dedicated to this
+> chip do.
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> This make MT7630E workable with mt76x0e driver and do not cause any
+> problems on MT7610U for me.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
 
 - Felix
