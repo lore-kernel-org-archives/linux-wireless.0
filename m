@@ -2,92 +2,101 @@ Return-Path: <SRS0=smuk=M7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 161F0ECDE3D
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 08:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1538BECDE43
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 08:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B5372083A
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 08:55:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="oGdtixuu"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B5372083A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id D70C621476
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 08:57:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D70C621476
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lemonage.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726976AbeJSRAu (ORCPT
+        id S1727178AbeJSRCt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Oct 2018 13:00:50 -0400
-Received: from nbd.name ([46.4.11.11]:46638 "EHLO nbd.name"
+        Fri, 19 Oct 2018 13:02:49 -0400
+Received: from smtp2.goneo.de ([85.220.129.33]:54022 "EHLO smtp2.goneo.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726609AbeJSRAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Oct 2018 13:00:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oubnlFrh1BSZdX71t1LVC8mtQuxgj5XpKNbkopY5Iyc=; b=oGdtixuuKyxd9vRoB0EIRX0lAY
-        axaG140XSBGD8G2mzeH2Cq5vaGTahT0MzrkZj0zKhm2VtcTVPlEyWHSW99TJi7a6SxSnYpWYgWheJ
-        WrChOe86wIwnJX4B/u/nXFSt14sgTLNdkXkv9pqFT89MMljV0nPm6T0T7Yu7A2dEqSVk=;
-Subject: Re: [PATCH 1/2] mt76: mt76x0: reduce duplication in setting rf
- bandwidth parameters
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-References: <20181018141645.31484-1-nbd@nbd.name>
- <20181019081757.GA17167@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <41666f9e-4d35-80fc-7c25-54ac5bbd28e3@nbd.name>
-Date:   Fri, 19 Oct 2018 10:55:38 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        id S1726903AbeJSRCt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Oct 2018 13:02:49 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp2.goneo.de (Postfix) with ESMTP id B88C923F5D5;
+        Fri, 19 Oct 2018 10:57:36 +0200 (CEST)
+X-Virus-Scanned: by goneo
+Received: from smtp2.goneo.de ([127.0.0.1])
+        by localhost (smtp2.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id a_RXTW9CRsgI; Fri, 19 Oct 2018 10:57:35 +0200 (CEST)
+Received: from lem-wkst-02.lemonage (hq.lemonage.de [87.138.178.34])
+        by smtp2.goneo.de (Postfix) with ESMTPSA id 7FD8323F6C8;
+        Fri, 19 Oct 2018 10:57:35 +0200 (CEST)
+Date:   Fri, 19 Oct 2018 10:57:28 +0200
+From:   Lars Poeschel <poeschel@lemonage.de>
+To:     Marcel Holtmann <marcel@holtmann.org>
+Cc:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] nfc: pn533: add UART phy driver
+Message-ID: <20181019085728.GA26696@lem-wkst-02.lemonage>
+References: <20181018144251.30028-1-poeschel@lemonage.de>
+ <6CB47B97-F58D-4162-98C1-8C8C88CE2914@holtmann.org>
 MIME-Version: 1.0
-In-Reply-To: <20181019081757.GA17167@redhat.com>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6CB47B97-F58D-4162-98C1-8C8C88CE2914@holtmann.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-19 10:17, Stanislaw Gruszka wrote:
-> On Thu, Oct 18, 2018 at 04:16:44PM +0200, Felix Fietkau wrote:
->> Remove initval table with duplicated registers and driver specific flags
->> in favor of a function that sets the registers directly
+On Thu, Oct 18, 2018 at 05:00:28PM +0200, Marcel Holtmann wrote:
+> Hi Lars,
 > 
-> There are few problems with this patch: MT_RF(7, 77) is missing and
-> band is not taken directly from chandef but overwriteen in
-> 'rf_band = mt76x0_frequency_plan[i].band' . But even after fixing that
-> I can not make MT7610U associate with AP on 5GHz. So please drop this
-> patch.
-Will do, thanks.
+> > This adds the UART phy interface for the pn533 driver.
+> > The pn533 driver can be used through UART interface this way.
+> > It is implemented as a serdev device.
+> > 
+> > Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
+> > ---
+> > Changes in v2:
+> > - switched from tty line discipline to serdev, resulting in many
+> >  simplifications
+> > - SPDX License Identifier
+> > 
+> > drivers/nfc/pn533/Kconfig  |  10 ++
+> > drivers/nfc/pn533/Makefile |   2 +
+> > drivers/nfc/pn533/pn533.h  |   8 ++
+> > drivers/nfc/pn533/uart.c   | 283 +++++++++++++++++++++++++++++++++++++
+> > 4 files changed, 303 insertions(+)
+> > create mode 100644 drivers/nfc/pn533/uart.c
+> > 
+> > diff --git a/drivers/nfc/pn533/Kconfig b/drivers/nfc/pn533/Kconfig
+> > index d94122dd30e4..da3ea2dbaa8a 100644
+> > --- a/drivers/nfc/pn533/Kconfig
+> > +++ b/drivers/nfc/pn533/Kconfig
+> > @@ -25,3 +25,13 @@ config NFC_PN533_I2C
+> > 
+> > 	  If you choose to build a module, it'll be called pn533_i2c.
+> > 	  Say N if unsure.
+> > +
+> > +config NFC_PN532_UART
+> > +	tristate "NFC PN532 device support (UART)”
+> 
+> you are missing the "depends on SERIAL_DEV_BUS” here.
 
-- Felix
+Yes, absolutely right. I missed that. I will post a follow-up.
+
+BTW a question:
+Only enabling SERIAL_DEV_BUS did not suffice for me. I also had to
+enable SERIAL_DEV_CTRL_TTYPORT, otherwise the probe of the driver was
+not called. This seems a bit odd to me. This option seems unrelated, but
+without it, it did not work.
+
+Should I better depend on SERIAL_DEV_CTRL_TTYPORT then ?
+
+Thanks,
+Lars
