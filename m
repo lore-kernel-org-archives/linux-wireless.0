@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57445ECDE43
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF98DECDE3D
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FCCB21486
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 748212145D
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="iLlP+urG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7FCCB21486
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="pCvV/tff"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 748212145D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727008AbeJSTZk (ORCPT
+        id S1727338AbeJST0O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Oct 2018 15:25:40 -0400
-Received: from nbd.name ([46.4.11.11]:52128 "EHLO nbd.name"
+        Fri, 19 Oct 2018 15:26:14 -0400
+Received: from nbd.name ([46.4.11.11]:52136 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726931AbeJSTZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Oct 2018 15:25:40 -0400
+        id S1726784AbeJST0O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Oct 2018 15:26:14 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=uRWeUtXZnsBwLNq0YnFYqFGmYH3Lqe7h2ocd5ScZ594=; b=iLlP+urGEL20ZDCQNGY6y8CiB7
-        nNZOxn769+onMglsLLJG2Rof9qPSrtnoumfYvo+1vhMqHLSAXb2HRZ8kfkx1x8aEaLDTQstofRf6B
-        0ESGjMwxC8U3bQtetAb+xFQRCJqnT8TvRs03GasPEofCKogPkwhBKJZi7Phwe3Lzy+Hs=;
-Subject: Re: [PATCH] mt76x0: mac: remove mt76x0_mac_set_ampdu_factor
+        bh=JR8j3N/hl++X+PzVIZnLzwMQwPDgjPbIVyXyw5czVcg=; b=pCvV/tffn6SZZjEnDWhPT+pX3W
+        DKzYmhhVZ5I8TMb++zaMMygf1mX/W19ZKFgFu0ovxBjfwpqbrWADi6DtMLg9jl+Gm3RmxeV9ynSxM
+        7zrZ42hpm4sY3T0wtoiq0FPI4dY02OxiJfZw9bCan5ygDeW36pG4BjAScjBhVz7NCT1A=;
+Subject: Re: [PATCH v2] mt76x0: align mt76x0u and mt76x0e fw version
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539945926.git.lorenzo.bianconi@redhat.com>
- <5c4f9d8ba71af1fc1a3eef5a78650c6e6e0e7f96.1539945926.git.lorenzo.bianconi@redhat.com>
+References: <cover.1539941831.git.lorenzo.bianconi@redhat.com>
+ <055ec314974a5cb9ea88cfb228a57a2d84f6fa15.1539941831.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <adef67cd-f160-d598-c185-6b0793bb44da@nbd.name>
-Date:   Fri, 19 Oct 2018 13:20:00 +0200
+Message-ID: <851dc1e7-c931-88f7-8465-fc7e7d8c421d@nbd.name>
+Date:   Fri, 19 Oct 2018 13:20:34 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <5c4f9d8ba71af1fc1a3eef5a78650c6e6e0e7f96.1539945926.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <055ec314974a5cb9ea88cfb228a57a2d84f6fa15.1539941831.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,8 +77,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-19 12:47, Lorenzo Bianconi wrote:
-> Remove no longer used mt76x0_mac_set_ampdu_factor routine
+On 2018-10-19 11:40, Lorenzo Bianconi wrote:
+> Unify firmware version used on mt76x0e and mt76x0u drivers.
+> Fallback to mt7610u fw if mt7610e one is not available
 > 
 > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
