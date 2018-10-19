@@ -2,85 +2,83 @@ Return-Path: <SRS0=smuk=M7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF80AECDE3D
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5ACECDE43
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 12:09:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BBAD2145D
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 11:20:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jCPtFl7F"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7BBAD2145D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 97C0321479
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Oct 2018 12:09:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 97C0321479
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727335AbeJST0f (ORCPT
+        id S1727462AbeJSUPg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Oct 2018 15:26:35 -0400
-Received: from nbd.name ([46.4.11.11]:52166 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726609AbeJST0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Oct 2018 15:26:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=kRs6VHrXgbZRcBZ0EX7NHdM20VKw022LU1MhbqvRb34=; b=jCPtFl7FmRTW3IzbFwxGl7zt5E
-        +q7ZBrfjZe778fNnNjmJfnbF/oZPR4IeILurvuXhWi5qPmzetEspJO/YkvXxzk3YCNdFhSnp6JgiF
-        x5tZRw1jwBw16SLas4nEvbli2b0PzHiF566EOOwHSn9sqOW1ODqpTh6gKNQ/SuA8uuTM=;
-Subject: Re: [PATCH] mt76x0: pci: add missing MODULE_FIRMWARE macro
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539903329.git.lorenzo.bianconi@redhat.com>
- <dab40954ff61c78f9c39fd47239e48b63e7fea88.1539903329.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <579f0c88-fcd8-99c8-651a-c90f0db6831e@nbd.name>
-Date:   Fri, 19 Oct 2018 13:20:55 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <dab40954ff61c78f9c39fd47239e48b63e7fea88.1539903329.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        Fri, 19 Oct 2018 16:15:36 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:45880 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726784AbeJSUPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Oct 2018 16:15:36 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 65E7D16C4530A;
+        Fri, 19 Oct 2018 20:09:44 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.399.0; Fri, 19 Oct 2018 20:09:39 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+CC:     YueHaibing <yuehaibing@huawei.com>, <ath10k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH] ath10k: remove set but not used variable 'tlv_len'
+Date:   Fri, 19 Oct 2018 12:20:26 +0000
+Message-ID: <1539951626-185764-1-git-send-email-yuehaibing@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-19 00:57, Lorenzo Bianconi wrote:
-> Add missing firmware declaration for mt76x0e driver
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Applied, thanks.
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-- Felix
+drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function 'ath10k_wmi_tlv_op_gen_config_pno_start':
+drivers/net/wireless/ath/ath10k/wmi-tlv.c:3455:6: warning:
+ variable 'tlv_len' set but not used [-Wunused-but-set-variable]
+
+It never used since inroduction in commit
+ce834e280f2f ("ath10k: support NET_DETECT WoWLAN feature")
+
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index bab8b25..bcd80e1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -3452,7 +3452,6 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
+ 	__le32 *channel_list;
+-	u16 tlv_len;
+ 	size_t len;
+ 	void *ptr;
+ 	u32 i;
+@@ -3510,8 +3509,6 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	/* nlo_configured_parameters(nlo_list) */
+ 	cmd->no_of_ssids = __cpu_to_le32(min_t(u8, pno->uc_networks_count,
+ 					       WMI_NLO_MAX_SSIDS));
+-	tlv_len = __le32_to_cpu(cmd->no_of_ssids) *
+-		sizeof(struct nlo_configured_parameters);
+ 
+ 	tlv = ptr;
+ 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
+
