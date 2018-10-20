@@ -7,337 +7,239 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA12ECDE46
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:05:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3291ECDE3D
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:06:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E1E02150F
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:05:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B072B2150F
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:06:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UzS8HhVn";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GOaa/g/p"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1E1E02150F
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NJyR1j7G";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h08r2Gk+"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B072B2150F
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727544AbeJTTQB (ORCPT
+        id S1727296AbeJTTQE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Oct 2018 15:16:01 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53476 "EHLO
+        Sat, 20 Oct 2018 15:16:04 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53626 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727292AbeJTTQA (ORCPT
+        with ESMTP id S1727292AbeJTTQE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Oct 2018 15:16:00 -0400
+        Sat, 20 Oct 2018 15:16:04 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 74CAD604BE; Sat, 20 Oct 2018 11:05:55 +0000 (UTC)
+        id EE4C06087F; Sat, 20 Oct 2018 11:05:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540033555;
-        bh=oDhHln7fXM6jSEgn1EJWQJQMuBax+iZT5yu+WMXLiWc=;
+        s=default; t=1540033559;
+        bh=leod1H/dHLMBipF1ZSU22u9ADeFR8o4pHddbHnquz5E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UzS8HhVnooAv6lHxKU1uDQq9TkmImpcZw857pRFvmi3wEU7Ny2usxolo3rZQZPdNB
-         55FVhF6+NeQHDGoRa7Qa4j9SMvXbvwH36HcJQLd0qOaAodphHsJD67ABmqNsTPxEQN
-         jZq7W0pDCC3uZ4pdCjfgA7Jig4HGJawkYOETDSk4=
+        b=NJyR1j7GBQB/KL9Athn1+BAxrhUg3wTvV4/4UZxVvtk8rWVkBuchkX4soBbPhq8k3
+         h0M9anxm7dCKNK0Wodmx4jTMP7XK5MijgfMKjKJQ+NK+aRZocmcLSpUnivwR+TKfOX
+         KsZq+GqL5uLWiVf/rEevRy0PhZ1+FQhZYeKk6Gos=
 Received: from smtp.codeaurora.org (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4B44A6087F;
-        Sat, 20 Oct 2018 11:05:53 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10B1260ADB;
+        Sat, 20 Oct 2018 11:05:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540033554;
-        bh=oDhHln7fXM6jSEgn1EJWQJQMuBax+iZT5yu+WMXLiWc=;
+        s=default; t=1540033557;
+        bh=leod1H/dHLMBipF1ZSU22u9ADeFR8o4pHddbHnquz5E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GOaa/g/pC8oLecRa/jx2LjxoS6USVSEwtDsQ3YhdVGULl7jP5XkQUeczA/sSmM0IN
-         th8Q7DDqOAkBgkEbt1uxkQcSgv5fyMsXz101RQ1MkklYGj0adNDQSU2m5H9ujrnqMG
-         lBW1xM/LOrw7X4duR8oMSmjhZVVs0sgEowFGwiho=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4B44A6087F
+        b=h08r2Gk+aXOlUdhULbFNh4vXnB3bqCmXV3wd2lvX4QhHH6WszWRznTwIWPcYOws+g
+         WfulO5ISiBTsgOUwcV8PnZNxHwWBd2+65fjFnltCeyryh3VaKtacOe4kcJgrQwUAL2
+         JsT9S/K2zpoMpck6MqebiGhhouXD3YowZfed6gmw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10B1260ADB
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
-Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Sat, 20 Oct 2018 04:05:52 -0700
+Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Sat, 20 Oct 2018 04:05:55 -0700
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 5/6] ath10k: migrate to mac80211 txq scheduling
-Date:   Sat, 20 Oct 2018 04:05:33 -0700
-Message-Id: <1540033534-11211-6-git-send-email-rmanohar@codeaurora.org>
+        Kan Yan <kyan@google.com>
+Subject: [PATCH 6/6] ath10k: reporting estimated tx airtime for fairness
+Date:   Sat, 20 Oct 2018 04:05:34 -0700
+Message-Id: <1540033534-11211-7-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
 References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ath10k maintains common txqs list for all stations. This txq
-management can be removed by migrating to mac80211 txq APIs
-and let mac80211 handle txqs reordering based on reported airtime.
-By doing this, txq fairness maintained in ath10k i.e processing
-N frames per txq is removed. By adapting to mac80211 APIs,
-ath10k will support mac80211 based airtime fairness algorithm.
+Transmit airtime will be estimated from last tx rate used.
+Firmware report tx rate by peer stats. Airtime is computed
+on tx path and the same will be reported to mac80211 upon
+tx completion.
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Kan Yan <kyan@google.com>
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c   |  2 -
- drivers/net/wireless/ath/ath10k/core.h   |  6 +-
- drivers/net/wireless/ath/ath10k/htc.h    |  1 -
- drivers/net/wireless/ath/ath10k/htt_rx.c |  8 +++
- drivers/net/wireless/ath/ath10k/mac.c    | 98 ++++++++++++++------------------
- 5 files changed, 54 insertions(+), 61 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c    | 57 ++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/txrx.c   |  4 +++
+ 4 files changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index da607febfd82..c8dbbfa901af 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -3065,9 +3065,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 
- 	mutex_init(&ar->conf_mutex);
- 	spin_lock_init(&ar->data_lock);
--	spin_lock_init(&ar->txqs_lock);
- 
--	INIT_LIST_HEAD(&ar->txqs);
- 	INIT_LIST_HEAD(&ar->peers);
- 	init_waitqueue_head(&ar->peer_mapping_wq);
- 	init_waitqueue_head(&ar->htt.empty_tx_wq);
 diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 042418097cf9..571289c7821d 100644
+index 571289c7821d..e6f597d9f226 100644
 --- a/drivers/net/wireless/ath/ath10k/core.h
 +++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -90,6 +90,9 @@
- /* The magic used by QCA spec */
- #define ATH10K_SMBIOS_BDF_EXT_MAGIC "BDF_"
+@@ -126,6 +126,7 @@ struct ath10k_skb_cb {
+ 	u8 flags;
+ 	u8 eid;
+ 	u16 msdu_id;
++	u16 airtime_est;
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_txq *txq;
+ } __packed;
+@@ -496,6 +497,7 @@ struct ath10k_sta {
+ 	u32 smps;
+ 	u16 peer_id;
+ 	struct rate_info txrate;
++	u32 last_tx_bitrate;
  
-+/* Default Airtime deficit (Tuned for multiclient performance) */
-+#define ATH10K_DEFAULT_AIRTIME_WEIGHT  4096
-+
- struct ath10k;
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-@@ -1062,10 +1065,7 @@ struct ath10k {
- 
- 	/* protects shared structure data */
- 	spinlock_t data_lock;
--	/* protects: ar->txqs, artxq->list */
--	spinlock_t txqs_lock;
- 
--	struct list_head txqs;
- 	struct list_head arvifs;
- 	struct list_head peers;
- 	struct ath10k_peer *peer_map[ATH10K_MAX_NUM_PEER_IDS];
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 51fda6c23f69..cb30add7dd33 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -51,7 +51,6 @@
-  */
- 
- #define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
--#define HTC_HOST_MAX_MSG_PER_TX_BUNDLE        16
- 
- enum ath10k_htc_tx_flags {
- 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+ 	struct work_struct update_wk;
+ 	u64 rx_duration;
 diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ffec98f7be50..35738fc84271 100644
+index 35738fc84271..26134bed52d2 100644
 --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
 +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2379,6 +2379,7 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
- 	u8 tid;
- 	int ret;
- 	int i;
-+	bool may_tx;
+@@ -2808,6 +2808,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
  
- 	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch ind\n");
+ 	arsta->txrate.nss = txrate.nss;
+ 	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
++	arsta->last_tx_bitrate = cfg80211_calculate_bitrate(&arsta->txrate);
  
-@@ -2451,8 +2452,13 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
- 		num_msdus = 0;
- 		num_bytes = 0;
- 
-+		ieee80211_txq_schedule_start(hw, txq->ac);
-+		may_tx = ieee80211_txq_may_transmit(hw, txq);
- 		while (num_msdus < max_num_msdus &&
- 		       num_bytes < max_num_bytes) {
-+			if (!may_tx)
-+				break;
-+
- 			ret = ath10k_mac_tx_push_txq(hw, txq);
- 			if (ret < 0)
- 				break;
-@@ -2460,6 +2466,8 @@ static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
- 			num_msdus++;
- 			num_bytes += ret;
- 		}
-+		ieee80211_return_txq(hw, txq);
-+		ieee80211_txq_schedule_end(hw, txq->ac);
- 
- 		record->num_msdus = cpu_to_le16(num_msdus);
- 		record->num_bytes = cpu_to_le32(num_bytes);
+ 	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
+ 		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a1c2801ded10..d78b83ac5c7b 100644
+index d78b83ac5c7b..d74b55ba9914 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3889,7 +3889,6 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
- 
- static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+@@ -3543,7 +3543,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+ 				    struct ieee80211_vif *vif,
+ 				    struct ieee80211_txq *txq,
+-				    struct sk_buff *skb)
++				    struct sk_buff *skb, u16 airtime)
  {
--	struct ath10k_txq *artxq;
- 	struct ath10k_skb_cb *cb;
- 	struct sk_buff *msdu;
- 	int msdu_id;
-@@ -3897,12 +3896,6 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
- 	if (!txq)
- 		return;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
+@@ -3560,6 +3560,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
  
--	artxq = (void *)txq->drv_priv;
--	spin_lock_bh(&ar->txqs_lock);
--	if (!list_empty(&artxq->list))
--		list_del_init(&artxq->list);
--	spin_unlock_bh(&ar->txqs_lock);
--
- 	spin_lock_bh(&ar->htt.tx_lock);
- 	idr_for_each_entry(&ar->htt.pending_tx, msdu, msdu_id) {
- 		cb = ATH10K_SKB_CB(msdu);
-@@ -3942,7 +3935,6 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
- 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
- 
- 	/* No need to get locks */
--
- 	if (ar->htt.tx_q_state.mode == HTT_TX_MODE_SWITCH_PUSH)
- 		return true;
- 
-@@ -4029,48 +4021,45 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 	return skb_len;
+ 	cb->vif = vif;
+ 	cb->txq = txq;
++	cb->airtime_est = airtime;
  }
  
--void ath10k_mac_tx_push_pending(struct ath10k *ar)
-+static int ath10k_mac_schedule_txq(struct ieee80211_hw *hw, u32 ac)
- {
--	struct ieee80211_hw *hw = ar->hw;
- 	struct ieee80211_txq *txq;
--	struct ath10k_txq *artxq;
--	struct ath10k_txq *last;
--	int ret;
--	int max;
--
--	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
--		return;
--
--	spin_lock_bh(&ar->txqs_lock);
--	rcu_read_lock();
--
--	last = list_last_entry(&ar->txqs, struct ath10k_txq, list);
--	while (!list_empty(&ar->txqs)) {
--		artxq = list_first_entry(&ar->txqs, struct ath10k_txq, list);
--		txq = container_of((void *)artxq, struct ieee80211_txq,
--				   drv_priv);
-+	int ret = 0;
+ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
+@@ -3947,6 +3948,49 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
+ 	return false;
+ }
  
--		/* Prevent aggressive sta/tid taking over tx queue */
--		max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
--		ret = 0;
--		while (ath10k_mac_tx_can_push(hw, txq) && max--) {
-+	ieee80211_txq_schedule_start(hw, ac);
-+	while ((txq = ieee80211_next_txq(hw, ac))) {
-+		while (ath10k_mac_tx_can_push(hw, txq)) {
- 			ret = ath10k_mac_tx_push_txq(hw, txq);
- 			if (ret < 0)
- 				break;
- 		}
-+		ieee80211_return_txq(hw, txq);
-+		ath10k_htt_tx_txq_update(hw, txq);
-+		if (ret == -EBUSY)
-+			break;
-+	}
-+	ieee80211_txq_schedule_end(hw, ac);
-+
-+	return ret;
-+}
- 
--		list_del_init(&artxq->list);
--		if (ret != -ENOENT)
--			list_add_tail(&artxq->list, &ar->txqs);
-+void ath10k_mac_tx_push_pending(struct ath10k *ar)
++/* Return estimated airtime in microsecond, which is calculated using last
++ * reported TX rate. This is just a rough estimation because host driver has no
++ * knowledge of the actual transmit rate, retries or aggregation. If actual
++ * airtime can be reported by firmware, then delta between estimated and actual
++ * airtime can be adjusted from deficit.
++ */
++#define IEEE80211_ATF_OVERHEAD		100	/* IFS + some slot time */
++#define IEEE80211_ATF_OVERHEAD_IFS	16	/* IFS only */
++static u16 ath10k_mac_update_airtime(struct ath10k *ar,
++				     struct ieee80211_txq *txq,
++				     struct sk_buff *skb)
 +{
-+	struct ieee80211_hw *hw = ar->hw;
-+	u32 ac;
- 
--		ath10k_htt_tx_txq_update(hw, txq);
-+	if (ar->htt.tx_q_state.mode != HTT_TX_MODE_SWITCH_PUSH)
-+		return;
- 
--		if (artxq == last || (ret < 0 && ret != -ENOENT))
-+	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
-+		return;
++	struct ath10k_sta *arsta;
++	u32 pktlen;
++	u16 airtime = 0;
 +
-+	rcu_read_lock();
-+	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		if (ath10k_mac_schedule_txq(hw, ac) == -EBUSY)
- 			break;
- 	}
--
- 	rcu_read_unlock();
--	spin_unlock_bh(&ar->txqs_lock);
- }
- EXPORT_SYMBOL(ath10k_mac_tx_push_pending);
- 
-@@ -4309,31 +4298,28 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
- 					struct ieee80211_txq *txq)
++	if (!txq || !txq->sta)
++		return airtime;
++
++	spin_lock_bh(&ar->data_lock);
++	arsta = (struct ath10k_sta *)txq->sta->drv_priv;
++
++	pktlen = skb->len + 38; /* Assume MAC header 30, SNAP 8 for most case */
++	if (arsta->last_tx_bitrate) {
++		/* airtime in us, last_tx_bitrate in 100kbps */
++		airtime = (pktlen * 8 * (1000 / 100))
++				/ arsta->last_tx_bitrate;
++		/* overhead for media access time and IFS */
++		airtime += IEEE80211_ATF_OVERHEAD_IFS;
++	} else {
++		/* This is mostly for throttle excessive BC/MC frames, and the
++		 * airtime/rate doesn't need be exact. Airtime of BC/MC frames
++		 * in 2G get some discount, which helps prevent very low rate
++		 * frames from being blocked for too long.
++		 */
++		airtime = (pktlen * 8 * (1000 / 100)) / 60; /* 6M */
++		airtime += IEEE80211_ATF_OVERHEAD;
++	}
++	spin_unlock_bh(&ar->data_lock);
++
++	return airtime;
++}
++
+ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 			   struct ieee80211_txq *txq)
  {
- 	struct ath10k *ar = hw->priv;
--	struct ath10k_txq *artxq = (void *)txq->drv_priv;
--	struct ieee80211_txq *f_txq;
--	struct ath10k_txq *f_artxq;
--	int ret = 0;
--	int max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
-+	int ret;
-+	u8 ac;
+@@ -3962,6 +4006,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 	size_t skb_len;
+ 	bool is_mgmt, is_presp;
+ 	int ret;
++	u16 airtime;
  
--	spin_lock_bh(&ar->txqs_lock);
--	if (list_empty(&artxq->list))
--		list_add_tail(&artxq->list, &ar->txqs);
-+	ath10k_htt_tx_txq_update(hw, txq);
-+	if (ar->htt.tx_q_state.mode != HTT_TX_MODE_SWITCH_PUSH)
-+		return;
- 
--	f_artxq = list_first_entry(&ar->txqs, struct ath10k_txq, list);
--	f_txq = container_of((void *)f_artxq, struct ieee80211_txq, drv_priv);
--	list_del_init(&f_artxq->list);
-+	ac = txq->ac;
-+	ieee80211_txq_schedule_start(hw, ac);
-+	txq = ieee80211_next_txq(hw, ac);
-+	if (!txq)
-+		goto out;
- 
--	while (ath10k_mac_tx_can_push(hw, f_txq) && max--) {
--		ret = ath10k_mac_tx_push_txq(hw, f_txq);
-+	while (ath10k_mac_tx_can_push(hw, txq)) {
-+		ret = ath10k_mac_tx_push_txq(hw, txq);
- 		if (ret < 0)
- 			break;
+ 	spin_lock_bh(&ar->htt.tx_lock);
+ 	ret = ath10k_htt_tx_inc_pending(htt);
+@@ -3979,7 +4024,8 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 		return -ENOENT;
  	}
--	if (ret != -ENOENT)
--		list_add_tail(&f_artxq->list, &ar->txqs);
--	spin_unlock_bh(&ar->txqs_lock);
--
--	ath10k_htt_tx_txq_update(hw, f_txq);
-+	ieee80211_return_txq(hw, txq);
- 	ath10k_htt_tx_txq_update(hw, txq);
-+out:
-+	ieee80211_txq_schedule_end(hw, ac);
- }
  
- /* Must not be called with conf_mutex held as workers can use that also. */
-@@ -8687,6 +8673,8 @@ int ath10k_mac_register(struct ath10k *ar)
+-	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
++	airtime = ath10k_mac_update_airtime(ar, txq, skb);
++	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
  
- 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 	skb_len = skb->len;
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+@@ -4246,8 +4292,10 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 	bool is_mgmt;
+ 	bool is_presp;
+ 	int ret;
++	u16 airtime;
  
-+	ar->hw->airtime_weight = ATH10K_DEFAULT_AIRTIME_WEIGHT;
+-	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
++	airtime = ath10k_mac_update_airtime(ar, txq, skb);
++	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
+ 
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
+@@ -8564,6 +8612,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		wiphy_ext_feature_set(ar->hw->wiphy,
+ 				      NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT);
+ 
++	if (ath10k_peer_stats_enabled(ar))
++		wiphy_ext_feature_set(ar->hw->wiphy,
++				      NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
+ 	/*
+ 	 * on LL hardware queues are managed entirely by the FW
+ 	 * so we only advertise to mac we can do the queues thing
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 23606b6972d0..8e7c416cd330 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -95,6 +95,10 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
++	if (txq && txq->sta)
++		ieee80211_sta_register_airtime(txq->sta, txq->tid,
++					       skb_cb->airtime_est, 0);
 +
- 	ret = ieee80211_register_hw(ar->hw);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
+ 	if (ar->dev_type != ATH10K_DEV_TYPE_HL)
+ 		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
 -- 
 1.9.1
 
