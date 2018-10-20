@@ -1,245 +1,55 @@
 Return-Path: <SRS0=EPmr=NA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Level: **
+X-Spam-Status: No, score=2.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,PHOTO_EDITING_FREEM,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3291ECDE3D
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8327EECDE3D
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 13:35:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B072B2150F
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 11:06:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NJyR1j7G";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="h08r2Gk+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B072B2150F
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 52DE121529
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Oct 2018 13:35:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 52DE121529
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=verizon.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727296AbeJTTQE (ORCPT
+        id S1727460AbeJTVqS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Oct 2018 15:16:04 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53626 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727292AbeJTTQE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Oct 2018 15:16:04 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id EE4C06087F; Sat, 20 Oct 2018 11:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540033559;
-        bh=leod1H/dHLMBipF1ZSU22u9ADeFR8o4pHddbHnquz5E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NJyR1j7GBQB/KL9Athn1+BAxrhUg3wTvV4/4UZxVvtk8rWVkBuchkX4soBbPhq8k3
-         h0M9anxm7dCKNK0Wodmx4jTMP7XK5MijgfMKjKJQ+NK+aRZocmcLSpUnivwR+TKfOX
-         KsZq+GqL5uLWiVf/rEevRy0PhZ1+FQhZYeKk6Gos=
-Received: from smtp.codeaurora.org (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: rmanohar@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10B1260ADB;
-        Sat, 20 Oct 2018 11:05:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540033557;
-        bh=leod1H/dHLMBipF1ZSU22u9ADeFR8o4pHddbHnquz5E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h08r2Gk+aXOlUdhULbFNh4vXnB3bqCmXV3wd2lvX4QhHH6WszWRznTwIWPcYOws+g
-         WfulO5ISiBTsgOUwcV8PnZNxHwWBd2+65fjFnltCeyryh3VaKtacOe4kcJgrQwUAL2
-         JsT9S/K2zpoMpck6MqebiGhhouXD3YowZfed6gmw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10B1260ADB
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
-Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Sat, 20 Oct 2018 04:05:55 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kan Yan <kyan@google.com>
-Subject: [PATCH 6/6] ath10k: reporting estimated tx airtime for fairness
-Date:   Sat, 20 Oct 2018 04:05:34 -0700
-Message-Id: <1540033534-11211-7-git-send-email-rmanohar@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
-References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
+        Sat, 20 Oct 2018 17:46:18 -0400
+Received: from morilee.com ([185.53.170.144]:33776 "EHLO tablebases.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727393AbeJTVqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 Oct 2018 17:46:18 -0400
+X-Greylist: delayed 1948 seconds by postgrey-1.27 at vger.kernel.org; Sat, 20 Oct 2018 17:46:17 EDT
+To:     linux-wireless@vger.kernel.org
+Subject: Solutions
+Message-ID: <b166ff483f6d4a3080ae52fba4055e33@hairpinlegs.com>
+Date:   Sat, 20 Oct 2018 14:57:32 +0200
+From:   "Linda" <paninfxteerpanloz@verizon.net>
+Reply-To: dotrenai@sina.com
+MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Transmit airtime will be estimated from last tx rate used.
-Firmware report tx rate by peer stats. Airtime is computed
-on tx path and the same will be reported to mac80211 upon
-tx completion.
+We are one image studio who is able to process 300+ photos a day.
 
-Signed-off-by: Kan Yan <kyan@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.h   |  2 ++
- drivers/net/wireless/ath/ath10k/htt_rx.c |  1 +
- drivers/net/wireless/ath/ath10k/mac.c    | 57 ++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/txrx.c   |  4 +++
- 4 files changed, 61 insertions(+), 3 deletions(-)
+If you need any image editing, please let us know. We can do it for you
+such as:
+Image cut out for photos  and clipping path, masking for your photos,
+They are mostly used for ecommerce photos, jewelry photos retouching,
+beauty and skin images
+and wedding photos.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 571289c7821d..e6f597d9f226 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -126,6 +126,7 @@ struct ath10k_skb_cb {
- 	u8 flags;
- 	u8 eid;
- 	u16 msdu_id;
-+	u16 airtime_est;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_txq *txq;
- } __packed;
-@@ -496,6 +497,7 @@ struct ath10k_sta {
- 	u32 smps;
- 	u16 peer_id;
- 	struct rate_info txrate;
-+	u32 last_tx_bitrate;
- 
- 	struct work_struct update_wk;
- 	u64 rx_duration;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 35738fc84271..26134bed52d2 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2808,6 +2808,7 @@ static inline int ath10k_get_legacy_rate_idx(struct ath10k *ar, u8 rate)
- 
- 	arsta->txrate.nss = txrate.nss;
- 	arsta->txrate.bw = ath10k_bw_to_mac80211_bw(txrate.bw);
-+	arsta->last_tx_bitrate = cfg80211_calculate_bitrate(&arsta->txrate);
- 
- 	if (ath10k_debug_is_extd_tx_stats_enabled(ar))
- 		ath10k_accumulate_per_peer_tx_stats(ar, arsta, peer_stats,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d78b83ac5c7b..d74b55ba9914 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3543,7 +3543,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
- static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_txq *txq,
--				    struct sk_buff *skb)
-+				    struct sk_buff *skb, u16 airtime)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
-@@ -3560,6 +3560,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
- 
- 	cb->vif = vif;
- 	cb->txq = txq;
-+	cb->airtime_est = airtime;
- }
- 
- bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
-@@ -3947,6 +3948,49 @@ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
- 	return false;
- }
- 
-+/* Return estimated airtime in microsecond, which is calculated using last
-+ * reported TX rate. This is just a rough estimation because host driver has no
-+ * knowledge of the actual transmit rate, retries or aggregation. If actual
-+ * airtime can be reported by firmware, then delta between estimated and actual
-+ * airtime can be adjusted from deficit.
-+ */
-+#define IEEE80211_ATF_OVERHEAD		100	/* IFS + some slot time */
-+#define IEEE80211_ATF_OVERHEAD_IFS	16	/* IFS only */
-+static u16 ath10k_mac_update_airtime(struct ath10k *ar,
-+				     struct ieee80211_txq *txq,
-+				     struct sk_buff *skb)
-+{
-+	struct ath10k_sta *arsta;
-+	u32 pktlen;
-+	u16 airtime = 0;
-+
-+	if (!txq || !txq->sta)
-+		return airtime;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	arsta = (struct ath10k_sta *)txq->sta->drv_priv;
-+
-+	pktlen = skb->len + 38; /* Assume MAC header 30, SNAP 8 for most case */
-+	if (arsta->last_tx_bitrate) {
-+		/* airtime in us, last_tx_bitrate in 100kbps */
-+		airtime = (pktlen * 8 * (1000 / 100))
-+				/ arsta->last_tx_bitrate;
-+		/* overhead for media access time and IFS */
-+		airtime += IEEE80211_ATF_OVERHEAD_IFS;
-+	} else {
-+		/* This is mostly for throttle excessive BC/MC frames, and the
-+		 * airtime/rate doesn't need be exact. Airtime of BC/MC frames
-+		 * in 2G get some discount, which helps prevent very low rate
-+		 * frames from being blocked for too long.
-+		 */
-+		airtime = (pktlen * 8 * (1000 / 100)) / 60; /* 6M */
-+		airtime += IEEE80211_ATF_OVERHEAD;
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	return airtime;
-+}
-+
- int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 			   struct ieee80211_txq *txq)
- {
-@@ -3962,6 +4006,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 	size_t skb_len;
- 	bool is_mgmt, is_presp;
- 	int ret;
-+	u16 airtime;
- 
- 	spin_lock_bh(&ar->htt.tx_lock);
- 	ret = ath10k_htt_tx_inc_pending(htt);
-@@ -3979,7 +4024,8 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 		return -ENOENT;
- 	}
- 
--	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
-+	airtime = ath10k_mac_update_airtime(ar, txq, skb);
-+	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
- 
- 	skb_len = skb->len;
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-@@ -4246,8 +4292,10 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 	bool is_mgmt;
- 	bool is_presp;
- 	int ret;
-+	u16 airtime;
- 
--	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
-+	airtime = ath10k_mac_update_airtime(ar, txq, skb);
-+	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb, airtime);
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-@@ -8564,6 +8612,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		wiphy_ext_feature_set(ar->hw->wiphy,
- 				      NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT);
- 
-+	if (ath10k_peer_stats_enabled(ar))
-+		wiphy_ext_feature_set(ar->hw->wiphy,
-+				      NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 23606b6972d0..8e7c416cd330 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -95,6 +95,10 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
-+	if (txq && txq->sta)
-+		ieee80211_sta_register_airtime(txq->sta, txq->tid,
-+					       skb_cb->airtime_est, 0);
-+
- 	if (ar->dev_type != ATH10K_DEV_TYPE_HL)
- 		dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
--- 
-1.9.1
+We do also different kind of beauty retouching, portraits retouching.
+
+We can send editing for your photos if you send us one or two photos.
+
+Thanks,
+Linda
 
