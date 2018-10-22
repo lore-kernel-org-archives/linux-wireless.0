@@ -2,76 +2,96 @@ Return-Path: <SRS0=+Qrf=NC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE4AC004D3
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E74C004D3
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:37:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51D0D20651
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:27:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 51D0D20651
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
+	by mail.kernel.org (Postfix) with ESMTP id D00E320651
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:37:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D00E320651
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726824AbeJWEr5 (ORCPT
+        id S1728921AbeJWE5g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 00:47:57 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:38962 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726082AbeJWEr4 (ORCPT
+        Tue, 23 Oct 2018 00:57:36 -0400
+Received: from gateway32.websitewelcome.com ([192.185.145.102]:49138 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727701AbeJWE5g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 00:47:56 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 42BC440A30A
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 13:27:54 -0700 (PDT)
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: Should we check netif_running in cfg80211_calculate_bi_data?
-Organization: Candela Technologies
-Message-ID: <8c876445-a065-ddb2-4dcf-e922f22a1b7d@candelatech.com>
-Date:   Mon, 22 Oct 2018 13:27:53 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.0
+        Tue, 23 Oct 2018 00:57:36 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 356B93A291
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 15:37:33 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id EgxBgTnlfSjJAEgxBgyABq; Mon, 22 Oct 2018 15:37:33 -0500
+X-Authority-Reason: nr=8
+Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:50950 helo=embeddedor)
+        by gator4166.hostgator.com with esmtpa (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1gEgxA-0020lB-C5; Mon, 22 Oct 2018 15:37:32 -0500
+Date:   Mon, 22 Oct 2018 22:37:31 +0200
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH 01/20] ath6kl: Mark expected switch fall-through
+Message-ID: <7932c27ae4e53aceacb7a0a1ae26db91432e5014.1540239684.git.gustavo@embeddedor.com>
+References: <cover.1540239684.git.gustavo@embeddedor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1540239684.git.gustavo@embeddedor.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 86.245.173.13
+X-Source-L: No
+X-Exim-ID: 1gEgxA-0020lB-C5
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr (embeddedor) [86.245.173.13]:50950
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 19
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I was testing on my 4.16 kernel with a bunch of VAPs and I had two configured
-for 100 beacon interval, and more at 240.  This failed for reasons I figured out
-(gcd logic), but even once I tried to configure the vaps for 240 interval they
-could not come up.  I am thinking maybe it was because I could only re-configure
-admin-up interfaces, and they couldn't come up due the gcd thing?
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-Anyway, while poking, I thought maybe the patch below would be helpful since
-we shouldn't care about admin-down interfaces in this case?
+Addresses-Coverity-ID: 201383 ("Missing break in switch")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index fbc880e..56d7583 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1541,6 +1541,9 @@ static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
-                 if (wdev->beacon_interval == *beacon_int_gcd)
-                         continue;
-
-+               if (!netif_running(wdev->netdev))
-+                       continue;
-+
-                 *beacon_int_different = true;
-                 *beacon_int_gcd = gcd(*beacon_int_gcd, wdev->beacon_interval);
-         }
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index cb59016..5e7ea83 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -389,6 +389,7 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl_vif *vif, u16 channel)
+ 		if (!ik->valid || ik->key_type != WAPI_CRYPT)
+ 			break;
+ 		/* for WAPI, we need to set the delayed group key, continue: */
++		/* fall through */
+ 	case WPA_PSK_AUTH:
+ 	case WPA2_PSK_AUTH:
+ 	case (WPA_PSK_AUTH | WPA2_PSK_AUTH):
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
 
