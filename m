@@ -2,103 +2,106 @@ Return-Path: <SRS0=+Qrf=NC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5DE2C67863
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 17:16:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F900C004D3
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 17:56:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 727CF205F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 17:16:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 727CF205F4
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=candelatech.com
+	by mail.kernel.org (Postfix) with ESMTP id F415920663
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 17:56:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YVfMrhVi";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HCWnPlA5"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F415920663
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728550AbeJWBfw (ORCPT
+        id S1728895AbeJWCPt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Oct 2018 21:35:52 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:33576 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727218AbeJWBfw (ORCPT
+        Mon, 22 Oct 2018 22:15:49 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:37922 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728658AbeJWCPt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Oct 2018 21:35:52 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Mon, 22 Oct 2018 22:15:49 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id EFFFA60C48; Mon, 22 Oct 2018 17:56:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540230978;
+        bh=BGe1veOJBXBXnexvDisE5gZeXmcTeuyqwGUcGatVxoc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=YVfMrhVip51yajmca8/tS4oSpUSLBdkOeB86WxzNOwu3v6HXuuKzhJu2E3SUyw2Vr
+         h0qBIfTg2uR8iEVfwHGowcO9zRxz8P0UqvFPOD0GebRpSoj9yBPArS5c2FmxvHD/Gi
+         Lc4VB5ifnKvHMuBRb9p8quD4N+l8KHGoM6x8jtyA=
+Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 84BB8409E08;
-        Mon, 22 Oct 2018 10:16:28 -0700 (PDT)
-Subject: Re: Where to report mpdus tx vs failed?
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Steve deRosier <derosier@gmail.com>
-References: <104c8823-e867-6244-a528-979482c7fccc@candelatech.com>
- <CALLGbRKOLVg0bLhezLkEA_MPCg_S1L-drJNy3fSWxPJXJV+ajQ@mail.gmail.com>
- <93888bdc-b27d-78db-7fde-e881fa74c99b@candelatech.com>
- <c46e9b859318574a3b5ce7e1dbdf48404892d101.camel@sipsolutions.net>
- <512247ba69be323b6cef3b17ccd6957343acebd1.camel@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <ae110050-1eec-25c4-57ba-86b42aae2930@candelatech.com>
-Date:   Mon, 22 Oct 2018 10:16:28 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.0
-MIME-Version: 1.0
-In-Reply-To: <512247ba69be323b6cef3b17ccd6957343acebd1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        (Authenticated sender: tamizhr@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 330A06085C;
+        Mon, 22 Oct 2018 17:56:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540230977;
+        bh=BGe1veOJBXBXnexvDisE5gZeXmcTeuyqwGUcGatVxoc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=HCWnPlA5I2KWd061VVwbQZftI6r6lbNvIiFlyR7O74qgL+E1ncNMVsgSaWpgdHATJ
+         ePT6bbSlJo4Tq7fgcsoi32SthmxcHN8zusaCltKnMT74Ld9dFWGNR7B48y1YwheRhY
+         gLKrB/7y51WO/A3Ax823E5Za/aF0IfryuP/XMBGE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 330A06085C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
+From:   Tamizh chelvam <tamizhr@codeaurora.org>
+To:     ath10k@lists.infradead.org, johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 0/4] cfg80211/mac80211: Add support for TID specific configuration
+Date:   Mon, 22 Oct 2018 23:25:14 +0530
+Message-Id: <1540230918-27712-1-git-send-email-tamizhr@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/22/2018 05:07 AM, Johannes Berg wrote:
-> On Mon, 2018-10-22 at 14:06 +0200, Johannes Berg wrote:
->> On Fri, 2018-10-19 at 11:32 -0700, Ben Greear wrote:
->>>
->>> I was hoping I could fit it into some existing stat.  It is sort of like
->>> retries, so that will be my first attempt.
->>>
->>> By investigating an RF sniff, I notice the 9880 ath10k (with my fw
->>> and driver, at least), will retransmit about 30% of the frames when running
->>> at least one of my test cases (small udp frame transmit to AP that can only do about mcs5 or mcs7
->>> reliably at 3x3 nss).
->>>
->>> I'd like to report this stat in my wifi test tool if nothing else, but
->>> likely other people would make use of it as well.
->>
->>
->> We have NL80211_STA_INFO_TX_RETRIES, shouldn't you be able to capture it
->> there?
->
-> Or, per TID, NL80211_TID_STATS_TX_MSDU_RETRIES
+Add infrastructure for per TID aggregation/retry count configurations
+such as retry count and AMPDU aggregation control(disable/enable).
+In some scenario reducing the number of retry count for a specific data
+traffic can reduce the latency by proceeding with the next packet
+instead of retrying the same packet more time. This will be useful
+where the next packet can resume the operation without an issue.
+Here added NL80211_CMD_SET_TID_CONFIG to support this operation by
+accepting retry count and AMPDU aggregation control.
+This command can accept STA mac addreess to make the configuration
+station specific rather than applying to all the connected stations
+to the netdev.
 
-I added this code (rate is struct ieee80211_tx_rate)
+Tamizh chelvam (3):
+  nl80211: Add netlink attribute for AMPDU aggregation enable/disable
+  tid conf 3
+  ath10k: Add support to configure TID specific configuration
 
-	if (tx_done->mpdus_failed) {
-		/* Maybe there is a better way to report this tried vs failed stat up the stack? */
-		rate->count = tx_done->mpdus_failed + 1;
-	}
-	else {
-		rate->count = 1;
-	}
+Vasanthakumar Thiagarajan (1):
+  New netlink command for TID specific configuration
 
-I think this is mostly providing useful info up the stack and we are trying to verify
-the counts against a packet sniff today.  The driver is only reporting
-this number for the first packet in the ampdu chain, so all retries are counted against the
-first frame (the rest will have mpdus_failed == 0 regardless of how many retries they have).
+Note:
+ * This patchset rebased on top of [PATCH 0/6] wireless: Per-sta NoAck and offload support
 
-And, on total retry failure, packets should be reported up the stack as tx-no-ack, so I think
-that is working OK too.
-
-I guess mac80211 could use this tx-status to report per-tid if it cared to.  I don't see any
-other way to pass such tx failure details up the stack to mac80211.
-
-Thanks,
-Ben
-
+ drivers/net/wireless/ath/ath10k/core.h |  23 ++++
+ drivers/net/wireless/ath/ath10k/mac.c  | 240 +++++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi.c  |   6 +-
+ drivers/net/wireless/ath/ath10k/wmi.h  |   1 +
+ include/net/cfg80211.h                 |  20 +++
+ include/net/mac80211.h                 |  36 +++++
+ include/uapi/linux/nl80211.h           |  90 +++++++++++++
+ net/mac80211/cfg.c                     |  71 ++++++++++
+ net/mac80211/driver-ops.h              |  16 +++
+ net/mac80211/trace.h                   |  34 +++++
+ net/wireless/nl80211.c                 | 103 ++++++++++++++
+ net/wireless/rdev-ops.h                |  30 +++++
+ net/wireless/trace.h                   |  50 +++++++
+ 13 files changed, 695 insertions(+), 25 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
