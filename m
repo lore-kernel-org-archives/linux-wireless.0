@@ -6,43 +6,44 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE20C004D3
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:04:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2451AC7112C
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:04:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4EC20652
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:04:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6C4EC20652
+	by mail.kernel.org (Postfix) with ESMTP id 4978320672
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:04:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4978320672
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729323AbeJWFYj (ORCPT
+        id S1729373AbeJWFYr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 01:24:39 -0400
-Received: from gateway23.websitewelcome.com ([192.185.49.179]:11825 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728939AbeJWFYj (ORCPT
+        Tue, 23 Oct 2018 01:24:47 -0400
+Received: from gateway20.websitewelcome.com ([192.185.54.2]:32078 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726753AbeJWFYq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 01:24:39 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id D63CB22087
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 15:41:03 -0500 (CDT)
+        Tue, 23 Oct 2018 01:24:46 -0400
+X-Greylist: delayed 1344 seconds by postgrey-1.27 at vger.kernel.org; Tue, 23 Oct 2018 01:24:46 EDT
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id B9F66400D97FB
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 15:42:17 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id Eh0RgPdKakBj6Eh0VgSv3A; Mon, 22 Oct 2018 15:41:03 -0500
+        id Eh1bgqf2caSeyEh1ggAApZ; Mon, 22 Oct 2018 15:42:17 -0500
 X-Authority-Reason: nr=8
-Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:50992 helo=embeddedor)
+Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:51004 helo=embeddedor)
         by gator4166.hostgator.com with esmtpa (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1gEh0Q-0022bq-OP; Mon, 22 Oct 2018 15:40:54 -0500
-Date:   Mon, 22 Oct 2018 22:40:53 +0200
+        id 1gEh1a-0023Jx-Ct; Mon, 22 Oct 2018 15:42:06 -0500
+Date:   Mon, 22 Oct 2018 22:42:04 +0200
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
         "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 07/20] iwlegacy: 4965-mac: mark expected switch fall-through
-Message-ID: <8d72b8a6f1529906672ac458e96d272bc55a1410.1540239684.git.gustavo@embeddedor.com>
+Subject: [PATCH 09/20] orinoco_usb: mark expected switch fall-through
+Message-ID: <5b3d73031e6528651c709f96ca22c818368327cd.1540239684.git.gustavo@embeddedor.com>
 References: <cover.1540239684.git.gustavo@embeddedor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -57,13 +58,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 86.245.173.13
 X-Source-L: No
-X-Exim-ID: 1gEh0Q-0022bq-OP
+X-Exim-ID: 1gEh1a-0023Jx-Ct
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr (embeddedor) [86.245.173.13]:50992
+X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr (embeddedor) [86.245.173.13]:51004
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 55
+X-Email-Count: 66
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -76,22 +77,21 @@ where we are expecting to fall through.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 280cd8a..6b4488a 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -559,7 +559,7 @@ il4965_translate_rx_status(struct il_priv *il, u32 decrypt_in)
- 			decrypt_out |= RX_RES_STATUS_BAD_KEY_TTAK;
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index 21bb684..40a8b941 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -908,6 +908,7 @@ static int ezusb_access_ltv(struct ezusb_priv *upriv,
+ 	case EZUSB_CTX_REQ_SUBMITTED:
+ 		if (!ctx->in_rid)
  			break;
- 		}
--		/* fall through if TTAK OK */
-+		/* fall through - if TTAK OK */
++		/* fall through */
  	default:
- 		if (!(decrypt_in & RX_MPDU_RES_STATUS_ICV_OK))
- 			decrypt_out |= RX_RES_STATUS_BAD_ICV_MIC;
+ 		err("%s: Unexpected context state %d", __func__,
+ 		    state);
 -- 
 2.7.4
 
