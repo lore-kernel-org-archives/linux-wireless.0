@@ -6,47 +6,44 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEB2C67863
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BACFDC67863
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:45:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6EDE20663
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:44:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A6EDE20663
+	by mail.kernel.org (Postfix) with ESMTP id F262720665
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 20:45:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F262720665
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728737AbeJWFEN (ORCPT
+        id S1729125AbeJWFF1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 01:04:13 -0400
-Received: from gateway23.websitewelcome.com ([192.185.49.179]:47088 "EHLO
+        Tue, 23 Oct 2018 01:05:27 -0400
+Received: from gateway23.websitewelcome.com ([192.185.49.179]:32165 "EHLO
         gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727179AbeJWFEN (ORCPT
+        by vger.kernel.org with ESMTP id S1727107AbeJWFF0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 01:04:13 -0400
-X-Greylist: delayed 412 seconds by postgrey-1.27 at vger.kernel.org; Tue, 23 Oct 2018 01:04:12 EDT
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 8FCD625936
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 15:44:08 -0500 (CDT)
+        Tue, 23 Oct 2018 01:05:26 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id 0A452DF3D
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 15:45:22 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id Eh3OgPifZkBj6Eh3TgT0NL; Mon, 22 Oct 2018 15:44:07 -0500
+        id Eh4jgw2HuRPojEh4kgBd81; Mon, 22 Oct 2018 15:45:22 -0500
 X-Authority-Reason: nr=8
-Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:51026 helo=embeddedor)
+Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:51052 helo=embeddedor)
         by gator4166.hostgator.com with esmtpa (Exim 4.91)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1gEh3N-0024NJ-9Y; Mon, 22 Oct 2018 15:43:57 -0500
-Date:   Mon, 22 Oct 2018 22:43:55 +0200
+        id 1gEh4j-0025E6-3l; Mon, 22 Oct 2018 15:45:21 -0500
+Date:   Mon, 22 Oct 2018 22:45:19 +0200
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>
 Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
         "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH 13/20] mwifiex: Mark expected switch fall-through
-Message-ID: <b82fcffdf7dbf10b37154696b99173815734d404.1540239684.git.gustavo@embeddedor.com>
+Subject: [PATCH 15/20] rt2x00: rt2500pci: mark expected switch fall-through
+Message-ID: <faed31f010821046ae2ce03fd1c46d202d9086d4.1540239684.git.gustavo@embeddedor.com>
 References: <cover.1540239684.git.gustavo@embeddedor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -61,13 +58,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 86.245.173.13
 X-Source-L: No
-X-Exim-ID: 1gEh3N-0024NJ-9Y
+X-Exim-ID: 1gEh4j-0025E6-3l
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr (embeddedor) [86.245.173.13]:51026
+X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr (embeddedor) [86.245.173.13]:51052
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 93
+X-Email-Count: 107
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -80,21 +77,22 @@ where we are expecting to fall through.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/marvell/mwifiex/ie.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
-index 75cbd60..6845eb5 100644
---- a/drivers/net/wireless/marvell/mwifiex/ie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/ie.c
-@@ -363,6 +363,7 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 						    (const u8 *)hdr,
- 						    hdr->len + sizeof(struct ieee_types_header)))
- 				break;
-+			/* fall through */
- 		default:
- 			memcpy(gen_ie->ie_buffer + ie_len, hdr,
- 			       hdr->len + sizeof(struct ieee_types_header));
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+index 1ff5434..e8e7bfe 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+@@ -1430,7 +1430,7 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev,
+ 			break;
+ 		case 2: /* Failure, excessive retries */
+ 			__set_bit(TXDONE_EXCESSIVE_RETRY, &txdesc.flags);
+-			/* Don't break, this is a failed frame! */
++			/* Fall through - this is a failed frame! */
+ 		default: /* Failure */
+ 			__set_bit(TXDONE_FAILURE, &txdesc.flags);
+ 		}
 -- 
 2.7.4
 
