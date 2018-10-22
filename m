@@ -2,108 +2,89 @@ Return-Path: <SRS0=+Qrf=NC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E43BC004D3
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E32D1C004D3
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:42:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F59A20651
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:12:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="acrnQhzb"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5F59A20651
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id CB1F720652
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Oct 2018 21:42:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CB1F720652
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729432AbeJWFcq (ORCPT
+        id S1728772AbeJWGCk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 01:32:46 -0400
-Received: from mail-it1-f193.google.com ([209.85.166.193]:54633 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727823AbeJWFcq (ORCPT
+        Tue, 23 Oct 2018 02:02:40 -0400
+Received: from mail-wm1-f47.google.com ([209.85.128.47]:51033 "EHLO
+        mail-wm1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728334AbeJWGCk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 01:32:46 -0400
-Received: by mail-it1-f193.google.com with SMTP id l191-v6so13521593ita.4;
-        Mon, 22 Oct 2018 14:12:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=x+wAsXlOlyFRy4xu/YOI8PMnkRaNf2EY3S+ifEGDujY=;
-        b=acrnQhzbcHL/2TnmjMiFCRDyT7wdO7XmiJphg/9ZwYIpTp2Vgege0VaXkOmPA44/gY
-         DIG5rJDXhB8NFU25Cf0VCnXRsUucS1wEJggt1U3pSEO6yyOTLCHVlGag4iU96l8+iavY
-         qliMIaAvlyrETJAw2omcCcY/B4qLfnXQ8q+7yb4ljXRk8HM7Aqim7YtXVUCeOVfBjQM8
-         syNRpLRHrICAdLm+WKKaw84glI3DSWkNOQ7FQO5yxFfyWVvBSK/lC22Hy7+wMlKyfE6F
-         PL6lAJ+8o3GhTQh1SBL7tLGayJOYm9OPY/wdnEd+UK95nn63RTlgbWSt/Ugz6aaVB0n/
-         65Mw==
+        Tue, 23 Oct 2018 02:02:40 -0400
+Received: by mail-wm1-f47.google.com with SMTP id i8-v6so11720723wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Oct 2018 14:42:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=x+wAsXlOlyFRy4xu/YOI8PMnkRaNf2EY3S+ifEGDujY=;
-        b=r4yH6Sr5rjywC/l3qzCPb0ACAusN/HkNpyxtGal/JwoojJZUawLko+lMFIM/0NNd1R
-         uqcocJpEX9hFMq2E/ZNP7Hp173Rzu4LU+Jv2MAKCHS62VJIeT6oYqK2bDsOVSjU1bfyt
-         xnW66p0eGb8FV+/Uc7jUcQ/m1NsE3VtRFNRcj5PW+W1oqsTNIG9eS3E5jN18dh+UYgNa
-         Pc2VXz5lxIdqQtZrf9b2Fm+Pxpy7YekohAFW4/phzuwwRlqzCJ1ZGCMmxe5/PANsdW85
-         JmdezhEjkv2LtIDrw8/AInTzpaohM7GZ5vuqHfjtgDnBswrf63F2SS/MX9DFTHsiHMR7
-         IYEg==
-X-Gm-Message-State: ABuFfogksJy2VdXwJUG6pt+LVLFKbyFdCuH3LB47jVuQie0Tw+sghBag
-        I2OEHP/rTEGAHYDbKWxZ6sfT/sXoMVRzJ3uCLnY=
-X-Google-Smtp-Source: ACcGV6313Pe6ghpIfRlj1R/TekFTY4aXV1LfWXVpEtQf8jDhKmJ6gw5wpelrjGiTebAdM+edBTHg3+euReYokdsB3N8=
-X-Received: by 2002:a24:de83:: with SMTP id d125-v6mr10309475itg.137.1540242754497;
- Mon, 22 Oct 2018 14:12:34 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=X0URGo7MdZN4BgVNc4nDKKuEvdDJFIy+Sc7NHwQpVMQ=;
+        b=cmOMRUU+OB+XbPteavFMxgRd94TuGaXSa/3LX5O4/cMJUoarOkKjzHr4b1R4VnJdtC
+         6DahAJ1gUMQAoaQqR3bmij1Ct5OWkU2p+f2QbIPSWNVJzF9vUMtS+bXr5lrFlS0mM3Mi
+         uHLlXi5uxiWvl0lG/sY5PUxDN8Bnv6thv3IwUfrXQ8CjCjBvKdZXMboAw/DePDN80vTh
+         P5dAYUHgNWC6yxu8LMCmFTBQ1GR13B4uXUYoKTkhZEab0w89Kme8E67hElm6KCsaFA5d
+         vGq+NDMaWGMOAL69GKP2WGdZ4InK9poacV/ad3+YwShkMRPz9YrJF4f9++aauUkQWyx0
+         IXFg==
+X-Gm-Message-State: ABuFfoiE3ZcmRT5/WpuXPt49a9y72vg+mkF4SYZJ+PRNKDOtYMRg7i7y
+        LTu9hNR9RAAXz0ouKe3VPEYhPw==
+X-Google-Smtp-Source: ACcGV60QOdh+edbjzG4Vka9zpmyL3J8mpzndvnTLF4cNeHmFDGK+0Af+zY6O9gtCjUlyvTtpOFjX1Q==
+X-Received: by 2002:a1c:870c:: with SMTP id j12-v6mr18110301wmd.40.1540244540313;
+        Mon, 22 Oct 2018 14:42:20 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.57.235])
+        by smtp.gmail.com with ESMTPSA id l125-v6sm21857187wmb.1.2018.10.22.14.42.18
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Oct 2018 14:42:19 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] add dfs support to mt76x0e driver
+Date:   Mon, 22 Oct 2018 23:42:11 +0200
+Message-Id: <cover.1540243910.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-References: <cover.1540239684.git.gustavo@embeddedor.com> <7932c27ae4e53aceacb7a0a1ae26db91432e5014.1540239684.git.gustavo@embeddedor.com>
-In-Reply-To: <7932c27ae4e53aceacb7a0a1ae26db91432e5014.1540239684.git.gustavo@embeddedor.com>
-From:   Steve deRosier <derosier@gmail.com>
-Date:   Mon, 22 Oct 2018 14:11:57 -0700
-Message-ID: <CALLGbRKoTJbMe+7iyjN66rew08_foAjNZSjeoqkMDSszqHDcQA@mail.gmail.com>
-Subject: Re: [PATCH 01/20] ath6kl: Mark expected switch fall-through
-To:     gustavo@embeddedor.com
-Cc:     ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        davem@davemloft.net, Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 22, 2018 at 1:37 PM Gustavo A. R. Silva
-<gustavo@embeddedor.com> wrote:
->
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
->
-> Addresses-Coverity-ID: 201383 ("Missing break in switch")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/main.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-> index cb59016..5e7ea83 100644
-> --- a/drivers/net/wireless/ath/ath6kl/main.c
-> +++ b/drivers/net/wireless/ath/ath6kl/main.c
-> @@ -389,6 +389,7 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl_vif *vif, u16 channel)
->                 if (!ik->valid || ik->key_type != WAPI_CRYPT)
->                         break;
->                 /* for WAPI, we need to set the delayed group key, continue: */
-> +               /* fall through */
->         case WPA_PSK_AUTH:
->         case WPA2_PSK_AUTH:
->         case (WPA_PSK_AUTH | WPA2_PSK_AUTH):
-> --
-> 2.7.4
->
+Introduce {sw,hw} dfs detector to mt76x0e driver in order to
+properly unlock radar frequencies
+This series is based on top of 'unify drv_bss_info_changed
+between mt76x0 and mt76x2' one:
+https://patchwork.kernel.org/cover/10650357/
 
-Looks fine to me. Though it's too bad that the compiler can't detect
-the fall through as already clearly commented.
+Lorenzo Bianconi (2):
+  mt76: move dfs support in mt76x02-lib module
+  mt76x0: pci: add DFS support
 
-Acked-by: Steve deRosier <derosier@cal-sierra.com>
+ drivers/net/wireless/mediatek/mt76/Makefile   |   3 +-
+ .../net/wireless/mediatek/mt76/mt76x0/main.c  |  11 +-
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   |   4 +
+ .../mt76/{mt76x2/pci_dfs.c => mt76x02_dfs.c}  | 162 +++++++++++-------
+ .../net/wireless/mediatek/mt76/mt76x02_dfs.h  |   5 +
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |   5 +
+ .../wireless/mediatek/mt76/mt76x2/Makefile    |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/dfs.h   |  25 ---
+ .../wireless/mediatek/mt76/mt76x2/mt76x2.h    |   1 -
+ .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  16 --
+ .../wireless/mediatek/mt76/mt76x2/pci_main.c  |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  23 +--
+ 12 files changed, 128 insertions(+), 131 deletions(-)
+ rename drivers/net/wireless/mediatek/mt76/{mt76x2/pci_dfs.c => mt76x02_dfs.c} (83%)
+ delete mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2/dfs.h
 
-- Steve
+-- 
+2.19.1
+
