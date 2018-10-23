@@ -2,86 +2,75 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8FBC46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBE9C46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:33:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9722620652
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:10:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="V5RlzLKZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9722620652
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 5AF9620665
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:33:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5AF9620665
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727857AbeJWRch (ORCPT
+        id S1728548AbeJWRzf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 13:32:37 -0400
-Received: from nbd.name ([46.4.11.11]:58714 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727704AbeJWRch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 13:32:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Vo5D7guR+utQbihevVm2UFtMES3NFxhq5/zTAGn9c5U=; b=V5RlzLKZHBYGQur7nZbp26sESo
-        0vj1lTN/wRQs4yz1RblIBHMQVVlmla9Nes1EqmLX81a4I6JL07e1svYKoSy8ml5QHaLxmwzJgtyY7
-        GBEeUn/UwytrmpvAPzo94zSZpvX0gqOGzC/jZQvqrVTu5F+y4C2/frUXIn2XeRQ+NkK0=;
-Subject: Re: [PATCH 0/2] add dfs support to mt76x0e driver
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1540243910.git.lorenzo.bianconi@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <21e96250-f38f-3fba-429c-c7d7991d05b5@nbd.name>
-Date:   Tue, 23 Oct 2018 11:10:06 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <cover.1540243910.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        Tue, 23 Oct 2018 13:55:35 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:36470 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728020AbeJWRzf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Oct 2018 13:55:35 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gEt3a-0000Ws-HV; Tue, 23 Oct 2018 11:32:58 +0200
+Message-ID: <7ac1d7a5f25ebcd44107c3a19e0d8140f37227c6.camel@sipsolutions.net>
+Subject: Re: Should we check netif_running in cfg80211_calculate_bi_data?
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Tue, 23 Oct 2018 11:32:40 +0200
+In-Reply-To: <8c876445-a065-ddb2-4dcf-e922f22a1b7d@candelatech.com> (sfid-20181022_222758_799406_E8076EAF)
+References: <8c876445-a065-ddb2-4dcf-e922f22a1b7d@candelatech.com>
+         (sfid-20181022_222758_799406_E8076EAF)
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-22 23:42, Lorenzo Bianconi wrote:
-> Introduce {sw,hw} dfs detector to mt76x0e driver in order to
-> properly unlock radar frequencies
-> This series is based on top of 'unify drv_bss_info_changed
-> between mt76x0 and mt76x2' one:
-> https://patchwork.kernel.org/cover/10650357/
-Applied, thanks.
+On Mon, 2018-10-22 at 13:27 -0700, Ben Greear wrote:
+> I was testing on my 4.16 kernel with a bunch of VAPs and I had two configured
+> for 100 beacon interval, and more at 240.  This failed for reasons I figured out
+> (gcd logic), but even once I tried to configure the vaps for 240 interval they
+> could not come up.  I am thinking maybe it was because I could only re-configure
+> admin-up interfaces, and they couldn't come up due the gcd thing?
+> 
+> Anyway, while poking, I thought maybe the patch below would be helpful since
+> we shouldn't care about admin-down interfaces in this case?
+> 
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index fbc880e..56d7583 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -1541,6 +1541,9 @@ static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
+>                  if (wdev->beacon_interval == *beacon_int_gcd)
+>                          continue;
+> 
+> +               if (!netif_running(wdev->netdev))
+> +                       continue;
+> +
 
-- Felix
+I don't think we'd ever get to this check, since those interfaces will
+always have wdev->beacon_interval == 0, checked a few lines before this
+code at the beginning of the loop? At least they should have, but a
+quick check suggests that is true.
+
+johannes
+
