@@ -5,39 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917B5C46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 20:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13742C46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 20:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30FEA205F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 20:26:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 30FEA205F4
+	by mail.kernel.org (Postfix) with ESMTP id BAB6C205F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 20:29:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BAB6C205F4
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbeJXEvo (ORCPT
+        id S1726745AbeJXEyw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 00:51:44 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:44894 "EHLO
+        Wed, 24 Oct 2018 00:54:52 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:44920 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726240AbeJXEvo (ORCPT
+        with ESMTP id S1725948AbeJXEyw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 00:51:44 -0400
+        Wed, 24 Oct 2018 00:54:52 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.91)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1gF3GG-00051G-0O; Tue, 23 Oct 2018 22:26:44 +0200
-Message-ID: <070e08cfd9e3b778f2012ae8f7532a7c6f5d2fff.camel@sipsolutions.net>
-Subject: Re: Should we check netif_running in cfg80211_calculate_bi_data?
+        id 1gF3JH-00054s-I0; Tue, 23 Oct 2018 22:29:51 +0200
+Message-ID: <7cf4a77e61aa1b48e750bb84fa12952ea648f10e.camel@sipsolutions.net>
+Subject: Re: mac80211 keeps trying to start ampdu session??
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Tue, 23 Oct 2018 22:26:25 +0200
-In-Reply-To: <52037f15-c48f-52fd-255b-dbd6f094ce17@candelatech.com>
-References: <8c876445-a065-ddb2-4dcf-e922f22a1b7d@candelatech.com>
-         <7ac1d7a5f25ebcd44107c3a19e0d8140f37227c6.camel@sipsolutions.net>
-         <5e048867-0294-4218-6b2b-bcbcad5be763@candelatech.com>
-         <5d6d273615166550749ae68b6eb2ab37f8265b06.camel@sipsolutions.net>
-         <52037f15-c48f-52fd-255b-dbd6f094ce17@candelatech.com>
+To:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Arend van Spriel <aspriel@gmail.com>, nbd@nbd.name
+Date:   Tue, 23 Oct 2018 22:29:32 +0200
+In-Reply-To: <20181023151312.65df98c4@manjaro> (sfid-20181023_142316_161504_FE6DE0E4)
+References: <20181023104404.795619aa@manjaro>
+         <0ead002730ad2902d87c77cc3abeb9c21c4a0930.camel@sipsolutions.net>
+         <20181023151312.65df98c4@manjaro> (sfid-20181023_142316_161504_FE6DE0E4)
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
 Mime-Version: 1.0
@@ -47,40 +46,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2018-10-23 at 13:22 -0700, Ben Greear wrote:
-> On 10/23/2018 12:53 PM, Johannes Berg wrote:
-> > On Tue, 2018-10-23 at 12:19 -0700, Ben Greear wrote:
-> > > 
-> > > Oct 23 12:11:05 ben-ota-2.candelatech.com kernel: Assigning beacon-in-gcd to: 240 from wdev: vap39
-> > > Oct 23 12:11:05 ben-ota-2.candelatech.com kernel: beacon-int-diff, beacon-int-gcd: 240  new-beacon-int: 100
-> > 
-> > This new-beacon-int 100 seems strange and suspicious. Why is it even
-> > trying to look at this? Hmm.
-> > 
-> > > Maybe we need to clear beacon-interval back to 0 on admin down of the wifi dev?
-> > 
-> > We should be doing this, we should end up in __cfg80211_stop_ap() and
-> > that does clear it? Hmm... perhaps this _fails_ somehow, and we don't
-> > clear it in the error path? I suppose we really should make that
-> > unconditional because there's nothing we can do to recover from that
-> > error ...
-> 
-> I am suspicious about this...  that is not the same memory location as wdev->beacon_interval,
-> so maybe this is the thing that is not properly cleared?
-> 
-> if (sdata->vif.type == NL80211_IFTYPE_AP ||
-> 	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
-> 		/*
-> 		 * always passing this is harmless, since it'll be the
-> 		 * same value that cfg80211 finds if it finds the same
-> 		 * interface ... and that's always allowed
-> 		 */
-> 		params.new_beacon_int = sdata->vif.bss_conf.beacon_int;
-> 	}
+On Tue, 2018-10-23 at 15:22 +0300, Ali MJ Al-Nasrawy wrote:
 
-Oh, this is mac80211. Yes, that has a different place, and that does
-indeed look like it doesn't get cleared? Odd. Perhaps you can try what
-happens if you just clear that in ieee80211_stop_ap()?
+> > This depends on the rate control algorithm, it triggers this.
+> 
+> In this case, it is minstrel_ht.
+> 
+> > 
+> > I think - perhaps depending on the return value - mac80211 *does* give
+> > up eventually, but not really sure.
+> 
+> The return value is handled only in
+> agg-tx.c:ieee80211_tx_ba_session_handle_start and it doesn't pass it
+> down or recognize difference between non-zero return values.
+
+Indeed.
+
+> And I don't think that it gives up retrying: I already have 800MB of
+> compressed logs for the last four days only full of this message and
+> additionally I ran a simple test for the last hour and found that it
+> tries to start ampdu session for every frame to be sent with that TID!
+
+Indeed, but that does seem excessive. Perhaps minstrel_ht should learn
+to back off, Felix what do you think? In this case the driver basically
+says "I don't want to do agg on this TID" and that repeats for every
+packet.
+
+> > Perhaps just remove the message?
+> 
+> OK, I report this just in case of it being unintended behavior with
+> probably a negative performance impact.
+
+It might actually, yeah ...
 
 johannes
 
