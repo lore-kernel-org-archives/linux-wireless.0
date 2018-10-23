@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58369C46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8FBC46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EC8120652
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:09:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9722620652
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:10:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="rlRNiaEP"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1EC8120652
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="V5RlzLKZ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9722620652
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727796AbeJWRbg (ORCPT
+        id S1727857AbeJWRch (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 13:31:36 -0400
-Received: from nbd.name ([46.4.11.11]:58678 "EHLO nbd.name"
+        Tue, 23 Oct 2018 13:32:37 -0400
+Received: from nbd.name ([46.4.11.11]:58714 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727704AbeJWRbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 13:31:36 -0400
+        id S1727704AbeJWRch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Oct 2018 13:32:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=og9xb97RLT7W9M9G37wLFzaiRrQT9b6lPxH7crPQVRU=; b=rlRNiaEPw7Yp3y2noPdBY1xm+D
-        6x9d2SLThCNyFwGuSqU76YMciCn4M+494yQQoCj32BVgT6KIVr3GOWbOjICfMTqMjL1m7DpFI9p3i
-        nLXVuM2SeI1guFgjSPOvOKsYmd+bC9cGBY1i9O7kQFv6fGo/3sBwKVAjA4SHs9AdJNQk=;
-Subject: Re: [PATCH 0/4] unify drv_bss_info_changed between mt76x0 and mt76x2
+        bh=Vo5D7guR+utQbihevVm2UFtMES3NFxhq5/zTAGn9c5U=; b=V5RlzLKZHBYGQur7nZbp26sESo
+        0vj1lTN/wRQs4yz1RblIBHMQVVlmla9Nes1EqmLX81a4I6JL07e1svYKoSy8ml5QHaLxmwzJgtyY7
+        GBEeUn/UwytrmpvAPzo94zSZpvX0gqOGzC/jZQvqrVTu5F+y4C2/frUXIn2XeRQ+NkK0=;
+Subject: Re: [PATCH 0/2] add dfs support to mt76x0e driver
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1540031637.git.lorenzo.bianconi@redhat.com>
+References: <cover.1540243910.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -62,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <0d8c8c0f-7aee-223c-ba57-8669bf2f14c4@nbd.name>
-Date:   Tue, 23 Oct 2018 11:09:04 +0200
+Message-ID: <21e96250-f38f-3fba-429c-c7d7991d05b5@nbd.name>
+Date:   Tue, 23 Oct 2018 11:10:06 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <cover.1540031637.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1540243910.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -76,12 +76,12 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-20 12:40, Lorenzo Bianconi wrote:
-> Unify drv_bss_info_changed mac80211 callback between mt76x0 and mt76x2.
-> Move ack timeout and protection utility routines in mt76x02-lib module.
-> 
-> This series is based on top of 'enable AP support in mt76x0e driver' one:
-> https://patchwork.kernel.org/cover/10650335/
+On 2018-10-22 23:42, Lorenzo Bianconi wrote:
+> Introduce {sw,hw} dfs detector to mt76x0e driver in order to
+> properly unlock radar frequencies
+> This series is based on top of 'unify drv_bss_info_changed
+> between mt76x0 and mt76x2' one:
+> https://patchwork.kernel.org/cover/10650357/
 Applied, thanks.
 
 - Felix
