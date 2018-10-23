@@ -2,93 +2,85 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2285C46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 07:44:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F2BBC46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:05:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B867D20671
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 07:44:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q94wnO+x"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B867D20671
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 335C12075D
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:05:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 335C12075D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727582AbeJWQGZ (ORCPT
+        id S1727613AbeJWQ1e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 12:06:25 -0400
-Received: from mail-wm1-f47.google.com ([209.85.128.47]:50395 "EHLO
-        mail-wm1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727023AbeJWQGY (ORCPT
+        Tue, 23 Oct 2018 12:27:34 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:42492 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727210AbeJWQ1d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 12:06:24 -0400
-Received: by mail-wm1-f47.google.com with SMTP id i8-v6so654148wmg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2018 00:44:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zHOBHPteq6+XEwEpHAl5Qs6oAl0R0W8j0Ilcjf71cfI=;
-        b=Q94wnO+x6sAVq0V5r9t5Zc2huSeh18ZWxbgeLtLcGUP8OKKoe0ephn/cXXUQYy69E/
-         7zRIc9Xol/vngstiP2ClSrM7UKigB9sZB+sxSi6LNv36lk1UZRuusLMUNqh1luwsQzmy
-         jIXzHHQTuc4Tlm+rZHWA8tyR2XfCvRwC4HJrpARqEbgibWgvPKoxLgbVo9nx0MUUF8bu
-         yBAQfetDc1biQEDGQ3CqyKZB2mvVr4NHEb2W155cuW4VcoeuHtt5YnoOFoVNVktJ+aeX
-         x6nGUa3T6dREm4yXpgH8r7pnfHZx8ZhSwYoN5TEfkEEGuiNZPo1se++UUektoff1FrJx
-         FWKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zHOBHPteq6+XEwEpHAl5Qs6oAl0R0W8j0Ilcjf71cfI=;
-        b=e8FKxMm+SBEmOQe+DMXZ/mlJRANKtvUQfWEhJs9g3y6AXvSgv2SQRdRwJBHmy1nmy7
-         TYwAAWwBHJTlISmbLOsUbTKLua5wbGNYPHsT4IwVfu3pEPiEAktvm1unpYHDrTcffSqR
-         FC2YFv9N1VnzJWi5c9tORwWkqic9NQ6sYCVOmcABKhkoRdm55vkBt2MPPiM41KSebeG7
-         BahLvBjANd19DqskezbFFcbtzlAM6yg6fuDuKu7TqzDV8CoDBdy8LU7ByZIDhW1MprDI
-         U7+6UQ/sInm2VpIwlAhZ7voKY5P7EBpW3tXm5r/iA/sezI2nZGGikE4e6AUmLy+PC2CQ
-         epBw==
-X-Gm-Message-State: ABuFfohiOGVJXM2VBTjCN/NPuJC2Lbe3JjBkc05PZwdV0NtHOimPFZ2n
-        fmaTP4AYHgUNFJoxvd0cfbDXPUmP
-X-Google-Smtp-Source: ACcGV62u5l1j9YLc0iyHUjyiBAhKmfPgBsUMoMWYp+N4h7WHOCga8wGk2mGv+FF/EXY6+E4LaQTQ2Q==
-X-Received: by 2002:a1c:1314:: with SMTP id 20-v6mr19908159wmt.132.1540280651532;
-        Tue, 23 Oct 2018 00:44:11 -0700 (PDT)
-Received: from manjaro ([37.238.236.76])
-        by smtp.gmail.com with ESMTPSA id w4-v6sm760139wra.83.2018.10.23.00.44.10
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 23 Oct 2018 00:44:11 -0700 (PDT)
-Date:   Tue, 23 Oct 2018 10:44:04 +0300
-From:   Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Arend van Spriel <aspriel@gmail.com>
-Subject: mac80211 keeps trying to start ampdu session??
-Message-ID: <20181023104404.795619aa@manjaro>
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; i686-pc-linux-gnu)
+        Tue, 23 Oct 2018 12:27:33 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9N858g8013015, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv02.realtek.com.tw[172.21.6.19])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9N858g8013015
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Tue, 23 Oct 2018 16:05:08 +0800
+Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
+ RTITCASV02.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 23 Oct
+ 2018 16:05:07 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "zhongjiang@huawei.com" <zhongjiang@huawei.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: remove set but not used variable 'radiob_array_table' and 'radiob_arraylen'
+Thread-Topic: [PATCH] rtlwifi: remove set but not used variable
+ 'radiob_array_table' and 'radiob_arraylen'
+Thread-Index: AQHUapWqnEkjYYfngkGMMsNsCpMpTqUr8siA
+Date:   Tue, 23 Oct 2018 08:05:07 +0000
+Message-ID: <1540281873.25715.2.camel@realtek.com>
+References: <1540273651-64688-1-git-send-email-zhongjiang@huawei.com>
+In-Reply-To: <1540273651-64688-1-git-send-email-zhongjiang@huawei.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.146]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <C3257BDF3BB1DE479E988FED8234E1DF@realtek.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-
-I am trying to debug brcmsmac wireless driver for spamming the log with
-the message:
-[...] START: tid 2 is not agg'able
-for it does not support AMPDU aggreggation for TID 2.
-
-And after quick tracing, I found that mac80211 keeps trying to start
-AMPDU session for the _same TID and STA_ despite that the driver returns
-non-zero code via its ampdu_action callback and that non-zero return
-codes are recognized as the "HW unavailable" for such session
-(agg-tx.c:ieee80211_tx_ba_session_handle_start)
-
-So, Is that an expected behaviour from mac80211 or not??
-
-Regards,
-Ali MJ
+T24gVHVlLCAyMDE4LTEwLTIzIGF0IDEzOjQ3ICswODAwLCB6aG9uZyBqaWFuZyB3cm90ZToNCj4g
+J3JhZGlvYl9hcnJheV90YWJsZScgYW5kICdyYWRpb2JfYXJyYXlsZW4nIGlzIG5vdCB1c2VkIGFm
+dGVyIHNldHRpbmcgaXRzDQo+IHZhbHVlLg0KPiBJdCBpcyBzYWZlIHRvIHJlbW92ZSB0aGUgdW51
+c2VkIHZhcmlhYmxlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogemhvbmcgamlhbmcgPHpob25namlh
+bmdAaHVhd2VpLmNvbT4NCj4gLS0tDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9y
+dGx3aWZpL3J0bDg3MjNhZS9waHkuYyB8IDUgKy0tLS0NCj4gwqAxIGZpbGUgY2hhbmdlZCwgMSBp
+bnNlcnRpb24oKyksIDQgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDg3MjNhZS9waHkuYw0KPiBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4NzIzYWUvcGh5LmMNCj4gaW5kZXggNWNm
+MjlmNS4uM2YzMzI3OCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRl
+ay9ydGx3aWZpL3J0bDg3MjNhZS9waHkuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+ZWFsdGVrL3J0bHdpZmkvcnRsODcyM2FlL3BoeS5jDQo+IEBAIC01MDksMTMgKzUwOSwxMCBAQCBi
+b29sIHJ0bDg3MjNlX3BoeV9jb25maWdfcmZfd2l0aF9oZWFkZXJmaWxlKHN0cnVjdA0KPiBpZWVl
+ODAyMTFfaHcgKmh3LA0KPiDCoAlpbnQgaTsNCj4gwqAJYm9vbCBydHN0YXR1cyA9IHRydWU7DQo+
+IMKgCXUzMiAqcmFkaW9hX2FycmF5X3RhYmxlOw0KPiAtCXUzMiAqcmFkaW9iX2FycmF5X3RhYmxl
+Ow0KPiAtCXUxNiByYWRpb2FfYXJyYXlsZW4sIHJhZGlvYl9hcnJheWxlbjsNCj4gKwl1MTYgcmFk
+aW9hX2FycmF5bGVuOw0KPiDCoA0KPiDCoAlyYWRpb2FfYXJyYXlsZW4gPSBSVEw4NzIzRVJBRElP
+QV8xVEFSUkFZTEVOR1RIOw0KPiDCoAlyYWRpb2FfYXJyYXlfdGFibGUgPSBSVEw4NzIzRV9SQURJ
+T0FfMVRBUlJBWTsNCj4gLQlyYWRpb2JfYXJyYXlsZW4gPSBSVEw4NzIzRV9SQURJT0JfMVRBUlJB
+WUxFTkdUSDsNCj4gLQlyYWRpb2JfYXJyYXlfdGFibGUgPSBSVEw4NzIzRV9SQURJT0JfMVRBUlJB
+WTsNCj4gwqANCj4gwqAJcnRzdGF0dXMgPSB0cnVlOw0KPiDCoA0KDQpJIHRoaW5rIDg3MjNhZSBo
+YXMgb25seSBvbmUgYW50ZW5uYSwgc28geW91IGNhbiByZW1vdmUgcmFkaW8gQiBhcnJheSBhcyB3
+ZWxsLg0KDQo=
