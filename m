@@ -2,43 +2,41 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A0FC67863
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C87AC46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:07:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9ADF20652
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:07:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2201020652
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 09:07:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hVctzT/I"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C9ADF20652
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="qlr5O8P5"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2201020652
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728399AbeJWR3k (ORCPT
+        id S1727878AbeJWR3v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 13:29:40 -0400
-Received: from nbd.name ([46.4.11.11]:58624 "EHLO nbd.name"
+        Tue, 23 Oct 2018 13:29:51 -0400
+Received: from nbd.name ([46.4.11.11]:58628 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727978AbeJWR3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 13:29:39 -0400
+        id S1727602AbeJWR3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Oct 2018 13:29:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=6j9CsnncjqNXxJt3FLMzkPiNgvmJH+z55hKcVXryWHM=; b=hVctzT/InYSUjFqwDxFYJIodAS
-        8JNpr+HMBAtp/xdbw8Fxn9lLv89oxhChk4oB2IY4SIoCVKf97RwiVSykyCi9PjgAZClRrmwmghytj
-        gmZ0/4vFZ9Nu/gTyE0hL2i33Ub8NwC4kd2j+eayb6hbT9cgLP3Ns6tTK9WjzqZ0VqbUY=;
-Subject: Re: [PATCH] mt76: move mt76x02_mac_set_short_preamble in
- mt76x02_mac.c
+        bh=27xk7FLprLcTi+7ST3SkOeOdhBmxrfYlk9/hdA5Kskw=; b=qlr5O8P5Iy2R6Y9xpEwuqLTqSc
+        q28bzxQf4i19ByS4jWe8KjPDbnJFGT1NIKJqPu75qlc53zDmgPOMN1R+aLM0ag9yBcEUFDR0r1iG9
+        zCh1A3ObR7Hwo+N0QEIF3TtD/XqTcwdiUqpM7rQFI0ntKBANwUvuZh4uEaSZA3fb1xBE=;
+Subject: Re: [PATCH 0/9] enable AP support in mt76x0e driver
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1539953578.git.lorenzo.bianconi@redhat.com>
- <764e18b4b109bafa9bb0cc1f270cad61b3509817.1539953578.git.lorenzo.bianconi@redhat.com>
+References: <cover.1540029458.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -64,12 +62,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <cf55d2d7-1357-c7ac-4bba-dacdfa8c2a78@nbd.name>
-Date:   Tue, 23 Oct 2018 11:07:08 +0200
+Message-ID: <b25bf44a-61fa-61cb-6b2a-75d8d4be9c6c@nbd.name>
+Date:   Tue, 23 Oct 2018 11:07:21 +0200
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <764e18b4b109bafa9bb0cc1f270cad61b3509817.1539953578.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <cover.1540029458.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,11 +76,10 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-19 14:56, Lorenzo Bianconi wrote:
-> Move mt76x02_mac_set_short_preamble routine in mt76x02-lib module
-> since it is shared between mt76x0 and mt76x2 drivers
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+On 2018-10-20 12:13, Lorenzo Bianconi wrote:
+> Add beacon transmission/management support to mt76x0 driver.
+> Add missing mac80211 callbacks to mt76x0e driver in order
+> to enable AP support
 Applied, thanks.
 
 - Felix
