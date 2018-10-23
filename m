@@ -2,92 +2,106 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7162AC46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 14:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 864EAC46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 16:13:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AB6A20652
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 14:39:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F01820665
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 16:13:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=thunk.org header.i=@thunk.org header.b="FUHbHd+w"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3AB6A20652
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=mit.edu
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u8lNjEUJ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F01820665
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728176AbeJWXCv (ORCPT
+        id S1728275AbeJXAhC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 19:02:51 -0400
-Received: from imap.thunk.org ([74.207.234.97]:48876 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727829AbeJWXCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 19:02:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org;
-         s=ef5046eb; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ZUUyvOv+SDlYPpYvAvKrprUZi1eEyh/sA/WJpgeGqD8=; b=FUHbHd+wz72+DCXtj1bGJBgqws
-        MZw67Z4CcYu6tzc05Wj64QNEsxS5KoeNA122cnOrhtHUjYyibCL3fDguJki+K/a2BfuoVAaLLqM1q
-        NtfAQllSxiUUqRHkYSfSmcQkJNqnE1YD47q43W/p1/R8HYnHZYIFFofrY+IigBsGVc5U=;
-Received: from root (helo=callcc.thunk.org)
-        by imap.thunk.org with local-esmtp (Exim 4.89)
-        (envelope-from <tytso@thunk.org>)
-        id 1gExpq-00027F-7Q; Tue, 23 Oct 2018 14:39:07 +0000
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id A9F617A56BE; Tue, 23 Oct 2018 10:38:56 -0400 (EDT)
-Date:   Tue, 23 Oct 2018 10:38:56 -0400
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Is Fixes line enough?
-Message-ID: <20181023143856.GD6850@thunk.org>
-Mail-Followup-To: "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <a99840d5-7d57-ec1f-1c70-37ffa6cfd31b@lwfinger.net>
+        Tue, 23 Oct 2018 20:37:02 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46274 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728217AbeJXAhB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Oct 2018 20:37:01 -0400
+Received: by mail-wr1-f66.google.com with SMTP id i4-v6so2341880wrr.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2018 09:12:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+JScUQ78rFZbnKeeinU5VrseuSLSSJNADLkjx45RdqQ=;
+        b=u8lNjEUJGPOo8RXEFj9OXw0uupkkXQUHKu4J7jr5JsFer9IsK/n36ynF814hr5fnhG
+         UQnvAfUQNWuje9HOH8QYTpSjkcqHfncMuLcW5LVQeNC5vjl81xMDGpoGyXXeyMQZblVd
+         Lozwt2hToIC2wYCSvrvf3NfpeNYf99X2mkGPu+KGc62HBV4QnQVgDRUJvZFRbEdpQ0DG
+         PWcftUUq0Jji/2OGyBwbFajMqcX+j69JcIUtg38M4Y1IzYUs1yeKiE2ZlXb+Kp8p+TdB
+         6Lr/rh5CKXM7ZCEBmb1EEemeCEHXTkPYlUzTIZUB2DGFSTuEai98HkxI/1C8rWCoQaYy
+         DwBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+JScUQ78rFZbnKeeinU5VrseuSLSSJNADLkjx45RdqQ=;
+        b=jURMsjYmu7svGM606W/eF6YQoCWOd4SHsuBeIITARtnHnP7BfdiPgPMJHMlWl56oVQ
+         cFPE0VnV400xyU7kM3ES5aEMlOItr5Z/4Kg8CuB7v1Rd2BsK8vQZMQUzTDjhxhpQDDl6
+         pAeLiM3nzMW+0wLhRq/fhjqXdXX5qVOgMpznKWkFegL0NBxGWK61m1qsvNnv/D213gkq
+         US7I9bpafzaw7rJ0U1qFgR8dHfTNZHmilR4b1K1iOjwQ1Jju6biWViztn5zJyvpIlcwl
+         fwbFplv9nCv1y/jMk/Xup+olSjSolpPAIk5vr1K5DPM4/af/pqZGW4XcXf4Ac46JVA2o
+         5JiA==
+X-Gm-Message-State: ABuFfogJx4oRjzclTGkYNBZdGxEEu/lghLBc/qmZg8ZEfUaJOZClad7j
+        xw00PKg6PRpAqnxYM44OqEVC2PDoOHE=
+X-Google-Smtp-Source: ACcGV60SDuBKpSQxXz/K3pez4T73KtH4ziTYxK+1VQ5sShiFdV/TFAAuC9Iw0GTx2wwVPz0k+GEuFQ==
+X-Received: by 2002:adf:9021:: with SMTP id h30-v6mr53403649wrh.248.1540311178471;
+        Tue, 23 Oct 2018 09:12:58 -0700 (PDT)
+Received: from localhost.localdomain ([37.238.236.62])
+        by smtp.gmail.com with ESMTPSA id h18-v6sm1065505wro.0.2018.10.23.09.12.56
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Oct 2018 09:12:57 -0700 (PDT)
+From:   Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Subject: [PATCH] brcmsmac: never log "tid x is not agg'able" by default
+Date:   Tue, 23 Oct 2018 19:12:35 +0300
+Message-Id: <20181023161235.18143-1-alimjalnasrawy@gmail.com>
+X-Mailer: git-send-email 2.19.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a99840d5-7d57-ec1f-1c70-37ffa6cfd31b@lwfinger.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: tytso@thunk.org
-X-SA-Exim-Scanned: No (on imap.thunk.org); SAEximRunCond expanded to false
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 23, 2018 at 09:05:20AM -0500, Larry Finger wrote:
-> Greg,
-> 
-> A question has come up on the linux-wireless ML. If a patch has a "Fixes"
-> line, is that sufficient to get it flagged as a patch in Stable, or is a
-> "Cc: Stable" line also needed?
+This message greatly spams the log under heavy Tx of frames with BK access
+class which is especially true when operating as AP. It is also not informative
+as the "agg'ablity" of TIDs are set once and never change.
+Fix this by logging only in debug mode.
 
-Someone actually asked this question at the Maintainer's Summit,
-actually.  The answer was that the Fixes line is not sufficient for
-Greg's scripts; you have to have the "Cc: stable" line as well.  Greg
-tried using the Fixes line as a trigger, but there were too many cases
-where this pulled in commits that weren't really suitable for the
-Stable kernels.  Sasha's machine-learning lash up will use the Fixes
-line as a signal, but if you want to explicitly request that the patch
-should be cherry-picked into Stable, you should have the "Cc: stable"
-line.
+Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c    | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-(Also mentioned that at the Maintainer's Summit was that we probably
-do need to take a look at the Stable documentation and see how it
-needs to be updated to reflect how things are currently behind
-handled.  :-)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index 912499f..c5de9a3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -846,8 +846,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		status = brcms_c_aggregatable(wl->wlc, tid);
+ 		spin_unlock_bh(&wl->lock);
+ 		if (!status) {
+-			brcms_err(wl->wlc->hw->d11core,
+-				  "START: tid %d is not agg\'able\n", tid);
++			brcms_dbg_ht(wl->wlc->hw->d11core,
++				     "START: tid %d is not agg\'able\n", tid);
+ 			return -EINVAL;
+ 		}
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+-- 
+2.19.0
 
-Cheers,
-
-						- Ted
