@@ -2,108 +2,142 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AFFBC46475
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 011DDC46475
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:59:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 123D32075D
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:40:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 123D32075D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=huawei.com
+	by mail.kernel.org (Postfix) with ESMTP id C0D6320671
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 08:59:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C0D6320671
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727963AbeJWRDJ (ORCPT
+        id S1728366AbeJWRWI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 13:03:09 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:13683 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727542AbeJWRDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 13:03:08 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 28C6DFAF76082;
-        Tue, 23 Oct 2018 16:40:42 +0800 (CST)
-Received: from linux-ibm.site (10.175.102.37) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.408.0; Tue, 23 Oct 2018 16:40:43 +0800
-From:   zhong jiang <zhongjiang@huawei.com>
-To:     <kvalo@codeaurora.org>
-CC:     <davem@davemloft.net>, <pkshih@realtek.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] rtlwifi: remove set but not used variable 'radiob_array_table' and 'radiob_arraylen'
-Date:   Tue, 23 Oct 2018 16:28:02 +0800
-Message-ID: <1540283282-9772-1-git-send-email-zhongjiang@huawei.com>
-X-Mailer: git-send-email 1.7.12.4
+        Tue, 23 Oct 2018 13:22:08 -0400
+Received: from gateway30.websitewelcome.com ([192.185.149.4]:47873 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727470AbeJWRWH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Oct 2018 13:22:07 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id CB6BEB211
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2018 03:59:38 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id EsXAgoK3x7jE8EsXHgEWXV; Tue, 23 Oct 2018 03:59:38 -0500
+X-Authority-Reason: nr=8
+Received: from lfbn-1-466-13.w86-245.abo.wanadoo.fr ([86.245.173.13]:53876 helo=[192.168.1.41])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.91)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1gEsX9-004Eed-RX; Tue, 23 Oct 2018 03:59:28 -0500
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
+References: <20181023001308.GA4150@embeddedor.com>
+ <0b3197a734f71bdfffaf717e63b17e2fe31720a2.camel@sipsolutions.net>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ VtSixD1uOgytAP7RWS474w==
+Subject: Re: [PATCH v2] wireless: mark expected switch fall-throughs
+Message-ID: <f0a240e2-cae7-07f4-757f-a8606199d29e@embeddedor.com>
+Date:   Tue, 23 Oct 2018 10:59:23 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.102.37]
-X-CFilter-Loop: Reflected
+In-Reply-To: <0b3197a734f71bdfffaf717e63b17e2fe31720a2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 86.245.173.13
+X-Source-L: No
+X-Exim-ID: 1gEsX9-004Eed-RX
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: lfbn-1-466-13.w86-245.abo.wanadoo.fr ([192.168.1.41]) [86.245.173.13]:53876
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-radiob_array_table' and 'radiob_arraylen' are not used after setting its value.
-It is safe to remove the unused variable. Meanwhile, radio B radio should be
-removed as well. because it will no longer be referenced.
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c   | 5 +----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.c | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.h | 2 --
- 3 files changed, 1 insertion(+), 10 deletions(-)
+On 10/23/18 9:01 AM, Johannes Berg wrote:
+> On Tue, 2018-10-23 at 02:13 +0200, Gustavo A. R. Silva wrote:
+>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>> where we are expecting to fall through.
+>>
+>> Warning level 3 was used: -Wimplicit-fallthrough=3
+>>
+>> This code was not tested and GCC 7.2.0 was used to compile it.
+> 
+> Look, I'm not going to make this any clearer: I'm not applying patches
+> like that where you've invested no effort whatsoever on verifying that
+> they're correct.
+> 
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-index 5cf29f5..3f33278 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-@@ -509,13 +509,10 @@ bool rtl8723e_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 	int i;
- 	bool rtstatus = true;
- 	u32 *radioa_array_table;
--	u32 *radiob_array_table;
--	u16 radioa_arraylen, radiob_arraylen;
-+	u16 radioa_arraylen;
- 
- 	radioa_arraylen = RTL8723ERADIOA_1TARRAYLENGTH;
- 	radioa_array_table = RTL8723E_RADIOA_1TARRAY;
--	radiob_arraylen = RTL8723E_RADIOB_1TARRAYLENGTH;
--	radiob_array_table = RTL8723E_RADIOB_1TARRAY;
- 
- 	rtstatus = true;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.c
-index 61e8604..1bbee0b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.c
-@@ -475,10 +475,6 @@
- 	0x000, 0x00030159,
- };
- 
--u32 RTL8723E_RADIOB_1TARRAY[RTL8723E_RADIOB_1TARRAYLENGTH] = {
--	0x0,
--};
--
- u32 RTL8723EMAC_ARRAY[RTL8723E_MACARRAYLENGTH] = {
- 	0x420, 0x00000080,
- 	0x423, 0x00000000,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.h
-index 57a548c..a044f3c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/table.h
-@@ -36,8 +36,6 @@
- extern u32 RTL8723EPHY_REG_ARRAY_PG[RTL8723E_PHY_REG_ARRAY_PGLENGTH];
- #define RTL8723ERADIOA_1TARRAYLENGTH		282
- extern u32 RTL8723E_RADIOA_1TARRAY[RTL8723ERADIOA_1TARRAYLENGTH];
--#define RTL8723E_RADIOB_1TARRAYLENGTH		1
--extern u32 RTL8723E_RADIOB_1TARRAY[RTL8723E_RADIOB_1TARRAYLENGTH];
- #define RTL8723E_MACARRAYLENGTH			172
- extern u32 RTL8723EMAC_ARRAY[RTL8723E_MACARRAYLENGTH];
- #define RTL8723E_AGCTAB_1TARRAYLENGTH		320
--- 
-1.7.12.4
+How do you suggest me to verify that every part is correct in this type
+of patches?
+
+Thanks
+--
+Gustavo
+
+
 
