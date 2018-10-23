@@ -2,79 +2,85 @@ Return-Path: <SRS0=ht5v=ND=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A33C67863
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 01:25:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 837FDC67863
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 03:24:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E1BE20665
-	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 01:25:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4E1BE20665
+	by mail.kernel.org (Postfix) with ESMTP id 4FEDA2064C
+	for <linux-wireless@archiver.kernel.org>; Tue, 23 Oct 2018 03:24:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4FEDA2064C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727872AbeJWJqF (ORCPT
+        id S1727067AbeJWLqU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 23 Oct 2018 05:46:05 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:55124 "EHLO
+        Tue, 23 Oct 2018 07:46:20 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:56077 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725883AbeJWJqF (ORCPT
+        with ESMTP id S1726438AbeJWLqU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Oct 2018 05:46:05 -0400
+        Tue, 23 Oct 2018 07:46:20 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9N1OkNf026058, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9N3Omiq022436, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9N1OkNf026058
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9N3Omiq022436
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Tue, 23 Oct 2018 09:24:46 +0800
-Received: from RTITMBSVM01.realtek.com.tw ([fe80::f4ca:82cf:5a3:5d7a]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0415.000; Tue, 23 Oct
- 2018 09:24:45 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "yuehaibing@huawei.com" <yuehaibing@huawei.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "natechancellor@gmail.com" <natechancellor@gmail.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: btcoex: remove set but not used variable 'ppsc'
-Thread-Topic: [PATCH] rtlwifi: btcoex: remove set but not used variable
- 'ppsc'
-Thread-Index: AQHUadqMke4Dmp6jrki0QUw091mP3KUrhGMA
-Date:   Tue, 23 Oct 2018 01:24:45 +0000
-Message-ID: <1540257852.2768.4.camel@realtek.com>
-References: <1540194675-65562-1-git-send-email-yuehaibing@huawei.com>
-In-Reply-To: <1540194675-65562-1-git-send-email-yuehaibing@huawei.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.146]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <712225B4A4089D429066630624D2950F@realtek.com>
-Content-Transfer-Encoding: base64
+        Tue, 23 Oct 2018 11:24:48 +0800
+Received: from localhost.localdomain (172.21.68.143) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.408.0; Tue, 23 Oct 2018 11:24:48 +0800
+From:   <yhchuang@realtek.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fix GFP_KERNEL under tasklet context
+Date:   Tue, 23 Oct 2018 11:24:44 +0800
+Message-ID: <1540265084-13808-1-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.143]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gTW9uLCAyMDE4LTEwLTIyIGF0IDA3OjUxICswMDAwLCBZdWVIYWliaW5nIHdyb3RlOg0KPiBG
-aXhlcyBnY2MgJy1XdW51c2VkLWJ1dC1zZXQtdmFyaWFibGUnIHdhcm5pbmc6DQo+IA0KPiBkcml2
-ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Y291dHNyYy5j
-OiBJbiBmdW5jdGlvbg0KPiAnaGFsYnRjX2xlYXZlX2xwcyc6DQo+IGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjb3V0c3JjLmM6Mjk1OjIxOiB3YXJu
-aW5nOg0KPiDCoHZhcmlhYmxlICdwcHNjJyBzZXQgYnV0IG5vdCB1c2VkIFstV3VudXNlZC1idXQt
-c2V0LXZhcmlhYmxlXQ0KPiANCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZp
-L2J0Y29leGlzdC9oYWxidGNvdXRzcmMuYzogSW4gZnVuY3Rpb24NCj4gJ2hhbGJ0Y19lbnRlcl9s
-cHMnOg0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hh
-bGJ0Y291dHNyYy5jOjMxODoyMTogd2FybmluZzoNCj4gwqB2YXJpYWJsZSAncHBzYycgc2V0IGJ1
-dCBub3QgdXNlZCBbLVd1bnVzZWQtYnV0LXNldC12YXJpYWJsZV0NCj4gDQo+IEl0IG5ldmVyIHVz
-ZWQgc2luY2UgaW50cm9kdWN0aW9uIGluDQo+IGNvbW1pdCBhYTQ1YTY3M2IyOTEgKCJydGx3aWZp
-OiBidGNvZXhpc3Q6IEFkZCBuZXcgbWluaSBkcml2ZXIiKQ0KPiANCj4gU2lnbmVkLW9mZi1ieTog
-WXVlSGFpYmluZyA8eXVlaGFpYmluZ0BodWF3ZWkuY29tPg0KDQoNCkFja2VkLWJ5OiBQaW5nLUtl
-IFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCg0KDQo=
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+cfg80211_sta_opmode_change_notify needs a gfp_t flag to hint the nl80211
+stack when allocating new skb, but it is called under tasklet context
+here with GFP_KERNEL and kernel will yield a warning about it.
+
+Fixes: ff84e7bfe176 ("mac80211: Add support to notify ht/vht opmode modification.")
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ net/mac80211/rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 64742f2..03d3964f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3028,7 +3028,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			cfg80211_sta_opmode_change_notify(sdata->dev,
+ 							  rx->sta->addr,
+ 							  &sta_opmode,
+-							  GFP_KERNEL);
++							  GFP_ATOMIC);
+ 			goto handled;
+ 		}
+ 		case WLAN_HT_ACTION_NOTIFY_CHANWIDTH: {
+@@ -3065,7 +3065,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			cfg80211_sta_opmode_change_notify(sdata->dev,
+ 							  rx->sta->addr,
+ 							  &sta_opmode,
+-							  GFP_KERNEL);
++							  GFP_ATOMIC);
+ 			goto handled;
+ 		}
+ 		default:
+-- 
+2.7.4
+
