@@ -2,79 +2,105 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BACF7C004D3
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0272C004D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 709F920824
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:09:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61A5F2064A
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:56:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WlMzVvby"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 709F920824
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="goWW5v0K"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 61A5F2064A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727354AbeJXUhq (ORCPT
+        id S1727547AbeJXVY6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 16:37:46 -0400
-Received: from mail-ot1-f50.google.com ([209.85.210.50]:46920 "EHLO
-        mail-ot1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726360AbeJXUhq (ORCPT
+        Wed, 24 Oct 2018 17:24:58 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37184 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727177AbeJXVY6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 16:37:46 -0400
-Received: by mail-ot1-f50.google.com with SMTP id u26so3597494otk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 05:09:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=MBXgBanvCS1nrKQtjSWlr2YzhpzItb/srf4mT2j5WY4=;
-        b=WlMzVvbybrDduNpXBgs8WE/9m69Lk1DLTsiT3oR/YlUS7CIl3eI1E6VwY6pAw+DnsO
-         BgRGhaBtRgJFGI499bwHgkKw77SrNA5lr0rIIau6uPruO6L2zfrJ3f8mTxeY2TABXvLo
-         VqrolMEOoQiusnGwo0o9x1NGQHQaLm+hrflrPYoxW+DM7KhJ6oaHzuU6cIVJYWAnHZ0u
-         VOjk430KZEAb7rCaoqjY7MBxjNBPaZc7ovfWQWWzk3H0O+JrPSNtteePbrOWDc8eOGbW
-         XZFSTQL4fH6GgYMA9EWsXI8Me/885V7i1dB+ACQB5mfIqvzHonzeYipuinAlg204Yb6X
-         1DDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=MBXgBanvCS1nrKQtjSWlr2YzhpzItb/srf4mT2j5WY4=;
-        b=s5u3BjnCfyn5Dra688HH6gcS3SN5fhyjkogt90cID3JAdSBowz+xfJYb+Ns3koV4B8
-         4WUuJ319wEazOsJbFwDCyNKT75MGgvgeOdPAoabLAkiNJ+vmcaeK5GTUdIf7C4xpSnQg
-         aoPmnUvKFToorOhxuIu0Ufc9uTHhiYBKmgbOWYO0mJ16VMMFkQQL7cYzKlQ/wZAKAGFb
-         bGfoSbHkucRqLvDaVb1m+BlNAA9KSBg/nNZaChKYLlCrJyu9ey4Dm2H+mNM2/ph03QKQ
-         S0Hotguxhykr/etxC+1DTItZecY0Ot66yYwBMRHSaXtofKIy4bPMlT0fGHkDsEmbtH0A
-         TnPQ==
-X-Gm-Message-State: AGRZ1gKb/xSwcS9B0iWILQ0wgWPbjYyHMa8iBYGPmzRBTH56CYmdlIIv
-        N9OG8kCkigPiT7rSmocgzksZAQq8pG70cwh0TyM=
-X-Google-Smtp-Source: AJdET5fRazEc50MA7uzz7jOY3jwJNmAj6Q0hP2QWVWG+j5nNbIFs7+hkzSozCeFlMKq/n8EJ8aZ93ZRD6k021E8zAEI=
-X-Received: by 2002:a9d:ec:: with SMTP id 41mr1415953otk.322.1540382993793;
- Wed, 24 Oct 2018 05:09:53 -0700 (PDT)
+        Wed, 24 Oct 2018 17:24:58 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w9OCnSDM094825;
+        Wed, 24 Oct 2018 12:56:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2018-07-02;
+ bh=yN6f7Vf683zVbKWT67T2TDYzmNLP/4oCu2OOVL/tMCM=;
+ b=goWW5v0KHA5jh/4rIHZZ182PYG0a/06+FwMld1hOigyzHc7fDiVvQ8J9f8TFgC7QLmVu
+ UpBk662yBasuJvkBLjdE+EStIH1LKi2c2JVE1pK2peRtCiwV94P6rPhwB2/fLSb04z73
+ fRcY9Wq2b0sZ7hYeRcrklTj5lEzY10kDDCKjO6jjftrCPSdOzmARV75bl6ZoTRgLkv7J
+ JseIRSGQo/f8c+IEQLszh3nWlD8aG1lWgmbX+///eqT3TDTPjjvDFzj232IZQVz5ppk/
+ dB/ICKyySpZD803hpcwFIl1DxcXo5y9BGA3eVhQaJh4QSxaMACscQD8grCLAVU4p3p5L Nw== 
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2n7usubck3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 24 Oct 2018 12:56:48 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w9OCulSl017153
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 24 Oct 2018 12:56:48 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w9OCukp1005154;
+        Wed, 24 Oct 2018 12:56:47 GMT
+Received: from mwanda (/129.205.6.86)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 24 Oct 2018 05:56:46 -0700
+Date:   Wed, 24 Oct 2018 15:56:30 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Fix a locking bug in ath9k_add_interface()
+Message-ID: <20181024125630.pqs6uae3owjvfdhr@mwanda>
+References: <20181019200842.7qclbjs547sm7mbn@kili.mountain>
+ <87tvlbuc3n.fsf@codeaurora.org>
 MIME-Version: 1.0
-Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Wed, 24 Oct 2018 05:09:53
- -0700 (PDT)
-In-Reply-To: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
-References: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Wed, 24 Oct 2018 14:09:53 +0200
-Message-ID: <CAKR_QV+xitANRgaH=_wEkRgizFU7fsqyY8JY7f+AzQTdgjQ1cg@mail.gmail.com>
-Subject: Re: ath9k driver may be broken on ARM64 ?
-To:     Ellie Revves <ellierevves@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87tvlbuc3n.fsf@codeaurora.org>
+User-Agent: NeoMutt/20170609 (1.8.3)
+X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9055 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=876
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1807170000 definitions=main-1810240112
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi
+On Wed, Oct 24, 2018 at 08:50:52AM +0300, Kalle Valo wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+> 
+> > We tried to revert commit d9c52fd17cb4 ("ath9k: fix tx99 with monitor
+> > mode interface") but accidentally missed part of the locking change.
+> >
+> > The lock has to be held earlier so that we're holding it when we do
+> > "sc->tx99_vif = vif;" and also there in the current code there is a
+> > stray unlock before we have taken the lock.
+> >
+> > Fixes: 6df0580be8bc ("ath9k: add back support for using active monitor interfaces for tx99")
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> commit 6df0580be8bc is on it's way to v4.20 so should I also queue this
+> to v4.20?
 
-There was similar issue reported in forum recently:
-https://forum.openwrt.org/t/wireless-card-atheros-ar9565/23608
+Yeah.  Obviously this is a static checker thing and I haven't tested it.
 
-Could you enable ath9k debug and post output?
+I don't know if add_interface() is ever called in parallel, but I can
+imagine that it might be.  In that case the race condition is something
+that would affect real life.
+
+Anyway, it's a small obvious fix.
+
+regards,
+dan carpenter
+
