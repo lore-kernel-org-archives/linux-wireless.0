@@ -2,91 +2,106 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A542ECDE46
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF26ECDE44
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 19:13:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 222A6207DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:55:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43B6420831
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 19:13:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KCDJKewt";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Epwg0oA3"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 222A6207DD
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LrzDWqqv"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 43B6420831
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727427AbeJYDYi (ORCPT
+        id S1726676AbeJYDl3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 23:24:38 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53982 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726748AbeJYDYi (ORCPT
+        Wed, 24 Oct 2018 23:41:29 -0400
+Received: from mail-qt1-f172.google.com ([209.85.160.172]:42193 "EHLO
+        mail-qt1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726497AbeJYDl3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 23:24:38 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 93AAB60C4F; Wed, 24 Oct 2018 18:55:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540407325;
-        bh=c9zkLL3Q89pQF1hlz9HdPCPB0Ch4uq6q6cRqvBwbZIA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=KCDJKewt5G6SHr4QszPmlQJd5wKLGM7zMNYOUc71gqwwv0vkZ5DwPwzhDS5uizNlH
-         8U7oYvux5BkP0DWBGp2mTqIYqYOYuUwZ+v7vDv+3N37248p1OKv5Bl4iOYvICqHs/y
-         pzsMQ2cg28/noy6di0jd6WqG+XHpfYoIOAEktpGI=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 9D3ED60ADB;
-        Wed, 24 Oct 2018 18:55:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540407314;
-        bh=c9zkLL3Q89pQF1hlz9HdPCPB0Ch4uq6q6cRqvBwbZIA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Epwg0oA3+eRJPk4O8qgiRj5ZCWF7WB+vh4E/cfaDUoKxwrBtqA0+ScEfpVTjZLP/f
-         Ve1wQ1Im19D2Mh4CFVPtdW+g5yFGA0H0vDhbFnZjph/dy5ShQBq1fBoaFtYhCh7GdV
-         pZriCoDXK+2B7tqQM8yt0JUa+3lToDk0tB2/EJUY=
+        Wed, 24 Oct 2018 23:41:29 -0400
+Received: by mail-qt1-f172.google.com with SMTP id j46-v6so6905257qtc.9
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 12:12:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=do2FS+guK+Rgy3iLiFpD7mwkrEJUQ11ONBOFdKp/TbQ=;
+        b=LrzDWqqv4O9a8EKAVJ11lCBMj1WACwKD1/sJc6LgAIZgo/oggqoOEQCN4LDirbSSLA
+         WoQS8iyj3Gaa/tXEiKmEi45TEmD+7pDeiAgZTPDccT3TbeBPN4ptOh0pLLad5H7knCKE
+         aK+pr2zgX6Kn7YkK+VdRVjGv4ItK1i7oG7IzUhZHU/tsNlU+AnY/zhipm62uvCQkN88u
+         6ic00aq+UnlQNgFQ6z5oGn2UGjC6Y5t9JNVXmBEztgRtINfQ0w8tlpJs8iGvf9SZ8gUc
+         HL35I13RjOtJ1zUFihi5cywMxK9yG7gDNwH1VsndjETzW1827hoDRqYwmmTpT1OH9wZR
+         vjvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=do2FS+guK+Rgy3iLiFpD7mwkrEJUQ11ONBOFdKp/TbQ=;
+        b=f8FlbXUNYkxuJ7Caz8Z9Tl+aDqHDaV33I+QNAxzwDOvBm1eDdO2ug/YXbXGbLbxzRs
+         pzSxTWoPjCmecYeCtKhTTKvKHFsOoVdfZ4yGzlcswPSePVdbSykJXEYD3KRPsqvt9qv8
+         NbCMzZoRUSEtukhBQ3yHI0C2fC0hXgD1euvXHvJwJcAwY4XB6LZ3qMCO1nzNs4wC1xll
+         vtzsAXTPKI5tlyi/0QLVP3jqE9UkTlE50uleImJP7Il+XZBSfVFdZmHmsZa+qvvxasRj
+         RrHembLu673LOApe0UDgMxR3uPK7uI/VHD57QMsjCbMjUAjUNNl6Etv7w8rX+SulbwFA
+         uOvw==
+X-Gm-Message-State: AGRZ1gLh/HJPFmqngM8+Kj49QtT8ssHg3rkHiz17uoENsV6Am+XLOrBA
+        Ok/0OrI4wwBYgFvdsNep6PGRdKIm
+X-Google-Smtp-Source: AJdET5diB44N30dw17xlb876xZrU9LZHYkCERag4nk1yF2AIP6PmVAjfV6GmGCUTdgMYy07beR0yUg==
+X-Received: by 2002:ac8:3693:: with SMTP id a19-v6mr3668467qtc.236.1540408332633;
+        Wed, 24 Oct 2018 12:12:12 -0700 (PDT)
+Received: from ?IPv6:2001:470:1d:7b6::245? ([2001:470:1d:7b6::245])
+        by smtp.googlemail.com with ESMTPSA id h49-v6sm4430902qth.32.2018.10.24.12.12.10
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 24 Oct 2018 12:12:11 -0700 (PDT)
+Subject: Re: ath9k driver may be broken on ARM64 ?
+From:   Ellie Revves <ellierevves@gmail.com>
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+References: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
+ <CAKR_QV+xitANRgaH=_wEkRgizFU7fsqyY8JY7f+AzQTdgjQ1cg@mail.gmail.com>
+ <caf394ef-dc52-b19b-6b31-77b92158f389@gmail.com>
+Message-ID: <6c59ee97-cad9-46bb-be0c-6daa6f614a61@gmail.com>
+Date:   Wed, 24 Oct 2018 15:13:50 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Firefox/52.0 SeaMonkey/2.49.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+In-Reply-To: <caf394ef-dc52-b19b-6b31-77b92158f389@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Date:   Wed, 24 Oct 2018 11:55:14 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: Re: [PATCH 5/6] ath10k: migrate to mac80211 txq scheduling
-In-Reply-To: <87a7n3u4kl.fsf@codeaurora.org>
-References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
- <1540033534-11211-6-git-send-email-rmanohar@codeaurora.org>
- <87a7n3u4kl.fsf@codeaurora.org>
-Message-ID: <051d255c3377cd9d1724cc288df2d8c2@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-24 01:33, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->> ath10k maintains common txqs list for all stations. This txq
->> management can be removed by migrating to mac80211 txq APIs
->> and let mac80211 handle txqs reordering based on reported airtime.
->> By doing this, txq fairness maintained in ath10k i.e processing
->> N frames per txq is removed. By adapting to mac80211 APIs,
->> ath10k will support mac80211 based airtime fairness algorithm.
->> 
->> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
-> 
-> Is Toke the original author? Then you should add "From:" tag to mark
-> that. And you might want to use Co-developed-by to mark yourself as
-> co-developer.
-> 
-Toke submitted ath10k changes in RFC v1 but those were dropped
-in follow up series. When I reworked on ath10k, I retaining his s-o-b.
+Hi,
+well I enabled CONFIG_ATH_DEBUG and booted this kernel, sorry for the 
+mess of escape sequence but I captured via serial console:
+http://ix.io/1pWI
+I don't see anything different even if I cranked up ath9k.debug= to the 
+*any* value. I guess this thing happens so early at boot that nothing 
+useful is yet initialized...
+Thanks
 
-Will fix it.
+Ellie Revves a écrit :
+> Hi,
+> sure, I enabled atheros wireless debugging in my kernel and am 
+> rebuilding it. After this is done, should I set ath9k.debug= on the 
+> cmdline ? It is built as module, but my filesystem is read-only so no 
+> modprobe.d snippet can be added.
+> Thanks
+>
+> Tom Psyborg a écrit :
+>> Hi
+>>
+>> There was similar issue reported in forum recently:
+>> https://forum.openwrt.org/t/wireless-card-atheros-ar9565/23608
+>>
+>> Could you enable ath9k debug and post output?
+>
 
--Rajkumar
