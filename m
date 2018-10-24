@@ -2,99 +2,79 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F44C67863
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 11:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BACF7C004D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:09:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40E33207DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 11:22:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 40E33207DD
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 709F920824
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 12:09:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WlMzVvby"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 709F920824
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727610AbeJXTuG (ORCPT
+        id S1727354AbeJXUhq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 15:50:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57742 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727000AbeJXTuG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 15:50:06 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 92C30308FBA2;
-        Wed, 24 Oct 2018 11:22:22 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.135])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A6D185B681;
-        Wed, 24 Oct 2018 11:22:21 +0000 (UTC)
-Date:   Wed, 24 Oct 2018 13:22:20 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Joonwoo Park <joonwpark81@gmail.com>,
-        Andy Lutomirski <luto@amacapital.net>,
-        Rajat Jain <rajatja@google.com>,
-        Kirtika Ruchandani <kirtika@chromium.org>
-Subject: Re: [PATCH] iwlwifi: pcie: align licensing to dual GPL/BSD
-Message-ID: <20181024112219.GA23126@redhat.com>
-References: <20181024070436.4466-1-johannes@sipsolutions.net>
+        Wed, 24 Oct 2018 16:37:46 -0400
+Received: from mail-ot1-f50.google.com ([209.85.210.50]:46920 "EHLO
+        mail-ot1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726360AbeJXUhq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Oct 2018 16:37:46 -0400
+Received: by mail-ot1-f50.google.com with SMTP id u26so3597494otk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 05:09:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=MBXgBanvCS1nrKQtjSWlr2YzhpzItb/srf4mT2j5WY4=;
+        b=WlMzVvbybrDduNpXBgs8WE/9m69Lk1DLTsiT3oR/YlUS7CIl3eI1E6VwY6pAw+DnsO
+         BgRGhaBtRgJFGI499bwHgkKw77SrNA5lr0rIIau6uPruO6L2zfrJ3f8mTxeY2TABXvLo
+         VqrolMEOoQiusnGwo0o9x1NGQHQaLm+hrflrPYoxW+DM7KhJ6oaHzuU6cIVJYWAnHZ0u
+         VOjk430KZEAb7rCaoqjY7MBxjNBPaZc7ovfWQWWzk3H0O+JrPSNtteePbrOWDc8eOGbW
+         XZFSTQL4fH6GgYMA9EWsXI8Me/885V7i1dB+ACQB5mfIqvzHonzeYipuinAlg204Yb6X
+         1DDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=MBXgBanvCS1nrKQtjSWlr2YzhpzItb/srf4mT2j5WY4=;
+        b=s5u3BjnCfyn5Dra688HH6gcS3SN5fhyjkogt90cID3JAdSBowz+xfJYb+Ns3koV4B8
+         4WUuJ319wEazOsJbFwDCyNKT75MGgvgeOdPAoabLAkiNJ+vmcaeK5GTUdIf7C4xpSnQg
+         aoPmnUvKFToorOhxuIu0Ufc9uTHhiYBKmgbOWYO0mJ16VMMFkQQL7cYzKlQ/wZAKAGFb
+         bGfoSbHkucRqLvDaVb1m+BlNAA9KSBg/nNZaChKYLlCrJyu9ey4Dm2H+mNM2/ph03QKQ
+         S0Hotguxhykr/etxC+1DTItZecY0Ot66yYwBMRHSaXtofKIy4bPMlT0fGHkDsEmbtH0A
+         TnPQ==
+X-Gm-Message-State: AGRZ1gKb/xSwcS9B0iWILQ0wgWPbjYyHMa8iBYGPmzRBTH56CYmdlIIv
+        N9OG8kCkigPiT7rSmocgzksZAQq8pG70cwh0TyM=
+X-Google-Smtp-Source: AJdET5fRazEc50MA7uzz7jOY3jwJNmAj6Q0hP2QWVWG+j5nNbIFs7+hkzSozCeFlMKq/n8EJ8aZ93ZRD6k021E8zAEI=
+X-Received: by 2002:a9d:ec:: with SMTP id 41mr1415953otk.322.1540382993793;
+ Wed, 24 Oct 2018 05:09:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181024070436.4466-1-johannes@sipsolutions.net>
-User-Agent: Mutt/1.8.3 (2017-05-23)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Wed, 24 Oct 2018 11:22:22 +0000 (UTC)
+Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Wed, 24 Oct 2018 05:09:53
+ -0700 (PDT)
+In-Reply-To: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
+References: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Wed, 24 Oct 2018 14:09:53 +0200
+Message-ID: <CAKR_QV+xitANRgaH=_wEkRgizFU7fsqyY8JY7f+AzQTdgjQ1cg@mail.gmail.com>
+Subject: Re: ath9k driver may be broken on ARM64 ?
+To:     Ellie Revves <ellierevves@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 24, 2018 at 09:04:36AM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> These files have a long history of code changes, but analysing
-> the remaining code leads to having only a few changes that are
-> not already owned by Intel, notably from
->  - Andy Lutomirski <luto@amacapital.net>
->  - Joonwoo Park <joonwpark81@gmail.com>
->  - Kirtika Ruchandani <kirtika@chromium.org>
->  - Rajat Jain <rajatja@google.com>
->  - Stanislaw Gruszka <sgruszka@redhat.com>
-> remaining in the code today.
-> 
-> Note that
->  - I myself was working for Intel and for any possibly code
->    that might be before my employment there give permission
->  - Wizery employees were working for Intel
-> 
-> More specifically, we identified the following commits that
-> (partially may) remain today:
-> 
-> 25c03d8e8c13 Joonwoo Park <joonwpark81@gmail.com>      ("iwlwifi: do not schedule tasklet when rcv unused irq")
-> f36d04abe684 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: use dma_alloc_coherent")
-> 387f3381f732 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: fix dma mappings and skbs leak")
-> 2624e96ce16b Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: fix possible data overwrite in hcmd callback")
-> bfe4b80e9f73 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: always check if got h/w access before write")
-> d536c32b45d2 Andy Lutomirski <luto@amacapital.net>     ("iwlwifi: pcie: log when waking the NIC for hcmd submission fails")
-> a6d24fad00d9 Rajat Jain <rajatja@google.com>           ("iwlwifi: pcie: dump registers when HW becomes inaccessible")
-> fb12777ab59b Kirtika Ruchandani <kirtika@chromium.org> ("iwlwifi: Add more call-sites for pcie reg dumper")
-> 3a73a30049f2 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: cleanup/fix memory barriers")
-> aa5affbacb24 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: dump stack when fail to gain access to the device")
-> 
-> Align the licenses with their permission to clean up and to
-> make it all identical.
-> 
-> CC: Joonwoo Park <joonwpark81@gmail.com>
-> CC: Stanislaw Gruszka <sgruszka@redhat.com>
-> CC: Andy Lutomirski <luto@amacapital.net>
-> CC: Rajat Jain <rajatja@google.com>
-> CC: Kirtika Ruchandani <kirtika@chromium.org>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Hi
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+There was similar issue reported in forum recently:
+https://forum.openwrt.org/t/wireless-card-atheros-ar9565/23608
+
+Could you enable ath9k debug and post output?
