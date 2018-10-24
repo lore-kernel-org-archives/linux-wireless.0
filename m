@@ -2,96 +2,115 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA95C67863
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D83E0C004D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:51:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13D08204FD
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:39:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FA1020831
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:51:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nrB9XMYI"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 13D08204FD
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YlGqoIpK";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="isDlkWvq"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9FA1020831
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728673AbeJXQF6 (ORCPT
+        id S1727385AbeJXQRn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 12:05:58 -0400
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:39358 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728442AbeJXQF5 (ORCPT
+        Wed, 24 Oct 2018 12:17:43 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:40978 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726832AbeJXQRn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 12:05:57 -0400
-Received: by mail-lf1-f65.google.com with SMTP id p11-v6so3164269lfc.6
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 00:39:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=GkoSdEv4GCFVToMEcnWqnbzhSlo5v+SnRtwOQPG9EY8=;
-        b=nrB9XMYI2A2DPnjBDaeE7rku2nqhOwA6Cv5MtJ+4pWkXYN4LZjEjQhHiSC3O3kf7Sj
-         XXd9Grcg/ajNBMVKNhIsv1ejo8ed1FmLxhAJ6On9XsErLmCZlm4DOrdXeH/BVPbEydCx
-         vzsUT0hp/ME/zXgNwkn/vlJp0o99rDmOBbaa3y/tt1p3qmHRncxhTmf4+fLzbjHPMddJ
-         Uq2qhNJyXLy+3hympLAPiQTH5hNKG0ECcMqbqqg2QXgv+oa2ZB9n2uJcIaNDjdSZsEKa
-         diTtJ3m09XC1U8tCudY9kQy69uNEfAi0mZVvA2YoWSnwXztxLaiCa/CPMbqic0NbpRMe
-         O1qg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=GkoSdEv4GCFVToMEcnWqnbzhSlo5v+SnRtwOQPG9EY8=;
-        b=hgZig33waFmPPP7348HzRqbC+OR97MVf9Oom6HodSTAJaR4kbv3iipdrMnvXvLXQFI
-         VkJopX4PxAswVdhhPHZ8Il31UkSrR2w3rgobS0ODyHqcmrmnZsMstK8lEHSDtacoIxF8
-         cb9GbjAx5OVf5w4H+AGXF/6GQTssr/FnGC74/2HLrT/APEk+BU2IsIQx9A9O6I4X+MzI
-         2XC1axsmBava6Ryj4tbW5+KIUqhQch7pvArm7/3/rBqNPe3fz55fGgbGmijA0ZaseAfU
-         JxZpVxo4H343eRteiOOY5vbLlXhlUoXZa5wRy95mK1d0jUY6lUkhJ3S0hMtPrQdscz83
-         gwwQ==
-X-Gm-Message-State: AGRZ1gLdUNCXM1aWGteJ5P1xnX+D3lT+631q4ljCKmaSBet3Osr8zBWk
-        XC8/wUgIRAQq6R5PitlJwKucP5hM8CaYEIqY9Aezn5DSyKo=
-X-Google-Smtp-Source: AJdET5dZGQtDxvmMV2dJM1BiOpeqaDIrgTls9/dH4+2lYSiut2mHSR7g4UGcfBoVnRGQ5kFtHjOssfkhXkGR5WBmDW0=
-X-Received: by 2002:a19:d78c:: with SMTP id q12mr2335063lfi.27.1540366740509;
- Wed, 24 Oct 2018 00:39:00 -0700 (PDT)
+        Wed, 24 Oct 2018 12:17:43 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6D8C460F39; Wed, 24 Oct 2018 07:50:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540367444;
+        bh=airQKr2hQAfcDpd0qV4dEfogZh+vEH9IDTk9ys52p0k=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=YlGqoIpKJCSTirEIdiX3Iep+XHlTHOT9bWJBasfeTvcI7VaeU8hc8ZSjCCvT6mSE+
+         NWiCa/mpznZehpO7jMK3OhGGEm3dP4gm4Td91Ku+M4AmPjZCQcSk9itnm+GTzkNG+Z
+         GR/PpZUnopRqfzXCO2oCApLHscZk9iyziLTe+we4=
+Received: from x230.qca.qualcomm.com (87-93-79-96.bb.dnainternet.fi [87.93.79.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86A6E6034D;
+        Wed, 24 Oct 2018 07:50:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540367443;
+        bh=airQKr2hQAfcDpd0qV4dEfogZh+vEH9IDTk9ys52p0k=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=isDlkWvqfETGCoQQl/S8bw4tZe932qnyQJcK0O0D1ztsrLZ/+r2gsGltHzVYeLMTi
+         Qf8GiDvPTrAS573tP8c9YrFSDof40BpgZknb24EDoq5VGgLbZAJZ/IQX70cmrrrUOL
+         q5ScqBbYQrT2/fjBlHWCh0PZ0NKzEYZhyNrAcF0s=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 86A6E6034D
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Govind Singh <govinds@codeaurora.org>,
+        David Miller <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        netdev@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>
+Subject: Re: [GIT] Networking
+References: <20181023.202921.1185045750138652543.davem@davemloft.net>
+        <CAHk-=whuhCGujWKO8JObGQaSdWOpJBXdkM-B-vD80QZifveScw@mail.gmail.com>
+        <CAHk-=wh2H9jE2RXibQgWs3_Q539roj62_gzPXKjnhhKqSFcw2g@mail.gmail.com>
+Date:   Wed, 24 Oct 2018 10:50:38 +0300
+In-Reply-To: <CAHk-=wh2H9jE2RXibQgWs3_Q539roj62_gzPXKjnhhKqSFcw2g@mail.gmail.com>
+        (Linus Torvalds's message of "Wed, 24 Oct 2018 08:23:44 +0100")
+Message-ID: <87lg6nu6k1.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-References: <20181024070436.4466-1-johannes@sipsolutions.net>
- <CA+icZUW=jiTs9GPu-OgNnF1vaj=bHy88b5Qm3NnhkyKVdPqeLA@mail.gmail.com> <22674c9e06c5ebe6eef92c8aa9b7fef904208497.camel@sipsolutions.net>
-In-Reply-To: <22674c9e06c5ebe6eef92c8aa9b7fef904208497.camel@sipsolutions.net>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Wed, 24 Oct 2018 09:38:49 +0200
-Message-ID: <CA+icZUVnM1u2Dy_okYBFZvx8VBdMLx5T41Zbcm-DTOYsn+A8eg@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: pcie: align licensing to dual GPL/BSD
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, joonwpark81@gmail.com,
-        sgruszka@redhat.com, luto@amacapital.net, rajatja@google.com,
-        kirtika@chromium.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 24, 2018 at 9:36 AM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Wed, 2018-10-24 at 09:33 +0200, Sedat Dilek wrote:
-> >
-> > > Align the licenses with their permission to clean up and to
-> > > make it all identical.
-> > >
-> >
-> > Does it make sense to put the BSD license (text) in a separate file
-> > (like GPL) and reference it?
->
-> I agree that it would, and in fact we already have it available to
-> reference with the SPDX in the LICENSES directory.
->
-> However, no files of the iwlwifi driver currently do that, and I'd
-> prefer doing that sort of cleanup more generally as a separate step.
->
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-Sounds good to me.
+> On Wed, Oct 24, 2018 at 7:01 AM Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>>
+>> Hmm. Tentatively pulled, but there's something wrong with the Kconfig rules.
+>
+> Confirmed.
 
-- Sedat -
+BTW, our emails crossed and more info in the other email[1].
+
+> I did a978a5b8d83f ("net/kconfig: Make QCOM_QMI_HELPERS available when
+> COMPILE_TEST") to fix the breakage.
+
+Thanks, though I don't see it yet as I guess you haven't pushed it yet.
+Do note that it _might_ conflict the other commit which I suspect is in
+also coming to you:
+
+ccfb464cd106 ("soc: qcom: Allow COMPILE_TEST of qcom SoC Kconfigs")
+
+> Why wasn't this noticed in testing?
+
+Mostly bad timing due to my vacation. I did do allmodconfig build but
+not sure why I missed the warning, also the kbuild bot didn't report
+anything. Jeff did report[2] it last week but I was on vacation at the
+time and just came back yesterday and didn't have time to react to it
+yet. Really sorry for the mess.
+
+[1] https://lkml.kernel.org/r/87pnvzu7i6.fsf@codeaurora.org
+
+[2] http://lists.infradead.org/pipermail/ath10k/2018-October/012330.html
+
+-- 
+Kalle Valo
