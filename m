@@ -2,80 +2,91 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 931D5ECDE46
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A542ECDE46
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5CB322075D
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:40:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 222A6207DD
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 18:55:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="b5w1XA9/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5CB322075D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KCDJKewt";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Epwg0oA3"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 222A6207DD
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727143AbeJYDKA (ORCPT
+        id S1727427AbeJYDYi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 23:10:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40268 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726521AbeJYDJ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 23:09:59 -0400
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C47C120833
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 18:40:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1540406450;
-        bh=w1cxDlU22GHKXs2IVgtP45JuItMAVYPpWjvJdjfKyzQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=b5w1XA9/y5JpdIc84GtVKCNE1T+nGHuQcDiXEyV4oka0XjpJ/wr7FlXYG+NhYnHRl
-         yyrNCOFI/hWNBgvzaZpZMYLqTuOdHG20CFxNOy20qYu7htji6B4nBWHtxgnIIW7oLI
-         tp/3ChY9bVVM3DVAAzrSiqpulaM/LjaGWIyYWL1s=
-Received: by mail-wm1-f51.google.com with SMTP id y140-v6so225857wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 11:40:49 -0700 (PDT)
-X-Gm-Message-State: AGRZ1gKk9/hrki1X+DBgY/k1rbJsNU8oLfsN0nA881S2uhf0m7NJHF/6
-        LbGk8agN43zWgMSTmyjltyK7Mi9gpj/X6yVAPMmV8g==
-X-Google-Smtp-Source: AJdET5c2mXmkvdWFn9H9C6U7vgGJgcW0j1gR3GI8q5/TvmmrTn1E4Z5ff2t0PDn2V3VuhAoz+cRzzJLJ1yNZa7yhwkU=
-X-Received: by 2002:a1c:1fcd:: with SMTP id f196-v6mr3897276wmf.19.1540406448251;
- Wed, 24 Oct 2018 11:40:48 -0700 (PDT)
+        Wed, 24 Oct 2018 23:24:38 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:53982 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726748AbeJYDYi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Oct 2018 23:24:38 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 93AAB60C4F; Wed, 24 Oct 2018 18:55:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540407325;
+        bh=c9zkLL3Q89pQF1hlz9HdPCPB0Ch4uq6q6cRqvBwbZIA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=KCDJKewt5G6SHr4QszPmlQJd5wKLGM7zMNYOUc71gqwwv0vkZ5DwPwzhDS5uizNlH
+         8U7oYvux5BkP0DWBGp2mTqIYqYOYuUwZ+v7vDv+3N37248p1OKv5Bl4iOYvICqHs/y
+         pzsMQ2cg28/noy6di0jd6WqG+XHpfYoIOAEktpGI=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 9D3ED60ADB;
+        Wed, 24 Oct 2018 18:55:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540407314;
+        bh=c9zkLL3Q89pQF1hlz9HdPCPB0Ch4uq6q6cRqvBwbZIA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Epwg0oA3+eRJPk4O8qgiRj5ZCWF7WB+vh4E/cfaDUoKxwrBtqA0+ScEfpVTjZLP/f
+         Ve1wQ1Im19D2Mh4CFVPtdW+g5yFGA0H0vDhbFnZjph/dy5ShQBq1fBoaFtYhCh7GdV
+         pZriCoDXK+2B7tqQM8yt0JUa+3lToDk0tB2/EJUY=
 MIME-Version: 1.0
-References: <20181024070436.4466-1-johannes@sipsolutions.net>
-In-Reply-To: <20181024070436.4466-1-johannes@sipsolutions.net>
-From:   Andy Lutomirski <luto@kernel.org>
-Date:   Wed, 24 Oct 2018 11:40:36 -0700
-X-Gmail-Original-Message-ID: <CALCETrXrU=ez0K+1Ubgw4txtpa0DfHeN2d8=n7kwm8_hnKWSxA@mail.gmail.com>
-Message-ID: <CALCETrXrU=ez0K+1Ubgw4txtpa0DfHeN2d8=n7kwm8_hnKWSxA@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: pcie: align licensing to dual GPL/BSD
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>, joonwpark81@gmail.com,
-        Stanislaw Gruszka <sgruszka@redhat.com>, rajatja@google.com,
-        kirtika@chromium.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Wed, 24 Oct 2018 11:55:14 -0700
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: Re: [PATCH 5/6] ath10k: migrate to mac80211 txq scheduling
+In-Reply-To: <87a7n3u4kl.fsf@codeaurora.org>
+References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
+ <1540033534-11211-6-git-send-email-rmanohar@codeaurora.org>
+ <87a7n3u4kl.fsf@codeaurora.org>
+Message-ID: <051d255c3377cd9d1724cc288df2d8c2@codeaurora.org>
+X-Sender: rmanohar@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 24, 2018 at 12:05 AM Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> These files have a long history of code changes, but analysing
-> the remaining code leads to having only a few changes that are
-> not already owned by Intel, notably from
->  - Andy Lutomirski <luto@amacapital.net>
->  - Joonwoo Park <joonwpark81@gmail.com>
->  - Kirtika Ruchandani <kirtika@chromium.org>
->  - Rajat Jain <rajatja@google.com>
->  - Stanislaw Gruszka <sgruszka@redhat.com>
-> remaining in the code today.
->
+On 2018-10-24 01:33, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> ath10k maintains common txqs list for all stations. This txq
+>> management can be removed by migrating to mac80211 txq APIs
+>> and let mac80211 handle txqs reordering based on reported airtime.
+>> By doing this, txq fairness maintained in ath10k i.e processing
+>> N frames per txq is removed. By adapting to mac80211 APIs,
+>> ath10k will support mac80211 based airtime fairness algorithm.
+>> 
+>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>> Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+> 
+> Is Toke the original author? Then you should add "From:" tag to mark
+> that. And you might want to use Co-developed-by to mark yourself as
+> co-developer.
+> 
+Toke submitted ath10k changes in RFC v1 but those were dropped
+in follow up series. When I reworked on ath10k, I retaining his s-o-b.
 
-Acked-by: Andy Lutomirski <luto@kernel.org>
+Will fix it.
+
+-Rajkumar
