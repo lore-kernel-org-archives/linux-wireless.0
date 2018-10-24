@@ -2,114 +2,88 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81027C004D3
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 05:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45451C004D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 05:51:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E18920652
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 05:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37C22075D
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 05:50:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bCBHna6d"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2E18920652
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JsFtR28T";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JsFtR28T"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D37C22075D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726407AbeJXNiI (ORCPT
+        id S1726382AbeJXORd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 09:38:08 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:43625 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726080AbeJXNiI (ORCPT
+        Wed, 24 Oct 2018 10:17:33 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55082 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726224AbeJXORd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 09:38:08 -0400
-Received: by mail-qk1-f195.google.com with SMTP id m17-v6so2376639qkk.10
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Oct 2018 22:11:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=cc:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding;
-        bh=vvyqHrxNhpMFM3HJN+748SICU38JuNJgYbKyDsfYaik=;
-        b=bCBHna6dxqWnjxpR+2p3+THq2LraOIN09n/EP4EgbbR/29mu5pIIFx8qSJQc/DDgJb
-         eZ802k4+PcfnkQmMRwOXgklT5/c+nBMUDFlV5goIruCfmtWrhns9Bst/VqDkuAyi4Nxa
-         W7HjZ8wKq5ZZDWT0IKSpwVH6SAdjsH/EIUBU6FD/NKpkG4zmxA/z5fHpG8nV2xhVtrT1
-         m+RxdZL9VKxPET8NlFuaM+nxVhyse/SICK30dN48KMoLR5ItuK6uMXsE3cPcayKvw45W
-         QYRkBCJjkJwGD9wqWdksBGg5nwCkuUmeGdhse9E6BNhRvAmQznur6k3oryJrfExIgY5Y
-         jmug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding;
-        bh=vvyqHrxNhpMFM3HJN+748SICU38JuNJgYbKyDsfYaik=;
-        b=kZhk9Bpr19uc81cy4xgA4meIAo9aQC9b1PSg5v+IXLQCdYPZJy83vwolk+fkdeqOcP
-         aC11pEvuqClmDaGQugHt1axP8SFAjw5/RKexVkinj/JQjfSpx6Qnt/RxuWmuuFvrmmmq
-         QHG6YENrpqyNF3eVSRIi4gdcpDTVwVi+QvglW6iDVpCQv6P3yW+YB4BcxLi5uO+hITuv
-         3xDtpYXzrbaiRwJn8ZAOz0D+YFcF4pO4LS+pyiQS8dzZLM56AL/H/ssFI9qinVJSY2Kn
-         i2WXVZGjHyzi1+SWIPHipUGMfcgsbiVy91IsNcRM5mggRLqZ2FVR25oAf9pZ06m/GQJ4
-         Ux3A==
-X-Gm-Message-State: AGRZ1gJBmr1H850p0Wg5HllYZ3bKummykKUOMb5XRoRtHHKZRLj8i4g9
-        LDdvhHR79GInTGq4E2ak+uuX2rdo
-X-Google-Smtp-Source: AJdET5fp/S85lUi5LdHqL6WAs53o2M5INMQgb8Pv1awbU05ySy30t/+b9Doz+lPzNrXL4TW0TNhK2Q==
-X-Received: by 2002:a37:5906:: with SMTP id n6-v6mr973495qkb.73.1540357898469;
-        Tue, 23 Oct 2018 22:11:38 -0700 (PDT)
-Received: from ?IPv6:2001:470:1d:7b6::245? ([2001:470:1d:7b6::245])
-        by smtp.googlemail.com with ESMTPSA id q51-v6sm5328850qtq.6.2018.10.23.22.11.37
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Oct 2018 22:11:37 -0700 (PDT)
-Cc:     linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-From:   Ellie Revves <ellierevves@gmail.com>
-Subject: ath9k driver may be broken on ARM64 ?
-Message-ID: <ecb743be-ec4f-0f80-c598-c71826492b30@gmail.com>
-Date:   Wed, 24 Oct 2018 01:13:05 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Firefox/52.0 SeaMonkey/2.49.4
+        Wed, 24 Oct 2018 10:17:33 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id CD0F460C64; Wed, 24 Oct 2018 05:50:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540360257;
+        bh=4RC3w8KIu76dvbYvnP3VtSAAw7VePnLpKcPqaGpiC1c=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=JsFtR28TxwVwTwOoPURFm0iiChvvgv8qdDJHSvKfx5rq/X6+/5Oke5dSLI5jJd7hr
+         MUVaoWwMWzu14HH/QzuAW/D2KbyxQ7Ptqx+4B/u6tBzb5I3g4yUMH9sZRa/s5xEVGY
+         fc4ujZswvsBj3JVgsMvruSIdbHMhFAv4cUzCgyZQ=
+Received: from x230.qca.qualcomm.com (vpn.espressohouse.com [31.216.224.152])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EFDCE60C4F;
+        Wed, 24 Oct 2018 05:50:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540360257;
+        bh=4RC3w8KIu76dvbYvnP3VtSAAw7VePnLpKcPqaGpiC1c=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=JsFtR28TxwVwTwOoPURFm0iiChvvgv8qdDJHSvKfx5rq/X6+/5Oke5dSLI5jJd7hr
+         MUVaoWwMWzu14HH/QzuAW/D2KbyxQ7Ptqx+4B/u6tBzb5I3g4yUMH9sZRa/s5xEVGY
+         fc4ujZswvsBj3JVgsMvruSIdbHMhFAv4cUzCgyZQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EFDCE60C4F
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Fix a locking bug in ath9k_add_interface()
+References: <20181019200842.7qclbjs547sm7mbn@kili.mountain>
+Date:   Wed, 24 Oct 2018 08:50:52 +0300
+In-Reply-To: <20181019200842.7qclbjs547sm7mbn@kili.mountain> (Dan Carpenter's
+        message of "Fri, 19 Oct 2018 23:08:43 +0300")
+Message-ID: <87tvlbuc3n.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-for the context part:
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-I've got a marvell espressobin board, to which I attached a mini-PCIE 
-wireless card, atheros AR9565 aka. QCB335. I am using both archlinux-arm 
-and a custom OS made with buildroot, and both have this problem.
+> We tried to revert commit d9c52fd17cb4 ("ath9k: fix tx99 with monitor
+> mode interface") but accidentally missed part of the locking change.
+>
+> The lock has to be held earlier so that we're holding it when we do
+> "sc->tx99_vif = vif;" and also there in the current code there is a
+> stray unlock before we have taken the lock.
+>
+> Fixes: 6df0580be8bc ("ath9k: add back support for using active monitor interfaces for tx99")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Problem:
+commit 6df0580be8bc is on it's way to v4.20 so should I also queue this
+to v4.20?
 
-When the system boots up, the kernel recognizes the card, and then the 
-ath9k driver gets loaded. From what someone on the irc channel of 
-#linux-wireless determined, the driver ends up doing a sigbus while 
-attempting to read from a specific address in memory, which of course 
-makes it crash. We did check the page tables, and the memory seems to be 
-mapped fine. So we're still clueless as to why it is not possible to 
-read from that particular memory address, and why the driver would do 
-so. Here I attach the kernel page tables, along with the dmesg output. 
-The problematic line in the trace is x19.
-
-I'd appreciate any help in fixing this issue which I think might be 
-related to ARM64.
-
-Note that I am no programmer, all the info I gathered so far were with 
-someone else's help. But if you need some more debug output, files or 
-anything else, just let me know. I can also apply patches to test 
-things, or modify the code if I know exactly in what way, i.e: what to 
-copy and past.
-
-Dmesg:
-
-http://ix.io/1pTK
-
-kernel page tables -- from a later kernel build, but do notice that the 
-memory is still mapped correctly even if the register changed:
-
-http://ix.io/1pQh
-
-Thanks a lot :)
+-- 
+Kalle Valo
