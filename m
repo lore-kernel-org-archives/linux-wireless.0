@@ -2,478 +2,65 @@ Return-Path: <SRS0=AjP+=NE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5932C004D3
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0C2C67863
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:36:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84E092054F
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:33:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fJRf+8A9"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 84E092054F
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id C117D2082E
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Oct 2018 07:36:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C117D2082E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729191AbeJXQAu (ORCPT
+        id S1729845AbeJXQDY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Oct 2018 12:00:50 -0400
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:45949 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729177AbeJXQAu (ORCPT
+        Wed, 24 Oct 2018 12:03:24 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:50920 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729691AbeJXQDX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Oct 2018 12:00:50 -0400
-Received: by mail-lj1-f194.google.com with SMTP id j4-v6so3772418ljc.12
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Oct 2018 00:33:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=ynL6gbrDYVLKqDATtmdWlDOAYhAclasxkjXztJjM/Yk=;
-        b=fJRf+8A9p5tqCmwfcEMOk1tAzkQ3MXWGEiZ3OGVHOHiHRcqef/jEEndhgWdoFA7zDn
-         wL4ZIoxGmG0PIy22GEgWlPwJbneogk+bJs5AtNXHuVPpPfmzaQckqCJ3GvI5uAzISn9g
-         VEK0zrtlhGXF0LdqFh012PDLmVbm/UAecIUVyuNS49VcnRBDgOUFwXgdY3K09L5AR/De
-         v1gM6EwIV6jQqxNf9hMwtx4I70O8NeJ/ciMQqpryXQgaJpoxk5oWShnjfUvZwfO4ue/A
-         O3COtMlUczW8MDkJrhMxMofIu7QGW2POlHQN4Aj3RC6COP2rLtsa5Av2eW0C8czAYFsd
-         LeBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=ynL6gbrDYVLKqDATtmdWlDOAYhAclasxkjXztJjM/Yk=;
-        b=A4NDTMg92t1Xv4WD49oQtj5G3PlOJ6+mW3gdvReyj1clAXYHEiCj/YWUl9RXgKS42S
-         9XsK/Q9ExIkm85k9Qzw44HMz2huKCf83zjKCBK6acbRiENbw5FK7Tmh8vB8ZSUc+M2Lb
-         mZj1rLacaGVbVWIYcZvJg01Bfahs6sJkHQ1pDh0OXjrw136U3PKzJ4vopG+TvcUxiFAD
-         RYdaOT0+eiGFKx41uDB1FCt60jCAkwa0r+a7HFQZAlUjlFTv9L6A12Kw4dlx8CcibOiP
-         9B094zHDEWII3zSi/CiQ22Qb/i6u0i8hdtAWcwP+m0vz4Qf4VG46Aa8/Vhs0cqSonDyV
-         JzFg==
-X-Gm-Message-State: AGRZ1gJNaRgc2V4c4QYesnaw/99jhxkVVQ2qhr6PqrdKpuM5ojpwtbvc
-        C/eSP6toTh8lHJ976qpsja2yle6IeJ9tzHTBqsI=
-X-Google-Smtp-Source: AJdET5dXZDxsiU+HEXoqI/mGUlfoT77GQm95SBNU0kGkvV329Rs4yareZ8Jwelo1T+8MCicJMXItZWTTLSTmJn+/u2c=
-X-Received: by 2002:a2e:7c18:: with SMTP id x24-v6mr1022329ljc.174.1540366433858;
- Wed, 24 Oct 2018 00:33:53 -0700 (PDT)
-MIME-Version: 1.0
-References: <20181024070436.4466-1-johannes@sipsolutions.net>
-In-Reply-To: <20181024070436.4466-1-johannes@sipsolutions.net>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Wed, 24 Oct 2018 09:33:42 +0200
-Message-ID: <CA+icZUW=jiTs9GPu-OgNnF1vaj=bHy88b5Qm3NnhkyKVdPqeLA@mail.gmail.com>
+        Wed, 24 Oct 2018 12:03:23 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gFDiN-0005ZN-Ex; Wed, 24 Oct 2018 09:36:27 +0200
+Message-ID: <22674c9e06c5ebe6eef92c8aa9b7fef904208497.camel@sipsolutions.net>
 Subject: Re: [PATCH] iwlwifi: pcie: align licensing to dual GPL/BSD
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>, joonwpark81@gmail.com,
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     sedat.dilek@gmail.com
+Cc:     linux-wireless@vger.kernel.org, joonwpark81@gmail.com,
         sgruszka@redhat.com, luto@amacapital.net, rajatja@google.com,
         kirtika@chromium.org
+Date:   Wed, 24 Oct 2018 09:36:12 +0200
+In-Reply-To: <CA+icZUW=jiTs9GPu-OgNnF1vaj=bHy88b5Qm3NnhkyKVdPqeLA@mail.gmail.com> (sfid-20181024_093355_425220_8F25C5E7)
+References: <20181024070436.4466-1-johannes@sipsolutions.net>
+         <CA+icZUW=jiTs9GPu-OgNnF1vaj=bHy88b5Qm3NnhkyKVdPqeLA@mail.gmail.com>
+         (sfid-20181024_093355_425220_8F25C5E7)
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Oct 24, 2018 at 9:05 AM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> These files have a long history of code changes, but analysing
-> the remaining code leads to having only a few changes that are
-> not already owned by Intel, notably from
->  - Andy Lutomirski <luto@amacapital.net>
->  - Joonwoo Park <joonwpark81@gmail.com>
->  - Kirtika Ruchandani <kirtika@chromium.org>
->  - Rajat Jain <rajatja@google.com>
->  - Stanislaw Gruszka <sgruszka@redhat.com>
-> remaining in the code today.
->
-> Note that
->  - I myself was working for Intel and for any possibly code
->    that might be before my employment there give permission
->  - Wizery employees were working for Intel
->
-> More specifically, we identified the following commits that
-> (partially may) remain today:
->
-> 25c03d8e8c13 Joonwoo Park <joonwpark81@gmail.com>      ("iwlwifi: do not schedule tasklet when rcv unused irq")
-> f36d04abe684 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: use dma_alloc_coherent")
-> 387f3381f732 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: fix dma mappings and skbs leak")
-> 2624e96ce16b Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: fix possible data overwrite in hcmd callback")
-> bfe4b80e9f73 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: always check if got h/w access before write")
-> d536c32b45d2 Andy Lutomirski <luto@amacapital.net>     ("iwlwifi: pcie: log when waking the NIC for hcmd submission fails")
-> a6d24fad00d9 Rajat Jain <rajatja@google.com>           ("iwlwifi: pcie: dump registers when HW becomes inaccessible")
-> fb12777ab59b Kirtika Ruchandani <kirtika@chromium.org> ("iwlwifi: Add more call-sites for pcie reg dumper")
-> 3a73a30049f2 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: cleanup/fix memory barriers")
-> aa5affbacb24 Stanislaw Gruszka <sgruszka@redhat.com>   ("iwlwifi: dump stack when fail to gain access to the device")
->
-> Align the licenses with their permission to clean up and to
-> make it all identical.
->
+On Wed, 2018-10-24 at 09:33 +0200, Sedat Dilek wrote:
+> 
+> > Align the licenses with their permission to clean up and to
+> > make it all identical.
+> > 
+> 
+> Does it make sense to put the BSD license (text) in a separate file
+> (like GPL) and reference it?
 
-Does it make sense to put the BSD license (text) in a separate file
-(like GPL) and reference it?
+I agree that it would, and in fact we already have it available to
+reference with the SPDX in the LICENSES directory.
 
-- Sedat -
+However, no files of the iwlwifi driver currently do that, and I'd
+prefer doing that sort of cleanup more generally as a separate step.
 
-> CC: Joonwoo Park <joonwpark81@gmail.com>
-> CC: Stanislaw Gruszka <sgruszka@redhat.com>
-> CC: Andy Lutomirski <luto@amacapital.net>
-> CC: Rajat Jain <rajatja@google.com>
-> CC: Kirtika Ruchandani <kirtika@chromium.org>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> I'd appreciate if you (in CC lines) could provide your acked-by here.
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 41 +++++++++++++++--
->  drivers/net/wireless/intel/iwlwifi/iwl-io.h   | 38 ++++++++++++++--
->  .../wireless/intel/iwlwifi/pcie/internal.h    | 44 +++++++++++++++++--
->  drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 44 +++++++++++++++++--
->  drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 44 +++++++++++++++++--
->  5 files changed, 192 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-> index 4f10914f6048..ffd1e649bfa0 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-> @@ -1,10 +1,13 @@
->  /******************************************************************************
-> + *
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
-> + *
-> + * GPL LICENSE SUMMARY
->   *
->   * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
->   * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
->   *
-> - * Portions of this file are derived from the ipw3945 project.
-> - *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
->   * published by the Free Software Foundation.
-> @@ -15,12 +18,44 @@
->   * more details.
->   *
->   * The full GNU General Public License is included in this distribution in the
-> - * file called LICENSE.
-> + * file called COPYING.
->   *
->   * Contact Information:
->   *  Intel Linux Wireless <linuxwifi@intel.com>
->   * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
->   *
-> + * BSD LICENSE
-> + *
-> + * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-> + * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *  * Redistributions of source code must retain the above copyright
-> + *    notice, this list of conditions and the following disclaimer.
-> + *  * Redistributions in binary form must reproduce the above copyright
-> + *    notice, this list of conditions and the following disclaimer in
-> + *    the documentation and/or other materials provided with the
-> + *    distribution.
-> + *  * Neither the name Intel Corporation nor the names of its
-> + *    contributors may be used to endorse or promote products derived
-> + *    from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
->   *****************************************************************************/
->  #include <linux/delay.h>
->  #include <linux/device.h>
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-> index 38085850a2d3..61477e58352d 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-> @@ -1,8 +1,9 @@
->  /******************************************************************************
->   *
-> - * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
->   *
-> - * Portions of this file are derived from the ipw3945 project.
-> + * GPL LICENSE SUMMARY
->   *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
-> @@ -14,14 +15,43 @@
->   * more details.
->   *
->   * The full GNU General Public License is included in this distribution in the
-> - * file called LICENSE.
-> + * file called COPYING.
->   *
->   * Contact Information:
->   *  Intel Linux Wireless <linuxwifi@intel.com>
->   * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
->   *
-> + * BSD LICENSE
-> + *
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *  * Redistributions of source code must retain the above copyright
-> + *    notice, this list of conditions and the following disclaimer.
-> + *  * Redistributions in binary form must reproduce the above copyright
-> + *    notice, this list of conditions and the following disclaimer in
-> + *    the documentation and/or other materials provided with the
-> + *    distribution.
-> + *  * Neither the name Intel Corporation nor the names of its
-> + *    contributors may be used to endorse or promote products derived
-> + *    from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
->   *****************************************************************************/
-> -
->  #ifndef __iwl_io_h__
->  #define __iwl_io_h__
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> index f9c4c64dee66..6821d09df8db 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-> @@ -1,13 +1,15 @@
->  /******************************************************************************
-> + *
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
-> + *
-> + * GPL LICENSE SUMMARY
->   *
->   * Copyright(c) 2003 - 2015 Intel Corporation. All rights reserved.
->   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
->   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
->   * Copyright(c) 2018 Intel Corporation
->   *
-> - * Portions of this file are derived from the ipw3945 project, as well
-> - * as portions of the ieee80211 subsystem header files.
-> - *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
->   * published by the Free Software Foundation.
-> @@ -18,12 +20,46 @@
->   * more details.
->   *
->   * The full GNU General Public License is included in this distribution in the
-> - * file called LICENSE.
-> + * file called COPYING.
->   *
->   * Contact Information:
->   *  Intel Linux Wireless <linuxwifi@intel.com>
->   * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
->   *
-> + * BSD LICENSE
-> + *
-> + * Copyright(c) 2003 - 2015 Intel Corporation. All rights reserved.
-> + * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-> + * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-> + * Copyright(c) 2018 Intel Corporation
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *  * Redistributions of source code must retain the above copyright
-> + *    notice, this list of conditions and the following disclaimer.
-> + *  * Redistributions in binary form must reproduce the above copyright
-> + *    notice, this list of conditions and the following disclaimer in
-> + *    the documentation and/or other materials provided with the
-> + *    distribution.
-> + *  * Neither the name Intel Corporation nor the names of its
-> + *    contributors may be used to endorse or promote products derived
-> + *    from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
->   *****************************************************************************/
->  #ifndef __iwl_trans_int_pcie_h__
->  #define __iwl_trans_int_pcie_h__
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> index e965cc588850..f4ad89aeaa0a 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> @@ -1,13 +1,15 @@
->  /******************************************************************************
-> + *
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
-> + *
-> + * GPL LICENSE SUMMARY
->   *
->   * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
->   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
->   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
->   * Copyright(c) 2018 Intel Corporation
->   *
-> - * Portions of this file are derived from the ipw3945 project, as well
-> - * as portions of the ieee80211 subsystem header files.
-> - *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
->   * published by the Free Software Foundation.
-> @@ -18,12 +20,46 @@
->   * more details.
->   *
->   * The full GNU General Public License is included in this distribution in the
-> - * file called LICENSE.
-> + * file called COPYING.
->   *
->   * Contact Information:
->   *  Intel Linux Wireless <linuxwifi@intel.com>
->   * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
->   *
-> + * BSD LICENSE
-> + *
-> + * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-> + * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-> + * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-> + * Copyright(c) 2018 Intel Corporation
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *  * Redistributions of source code must retain the above copyright
-> + *    notice, this list of conditions and the following disclaimer.
-> + *  * Redistributions in binary form must reproduce the above copyright
-> + *    notice, this list of conditions and the following disclaimer in
-> + *    the documentation and/or other materials provided with the
-> + *    distribution.
-> + *  * Neither the name Intel Corporation nor the names of its
-> + *    contributors may be used to endorse or promote products derived
-> + *    from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
->   *****************************************************************************/
->  #include <linux/sched.h>
->  #include <linux/wait.h>
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-> index f227b91098c9..60487d11eaa8 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-> @@ -1,13 +1,15 @@
->  /******************************************************************************
-> + *
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
-> + *
-> + * GPL LICENSE SUMMARY
->   *
->   * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
->   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
->   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
->   * Copyright(c) 2018 Intel Corporation
->   *
-> - * Portions of this file are derived from the ipw3945 project, as well
-> - * as portions of the ieee80211 subsystem header files.
-> - *
->   * This program is free software; you can redistribute it and/or modify it
->   * under the terms of version 2 of the GNU General Public License as
->   * published by the Free Software Foundation.
-> @@ -18,12 +20,46 @@
->   * more details.
->   *
->   * The full GNU General Public License is included in this distribution in the
-> - * file called LICENSE.
-> + * file called COPYING.
->   *
->   * Contact Information:
->   *  Intel Linux Wireless <linuxwifi@intel.com>
->   * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
->   *
-> + * BSD LICENSE
-> + *
-> + * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
-> + * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-> + * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-> + * Copyright(c) 2018 Intel Corporation
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *  * Redistributions of source code must retain the above copyright
-> + *    notice, this list of conditions and the following disclaimer.
-> + *  * Redistributions in binary form must reproduce the above copyright
-> + *    notice, this list of conditions and the following disclaimer in
-> + *    the documentation and/or other materials provided with the
-> + *    distribution.
-> + *  * Neither the name Intel Corporation nor the names of its
-> + *    contributors may be used to endorse or promote products derived
-> + *    from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + *
->   *****************************************************************************/
->  #include <linux/etherdevice.h>
->  #include <linux/ieee80211.h>
-> --
-> 2.17.2
->
+johannes
+
