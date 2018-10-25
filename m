@@ -2,174 +2,244 @@ Return-Path: <SRS0=+bZT=NF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99276C46475
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 21:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E3AC46475
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 21:36:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 418632083E
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 21:11:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAE6220834
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 21:36:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="P5dYYxfJ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 418632083E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="wH0OIHcf"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CAE6220834
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bobcopeland.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727350AbeJZFpZ (ORCPT
+        id S1726193AbeJZGK6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 01:45:25 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:49536 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727150AbeJZFpY (ORCPT
+        Fri, 26 Oct 2018 02:10:58 -0400
+Received: from mail-it1-f196.google.com ([209.85.166.196]:40855 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726085AbeJZGK6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 01:45:24 -0400
-X-IronPort-AV: E=Sophos;i="5.54,425,1534834800"; 
-   d="scan'208";a="22149273"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 25 Oct 2018 14:11:06 -0700
-Received: from NAM05-CO1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.49) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Thu, 25 Oct 2018 14:11:06 -0700
+        Fri, 26 Oct 2018 02:10:58 -0400
+Received: by mail-it1-f196.google.com with SMTP id i191-v6so3697252iti.5
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2018 14:36:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector1-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EjFV2HqVoYcPVzMqSGgCUwrf+z1VaITyyp20GZlbdZw=;
- b=P5dYYxfJztgBp9F02HT24WnR45PaLGBZKdFDPjsMm4uKeqG4eUolx1RXAIi2AMA5neq69iq6VUB9MdBsrhn6nuz8ccH/bvrJCHUQ8G/oaxNpvGdyko09vvHM6GKqMMOXEDm3RL29OqNdqLLFZhnhhrW1ND0IhkM7pNKBeyICwfY=
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com (10.160.135.27) by
- DM2PR11MB0350.namprd11.prod.outlook.com (10.160.136.156) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1273.18; Thu, 25 Oct 2018 21:11:04 +0000
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::5cab:d918:f310:6f0e]) by DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::5cab:d918:f310:6f0e%10]) with mapi id 15.20.1250.028; Thu, 25 Oct
- 2018 21:11:04 +0000
-From:   <Adham.Abozaeid@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <Ganesh.Krishna@microchip.com>, <Venkateswara.Kaja@microchip.com>,
-        <Aditya.Shankar@microchip.com>, <Sripad.Balwadgi@microchip.com>,
-        <Mrutyunjaya.Satapathy@microchip.com>, <johannes@sipsolutions.net>,
-        <Adham.Abozaeid@microchip.com>
-Subject: [PATCH 4/4] staging: wilc1000: Remove unused mutex cfg_values_lock
-Thread-Topic: [PATCH 4/4] staging: wilc1000: Remove unused mutex
- cfg_values_lock
-Thread-Index: AQHUbKc8fTgDDKcLq0GQb4foxioQKQ==
-Date:   Thu, 25 Oct 2018 21:11:03 +0000
-Message-ID: <20181025210849.20006-5-adham.abozaeid@microchip.com>
-References: <20181025210849.20006-1-adham.abozaeid@microchip.com>
-In-Reply-To: <20181025210849.20006-1-adham.abozaeid@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [198.175.253.81]
-x-clientproxiedby: BYAPR02CA0030.namprd02.prod.outlook.com
- (2603:10b6:a02:ee::43) To DM2PR11MB0255.namprd11.prod.outlook.com
- (2a01:111:e400:3c24::27)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Adham.Abozaeid@microchip.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DM2PR11MB0350;6:AOlUCb5PDWJ9snIJYdWi00rrJkGYrpDBhQuWzRNVQv7QAGwm00tARRBtJBHQA2lo6pImk8heD1C+1zWUZQDmGRZPeYOaGqfUlZO12Ix9SAgxIdEhIVaivabDkuh0imZd5eJBfW/mi1J62vX89udh85qxRiGSW7ryoCjwqiggBpBjD6ujJT9dvB6tVpPhWOp2c49XXCBlLdEZ5Zuvci2IfhFnYn1gYpPLj1VaVZ/dVYE20lCsRufoYZ+zZjyy1x0xr3XnpWvdicreVsu3JkflL3qzfaVqH12ohFyKHKwTb+xH3qeFPVU7EGZ4fAXTVxbkzKKcB14QVlzGQGSOJ8LJYmYOEEDR6LCmYJicWbIPsOoQAcFwqIU1YgOv+x1ciYXckW2wNJ2WeKO6vai1mWYvc3C1Knlq/xnHnZBcY9nZ0aRmkhW9uzfCkDouC9EjYwgX1+xL6lm2KEt/f+xwqALKXA==;5:v4iYNvtpnqnE8LwLyOebQ5Kg4E7mZZGPjp+QePGN/1wn3IIllSTnCzOckeAaEyi8Z5A1eIu2ZotQqwzB3I6AY+IUap4MNe2LYbruMbJG+q3eYSe1hH0Cof3iVpR12mcu6xlXQbOWXkMwUcMDW5ugNiZZSR/VW6n8rbptLtUZNts=;7:1C7Oc3HrM0CoTKQkPytS3xMAfCNjvztTArF+FbD3/fUIZT6XXQ0GtYX3f53u6rESNq2U1mIzbHclfjXNSoXpLpuTN1AWEiQWQx/EA7DhIVt7FzolHY2jxu8LQsGZcEN3NC7b/vz7RBE8MufMd/c8wA==
-x-ms-office365-filtering-correlation-id: d6023fda-3db8-4773-702e-08d63abe5f25
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:DM2PR11MB0350;
-x-ms-traffictypediagnostic: DM2PR11MB0350:
-x-ld-processed: 3f4057f3-b418-4d4e-ba84-d55b4e897d88,ExtAddr
-x-microsoft-antispam-prvs: <DM2PR11MB0350D7B11BB0116D0A3309578DF70@DM2PR11MB0350.namprd11.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(21532816269658);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(5005006)(8121501046)(3231355)(944501410)(52105095)(3002001)(93006095)(93001095)(10201501046)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:DM2PR11MB0350;BCL:0;PCL:0;RULEID:;SRVR:DM2PR11MB0350;
-x-forefront-prvs: 083691450C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(366004)(136003)(346002)(39860400002)(376002)(199004)(189003)(386003)(11346002)(6506007)(2900100001)(14444005)(3846002)(6116002)(71200400001)(446003)(68736007)(36756003)(81166006)(5250100002)(81156014)(2906002)(2616005)(476003)(4326008)(71190400001)(1076002)(5660300001)(52116002)(105586002)(86362001)(8676002)(256004)(478600001)(76176011)(66066001)(99286004)(26005)(53936002)(102836004)(6512007)(54906003)(2351001)(2501003)(316002)(25786009)(97736004)(106356001)(72206003)(6436002)(5640700003)(6916009)(14454004)(305945005)(186003)(107886003)(8936002)(6486002)(7736002)(486006);DIR:OUT;SFP:1101;SCL:1;SRVR:DM2PR11MB0350;H:DM2PR11MB0255.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: CUjgyei/qoA97NNrD1ydIfjGg/0IOyGMgJGSD6WrEuSBV6L2TEcjer4nTg7w5HNZDJz66BFUfO17bY2gsRMLI3g180v1cMJOrnsfpkdl4+VGorhQji0HDXcdhrn45IyYerWtM8LWkL5vHP8QbmvxSyLMR/lax41UC27WyoPCax188X80thzaI4fvBRO/js5XPT2da6jGOCwKc1D1RH1aXq1n65AUrULmtkz3e5KT3DI5mEwQmyX6EOeiOvnmBlB6MDRATanqk0DDIUedw8/1iw342LxpY7LKdDE4c4J6Oa6Rt2/Z2pGTUCHBEQYzTlEtJ62l7xUauDEDD58zUz9Lg/MajMoS4nsTHy64vtVKXX0=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=5uucghljxNNTQEuwopWLWD3CkofJTErGCS/hWk+8+xE=;
+        b=wH0OIHcfilflpxjdbw29yTvv9Eq8nInbeHOdxJyEJ0QY1vKm8mUmpcUP/PYAtLhILk
+         8VEA1ZdID3QEfY93SA32tHeaJzmx3BiWMVXzMqvB+K3DqLqWk6FYGEMXJH0ArdDxN/QD
+         ufU87qJHExoarpP6WevfSfPFb1QEyNWyXguUnH79p57M9PRNIjJz79XdD6uPTsCkpTUj
+         F4FIXIm4kliInd3yFn+2Aw8VB2Nzt5663LxzzEVrxpd0zy2V2WZOsFB16wlECHBYe1lk
+         J1JiIFLTG1KvRsiv0KOKiz7igKFUN5f7Bco+oevOyUs/iAc3/CKgWPWShE6aN6C96TLv
+         b1YQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=5uucghljxNNTQEuwopWLWD3CkofJTErGCS/hWk+8+xE=;
+        b=aaXp9j3EIbyNX5sblBelwWBCLmXLjjD4QI07M9/9tbl29npfjxPWXTYYh8NxHe6oNL
+         LI1G2yVj/LQk/g9G6d8xR8tTw1Vr9V+2DB7IShGYCsaEavR8RMyzOsExzWAyrmbR+2DM
+         fY9MvZOAZKrlf1SLXM7G1niIRBn9AFOT7DvzOKPvebcDEIOC00hnWPmPKdhUYpeiMlM5
+         WgVkb7Yj2SnbbeDE+aAyVfQZXAly8FfwPqdlqKJbOLgm8YFj54ArI2ZstAfz6tVa2f76
+         lMoBO5ytdjLhCvsyI68i45wyAHHatao3cw5cui3CjyoaE96kqDhCyhc+sI6c8jnbOh9g
+         0lxQ==
+X-Gm-Message-State: AGRZ1gJKmVCJYhe5m06bGcy4/89hLPqH15rFn/duUgpFI7cOYZ/kr5RN
+        mo9AtJqHQNZvmosqEgq3/s3SMw==
+X-Google-Smtp-Source: AJdET5fe0Ay6gIEIPfisMfoui4vXjWt0L6vEu7CR4CRY7EgNkQFcJbf43vEhUJwoYYQWrgQwoFx62g==
+X-Received: by 2002:a05:660c:487:: with SMTP id a7mr2188778itk.90.1540503395929;
+        Thu, 25 Oct 2018 14:36:35 -0700 (PDT)
+Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
+        by smtp.gmail.com with ESMTPSA id p128-v6sm1184499itp.5.2018.10.25.14.36.35
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 25 Oct 2018 14:36:35 -0700 (PDT)
+Received: from bob by hash with local (Exim 4.89)
+        (envelope-from <me@bobcopeland.com>)
+        id 1gFnIw-0004hw-90; Thu, 25 Oct 2018 17:36:34 -0400
+Date:   Thu, 25 Oct 2018 17:36:34 -0400
+From:   Bob Copeland <me@bobcopeland.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, kernel-team@fb.com,
+        Bob Copeland <bobcopeland@fb.com>
+Subject: [PATCH v2 3/3] {nl,mac}80211: add dot11MeshConnectedToMeshGate to
+ meshconf
+Message-ID: <20181025213634.hicyzvgfo3xpqusk@localhost>
+References: <20181025194854.11676-1-me@bobcopeland.com>
+ <20181025194854.11676-3-me@bobcopeland.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: d6023fda-3db8-4773-702e-08d63abe5f25
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2018 21:11:03.8884
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM2PR11MB0350
-X-OriginatorOrg: microchip.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181025194854.11676-3-me@bobcopeland.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-After removing cfg_values member, cfg_values_lock that was used to protect
-it can also be removed.
+When userspace is controlling mesh routing, it may have better
+knowledge about whether a mesh STA is connected to a mesh
+gate than the kernel mpath table.  Add dot11MeshConnectedToMeshGate
+to the mesh config so that such applications can explicitly
+signal that a mesh STA is connected to a gate, which will then
+be advertised in the beacon.
 
-Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
+Signed-off-by: Bob Copeland <bobcopeland@fb.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ---------
- drivers/staging/wilc1000/host_interface.h | 2 --
- 2 files changed, 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
-lc1000/host_interface.c
-index cdc495287949..165330b494f5 100755
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -369,11 +369,8 @@ static void handle_cfg_param(struct work_struct *work)
- 	struct cfg_param_attr *param =3D &msg->body.cfg_info;
- 	int ret;
- 	struct wid wid_list[32];
--	struct host_if_drv *hif_drv =3D vif->hif_drv;
- 	int i =3D 0;
-=20
--	mutex_lock(&hif_drv->cfg_values_lock);
--
- 	if (param->flag & RETRY_SHORT) {
- 		wid_list[i].id =3D WID_SHORT_RETRY_LIMIT;
- 		wid_list[i].val =3D (s8 *)&param->short_retry_limit;
-@@ -409,7 +406,6 @@ static void handle_cfg_param(struct work_struct *work)
- 	if (ret)
- 		netdev_err(vif->ndev, "Error in setting CFG params\n");
-=20
--	mutex_unlock(&hif_drv->cfg_values_lock);
- 	kfree(msg);
- }
-=20
-@@ -3123,15 +3119,10 @@ int wilc_init(struct net_device *dev, struct host_i=
-f_drv **hif_drv_handler)
- 	timer_setup(&hif_drv->connect_timer, timer_connect_cb, 0);
- 	timer_setup(&hif_drv->remain_on_ch_timer, listen_timer_cb, 0);
-=20
--	mutex_init(&hif_drv->cfg_values_lock);
--	mutex_lock(&hif_drv->cfg_values_lock);
--
- 	hif_drv->hif_state =3D HOST_IF_IDLE;
-=20
- 	hif_drv->p2p_timeout =3D 0;
-=20
--	mutex_unlock(&hif_drv->cfg_values_lock);
--
- 	wilc->clients_count++;
-=20
+v2: add policy range and type comment
+
+ include/net/cfg80211.h        | 5 +++++
+ include/uapi/linux/nl80211.h  | 8 +++++++-
+ net/mac80211/cfg.c            | 3 +++
+ net/mac80211/debugfs_netdev.c | 3 +++
+ net/mac80211/mesh.c           | 3 ++-
+ net/wireless/nl80211.c        | 8 +++++++-
+ 6 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f2cb1a3c9651..cddaa9dacb27 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1562,6 +1562,10 @@ struct bss_parameters {
+  * @plink_timeout: If no tx activity is seen from a STA we've established
+  *	peering with for longer than this time (in seconds), then remove it
+  *	from the STA's list of peers.  Default is 30 minutes.
++ * @dot11MeshConnectedToMeshGate: if set to true, advertise that this STA is
++ *      connected to a mesh gate in mesh formation info.  If false, the
++ *      value in mesh formation is determined by the presence of root paths
++ *      in the mesh path table
+  */
+ struct mesh_config {
+ 	u16 dot11MeshRetryTimeout;
+@@ -1581,6 +1585,7 @@ struct mesh_config {
+ 	u16 dot11MeshHWMPperrMinInterval;
+ 	u16 dot11MeshHWMPnetDiameterTraversalTime;
+ 	u8 dot11MeshHWMPRootMode;
++	bool dot11MeshConnectedToMeshGate;
+ 	u16 dot11MeshHWMPRannInterval;
+ 	bool dot11MeshGateAnnouncementProtocol;
+ 	bool dot11MeshForwarding;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f2d79f9b4b5a..ba0dc0afdc29 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3075,7 +3075,7 @@ enum nl80211_sta_bss_param {
+  *	some packets with an FCS error due to TA corruption. Hence this counter
+  *	might not be fully accurate.
+  * @NL80211_STA_INFO_CONNECTED_TO_GATE: set to true if STA has a path to a
+- *	mesh gate
++ *	mesh gate (u8, 0 or 1)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -3898,6 +3898,11 @@ enum nl80211_mesh_power_mode {
+  *	remove it from the STA's list of peers. You may set this to 0 to disable
+  *	the removal of the STA. Default is 30 minutes.
+  *
++ * @NL80211_MESHCONF_CONNECTED_TO_GATE: If set to true then this mesh STA
++ *	will advertise that it is connected to a gate in the mesh formation
++ *	field.  If left unset then the mesh formation field will only
++ *	advertise such if there is an active root mesh path.
++ *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  */
+ enum nl80211_meshconf_params {
+@@ -3930,6 +3935,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_POWER_MODE,
+ 	NL80211_MESHCONF_AWAKE_WINDOW,
+ 	NL80211_MESHCONF_PLINK_TIMEOUT,
++	NL80211_MESHCONF_CONNECTED_TO_GATE,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 51622333d460..6d1c54f28df7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2028,6 +2028,9 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 			nconf->dot11MeshAwakeWindowDuration;
+ 	if (_chg_mesh_attr(NL80211_MESHCONF_PLINK_TIMEOUT, mask))
+ 		conf->plink_timeout = nconf->plink_timeout;
++	if (_chg_mesh_attr(NL80211_MESHCONF_CONNECTED_TO_GATE, mask))
++		conf->dot11MeshConnectedToMeshGate =
++			nconf->dot11MeshConnectedToMeshGate;
+ 	ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
  	return 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wi=
-lc1000/host_interface.h
-index 60cb1a1fee1a..c78e0682a248 100755
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -238,8 +238,6 @@ struct host_if_drv {
- 	enum host_if_state hif_state;
-=20
- 	u8 assoc_bssid[ETH_ALEN];
--	/*lock to protect concurrent setting of cfg params*/
--	struct mutex cfg_values_lock;
-=20
- 	struct timer_list scan_timer;
- 	struct wilc_vif *scan_timer_vif;
---=20
-2.17.1
+ }
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index c813207bb123..cff0fb3578c9 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -641,6 +641,8 @@ IEEE80211_IF_FILE(dot11MeshHWMPconfirmationInterval,
+ IEEE80211_IF_FILE(power_mode, u.mesh.mshcfg.power_mode, DEC);
+ IEEE80211_IF_FILE(dot11MeshAwakeWindowDuration,
+ 		  u.mesh.mshcfg.dot11MeshAwakeWindowDuration, DEC);
++IEEE80211_IF_FILE(dot11MeshConnectedToMeshGate,
++		  u.mesh.mshcfg.dot11MeshConnectedToMeshGate, DEC);
+ #endif
+ 
+ #define DEBUGFS_ADD_MODE(name, mode) \
+@@ -762,6 +764,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ 	MESHPARAMS_ADD(dot11MeshHWMPconfirmationInterval);
+ 	MESHPARAMS_ADD(power_mode);
+ 	MESHPARAMS_ADD(dot11MeshAwakeWindowDuration);
++	MESHPARAMS_ADD(dot11MeshConnectedToMeshGate);
+ #undef MESHPARAMS_ADD
+ }
+ #endif
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 19205c821dee..4869280a6413 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -255,7 +255,8 @@ int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
+ 	u8 *pos, neighbors;
+ 	u8 meshconf_len = sizeof(struct ieee80211_meshconf_ie);
+ 	bool is_connected_to_gate = ifmsh->num_gates > 0 ||
+-		ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol;
++		ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol ||
++		ifmsh->mshcfg.dot11MeshConnectedToMeshGate;
+ 
+ 	if (skb_tailroom(skb) < 2 + meshconf_len)
+ 		return -ENOMEM;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ce8c082e6389..12cfd747e59e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6123,7 +6123,9 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 	    nla_put_u16(msg, NL80211_MESHCONF_AWAKE_WINDOW,
+ 			cur_params.dot11MeshAwakeWindowDuration) ||
+ 	    nla_put_u32(msg, NL80211_MESHCONF_PLINK_TIMEOUT,
+-			cur_params.plink_timeout))
++			cur_params.plink_timeout) ||
++	    nla_put_u8(msg, NL80211_MESHCONF_CONNECTED_TO_GATE,
++		       cur_params.dot11MeshConnectedToMeshGate))
+ 		goto nla_put_failure;
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+@@ -6180,6 +6182,7 @@ nl80211_meshconf_params_policy[NL80211_MESHCONF_ATTR_MAX+1] = {
+ 				 NL80211_MESH_POWER_MAX),
+ 	[NL80211_MESHCONF_AWAKE_WINDOW] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_PLINK_TIMEOUT] = { .type = NLA_U32 },
++	[NL80211_MESHCONF_CONNECTED_TO_GATE] = NLA_POLICY_RANGE(NLA_U8, 0, 1),
+ };
+ 
+ static const struct nla_policy
+@@ -6291,6 +6294,9 @@ do {									\
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, mask,
+ 				  NL80211_MESHCONF_RSSI_THRESHOLD,
+ 				  nla_get_s32);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConnectedToMeshGate, mask,
++				  NL80211_MESHCONF_CONNECTED_TO_GATE,
++				  nla_get_u8);
+ 	/*
+ 	 * Check HT operation mode based on
+ 	 * IEEE 802.11-2016 9.4.2.57 HT Operation element.
+-- 
+2.11.0
 
