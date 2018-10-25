@@ -2,369 +2,187 @@ Return-Path: <SRS0=+bZT=NF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D29C46475
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 17:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C681AC46475
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 17:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 047A72082D
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 17:47:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 047A72082D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
+	by mail.kernel.org (Postfix) with ESMTP id 7FD8520665
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 17:57:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="RIJyuP+t"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7FD8520665
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727572AbeJZCUr (ORCPT
+        id S1727614AbeJZCbR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Oct 2018 22:20:47 -0400
-Received: from mga12.intel.com ([192.55.52.136]:18731 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727465AbeJZCUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Oct 2018 22:20:47 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Oct 2018 10:47:00 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.54,425,1534834800"; 
-   d="scan'208";a="244363256"
-Received: from jprestwo.jf.intel.com ([10.54.74.38])
-  by orsmga004.jf.intel.com with ESMTP; 25 Oct 2018 10:47:00 -0700
-Message-ID: <b8f27f527a33c8744e931d4e9839894ade20c7b2.camel@linux.intel.com>
-Subject: Re: [PATCH v3 1/2] mac80211_hwsim: allow setting iftype support
-From:   James Prestwood <james.prestwood@linux.intel.com>
-To:     linux-wireless@vger.kernel.org
-Date:   Thu, 25 Oct 2018 10:50:52 -0700
-In-Reply-To: <20181017211624.7338-1-james.prestwood@linux.intel.com>
-References: <20181017211624.7338-1-james.prestwood@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Thu, 25 Oct 2018 22:31:17 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:39030 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727543AbeJZCbQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Oct 2018 22:31:16 -0400
+Received: by mail-pg1-f194.google.com with SMTP id r9-v6so4356245pgv.6
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2018 10:57:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=BfPqDKGw3o0KXK8SulRln3sQqjmzSCqI/iaJQG9ROBQ=;
+        b=RIJyuP+tj6g+p4R8MLIQZDjLwRuXwA1PMtCy9NT3n4DxhrfZJSIh6QYXcYuhRbARSV
+         XRDOyMZRKk8+zVRXZn7/WvtOlLCeL5gE/I/FOP4Hsfj8ZnGHnbV6ZGYXN9aclQUZeUb/
+         Gkj182asMJJfL/JShP++JVXaL/FTKGok3Qh9E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=BfPqDKGw3o0KXK8SulRln3sQqjmzSCqI/iaJQG9ROBQ=;
+        b=UUzmFkxTCSKaVJGmBrgH3qfhEDCWNl1PisfENqlfbjxCUX65A85638blrT+pvn0B8X
+         4HRudngAp0+BQ8jTjn7zFmzN4UZFbTcq5idumbL0XNPLPn2yTZiFraVJoYXAcj/VrEel
+         CZsbpjZoyiPcDZvXj7uFtjjDLzGpDRI7/6HpSAjDSfedCc7ujCVOz/tKCtOz9ioTZz32
+         YjRLaHi/rmlheBz4v1np51r3L6OaPRNcwFbSayr45fk4yh3I2oFZPBlk13ta/TDvhDFy
+         KY4O/FivJFtIofB09dzTX/Lmlz4+QZ/LzA1aeRtDf1QU+kLN8ZCF4JsXnx0nryT9NjaT
+         Ahgg==
+X-Gm-Message-State: AGRZ1gIsLub+2j3aYAEf8jzNX/pgDrh0O3QCcyalzmuuHzCS4JOdJcV9
+        akhZBfGNo6zaSwGwdW2+pFXQKA==
+X-Google-Smtp-Source: AJdET5fTu9CtHiYyqEMgkudSPH+oYSTySimynSP5+IXhdQSA/U0o0+m6LTb2SPrfC/iHoCciTu/MvQ==
+X-Received: by 2002:a63:4d5d:: with SMTP id n29-v6mr204008pgl.270.1540490247767;
+        Thu, 25 Oct 2018 10:57:27 -0700 (PDT)
+Received: from localhost.localdomain ([2601:1c2:680:1319:4e72:b9ff:fe99:466a])
+        by smtp.gmail.com with ESMTPSA id e2-v6sm10239554pgv.25.2018.10.25.10.57.26
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 25 Oct 2018 10:57:26 -0700 (PDT)
+From:   John Stultz <john.stultz@linaro.org>
+To:     lkml <linux-kernel@vger.kernel.org>
+Cc:     John Stultz <john.stultz@linaro.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        linux-wireless@vger.kernel.org
+Subject: [RFC][PATCH] wlcore: Fixup "Add support for optional wakeirq"
+Date:   Thu, 25 Oct 2018 10:57:21 -0700
+Message-Id: <1540490241-32021-1-git-send-email-john.stultz@linaro.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes,
+After commit 3c83dd577c7f ("wlcore: Add support for optional
+wakeirq") landed upstream, I started seeing the following oops
+on my HiKey board:
 
-Ping
+[    1.870279] Unable to handle kernel read from unreadable memory at virtual address 0000000000000010
+[    1.870283] Mem abort info:
+[    1.870287]   ESR = 0x96000005
+[    1.870292]   Exception class = DABT (current EL), IL = 32 bits
+[    1.870296]   SET = 0, FnV = 0
+[    1.870299]   EA = 0, S1PTW = 0
+[    1.870302] Data abort info:
+[    1.870306]   ISV = 0, ISS = 0x00000005
+[    1.870309]   CM = 0, WnR = 0
+[    1.870312] [0000000000000010] user address but active_mm is swapper
+[    1.870318] Internal error: Oops: 96000005 [#1] PREEMPT SMP
+[    1.870327] CPU: 0 PID: 5 Comm: kworker/0:0 Not tainted 4.19.0-05129-gb3d1e8e #48
+[    1.870331] Hardware name: HiKey Development Board (DT)
+[    1.870350] Workqueue: events_freezable mmc_rescan
+[    1.870358] pstate: 60400005 (nZCv daif +PAN -UAO)
+[    1.870366] pc : wl1271_probe+0x210/0x350
+[    1.870371] lr : wl1271_probe+0x210/0x350
+[    1.870374] sp : ffffff80080739b0
+[    1.870377] x29: ffffff80080739b0 x28: 0000000000000000
+[    1.870384] x27: 0000000000000000 x26: 0000000000000000
+[    1.870391] x25: 0000000000000036 x24: ffffffc074ecb598
+[    1.870398] x23: ffffffc07ffdce78 x22: ffffffc0744ed808
+[    1.870404] x21: ffffffc074ecbb98 x20: ffffff8008ff9000
+[    1.870411] x19: ffffffc0744ed800 x18: ffffff8008ff9a48
+[    1.870418] x17: 0000000000000000 x16: 0000000000000000
+[    1.870425] x15: ffffffc074ecb503 x14: ffffffffffffffff
+[    1.870431] x13: ffffffc074ecb502 x12: 0000000000000030
+[    1.870438] x11: 0101010101010101 x10: 0000000000000040
+[    1.870444] x9 : ffffffc075400248 x8 : ffffffc075400270
+[    1.870451] x7 : 0000000000000000 x6 : 0000000000000000
+[    1.870457] x5 : 0000000000000000 x4 : 0000000000000000
+[    1.870463] x3 : 0000000000000000 x2 : 0000000000000000
+[    1.870469] x1 : 0000000000000028 x0 : 0000000000000000
+[    1.870477] Process kworker/0:0 (pid: 5, stack limit = 0x(____ptrval____))
+[    1.870480] Call trace:
+[    1.870485]  wl1271_probe+0x210/0x350
+[    1.870491]  sdio_bus_probe+0x100/0x128
+[    1.870500]  really_probe+0x1a8/0x2b8
+[    1.870506]  driver_probe_device+0x58/0x100
+[    1.870511]  __device_attach_driver+0x94/0xd8
+[    1.870517]  bus_for_each_drv+0x70/0xc8
+[    1.870522]  __device_attach+0xe0/0x140
+[    1.870527]  device_initial_probe+0x10/0x18
+[    1.870532]  bus_probe_device+0x94/0xa0
+[    1.870537]  device_add+0x374/0x5b8
+[    1.870542]  sdio_add_func+0x60/0x88
+[    1.870546]  mmc_attach_sdio+0x1b0/0x358
+[    1.870551]  mmc_rescan+0x2cc/0x390
+[    1.870558]  process_one_work+0x12c/0x320
+[    1.870563]  worker_thread+0x48/0x458
+[    1.870569]  kthread+0xf8/0x128
+[    1.870575]  ret_from_fork+0x10/0x18
+[    1.870583] Code: 92400c21 b2760021 a90687a2 97e95bf9 (f9400803)
+[    1.870587] ---[ end trace 1e15f81d3c139ca9 ]---
 
-On Wed, 2018-10-17 at 14:16 -0700, James Prestwood wrote:
-> The mac80211_hwsim driver hard codes its supported interface types.
-> For
-> testing purposes it would be valuable to allow changing these
-> supported
-> types in order to simulate actual drivers that support a limited set
-> of
-> iftypes. A new attribute was added to allow this:
-> 
-> - HWSIM_ATTR_IFTYPE_SUPPORT
-> 	A u32 bit field of supported NL80211_IFTYPE_* bits
-> 
-> This will only enable/disable iftypes that mac80211_hwsim already
-> supports.
-> 
-> In order to accomplish this, the ieee80211_iface_limit structure
-> needed
-> to be built dynamically to only include limit rules for iftypes that
-> the user requested to enable.
-> 
-> Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
-> ---
->  drivers/net/wireless/mac80211_hwsim.c | 153 +++++++++++++++---------
-> --
->  drivers/net/wireless/mac80211_hwsim.h |   2 +
->  2 files changed, 90 insertions(+), 65 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c
-> b/drivers/net/wireless/mac80211_hwsim.c
-> index 18e819d964f1..2799eb247b7e 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -448,48 +448,6 @@ static const struct nl80211_vendor_cmd_info
-> mac80211_hwsim_vendor_events[] = {
->  	{ .vendor_id = OUI_QCA, .subcmd = 1 },
->  };
->  
-> -static const struct ieee80211_iface_limit hwsim_if_limits[] = {
-> -	{ .max = 1, .types = BIT(NL80211_IFTYPE_ADHOC) },
-> -	{ .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) |
-> -				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-> -#ifdef CONFIG_MAC80211_MESH
-> -				 BIT(NL80211_IFTYPE_MESH_POINT) |
-> -#endif
-> -				 BIT(NL80211_IFTYPE_AP) |
-> -				 BIT(NL80211_IFTYPE_P2P_GO) },
-> -	/* must be last, see hwsim_if_comb */
-> -	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) }
-> -};
-> -
-> -static const struct ieee80211_iface_combination hwsim_if_comb[] = {
-> -	{
-> -		.limits = hwsim_if_limits,
-> -		/* remove the last entry which is P2P_DEVICE */
-> -		.n_limits = ARRAY_SIZE(hwsim_if_limits) - 1,
-> -		.max_interfaces = 2048,
-> -		.num_different_channels = 1,
-> -		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT)
-> |
-> -				       BIT(NL80211_CHAN_WIDTH_20) |
-> -				       BIT(NL80211_CHAN_WIDTH_40) |
-> -				       BIT(NL80211_CHAN_WIDTH_80) |
-> -				       BIT(NL80211_CHAN_WIDTH_160),
-> -	},
-> -};
-> -
-> -static const struct ieee80211_iface_combination
-> hwsim_if_comb_p2p_dev[] = {
-> -	{
-> -		.limits = hwsim_if_limits,
-> -		.n_limits = ARRAY_SIZE(hwsim_if_limits),
-> -		.max_interfaces = 2048,
-> -		.num_different_channels = 1,
-> -		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT)
-> |
-> -				       BIT(NL80211_CHAN_WIDTH_20) |
-> -				       BIT(NL80211_CHAN_WIDTH_40) |
-> -				       BIT(NL80211_CHAN_WIDTH_80) |
-> -				       BIT(NL80211_CHAN_WIDTH_160),
-> -	},
-> -};
-> -
->  static spinlock_t hwsim_radio_lock;
->  static LIST_HEAD(hwsim_radios);
->  static struct workqueue_struct *hwsim_wq;
-> @@ -513,6 +471,8 @@ struct mac80211_hwsim_data {
->  	struct ieee80211_channel
-> channels_5ghz[ARRAY_SIZE(hwsim_channels_5ghz)];
->  	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
->  	struct ieee80211_iface_combination if_combination;
-> +	struct ieee80211_iface_limit if_limits[3];
-> +	int n_if_limits;
->  
->  	struct mac_address addresses[2];
->  	int channels, idx;
-> @@ -641,6 +601,7 @@ static const struct nla_policy
-> hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
->  	[HWSIM_ATTR_NO_VIF] = { .type = NLA_FLAG },
->  	[HWSIM_ATTR_FREQ] = { .type = NLA_U32 },
->  	[HWSIM_ATTR_PERM_ADDR] = { .type = NLA_UNSPEC, .len = ETH_ALEN
-> },
-> +	[HWSIM_ATTR_IFTYPE_SUPPORT] = { .type = NLA_U32 },
->  };
->  
->  static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-> @@ -2413,6 +2374,7 @@ struct hwsim_new_radio_params {
->  	const char *hwname;
->  	bool no_vif;
->  	const u8 *perm_addr;
-> +	u32 iftypes;
->  };
->  
->  static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
-> @@ -2517,6 +2479,29 @@ static void hwsim_mcast_new_radio(int id,
-> struct genl_info *info,
->  	nlmsg_free(mcast_skb);
->  }
->  
-> +#ifdef CONFIG_MAC80211_MESH
-> +#define HWSIM_MESH_BIT BIT(NL80211_IFTYPE_MESH_POINT)
-> +#else
-> +#define HWSIM_MESH_BIT 0
-> +#endif
-> +
-> +#define HWSIM_DEFAULT_IF_LIMIT \
-> +	( \
-> +		BIT(NL80211_IFTYPE_STATION) | \
-> +		BIT(NL80211_IFTYPE_P2P_CLIENT) | \
-> +		BIT(NL80211_IFTYPE_AP) | \
-> +		BIT(NL80211_IFTYPE_P2P_GO) | \
-> +		HWSIM_MESH_BIT \
-> +	)
-> +
-> +#define HWSIM_IFTYPE_SUPPORT_MASK \
-> +	BIT(NL80211_IFTYPE_STATION) | \
-> +	BIT(NL80211_IFTYPE_AP) | \
-> +	BIT(NL80211_IFTYPE_P2P_CLIENT) | \
-> +	BIT(NL80211_IFTYPE_P2P_GO) | \
-> +	BIT(NL80211_IFTYPE_ADHOC) | \
-> +	BIT(NL80211_IFTYPE_MESH_POINT)
-> +
->  static int mac80211_hwsim_new_radio(struct genl_info *info,
->  				    struct hwsim_new_radio_params
-> *param)
->  {
-> @@ -2528,6 +2513,7 @@ static int mac80211_hwsim_new_radio(struct
-> genl_info *info,
->  	const struct ieee80211_ops *ops = &mac80211_hwsim_ops;
->  	struct net *net;
->  	int idx;
-> +	int n_limits = 0;
->  
->  	if (WARN_ON(param->channels > 1 && !param->use_chanctx))
->  		return -EINVAL;
-> @@ -2603,43 +2589,61 @@ static int mac80211_hwsim_new_radio(struct
-> genl_info *info,
->  	if (info)
->  		data->portid = info->snd_portid;
->  
-> +	/* setup interface limits, only on interface types we support
-> */
-> +	if (param->iftypes & BIT(NL80211_IFTYPE_ADHOC)) {
-> +		data->if_limits[n_limits].max = 1;
-> +		data->if_limits[n_limits].types =
-> BIT(NL80211_IFTYPE_ADHOC);
-> +		n_limits++;
-> +	}
-> +
-> +	if (param->iftypes & HWSIM_DEFAULT_IF_LIMIT) {
-> +		data->if_limits[n_limits].max = 2048;
-> +		/*
-> +		 * For this case, we may only support a subset of
-> +		 * HWSIM_DEFAULT_IF_LIMIT, therefore we only want to
-> add the
-> +		 * bits that both param->iftype &
-> HWSIM_DEFAULT_IF_LIMIT have.
-> +		 */
-> +		data->if_limits[n_limits].types =
-> +					HWSIM_DEFAULT_IF_LIMIT & param-
-> >iftypes;
-> +		n_limits++;
-> +	}
-> +
-> +	if (param->iftypes & BIT(NL80211_IFTYPE_P2P_DEVICE)) {
-> +		data->if_limits[n_limits].max = 1;
-> +		data->if_limits[n_limits].types =
-> +						BIT(NL80211_IFTYPE_P2P_
-> DEVICE);
-> +		n_limits++;
-> +	}
-> +
->  	if (data->use_chanctx) {
->  		hw->wiphy->max_scan_ssids = 255;
->  		hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
->  		hw->wiphy->max_remain_on_channel_duration = 1000;
-> -		hw->wiphy->iface_combinations = &data->if_combination;
-> -		if (param->p2p_device)
-> -			data->if_combination =
-> hwsim_if_comb_p2p_dev[0];
-> -		else
-> -			data->if_combination = hwsim_if_comb[0];
-> -		hw->wiphy->n_iface_combinations = 1;
-> -		/* For channels > 1 DFS is not allowed */
->  		data->if_combination.radar_detect_widths = 0;
->  		data->if_combination.num_different_channels = data-
-> >channels;
-> -	} else if (param->p2p_device) {
-> -		hw->wiphy->iface_combinations = hwsim_if_comb_p2p_dev;
-> -		hw->wiphy->n_iface_combinations =
-> -			ARRAY_SIZE(hwsim_if_comb_p2p_dev);
->  	} else {
-> -		hw->wiphy->iface_combinations = hwsim_if_comb;
-> -		hw->wiphy->n_iface_combinations =
-> ARRAY_SIZE(hwsim_if_comb);
-> +		data->if_combination.num_different_channels = 1;
-> +		data->if_combination.radar_detect_widths =
-> +					BIT(NL80211_CHAN_WIDTH_20_NOHT)
-> |
-> +					BIT(NL80211_CHAN_WIDTH_20) |
-> +					BIT(NL80211_CHAN_WIDTH_40) |
-> +					BIT(NL80211_CHAN_WIDTH_80) |
-> +					BIT(NL80211_CHAN_WIDTH_160);
->  	}
->  
-> +	data->if_combination.n_limits = n_limits;
-> +	data->if_combination.max_interfaces = 2048;
-> +	data->if_combination.limits = data->if_limits;
-> +
-> +	hw->wiphy->iface_combinations = &data->if_combination;
-> +	hw->wiphy->n_iface_combinations = 1;
-> +
->  	INIT_DELAYED_WORK(&data->roc_start, hw_roc_start);
->  	INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
->  	INIT_DELAYED_WORK(&data->hw_scan, hw_scan_work);
->  
->  	hw->queues = 5;
->  	hw->offchannel_tx_hw_queue = 4;
-> -	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-> -				     BIT(NL80211_IFTYPE_AP) |
-> -				     BIT(NL80211_IFTYPE_P2P_CLIENT) |
-> -				     BIT(NL80211_IFTYPE_P2P_GO) |
-> -				     BIT(NL80211_IFTYPE_ADHOC) |
-> -				     BIT(NL80211_IFTYPE_MESH_POINT);
-> -
-> -	if (param->p2p_device)
-> -		hw->wiphy->interface_modes |=
-> BIT(NL80211_IFTYPE_P2P_DEVICE);
->  
->  	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
->  	ieee80211_hw_set(hw, CHANCTX_STA_CSA);
-> @@ -2665,6 +2669,8 @@ static int mac80211_hwsim_new_radio(struct
-> genl_info *info,
->  			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
->  	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
->  
-> +	hw->wiphy->interface_modes = param->iftypes;
-> +
->  	/* ask mac80211 to reserve space for magic */
->  	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
->  	hw->sta_data_size = sizeof(struct hwsim_sta_priv);
-> @@ -3240,10 +3246,27 @@ static int hwsim_new_radio_nl(struct sk_buff
-> *msg, struct genl_info *info)
->  			return -EINVAL;
->  		}
->  
-> -
->  		param.perm_addr = nla_data(info-
-> >attrs[HWSIM_ATTR_PERM_ADDR]);
->  	}
->  
-> +	if (info->attrs[HWSIM_ATTR_IFTYPE_SUPPORT]) {
-> +		param.iftypes = nla_get_u32(
-> +					info-
-> >attrs[HWSIM_ATTR_IFTYPE_SUPPORT]);
-> +		if (param.iftypes & ~(HWSIM_IFTYPE_SUPPORT_MASK)) {
-> +			NL_SET_BAD_ATTR(info->extack,
-> +					info-
-> >attrs[HWSIM_ATTR_IFTYPE_SUPPORT]);
-> +			return -EINVAL;
-> +		}
-> +	} else
-> +		param.iftypes = HWSIM_IFTYPE_SUPPORT_MASK;
-> +
-> +	/* ensure both flag and iftype support is honored */
-> +	if (param.p2p_device ||
-> +			param.iftypes & BIT(NL80211_IFTYPE_P2P_DEVICE))
-> {
-> +		param.iftypes |= BIT(NL80211_IFTYPE_P2P_DEVICE);
-> +		param.p2p_device = true;
-> +	}
-> +
->  	ret = mac80211_hwsim_new_radio(info, &param);
->  	kfree(hwname);
->  	return ret;
-> diff --git a/drivers/net/wireless/mac80211_hwsim.h
-> b/drivers/net/wireless/mac80211_hwsim.h
-> index 0fe3199f8c72..3f6b670116d0 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.h
-> +++ b/drivers/net/wireless/mac80211_hwsim.h
-> @@ -132,6 +132,7 @@ enum {
->   * @HWSIM_ATTR_TX_INFO_FLAGS: additional flags for corresponding
->   *	rates of %HWSIM_ATTR_TX_INFO
->   * @HWSIM_ATTR_PERM_ADDR: permanent mac address of new radio
-> + * @HWSIM_ATTR_IFTYPE_SUPPORT: u32 attribute of supported interface
-> types bits
->   * @__HWSIM_ATTR_MAX: enum limit
->   */
->  
-> @@ -160,6 +161,7 @@ enum {
->  	HWSIM_ATTR_PAD,
->  	HWSIM_ATTR_TX_INFO_FLAGS,
->  	HWSIM_ATTR_PERM_ADDR,
-> +	HWSIM_ATTR_IFTYPE_SUPPORT,
->  	__HWSIM_ATTR_MAX,
->  };
->  #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+It seems since we don't have a wakeirq value in the dts, the wakeirq
+value in wl1271_probe() is zero, which then causes trouble in
+irqd_get_trigger_type(irq_get_irq_data(wakeirq)).
+
+This patch tries to address this by checking if wakeirq is zero,
+and not trying to add it to the resources if that is the case.
+
+Cc: Tony Lindgren <tony@atomide.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>
+Cc: Anders Roxell <anders.roxell@linaro.org>
+Cc: linux-wireless@vger.kernel.org
+Acked-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 4c2154b..bd10165 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -285,7 +285,7 @@ static int wl1271_probe(struct sdio_func *func,
+ 	struct resource res[2];
+ 	mmc_pm_flag_t mmcflags;
+ 	int ret = -ENOMEM;
+-	int irq, wakeirq;
++	int irq, wakeirq, num_irqs;
+ 	const char *chip_family;
+ 
+ 	/* We are only able to handle the wlan function */
+@@ -353,12 +353,17 @@ static int wl1271_probe(struct sdio_func *func,
+ 		       irqd_get_trigger_type(irq_get_irq_data(irq));
+ 	res[0].name = "irq";
+ 
+-	res[1].start = wakeirq;
+-	res[1].flags = IORESOURCE_IRQ |
+-		       irqd_get_trigger_type(irq_get_irq_data(wakeirq));
+-	res[1].name = "wakeirq";
+ 
+-	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
++	if (wakeirq > 0) {
++		res[1].start = wakeirq;
++		res[1].flags = IORESOURCE_IRQ |
++			       irqd_get_trigger_type(irq_get_irq_data(wakeirq));
++		res[1].name = "wakeirq";
++		num_irqs = 2;
++	} else {
++		num_irqs = 1;
++	}
++	ret = platform_device_add_resources(glue->core, res, num_irqs);
+ 	if (ret) {
+ 		dev_err(glue->dev, "can't add resources\n");
+ 		goto out_dev_put;
+-- 
+2.7.4
 
