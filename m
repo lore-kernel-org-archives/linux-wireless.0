@@ -2,227 +2,119 @@ Return-Path: <SRS0=+bZT=NF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4702DECDE46
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 19:49:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4170DECDE47
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 20:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0136B2082E
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 19:49:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB0C32054F
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Oct 2018 20:33:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="xWBfJbfS"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0136B2082E
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bobcopeland.com
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IQhQesyP"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EB0C32054F
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726014AbeJZEXZ (ORCPT
+        id S1726275AbeJZFHe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 00:23:25 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:33289 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725784AbeJZEXZ (ORCPT
+        Fri, 26 Oct 2018 01:07:34 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:44730 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbeJZFHe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 00:23:25 -0400
-Received: by mail-io1-f68.google.com with SMTP id l25-v6so6260438ioj.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Oct 2018 12:49:18 -0700 (PDT)
+        Fri, 26 Oct 2018 01:07:34 -0400
+Received: by mail-oi1-f193.google.com with SMTP id k19-v6so1841042oic.11;
+        Thu, 25 Oct 2018 13:33:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=fycvqBAtfE40J048mJ8Ij50lgVhHr4bugNStCwA6+d4=;
-        b=xWBfJbfS6rhTOv7t3QBNSk3T3frc9V339TXE3dS7uOpd7PbsKgIMLQ2FA43HmpHJeD
-         WOrA1+hXlOoyZmMFsODRG1Fa2eVxZihDedJ9q33tkwYyD1GUaWXAz+hWyeENzM/AG263
-         IRr+grdaoJtp7+xIk3PLXbjc+1NqrF0thXLau+vZSMLltyBkbXxIzNye5e6wzlL9+5xc
-         YjNOU81XlMlwfGz4zCHYIAn663k4Bk3mw0J/0yNjIyMjRkJ4gF5tsWuNgYS7g2y9Ow0V
-         eJxN4rggXEDdmKqkNbefALywdMddRqP8oq5Q4cjcYbZV8T1gLIYSBO4Rtp9Vlja939yK
-         pHQQ==
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=9mc+cUu9+3kBOHiROgxNNx1QR01eTy6jVlFvG76VZMw=;
+        b=IQhQesyP/W4Uob+B/LfIqZacUHeudtSd2A3P0no2k4Uqn3tksh23krLb49mpNMrbe6
+         KijK4WTcUkesUrKR9jgcbYTr2aGXYYrg4WIogn/YJMSJ3AZUpyeSOtukkuCUUXFXkkj8
+         mlH78zFRJor6A9r22Xbw7Aisjh+WOaT2luO5Oa3kURQpoZJYbv3x1owrdkQYeKVs69hs
+         y38fEGlfN8L0pDa2GkVwbLmCgAiE8y5lt7GyiGEBKzuZJaX3Q7WfHKjbrSOj197bPSr2
+         d2Myj/fqTrntlu/3EmSQrAIBx4MNw6XEa6F6CwmwWmERqSXn8520xcfH5BC7c9QPcDOy
+         2xNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=fycvqBAtfE40J048mJ8Ij50lgVhHr4bugNStCwA6+d4=;
-        b=js7QkbuEWhSqyYcM1Xo6S5svX5Ohw/8XwtrX59jSH72Ohmg+Hc8riqCqGt6ct+sU43
-         IjcLIAhPb2cUWc4HrsbPyPlyTurD7XNJHTvvCdyaHJIhKMXUeB8HgGTOAcmAPciVh1Vv
-         YFopUxFWA6chfuPI098XtFpYYK6hC/GIahoH45IphTxLMHvBVrJyXilWg3aVFsuAed4x
-         XyS7rPG9f6m2N8k105r+hC99C/ttt39WGhw84gOo0JTXKlHMXE0UMwXCiIhJePp8vLkg
-         uGHfedymlD5U0CCR4vzxo0+A83n0+GUx3PKwgN88dkKwfDpqHuSuGQrqNwOLFtIY5ANz
-         nhSQ==
-X-Gm-Message-State: AGRZ1gLZXUqA4cI6S1svuLX6Knq1gt3ONGC8OQ8dCBbwJ/L/LGZ2ig07
-        lMJRa1hk3XVfMJtqAAsjzaV15A==
-X-Google-Smtp-Source: AJdET5cuaJjv8HI01wSndqDrzcElJNr4uOpiXHDsP2SC2UdAFniKdoPp6SlMjG3d/Yvj5/0n1ZD+uQ==
-X-Received: by 2002:a6b:b2d0:: with SMTP id b199-v6mr397851iof.140.1540496957713;
-        Thu, 25 Oct 2018 12:49:17 -0700 (PDT)
-Received: from hash (CPE30b5c2fb365b-CM18593342f28f.cpe.net.cable.rogers.com. [99.232.51.173])
-        by smtp.gmail.com with ESMTPSA id s20-v6sm3131017ioa.1.2018.10.25.12.49.17
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 25 Oct 2018 12:49:17 -0700 (PDT)
-Received: from bob by hash with local (Exim 4.89)
-        (envelope-from <me@bobcopeland.com>)
-        id 1gFld6-00034Y-A0; Thu, 25 Oct 2018 15:49:16 -0400
-From:   Bob Copeland <me@bobcopeland.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, kernel-team@fb.com,
-        Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Subject: [PATCH 3/3] {nl,mac}80211: add dot11MeshConnectedToMeshGate to meshconf
-Date:   Thu, 25 Oct 2018 15:48:54 -0400
-Message-Id: <20181025194854.11676-3-me@bobcopeland.com>
-X-Mailer: git-send-email 2.11.0
-In-Reply-To: <20181025194854.11676-1-me@bobcopeland.com>
-References: <20181025194854.11676-1-me@bobcopeland.com>
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=9mc+cUu9+3kBOHiROgxNNx1QR01eTy6jVlFvG76VZMw=;
+        b=TNH/AS36b88zrfxq71ziQ2hWjfHwLkxnjO6hQbsuDvd+casS2TRZZFD08M87L67Ha2
+         dcGeGQ3AyafjrVIa96evdtGinfWyhXqj1nhlnSueEm6+RfrfHWX5GO+98j8mAd0wD223
+         wnEAmzm3JAODlWDo+pXSm6OlA3PSdsxk4lNMmO3/j2ZGYL/9MOsnFrgvJA9264IjZ67D
+         +mu8W4bOfEpRHaFOWLew+r5c3LwgocjPwaU8cBDw72v1+O8olyHmfrj1m8SMpj6CK6Lm
+         AvTZJKPFHKlfuMKap4T+xrmJwPuYXuVpFsODT7m8NrPc1QRx6ab6e06pIIco68WDjwzS
+         FsTQ==
+X-Gm-Message-State: AGRZ1gKeNljSq/gKRb2+QY6JA9Qyh6Ukl6VOIy7lHhdhZQnHn+Hydwzf
+        sz2jSPXWiEP+auut5x6BM+ezvEjNSFjolQr3B/Nahw==
+X-Google-Smtp-Source: AJdET5c2IZQsNo2WeMggLGHJ5aeM8SDJ/DS5hUZcm89CuiV1gIdJiO/22XGIfuHqRzzDEOH7024quM7S9PxhC6hJX4Q=
+X-Received: by 2002:aca:3c56:: with SMTP id j83-v6mr473490oia.155.1540499600305;
+ Thu, 25 Oct 2018 13:33:20 -0700 (PDT)
+MIME-Version: 1.0
+Received: by 2002:a9d:2eab:0:0:0:0:0 with HTTP; Thu, 25 Oct 2018 13:33:19
+ -0700 (PDT)
+In-Reply-To: <20181025141853.214051-13-sashal@kernel.org>
+References: <20181025141853.214051-1-sashal@kernel.org> <20181025141853.214051-13-sashal@kernel.org>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Thu, 25 Oct 2018 22:33:19 +0200
+Message-ID: <CAKR_QVJ56Ei_rq7bvRdt3KR1eLhhP8Uamf_-Rn=uDb-eEoGq1A@mail.gmail.com>
+Subject: Re: [PATCH AUTOSEL 3.18 13/98] PCI: Mark Atheros AR9580 to avoid bus reset
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Maik Broemme <mbroemme@libmpq.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When userspace is controlling mesh routing, it may have better
-knowledge about whether a mesh STA is connected to a mesh
-gate than the kernel mpath table.  Add dot11MeshConnectedToMeshGate
-to the mesh config so that such applications can explicitly
-signal that a mesh STA is connected to a gate, which will then
-be advertised in the beacon.
+On 25/10/2018, Sasha Levin <sashal@kernel.org> wrote:
+> From: Maik Broemme <mbroemme@libmpq.org>
+>
+> [ Upstream commit 8e2e03179923479ca0c0b6fdc7c93ecf89bce7a8 ]
+>
+> Similar to the AR93xx and the AR94xx series, the AR95xx also have the same
+> quirk for the Bus Reset.  It will lead to instant system reset if the
+> device is assigned via VFIO to a KVM VM.  I've been able reproduce this
+> behavior with a MikroTik R11e-2HnD.
+>
+> Fixes: c3e59ee4e766 ("PCI: Mark Atheros AR93xx to avoid bus reset")
+> Signed-off-by: Maik Broemme <mbroemme@libmpq.org>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org	# v3.14+
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> ---
+>  drivers/pci/quirks.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 9e86ace95832..0b75b47a5329 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3081,6 +3081,7 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030,
+> quirk_no_bus_reset);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032,
+> quirk_no_bus_reset);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c,
+> quirk_no_bus_reset);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033,
+> quirk_no_bus_reset);
+>
+>  #ifdef CONFIG_ACPI
+>  /*
+> --
+> 2.17.1
+>
+>
 
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
----
- include/net/cfg80211.h        | 5 +++++
- include/uapi/linux/nl80211.h  | 6 ++++++
- net/mac80211/cfg.c            | 3 +++
- net/mac80211/debugfs_netdev.c | 3 +++
- net/mac80211/mesh.c           | 3 ++-
- net/wireless/nl80211.c        | 8 +++++++-
- 6 files changed, 26 insertions(+), 2 deletions(-)
+Hi
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f2cb1a3c9651..cddaa9dacb27 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1562,6 +1562,10 @@ struct bss_parameters {
-  * @plink_timeout: If no tx activity is seen from a STA we've established
-  *	peering with for longer than this time (in seconds), then remove it
-  *	from the STA's list of peers.  Default is 30 minutes.
-+ * @dot11MeshConnectedToMeshGate: if set to true, advertise that this STA is
-+ *      connected to a mesh gate in mesh formation info.  If false, the
-+ *      value in mesh formation is determined by the presence of root paths
-+ *      in the mesh path table
-  */
- struct mesh_config {
- 	u16 dot11MeshRetryTimeout;
-@@ -1581,6 +1585,7 @@ struct mesh_config {
- 	u16 dot11MeshHWMPperrMinInterval;
- 	u16 dot11MeshHWMPnetDiameterTraversalTime;
- 	u8 dot11MeshHWMPRootMode;
-+	bool dot11MeshConnectedToMeshGate;
- 	u16 dot11MeshHWMPRannInterval;
- 	bool dot11MeshGateAnnouncementProtocol;
- 	bool dot11MeshForwarding;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f2d79f9b4b5a..d04391ae4acd 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3898,6 +3898,11 @@ enum nl80211_mesh_power_mode {
-  *	remove it from the STA's list of peers. You may set this to 0 to disable
-  *	the removal of the STA. Default is 30 minutes.
-  *
-+ * @NL80211_MESHCONF_CONNECTED_TO_GATE: If set to true then this mesh STA
-+ *	will advertise that it is connected to a gate in the mesh formation
-+ *	field.  If left unset then the mesh formation field will only
-+ *	advertise such if there is an active root mesh path.
-+ *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-  */
- enum nl80211_meshconf_params {
-@@ -3930,6 +3935,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_POWER_MODE,
- 	NL80211_MESHCONF_AWAKE_WINDOW,
- 	NL80211_MESHCONF_PLINK_TIMEOUT,
-+	NL80211_MESHCONF_CONNECTED_TO_GATE,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 51622333d460..6d1c54f28df7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2028,6 +2028,9 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 			nconf->dot11MeshAwakeWindowDuration;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_PLINK_TIMEOUT, mask))
- 		conf->plink_timeout = nconf->plink_timeout;
-+	if (_chg_mesh_attr(NL80211_MESHCONF_CONNECTED_TO_GATE, mask))
-+		conf->dot11MeshConnectedToMeshGate =
-+			nconf->dot11MeshConnectedToMeshGate;
- 	ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 	return 0;
- }
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index c813207bb123..cff0fb3578c9 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -641,6 +641,8 @@ IEEE80211_IF_FILE(dot11MeshHWMPconfirmationInterval,
- IEEE80211_IF_FILE(power_mode, u.mesh.mshcfg.power_mode, DEC);
- IEEE80211_IF_FILE(dot11MeshAwakeWindowDuration,
- 		  u.mesh.mshcfg.dot11MeshAwakeWindowDuration, DEC);
-+IEEE80211_IF_FILE(dot11MeshConnectedToMeshGate,
-+		  u.mesh.mshcfg.dot11MeshConnectedToMeshGate, DEC);
- #endif
- 
- #define DEBUGFS_ADD_MODE(name, mode) \
-@@ -762,6 +764,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(dot11MeshHWMPconfirmationInterval);
- 	MESHPARAMS_ADD(power_mode);
- 	MESHPARAMS_ADD(dot11MeshAwakeWindowDuration);
-+	MESHPARAMS_ADD(dot11MeshConnectedToMeshGate);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 19205c821dee..4869280a6413 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -255,7 +255,8 @@ int mesh_add_meshconf_ie(struct ieee80211_sub_if_data *sdata,
- 	u8 *pos, neighbors;
- 	u8 meshconf_len = sizeof(struct ieee80211_meshconf_ie);
- 	bool is_connected_to_gate = ifmsh->num_gates > 0 ||
--		ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol;
-+		ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol ||
-+		ifmsh->mshcfg.dot11MeshConnectedToMeshGate;
- 
- 	if (skb_tailroom(skb) < 2 + meshconf_len)
- 		return -ENOMEM;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ce8c082e6389..05ac44d6d5c4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6123,7 +6123,9 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 	    nla_put_u16(msg, NL80211_MESHCONF_AWAKE_WINDOW,
- 			cur_params.dot11MeshAwakeWindowDuration) ||
- 	    nla_put_u32(msg, NL80211_MESHCONF_PLINK_TIMEOUT,
--			cur_params.plink_timeout))
-+			cur_params.plink_timeout) ||
-+	    nla_put_u8(msg, NL80211_MESHCONF_CONNECTED_TO_GATE,
-+		       cur_params.dot11MeshConnectedToMeshGate))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
-@@ -6180,6 +6182,7 @@ nl80211_meshconf_params_policy[NL80211_MESHCONF_ATTR_MAX+1] = {
- 				 NL80211_MESH_POWER_MAX),
- 	[NL80211_MESHCONF_AWAKE_WINDOW] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_PLINK_TIMEOUT] = { .type = NLA_U32 },
-+	[NL80211_MESHCONF_CONNECTED_TO_GATE] = { .type = NLA_U8 },
- };
- 
- static const struct nla_policy
-@@ -6291,6 +6294,9 @@ do {									\
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, mask,
- 				  NL80211_MESHCONF_RSSI_THRESHOLD,
- 				  nla_get_s32);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConnectedToMeshGate, mask,
-+				  NL80211_MESHCONF_CONNECTED_TO_GATE,
-+				  nla_get_u8);
- 	/*
- 	 * Check HT operation mode based on
- 	 * IEEE 802.11-2016 9.4.2.57 HT Operation element.
--- 
-2.11.0
-
+You should CC this to linux-wireless list too
