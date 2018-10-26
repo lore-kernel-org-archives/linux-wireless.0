@@ -2,78 +2,103 @@ Return-Path: <SRS0=rthY=NG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBF5C6786E
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442EBC6786E
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C37F20856
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:06:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE8FC20824
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:58:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbVlXD5B"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C37F20856
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HQezOqgX";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ez+kw7lO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EE8FC20824
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727566AbeJZUnl (ORCPT
+        id S1726128AbeJZVfL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 16:43:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49700 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727491AbeJZUnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 16:43:41 -0400
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F0F8420869
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 12:06:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1540555610;
-        bh=wqknGW/ST7oBy+cI2W6mybnqi3I80pIqwiDcxX8stKE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=YbVlXD5BnBwV+iCgyBDCcUxhWWwdJkagXBWTm3eogDdmw+oNwmO95R9gfGDfuoSmh
-         fCpWlGp7d44IqOYGJmz9ujGbkJq5+A4O6PAbQWpkWxXmK+bNaJ7HENvyFwCoF4BgZe
-         VwzN4aiHCe1a2H+aWyoGxz0bB0YHt5zXa8TIg2lw=
-Received: by mail-qt1-f178.google.com with SMTP id q41-v6so855939qtq.10
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 05:06:49 -0700 (PDT)
-X-Gm-Message-State: AGRZ1gKGki9+UaZEf6Hsle7sW7K/g/BXVTxX1VkOzCh+AbMtKqTTInWc
-        B/rLW7S3W2UttCd4/Bmas21TiEP+r/yfyd0d2tI=
-X-Google-Smtp-Source: AJdET5cmvIFApLTxq2x0gYPruRdmFUdSPyIFBn//XlVuqRBw9XpK0Qq7Wn1TQpyhoSW3PWY3wMdgeH6C4QqHMQLux8Y=
-X-Received: by 2002:a0c:ae76:: with SMTP id z51-v6mr2961332qvc.108.1540555609172;
- Fri, 26 Oct 2018 05:06:49 -0700 (PDT)
+        Fri, 26 Oct 2018 17:35:11 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51252 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726006AbeJZVfL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Oct 2018 17:35:11 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id C5944612F2; Fri, 26 Oct 2018 12:58:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540558690;
+        bh=qb7lBPqvyvPG9Wqw+QgZux9DRR8uE4c6nHDb0L0O7Uc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=HQezOqgXdgO1GkBdvZIihnoNxTlk7DF77lQPmAPfXbdNkHRA9oQwQSaSK3MTgldsw
+         YXs17aa9Cio9WIiQ537ZcJ3gRVmg3SXOFWVs5Gjf5QpdfZnu9UEG4D892YqDhtkZlF
+         I0CwBGy3PtxzBrxCxQhqKRFqdyTuRdEC12ZVq7do=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 49FCA60CEC;
+        Fri, 26 Oct 2018 12:58:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540558684;
+        bh=qb7lBPqvyvPG9Wqw+QgZux9DRR8uE4c6nHDb0L0O7Uc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ez+kw7lOCrggnBzbU3nUV3HdxCyANFPvG3MLd1DvTyC/yXhZ4voBC3imzzTCmqzqU
+         4Vex1py0FXeuzJLdXynXrondptBGtZcUv1lE2I1Tg9eEedr9ItNN+lReTmDhTG7jMF
+         R9D9/FXGYTZ406B0EBnbA5F6ITd8z7hVMc1b5BIs=
 MIME-Version: 1.0
-References: <1540210566-3192-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1540210566-3192-1-git-send-email-sgruszka@redhat.com>
-From:   Josh Boyer <jwboyer@kernel.org>
-Date:   Fri, 26 Oct 2018 08:06:37 -0400
-X-Gmail-Original-Message-ID: <CA+5PVA5ujUo=GaZKsrGW+HhcEctYdkx9HYgRog1eYR0Yz=VO1Q@mail.gmail.com>
-Message-ID: <CA+5PVA5ujUo=GaZKsrGW+HhcEctYdkx9HYgRog1eYR0Yz=VO1Q@mail.gmail.com>
-Subject: Re: [PATCH] linux-firmware: add firmware for mt7650e
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Linux Firmware <linux-firmware@kernel.org>,
-        linux-mediatek@lists.infradead.org,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        lorenzo.bianconi@redhat.com, sean.wang@kernel.org,
-        steven.liu@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 26 Oct 2018 18:28:04 +0530
+From:   Anilkumar Kolli <akolli@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: report tx rate using
+ ieee80211_tx_rate_update()
+In-Reply-To: <20181012113515.202BD6063F@smtp.codeaurora.org>
+References: <1539261904-9016-3-git-send-email-akolli@codeaurora.org>
+ <20181012113515.202BD6063F@smtp.codeaurora.org>
+Message-ID: <186319d123468bce8673c1462507d346@codeaurora.org>
+X-Sender: akolli@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 22, 2018 at 8:16 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> Add binary firmware for mt7650e based devices
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  WHENCE               |   2 ++
->  mediatek/mt7650e.bin | Bin 0 -> 382212 bytes
->  2 files changed, 2 insertions(+)
->  create mode 100644 mediatek/mt7650e.bin
+On 2018-10-12 17:05, Kalle Valo wrote:
+> Anilkumar Kolli <akolli@codeaurora.org> wrote:
+> 
+>> Mesh path metric needs tx rate information from ieee80211_tx_status()
+>> call but in ath10k there is no mechanism to report tx rate information
+>> via ieee80211_tx_status(), the tx rate is only accessible via
+>> sta_statiscs() op.
+>> 
+>> Per peer tx stats has tx rate info available, Tx rate is available
+>> to ath10k driver after every 4 PPDU sent in the air. For each PPDU,
+>> ath10k driver updates rate informattion to mac80211 using
+>> ieee80211_tx_rate_update().
+>> 
+>> Per peer txrate information is updated through per peer statistics
+>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+>> 
+>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+>> 
+>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+> 
+> Depends on:
+> 
+> f8252e7b5a83 mac80211: implement ieee80211_tx_rate_update to update 
+> rate
+> 
+> Currently in mac80211-next.
 
-Applied and pushed out.
+mac80211 dependent patch is merged.
 
-josh
+Please drop this patch, I have rebased this patch on latest ath.git,
+and posted v2 https://patchwork.kernel.org/patch/10656927/
+
+-- 
+Thanks
+Anil.
