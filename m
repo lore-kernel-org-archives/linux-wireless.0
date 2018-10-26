@@ -2,119 +2,156 @@ Return-Path: <SRS0=rthY=NG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3FFECDE44
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 22:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC1C8ECDE44
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 23:04:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FA2C20856
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 22:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C1082085B
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 23:04:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="TyIk/UM/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0FA2C20856
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DXbGrsJz";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Tkj1y5k0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C1082085B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728147AbeJ0HVX (ORCPT
+        id S1727514AbeJ0HnU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 Oct 2018 03:21:23 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:60313 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726418AbeJ0HVX (ORCPT
+        Sat, 27 Oct 2018 03:43:20 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55100 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726569AbeJ0HnU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Oct 2018 03:21:23 -0400
-X-IronPort-AV: E=Sophos;i="5.54,429,1534834800"; 
-   d="scan'208";a="22216110"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 26 Oct 2018 15:42:31 -0700
-Received: from NAM03-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Fri, 26 Oct 2018 15:42:31 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector1-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WqDZz0AOaJehAPelIJp1/ePBCCQg3+BGgzmKkXhtkwo=;
- b=TyIk/UM/CuVHdgoNVqQYayzHcYZZrRSFRr/zLmdlvxbQs4I4AqXCt/Uglth0BEpCB/nqGszktkXCWP0TbJYMIpOfkoXuktQREjEOiomqIO+CAfSF52g/F7VT1ms2J+Ou+mwKOegUC+p+0BHrL9sKuSO79W/yyzm/sr53WqiiAb0=
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com (10.160.135.27) by
- DM2PR11MB0123.namprd11.prod.outlook.com (10.160.27.28) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1273.25; Fri, 26 Oct 2018 22:42:28 +0000
-Received: from DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::5cab:d918:f310:6f0e]) by DM2PR11MB0255.namprd11.prod.outlook.com
- ([fe80::5cab:d918:f310:6f0e%10]) with mapi id 15.20.1250.028; Fri, 26 Oct
- 2018 22:42:28 +0000
-From:   <Adham.Abozaeid@microchip.com>
-To:     <dan.carpenter@oracle.com>
-CC:     <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <Venkateswara.Kaja@microchip.com>, <gregkh@linuxfoundation.org>,
-        <Ganesh.Krishna@microchip.com>,
-        <Mrutyunjaya.Satapathy@microchip.com>,
-        <Aditya.Shankar@microchip.com>, <Sripad.Balwadgi@microchip.com>,
-        <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/4] stagign: wilc1000: validate cfg parameters before
- scheduling the work
-Thread-Topic: [PATCH 2/4] stagign: wilc1000: validate cfg parameters before
- scheduling the work
-Thread-Index: AQHUbKc6eLOkXRU1kU6WoAUOYekHJqUxRX0AgADbM4A=
-Date:   Fri, 26 Oct 2018 22:42:27 +0000
-Message-ID: <5ce58ee6-0ce2-65bd-8dc7-26df41485c8b@microchip.com>
-References: <20181025210849.20006-1-adham.abozaeid@microchip.com>
- <20181025210849.20006-3-adham.abozaeid@microchip.com>
- <20181026093640.4b34wgabx5jmxo47@mwanda>
-In-Reply-To: <20181026093640.4b34wgabx5jmxo47@mwanda>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [198.175.253.81]
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101
- Thunderbird/58.0
-x-clientproxiedby: BYAPR08CA0009.namprd08.prod.outlook.com
- (2603:10b6:a03:100::22) To DM2PR11MB0255.namprd11.prod.outlook.com
- (2a01:111:e400:3c24::27)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Adham.Abozaeid@microchip.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DM2PR11MB0123;6:Dt20OyBdWJnd3dfuN5eFXMBgnIPxIC5ABB2LA43nZwYbWgt+RF2ycpqtCxcnaAmYHMdueMW7JZTCpNQsWB+TXz6OqmP5Nx8xKm5/jn00ZbhjK9ykZJoBzOEhzs3bEl6pEp/w8ET7ZKhDLILOXY5C2IyJHN2/LsZ5UXN/IAuKTZriKsm4USjx8hw4JKxDtgeiY6hLhuMqDrie5IKTNV7D9fh9z3hFmlUhHwCVJnSH6hpLvD5CbEStvY8P6KC7K+jyFgORSuBLDkd5z0UK5LMMoReX4ibLSUHGAGzwRYg3GLwa/LY8HqWdS6VQwsRNvYZouU4av2oT/rDVdoiNtItSY5aaVjnTUBBYArBpfV/pDzPyO2XDp/9EBtT9kt6vHQ4jvQVSRNyxdSThJ33hZ8lD5vmGp5LZJtEF3Tk0uBtqKz5rJ7k4IxR07z/OVI/ZiKAGij5WsE/9JF1eDE+PMJu/lOoqqMilOky9OTNeQkDpQbc=;5:iJUcfj+7weaWod/arYbrNxARzyhEzXX8SWz9fkYSo/7ZzHRkAktllR5vZ1SkfY5Kx3OJcfRBN4jG2SsL2FOiGO63at7NE6lPA9AJ/VScrqIBFmD7XY/KLcTDdu2LQ/bELlrED1AIEJW5RPmFsPIqg2TnunCYNki8M4cZjomhINg=;7:nTJDjSnOA10cpkLjIkRv8/9synYERj7NMVAkZXbGYR4C6Q60TfhExFQvq1xr7PfbCyJ+0vBkrzrqXSCJkV4eSS1pE1IXPYw/xWEzUiMm+aa6LKamO19Mx2so64ps+flLwO2GoGOTHLohj9oAXThyLg==
-x-ms-office365-filtering-correlation-id: 2fdca1f8-a0a1-4363-3158-08d63b944e00
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DM2PR11MB0123;
-x-ms-traffictypediagnostic: DM2PR11MB0123:
-x-ld-processed: 3f4057f3-b418-4d4e-ba84-d55b4e897d88,ExtAddr
-x-microsoft-antispam-prvs: <DM2PR11MB0123BD05DE264F25FDB5398A8DF00@DM2PR11MB0123.namprd11.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3231355)(944501410)(52105095)(3002001)(93006095)(93001095)(10201501046)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:DM2PR11MB0123;BCL:0;PCL:0;RULEID:;SRVR:DM2PR11MB0123;
-x-forefront-prvs: 083751FCA6
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(366004)(346002)(39860400002)(136003)(376002)(199004)(189003)(5250100002)(99286004)(256004)(76176011)(97736004)(25786009)(81166006)(81156014)(8676002)(4326008)(6916009)(65826007)(102836004)(53546011)(68736007)(26005)(52116002)(14454004)(386003)(72206003)(6506007)(86362001)(54906003)(305945005)(58126008)(7736002)(316002)(71200400001)(71190400001)(31696002)(6486002)(6512007)(5660300001)(6436002)(53936002)(2900100001)(36756003)(106356001)(65956001)(65806001)(66066001)(105586002)(31686004)(446003)(11346002)(486006)(476003)(2616005)(186003)(8936002)(478600001)(229853002)(3846002)(6116002)(6246003)(2906002)(64126003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM2PR11MB0123;H:DM2PR11MB0255.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 5laCVoeeKNrJHSQQIjxdNQmUJorQgiIFNc//DoEA3kZNfbMWL3ccK4zofOdeNxOwg7FNt6ChKrB4rjNm49KIpxRiupD5DsPmlRZkSguCCpkBVV/WkGeXvA8CYh/iCF05fJfk6jur92oisQ+wvYGoJG9RtCnf9OiQvtkCfbiKa2ArMINYvz3eppv2/Y2iL73fGfKJyp535JFupeaeZUMIAO2TATA7kALPAtZYK2xVoZJPnkwmBQKNbrhobRDXS1DXfIyXDICwoPAab6SK5kEU2XH9PZHMalGJGN7X4cHK7LheX/BftCgqlxKhTEAJiS6qaSBTQdwVS2RH3nJa7pFXxa1DREP5WhM9hRdqTuD4JuE=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A06FCBEF63CD3045B68D4238D92A9236@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        Sat, 27 Oct 2018 03:43:20 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2DBC66028B; Fri, 26 Oct 2018 23:04:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540595064;
+        bh=5KNllXH/fCUdDOy2ipTacEHI0xkNXFRCmqimHyB4RII=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=DXbGrsJzSLFgCTsoOlGiml5tt8qR5MnD1r0xZuehtz6HA2uX8+8yH+0WFfYNmbXgl
+         Zv9kDYdN2UKKToEx5teGUvKQHPUFJM5zExOi31m7Q2Ls7iJopE/WVM1/op+CWvIMRI
+         o6SazzjtzbO1Uzgowfyyi0T+Q0Hi+4KHAK9MrIF4=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id AC23560791;
+        Fri, 26 Oct 2018 23:04:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540595063;
+        bh=5KNllXH/fCUdDOy2ipTacEHI0xkNXFRCmqimHyB4RII=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Tkj1y5k0o1KeSCEX2GSWahk+xGdXUBPAbQV7GUsEaawwTLghLQCAhvdiQbH7W3V/f
+         TUC8GKjbMSqlq+PRSJlTB5H4sJcotWQlh17ud/Lfy8TBRVkz60bSF0sjrKTAht1j8z
+         lHm+es++NoJB+YD31OHyMRAoXHF9s53R+eXQs/UM=
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2fdca1f8-a0a1-4363-3158-08d63b944e00
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Oct 2018 22:42:27.6833
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM2PR11MB0123
-X-OriginatorOrg: microchip.com
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Fri, 26 Oct 2018 16:04:23 -0700
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/6] mac80211: Add airtime accounting and scheduling to
+ TXQs
+In-Reply-To: <8736ssbxp9.fsf@toke.dk>
+References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
+ <1540033534-11211-4-git-send-email-rmanohar@codeaurora.org>
+ <8736ssbxp9.fsf@toke.dk>
+Message-ID: <9c2b790132a9a89fecd7dd79dc67d891@codeaurora.org>
+X-Sender: rmanohar@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gMTAvMjYvMTggMjozNiBBTSwgRGFuIENhcnBlbnRlciB3cm90ZToNCj4gT24gVGh1LCBPY3Qg
-MjUsIDIwMTggYXQgMDk6MTE6MDBQTSArMDAwMCwgQWRoYW0uQWJvemFlaWRAbWljcm9jaGlwLmNv
-bSB3cm90ZToNCj4NCj4gWW91J2xsIG5lZWQgdG8gcmVzZW5kIHRoZXNlIGJlY2F1c2UgeW91ciBl
-bWFpbCBmcm9tIGhlYWRlciBpcyBpbiB0aGUNCj4gd3JvbmcgZm9ybWF0LiAgQWxzbyB0aGVyZSBp
-cyBhIHR5cG8gaW4gdGhlIHN1YmplY3QuICBzL3N0YWdpZ24vc3RhZ2luZy8uDQo+DQpBcG9sb2dp
-ZXMgRGFuIGZvciB0aGF0ISBXaWxsIGNvcnJlY3QgdGhlIHN1YmplY3QgYW5kIGVtYWlsIGZyb20g
-Zm9ybWF0IGFuZCBzZW5kIHYyLg0KDQpSZWdhcmRzLA0KQWRoYW0NCg0K
+On 2018-10-26 07:16, Toke Høiland-Jørgensen wrote:
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> From: Toke Høiland-Jørgensen <toke@toke.dk>
+[...]
+>>  	u8 max_nan_de_entries;
+>>  	u8 tx_sk_pacing_shift;
+>> +	u32 airtime_weight;
+>>  };
+> 
+> This doesn't make sense. Airtime weights can be set by userspace, so
+> even if a driver sets another default it is not guaranteed to be
+> honoured. So what's the point?
+> 
+The reason for driver specific default is to avoid performance impact
+in ath10k when the user is using vanilla ath10k with default airtime.
+As I mentioned earlier, mac80211 default (256us) is too low for 11ac 
+devices
+especially with driver is bursting aggregation.
+
+Yes. I do understand the user can change airtime at anytime but It must 
+be
+noted that different airtime weight will result in different throughput.
+IMHO the defaults should not impact current benchmark. Otherwise it will 
+be
+alarmed as regression later. isn't it?
+
+
+> So since we're rotating the queue on every call to the function, I'm
+> wondering if this actually succeeds in throttling the slow station's
+> airtime usage enough to achieve fairness? So I'll ask again: Did you
+> test the fairness performance, and how?
+> 
+We are collecting data of mixed clients (11ac, 11n and legacy) keeping 
+them
+at same distance and different distance. So that lower rate clients will
+interfere higher MCS rate station. Also configuring different airtime 
+weight
+for each stations so that throttling low rate clients more should help 
+higher
+performing(better MCS) clients.
+
+By allowing different airtime for each stations, the user can control 
+guest
+network over primary network. Also It helped to improve performance of 
+preferred
+station and algo. to control station is given to cloud or user 
+application.
+
+As of now, We are testing with 4 11ac clients of same distance. And 
+collecting
+the performance data in multiple iteration. Below are current data of
+station's performance (Mbps) against airtime weight.
+
+airtime   station1(%airtime)  station2     station3       station4 
+(Mbps)
+
+No ATF      182               168          166            169
+
+4ms         170 (100%)        164 (100%)   185  (100%)    175 (100%)
+
+4ms         277 (70%)         115 (10%)    103 (10%)      105 (10%)
+
+4ms         223 (40%)         214 (40%)    109 (10%)       94 (10%)
+
+4ms         337 (90%)         182 (8%)      23 (1%)        30 (1%)
+
+
+
+             STA1(11ac)  STA2 (11n)  STA3(11a)
+             ==========  ==========  =========
+
+No ATF       225         166         3.5
+
+ATF (4ms)    234         151         3.5
+
+> 
+> Also, taking a step back:
+> 
+> With this, we're doing lots of work to make sure that the hardware's
+> round-robin scheduling queue lines up with mac80211; so if we do this
+> anyway, why can't we just control the order directly from mac80211
+> (which is what we do with the other next_txq() API)?
+> 
+The only way to enforce mac80211 ordering in ath10k is to disable pull
+mode in firmware and always operates in push mode similar to ath9k.
+
+-Rajkumar
