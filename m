@@ -2,57 +2,66 @@ Return-Path: <SRS0=rthY=NG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC17C6786E
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 11:10:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 001BEC6786E
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 11:22:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B3E9207DD
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 11:10:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E4132064A
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 11:22:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PhCx7Avq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="crVCBDP7"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4B3E9207DD
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TJl1kY1x"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8E4132064A
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727333AbeJZTrN (ORCPT
+        id S1727428AbeJZT73 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 15:47:13 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:54408 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727224AbeJZTrM (ORCPT
+        Fri, 26 Oct 2018 15:59:29 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:45870 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727313AbeJZT72 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 15:47:12 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 66A2F60A33; Fri, 26 Oct 2018 11:10:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540552232;
-        bh=eNA1ezzLTb365ihzr1MQ53srG3jRg4b2k7LlhvG4DIo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=PhCx7AvqDh+/LLTApOGVgdfJ2aFHOKUEKJ0voU/Yp1b/rnwuZrXZ/YmlOzsPuwbU7
-         RUjHy2jI88NHttxIa5NQLgrIa0eLeTeDRBgfhcfJEFk4QHy7WGlDZet5/gKAQgXJI3
-         yyOhgOfXq6ieVmCeyq4eCu5sQMGBlxN1Tha8vfTM=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D750E60A33;
-        Fri, 26 Oct 2018 11:10:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540552231;
-        bh=eNA1ezzLTb365ihzr1MQ53srG3jRg4b2k7LlhvG4DIo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=crVCBDP7cLSaHvfLj2l7fFnq8nbaIt3HZ0s84t/LzuS4TBWCKOvTnxg4WkQiCpXFm
-         WBfIFi05464luPx3XYGdFUP0Pu60x+57KzR/AKilSGAZ1PChWCFt6Lt6R4tPYPXkfa
-         Vd1aoq/BZEr1VOdP4P79n9hpHfgfpZKq/qoB6ZmM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D750E60A33
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+        Fri, 26 Oct 2018 15:59:28 -0400
+Received: by mail-lf1-f68.google.com with SMTP id c24-v6so619218lfi.12
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 04:22:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WFXMQhrzlhNhjA2qSVeN3rBaOFul3j6zBAS8zlLOf7o=;
+        b=TJl1kY1xtriO71/KmCrfYujL6X/eiIsmg9gevA5dNshE87Mwwstn8v8PX4MlqunfID
+         ku4uMdyvbp33y7iJi7iCq1bAFV7Ogql3/h6gXGIFpdVfH7m2MHq62AQI832dMj2oia5r
+         w/eyR2eNwYRXLa9GlPFlEJp6TK9RdgnVAbw9ZLdUxPLgRut4NJ7nzEjLes1qlipmmDJT
+         adEL03DNHqAA/4+KIhSV2EkwHFACJlnYAZif6zcood/KrUBY6U+QZvUVqo/DAGPMDwXb
+         J0nHemriXBPoA57jLMFckcQVPFFN9ntYLKwPeKC3y23Jo0hP2IKsPEF+leE7BPLRpGzm
+         bqJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WFXMQhrzlhNhjA2qSVeN3rBaOFul3j6zBAS8zlLOf7o=;
+        b=oQzNkPFF6DlPDVbVnSo5gEK125scZN1pgSVJeAvN0JhBZv3BY6/NuTXQ6W12fsVijp
+         sW2WsbnNQzPUIQeBtTf7cugj5W4jK6cNDgOhf1aheLKTCTg70o0UE+vm963Yb5TyX1pZ
+         YkzwAtsCNmD3x/+8falVYvcj58p6OvN9k/FB2LpfHkfqTsZGyXKn6eSC7hFRVKkM0x0b
+         Y8y4vfwGpcXTVD5bAtYyML0FsGnRYc4aXZXKWieSk0r2IXfpwxWX1NOmoffKmFLx7+3n
+         J6wPlARoeqL/akd61P66Lx/1Q0aTXe6yWowtWYyB9CBE64cevVS1754Uvkq2qm0q+WXw
+         ybOw==
+X-Gm-Message-State: AGRZ1gLa4EJzwpmxHHWE7gqubYxjuqjphvTVNDEkIe6JKsFwQ9uSttGl
+        gyQIpW+S8vYUMMMrD7+T1Zk=
+X-Google-Smtp-Source: AJdET5eXDiucr++TY5Zi45Dh/o7lnlsg/AtnX21xfeTlcPpwm4RfgyVRxLQMr8/l6tpDqLHYfdhTvA==
+X-Received: by 2002:ac2:4299:: with SMTP id m25-v6mr1912158lfh.115.1540552964218;
+        Fri, 26 Oct 2018 04:22:44 -0700 (PDT)
+Received: from linux-veee.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id b123-v6sm1718207lfe.54.2018.10.26.04.22.42
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 26 Oct 2018 04:22:42 -0700 (PDT)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
@@ -63,45 +72,99 @@ Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH 4.20 FIX] brcmutil: really fix decoding channel info for 160 MHz bandwidth
-References: <20181026105039.11445-1-zajec5@gmail.com>
-Date:   Fri, 26 Oct 2018 14:10:25 +0300
-In-Reply-To: <20181026105039.11445-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Fri, 26 Oct 2018 12:50:39 +0200")
-Message-ID: <875zxpgdzy.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmutil: print invalid chanspec when WARN-ing
+Date:   Fri, 26 Oct 2018 13:22:32 +0200
+Message-Id: <20181026112232.22699-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.13.7
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> Previous commit /adding/ support for 160 MHz chanspecs was incomplete.
-> It didn't set bandwidth info and didn't extract control channel info. As
-> the result it was also using uninitialized "sb" var.
->
-> This change has been tested for two chanspecs found to be reported by
-> some devices/firmwares:
-> 1) 60/160 (0xee32)
->    Before: chnum:50 control_ch_num:36
->     After: chnum:50 control_ch_num:60
-> 2) 120/160 (0xed72)
->    Before: chnum:114 control_ch_num:100
->     After: chnum:114 control_ch_num:120
->
-> Fixes: 330994e8e8ec ("brcmfmac: fix for proper support of 160MHz bandwidt=
-h")
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+On one of my devices I got WARNINGs when brcmfmac tried to decode
+chanspec. I couldn't tell if it was some unsupported format or just a
+malformed value passed by a firmware.
 
-I'll queue this for 4.20.
+Print chanspec value so it's possible to debug a possible problem.
 
---=20
-Kalle Valo
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+There is no rush with this one, it can wait for post 4.20 merge window.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
+index eb5db94f5745..8ac34821f1c1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
+@@ -128,7 +128,7 @@ static void brcmu_d11n_decchspec(struct brcmu_chan *ch)
+ 		}
+ 		break;
+ 	default:
+-		WARN_ON_ONCE(1);
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 		break;
+ 	}
+ 
+@@ -140,7 +140,7 @@ static void brcmu_d11n_decchspec(struct brcmu_chan *ch)
+ 		ch->band = BRCMU_CHAN_BAND_2G;
+ 		break;
+ 	default:
+-		WARN_ON_ONCE(1);
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 		break;
+ 	}
+ }
+@@ -167,7 +167,7 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
+ 			ch->sb = BRCMU_CHAN_SB_U;
+ 			ch->control_ch_num += CH_10MHZ_APART;
+ 		} else {
+-			WARN_ON_ONCE(1);
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 		}
+ 		break;
+ 	case BRCMU_CHSPEC_D11AC_BW_80:
+@@ -188,7 +188,7 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
+ 			ch->control_ch_num += CH_30MHZ_APART;
+ 			break;
+ 		default:
+-			WARN_ON_ONCE(1);
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 			break;
+ 		}
+ 		break;
+@@ -222,13 +222,13 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
+ 			ch->control_ch_num += CH_70MHZ_APART;
+ 			break;
+ 		default:
+-			WARN_ON_ONCE(1);
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 			break;
+ 		}
+ 		break;
+ 	case BRCMU_CHSPEC_D11AC_BW_8080:
+ 	default:
+-		WARN_ON_ONCE(1);
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 		break;
+ 	}
+ 
+@@ -240,7 +240,7 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
+ 		ch->band = BRCMU_CHAN_BAND_2G;
+ 		break;
+ 	default:
+-		WARN_ON_ONCE(1);
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
+ 		break;
+ 	}
+ }
+-- 
+2.13.7
+
