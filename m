@@ -2,153 +2,78 @@ Return-Path: <SRS0=rthY=NG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A47BECDE44
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBF5C6786E
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:06:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E18E82084D
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:01:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E18E82084D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 7C37F20856
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 12:06:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbVlXD5B"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7C37F20856
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727641AbeJZUib (ORCPT
+        id S1727566AbeJZUnl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 16:38:31 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:55572 "EHLO mx1.redhat.com"
+        Fri, 26 Oct 2018 16:43:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49700 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727469AbeJZUib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 16:38:31 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727491AbeJZUnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Oct 2018 16:43:41 -0400
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D7F9630A3155;
-        Fri, 26 Oct 2018 12:01:40 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.86])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 31BDA6146F;
-        Fri, 26 Oct 2018 12:01:40 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] mt76: remove wait argument from mt76x02_mcu_set_radio_state
-Date:   Fri, 26 Oct 2018 14:00:29 +0200
-Message-Id: <1540555229-28582-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1540555229-28582-1-git-send-email-sgruszka@redhat.com>
-References: <1540555229-28582-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Fri, 26 Oct 2018 12:01:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F0F8420869
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 12:06:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1540555610;
+        bh=wqknGW/ST7oBy+cI2W6mybnqi3I80pIqwiDcxX8stKE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=YbVlXD5BnBwV+iCgyBDCcUxhWWwdJkagXBWTm3eogDdmw+oNwmO95R9gfGDfuoSmh
+         fCpWlGp7d44IqOYGJmz9ujGbkJq5+A4O6PAbQWpkWxXmK+bNaJ7HENvyFwCoF4BgZe
+         VwzN4aiHCe1a2H+aWyoGxz0bB0YHt5zXa8TIg2lw=
+Received: by mail-qt1-f178.google.com with SMTP id q41-v6so855939qtq.10
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 05:06:49 -0700 (PDT)
+X-Gm-Message-State: AGRZ1gKGki9+UaZEf6Hsle7sW7K/g/BXVTxX1VkOzCh+AbMtKqTTInWc
+        B/rLW7S3W2UttCd4/Bmas21TiEP+r/yfyd0d2tI=
+X-Google-Smtp-Source: AJdET5cmvIFApLTxq2x0gYPruRdmFUdSPyIFBn//XlVuqRBw9XpK0Qq7Wn1TQpyhoSW3PWY3wMdgeH6C4QqHMQLux8Y=
+X-Received: by 2002:a0c:ae76:: with SMTP id z51-v6mr2961332qvc.108.1540555609172;
+ Fri, 26 Oct 2018 05:06:49 -0700 (PDT)
+MIME-Version: 1.0
+References: <1540210566-3192-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1540210566-3192-1-git-send-email-sgruszka@redhat.com>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Fri, 26 Oct 2018 08:06:37 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA5ujUo=GaZKsrGW+HhcEctYdkx9HYgRog1eYR0Yz=VO1Q@mail.gmail.com>
+Message-ID: <CA+5PVA5ujUo=GaZKsrGW+HhcEctYdkx9HYgRog1eYR0Yz=VO1Q@mail.gmail.com>
+Subject: Re: [PATCH] linux-firmware: add firmware for mt7650e
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Linux Firmware <linux-firmware@kernel.org>,
+        linux-mediatek@lists.infradead.org,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        lorenzo.bianconi@redhat.com, sean.wang@kernel.org,
+        steven.liu@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove wait argument from mt76x02_mcu_set_radio_state and newer wait
-for response when sending CMD_POWER_SAVING_OP mcu command.
-Note this change behaviour for PCIe devices, but the change is in
-align with vendor driver.
+On Mon, Oct 22, 2018 at 8:16 AM Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>
+> Add binary firmware for mt7650e based devices
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  WHENCE               |   2 ++
+>  mediatek/mt7650e.bin | Bin 0 -> 382212 bytes
+>  2 files changed, 2 insertions(+)
+>  create mode 100644 mediatek/mt7650e.bin
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c     | 6 ++----
- drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h     | 3 +--
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c  | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/usb_mcu.c  | 2 +-
- 6 files changed, 7 insertions(+), 10 deletions(-)
+Applied and pushed out.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-index 964befc525f3..e91d4deaa8c0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-@@ -151,8 +151,7 @@ int mt76x02_mcu_function_select(struct mt76x02_dev *dev, enum mcu_function func,
- }
- EXPORT_SYMBOL_GPL(mt76x02_mcu_function_select);
- 
--int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on,
--				bool wait_resp)
-+int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on)
- {
- 	struct {
- 		__le32 mode;
-@@ -162,8 +161,7 @@ int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on,
- 		.level = cpu_to_le32(0),
- 	};
- 
--	return mt76_mcu_send_msg(dev, CMD_POWER_SAVING_OP, &msg, sizeof(msg),
--				 wait_resp);
-+	return mt76_mcu_send_msg(dev, CMD_POWER_SAVING_OP, &msg, sizeof(msg), false);
- }
- EXPORT_SYMBOL_GPL(mt76x02_mcu_set_radio_state);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-index 5cbf0e7c118c..7e4004120102 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.h
-@@ -102,8 +102,7 @@ int mt76x02_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
- 			 int len, bool wait_resp);
- int mt76x02_mcu_function_select(struct mt76x02_dev *dev, enum mcu_function func,
- 				u32 val);
--int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on,
--				bool wait_resp);
-+int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on);
- void mt76x02_set_ethtool_fwver(struct mt76x02_dev *dev,
- 			       const struct mt76x02_fw_header *h);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index f6e8af6432c1..9163481e778c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -297,7 +297,7 @@ void mt76x2_stop_hardware(struct mt76x02_dev *dev)
- {
- 	cancel_delayed_work_sync(&dev->cal_work);
- 	cancel_delayed_work_sync(&dev->mac_work);
--	mt76x02_mcu_set_radio_state(dev, false, true);
-+	mt76x02_mcu_set_radio_state(dev, false);
- 	mt76x2_mac_stop(dev, false);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
-index 59ef7931df50..da7cd40f56ff 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
-@@ -305,7 +305,7 @@ int mt76x2_phy_start(struct mt76x02_dev *dev)
- {
- 	int ret;
- 
--	ret = mt76x02_mcu_set_radio_state(dev, true, true);
-+	ret = mt76x02_mcu_set_radio_state(dev, true);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-index a7d591610f16..2e690ef5f2fc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-@@ -300,7 +300,7 @@ void mt76x2u_stop_hw(struct mt76x02_dev *dev)
- 
- void mt76x2u_cleanup(struct mt76x02_dev *dev)
- {
--	mt76x02_mcu_set_radio_state(dev, false, false);
-+	mt76x02_mcu_set_radio_state(dev, false);
- 	mt76x2u_stop_hw(dev);
- 	mt76u_queues_deinit(&dev->mt76);
- 	mt76u_mcu_deinit(&dev->mt76);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mcu.c
-index ca9037af804c..45a95ee3a415 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_mcu.c
-@@ -262,5 +262,5 @@ int mt76x2u_mcu_init(struct mt76x02_dev *dev)
- 	if (err < 0)
- 		return err;
- 
--	return mt76x02_mcu_set_radio_state(dev, true, false);
-+	return mt76x02_mcu_set_radio_state(dev, true);
- }
--- 
-2.7.5
-
+josh
