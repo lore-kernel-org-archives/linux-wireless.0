@@ -2,89 +2,124 @@ Return-Path: <SRS0=rthY=NG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E058AECDE44
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 09:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C93E4C6786E
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 10:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9455020834
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 09:37:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7514220856
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Oct 2018 10:50:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k3Du+TuK"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9455020834
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=oracle.com
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UkcyCARE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7514220856
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727231AbeJZSNe (ORCPT
+        id S1726612AbeJZT1c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Oct 2018 14:13:34 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33716 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726179AbeJZSNe (ORCPT
+        Fri, 26 Oct 2018 15:27:32 -0400
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:45508 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726493AbeJZT1c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Oct 2018 14:13:34 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w9Q9YW7u029704;
-        Fri, 26 Oct 2018 09:37:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=c19ye0jH1E1Qb1Y/rc5ZiWGnl9m0jM7fCjTswo5EPi8=;
- b=k3Du+TuKFizjbm3POmbeWbebmuMzlQdGkktzXCgS39PdzEXpmXw21iJchylZ2OREl5Ev
- sA7uKRrROwC314nVtK4pe75EG5QX0/OsyEs9H9e/uCm6MW/7uuyUXH2IkTGkW5sYuh+R
- PAvmcmIFZNvHM1q8T6lHct2Yg1Eo062pm5lBzMY1OiKec+J4MaiLres6a3j8qYWMxSRo
- se4RzMXDqfUuhCcxwunIZNXlSnWZMt0XJcK3NVrMf8DL0pqC7yY5GWRstNJVHkign7kF
- aVErCtLEoWmKdAve9IGL2DClKL8yohkTM+fO18DTRWab/L/JCDnV/a1QXP4VcaBSe+en 5A== 
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2n7w0r68fv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 26 Oct 2018 09:37:06 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w9Q9b5fs030925
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 26 Oct 2018 09:37:05 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w9Q9b4tF025539;
-        Fri, 26 Oct 2018 09:37:04 GMT
-Received: from mwanda (/129.205.6.86)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 26 Oct 2018 02:37:04 -0700
-Date:   Fri, 26 Oct 2018 12:36:40 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Adham.Abozaeid@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        Venkateswara.Kaja@microchip.com, gregkh@linuxfoundation.org,
-        Ganesh.Krishna@microchip.com, Mrutyunjaya.Satapathy@microchip.com,
-        Aditya.Shankar@microchip.com, Sripad.Balwadgi@microchip.com,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH 2/4] stagign: wilc1000: validate cfg parameters before
- scheduling the work
-Message-ID: <20181026093640.4b34wgabx5jmxo47@mwanda>
-References: <20181025210849.20006-1-adham.abozaeid@microchip.com>
- <20181025210849.20006-3-adham.abozaeid@microchip.com>
+        Fri, 26 Oct 2018 15:27:32 -0400
+Received: by mail-lf1-f65.google.com with SMTP id c24-v6so553056lfi.12
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Oct 2018 03:50:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/GjCSHamKbLjb9IMQiHvjhXSCoApCnDXPL5a+jzN1vY=;
+        b=UkcyCARESVXBCkNrduS2lp8mezUvOVSNek2vTntjbSQl5T/qhkS6DGsNIST4ZKGJF8
+         Rzb2m3smFqEp6Z3zyjHIQvsXfJbScVBIzmnwrFd4MlgO0NERcZwnqcE0tKDdo4XhPaKY
+         IBK6ytUI1+j+9iDcRwtS/+pQGh2INTMrJx3WZZf8kmUmnd0nPxnkz6OJn1z1o3ZAWbmb
+         H99iuRKo47EIKwZTQdS/Q1KoESzEgs62jXZmWmRyYDjDtweJGnIRAp9yKhT2QfU3iZ2P
+         nOybPr5n78TUT9Uo9gJhc+HdDY0Iod1+VulRAonzTqvNtbKjDcel8l7fOTIWhY8Ax27V
+         mdLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/GjCSHamKbLjb9IMQiHvjhXSCoApCnDXPL5a+jzN1vY=;
+        b=rpG51mwB/WM/YP6wlSFh4JSfcFI/fuDTDNWtJ+wdXP1dlUGhS7gNy98RMsUb+vg3s3
+         LIDzvj+GxeBKSGUOyQwTqpviMmFQ0ISbeH0PsehN+NFH29coCUcu7IMp+Adxx9H92ecq
+         JM9zkdY6zDCz9dMzgfi/8y+I1JqjZoTz30BbrguN60Q53Ojl4+Ns4YlmKYDLhM5yXbaa
+         s6RoxBZJCYHTfnQfHV3fVecxogH/gM8E/PlHVshIpmwzgabyz+OJ7vyvRXeVQcApJcr1
+         P9A7TuQgwDfj3sGl+MSeFlkybj8L1WxLJ438bTmDTbPV63ir5NqJbHgKPOQIDQMNbwnG
+         zlHw==
+X-Gm-Message-State: AGRZ1gIvhIeHdVFedtUDEygTZI5xuD7gpNo6+xS/WTDicegh4EErNDuZ
+        zncqNAPcs+YzFPv5/STO5EQ=
+X-Google-Smtp-Source: AJdET5cNrVFVqH+DQyUr7VsFyV/p62s1IVTl0rqeEuYLcHyPCanWsYOygTFD8X+rm6SGZ4iPyJOKQg==
+X-Received: by 2002:a19:6719:: with SMTP id b25mr1812721lfc.38.1540551054541;
+        Fri, 26 Oct 2018 03:50:54 -0700 (PDT)
+Received: from linux-veee.lan (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id t4-v6sm1551331ljj.13.2018.10.26.03.50.52
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 26 Oct 2018 03:50:52 -0700 (PDT)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.20 FIX] brcmutil: really fix decoding channel info for 160 MHz bandwidth
+Date:   Fri, 26 Oct 2018 12:50:39 +0200
+Message-Id: <20181026105039.11445-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.13.7
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181025210849.20006-3-adham.abozaeid@microchip.com>
-User-Agent: NeoMutt/20170609 (1.8.3)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9057 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=392
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1807170000 definitions=main-1810260085
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Oct 25, 2018 at 09:11:00PM +0000, Adham.Abozaeid@microchip.com wrote:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-You'll need to resend these because your email from header is in the
-wrong format.  Also there is a typo in the subject.  s/stagign/staging/.
+Previous commit /adding/ support for 160 MHz chanspecs was incomplete.
+It didn't set bandwidth info and didn't extract control channel info. As
+the result it was also using uninitialized "sb" var.
 
-regards,
-dan carpenter
+This change has been tested for two chanspecs found to be reported by
+some devices/firmwares:
+1) 60/160 (0xee32)
+   Before: chnum:50 control_ch_num:36
+    After: chnum:50 control_ch_num:60
+2) 120/160 (0xed72)
+   Before: chnum:114 control_ch_num:100
+    After: chnum:114 control_ch_num:120
+
+Fixes: 330994e8e8ec ("brcmfmac: fix for proper support of 160MHz bandwidth")
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
+index e7584b842dce..eb5db94f5745 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
+@@ -193,6 +193,9 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
+ 		}
+ 		break;
+ 	case BRCMU_CHSPEC_D11AC_BW_160:
++		ch->bw = BRCMU_CHAN_BW_160;
++		ch->sb = brcmu_maskget16(ch->chspec, BRCMU_CHSPEC_D11AC_SB_MASK,
++					 BRCMU_CHSPEC_D11AC_SB_SHIFT);
+ 		switch (ch->sb) {
+ 		case BRCMU_CHAN_SB_LLL:
+ 			ch->control_ch_num -= CH_70MHZ_APART;
+-- 
+2.13.7
 
