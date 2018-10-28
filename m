@@ -2,119 +2,144 @@ Return-Path: <SRS0=/i66=NI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90854C6786F
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 14:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E09C6786F
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 15:48:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 582D720664
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 14:35:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07C8620873
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 15:48:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LXVwfsbp"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 582D720664
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="un4dqGzM"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 07C8620873
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727603AbeJ1XTv (ORCPT
+        id S1727756AbeJ2AdK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 28 Oct 2018 19:19:51 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:34561 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726548AbeJ1XTv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Oct 2018 19:19:51 -0400
-Received: by mail-lf1-f66.google.com with SMTP id n26-v6so4149500lfl.1;
-        Sun, 28 Oct 2018 07:35:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=ogbCnzOS1qu3JW+CgfkkNaNgtD3s6w3fPHUt0d9V0ag=;
-        b=LXVwfsbp2g9MLTM5ZHiuDYyMw2lIS/iru962c+V4xtEGAf9eYHeVQuYDv7AP7uKKzz
-         e23TojkA0J4Vh7ZwqrxHC8uw3eIPDtaE5FGv+4GSkk9LSIa9DgtMHGd8z9qAgVg/kqBB
-         FjNm4thp3ijGdTzPTWUm3WKclCZEHERqBV0fslfj6tjs0W1s1xo2z4X7slYoBmlUqvdw
-         2czjuisC3zZlXFOWVYpbcrEouSvG6OnggJRgvr+HXGrP8GsHPlJQRumcx00UXUK28wKg
-         L86+ZTUe4+GrcupOJhJOBQYajJFZobLapdmUBxDQLd6ExElh0pUBvRCdPyOsU4INrhsx
-         ISnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to:user-agent;
-        bh=ogbCnzOS1qu3JW+CgfkkNaNgtD3s6w3fPHUt0d9V0ag=;
-        b=oiv9e3nbRxoJS4Dy+FxvRNuOFwu1ZlMQdf+kmXsunPwZ/CJ0ZZ5MAD3YB+AMz3zYHz
-         tC3p4OZnKjh+eUWYYJH9cBpCADo5pRKQaCb5v6sC1EAaciDoeAFCU0+B74FFbbhvwOYK
-         KmIPMHarKBnQVLXNO18wKYbQaQzIqJNqMjtiqv1tvmH7BOfcZoGY7OTyAHxsOlO+FIoq
-         Zx10l+kbIC8ZtGjAWFENTB5/goAAqJthNUAgPzkJXATxSsd8/s1YYhhuh1YNkZchr7qy
-         mx1vcSL22Bo2+TtNOHC58x0tOWsZF9tPqGpDxnCTRfKTUaNLObBLGDDaHGDGo0yylsHA
-         SOOQ==
-X-Gm-Message-State: AGRZ1gIhrXXpCBkXvJqFTMt+fLGeVUckoJ0zBt9QXwjDejqnRDPXkN+u
-        Rc7ZJCPmv5kMgEl+NfNZoU4=
-X-Google-Smtp-Source: AJdET5eB9O2m0E8jmvjV2VYdcdZAszA6JsArIXdXWnTQX2rgE+zgjo//9nrd52O3j5pcq6bigJ8tBA==
-X-Received: by 2002:a19:24c6:: with SMTP id k189mr6386816lfk.77.1540737302128;
-        Sun, 28 Oct 2018 07:35:02 -0700 (PDT)
-Received: from xi.terra (c-74bee655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.190.116])
-        by smtp.gmail.com with ESMTPSA id t77-v6sm2795272lfi.63.2018.10.28.07.35.00
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 28 Oct 2018 07:35:01 -0700 (PDT)
-Received: from johan by xi.terra with local (Exim 4.91)
-        (envelope-from <johan@kernel.org>)
-        id 1gGm9h-0005Ok-DL; Sun, 28 Oct 2018 15:35:05 +0100
-Date:   Sun, 28 Oct 2018 15:35:05 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Marcel Holtmann <marcel@holtmann.org>
-Cc:     Johan Hovold <johan@kernel.org>,
-        Lars Poeschel <poeschel@lemonage.de>,
-        devicetree <devicetree@vger.kernel.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 3/5] nfc: pn533: add UART phy driver
-Message-ID: <20181028143505.GM27852@localhost>
-References: <20181025132937.24405-1-poeschel@lemonage.de>
- <20181025132937.24405-3-poeschel@lemonage.de>
- <20181028102725.GL27852@localhost>
- <9494A12C-C53A-4F6E-B6F3-BABB09867677@holtmann.org>
+        Sun, 28 Oct 2018 20:33:10 -0400
+Received: from mail.toke.dk ([52.28.52.200]:41917 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727639AbeJ2AdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Oct 2018 20:33:09 -0400
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1540741690; bh=IHUhFdTokxvTm+Mu2oveaTEL5hvp/jxPL3U5H09j9sY=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=un4dqGzMf9PRYJf8TEp+hkONLlNHy4gnFou/FSSLXfmw9PiW1DXMm6RWjybmxSBTm
+         gyH92pIaZpNciYpoLiUQ8WitKQ2r7BJaoxs0AUvLZCS+wzd+DwJCU0nhNRlsqgky/O
+         1hqAEFNegxtLj8H9CegHbToPL1X4v6XUxHG/jr+i72zuPKhxNzDmbVeMxVSshRx5i8
+         baHINEvO3n4kpd0+eo9vA1Jme4ady6TxWl2iSebvLIB6XNnQaUB3o2km08RN0iaWKu
+         oUWLiquNZwvqCJHfBnRocT8q07cQexwhRCShcaBSGmqDkahlyiXihaAsfCFFPvsXAa
+         FZlgZNozY4jxQ==
+To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/6] mac80211: Add airtime accounting and scheduling to TXQs
+In-Reply-To: <9c2b790132a9a89fecd7dd79dc67d891@codeaurora.org>
+References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org> <1540033534-11211-4-git-send-email-rmanohar@codeaurora.org> <8736ssbxp9.fsf@toke.dk> <9c2b790132a9a89fecd7dd79dc67d891@codeaurora.org>
+Date:   Sun, 28 Oct 2018 16:48:09 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87woq2843q.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9494A12C-C53A-4F6E-B6F3-BABB09867677@holtmann.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Oct 28, 2018 at 02:46:24PM +0100, Marcel Holtmann wrote:
+Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
 
-> >> +#define VERSION "0.1"
-> > 
-> > We don't version kernel drivers individually, so please drop this here
-> > and below.
-> 
-> if we don’t then maybe send patches to remove MODULE_VERSION first.
-> Otherwise this is totally fine to do.
-> 
-> There are currently 670 usages of MODULE_VERSION and I have not heard
-> anybody looking at removing this.
+> On 2018-10-26 07:16, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+>>=20
+>>> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+> [...]
+>>>  	u8 max_nan_de_entries;
+>>>  	u8 tx_sk_pacing_shift;
+>>> +	u32 airtime_weight;
+>>>  };
+>>=20
+>> This doesn't make sense. Airtime weights can be set by userspace, so
+>> even if a driver sets another default it is not guaranteed to be
+>> honoured. So what's the point?
+>>=20
+> The reason for driver specific default is to avoid performance impact
+> in ath10k when the user is using vanilla ath10k with default airtime.
+> As I mentioned earlier, mac80211 default (256us) is too low for 11ac
+> devices especially with driver is bursting aggregation.
+>
+> Yes. I do understand the user can change airtime at anytime but It
+> must be noted that different airtime weight will result in different
+> throughput. IMHO the defaults should not impact current benchmark.
+> Otherwise it will be alarmed as regression later. isn't it?
 
-Should have phrased that differently; versioning modules individually
-does not make much sense when we already have a kernel version which is
-tied to the driver code in question and which *does* get updated as new
-kernels are released (unlike these module version defines, which tend to
-stay unchanged).
+My point is that if the user has to know the implementation-specific
+limitations of each driver before setting a weight, then it's not a
+particularly friendly API. I think we should be able to do better than
+that...
 
-For USB, we've dropped module versioning entirely and push back whenever
-someone proposes to add it back. Other subsystems and particularly old
-drivers may still have these macros of course.
+>> So since we're rotating the queue on every call to the function, I'm
+>> wondering if this actually succeeds in throttling the slow station's
+>> airtime usage enough to achieve fairness? So I'll ask again: Did you
+>> test the fairness performance, and how?
+>>=20
+> We are collecting data of mixed clients (11ac, 11n and legacy) keeping
+> them at same distance and different distance. So that lower rate
+> clients will interfere higher MCS rate station. Also configuring
+> different airtime weight for each stations so that throttling low rate
+> clients more should help higher performing(better MCS) clients.
+>
+> By allowing different airtime for each stations, the user can control
+> guest network over primary network. Also It helped to improve
+> performance of preferred station and algo. to control station is given
+> to cloud or user application.
+>
+> As of now, We are testing with 4 11ac clients of same distance. And
+> collecting the performance data in multiple iteration. Below are
+> current data of station's performance (Mbps) against airtime weight.
+>
+> airtime   station1(%airtime)  station2     station3       station4=20
+> (Mbps)
+>
+> No ATF      182               168          166            169
+>
+> 4ms         170 (100%)        164 (100%)   185  (100%)    175 (100%)
+>
+> 4ms         277 (70%)         115 (10%)    103 (10%)      105 (10%)
+>
+> 4ms         223 (40%)         214 (40%)    109 (10%)       94 (10%)
+>
+> 4ms         337 (90%)         182 (8%)      23 (1%)        30 (1%)
 
-In this case, the pn533 driver (and its interface drivers) is one of only
-three NFC drivers which have MODULE_VERSION, but maybe it makes sense to
-keep it in, if only for consistency with the other pn533 components.
+So this looks like it's doing *something*, but not like it's succeeding
+in achieving the set percentages. Did you check if the actual airtime
+values (in debugfs) corresponds to the configured weights?
 
-Thanks,
-Johan
+>
+>              STA1(11ac)  STA2 (11n)  STA3(11a)
+>              =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D  =3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D  =3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> No ATF       225         166         3.5
+>
+> ATF (4ms)    234         151         3.5
+
+This also shows like ATF has no effect?
+
+>> Also, taking a step back:
+>>=20
+>> With this, we're doing lots of work to make sure that the hardware's
+>> round-robin scheduling queue lines up with mac80211; so if we do this
+>> anyway, why can't we just control the order directly from mac80211
+>> (which is what we do with the other next_txq() API)?
+>>=20
+> The only way to enforce mac80211 ordering in ath10k is to disable pull
+> mode in firmware and always operates in push mode similar to ath9k.
+
+And I assume that is not too likely to happen, or? What is the benefit
+of pull mode at the firmware level?
+
+-Toke
