@@ -2,120 +2,111 @@ Return-Path: <SRS0=/i66=NI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C08C2BC61
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 22:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F94C2BC61
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 22:55:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08A2A2082B
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 22:01:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Db8TnnhC";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Db8TnnhC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 08A2A2082B
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 32FCA2082D
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Oct 2018 22:55:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 32FCA2082D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727995AbeJ2Grj (ORCPT
+        id S1726090AbeJ2HlI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 02:47:39 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:57744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727756AbeJ2Gri (ORCPT
+        Mon, 29 Oct 2018 03:41:08 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:43733 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725841AbeJ2HlI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 02:47:38 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E956E60B7D; Sun, 28 Oct 2018 22:01:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540764101;
-        bh=VCT+ALNOAog7jLR7edfwE2eox8w3/Xl/gOUG6lut5Zg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Db8TnnhC/N5cVnFEiPDcGD6nLFwpBgDhdsHNTS0DJD8Kwgmfb8MYsY4eKelMv2Rgv
-         h6r/FmfCE438hCccR0iSMwJPztmSPV5ByNlXFqQZTw4MSJ+zjrXogS6w/+H6SLL+qr
-         Lmpueo+TS3qGBTA7AVbGpJJqoi9ju41DqMg+ipZg=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 578D96021A;
-        Sun, 28 Oct 2018 22:01:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540764101;
-        bh=VCT+ALNOAog7jLR7edfwE2eox8w3/Xl/gOUG6lut5Zg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Db8TnnhC/N5cVnFEiPDcGD6nLFwpBgDhdsHNTS0DJD8Kwgmfb8MYsY4eKelMv2Rgv
-         h6r/FmfCE438hCccR0iSMwJPztmSPV5ByNlXFqQZTw4MSJ+zjrXogS6w/+H6SLL+qr
-         Lmpueo+TS3qGBTA7AVbGpJJqoi9ju41DqMg+ipZg=
+        Mon, 29 Oct 2018 03:41:08 -0400
+Received: by mail-wr1-f65.google.com with SMTP id t10-v6so6668875wrn.10
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2018 15:55:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=zh+I6CpxDoNNfW0wEwMole7k6dnb6GzIot468UhPsDc=;
+        b=jA+gL3F7OSF4p+AZUl+ypS9LcGB+Ss4OPqRyqSOkooyNLp3kRG9XlAuKz/gSa/lIko
+         B0717kei1fcMlJyfGTqnZkc3bsTc7OjGGUqYm9/nlIzD/35MjbbBMJ9okrba1Eqf/NNS
+         etyv5/rOXUJt0sxIxSczU5aEWXYTxiZY27193EkHepEX+aJTJF41zSLDcrHXWbtlGr9f
+         aGhjkmKfqwHAneRaGg9OQXe6hpvLNbxN8Wph099cDYeVpW4lykVvp2gxC3mGeBS3WeAw
+         C4YNH6X1a7HvyEeRL0PQHr6QeDxZrQBTP/+e3T2qzAGVAluy5AyrU7yn2jTLxzz0DpBZ
+         6Djw==
+X-Gm-Message-State: AGRZ1gLc/u1k1QKacRWbKxA8ji9NiW75TsSGzgky10ZCXdr6dXAL5KHN
+        ETlb5AWgp6q/L9i1s6eMTQXId/SnPOM=
+X-Google-Smtp-Source: AJdET5eG0HpelP1FUV+PACYE2z8ieGyy/NILiaDP89NYU2nTEGP8q0oKLeE+/mVdaL42kJ8TM3mZyg==
+X-Received: by 2002:a5d:46ce:: with SMTP id g14-v6mr12313278wrs.263.1540767302767;
+        Sun, 28 Oct 2018 15:55:02 -0700 (PDT)
+Received: from localhost.localdomain ([151.66.52.234])
+        by smtp.gmail.com with ESMTPSA id s18-v6sm2322335wrf.61.2018.10.28.15.55.01
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 28 Oct 2018 15:55:02 -0700 (PDT)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x0: init: use mt76x02_mac_shared_key_setup in mt76x0_init_hardware
+Date:   Sun, 28 Oct 2018 23:54:36 +0100
+Message-Id: <2e94395e76c21ce9ec6005adeb1aa07aa3626a84.1540767086.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <cover.1540767086.git.lorenzo.bianconi@redhat.com>
+References: <cover.1540767086.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
 Content-Transfer-Encoding: 8bit
-Date:   Sun, 28 Oct 2018 15:01:41 -0700
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 3/6] mac80211: Add airtime accounting and scheduling to
- TXQs
-In-Reply-To: <87woq2843q.fsf@toke.dk>
-References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
- <1540033534-11211-4-git-send-email-rmanohar@codeaurora.org>
- <8736ssbxp9.fsf@toke.dk> <9c2b790132a9a89fecd7dd79dc67d891@codeaurora.org>
- <87woq2843q.fsf@toke.dk>
-Message-ID: <8fd3524bfe022ccd2a8b61a3314ed32b@codeaurora.org>
-X-Sender: rmanohar@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-28 08:48, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-> 
->> Yes. I do understand the user can change airtime at anytime but It
->> must be noted that different airtime weight will result in different
->> throughput. IMHO the defaults should not impact current benchmark.
->> Otherwise it will be alarmed as regression later. isn't it?
-> 
-> My point is that if the user has to know the implementation-specific
-> limitations of each driver before setting a weight, then it's not a
-> particularly friendly API. I think we should be able to do better than
-> that...
-> 
-Hmm.. I was trying to balance throughput vs CPU usage. Keeping lower
-threshold is causing more lock contention and impacting throughput.
-I thought of configuring default airtime_weight from hostapd for
-legacy, 11n and 11ac stations.
+Use mt76x02_mac_shared_key_setup utility routine for shared key
+initialization and remove duplicated code
 
->> airtime   station1(%airtime)  station2     station3       station4
->> (Mbps)
->> 
->> No ATF      182               168          166            169
->> 
->> 4ms         170 (100%)        164 (100%)   185  (100%)    175 (100%)
->> 
->> 4ms         277 (70%)         115 (10%)    103 (10%)      105 (10%)
->> 
->> 4ms         223 (40%)         214 (40%)    109 (10%)       94 (10%)
->> 
->> 4ms         337 (90%)         182 (8%)      23 (1%)        30 (1%)
-> 
-> So this looks like it's doing *something*, but not like it's succeeding
-> in achieving the set percentages. Did you check if the actual airtime
-> values (in debugfs) corresponds to the configured weights?
-> 
-No. Will check that.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/init.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
->> The only way to enforce mac80211 ordering in ath10k is to disable pull
->> mode in firmware and always operates in push mode similar to ath9k.
-> 
-> And I assume that is not too likely to happen, or? What is the benefit
-> of pull mode at the firmware level?
-> 
-Pull mode mainly required to support MU-MIMO. IMHO both MUMIMO & ATF can 
-not
-co-exist unless both are implemented at host driver. Fixing tx mode in 
-ath10k
-needs firmware reload. By introducing modparam, pull-mode can be 
-disabled.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+index 64eb6f451541..23ff29990ff7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
+@@ -176,13 +176,6 @@ static int mt76x0_init_wcid_mem(struct mt76x02_dev *dev)
+ 	return 0;
+ }
+ 
+-static void mt76x0_init_key_mem(struct mt76x02_dev *dev)
+-{
+-	u32 vals[4] = {};
+-
+-	mt76_wr_copy(dev, MT_SKEY_MODE_BASE_0, vals, ARRAY_SIZE(vals));
+-}
+-
+ static int mt76x0_init_wcid_attr_mem(struct mt76x02_dev *dev)
+ {
+ 	u32 *vals;
+@@ -260,7 +253,7 @@ EXPORT_SYMBOL_GPL(mt76x0_mac_stop);
+ 
+ int mt76x0_init_hardware(struct mt76x02_dev *dev)
+ {
+-	int ret;
++	int ret, i, k;
+ 
+ 	if (!mt76x02_wait_for_wpdma(&dev->mt76, 1000))
+ 		return -EIO;
+@@ -289,7 +282,9 @@ int mt76x0_init_hardware(struct mt76x02_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	mt76x0_init_key_mem(dev);
++	for (i = 0; i < 16; i++)
++		for (k = 0; k < 4; k++)
++			mt76x02_mac_shared_key_setup(dev, i, k, NULL);
+ 
+ 	ret = mt76x0_init_wcid_attr_mem(dev);
+ 	if (ret)
+-- 
+2.19.1
 
--Rajkumar
