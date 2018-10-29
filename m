@@ -2,95 +2,98 @@ Return-Path: <SRS0=ivqe=NJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1E1C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3889BC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:56:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2A6D20657
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:30:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6E1920657
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:56:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VYC8H+0m";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VYC8H+0m"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D2A6D20657
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="T0sgtnMF";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HM6q3WKZ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E6E1920657
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726087AbeJ2XTX (ORCPT
+        id S1726985AbeJ2XpP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 19:19:23 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:52328 "EHLO
+        Mon, 29 Oct 2018 19:45:15 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49040 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725964AbeJ2XTW (ORCPT
+        with ESMTP id S1726035AbeJ2XpP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 19:19:22 -0400
+        Mon, 29 Oct 2018 19:45:15 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 656AD6029D; Mon, 29 Oct 2018 14:30:29 +0000 (UTC)
+        id 310F8602BD; Mon, 29 Oct 2018 14:56:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540823429;
-        bh=dHbkkhy76+grwK8z7xrxP5T5sJZWutvp9VcszBlNv3Y=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=VYC8H+0mSBGhdPSZJJJwRakg0/0zLabW03dvNM9Tq96l01fySy03H8iqUHHYRGU1z
-         rqmW0/9FVtbSpf2ci1tEXWt7EjKnlfeirpRwNVN7cebNOaQVhsdO+Blm3ptdUkRe1y
-         BQQLvrXa7UKwv6qT8l1xGAJrt23ySbcwdZiOhNok=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        s=default; t=1540824976;
+        bh=Pq1b7QRDSf3ZY8Cdnh+3LrICxWodgp6OgNBvW/ekfzs=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=T0sgtnMF/AAn4ITROhc+nsiluQl2IVvtWuHWNmDdRgnHUE/ysGxppzOLJbZAflI5H
+         cB3zrC13vX3Xd0pgtGfjZC8BhFY6F9ZafOInqd2RW+VZBzcmgWzrlKVm3jSbMo37P8
+         kSPsLv6A2NZuYxtkwtGHq/7Stji9BN5T5pzL2QjM=
+Received: from x230.qca.qualcomm.com (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 75A05600ED;
-        Mon, 29 Oct 2018 14:30:28 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BA5F160159;
+        Mon, 29 Oct 2018 14:56:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540823429;
-        bh=dHbkkhy76+grwK8z7xrxP5T5sJZWutvp9VcszBlNv3Y=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=VYC8H+0mSBGhdPSZJJJwRakg0/0zLabW03dvNM9Tq96l01fySy03H8iqUHHYRGU1z
-         rqmW0/9FVtbSpf2ci1tEXWt7EjKnlfeirpRwNVN7cebNOaQVhsdO+Blm3ptdUkRe1y
-         BQQLvrXa7UKwv6qT8l1xGAJrt23ySbcwdZiOhNok=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 75A05600ED
+        s=default; t=1540824975;
+        bh=Pq1b7QRDSf3ZY8Cdnh+3LrICxWodgp6OgNBvW/ekfzs=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=HM6q3WKZ/ukJkDAN9nnoB+aYVcwnglnXfNwP3XUwYBbWJAnKmMdS0hATzdgY76Lr6
+         UREOwwimmrSARCVl0o3YCVCmrePQDFla/KtAagOpH+ohKqTyZqqP+pQ+LhpwWADQqO
+         O+Xh/ONDCoUDzBdl9sqEvC/pC89JbYpmxAbalg9c=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BA5F160159
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76x0: use band parameter for LC calibration
-References: <1540484313-9354-1-git-send-email-sgruszka@redhat.com>
-Date:   Mon, 29 Oct 2018 16:30:26 +0200
-In-Reply-To: <1540484313-9354-1-git-send-email-sgruszka@redhat.com> (Stanislaw
-        Gruszka's message of "Thu, 25 Oct 2018 18:18:33 +0200")
-Message-ID: <87va5kbzb1.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+To:     Ajay Singh <ajay.kathat@microchip.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <aditya.shankar@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>
+Subject: Re: [PATCH 03/19] wilc: add host_interface.h
+In-Reply-To: <1d77cb4d-92c9-0ea4-bdd3-f16a2421406f@microchip.com> (Ajay
+        Singh's message of "Tue, 9 Oct 2018 17:14:23 +0530")
+References: <1537957525-11467-1-git-send-email-ajay.kathat@microchip.com>
+        <1537957525-11467-4-git-send-email-ajay.kathat@microchip.com>
+        <1539008417.3687.57.camel@sipsolutions.net>
+        <f4ab9830-7892-a062-48c4-5c5c64b5caa0@microchip.com>
+        <1539081379.3687.112.camel@sipsolutions.net>
+        <1d77cb4d-92c9-0ea4-bdd3-f16a2421406f@microchip.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Date:   Mon, 29 Oct 2018 16:56:10 +0200
+Message-ID: <87r2g8er91.fsf@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+Ajay Singh <ajay.kathat@microchip.com> writes:
 
-> We use always 1 as band parameter for MCU_CAL_LC, this break 2GHz,
-> we should use 0 for this band instead.
+> On 10/9/2018 4:06 PM, Johannes Berg wrote:
+>> On Tue, 2018-10-09 at 16:04 +0530, Ajay Singh wrote:
+>>
+>>>>> +typedef void (*wilc_remain_on_chan_expired)(void *, u32);
+>>>>> +typedef void (*wilc_remain_on_chan_ready)(void *);
+>>> I think as per coding style the typedef for function pointer are allowed.
+>> True, I guess, but why do you need them?
 >
-> Patch fixes problems happened sometimes when try to associate with 2GHz
-> AP and manifest by errors like below:
->
-> [14680.920823] wlan0: authenticate with 18:31:bf:c0:51:b0
-> [14681.109506] wlan0: send auth to 18:31:bf:c0:51:b0 (try 1/3)
-> [14681.310454] wlan0: send auth to 18:31:bf:c0:51:b0 (try 2/3)
-> [14681.518469] wlan0: send auth to 18:31:bf:c0:51:b0 (try 3/3)
-> [14681.726499] wlan0: authentication with 18:31:bf:c0:51:b0 timed out
->
-> Fixes: 9aec146d0f6b ("mt76x0: pci: introduce mt76x0_phy_calirate routine")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> This is for 4.20.
+> Actually these function pointer are used in multiple places i.e inside
+> the struct and also for passing as the argument for the function. So i
+> think its better to keep them as typedef to simplify and avoid any 'line
+> over 80 chars' checkpatch issue. But anyway if you suggest we can modify
+> to remove these typedefs .
 
-This describes the symptoms better than the other 4.20 patch, thanks for
-that. And at least to me looks ok for 4.20.
+Please remove them, they just make the code harder to read.
 
 -- 
 Kalle Valo
