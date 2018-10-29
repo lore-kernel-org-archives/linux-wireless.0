@@ -2,200 +2,217 @@ Return-Path: <SRS0=ivqe=NJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B2A4C2BC61
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 10:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48302C2BC61
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 11:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C37C20827
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 10:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA6E52064C
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 11:07:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="mqExlnUm"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C37C20827
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fkti537c"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EA6E52064C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729762AbeJ2TPg (ORCPT
+        id S1727677AbeJ2TzQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 15:15:36 -0400
-Received: from mail-bn3nam01on0121.outbound.protection.outlook.com ([104.47.33.121]:15424
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729602AbeJ2TPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 15:15:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0aVUu4aYhp4PpaLN/HmUyNAP9gkS7Wzn0G+3+ZktQtY=;
- b=mqExlnUmuDqoxSrvcvhE/NL0dsQgd9oimLA9p3JhzCJE1Jld4/gsHdA/1cCIjyiJIRHKdwq79dwofU8wcchz7z/J6rXO25Wc0u0YwtPXQSTLcbTHZhKYWUkFo7TlxMrIEShT0l8t1qPRKOkrUrVSlQh5LBa4Y6l4NVcbviAxMX8=
-Received: from BYAPR06MB3992.namprd06.prod.outlook.com (52.135.200.22) by
- BYAPR06MB4518.namprd06.prod.outlook.com (52.135.233.160) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1273.25; Mon, 29 Oct 2018 10:27:28 +0000
-Received: from BYAPR06MB3992.namprd06.prod.outlook.com
- ([fe80::e059:d46e:4de6:4bae]) by BYAPR06MB3992.namprd06.prod.outlook.com
- ([fe80::e059:d46e:4de6:4bae%2]) with mapi id 15.20.1273.027; Mon, 29 Oct 2018
- 10:27:28 +0000
-From:   Wright Feng <Wright.Feng@cypress.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Wright Feng <Wright.Feng@cypress.com>,
-        "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "franky.lin@broadcom.com" <franky.lin@broadcom.com>,
-        "hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>
-Subject: [PATCH 3/3] brcmfmac: make firmware frameburst mode a module
- parameter
-Thread-Topic: [PATCH 3/3] brcmfmac: make firmware frameburst mode a module
- parameter
-Thread-Index: AQHUb3H+Fs3IQIbeVESAT2P4l9cing==
-Date:   Mon, 29 Oct 2018 10:27:28 +0000
-Message-ID: <1540808552-28738-4-git-send-email-wright.feng@cypress.com>
-References: <1540808552-28738-1-git-send-email-wright.feng@cypress.com>
-In-Reply-To: <1540808552-28738-1-git-send-email-wright.feng@cypress.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: TYAPR01CA0116.jpnprd01.prod.outlook.com
- (2603:1096:404:2a::32) To BYAPR06MB3992.namprd06.prod.outlook.com
- (2603:10b6:a02:90::22)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Wright.Feng@cypress.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [61.222.14.99]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR06MB4518;6:w3wuN3lkgFHe/uA9X0jCa6eZQH0Cg7K8ML3B7J6QmTLJthLsO74KyI+iaQgZdKPlziT+qn53mJofixeBTqZK/ZZlz4JkZZFO8wWF7HsfrdGSKp/ac2ZqEE0O+3oB43Ptau58Z8CX22Idu/UYwtdZfbmGQSxTvPh49A3PWv4CFx/HnT+HwyeiP1RpGa6DnjOb4+K2BrqYp4wWSUUhhPZItMU9PlNyGRYwMxZb4CRpib+YmSy/EqTD7cyjwac9yl08nK80dse54AB0tdzXK1CioQbgNjBptbPXb0/BWu3KLxglYSKLw4Z+qTp8MyISJGMPhKl0+DPBtaR8qgG/sPj4T7es4lTFs75xbyWDBuvgOlMECoNIbrjyTJCb2tatZoS1dcY3KNOcwBbRSym6HpzSL2XP5QUq8fiazo5GaIHeP9FHM7kjzMy7nfhdFZT1lY/ftR1DzKJY+r5jRaMkfo7YLQ==;5:WZk7L2LZ3hyFBmFvc+JaPLr1SXaqCLghDBzY1VNp6HxoRW66Ofjep0afownGb5onQ9IVLuy5Yez5fjxY3uPXUbauXXQmYeWgYU5sxUKX5fSLFLiZsaWf6h7wTk6AdnqDWynLnt616MpQ2oJkFjFxJ0MMGaWeAS9xyc+lwhKwSRk=;7:F8DCHZsI5jLG82eHoApNgDacdqWm5z5ccaKmhmwmU+wTCWSDo/UeA9RgozgtytdRH58abpVcXr0TYMBggNuOCfcJxkJOM/n+INKZj2zJV3LDzupObLJD85PywQuOTdN0M0gwBNLuynSjP+yahbb2JA==
-x-ms-office365-filtering-correlation-id: af094f70-ff2a-4421-0afd-08d63d892079
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BYAPR06MB4518;
-x-ms-traffictypediagnostic: BYAPR06MB4518:
-x-microsoft-antispam-prvs: <BYAPR06MB45180E5A434FC03A7B8DCB6EFBF30@BYAPR06MB4518.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(258095267146985);
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(10201501046)(3002001)(93006095)(93001095)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(20161123564045)(20161123560045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:BYAPR06MB4518;BCL:0;PCL:0;RULEID:;SRVR:BYAPR06MB4518;
-x-forefront-prvs: 084080FC15
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(39860400002)(376002)(346002)(136003)(366004)(199004)(189003)(478600001)(4326008)(86362001)(305945005)(52116002)(6916009)(71190400001)(6116002)(71200400001)(105586002)(72206003)(3846002)(14454004)(54906003)(102836004)(6506007)(386003)(106356001)(25786009)(7736002)(5660300001)(26005)(36756003)(2351001)(76176011)(476003)(53936002)(2906002)(316002)(11346002)(486006)(2616005)(2501003)(5250100002)(186003)(5640700003)(6436002)(99286004)(8676002)(66066001)(97736004)(81156014)(446003)(68736007)(81166006)(14444005)(8936002)(6486002)(256004)(2900100001)(6512007)(44832011)(309714004);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR06MB4518;H:BYAPR06MB3992.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: cypress.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 9na9xIi/GMnABaEtb0hueSajwIS/Xrpo7CXevhgiymFeaxzlLOIhDOtVHEsa4VhPdGv0qXMpsRlugUxXa9MhePhEsaLAVtMLEDlPugEAQtHkU8S48wVl+CU5QjPAHQfMkK539SmoR0/vL4jNsy2dSg/2zymmZN3ay6R9rYlQjnruYHV4tWGzlpFi58A2EuCDJ1e4sSAh2n/2EBJ6Jkm3VuRm3IoDWJLuV4vvlmXroalj40E8QY8KD0X2GCWcENrcOm5lXIkj05sNTDLxt6xzADjB6WhWgkcYnQFLslJk3d+MvfSH2dwdHVgJne4wnaZFHKMLiWrCaAJEnDoFCISWryHNeu61SRhlKUbilu6Ff4E=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Mon, 29 Oct 2018 15:55:16 -0400
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:35390 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726692AbeJ2TzP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Oct 2018 15:55:15 -0400
+Received: by mail-lf1-f65.google.com with SMTP id d7-v6so5666151lfi.2;
+        Mon, 29 Oct 2018 04:07:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=FOCrY6C6LY1qMKaDyhet23xMCETdYNcQeghglHoE/EM=;
+        b=Fkti537crTS2rpU12vjxlt7+K8fYBpcH5tRsFEgzGQ0GovzO3rSRSqc14d2q1G3DF5
+         OW0UnSrkkT1gxUibJQXRrrueQur47klE906L4NFjkZNE8IuMtxHasHe6aM9nW8MZ0B90
+         3XH1hu9x4nn3Q0DXLWD4WRg2IdygjvmlXXSuuO3pe/zGpmviXfPwlizLl73tLUdSlXdd
+         X/1cjzzQiVhZ+WQjWfqWOyZwGSxMOYJS0e6xQCoJPEJMvhReoh3uAgcZxq9w3tUb3NMx
+         lJs4zxUkqW1Z9aXN3VM5H/TsifdUNNWbA9jCpUZ0hkj0DDWk2ATLwqNs+G27QCB9cRfc
+         lF6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to:user-agent;
+        bh=FOCrY6C6LY1qMKaDyhet23xMCETdYNcQeghglHoE/EM=;
+        b=oMnD3lsA8cotMzE7V59iytJ+DKEKx8TDXvHRnhER4hKFg7lXwxTUpsjD/2JcIocv7u
+         wS7tdjYhT2tO7qZ7Ht2/m9m02LpHzlSBCsIkDDUlroDO7KVqWdv3zWYCapZOUXr1OsUo
+         D3/edQAnflyIi75O+EHAEMP9+B74VJpHQqA59L4BzDoXZGHhFX6zz59vYaQA9d3p8TLl
+         e+cjyv7OpY3e2R7UgOWxiPdJEPVnRhHYtKIEkX63IbU5psvS7dD2h8I7y81SYNxFZqBd
+         pC9tD83sQQEhNNQAN3P/kpPrKlQk4Z1ik825I0wP9mbJqIqtsZ4/FLOjJBggwsA7UDb0
+         1hMw==
+X-Gm-Message-State: AGRZ1gLMTmeYxswN9YTVoFithMT8sbtYHPDbLwQHcQK4OwNa44dmWmmU
+        xoBfSVo4bbY6sQ2o4CWJVSE=
+X-Google-Smtp-Source: AJdET5fkxhJdeOsFQtxycfu03KpLOuaAnwo8hZS++H1SxDuMzu+l9DExzIBojznkE9793ByJ6BGkFw==
+X-Received: by 2002:a19:5059:: with SMTP id z25mr7941732lfj.120.1540811221412;
+        Mon, 29 Oct 2018 04:07:01 -0700 (PDT)
+Received: from xi.terra (c-74bee655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.190.116])
+        by smtp.gmail.com with ESMTPSA id b22sm2061959lfg.32.2018.10.29.04.06.59
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 29 Oct 2018 04:06:59 -0700 (PDT)
+Received: from johan by xi.terra with local (Exim 4.91)
+        (envelope-from <johan@kernel.org>)
+        id 1gH5Nw-0002ja-TS; Mon, 29 Oct 2018 12:07:04 +0100
+Date:   Mon, 29 Oct 2018 12:07:04 +0100
+From:   Johan Hovold <johan@kernel.org>
+To:     Lars Poeschel <poeschel@lemonage.de>
+Cc:     Johan Hovold <johan@kernel.org>, devicetree@vger.kernel.org,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 3/5] nfc: pn533: add UART phy driver
+Message-ID: <20181029110704.GQ27852@localhost>
+References: <20181025132937.24405-1-poeschel@lemonage.de>
+ <20181025132937.24405-3-poeschel@lemonage.de>
+ <20181028102725.GL27852@localhost>
+ <20181029100246.GA5905@lem-wkst-02.lemonage>
 MIME-Version: 1.0
-X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: af094f70-ff2a-4421-0afd-08d63d892079
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Oct 2018 10:27:28.6933
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR06MB4518
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20181029100246.GA5905@lem-wkst-02.lemonage>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch is for adding a new module parameter "frameburst".
-With setting "frameburst=3D1" in module parameters, firmware frameburst mod=
-e
-will be enabled. The feature can enable per-packet framebursting in
-firmware side and get higher TX throughput in High Throughput(HT) mode.
+On Mon, Oct 29, 2018 at 11:02:46AM +0100, Lars Poeschel wrote:
+> Hi Johan,
+> 
+> thank you very much for the review!
+> 
+> On Sun, Oct 28, 2018 at 11:27:25AM +0100, Johan Hovold wrote:
+> > On Thu, Oct 25, 2018 at 03:29:34PM +0200, Lars Poeschel wrote:
+> > > This adds the UART phy interface for the pn533 driver.
+> > > The pn533 driver can be used through UART interface this way.
+> > > It is implemented as a serdev device.
+> > 
+> > Just a few drive-by comments below.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c   | 5 +++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h   | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h     | 1 +
- 4 files changed, 15 insertions(+)
+> > > +/*
+> > > + * Driver for NXP PN532 NFC Chip - UART transport layer
+> > > + *
+> > > + * Copyright (C) 2018 Lemonage Software GmbH
+> > > + * Author: Lars Pöschel <poeschel@lemonage.de>
+> > > + * All rights reserved.
+> > > + */
+> > 
+> > > +#define VERSION "0.1"
+> > 
+> > We don't version kernel drivers individually, so please drop this here
+> > and below.
+> 
+> There was a comment from Marcel about this as well and I read it as: You
+> can do it, but it is not required and nobody really cares.
+> I included this, because the other pn532 phy driver (i2c) is doing it
+> this way, but I don't like it either, so I will drop this, as well as
+> the PN532_UART_DRIVER_NAME define in the next version.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/=
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 230a378..4a05d3f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6638,6 +6638,13 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211=
-_info *cfg)
-=20
- 	brcmf_configure_arp_nd_offload(ifp, true);
-=20
-+	if (ifp->drvr->settings->frameburst) {
-+		err =3D brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_FAKEFRAG, 1);
-+			if (err)
-+				brcmf_info("setting frameburst mode failed\n");
-+		brcmf_dbg(INFO, "frameburst mode enabled\n");
-+	}
-+
- 	cfg->dongle_up =3D true;
- default_conf_out:
-=20
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 94044a7..0ad4c31 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -78,6 +78,10 @@
- module_param_named(iapp, brcmf_iapp_enable, int, 0);
- MODULE_PARM_DESC(iapp, "Enable partial support for the obsoleted Inter-Acc=
-ess Point Protocol");
-=20
-+static int brcmf_frameburst;
-+module_param_named(frameburst, brcmf_frameburst, int, 0);
-+MODULE_PARM_DESC(frameburst, "Enable firmware frameburst feature");
-+
- #ifdef DEBUG
- /* always succeed brcmf_bus_started() */
- static int brcmf_ignore_probe_fail;
-@@ -419,6 +423,7 @@ struct brcmf_mp_device *brcmf_get_module_param(struct d=
-evice *dev,
- 	settings->fcmode =3D brcmf_fcmode;
- 	settings->roamoff =3D !!brcmf_roamoff;
- 	settings->iapp =3D !!brcmf_iapp_enable;
-+	settings->frameburst =3D !!brcmf_frameburst;
- #ifdef DEBUG
- 	settings->ignore_probe_fail =3D !!brcmf_ignore_probe_fail;
- #endif
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index a34642c..b919752 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -47,6 +47,7 @@ struct brcmf_mp_global_t {
-  * @feature_disable: Feature_disable bitmask.
-  * @fcmode: FWS flow control.
-  * @roamoff: Firmware roaming off?
-+ * @frameburst: Firmware frame burst mode.
-  * @ignore_probe_fail: Ignore probe failure.
-  * @country_codes: If available, pointer to struct for translating country=
- codes
-  * @bus: Bus specific platform data. Only SDIO at the mmoment.
-@@ -57,6 +58,7 @@ struct brcmf_mp_device {
- 	int		fcmode;
- 	bool		roamoff;
- 	bool		iapp;
-+	bool		frameburst;
- 	bool		ignore_probe_fail;
- 	struct brcmfmac_pd_cc *country_codes;
- 	union {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/driv=
-ers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-index 63b1287..b6b183b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-@@ -80,6 +80,7 @@
- #define BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON	201
- #define BRCMF_C_SET_ASSOC_PREFER		205
- #define BRCMF_C_GET_VALID_CHANNELS		217
-+#define BRCMF_C_SET_FAKEFRAG			219
- #define BRCMF_C_GET_KEY_PRIMARY			235
- #define BRCMF_C_SET_KEY_PRIMARY			236
- #define BRCMF_C_SET_SCAN_PASSIVE_TIME		258
---=20
-1.9.1
+Sounds good.
 
+> > > +static int pn532_uart_probe(struct serdev_device *serdev)
+> > > +{
+> > > +	struct pn532_uart_phy *pn532;
+> > > +	struct pn533 *priv;
+> > > +	int err;
+> > > +
+> > > +	err = -ENOMEM;
+> > > +	pn532 = kzalloc(sizeof(*pn532), GFP_KERNEL);
+> > > +	if (pn532 == NULL)
+> > 
+> > I'd use !pn532 here (and elsewhere).
+> 
+> I will change it.
+> 
+> > > +		goto err_exit;
+> > > +
+> > > +	pn532->recv_skb = alloc_skb(PN532_UART_SKB_BUFF_LEN, GFP_KERNEL);
+> > > +	if (pn532->recv_skb == NULL)
+> > > +		goto err_free;
+> > > +
+> > > +	pn532->serdev = serdev;
+> > > +	priv = pn533_register_device(PN533_DEVICE_PN532,
+> > > +				     PN533_NO_TYPE_B_PROTOCOLS,
+> > > +				     PN533_PROTO_REQ_ACK_RESP,
+> > > +				     pn532, &uart_phy_ops, NULL,
+> > > +				     &pn532->serdev->dev,
+> > > +				     &serdev->dev);
+> > > +
+> > 
+> > Stray new line.
+> 
+> Ok.
+> 
+> > > +	if (IS_ERR(priv)) {
+> > > +		err = PTR_ERR(priv);
+> > > +		goto err_skb;
+> > > +	}
+> > 
+> > Should you not set up your device fully before registering it? I'd
+> > assume you could get callbacks from NFC core here.
+> 
+> I did not see any during my tests, but you are right: It feels a bit
+> odd.
+> The i2c driver is also requesting irqs after registering.
+> The pn533_finalize_setup() has to be last.
+> I could do the serdev_* stuff before, but ...
+> 
+> > > +
+> > > +	pn532->priv = priv;
+> > > +	serdev_device_set_drvdata(serdev, pn532);
+> > > +	serdev_device_set_client_ops(serdev, &pn532_serdev_ops);
+> > > +	err = serdev_device_open(serdev);
+> > > +	if (err) {
+> > > +		dev_err(&serdev->dev, "Unable to open device %s\n",
+> > > +				serdev->dev.init_name);
+> > 
+> > dev_err will include the device name so you can drop the init_name bit.
+> 
+> Ok, i drop it.
+> 
+> > > +		goto err_unregister;
+> > > +	}
+> > 
+> > Keeping the serial device open at all times will prevent low power
+> > states on some platforms. Wouldn't it be possible to open the device
+> > when the nfc interface is brought up (and during setup)?
+> 
+> ... that would then be contrary to this idea.
+
+Not necessarily, that depends on what callbacks you can expect and at
+what time.
+
+> Also I don't see how to implement it with what is there today. i2c also
+> does not do something similar.
+
+But i2c doesn't have the concept of an "open" port consuming power.
+
+> It can be done with adding some callbacks from the core (pn533.c) driver
+> to it's phy drivers.
+
+Haven't looked at it in any detail, but in general serdev driver should
+only keep the port open while the device is in use.
+
+I only noticed that nfc core has dev_up/down callbacks which looks like
+they could be used for something like this.
+
+> Wouldn't that be the scope of another later patch then ?
+
+Possibly. We have accepted some serdev drivers already taking the lazy
+approach of opening the port in probe. Depending on the driver, it may
+not be too bad (e.g. for some specific hardware which you know you'll
+always use), but it not really nice to have everyone pay a price in
+terms of power-consumption for a feature that is rarely used.
+
+Johan
