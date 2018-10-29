@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 287D3C2BC61
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1E1C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:30:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D888C20657
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:25:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2A6D20657
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 14:30:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dYGNNvzQ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cv1Ap6Kv"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D888C20657
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VYC8H+0m";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VYC8H+0m"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D2A6D20657
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726501AbeJ2XO1 (ORCPT
+        id S1726087AbeJ2XTX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 19:14:27 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:46906 "EHLO
+        Mon, 29 Oct 2018 19:19:23 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:52328 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725967AbeJ2XO1 (ORCPT
+        with ESMTP id S1725964AbeJ2XTW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 19:14:27 -0400
+        Mon, 29 Oct 2018 19:19:22 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 401BE60159; Mon, 29 Oct 2018 14:25:35 +0000 (UTC)
+        id 656AD6029D; Mon, 29 Oct 2018 14:30:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540823135;
-        bh=IfT9jN1HExkEkAE249H6pVzspS0bFd57ivcYAPdofL4=;
+        s=default; t=1540823429;
+        bh=dHbkkhy76+grwK8z7xrxP5T5sJZWutvp9VcszBlNv3Y=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=dYGNNvzQxVnfvkDrU4xdJBGsCVyR1ynOBfcz3sKv+bDYzF6zPJ2UtkwHE6DzXqLDx
-         HRtDK+Ng1g/SbGrr5x4BodMJS69v9MrvMdC64qabKaDENITj7vs/as3QW2ZgE4w1mj
-         N5oxdmeVUONqvB28FlPK/njLICh5kXdivKw+dZ74=
+        b=VYC8H+0mSBGhdPSZJJJwRakg0/0zLabW03dvNM9Tq96l01fySy03H8iqUHHYRGU1z
+         rqmW0/9FVtbSpf2ci1tEXWt7EjKnlfeirpRwNVN7cebNOaQVhsdO+Blm3ptdUkRe1y
+         BQQLvrXa7UKwv6qT8l1xGAJrt23ySbcwdZiOhNok=
 Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
         (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E39A60744;
-        Mon, 29 Oct 2018 14:25:33 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 75A05600ED;
+        Mon, 29 Oct 2018 14:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1540823134;
-        bh=IfT9jN1HExkEkAE249H6pVzspS0bFd57ivcYAPdofL4=;
+        s=default; t=1540823429;
+        bh=dHbkkhy76+grwK8z7xrxP5T5sJZWutvp9VcszBlNv3Y=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=cv1Ap6KvUNQFGkq8k1Ooh7kfNh9+6jD+sZpvs0y/qvF/AUaItLMrlROWWRWy9mzH+
-         LNllVYE6CSPd4RSS2Df1QZ41lSL8yKGyMmqEELM3D+t0K33I0xv0yEo+JfZHb+d3rC
-         /jG0kJT1a3MsYs89FVo2lAHNdT9g61+0hguu8KhM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1E39A60744
+        b=VYC8H+0mSBGhdPSZJJJwRakg0/0zLabW03dvNM9Tq96l01fySy03H8iqUHHYRGU1z
+         rqmW0/9FVtbSpf2ci1tEXWt7EjKnlfeirpRwNVN7cebNOaQVhsdO+Blm3ptdUkRe1y
+         BQQLvrXa7UKwv6qT8l1xGAJrt23ySbcwdZiOhNok=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 75A05600ED
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -56,12 +56,12 @@ To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Cc:     Felix Fietkau <nbd@nbd.name>,
         Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76x0: run calibration after scanning
-References: <1540808213-14442-1-git-send-email-sgruszka@redhat.com>
-Date:   Mon, 29 Oct 2018 16:25:31 +0200
-In-Reply-To: <1540808213-14442-1-git-send-email-sgruszka@redhat.com>
-        (Stanislaw Gruszka's message of "Mon, 29 Oct 2018 11:16:53 +0100")
-Message-ID: <87zhuwbzj8.fsf@purkki.adurom.net>
+Subject: Re: [PATCH] mt76x0: use band parameter for LC calibration
+References: <1540484313-9354-1-git-send-email-sgruszka@redhat.com>
+Date:   Mon, 29 Oct 2018 16:30:26 +0200
+In-Reply-To: <1540484313-9354-1-git-send-email-sgruszka@redhat.com> (Stanislaw
+        Gruszka's message of "Thu, 25 Oct 2018 18:18:33 +0200")
+Message-ID: <87va5kbzb1.fsf@purkki.adurom.net>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -72,22 +72,25 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-> If we are associated and scanning is performed , sw_scan_complete callback
-> is done after we get back to operating channel, so we do not perform
-> phy calibration and queue cal work. Fix this by run calibration from
-> sw_scan_complete().
+> We use always 1 as band parameter for MCU_CAL_LC, this break 2GHz,
+> we should use 0 for this band instead.
 >
-> Fixes: bbd10586f0df ("mt76x0: phy: do not run calibration during channel switch")
+> Patch fixes problems happened sometimes when try to associate with 2GHz
+> AP and manifest by errors like below:
+>
+> [14680.920823] wlan0: authenticate with 18:31:bf:c0:51:b0
+> [14681.109506] wlan0: send auth to 18:31:bf:c0:51:b0 (try 1/3)
+> [14681.310454] wlan0: send auth to 18:31:bf:c0:51:b0 (try 2/3)
+> [14681.518469] wlan0: send auth to 18:31:bf:c0:51:b0 (try 3/3)
+> [14681.726499] wlan0: authentication with 18:31:bf:c0:51:b0 timed out
+>
+> Fixes: 9aec146d0f6b ("mt76x0: pci: introduce mt76x0_phy_calirate routine")
 > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > ---
-> This is for 4.20
+> This is for 4.20.
 
-So what are the symptoms from user's point of view? Is this a
-regression?
-
-I'm just trying to understand if this really is needed for 4.20. There
-are so many mt76 patches flowing to -next that the bar for mt76 -rc
-patches is even higher than normally.
+This describes the symptoms better than the other 4.20 patch, thanks for
+that. And at least to me looks ok for 4.20.
 
 -- 
 Kalle Valo
