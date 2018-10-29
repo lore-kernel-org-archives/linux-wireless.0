@@ -2,113 +2,119 @@ Return-Path: <SRS0=ivqe=NJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53079C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 16:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5953C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 18:50:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A4A420657
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 16:13:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F56D2082D
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 18:50:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OVBe3tj5"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1A4A420657
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EIMh1TWw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F56D2082D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727683AbeJ3BCm (ORCPT
+        id S1729359AbeJ3DkM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 21:02:42 -0400
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:39859 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727597AbeJ3BCl (ORCPT
+        Mon, 29 Oct 2018 23:40:12 -0400
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:38706 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725923AbeJ3DkM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 21:02:41 -0400
-Received: by mail-lf1-f65.google.com with SMTP id p11-v6so6488375lfc.6;
-        Mon, 29 Oct 2018 09:13:24 -0700 (PDT)
+        Mon, 29 Oct 2018 23:40:12 -0400
+Received: by mail-yb1-f195.google.com with SMTP id v92-v6so3905821ybi.5
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Oct 2018 11:50:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=eYWHVdhWDDpgJ2V9xAcamwTCuB5W5kVeb46h2M75ePI=;
-        b=OVBe3tj5nmWSNqkZAZWR6DTnE6lm+LuM3BWOypqYrO83jI35gm7uVpqHRmlYV0F0+e
-         zdzIwn303SpLcyc2hvd2FpiC5ZqZJKo458WqtWfPTKlNlruSBtLzeLDyMIKzPpIaHB8D
-         6wJPlOiL0wo+iPsJi94RIHtsjD9UuKw5E5Vf8PYVgVN4YeChPopjAD+F5O3GksYPt+Mq
-         LMX38XaX5yfP8Uq7XgxCCVppxHGaNPGWlvwtu1UUcs2C6Cj7AzYlhf72zyvXl8pQgShk
-         L758GXrDt3HFlVrEr4UN9gezWFspeGMmRVws+t08ltPJpOWM5a7KDApUFcKzlby7LmwE
-         RsMQ==
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qt2JpCU7hyxcma94vNLL2jySJE58SOVquiIMtRS2uL0=;
+        b=EIMh1TWwXp2iJQMu7UxfqMj71k58F2VFKWF8D0fo3MwDSQuO+18ajsoqOpgkdiQuju
+         LiAAPN85SxQcL1c3Oq2+pbo5ccSotBXvpZHaop9i0PaBA0GNf0KcDcBEJIyzzxnQMKr2
+         CRWbDMEubKaatqUKIzaNovDv6pYjAvbLiymnQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=eYWHVdhWDDpgJ2V9xAcamwTCuB5W5kVeb46h2M75ePI=;
-        b=SPsyXkDkG8H9dCe2Y34Dlv6/lU6+bygJS2Pt2k+RUt13q90iyV5Cn4KunaPO49bV6S
-         EPWLqr7YKBWznt8RvzVjUaaK6b0OcsgaAxwbIsmRv1DrQhDdw844AOnhv7UkDvGyxMa7
-         w7kKH9h+35+aick/LJyVNkSTGby9qtHRwGY5amoR0S1rAB3aOY2rPHx0p9m9c/KM9PVs
-         4jOKZPxgR71o2W+FNPUGzMYim+UWNaInfDlhCU8/UkcufhXFPoLmGbWyuWeqc367BKHX
-         eCRxIGqnP2uOmsocQjCx46+SRV6AtLvL90iL6TSKcvwIsNZBstFef8xMFhP8wEES3V1m
-         M87A==
-X-Gm-Message-State: AGRZ1gKovccZlKSizzytWK1TPZjTdPLlo+X7zpcMTO0oiN5asEWcptnH
-        Nd0W7JQXY06Dl2WJ2ybKXnbLyUOO
-X-Google-Smtp-Source: AJdET5c0qA6cFzfJmfCFpfbnNHFdjAtHBaLfsHoBkzUcbHoRpeUOpuO0w6cHf0L/clLVwAyNJA5m+w==
-X-Received: by 2002:a19:4e59:: with SMTP id c86mr9038690lfb.132.1540829603958;
-        Mon, 29 Oct 2018 09:13:23 -0700 (PDT)
-Received: from xi.terra (c-74bee655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.190.116])
-        by smtp.gmail.com with ESMTPSA id 2-v6sm3103567ljv.83.2018.10.29.09.13.22
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 29 Oct 2018 09:13:23 -0700 (PDT)
-Received: from johan by xi.terra with local (Exim 4.91)
-        (envelope-from <johan@kernel.org>)
-        id 1gHAAS-0003cz-Ij; Mon, 29 Oct 2018 17:13:28 +0100
-Date:   Mon, 29 Oct 2018 17:13:28 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Lars Poeschel <poeschel@lemonage.de>
-Cc:     Johan Hovold <johan@kernel.org>, devicetree@vger.kernel.org,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:NFC SUBSYSTEM" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 3/5] nfc: pn533: add UART phy driver
-Message-ID: <20181029161328.GT27852@localhost>
-References: <20181025132937.24405-1-poeschel@lemonage.de>
- <20181025132937.24405-3-poeschel@lemonage.de>
- <20181028102725.GL27852@localhost>
- <20181029100246.GA5905@lem-wkst-02.lemonage>
- <20181029110704.GQ27852@localhost>
- <20181029155110.GA12914@lem-wkst-02.lemonage>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qt2JpCU7hyxcma94vNLL2jySJE58SOVquiIMtRS2uL0=;
+        b=KIkuv6BkRPNefCnnZENZ8vLpp6cw8HVj72rxgznPs5XKDPjh0i6t0L1SZnD8k/Fg1I
+         PsbKETxiy/KFQ4wvM727ykk4zVYisYszcjgMp1RsjSPirp3EudRrFOKZV/31DctmInLT
+         SuQPFrUjpBQABxVtka+ryyzB50GPdTRgBqi6sFgq7CPzAyJOiUNEb6qIvwEI7LPwY9RD
+         dZA/1bfMoRWxCN92jn9VmxbC9IvAvJFnEbHlCkvasqrT56bnn3G5KdGADfyhu1atC7X4
+         HJgelMHQTZPrDUQRzNehPUbP4T5t9wUHTQc4bQX3Gryn4UvenmDYKzOMgo0B3yYBNndW
+         440Q==
+X-Gm-Message-State: AGRZ1gKQ4qHi61ey+8e2Zj7H0sfWJ+UbmkyT0WO9e3n4FgssvOvVYKz2
+        mH9Kujv1052o72jYTGOqYjRdQwLp8GQNpzlYcq46pw==
+X-Google-Smtp-Source: AJdET5ePvMdXDUkmUuEOfUywGdUc9XGbmnceIR0O+39x3oC+WL/F1tt7e+7qMs2mjMCNlqulWApMEx4kK/tml9ZHLZQ=
+X-Received: by 2002:a25:4a02:: with SMTP id x2-v6mr15254531yba.72.1540839016209;
+ Mon, 29 Oct 2018 11:50:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181029155110.GA12914@lem-wkst-02.lemonage>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <1540808552-28738-1-git-send-email-wright.feng@cypress.com> <1540808552-28738-2-git-send-email-wright.feng@cypress.com>
+In-Reply-To: <1540808552-28738-2-git-send-email-wright.feng@cypress.com>
+From:   Franky Lin <franky.lin@broadcom.com>
+Date:   Mon, 29 Oct 2018 11:50:05 -0700
+Message-ID: <CA+8PC_f-EMCWnn1oBorAZjNY2xJXcJbhbP+8fU9wYJXnnZto5w@mail.gmail.com>
+Subject: Re: [PATCH 1/3] brcmfmac: calling skb_orphan before sending skb to
+ SDIO bus
+To:     Wright Feng <Wright.Feng@cypress.com>
+Cc:     "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 29, 2018 at 04:51:10PM +0100, Lars Poeschel wrote:
-> On Mon, Oct 29, 2018 at 12:07:04PM +0100, Johan Hovold wrote:
+On Mon, Oct 29, 2018 at 3:27 AM Wright Feng <Wright.Feng@cypress.com> wrote:
+>
+> Linux 3.6 introduces TSQ which has a per socket threshold for TCP Tx
+> packets to reduce latency. In fcmode 1 and fcmode 2, host driver enqueues
+> skb in hanger and TCP doesn't push new skb until host frees the skb when
+> receiving fwstatus event. So using skb_orphan before sending skb to bus
+> will make the skb removing the ownership of socket. With this patch, we
+> are able to get better throughput in fcmode 1 and fcmode 2.
+>
+> Tested 43455 TCP throughput in 20 MHz bandwidth with / without this patch.
+> fcmode 0: 59.5 / 59.6 (mbps)
+> fcmode 1: 59.3 / 23.4 (mbps)
+> fcmode 2: 59.6 / 21.5 (mbps)
+>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index b2e1ab5..519b25d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -2298,6 +2298,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+>                                               &prec_out);
+>                         if (pkt == NULL)
+>                                 break;
+> +                       skb_orphan(pkt);
 
-> > > Wouldn't that be the scope of another later patch then ?
-> > 
-> > Possibly. We have accepted some serdev drivers already taking the lazy
-> > approach of opening the port in probe. Depending on the driver, it may
-> > not be too bad (e.g. for some specific hardware which you know you'll
-> > always use), but it not really nice to have everyone pay a price in
-> > terms of power-consumption for a feature that is rarely used.
-> 
-> Is there a way in serdev to close a port, but still occupy it ?
-> I'd like to do the basic chip initialisation in _probe and then close
-> the port for power-consuption reasons. I'd like to have the port still
-> occupied, so that it's not available to other possible users in the
-> meantime. I'd then do a serdev open again in dev_up and really use it
-> from there.
-> dev_down is then for serdev close and also still occupy it.
-> closing and releasing would then be done in _remove.
+TSQ allows device driver to tweak for a deeper queue now. [1]. We
+should use that instead of orphaning the packet before handing over to
+firmware which would remove the bufferbloat protection by TSQ.
 
-The serdev device is bound you driver regardless of whether you open the
-port or not, so just use serdev_device_open() and serdev_device_close()
-as necessary at probe() if you need to do some setup and then later at
-dev_up() and dev_down(), respectively.
+Thanks,
+-Franky
 
-Johan
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3a9b76fd0db9f
+
+>                         __skb_queue_tail(&pktq, pkt);
+>                 }
+>                 spin_unlock_bh(&bus->txq_lock);
+> --
+> 1.9.1
+>
