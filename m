@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC647ECDE46
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC5AECDE44
 	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 00:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD57C20843
+	by mail.kernel.org (Postfix) with ESMTP id 8C41920827
 	for <linux-wireless@archiver.kernel.org>; Mon, 29 Oct 2018 00:42:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BD57C20843
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8C41920827
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbeJ2JXx (ORCPT
+        id S1726029AbeJ2JXo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Oct 2018 05:23:53 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:39561 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725865AbeJ2JXw (ORCPT
+        Mon, 29 Oct 2018 05:23:44 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:43505 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725865AbeJ2JXo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Oct 2018 05:23:52 -0400
-Received: by mail-wr1-f65.google.com with SMTP id r10-v6so6806804wrv.6
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2018 17:37:35 -0700 (PDT)
+        Mon, 29 Oct 2018 05:23:44 -0400
+Received: by mail-wr1-f67.google.com with SMTP id t10-v6so6791726wrn.10
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Oct 2018 17:37:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bC+tNRo8OAUX1LaHE3sa0wQOr9sPlqczPqMz5bKzhpU=;
-        b=blnlNx5mLdHEDBGWopSq7SYYJtxLHNQtV2Cn8FOXX1M4LvrVleCf7L07SnPGiw6MEJ
-         uX4jieuhyn7Ce6N2PdnqygDnn2+YMgQmLZjjiegCN50MoDvtW5UR8uq+L3Mse01ldwfz
-         v/Yobb7OKTzTUHyrBed3zunzTzRgetJV1n8r0sIwJNj4h7Ye1qh8+o9A/oswJh/LIVbc
-         ND6Zon89dQj7cAiQIYFLctluV7PLZMDe0zaiBPqwpDnmR4hlnDP2I/eWrPG9/XJXAcC/
-         /ttzG1MeZohDA2oB2Rx6wJyhC68VbZ8pEl2HAVxKgTIdj68+5oiHhgqqFNb5WicKLRHX
-         5EvQ==
-X-Gm-Message-State: AGRZ1gJSToiR3MKMPE/k6/3rEi8p48LMrx3I3d+zbRI0y+fWd1nhIfSv
-        6GsTUzfiogMoyItw/5PX+p/u0w==
-X-Google-Smtp-Source: AJdET5dpenXzfAQpDnKH5uIgpmnzQxf44lpnz22cWPg9BBZ90Z+NZeeS5br9V137JdMo2gpfW7ZBTg==
-X-Received: by 2002:a5d:4dc2:: with SMTP id f2-v6mr2211840wru.45.1540773455082;
-        Sun, 28 Oct 2018 17:37:35 -0700 (PDT)
+        bh=SO4vYW6k096kch+9oiuJcvLjEZ68o8N59DqMrP0k+g0=;
+        b=OnbP3hJLmdd+GlJYojfKG9IxL/gKDikobguZR2rBlfGqRgh229S3ly+bnG4nZY7Etb
+         TH+CY2t8ncEvj6KQfPGDQGy8JX6LjsnoxvsEhhpNSXCkhatGwPuiaJPsjysi/fu/JwPb
+         M93D5LIscKLeW04eNgJ03evtfiei83W/e/dX9y/3Oq3sHt+yizwq3+bRdQ0xlAU5RzX9
+         2T5M96b+5l6w2I4UZGISn4XIgSON5MJfBaLbor37i1i1IOOGDKPfHKiurCrKd0/Ym2D0
+         F4oXZO3IUAMwaWIhv0X2Yrd8XZI6BMnREG/415rZGDvS4uIRO98eW7X+ZgBh8VGEK74u
+         eySQ==
+X-Gm-Message-State: AGRZ1gLt4lHRFzyv/3AF1b38wWbaCrRKboWABMOSLrzqrDjW+AZl+nby
+        FWye+yZ0AL71PGTWXw38lsRgMA==
+X-Google-Smtp-Source: AJdET5drsX8y+4pqNvtrNbFVhZ36HNGBGtbzaJZ0jmoWwQHw6Pr12NC3dxzjcwoaWvcjg74hRGocQA==
+X-Received: by 2002:adf:a447:: with SMTP id e7-v6mr12614596wra.190.1540773446252;
+        Sun, 28 Oct 2018 17:37:26 -0700 (PDT)
 Received: from localhost.localdomain ([151.66.52.234])
-        by smtp.gmail.com with ESMTPSA id e5-v6sm12135545wru.88.2018.10.28.17.37.34
+        by smtp.gmail.com with ESMTPSA id e5-v6sm12135545wru.88.2018.10.28.17.37.25
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 28 Oct 2018 17:37:34 -0700 (PDT)
+        Sun, 28 Oct 2018 17:37:25 -0700 (PDT)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mt76x0: init: use mt76x02_mac_wcid_setup for wcid configuration
-Date:   Mon, 29 Oct 2018 01:37:00 +0100
-Message-Id: <4b83d461caedff525e9988db435465d63dad3c75.1540772762.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH 1/2] mt76x2: move wcid_tx_rate conf at bootstrap
+Date:   Mon, 29 Oct 2018 01:36:59 +0100
+Message-Id: <5737ba4f70b3676e9808091ceb852322aaf3be45.1540772762.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <cover.1540772762.git.lorenzo.bianconi@redhat.com>
 References: <cover.1540772762.git.lorenzo.bianconi@redhat.com>
@@ -61,83 +61,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use mt76x02_mac_wcid_setup utility routine for wcid init configuration
-and remove duplicated code. This patch fixes a mt76x0 AP issue since
-hw key table selection was set to pairwise by default
+Move WCID tx rate configuration at device bootstrap since
+the related register are always set to 0
 
-Fixes: dbad2adcb2c7 ("mt76x0: pci: enable AP support")
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x0/init.c  | 45 +------------------
- 1 file changed, 2 insertions(+), 43 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c     | 3 ---
+ drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c | 5 ++++-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-index 23ff29990ff7..55db5a15410e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/init.c
-@@ -157,42 +157,6 @@ static void mt76x0_init_mac_registers(struct mt76x02_dev *dev)
- 	mt76_rmw(dev, MT_WMM_CTRL, 0x3ff, 0x201);
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+index 4fb9f095ffec..b0b04415703f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+@@ -106,9 +106,6 @@ void mt76x02_mac_wcid_setup(struct mt76x02_dev *dev, u8 idx,
  
--static int mt76x0_init_wcid_mem(struct mt76x02_dev *dev)
--{
--	u32 *vals;
--	int i;
--
--	vals = kmalloc(sizeof(*vals) * MT76_N_WCIDS * 2, GFP_KERNEL);
--	if (!vals)
--		return -ENOMEM;
--
--	for (i = 0; i < MT76_N_WCIDS; i++)  {
--		vals[i * 2] = 0xffffffff;
--		vals[i * 2 + 1] = 0x00ffffff;
--	}
--
--	mt76_wr_copy(dev, MT_WCID_ADDR_BASE, vals, MT76_N_WCIDS * 2);
--	kfree(vals);
--	return 0;
--}
--
--static int mt76x0_init_wcid_attr_mem(struct mt76x02_dev *dev)
--{
--	u32 *vals;
--	int i;
--
--	vals = kmalloc(sizeof(*vals) * MT76_N_WCIDS * 2, GFP_KERNEL);
--	if (!vals)
--		return -ENOMEM;
--
--	for (i = 0; i < MT76_N_WCIDS * 2; i++)
--		vals[i] = 1;
--
--	mt76_wr_copy(dev, MT_WCID_ATTR_BASE, vals, MT76_N_WCIDS * 2);
--	kfree(vals);
--	return 0;
--}
--
- static void mt76x0_reset_counters(struct mt76x02_dev *dev)
- {
- 	mt76_rr(dev, MT_RX_STAT_0);
-@@ -278,17 +242,12 @@ int mt76x0_init_hardware(struct mt76x02_dev *dev)
+ 	mt76_wr(dev, MT_WCID_ATTR(idx), attr);
  
- 	dev->mt76.rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
- 
--	ret = mt76x0_init_wcid_mem(dev);
--	if (ret)
--		return ret;
+-	mt76_wr(dev, MT_WCID_TX_RATE(idx), 0);
+-	mt76_wr(dev, MT_WCID_TX_RATE(idx) + 4, 0);
 -
- 	for (i = 0; i < 16; i++)
- 		for (k = 0; k < 4; k++)
- 			mt76x02_mac_shared_key_setup(dev, i, k, NULL);
+ 	if (idx >= 128)
+ 		return;
  
--	ret = mt76x0_init_wcid_attr_mem(dev);
--	if (ret)
--		return ret;
-+	for (i = 0; i < 256; i++)
-+		mt76x02_mac_wcid_setup(dev, i, 0, NULL);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+index f6e8af6432c1..7b53b2be28c2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
+@@ -129,8 +129,11 @@ static int mt76x2_mac_reset(struct mt76x02_dev *dev, bool hard)
+ 	for (i = 0; i < 256 / 32; i++)
+ 		mt76_wr(dev, MT_WCID_DROP_BASE + i * 4, 0);
  
- 	mt76x0_reset_counters(dev);
+-	for (i = 0; i < 256; i++)
++	for (i = 0; i < 256; i++) {
+ 		mt76x02_mac_wcid_setup(dev, i, 0, NULL);
++		mt76_wr(dev, MT_WCID_TX_RATE(i), 0);
++		mt76_wr(dev, MT_WCID_TX_RATE(i) + 4, 0);
++	}
  
+ 	for (i = 0; i < MT_MAX_VIFS; i++)
+ 		mt76x02_mac_wcid_setup(dev, MT_VIF_WCID(i), i, NULL);
 -- 
 2.19.1
 
