@@ -1,206 +1,178 @@
-Return-Path: <SRS0=qkCK=NK=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=7415=NL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B75C2BC61
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Oct 2018 15:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FD5C0044C
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 06:17:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E59F120657
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Oct 2018 15:32:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D53120821
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 06:17:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVTXquLb"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E59F120657
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Dkf5JAJz";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="atqj50ru"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D53120821
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726991AbeJaA0T (ORCPT
+        id S1729061AbeJaPOY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Oct 2018 20:26:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55894 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725988AbeJaA0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Oct 2018 20:26:19 -0400
-Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1DE8620657;
-        Tue, 30 Oct 2018 15:32:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1540913542;
-        bh=+fQ5kqI/3SA1UpCUyjiVuVuC0UhvJfv3ie1yGJUnB4A=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ZVTXquLbyrTjo9xNdPz70P2ua4a2F1Nts5SDNg/EOu1P2cZy5N0jwen3pGGZvbSVE
-         KNidN1cTMa+smq2oGV01sfcq9PwG233TNFa1zSpH6SvpwT2LVs/yYlh/Y/7NTR2ox/
-         uGRGfMx5DGXbqkoV9ONnELcnp63HgG8hYQqCHJvw=
-Received: by mail-qk1-f175.google.com with SMTP id e4so7497123qkh.6;
-        Tue, 30 Oct 2018 08:32:22 -0700 (PDT)
-X-Gm-Message-State: AGRZ1gIKGHGx2RlVkNpVVRhBBlH+GHGtf9V/EPhob4XPcng8DHxwEHeu
-        fByMXkHoFhDnOGXzTDH+WPbh/ouwjoUZQbFz5A==
-X-Google-Smtp-Source: AJdET5fDXcLGHCiSYklkbZiElcysDz/zIfOWfBtQByr6oY2KI+NPXWy+do/jThgbO78ei0QLwYQJzys2DKnMt/5Kf14=
-X-Received: by 2002:a37:9201:: with SMTP id u1-v6mr15461904qkd.29.1540913541303;
- Tue, 30 Oct 2018 08:32:21 -0700 (PDT)
+        Wed, 31 Oct 2018 11:14:24 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:52042 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726287AbeJaPOY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Oct 2018 11:14:24 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id A60E6601B4; Wed, 31 Oct 2018 06:17:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540966661;
+        bh=GzBuBmK8VPczhL7EZnxGYp3SKg0UuEhu21xxke46Nlg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Dkf5JAJzEb27TU5esyUDuvpjPj7YGOhQvQMHc0Bf7C4/oNUBWpfCxBjJO+tz7BoFS
+         89M+h+QXWSPVmIeg8kE6u55HXJZicSF8L4iBN+amZZ9Jy1iSNecPooZKWOW8xepucM
+         WNuDb8Lt6ieOs9gKm2guRooRfUQ60R0tkA+/Ctps=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id C09B1605A2;
+        Wed, 31 Oct 2018 06:17:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1540966660;
+        bh=GzBuBmK8VPczhL7EZnxGYp3SKg0UuEhu21xxke46Nlg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=atqj50ruYGU/vQQFy7mm/yAkDeuDxEgTpeeswLBzGT6yTdHhwcKr3R4t7tkukvYb/
+         rQXAC3oY6ZdcHCrD8zV2oPCDZmA6QWosIG+V5MXl6tKYPmGHMH5Ke30XKeSReOsPgC
+         k9YLCEIhnnmkWL3+E46cI8vXiuvzUPlLZeZxINaI=
 MIME-Version: 1.0
-References: <1538653364-1239-1-git-send-email-bperumal@codeaurora.org>
- <1538653364-1239-2-git-send-email-bperumal@codeaurora.org>
- <20181015192425.GA19699@bogus> <d617b0c39a2faa7c9b23b884bef3f829@codeaurora.org>
-In-Reply-To: <d617b0c39a2faa7c9b23b884bef3f829@codeaurora.org>
-From:   Rob Herring <robh@kernel.org>
-Date:   Tue, 30 Oct 2018 10:32:10 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqLTxzFSQ6jvZo7CCcxBML6Y5j2AvAOotnVDJGTh-1K7ZA@mail.gmail.com>
-Message-ID: <CAL_JsqLTxzFSQ6jvZo7CCcxBML6Y5j2AvAOotnVDJGTh-1K7ZA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] dt: bindings: add new dt entry to indentify external FEM
-To:     Bhagavathi Perumal S <bperumal@codeaurora.org>
-Cc:     ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        devicetree@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Wed, 31 Oct 2018 14:17:40 +0800
+From:   yiboz@codeaurora.org
+To:     =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 3/6] mac80211: Add airtime accounting and scheduling to
+ TXQs
+In-Reply-To: <87woq2843q.fsf@toke.dk>
+References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org>
+ <1540033534-11211-4-git-send-email-rmanohar@codeaurora.org>
+ <8736ssbxp9.fsf@toke.dk> <9c2b790132a9a89fecd7dd79dc67d891@codeaurora.org>
+ <87woq2843q.fsf@toke.dk>
+Message-ID: <b452524e6155f075cc8125885c46de2d@codeaurora.org>
+X-Sender: yiboz@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 30, 2018 at 3:41 AM <bperumal@codeaurora.org> wrote:
->
-> On 2018-10-16 00:54, Rob Herring wrote:
-> > On Thu, Oct 04, 2018 at 05:12:43PM +0530, Bhagavathi Perumal S wrote:
-> >> This adds new dt entry ext-fem-name, it is used by ath10k driver
-> >> to select correct timing parameters and configure it in target wifi
-> >> hardware.
-> >> The Front End Module(FEM) normally includes tx power amplifier(PA) and
-> >> rx low noise amplifier(LNA). The default timing parameters like tx end
-> >> to
-> >> PA off timing values were fine tuned for internal FEM used in
-> >> reference
-> >> design. And these timing values can not be same if ODM modifies
-> >> hardware
-> >> design with different external FEM. This DT entry helps to choose
-> >> correct
-> >> timing values in driver if different external FEM hardware used.
-> >
-> > 'dt-bindings: net: ath10k: ...' for the subject please.
-> Sure, I will change and send v2 patch.
->
-> >
-> >>
-> >> Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
-> >> ---
-> >>  .../bindings/net/wireless/qcom,ath10k.txt          | 22
-> >> ++++++++++++++++++++++
-> >>  1 file changed, 22 insertions(+)
-> >>
-> >> diff --git
-> >> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> >> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> >> index 7fd4e8c..fbaf309 100644
-> >> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> >> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> >> @@ -56,6 +56,7 @@ Optional properties:
-> >>                                   the length can vary between hw versions.
-> >>  - <supply-name>-supply: handle to the regulator device tree node
-> >>                         optional "supply-name" is "vdd-0.8-cx-mx".
-> >> +- ext-fem-name: name of external front end module used.
-> >
-> > What are valid names? What if the OS doesn't recognize the name?
-> > Perhaps
-> Some valid FEM devices are "microsemi-lx5586", "sky85703-11" and
-> "sky85803" etc.
-> Currently driver accepts only "microsemi-lx5586", Since this FEM
-> requires different timing settings,
+在 2018-10-28 23:48，Toke Høiland-Jørgensen 写道：
+> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+> 
+>> On 2018-10-26 07:16, Toke Høiland-Jørgensen wrote:
+>>> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+>>> 
+>>>> From: Toke Høiland-Jørgensen <toke@toke.dk>
+>> [...]
+>>>>  	u8 max_nan_de_entries;
+>>>>  	u8 tx_sk_pacing_shift;
+>>>> +	u32 airtime_weight;
+>>>>  };
+>>> 
+>>> This doesn't make sense. Airtime weights can be set by userspace, so
+>>> even if a driver sets another default it is not guaranteed to be
+>>> honoured. So what's the point?
+>>> 
+>> The reason for driver specific default is to avoid performance impact
+>> in ath10k when the user is using vanilla ath10k with default airtime.
+>> As I mentioned earlier, mac80211 default (256us) is too low for 11ac
+>> devices especially with driver is bursting aggregation.
+>> 
+>> Yes. I do understand the user can change airtime at anytime but It
+>> must be noted that different airtime weight will result in different
+>> throughput. IMHO the defaults should not impact current benchmark.
+>> Otherwise it will be alarmed as regression later. isn't it?
+> 
+> My point is that if the user has to know the implementation-specific
+> limitations of each driver before setting a weight, then it's not a
+> particularly friendly API. I think we should be able to do better than
+> that...
+> 
+>>> So since we're rotating the queue on every call to the function, I'm
+>>> wondering if this actually succeeds in throttling the slow station's
+>>> airtime usage enough to achieve fairness? So I'll ask again: Did you
+>>> test the fairness performance, and how?
+>>> 
+>> We are collecting data of mixed clients (11ac, 11n and legacy) keeping
+>> them at same distance and different distance. So that lower rate
+>> clients will interfere higher MCS rate station. Also configuring
+>> different airtime weight for each stations so that throttling low rate
+>> clients more should help higher performing(better MCS) clients.
+>> 
+>> By allowing different airtime for each stations, the user can control
+>> guest network over primary network. Also It helped to improve
+>> performance of preferred station and algo. to control station is given
+>> to cloud or user application.
+>> 
+>> As of now, We are testing with 4 11ac clients of same distance. And
+>> collecting the performance data in multiple iteration. Below are
+>> current data of station's performance (Mbps) against airtime weight.
+>> 
+>> airtime   station1(%airtime)  station2     station3       station4
+>> (Mbps)
+>> 
+>> No ATF      182               168          166            169
+>> 
+>> 4ms         170 (100%)        164 (100%)   185  (100%)    175 (100%)
+>> 
+>> 4ms         277 (70%)         115 (10%)    103 (10%)      105 (10%)
+>> 
+>> 4ms         223 (40%)         214 (40%)    109 (10%)       94 (10%)
+>> 
+>> 4ms         337 (90%)         182 (8%)      23 (1%)        30 (1%)
+> 
+> So this looks like it's doing *something*, but not like it's succeeding
+> in achieving the set percentages. Did you check if the actual airtime
+> values (in debugfs) corresponds to the configured weights?
+> 
+>> 
+>>              STA1(11ac)  STA2 (11n)  STA3(11a)
+>>              ==========  ==========  =========
+>> 
+>> No ATF       225         166         3.5
+>> 
+>> ATF (4ms)    234         151         3.5
+> 
+> This also shows like ATF has no effect?
+> 
+>>> Also, taking a step back:
+>>> 
+>>> With this, we're doing lots of work to make sure that the hardware's
+>>> round-robin scheduling queue lines up with mac80211; so if we do this
+>>> anyway, why can't we just control the order directly from mac80211
+>>> (which is what we do with the other next_txq() API)?
+>>> 
+Toke and Raj,
 
-Assuming you keep this, then you need to enumerate what are valid
-values in the binding. Otherwise, 'ext-fem-name = "rob"' is valid.
+How about treating any txqs before the txq that FW asked for in 
+push-pull mode
+as pending txqs? Then we can dequeue and reorder them.And airtime weight 
+need
+to be tuned to make sure it won't cost too much time. After that, check 
+the txq
+FW wishes to fetch in txq_may_transmit.
 
-> And it can be extended for other FEM devices in future.
-> If OS doesn't recognize the name, it uses predefined default timing
-> settings.
->
-> > this should be a compatible string for the particular module instead?
-> > Then it could cover any differences, not just the FEM.
-> >
-> No, it is specific to FEM device.
+Is this way able to achieve fairness and line up with mac80211?
+Also, we may need to consider if FW supports in this way.
 
-You will be better off having either a specific compatible string or
-using VID/PID as this is a PCI device. Then you can handle other
-differences you may find between h/w versions without a DT change.
-
-> >>
-> >>  Example (to supply the calibration data alone):
-> >>
-> >> @@ -150,3 +151,24 @@ wifi@18000000 {
-> >>                         <0 141 0 /* CE11 */ >;
-> >>              vdd-0.8-cx-mx-supply = <&pm8998_l5>;
-> >>  };
-> >> +
-> >> +Example (to supply the external front end module name):
-> >> +
-> >> +In this example, the front end module is defined as a property of the
-> >> ath10k
-> >> +device node.
-> >
-> > Really need a whole new example for 1 property?
-> Will add this property in existing example.
->
-> >
-> >> +
-> >> +pci {
-> >> +    pcie@0 {
-> >> +            reg = <0 0 0 0 0>;
-> >> +            #interrupt-cells = <1>;
-> >> +            #size-cells = <2>;
-> >> +            #address-cells = <3>;
-> >> +            device_type = "pci";
-> >> +
-> >> +            ath10k@0,0 {
-> >
-> > wifi@0,0
-> Added in ath10k@0,0 to make consistent with existing property
-> "qcom,ath10k-calibration-data" below,
-> "
-
-I don't see how that matters.
-
-> pci {
->          pcie@0 {
->                  reg = <0 0 0 0 0>;
->                  #interrupt-cells = <1>;
->                  #size-cells = <2>;
->                  #address-cells = <3>;
->                  device_type = "pci";
->
->                  ath10k@0,0 {
->                          reg = <0 0 0 0 0>;
->                          device_type = "pci";
->                          qcom,ath10k-calibration-data = [ 01 02 03 ... ];
->                  };
->          };
-> };
-> "
->
-> If wifi@0,0 is preferable, then I will add new entry "wifi@0,0" and add
-> ext-fem-name into it.
-
-Node names are supposed to reflect the class of device, not the model.
-See the DT spec for a list.
-
->
-> >
-> >> +                    reg = <0 0 0 0 0>;
-> >> +                    device_type = "pci";
-
-Also, this is wrong. Only PCI bridges should have this property. dtc
-will give you a warning on this.
-
-> >> +                    ext-fem-name = "microsemi-lx5586";
-> >> +            };
-> >> +    };
-> >> +};
-> >> --
-> >> 1.9.1
-> >>
->
-> Thanks, Sorry for the delayed response,
-> Bhagavathi Perumal S.
+>> The only way to enforce mac80211 ordering in ath10k is to disable pull
+>> mode in firmware and always operates in push mode similar to ath9k.
+> 
+> And I assume that is not too likely to happen, or? What is the benefit
+> of pull mode at the firmware level?
+> 
+> -Toke
