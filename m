@@ -2,96 +2,230 @@ Return-Path: <SRS0=7415=NL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A86ECDE44
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 10:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A980DC0044C
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 10:14:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 646EF20685
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 10:07:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 646EF20685
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 3FD1220685
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 10:14:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3FD1220685
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728102AbeJaTEu (ORCPT
+        id S1728229AbeJaTL6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Oct 2018 15:04:50 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:54369 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727436AbeJaTEu (ORCPT
+        Wed, 31 Oct 2018 15:11:58 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:45528 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727980AbeJaTL6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Oct 2018 15:04:50 -0400
-Received: by mail-wm1-f65.google.com with SMTP id r63-v6so14511177wma.4
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2018 03:07:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=bRO/0d13ER7/2YMkRqrzcDc36HrN3S9hFjthSXWVooM=;
-        b=q1BHwypb7HnAZfuPLWTm0mPxjyqIvpERsMSMOTWdWw4iqN+2yh3oP8HdM3a77EO6US
-         aOrQVnmuBg9aXTT0+v9t5IWKN4Tn1lnuaYkUJLGLIshGYW6Kxko+t6JCIxixMEUxlgQu
-         bvg0uxp9RPMFLVLfA5clvtVVUSZL9+Xbm0ZRhvthNuqwiV2gVJmEXEiDf6azqpdxsQew
-         YzbbjXXJD7EF5mJL4L6HhtCjOr8i6xmO7TybfEdGDoYn+7uIybiCYTR1p+vxlGjQDrE/
-         A/RvDcIlKizp7/Iq68bppY9ox1C8qnHfH4CIa4BOLeiZbJH27twpNQR3R8asAGj5RJr0
-         3SmA==
-X-Gm-Message-State: AGRZ1gIrGjr75jsDlB2PsqDNpbuoynrvsO3y0fvHhhEo3qynMslen85e
-        tZ/lTU7wUJbAOZk1dboDAwk8Jw==
-X-Google-Smtp-Source: AJdET5fvpJAGlulHVDutFZvYMiwOrEKZQaUdZRGuqVlsapqYfadlMx3oWbzhYtmYUKWKhUhOrqaMow==
-X-Received: by 2002:a7b:c00a:: with SMTP id c10-v6mr1735564wmb.73.1540980441455;
-        Wed, 31 Oct 2018 03:07:21 -0700 (PDT)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id y195-v6sm19871376wme.22.2018.10.31.03.07.20
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 31 Oct 2018 03:07:21 -0700 (PDT)
-Date:   Wed, 31 Oct 2018 11:07:18 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt76x0: do not overwrite other MT_BBP(AGC, 8) fields
-Message-ID: <20181031100718.GC9564@localhost.localdomain>
-References: <1540971178-16407-1-git-send-email-sgruszka@redhat.com>
+        Wed, 31 Oct 2018 15:11:58 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID w9VAE2w6030319, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id w9VAE2w6030319
+        (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
+        Wed, 31 Oct 2018 18:14:02 +0800
+Received: from localhost.localdomain (172.21.68.143) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.408.0; Wed, 31 Oct 2018 18:14:01 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>, <sgruszka@redhat.com>
+CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <pkshih@realtek.com>, <tehuang@realtek.com>,
+        <johannes@sipsolutions.net>
+Subject: [RFC v5 00/13] rtw88: mac80211 driver for Realtek 802.11ac wireless network chips
+Date:   Wed, 31 Oct 2018 18:12:14 +0800
+Message-ID: <1540980747-9297-1-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1540971178-16407-1-git-send-email-sgruszka@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.143]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> MT_BBP(AGC, 8) register has values depend on band in
-> mt76x0_bbp_switch_tab, so we should not overwrite other fields
-> than MT_BBP_AGC_GAIN when setting gain.
-> 
-> This can fix performance issues when connecting to 2.4GHz AP.
-> 
-> Fixes: 4636a2544c3b ("mt76x0: phy: align channel gain logic to mt76x2 one")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> index ba98814ae47d..88dd0aa7e877 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-> @@ -690,10 +690,8 @@ static void mt76x0_phy_temp_sensor(struct mt76x02_dev *dev)
->  static void mt76x0_phy_set_gain_val(struct mt76x02_dev *dev)
->  {
->  	u8 gain = dev->cal.agc_gain_cur[0] - dev->cal.agc_gain_adjust;
-> -	u32 val = 0x122c << 16 | 0xf2;
->  
-> -	mt76_wr(dev, MT_BBP(AGC, 8),
-> -		val | FIELD_PREP(MT_BBP_AGC_GAIN, gain));
-> +	mt76_rmw_field(dev, MT_BBP(AGC, 8), MT_BBP_AGC_GAIN, gain);
->  
->  	if ((dev->mt76.chandef.chan->flags & IEEE80211_CHAN_RADAR) &&
->  	    !is_mt7630(dev))
-> -- 
-> 2.7.5
-> 
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Acked-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+This is a new mac80211 driver for Realtek 802.11ac wireless network chips.
+rtw88 supports 8822BE and 8822CE chips, and will be able to support
+multi-vif combinations in run-time.
+
+For now, only PCI bus is supported, but rtw88 was originally designed
+to optionally support three buses includes USB & SDIO. USB & SDIO modules
+will soon be supported by rtw88, with configurable core module to fit
+with different bus modules in the same time.
+
+For example, if we choose 8822BE and 8822CU, only PCI & USB modules will
+be selected, built, loaded into kernel. This is one of the major
+difference from rtlwifi, which can only support specific combinations.
+
+Another difference from rtlwifi is that rtw88 is designed to support
+the latest Realtek 802.11ac wireless network chips like 8822B and
+8822C series. Compared to the earlier chips supported by rtlwifi like
+the 802.11n 8192EE chipset or 802.11ac 8821AE/8812AE chips, newer ICs
+have different MAC & PHY settings, such as new multi-port feature for the
+MAC layer design and Jaguar2/Jaguar3 PHY layer IPs.
+
+Multi-Port feature is also supported under rtw88's software architecture.
+rtlwifi can only support one vif in the same time, most because of the
+hardware limitations for early chips, hence the original design of it
+also restricts the usage of multi-vif support, so latest chipset seems not
+take advantages from its new MAC engine.
+
+However, rtw88 can run multiple vifs concurrently by holding them on
+hardware ports provided by MAC engine, hence can easily start different
+roles on a single device.
+
+Based on the reasons mentioned before, we implemented rtw88. It had many
+authors, they are listed here alphabetically:
+
+Ping-Ke Shih <pkshih@realtek.com>
+Tzu-En Huang <tehuang@realtek.com>
+Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+
+v5
+
+ - make all strings terminated with a new line
+ - use request_firmware_nowait to not block if the driver
+   is built-in in the kernel
+ - code cleanup for h2c functions
+ - simplify vif and sta iterators
+ - apply correct regulatory settings
+ - error check for kmalloc and skb_alloc
+ - use check_hw_ready to achieve hw pollings
+
+v4
+
+ - remove vis_list and sta_list, use mac80211 iterator
+ - use kernel helpers such as bitmap, bcd2bin, lockdep
+ - move debugfs into wiphy->debugfsdir
+ - use spin_lock in interrupt handler
+ - remove unnecessary depends on lines in Kconfig
+ - make port config constant
+ - avoid watchdog timer spreading
+ - return -EOPNOTSUPP for PMF key error message suppression
+ - do not replace regd in wiphy for now
+ - use host- fix- endian transfer in linux/bitfield.h to
+   replace/get bits to/from card
+
+v3
+
+ - missing rcu list traverse for vif_list
+
+v2
+
+ - rename from rtwlan to rtw88
+ - remove lots of magic numbers
+ - add pci null entry for auto load on boot
+ - add rtwdev->mutex to protect against mac80211 callbacks
+ - add rcu lock protection for vif_list and sta_list
+ - refine bits & endian macros to use helper functions provided by kernel
+   instead of create new ones
+ - ieee80211_free_txskb for tx path dropped packets
+ - not register iface_combination since now only one vif is allowed
+ - some fixes suggested by Stanislaw
+
+
+Yan-Hsuan Chuang (13):
+  rtw88: main files
+  rtw88: core files
+  rtw88: hci files
+  rtw88: trx files
+  rtw88: mac files
+  rtw88: fw and efuse files
+  rtw88: phy files
+  rtw88: debug files
+  rtw88: chip files
+  rtw88: 8822B init table
+  rtw88: 8822C init table
+  rtw88: Kconfig & Makefile
+  rtw88: add support for Realtek 802.11ac wireless chips
+
+ MAINTAINERS                                        |     8 +
+ drivers/net/wireless/realtek/Kconfig               |     1 +
+ drivers/net/wireless/realtek/Makefile              |     1 +
+ drivers/net/wireless/realtek/rtw88/Kconfig         |    55 +
+ drivers/net/wireless/realtek/rtw88/Makefile        |    19 +
+ drivers/net/wireless/realtek/rtw88/debug.c         |   652 +
+ drivers/net/wireless/realtek/rtw88/debug.h         |    43 +
+ drivers/net/wireless/realtek/rtw88/efuse.c         |   150 +
+ drivers/net/wireless/realtek/rtw88/efuse.h         |    53 +
+ drivers/net/wireless/realtek/rtw88/fw.c            |   611 +
+ drivers/net/wireless/realtek/rtw88/fw.h            |   213 +
+ drivers/net/wireless/realtek/rtw88/hci.h           |   211 +
+ drivers/net/wireless/realtek/rtw88/mac.c           |  1010 +
+ drivers/net/wireless/realtek/rtw88/mac.h           |    35 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c      |   480 +
+ drivers/net/wireless/realtek/rtw88/main.c          |  1187 ++
+ drivers/net/wireless/realtek/rtw88/main.h          |  1119 +
+ drivers/net/wireless/realtek/rtw88/pci.c           |  1208 ++
+ drivers/net/wireless/realtek/rtw88/pci.h           |   229 +
+ drivers/net/wireless/realtek/rtw88/phy.c           |  1670 ++
+ drivers/net/wireless/realtek/rtw88/phy.h           |   125 +
+ drivers/net/wireless/realtek/rtw88/ps.c            |   165 +
+ drivers/net/wireless/realtek/rtw88/ps.h            |    20 +
+ drivers/net/wireless/realtek/rtw88/reg.h           |   411 +
+ drivers/net/wireless/realtek/rtw88/regd.c          |   391 +
+ drivers/net/wireless/realtek/rtw88/regd.h          |    67 +
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c      |  1590 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h      |   155 +
+ .../net/wireless/realtek/rtw88/rtw8822b_table.c    | 20783 +++++++++++++++++++
+ .../net/wireless/realtek/rtw88/rtw8822b_table.h    |    18 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c      |  1169 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h      |   171 +
+ .../net/wireless/realtek/rtw88/rtw8822c_table.c    |  4150 ++++
+ .../net/wireless/realtek/rtw88/rtw8822c_table.h    |    16 +
+ drivers/net/wireless/realtek/rtw88/rx.c            |   151 +
+ drivers/net/wireless/realtek/rtw88/rx.h            |    41 +
+ drivers/net/wireless/realtek/rtw88/sec.c           |   120 +
+ drivers/net/wireless/realtek/rtw88/sec.h           |    39 +
+ drivers/net/wireless/realtek/rtw88/tx.c            |   273 +
+ drivers/net/wireless/realtek/rtw88/tx.h            |    81 +
+ 40 files changed, 38891 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/Kconfig
+ create mode 100644 drivers/net/wireless/realtek/rtw88/Makefile
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/debug.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/efuse.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/fw.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/hci.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/mac80211.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/main.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/pci.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/pci.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/phy.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/ps.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/reg.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/regd.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822c_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rx.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sec.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/tx.h
+
+-- 
+2.7.4
+
