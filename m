@@ -2,76 +2,74 @@ Return-Path: <SRS0=7415=NL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F369C0044C
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 07:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A3FFC0044C
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 08:58:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EAF620840
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 07:33:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0EAF620840
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 56D1B20685
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 08:58:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 56D1B20685
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726201AbeJaQ37 (ORCPT
+        id S1727597AbeJaRzy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Oct 2018 12:29:59 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60268 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725955AbeJaQ37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Oct 2018 12:29:59 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CA6814E91C;
-        Wed, 31 Oct 2018 07:33:02 +0000 (UTC)
-Received: from localhost (ovpn-204-170.brq.redhat.com [10.40.204.170])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 89ABB1001914;
-        Wed, 31 Oct 2018 07:32:59 +0000 (UTC)
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x0: do not overwrite other MT_BBP(AGC, 8) fields
-Date:   Wed, 31 Oct 2018 08:32:58 +0100
-Message-Id: <1540971178-16407-1-git-send-email-sgruszka@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 31 Oct 2018 07:33:02 +0000 (UTC)
+        Wed, 31 Oct 2018 13:55:54 -0400
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23736 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727519AbeJaRzy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Oct 2018 13:55:54 -0400
+X-IronPort-AV: E=Sophos;i="5.54,447,1534802400"; 
+   d="scan'208";a="1418126"
+Received: from ironmsg01-ams.qualcomm.com ([10.251.56.2])
+  by alexa-out-ams-01.qualcomm.com with ESMTP; 31 Oct 2018 09:52:31 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9062"; a="6147926"
+Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
+  by ironmsg01-ams.qualcomm.com with ESMTP; 31 Oct 2018 09:52:30 +0100
+From:   Maya Erez <merez@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 06/16] wil6210: fix memory leak in wil_find_tx_bcast_2
+Date:   Wed, 31 Oct 2018 10:52:14 +0200
+Message-Id: <1540975944-30576-7-git-send-email-merez@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1540975944-30576-1-git-send-email-merez@codeaurora.org>
+References: <1540975944-30576-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-MT_BBP(AGC, 8) register has values depend on band in
-mt76x0_bbp_switch_tab, so we should not overwrite other fields
-than MT_BBP_AGC_GAIN when setting gain.
+From: Lior David <liord@codeaurora.org>
 
-This can fix performance issues when connecting to 2.4GHz AP.
+A successful call to wil_tx_ring takes skb reference so
+it will only be freed in wil_tx_complete. Consume the skb
+in wil_find_tx_bcast_2 to prevent memory leak.
 
-Fixes: 4636a2544c3b ("mt76x0: phy: align channel gain logic to mt76x2 one")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/phy.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index ba98814ae47d..88dd0aa7e877 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -690,10 +690,8 @@ static void mt76x0_phy_temp_sensor(struct mt76x02_dev *dev)
- static void mt76x0_phy_set_gain_val(struct mt76x02_dev *dev)
- {
- 	u8 gain = dev->cal.agc_gain_cur[0] - dev->cal.agc_gain_adjust;
--	u32 val = 0x122c << 16 | 0xf2;
- 
--	mt76_wr(dev, MT_BBP(AGC, 8),
--		val | FIELD_PREP(MT_BBP_AGC_GAIN, gain));
-+	mt76_rmw_field(dev, MT_BBP(AGC, 8), MT_BBP_AGC_GAIN, gain);
- 
- 	if ((dev->mt76.chandef.chan->flags & IEEE80211_CHAN_RADAR) &&
- 	    !is_mt7630(dev))
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index c592c8e..3e1c831 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1395,6 +1395,8 @@ static struct wil_ring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
+ 			wil_dbg_txrx(wil, "BCAST DUP -> ring %d\n", i);
+ 			wil_set_da_for_vring(wil, skb2, i);
+ 			wil_tx_ring(wil, vif, v2, skb2);
++			/* successful call to wil_tx_ring takes skb2 ref */
++			dev_kfree_skb_any(skb2);
+ 		} else {
+ 			wil_err(wil, "skb_copy failed\n");
+ 		}
 -- 
-2.7.5
+1.9.1
 
