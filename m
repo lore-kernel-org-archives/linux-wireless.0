@@ -2,74 +2,72 @@ Return-Path: <SRS0=7415=NL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC7DC0044C
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 13:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75305ECDE44
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 18:49:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC03E20664
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 13:45:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00B8D2080A
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Oct 2018 18:49:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="s16iHnTO"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AC03E20664
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CP+k9s+D"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 00B8D2080A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729350AbeJaWnt (ORCPT
+        id S1730720AbeKADsm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Oct 2018 18:43:49 -0400
-Received: from nbd.name ([46.4.11.11]:40964 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729228AbeJaWnt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Oct 2018 18:43:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=j7p3i8XL9W7SKv1gT6WbuMRK9sCK1YigiC06VM6Rf68=; b=s16iHnTODVLH4DdKvJ69Bh2yZf
-        lYA/5ZmTqiq4NUPzii6UaJ72SjuHpJt6P/hbQM1oDJIaxYjlIScOS6eKnCgBozeu2rtOAPznyEMzn
-        WlNRWS5Vr2OxCamQx3Wm/B/0Ko/OGkn/6bmLjLFwicW96GBjzrMr5TfBoQVqx/nHEBGo=;
-Subject: Re: [PATCH v2] mt76x0: run calibration after scanning
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-References: <1540991486-1948-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <82e9d0fd-b6ea-f514-2237-675cca8e42e6@nbd.name>
-Date:   Wed, 31 Oct 2018 14:45:42 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        Wed, 31 Oct 2018 23:48:42 -0400
+Received: from mail-ot1-f44.google.com ([209.85.210.44]:37456 "EHLO
+        mail-ot1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730228AbeKADsm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Oct 2018 23:48:42 -0400
+Received: by mail-ot1-f44.google.com with SMTP id o14so15548029oth.4
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Oct 2018 11:49:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=BRnO7/KWsMT5885w+goNh451ptW0c35zLwH5yNdoaew=;
+        b=CP+k9s+DN6odJR1ST7Xh/F6dQhbBK81DoSwQdsfynytgb8NZu6QdjnZOo0vlu7XeyO
+         I7nArUOLcGvgYnhiFqI6bVFgcVtr4hD7hbhvG4jxz1uMJCEktBE6F8KgmjzuCKODxp72
+         md7H27+X9CwJYp3fhsPNeyppdA/GxcbkCeW7GwVP9OOE3eHz8vzavdT/fQeUcbHiuJww
+         6h29Ef4wzhPbdQ3B2ade1W3lcwbMI0F2XUTP1+5REVquyzVfQwQQtBr3ZbcZ8GHdAU0B
+         Pq0jljue5c9Nx4dZ9/69fpw5y+ubW188P3rpymQKnj3HuBpP2FBrem9Z9xA/J3GNavAi
+         xb0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:to:cc:from:subject:message-id:date
+         :user-agent:mime-version:content-language:content-transfer-encoding;
+        bh=BRnO7/KWsMT5885w+goNh451ptW0c35zLwH5yNdoaew=;
+        b=fPYJWf4HdLoaKp4pVb5tKa9wHnC1Zv1gdykeh+6suavZY+whwi74rju7zj8+et1JUo
+         KcseAXw9FK0rzxbt6VzfA1tknUa7eEFWJmAUnp6r0mgoW26sdcbxlX+Q4LGjswdA6tyn
+         urnxn5eK5bohk4UDXKBT8tuIchNylC1QEW3JKMRc2hWZnOM4femJf7d62eQjNIO3GjFk
+         ortIdeBEBFekIfI32s/BEOImQgOUhgAm9CGGW2po68VhULCO+XFgZEYAvEMF+o/1V/wU
+         VddsMlzDdAlGT6vaG9TI4OXczG57UP8xR1K5QUzAxBkHEeFR5aIMCBkJLCav1aD5NrdY
+         1w0w==
+X-Gm-Message-State: AGRZ1gIsGjjqP91nRUt8JzgiwNJX3JY57/nwa+c/+2TOfETN1gA4b0eE
+        /p6VJYEsUFSN7YJPBWR5OLpl3Gzv
+X-Google-Smtp-Source: AJdET5d13XGYRvXBSjJ0OMhb2EP+HUo52zucFrnjc+BCqfZOmWd1+4bwmi4r+evPjkS3fXl1BYF00g==
+X-Received: by 2002:a9d:ed1:: with SMTP id 75mr2786407otj.137.1541011764764;
+        Wed, 31 Oct 2018 11:49:24 -0700 (PDT)
+Received: from [192.168.1.118] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id 71sm1541455ote.26.2018.10.31.11.49.23
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 31 Oct 2018 11:49:23 -0700 (PDT)
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Fix for memory leak in the wireless extensions layer
+Message-ID: <e0ce06aa-9a9a-d763-4b29-57e976dc1cc4@lwfinger.net>
+Date:   Wed, 31 Oct 2018 13:49:21 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-In-Reply-To: <1540991486-1948-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -77,43 +75,16 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-31 14:11, Stanislaw Gruszka wrote:
-> If we are associated and scanning is performed, sw_scan_complete callback
-> is done after we get back to operating channel, so we do not perform
-> queue cal work. Fix this queue cal work from sw_scan_complete().
-> 
-> We have to restore gain in MT_BBP(AGC, 8) register after scanning, as
-> it was multiple times modified by channel switch code. So queue cal work
-> without  any delay and reset dev->cal.low_gain to assure calibration
-> code will AGC gain value.
-> 
-> Note patch was not tested on mt76x2, but should work and be needed
-> fix as well.
-> 
-> Fixes: bbd10586f0df ("mt76x0: phy: do not run calibration during channel switch")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> v1 -> v2:
-> only queue cal work with 0 delay an reset dev->cal.low_gain 
-> 
->  drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> index 9f083008dbd4..747fd2c9ec45 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> @@ -553,6 +553,12 @@ void mt76x02_sw_scan_complete(struct ieee80211_hw *hw,
->  	clear_bit(MT76_SCANNING, &dev->mt76.state);
->  	if (mt76_is_mmio(dev))
->  		tasklet_enable(&dev->pre_tbtt_tasklet);
-> +
-> +	if (vif->bss_conf.assoc) {
-> +		/* Restore AGC gain and resume calibration after scanning. */
-> +		dev->cal.low_gain = -1;
-> +		ieee80211_queue_delayed_work(hw, &dev->cal_work, 0);
-> +	}
-I think checking vif->bss_conf.assoc here is not enough, since we might
-be using multiple interfaces (e.g. AP+STA)
+Greg,
 
-- Felix
+Is the fix for a memory leak in the wext compat layer queued for stable? It is 
+in kernel:HEAD as commit 848e616e66d4592fe9afc40743d3504deb7632b4 ("cfg80211: 
+fix wext-compat memory leak")
+
+I just receiv3ed a complaint about a leak for a system that is running Ubuntu's 
+kernel 4.19.
+
+Unfortunately, this commit has a "fixes" line, but not a Cc for Stable.
+
+Larry
+
