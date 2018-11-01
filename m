@@ -2,344 +2,102 @@ Return-Path: <SRS0=HAyh=NM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2131BC0044C
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Nov 2018 10:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15809C6786F
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Nov 2018 15:29:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA72C205F4
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Nov 2018 10:04:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA72C205F4
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lemonage.de
+	by mail.kernel.org (Postfix) with ESMTP id CF47C2081B
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Nov 2018 15:29:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BCsbeIHK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CF47C2081B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728056AbeKATGJ (ORCPT
+        id S1728987AbeKBAdM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 1 Nov 2018 15:06:09 -0400
-Received: from smtp3-1.goneo.de ([85.220.129.38]:59255 "EHLO smtp3-1.goneo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727875AbeKATGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Nov 2018 15:06:08 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp3.goneo.de (Postfix) with ESMTP id 22A5823F020;
-        Thu,  1 Nov 2018 11:03:48 +0100 (CET)
-X-Virus-Scanned: by goneo
-Received: from smtp3.goneo.de ([127.0.0.1])
-        by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id dKwWfsCqXITZ; Thu,  1 Nov 2018 11:03:46 +0100 (CET)
-Received: from lem-wkst-02.lemonage.de. (hq.lemonage.de [87.138.178.34])
-        by smtp3.goneo.de (Postfix) with ESMTPA id 7E49623F3BB;
-        Thu,  1 Nov 2018 11:03:46 +0100 (CET)
-From:   Lars Poeschel <poeschel@lemonage.de>
-To:     devicetree@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-        Kees Cook <keescook@chromium.org>,
-        Lars Poeschel <poeschel@lemonage.de>,
-        linux-wireless@vger.kernel.org (open list:NFC SUBSYSTEM),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 5/6] nfc: pn533: Add autopoll capability
-Date:   Thu,  1 Nov 2018 11:02:13 +0100
-Message-Id: <20181101100216.613-5-poeschel@lemonage.de>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181101100216.613-1-poeschel@lemonage.de>
-References: <20181101100216.613-1-poeschel@lemonage.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Thu, 1 Nov 2018 20:33:12 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:38337 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728298AbeKBAdM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Nov 2018 20:33:12 -0400
+Received: by mail-pf1-f193.google.com with SMTP id b11-v6so9507977pfi.5;
+        Thu, 01 Nov 2018 08:29:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=b2PzhwDdAp0pEpUPsO0H72CNFryAo9nWwGPZaOICtvI=;
+        b=BCsbeIHK1ujJ16Eymh4835mLlsPQ3ij5lrb4sr/dgbIR5WtQGP0qojnzJr+TpL9nTm
+         gMQU47Qjwa5BLPS7TuHdEgtGnzTk4ppxxjpKTtIYPJ30aOiwXqi51eCIxIz+FEsO6Nrd
+         qR/y1oGQ1ITaFEymhmLTxELTr4AOfN0YCP7/QWGcdwhTQiz6G4STZXsX2cqOBpn5sVmD
+         czZ3X4PT/APpAzyrhA2vghmK8eZeF6S7qPIZJO+IbR7JgW4eS8s9IFN7/RW0PP6qZsbs
+         BXyABRdXfRlHbT3LipyBU7gm95DSQ7ftMKySeOIktZZ/FAY4O3N99tuude69vEK0oeMJ
+         o39w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=b2PzhwDdAp0pEpUPsO0H72CNFryAo9nWwGPZaOICtvI=;
+        b=mY0QZvvtEMlZcSQLFYbE53R5Qk1dt7u8EbSy8o0HC4s4M8vfiXrhBCLztmiUfsb09x
+         MSnzKSkq7RwmlAAmcmBzSqyFXO9BNHUeTLw1KIsWkftGR8QVNC8Z+ZZdQP1wjTnQRZGG
+         w0Mpwfmpb7gTAor/HhX/IbHD8zZXS6SphjbkQdrmcf/FkZapJVkoqlxYutHI1v7m8xKv
+         J4GnWyhyo291oK08U5KzgeafqnSN1/QCXjIIsKHRhy26RMgq0MrKRxCErPv4lSJxUNUU
+         fw9M77+yNjMnp09JG195tuZ0Us4swIbSn+92yVdm8Tb/dWSD6zkpLDrXlnQnYbfGVLyt
+         5ayA==
+X-Gm-Message-State: AGRZ1gLMCGvDGePvyIzjrabTd8OiSPd0BUQmR8bfwyJXo85f4dtk3LXW
+        k3lVCpPiWm5et9a72/YUcSI=
+X-Google-Smtp-Source: AJdET5d4nWVVtEC2MzpYog8M16+VSET60ff6OVihh9d63iwSKyHQD+oJ+rxmH/MpjTUSA1x8/X7JgA==
+X-Received: by 2002:a65:580d:: with SMTP id g13-v6mr7059331pgr.370.1541086185410;
+        Thu, 01 Nov 2018 08:29:45 -0700 (PDT)
+Received: from localhost (68.168.130.77.16clouds.com. [68.168.130.77])
+        by smtp.gmail.com with ESMTPSA id b29-v6sm57412054pfj.183.2018.11.01.08.29.44
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 01 Nov 2018 08:29:44 -0700 (PDT)
+From:   Yangtao Li <tiny.windzz@gmail.com>
+To:     kvalo@codeaurora.org, davem@davemloft.net
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yangtao Li <tiny.windzz@gmail.com>
+Subject: [PATCH] ath10k: fix some typo
+Date:   Thu,  1 Nov 2018 11:29:32 -0400
+Message-Id: <20181101152932.22684-1-tiny.windzz@gmail.com>
+X-Mailer: git-send-email 2.17.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-pn532 devices support an autopoll command, that lets the chip
-automatically poll for selected nfc technologies instead of manually
-looping through every single nfc technology the user is interested in.
-This is faster and less cpu and bus intensive than manually polling.
-This adds this autopoll capability to the pn533 driver.
-
-Signed-off-by: Lars Poeschel <poeschel@lemonage.de>
+Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
 ---
- drivers/nfc/pn533/pn533.c | 193 +++++++++++++++++++++++++++++++++++++-
- drivers/nfc/pn533/pn533.h |  10 +-
- 2 files changed, 197 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/wow.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index f0c541152777..8c21ee72832f 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -197,6 +197,32 @@ struct pn533_cmd_jump_dep_response {
- 	u8 gt[];
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
+index a6b179f88d36..e834c25a9330 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.c
++++ b/drivers/net/wireless/ath/ath10k/wow.c
+@@ -135,7 +135,7 @@ static void ath10k_wow_convert_8023_to_80211
+ 	       &old_hdr_mask->h_proto,
+ 	       sizeof(old_hdr_mask->h_proto));
  
-+struct pn532_autopoll_resp {
-+	u8 type;
-+	u8 ln;
-+	u8 tg;
-+	u8 tgdata[];
-+} __packed;
-+
-+/* PN532_CMD_IN_AUTOPOLL */
-+#define PN532_AUTOPOLL_POLLNR_INFINITE	0xff
-+#define PN532_AUTOPOLL_PERIOD		0x03 /* in units of 150 ms */
-+
-+#define PN532_AUTOPOLL_TYPE_GENERIC_106		0x00
-+#define PN532_AUTOPOLL_TYPE_GENERIC_212		0x01
-+#define PN532_AUTOPOLL_TYPE_GENERIC_424		0x02
-+#define PN532_AUTOPOLL_TYPE_JEWEL		0x04
-+#define PN532_AUTOPOLL_TYPE_MIFARE		0x10
-+#define PN532_AUTOPOLL_TYPE_FELICA212		0x11
-+#define PN532_AUTOPOLL_TYPE_FELICA424		0x12
-+#define PN532_AUTOPOLL_TYPE_ISOA		0x20
-+#define PN532_AUTOPOLL_TYPE_ISOB		0x23
-+#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_106	0x40
-+#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_212	0x41
-+#define PN532_AUTOPOLL_TYPE_DEP_PASSIVE_424	0x42
-+#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_106	0x80
-+#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_212	0x81
-+#define PN532_AUTOPOLL_TYPE_DEP_ACTIVE_424	0x82
+-	/* Caculate new pkt_offset */
++	/* Calculate new pkt_offset */
+ 	if (old->pkt_offset < ETH_ALEN)
+ 		new->pkt_offset = old->pkt_offset +
+ 			offsetof(struct ieee80211_hdr_3addr, addr1);
+@@ -146,7 +146,7 @@ static void ath10k_wow_convert_8023_to_80211
+ 	else
+ 		new->pkt_offset = old->pkt_offset + hdr_len + rfc_len - ETH_HLEN;
  
- /* PN533_TG_INIT_AS_TARGET */
- #define PN533_INIT_TARGET_PASSIVE 0x1
-@@ -1401,6 +1427,101 @@ static int pn533_poll_dep(struct nfc_dev *nfc_dev)
- 	return rc;
- }
- 
-+static int pn533_autopoll_complete(struct pn533 *dev, void *arg,
-+			       struct sk_buff *resp)
-+{
-+	u8 nbtg;
-+	int rc;
-+	struct pn532_autopoll_resp *apr;
-+	struct nfc_target nfc_tgt;
-+
-+	if (IS_ERR(resp)) {
-+		rc = PTR_ERR(resp);
-+
-+		nfc_err(dev->dev, "%s  autopoll complete error %d\n",
-+			__func__, rc);
-+
-+		if (rc == -ENOENT) {
-+			if (dev->poll_mod_count != 0)
-+				return rc;
-+			goto stop_poll;
-+		} else if (rc < 0) {
-+			nfc_err(dev->dev,
-+				"Error %d when running autopoll\n", rc);
-+			goto stop_poll;
-+		}
-+	}
-+
-+	nbtg = resp->data[0];
-+	if ((nbtg > 2) || (nbtg <= 0))
-+		return -EAGAIN;
-+
-+	apr = (struct pn532_autopoll_resp *)&resp->data[1];
-+	while (nbtg--) {
-+		memset(&nfc_tgt, 0, sizeof(struct nfc_target));
-+		switch (apr->type) {
-+		case PN532_AUTOPOLL_TYPE_ISOA:
-+			dev_dbg(dev->dev, "ISOA");
-+			rc = pn533_target_found_type_a(&nfc_tgt, apr->tgdata,
-+						       apr->ln - 1);
-+			break;
-+		case PN532_AUTOPOLL_TYPE_FELICA212:
-+		case PN532_AUTOPOLL_TYPE_FELICA424:
-+			dev_dbg(dev->dev, "FELICA");
-+			rc = pn533_target_found_felica(&nfc_tgt, apr->tgdata,
-+						       apr->ln - 1);
-+			break;
-+		case PN532_AUTOPOLL_TYPE_JEWEL:
-+			dev_dbg(dev->dev, "JEWEL");
-+			rc = pn533_target_found_jewel(&nfc_tgt, apr->tgdata,
-+						      apr->ln - 1);
-+			break;
-+		case PN532_AUTOPOLL_TYPE_ISOB:
-+			dev_dbg(dev->dev, "ISOB");
-+			rc = pn533_target_found_type_b(&nfc_tgt, apr->tgdata,
-+						       apr->ln - 1);
-+			break;
-+		case PN532_AUTOPOLL_TYPE_MIFARE:
-+			dev_dbg(dev->dev, "Mifare");
-+			rc = pn533_target_found_type_a(&nfc_tgt, apr->tgdata,
-+						       apr->ln - 1);
-+			break;
-+		default:
-+			nfc_err(dev->dev,
-+				    "Unknown current poll modulation");
-+			rc = -EPROTO;
-+		}
-+
-+		if (rc)
-+			goto done;
-+
-+		if (!(nfc_tgt.supported_protocols & dev->poll_protocols)) {
-+			nfc_err(dev->dev,
-+				    "The Tg found doesn't have the desired protocol");
-+			rc = -EAGAIN;
-+			goto done;
-+		}
-+
-+		dev->tgt_available_prots = nfc_tgt.supported_protocols;
-+		apr = (struct pn532_autopoll_resp *)
-+			(apr->tgdata + (apr->ln - 1));
-+	}
-+
-+	pn533_poll_reset_mod_list(dev);
-+	nfc_targets_found(dev->nfc_dev, &nfc_tgt, 1);
-+
-+done:
-+	dev_kfree_skb(resp);
-+	return rc;
-+
-+stop_poll:
-+	nfc_err(dev->dev, "autopoll operation has been stopped\n");
-+
-+	pn533_poll_reset_mod_list(dev);
-+	dev->poll_protocols = 0;
-+	return rc;
-+}
-+
- static int pn533_poll_complete(struct pn533 *dev, void *arg,
- 			       struct sk_buff *resp)
- {
-@@ -1546,6 +1667,7 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
- 	struct pn533_poll_modulations *cur_mod;
- 	u8 rand_mod;
- 	int rc;
-+	struct sk_buff *skb;
- 
- 	dev_dbg(dev->dev,
- 		"%s: im protocols 0x%x tm protocols 0x%x\n",
-@@ -1569,9 +1691,73 @@ static int pn533_start_poll(struct nfc_dev *nfc_dev,
- 			tm_protocols = 0;
- 	}
- 
--	pn533_poll_create_mod_list(dev, im_protocols, tm_protocols);
- 	dev->poll_protocols = im_protocols;
- 	dev->listen_protocols = tm_protocols;
-+	if (dev->device_type == PN533_DEVICE_PN532_AUTOPOLL) {
-+		skb = pn533_alloc_skb(dev, 4 + 6);
-+		if (!skb)
-+			return -ENOMEM;
-+
-+		*((u8 *)skb_put(skb, sizeof(u8))) =
-+			PN532_AUTOPOLL_POLLNR_INFINITE;
-+		*((u8 *)skb_put(skb, sizeof(u8))) = PN532_AUTOPOLL_PERIOD;
-+
-+		if ((im_protocols & NFC_PROTO_MIFARE_MASK) &&
-+				(im_protocols & NFC_PROTO_ISO14443_MASK) &&
-+				(im_protocols & NFC_PROTO_NFC_DEP_MASK))
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_GENERIC_106;
-+		else {
-+			if (im_protocols & NFC_PROTO_MIFARE_MASK)
-+				*((u8 *)skb_put(skb, sizeof(u8))) =
-+					PN532_AUTOPOLL_TYPE_MIFARE;
-+
-+			if (im_protocols & NFC_PROTO_ISO14443_MASK)
-+				*((u8 *)skb_put(skb, sizeof(u8))) =
-+					PN532_AUTOPOLL_TYPE_ISOA;
-+
-+			if (im_protocols & NFC_PROTO_NFC_DEP_MASK) {
-+				*((u8 *)skb_put(skb, sizeof(u8))) =
-+					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_106;
-+				*((u8 *)skb_put(skb, sizeof(u8))) =
-+					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_212;
-+				*((u8 *)skb_put(skb, sizeof(u8))) =
-+					PN532_AUTOPOLL_TYPE_DEP_PASSIVE_424;
-+			}
-+		}
-+
-+		if (im_protocols & NFC_PROTO_FELICA_MASK ||
-+				im_protocols & NFC_PROTO_NFC_DEP_MASK) {
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_FELICA212;
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_FELICA424;
-+		}
-+
-+		if (im_protocols & NFC_PROTO_JEWEL_MASK)
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_JEWEL;
-+
-+		if (im_protocols & NFC_PROTO_ISO14443_B_MASK)
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_ISOB;
-+
-+		if (tm_protocols)
-+			*((u8 *)skb_put(skb, sizeof(u8))) =
-+				PN532_AUTOPOLL_TYPE_DEP_ACTIVE_106;
-+
-+		rc = pn533_send_cmd_async(dev, PN533_CMD_IN_AUTOPOLL, skb,
-+				pn533_autopoll_complete, NULL);
-+
-+		if (rc < 0)
-+			dev_kfree_skb(skb);
-+		else
-+			dev->poll_mod_count++;
-+
-+		return rc;
-+	}
-+
-+	pn533_poll_create_mod_list(dev, im_protocols, tm_protocols);
- 
- 	/* Do not always start polling from the same modulation */
- 	get_random_bytes(&rand_mod, sizeof(rand_mod));
-@@ -2471,7 +2657,8 @@ static int pn533_dev_up(struct nfc_dev *nfc_dev)
- 	if (dev->phy_ops)
- 		dev->phy_ops->dev_up(dev);
- 
--	if (dev->device_type == PN533_DEVICE_PN532) {
-+	if ((dev->device_type == PN533_DEVICE_PN532) ||
-+		(dev->device_type == PN533_DEVICE_PN532_AUTOPOLL)) {
- 		int rc = pn532_sam_configuration(nfc_dev);
- 
- 		if (rc)
-@@ -2518,6 +2705,7 @@ static int pn533_setup(struct pn533 *dev)
- 	case PN533_DEVICE_PASORI:
- 	case PN533_DEVICE_ACR122U:
- 	case PN533_DEVICE_PN532:
-+	case PN533_DEVICE_PN532_AUTOPOLL:
- 		max_retries.mx_rty_atr = 0x2;
- 		max_retries.mx_rty_psl = 0x1;
- 		max_retries.mx_rty_passive_act =
-@@ -2554,6 +2742,7 @@ static int pn533_setup(struct pn533 *dev)
- 	switch (dev->device_type) {
- 	case PN533_DEVICE_STD:
- 	case PN533_DEVICE_PN532:
-+	case PN533_DEVICE_PN532_AUTOPOLL:
- 		break;
- 
- 	case PN533_DEVICE_PASORI:
-diff --git a/drivers/nfc/pn533/pn533.h b/drivers/nfc/pn533/pn533.h
-index d1a0543f66a8..e0636263911d 100644
---- a/drivers/nfc/pn533/pn533.h
-+++ b/drivers/nfc/pn533/pn533.h
-@@ -18,10 +18,11 @@
-  * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
--#define PN533_DEVICE_STD     0x1
--#define PN533_DEVICE_PASORI  0x2
--#define PN533_DEVICE_ACR122U 0x3
--#define PN533_DEVICE_PN532   0x4
-+#define PN533_DEVICE_STD		0x1
-+#define PN533_DEVICE_PASORI		0x2
-+#define PN533_DEVICE_ACR122U		0x3
-+#define PN533_DEVICE_PN532		0x4
-+#define PN533_DEVICE_PN532_AUTOPOLL	0x5
- 
- #define PN533_ALL_PROTOCOLS (NFC_PROTO_JEWEL_MASK | NFC_PROTO_MIFARE_MASK |\
- 			     NFC_PROTO_FELICA_MASK | NFC_PROTO_ISO14443_MASK |\
-@@ -87,6 +88,7 @@
- #define PN533_CMD_IN_ATR 0x50
- #define PN533_CMD_IN_RELEASE 0x52
- #define PN533_CMD_IN_JUMP_FOR_DEP 0x56
-+#define PN533_CMD_IN_AUTOPOLL 0x60
- 
- #define PN533_CMD_TG_INIT_AS_TARGET 0x8c
- #define PN533_CMD_TG_GET_DATA 0x86
+-	/* Caculate new hdr end offset */
++	/* Calculate new hdr end offset */
+ 	if (total_len > ETH_HLEN)
+ 		hdr_80211_end_offset = hdr_len + rfc_len;
+ 	else if (total_len > offsetof(struct ethhdr, h_proto))
 -- 
-2.19.1
+2.17.0
 
