@@ -6,118 +6,86 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F55C32789
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 11:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E11FC32789
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 11:08:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A32A20657
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 11:08:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9A32A20657
+	by mail.kernel.org (Postfix) with ESMTP id 4057C20657
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 11:08:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4057C20657
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727369AbeKBUPW (ORCPT
+        id S1727412AbeKBUPZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Nov 2018 16:15:22 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:34086 "EHLO
+        Fri, 2 Nov 2018 16:15:25 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:34092 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726528AbeKBUPV (ORCPT
+        with ESMTP id S1726528AbeKBUPZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Nov 2018 16:15:21 -0400
+        Fri, 2 Nov 2018 16:15:25 -0400
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gIXJJ-0007MW-Jl; Fri, 02 Nov 2018 13:08:18 +0200
+        id 1gIXJH-0007MW-8a; Fri, 02 Nov 2018 13:08:15 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Ihab Zhaika <ihab.zhaika@intel.com>, stable@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri,  2 Nov 2018 13:07:59 +0200
-Message-Id: <20181102110800.29817-15-luca@coelho.fi>
+Date:   Fri,  2 Nov 2018 13:07:56 +0200
+Message-Id: <20181102110800.29817-12-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181102110800.29817-1-luca@coelho.fi>
 References: <20181102110800.29817-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/15] iwlwifi: add new cards for 9560, 9462, 9461 and killer series
+Subject: [PATCH 11/15] iwlwifi: mvm: Send non offchannel traffic via AP sta
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ihab Zhaika <ihab.zhaika@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-add few PCI ID'S for 9560, 9462, 9461 and killer series.
+TDLS discovery response frame is a unicast direct frame to the peer.
+Since we don't have a STA for this peer, this frame goes through
+iwl_tx_skb_non_sta(). As the result aux_sta and some completely
+arbitrary queue would be selected for this frame, resulting in a queue
+hang.  Fix that by sending such frames through AP sta instead.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 50 +++++++++++++++++++
- 1 file changed, 50 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 9e015212c2c0..8d4711590dfc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -513,6 +513,56 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x9074, iwl8265_2ac_cfg)},
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5bdc638fc999..55b965629e33 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -809,6 +809,21 @@ static void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
+ 	    !ieee80211_is_bufferable_mmpdu(hdr->frame_control))
+ 		sta = NULL;
  
- /* 9000 Series */
-+	{IWL_PCI_DEVICE(0x02F0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0060, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x1551, iwl9560_killer_s_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x1552, iwl9560_killer_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x2030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x2034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x4234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x02F0, 0x42A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0038, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x003C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0060, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0064, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x00A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x00A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0230, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0238, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x023C, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0260, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x0264, iwl9461_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x02A0, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x02A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x1551, iwl9560_killer_s_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x1552, iwl9560_killer_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x2030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x2034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x4030, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x4034, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x4234, iwl9560_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x06F0, 0x42A4, iwl9462_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0014, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0018, iwl9260_2ac_cfg)},
++	/* If there is no sta, and it's not offchannel - send through AP */
++	if (info->control.vif->type == NL80211_IFTYPE_STATION &&
++	    info->hw_queue != IWL_MVM_OFFCHANNEL_QUEUE && !sta) {
++		struct iwl_mvm_vif *mvmvif =
++			iwl_mvm_vif_from_mac80211(info->control.vif);
++		u8 ap_sta_id = READ_ONCE(mvmvif->ap_sta_id);
++
++		if (ap_sta_id < IWL_MVM_STATION_COUNT) {
++			/* mac80211 holds rcu read lock */
++			sta = rcu_dereference(mvm->fw_id_to_mac_id[ap_sta_id]);
++			if (IS_ERR_OR_NULL(sta))
++				goto drop;
++		}
++	}
++
+ 	if (sta) {
+ 		if (iwl_mvm_defer_tx(mvm, sta, skb))
+ 			return;
 -- 
 2.19.1
 
