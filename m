@@ -2,107 +2,110 @@ Return-Path: <SRS0=E2P1=NN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF58C65C22
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 16:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D392AC32789
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 16:19:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3E5020831
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 16:07:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="QCperiG8"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C3E5020831
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	by mail.kernel.org (Postfix) with ESMTP id 9C20B2081B
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Nov 2018 16:19:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9C20B2081B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=arndb.de
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728025AbeKCBPK (ORCPT
+        id S1727846AbeKCB0j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Nov 2018 21:15:10 -0400
-Received: from nbd.name ([46.4.11.11]:58750 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728014AbeKCBPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Nov 2018 21:15:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=3wu7t8oQZ5b6DlOeK09uPTRpbykcmQiEJ/naTy8H5gg=; b=QCperiG8l3dXaemhjXPYMDUMj0
-        jOFxEPD3oPXchiu2N98uytAUCpsSic/TQD5q0iscbOOKKqoRziVJkx+3wG123ds3RrivanY/nxVkQ
-        8YUiDiHeq3tzeR/BibOd8mKBQ45D2LH4wombto4t4+MTOD8W+mD3r+W7dcrj0GYkk4sU=;
-Subject: Re: [PATCH 2/4] mt76: remove wait argument from mt76x02_mcu_calibrate
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-References: <1540555229-28582-1-git-send-email-sgruszka@redhat.com>
- <1540555229-28582-3-git-send-email-sgruszka@redhat.com>
- <962e3461-a7cc-14df-bae5-0de2201e90b3@nbd.name>
- <20181102125613.GA5247@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <6d052575-fdf8-0233-da9c-4a5fd797c94e@nbd.name>
-Date:   Fri, 2 Nov 2018 17:07:32 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20181102125613.GA5247@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Fri, 2 Nov 2018 21:26:39 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:34937 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbeKCB0j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Nov 2018 21:26:39 -0400
+Received: from wuerfel.lan ([109.192.41.194]) by mrelayeu.kundenserver.de
+ (mreue009 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1Mt6wz-1fPxAL0Dlp-00tVHY; Fri, 02 Nov 2018 17:18:36 +0100
+Received: from wuerfel.lan ([109.192.41.194]) by mrelayeu.kundenserver.de
+ (mreue009 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1Mt6wz-1fPxAL0Dlp-00tVHY; Fri, 02 Nov 2018 17:18:36 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Rakesh Pillai <pillair@codeaurora.org>,
+        Anilkumar Kolli <akolli@codeaurora.org>,
+        Balaji Pothunoori <bpothuno@codeaurora.org>,
+        Yingying Tang <yintang@qti.qualcomm.com>,
+        Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: avoid -Wmaybe-uninitialized warning
+Date:   Fri,  2 Nov 2018 17:17:19 +0100
+Message-Id: <20181102161833.2956376-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.18.0
+X-Provags-ID: V03:K1:Q9JgcmppWO9yqO7kbS8UMQNFWZHdXHVgc53eT2yOWLmMEalFhd1
+ +ckutaHxDinzSaPgjzF5OdRyOxxHzv61eflsGfMsTGLNQvwNNNuKi7mIrUcMjBeRXgrrbNV
+ O0pYcFN9ZsgtYGsABV+3MZJceKtPzTFcNXT2dBYiAD5MbEkGnDtPj6W8SEFT/uqCcRAEJp2
+ IvsVdJcuEjflOiuqVXKrw==
+X-UI-Out-Filterresults: notjunk:1;V01:K0:rjgWZt7H4m0=:7PUscBi6x4yMQlBzhWV27+
+ FKg9BrL3fkVweEqhZ1NA+HOTRaEcMWI9xGi1PqcP0LewGfVPtsdzBVa4cVjIhmW7rkq3t/deH
+ 5lspnsQXHLkfo13aSLjMLAdubShFhxFAWPXKHo+pOv9C4TyyAE8mKkhI5CUjKqAyp4wCV5GA+
+ QY844YC8bIGpmjUrH9ZL0pdNxAmEC/V71icz2Z/rU/fCNCUK4mU1LxZqvDXGlovI8+yWyI4AF
+ 9FiBhVyrcdAJQL/oW/UBAznSistC7xRnj/Zu3WCs5rGXI791pjgYodtU2nE33W+th8L1Hb/z7
+ QQtPYq+NAkHcSlG0n/Q6jmFLg964+Lhnba63tgdSYk3BOyDQWj4lG98dEfOzPOPg3gEdBOja2
+ VVNir98BP9gAvI67xEpp/nmEyP8z75MThhG/0dXWSqd9bhiTD2pvBpEtV5ElKwVvh1OGukcZB
+ CwygaP0IaygQn4//cXdAM/15I8Ymcv+K1ser07JnafyBbHem9hZ0PdNZw033yTycJF+9Ew3R1
+ ZudBuZiSWgHacGqKD71J+V13JQSXqvNOi6eahYFqezhoAwMXpAapxbvRhxfy5bsTbz+Atn8cc
+ 08AgKkdF9/sZDZcnE+vAnXWKhp43HdOXiWwix4DFrr+7Q/zPYBuAicloG58UEIQcxivpoM4Y+
+ WnvWPO82Y88EhscwfWypcpi7mFpg86GaPFNq+lRDH3b77wrcBVGrKNVyxoeIZoAqcyfc=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-11-02 13:56, Stanislaw Gruszka wrote:
-> On Thu, Nov 01, 2018 at 06:29:01PM +0100, Felix Fietkau wrote:
->> On 2018-10-26 14:00, Stanislaw Gruszka wrote:
->> > We always wait for CMD_CALIBRATION_OP mcu message, but wait argument is used
->> > for do additioanl MT_MCU_COM_REG0 register operations, which are needed
->> > for MMIO devices and we can use mt76_is_mmio() check instead of wait argument.
->> > 
->> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> With this commit, I hit the WARN_ON on polling the MT_MCU_COM_REG0
->> register on mt76x0e. It seems to me that this register polling should be
->> moved out of mt76x02 and into a mt76x2 wrapper function.
-> 
-> I think it would be better to just do mt76x2e check like this:
-> 
->         bool is_mt76x2e = mt76_is_mmio(dev) && is_mt76x2(dev);
-> 
->         if (is_mt76x2e)
->                 mt76_rmw(dev, MT_MCU_COM_REG0, BIT(31), 0);
-> 
-> Then we will not have sparate calibration functions for mt76x2e and
-> mt76x2u, so code could be easier shared between those.
-My suggestion would have been making a wrapper function that checks for
-mt76_is_mmio(dev) and gets put into mt76x2-common. What you're proposing
-is fine with me as well, I guess it's a matter of preference.
+In some configurations the inlining in gcc is suboptimal, causing
+a false-positive warning:
 
-- Felix
+drivers/net/wireless/ath/ath10k/mac.c: In function 'ath10k_mac_init_rd':
+drivers/net/wireless/ath/ath10k/mac.c:8374:39: error: 'rd' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+  ar->ath_common.regulatory.current_rd = rd;
+
+If we initialize the output of ath10k_mac_get_wrdd_regulatory()
+before returning, this problem goes away.
+
+Fixes: 209b2a68de76 ("ath10k: add platform regulatory domain support")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a1c2801ded10..0d5fde28ee44 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8321,6 +8321,8 @@ static int ath10k_mac_get_wrdd_regulatory(struct ath10k *ar, u16 *rd)
+ 	u32 alpha2_code;
+ 	char alpha2[3];
+ 
++	*rd = ar->hw_eeprom_rd;
++
+ 	root_handle = ACPI_HANDLE(&pdev->dev);
+ 	if (!root_handle)
+ 		return -EOPNOTSUPP;
+@@ -8365,11 +8367,9 @@ static int ath10k_mac_init_rd(struct ath10k *ar)
+ 	u16 rd;
+ 
+ 	ret = ath10k_mac_get_wrdd_regulatory(ar, &rd);
+-	if (ret) {
++	if (ret)
+ 		ath10k_dbg(ar, ATH10K_DBG_BOOT,
+ 			   "fallback to eeprom programmed regulatory settings\n");
+-		rd = ar->hw_eeprom_rd;
+-	}
+ 
+ 	ar->ath_common.regulatory.current_rd = rd;
+ 	return 0;
+-- 
+2.18.0
+
