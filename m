@@ -1,111 +1,74 @@
-Return-Path: <SRS0=FZ/1=NO=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=r36G=NP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF8EECDE44
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Nov 2018 20:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A52E3C32789
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Nov 2018 04:29:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42CA020843
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Nov 2018 20:12:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IwEf7qnn"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 42CA020843
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 40B642081D
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Nov 2018 04:29:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 40B642081D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=perches.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726697AbeKDFYR (ORCPT
+        id S1729068AbeKDNmp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Nov 2018 01:24:17 -0400
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:44627 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbeKDFYR (ORCPT
+        Sun, 4 Nov 2018 08:42:45 -0500
+Received: from smtprelay0053.hostedemail.com ([216.40.44.53]:49144 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728984AbeKDNmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Nov 2018 01:24:17 -0400
-Received: by mail-lf1-f65.google.com with SMTP id m18-v6so3507925lfl.11;
-        Sat, 03 Nov 2018 13:11:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2pK44snJ4RRuPLwcuSjN0g5Q+pXa97n44tuvBH2HRyg=;
-        b=IwEf7qnnHj75hwk5DSde5xn8gebmL4E/DgDilokZjyujxlIspsW8ILMH8dDD46wU6M
-         Oa6BerUtbPHCSRkCMW9SIKqOrQXdjQG0d+Q1pf8jHPQskHrrevsmEy/rYR2LWQxOOm6m
-         OcmOpjYApBFEdH5ynnaE9g2yJevJxt96zoomATCf3Lz+6wQny/a0qnCNEuMKPPLuUpxr
-         y2KudQqLH20gwjYb/4e8UXX5smuaa48wOOE6Jn/rcvg8SwAH/mLXqj6YyXFy/OQv0FtR
-         Lgd6snpRRLQfa3iX1UmahTarHLtpDRKwAeO0AYBLD2ghXM9wsHyVRNnPoAG/prCW5fOv
-         SLtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2pK44snJ4RRuPLwcuSjN0g5Q+pXa97n44tuvBH2HRyg=;
-        b=lERozS80geybpD7VIAUozrzmlgF3nwrfBuzIYnweQcscAm6fDcsiWe7vMRFigHaqTf
-         +Lffjyri1H9Ry+toEwfo8ZJcUAefGSdjNqc3/BN3u7AdIXB9bJBgSYtMKjuQIHzZuAcf
-         pKl514Gnz0inMmkRr+O54pQxEw3JXiUAjTB7c44cKV8MXPvaqJLqaVp4prjMNl3n3CgP
-         bBfPYfkzXoFmiwAPM6QZBJlCgXNpaltz/9d+WsCuKyqgSGECg/p7koYfFnxWf3l2aetu
-         LZXh4XNvAD3aFDXBztiOzagpYjsXivLUA/A7KEYlToC84qzgM/Ffhj4tThOIJN0dNmix
-         Fp4Q==
-X-Gm-Message-State: AGRZ1gKx7IyyZtxRg15FHdmjzvCdhfRARp2ROweBEMDnqw2bRsPQNQTX
-        qzR1LTXx2mLaNRWZLQk2CwZk8ckT8CecE0B9Gw==
-X-Google-Smtp-Source: AJdET5cvDGEE9HnV6uejs+sCHsz0mbh2kXtPLWaRQ3V7hJl69OH/lhhKA73fc2B/w/ZNHs0OXq5ko9EmWKt1NCEEzN4=
-X-Received: by 2002:a19:2106:: with SMTP id h6mr9291390lfh.29.1541275917130;
- Sat, 03 Nov 2018 13:11:57 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAEJqkgiKzYTZQTGWNAPTeOPFWz658FWqDsAhyoxVDP1VKWSukg@mail.gmail.com>
-In-Reply-To: <CAEJqkgiKzYTZQTGWNAPTeOPFWz658FWqDsAhyoxVDP1VKWSukg@mail.gmail.com>
-From:   Gabriel C <nix.or.die@gmail.com>
-Date:   Sat, 3 Nov 2018 21:11:31 +0100
-Message-ID: <CAEJqkgh7xksO7tmPHGkOXvWftc2AcCgi4j3S3C88CorV53+Hgw@mail.gmail.com>
-Subject: Re: atk10k Unknown eventid and WARN() on resume with kernel 4.19
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     LKML <linux-kernel@vger.kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, dex77@frugalware.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 4 Nov 2018 08:42:45 -0500
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 61221100E86C4;
+        Sun,  4 Nov 2018 04:29:12 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: help26_6a4e6ea0a833a
+X-Filterd-Recvd-Size: 1734
+Received: from XPS-9350.home (unknown [47.151.153.53])
+        (Authenticated sender: joe@perches.com)
+        by omf15.hostedemail.com (Postfix) with ESMTPA;
+        Sun,  4 Nov 2018 04:28:50 +0000 (UTC)
+Message-ID: <d6f81b74ede58f9a7cd3ce01cd8366d5df50d1de.camel@perches.com>
+Subject: Re: [RFC v5 08/13] rtw88: debug files
+From:   Joe Perches <joe@perches.com>
+To:     yhchuang@realtek.com, kvalo@codeaurora.org, sgruszka@redhat.com
+Cc:     Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+        pkshih@realtek.com, tehuang@realtek.com, johannes@sipsolutions.net
+Date:   Sat, 03 Nov 2018 21:28:49 -0700
+In-Reply-To: <1540980747-9297-9-git-send-email-yhchuang@realtek.com>
+References: <1540980747-9297-1-git-send-email-yhchuang@realtek.com>
+         <1540980747-9297-9-git-send-email-yhchuang@realtek.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am Sa., 3. Nov. 2018 um 21:01 Uhr schrieb Gabriel C <nix.or.die@gmail.com>:
->
-> Hello,
->
-> starting with kernel 4.19 we noticed  'Unknown eventid: xxxx' warnings
-> on our Laptops.
->
-> ...
->
-> crazy@devnull:~$ dmesg | grep Unknow
-> [    7.144998] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [    7.147758] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
-> [    9.441654] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [    9.444446] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
-> [   11.770997] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [   11.773787] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
-> [320339.374108] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [320339.377020] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
-> [320342.128664] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [320342.131447] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
-> [320344.452864] ath10k_pci 0000:03:00.0: Unknown eventid: 118809
-> [320344.455696] ath10k_pci 0000:03:00.0: Unknown eventid: 90118
->
-> ....
->
-> Both boxes also hits the following WARN*() on resume from S3:
->
- Uh sorry .. Gmail doesn't like long lines it seems.
-There the WARN() message:
+On Wed, 2018-10-31 at 18:12 +0800, yhchuang@realtek.com wrote
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> debug files for Realtek 802.11ac wireless network chips
+[]
+> diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
+[]
+> +#ifdef CONFIG_RTW88_DEBUG
+[]
+> +#else
+> +
+> +static inline void rtw_dbg(struct rtw_dev *rtwdev, const char *fmt, ...) {}
+> +static inline void rtw_info(struct rtw_dev *rtwdev, const char *fmt, ...) {}
+> +static inline void rtw_warn(struct rtw_dev *rtwdev, const char *fmt, ...) {}
+> +static inline void rtw_err(struct rtw_dev *rtwdev, const char *fmt, ...) {}
 
-http://ftp.frugalware.org/pub/other/people/crazy/warn.txt
+I still think it's _very, very bad_, and extremely
+unusual to turn off _all_ logging, even for error
+conditions, based on a debug config flag.
 
->
-> Please let me know if you need an dmesg or any other informations.
->
-> BR ,
->
-> Gabriel C.
+
