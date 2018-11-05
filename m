@@ -2,137 +2,115 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59009C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96265C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:54:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A88B20685
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:42:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2A88B20685
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 5D57F2085A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:54:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LSY3wZCC";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fRVaKPdr"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5D57F2085A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729375AbeKFACQ (ORCPT
+        id S2387467AbeKFAOv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 19:02:16 -0500
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:34919 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727128AbeKFACP (ORCPT
+        Mon, 5 Nov 2018 19:14:51 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:45338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387465AbeKFAOu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 19:02:15 -0500
-Received: by mail-ed1-f66.google.com with SMTP id d6-v6so7708769edi.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 06:42:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=EgnkbYtcDash2nw98Kh6sqUbhbhr+F2xMl1r1m671W8=;
-        b=cNaorOVU7gmWPKPe26aS+qgzS75nzD+l+7Id7ai6QcsjE+nKkofOKbGmHakg184FnV
-         IvesESOc7S0GM5E96iL/+DydnF/NBd041nmaSX0drJibOE48fXJtC7+20n6lLQNJ8gws
-         XBxyy9zEetYr2CLkob8eW0oPRUeszwr5QDOUZM3/+56Q33dfJqGPnVV1xBlq6GcI1qLY
-         5Mz0BFg51wL0hYbVntDI861UotzVz3/bEpRxpWvWn4nzfsIBgJSj8c4TEB/ozkFwTYY2
-         K9iMzxMvcvZtmmOSd7kxJhsPIwcvTSEAA0SY2tW3PZuM/3fmii5pQUvuvcVk0q3Rz8Zg
-         rZHA==
-X-Gm-Message-State: AGRZ1gLoKQM7H2rNFW1cpSOr1Uyw6PLdxRuE7uMnsBEP7JMjuFItnL2D
-        5r9Ak4UYjkVyNFT3RR5Z4fMLYg==
-X-Google-Smtp-Source: AJdET5flngp/FBrIuVVL+ozudPdupV59cbpRavclrHIBki/gYx/qUkvKAyiyABdzqi+B+7dokpRdIA==
-X-Received: by 2002:a50:a881:: with SMTP id k1-v6mr4332868edc.296.1541428932166;
-        Mon, 05 Nov 2018 06:42:12 -0800 (PST)
-Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
-        by smtp.gmail.com with ESMTPSA id b2-v6sm11053418edy.52.2018.11.05.06.42.11
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 06:42:11 -0800 (PST)
-Subject: Re: [PATCH 5/6] brcmfmac: Set board_type from DMI on x86 based
- machines
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20181009124755.25402-1-hdegoede@redhat.com>
- <20181009124755.25402-5-hdegoede@redhat.com>
- <39789888-ddad-afcb-3abd-104ef544ca26@broadcom.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <84ddea24-4e1b-fade-5310-118383453279@redhat.com>
-Date:   Mon, 5 Nov 2018 15:42:10 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.8.0
+        Mon, 5 Nov 2018 19:14:50 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 220E4607CA; Mon,  5 Nov 2018 14:54:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541429685;
+        bh=s0fEBYdz/bB4E2xo1PX2jwHst/MNI9qTCJGd14ma4Pk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=LSY3wZCC/cRpnjZV0GsmCP171vjOht9NPYrhYLcZtTLz3af455RqcZOM3Mg0P79PG
+         SbMc3h61U0aTwvvb0284uOnQefAY/HPaqgHXZfdB8n1jNwBO2aZc+mp0Kbmar3Nv+T
+         IGtwQXtAnVPAortHGfo+s4rjrdurd/x0r8XuPI5o=
+Received: from x230.qca.qualcomm.com (87-93-163-19.bb.dnainternet.fi [87.93.163.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 09D666044B;
+        Mon,  5 Nov 2018 14:54:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541429684;
+        bh=s0fEBYdz/bB4E2xo1PX2jwHst/MNI9qTCJGd14ma4Pk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=fRVaKPdrGlHQcoJmR9rzcLWLzcI91JoY+0XzmHgXi9q1Y/Iow+/i6zMWQxFwwOk9B
+         P9Zb6Aq0AbIHiFA+nAa7mW5dYTtGpgEiN6JwyYFPM6SW+O6XbN4BOxr+ywEjew/AT9
+         tWQvti9yYuxdSaOU/YzvHrg+eWcFKUjV7BYaXTZU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 09D666044B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     nbd@nbd.name, sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+        arnd@arndb.de
+Subject: Re: [PATCH] mt76: fix building without CONFIG_LEDS_CLASS
+References: <cover.1541150589.git.lorenzo.bianconi@redhat.com>
+        <5d0d7286445acef822a806dc89fcbf9eb2672ade.1541150589.git.lorenzo.bianconi@redhat.com>
+        <87r2g3btnd.fsf@purkki.adurom.net>
+        <20181102132006.GA27823@localhost.localdomain>
+Date:   Mon, 05 Nov 2018 16:54:40 +0200
+In-Reply-To: <20181102132006.GA27823@localhost.localdomain> (Lorenzo
+        Bianconi's message of "Fri, 2 Nov 2018 14:20:07 +0100")
+Message-ID: <87k1lrfubz.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <39789888-ddad-afcb-3abd-104ef544ca26@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-On 05-11-18 12:41, Arend van Spriel wrote:
-> On 10/9/2018 2:47 PM, Hans de Goede wrote:
->> For x86 based machines, set the board_type used for nvram file selection
->> based on the DMI sys-vendor and product-name strings.
->>
->> Since on some models these strings are too generic, this commit also adds
->> a quirk table overriding the strings for models listed in that table.
->>
->> The board_type setting is used to load the board-specific nvram file with
->> a board-specific name so that we can ship files for each supported board
->> in linux-firmware.
-> 
-> some comments below....
-> 
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->> ---
->>  .../broadcom/brcm80211/brcmfmac/Makefile      |   2 +
->>  .../broadcom/brcm80211/brcmfmac/common.c      |   3 +-
->>  .../broadcom/brcm80211/brcmfmac/common.h      |   7 ++
->>  .../broadcom/brcm80211/brcmfmac/dmi.c         | 104 ++++++++++++++++++
->>  4 files changed, 115 insertions(+), 1 deletion(-)
->>  create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
->> index 1f5a9b948abf..22fd95a736a8 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
->> @@ -54,3 +54,5 @@ brcmfmac-$(CONFIG_BRCM_TRACING) += \
->>          tracepoint.o
->>  brcmfmac-$(CONFIG_OF) += \
->>          of.o
->> +brcmfmac-$(CONFIG_DMI) += \
->> +        dmi.o
-> 
-> Assuming OF and DMI are mutual exclusive, right?
+>> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+>> 
+>> > From: Arnd Bergmann <arnd@arndb.de>
+>> >
+>> > When CONFIG_LEDS_CLASS is disabled, or it is a loadable module while
+>> > mt76 is built-in, we run into a link error:
+>> >
+>> > drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_register_device':
+>> > mac80211.c:(.text+0xb78): relocation truncated to fit:
+>> > R_AARCH64_CALL26 against undefined symbol
+>> > `devm_of_led_classdev_register'
+>> >
+>> > We don't really need a hard dependency here as the driver can presumably
+>> > work just fine without LEDs, so this follows the iwlwifi example and
+>> > adds a separate Kconfig option for the LED support, this will be available
+>> > whenever it will link, and otherwise the respective code gets left out from
+>> > the driver object.
+>> >
+>> > Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> 
+>> Should this go to 4.20? A linker error is pretty bad, even though I
+>> think this is few months old issue already.
+>
+>  I guess so. The patch is based on top of Felix's repository so it apply with a
+>  'fuzz' on net-next/wireless-drivers-next but the patch is ok. Do I need to
+>  resend or it is ok?
 
-Not necessarily ACPI tables can embed of/devicetree data now, so an x86
-machine could have of-data, but having both compiled in is not an issue
-I would expect only one of them to actually be present (so either of-data
-or an entry in the DMI platform-data table).
+Doesn't seem to apply to wireless-drivers (which I fast forwarded to
+v4.20-rc1 today):
 
+Failed to apply the patch: ['git', 'am', '-s', '-3'] failed: 128
+fatal: sha1 information is lacking or useless (drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c).
+error: could not build fake ancestor
 
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
->> new file mode 100644
->> index 000000000000..fadc0ec745b8
->> --- /dev/null
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/dmi.c
-> 
-> [...]
-> 
->> +static const struct dmi_system_id dmi_platform_data[] = {
-> 
-> maybe call this dmi_platform_quirk as in brcmf_dmi_probe() you call this a "quirk table".
+So please rebase and resend.
 
-OK, will fix for v3. I will also switch back to the SPDX license header
-for v3, since the ISC license text is now in Linus' tree.
-
-Regards,
-
-Hans
+-- 
+Kalle Valo
