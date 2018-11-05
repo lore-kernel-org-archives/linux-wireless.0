@@ -2,127 +2,87 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2FBC0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 19:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FC7C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 20:32:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16DB720685
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 19:38:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=plaes.org header.i=@plaes.org header.b="lFgVWc+5"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 16DB720685
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=plaes.org
+	by mail.kernel.org (Postfix) with ESMTP id 526602085A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 20:32:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 526602085A
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388039AbeKFE6i (ORCPT
+        id S1730202AbeKFFyO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 23:58:38 -0500
-Received: from plaes.org ([188.166.43.21]:44044 "EHLO plaes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730003AbeKFE6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 23:58:37 -0500
-Received: from localhost (85.253.196.132.cable.starman.ee [85.253.196.132])
-        by plaes.org (Postfix) with ESMTPSA id 0E759403FA;
-        Mon,  5 Nov 2018 19:37:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=plaes.org; s=mail;
-        t=1541446642; bh=uzSMys5iWgkaYCE8KfQ+2PrBqVQVsRvykesANVuQk3M=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lFgVWc+53i8Rm3E0yugjuIBCarP0NWMgWwxp/+Tr2h6feCllhfjHnBjbskOtg5s86
-         rb51CLIT+DV7uaMVziSINlKR9vA+L1Xdz2jqCXOVlr/yqjG6Z2CZS1PnhBPh4ijSgr
-         VJ1q0HIGXo/FdI1jZ2cX8hfZ+Z5n98bjD3SMxWTnd60zKN5mbOb2jkYfLdufRRrkY9
-         nRe9dnR6pd9CHOdBGxcm0/u/eaJADjuhHXKPsm48E1Ly44RRDCLx7IavhC8cDVqaR9
-         6gp8LSCfxiEKA9R+wrzyu9vQjc80yIlEXh3ErEUoWXPT2mahh8SeICSOXv06kxJXlF
-         r4XYenALsDEaw==
-From:   Priit Laes <plaes@plaes.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH v2 2/3] brcmsmac: Use cordic-related macros from common cordic library
-Date:   Mon,  5 Nov 2018 21:37:17 +0200
-Message-Id: <21ac814df5e4d338337acb7d40c1ec3304a9135c.1541446422.git-series.plaes@plaes.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <cover.9ec98292c595a111ae78f31383ff8618c9cb04da.1541446422.git-series.plaes@plaes.org>
-References: <cover.9ec98292c595a111ae78f31383ff8618c9cb04da.1541446422.git-series.plaes@plaes.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 6 Nov 2018 00:54:14 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:58936 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725910AbeKFFyO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Nov 2018 00:54:14 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gJlYE-0002hN-Po; Mon, 05 Nov 2018 21:32:46 +0100
+Message-ID: <34042c1e8020bfb49ab97c9160ab50df044846af.camel@sipsolutions.net>
+Subject: Re: [RFC 0/3] cfg80211/nl80211/iw: add basic AMPDU/AMSDU controls
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     Jouni Malinen <j@w1.fi>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Date:   Mon, 05 Nov 2018 21:32:23 +0100
+In-Reply-To: <20181105143027.17570-1-sergey.matyukevich.os@quantenna.com>
+References: <20181105143027.17570-1-sergey.matyukevich.os@quantenna.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Current driver includes macro that is available from general cordic
-library. Use that and drop unused duplicate and unneeded internal
-definitions.
+Hi,
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
+> Here are several RFC patches providing simple high-level controls of AMSDU/AMPDU
+> aggregation. The primary purpose of this functionality is an attempt to fill
+> missing gaps in nl80211 interface for basic WFA certification tests.
 
----
-v2: Use single patch instead of change/removal patches.
----
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h | 7 +-------
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c | 4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 4 ++--
- 3 files changed, 4 insertions(+), 11 deletions(-)
+I see you don't implement it this way in the driver, but wouldn't it
+make more sense to have this as a per-STA (RA) setting? That's really
+the granularity it can be done on, I think?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
-index 4960f7d..e9e8337 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
-@@ -220,13 +220,6 @@ enum phy_cal_mode {
- #define BB_MULT_MASK		0x0000ffff
- #define BB_MULT_VALID_MASK	0x80000000
- 
--#define CORDIC_AG	39797
--#define	CORDIC_NI	18
--#define	FIXED(X)	((s32)((X) << 16))
--
--#define	FLOAT(X) \
--	(((X) >= 0) ? ((((X) >> 15) + 1) >> 1) : -((((-(X)) >> 15) + 1) >> 1))
--
- #define PHY_CHAIN_TX_DISABLE_TEMP	115
- #define PHY_HYSTERESIS_DELTATEMP	5
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-index 9fb0d9f..e78a93a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -3447,8 +3447,8 @@ wlc_lcnphy_start_tx_tone(struct brcms_phy *pi, s32 f_kHz, u16 max_val,
- 
- 		theta += rot;
- 
--		i_samp = (u16) (FLOAT(tone_samp.i * max_val) & 0x3ff);
--		q_samp = (u16) (FLOAT(tone_samp.q * max_val) & 0x3ff);
-+		i_samp = (u16)(CORDIC_FLOAT(tone_samp.i * max_val) & 0x3ff);
-+		q_samp = (u16)(CORDIC_FLOAT(tone_samp.q * max_val) & 0x3ff);
- 		data_buf[t] = (i_samp << 10) | q_samp;
- 	}
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-index a57f271..f4f5e90 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-@@ -23089,8 +23089,8 @@ wlc_phy_gen_load_samples_nphy(struct brcms_phy *pi, u32 f_kHz, u16 max_val,
- 
- 		theta += rot;
- 
--		tone_buf[t].q = (s32) FLOAT(tone_buf[t].q * max_val);
--		tone_buf[t].i = (s32) FLOAT(tone_buf[t].i * max_val);
-+		tone_buf[t].q = (s32)CORDIC_FLOAT(tone_buf[t].q * max_val);
-+		tone_buf[t].i = (s32)CORDIC_FLOAT(tone_buf[t].i * max_val);
- 	}
- 
- 	wlc_phy_loadsampletable_nphy(pi, tone_buf, num_samps);
--- 
-git-series 0.9.1
+Arguably even per-RA/TID, though that seems a little excessive?
+
+> We experimented with QCA sigma-dut tool: https://github.com/qca/sigma-dut.
+> The purpose was to cover basic HT/VHT WFA STA tests for cfg80211 driver
+> controlled by wpa_supplicant  w/o adding any vendor specific commands.
+> Multiple WFA test parameters (e.g. STBC, NSS, SGI, LDPC) can be configured
+> by overriding HT/VHT capabilities in wpa_supplicant and applying them on
+> connect in cfg80211_connect callback. Others (e.g. RTS params) can be
+> configured using iw tool or NL80211_CMD_SET_WIPHY directly. These patches
+> implement simpe high-level switches for AMSDU/AMPDU aggregation.
+> 
+> It would be interesting to collect comments/concerns regarding this approach.
+> Does it make sense to enhance nl80211 in order to cover all the missing pieces
+> required for WFA certification tests ? Or maybe it makes sense to use
+> NL80211_TESTMODE subcommands for this kind of testing.
+
+Honestly, I don't really know.
+
+I think other tests, e.g. noack, we used to just have debugfs files for,
+and then we got NL80211_CMD_SET_NOACK_MAP (which *is* per TID, btw)
+
+Perhaps if we really don't see any value beyond the testing, keeping it
+in debugfs would make sense, until we have more use cases and understand
+the granularity we should support?
+
+Clearly this is enough for the testing you refer to, but other use cases
+might actually need more fine-grained control (in the future), possibly
+down to the RA/TID level?
+
+johannes
+
