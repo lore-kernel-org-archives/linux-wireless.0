@@ -2,199 +2,170 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0A5C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D43FEC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:32:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DFEA2085A
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:31:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="eyghkq3h"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0DFEA2085A
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
+	by mail.kernel.org (Postfix) with ESMTP id A63FD20819
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:32:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A63FD20819
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729720AbeKEXvV (ORCPT
+        id S1729770AbeKEXw4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 18:51:21 -0500
-Received: from mail-eopbgr720089.outbound.protection.outlook.com ([40.107.72.89]:63104
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729072AbeKEXvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 18:51:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ouRIuH0Qk1GlofU9A1cKcGXntw31SVwyNx1Ximyiv48=;
- b=eyghkq3hBvPmSIEfgmnBklbWnK5lt/U9AMr+b5WpmnSRbP35DPPcehkd3IqxSZ/V3SkTYQKzKdjYJF3q2dDub+DNqZz/KffJk/VyTW4nClHTX9aOLgCdkUrsSNSipAK9WDdb3n+pEVn4EC6CzdVR3bX7OKZvvRnOEVBX9IE/BYE=
-Received: from BL0SPR01MB0020.namprd05.prod.outlook.com (20.177.146.138) by
- BL0PR05MB5364.namprd05.prod.outlook.com (10.167.233.160) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.9; Mon, 5 Nov 2018 14:30:39 +0000
-Received: from BL0SPR01MB0020.namprd05.prod.outlook.com
- ([fe80::fce8:69f:f659:27d8]) by BL0SPR01MB0020.namprd05.prod.outlook.com
- ([fe80::fce8:69f:f659:27d8%3]) with mapi id 15.20.1294.028; Mon, 5 Nov 2018
- 14:30:39 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-CC:     Jouni Malinen <j@w1.fi>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [RFC 2/3] iw: add phy subcommands to configure aggregation
-Thread-Topic: [RFC 2/3] iw: add phy subcommands to configure aggregation
-Thread-Index: AQHUdRQfn//pssnBGkemKzXFUo2h1Q==
-Date:   Mon, 5 Nov 2018 14:30:39 +0000
-Message-ID: <20181105143027.17570-3-sergey.matyukevich.os@quantenna.com>
-References: <20181105143027.17570-1-sergey.matyukevich.os@quantenna.com>
-In-Reply-To: <20181105143027.17570-1-sergey.matyukevich.os@quantenna.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: AM6P194CA0090.EURP194.PROD.OUTLOOK.COM
- (2603:10a6:209:8f::31) To BL0SPR01MB0020.namprd05.prod.outlook.com
- (2603:10b6:208:72::10)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BL0PR05MB5364;6:pLre6wUv2ettZ3mEhrc9sedrPThpPZKf232e3Eo3Do2R4y2I/w2YOYJtzUwBoP9QdTRgwakiTOa0J5qi/syKfxaPp8RWmL0zKM1M+mLfnFIyvwlBaYncNON1RzkODprltfJrtjdHOStKpQSFbw6QukVAjIEjt70pFI/nMkta1B8BIALOaDAffjyog4YUmJwPAErBwx5rO/K0Fhfbs2ho6VHCnExSqDldCxEckyJSfK54NCjjBbrcYo7FkyUFZzLyFcyElrCfMUeFIQIRIBdoFxXp1YruYUuBLisEt8tZpZ4myTPeAl0UizwTh+7jviUX/jiozLTYKphHuvxT1iWovfs1ASbYfIv4OqwJ2rfMEqeLBzVuXeXBKGlV9fmgHxMdphX3PPdLNEnltT47nNtR3ZpoyugSAdS2SAKtmFdft7AC65/edflm2wxWOxKMop3g6w+4AWERr3Oe379OWCCYmw==;5:CrBxTVvp9vD2UvLbOsARhaSj8ctYlFkFQat5HAvLbPESkvTA5gcMZXUPGqhBaeqfWyG54X4e3t8R46WISmnHTN4lBw01+wfGAfANgvYgiAn+/cJHVrGPccxM2IfzvuNDQK7SXFtN6+t1ZBX/+1KPuo1Krj2z/5Ky0vWkqPYtaSk=;7:WOKKdFJ/ogYBg/x0jvsngT7WKC3gL450ppFFkdYQn+1syPmM4GR4qH22ibqpXujWohXVbgVbWItvAJDd55alVHiHTxQwqDSjkMyk6xV//LwuEQ//6c0jXPHAnpnQ3FZfNkOni1gSom8xkZaabMqEkw==
-x-ms-office365-filtering-correlation-id: d35a411f-c660-4ac3-8205-08d6432b41ec
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB5364;
-x-ms-traffictypediagnostic: BL0PR05MB5364:
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
-x-microsoft-antispam-prvs: <BL0PR05MB5364DFA6A1DE88BF8BBB8758A3CA0@BL0PR05MB5364.namprd05.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:;
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(5005006)(8121501046)(3231382)(944501410)(52105095)(93006095)(93001095)(10201501046)(3002001)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123562045)(20161123564045)(20161123560045)(201708071742011)(7699051)(76991095);SRVR:BL0PR05MB5364;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB5364;
-x-forefront-prvs: 08476BC6EF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(136003)(396003)(39840400004)(366004)(346002)(189003)(199004)(14454004)(386003)(6506007)(36756003)(5660300001)(102836004)(186003)(2906002)(8936002)(54906003)(110136005)(103116003)(476003)(26005)(81156014)(8676002)(486006)(2616005)(105586002)(446003)(97736004)(11346002)(81166006)(106356001)(6436002)(6512007)(1076002)(6486002)(256004)(14444005)(68736007)(7736002)(6116002)(3846002)(99286004)(4326008)(53936002)(76176011)(305945005)(66066001)(86362001)(316002)(2501003)(107886003)(71190400001)(71200400001)(478600001)(25786009)(52116002)(2900100001);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB5364;H:BL0SPR01MB0020.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: FY6TjrmI81e290lTgNI3IM20uqnVmPMWacsu/x4xGBtcYlS52xekhEecra739G2BnHPwPRI0b8lpF1RQfCNRb9Y/8NqAQIPvfYhRzZ58fnOabvOddvJE2R0cIkxeL+GHmlMUfVVPSyQwrC8nj4ToVqrsAMAWxLmh3XzGgMHyLY9PyBYV1c3ZYBluSeGQQ0hyuxeVMqybfELJ3mCnfu77jyh0W/7Z8HqnPMCleyDldaTmzjAEx26OvFeCmlmpPAg5DcPZMUXH2JyO9RziQcpXInlOV7H5YdDlb3EKgg8ApPCHG1fAed+ACuy79qpcJgz8LRHCj+quft3vHadjEDkt3eLqaL4/MlZd8SgmivFrWh4=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Mon, 5 Nov 2018 18:52:56 -0500
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:43030 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726173AbeKEXw4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Nov 2018 18:52:56 -0500
+Received: by mail-ed1-f68.google.com with SMTP id y20-v6so7647648eds.10
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 06:32:56 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bWHA2wcgVIHKjY032rmz051M6tqVbuivomJNiP5/t+8=;
+        b=C6MBE6ve3LiZ4XmhFkkbmE45K5H3BznAZP8W36pUNXzvc4f3nuGk/yhyS7I+Z09bI8
+         TBXIkk1s+Rfd39c2Qst9Xdpijy8kT2Z1L4LSERfFhtlQNAqDS7omZG0NXcNAZfDjXf75
+         eGDL7/oXdAWEJApgfaMmfKEyV8xSp0bCHpml68S9OGhoqcFRgHSQ9SMtBsLbVbmSXjb1
+         vgtKcyd+phb0nWrER7Hk1iQfGNnSe/cTCGrGLcO+WTdClu3BXlEQDzvQdLzCSXfndV2v
+         x0d0Ke8ouhJANk3W7IDvKWuZcJM3zWDxgZx3BLKxAXDSHDML/RttLVDcX0jx4m6RLsU4
+         IoBw==
+X-Gm-Message-State: AGRZ1gL8e7KCJibaoLUC+n9WrFi7Wa4Zt2q+AHTFiJoGi88QqdCQPUW7
+        wdKKxetdMulztE5DccJLOsi0dKy/yOc=
+X-Google-Smtp-Source: AJdET5f1QU5j4szHhnzbWREmk1wR1MMMSkKB0EBq4hH18YJ3dO8VQwONsG75JWQt/Lz9iptckVKVWA==
+X-Received: by 2002:a17:906:3d72:: with SMTP id r18-v6mr1595908ejf.186.1541428375553;
+        Mon, 05 Nov 2018 06:32:55 -0800 (PST)
+Received: from shalem.localdomain (546A5441.cm-12-3b.dynamic.ziggo.nl. [84.106.84.65])
+        by smtp.gmail.com with ESMTPSA id t1-v6sm10369019eds.44.2018.11.05.06.32.54
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 05 Nov 2018 06:32:54 -0800 (PST)
+Subject: Re: [PATCH 3/6] brcmfmac: Add support for first trying to get a board
+ specific nvram file
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20181009124755.25402-1-hdegoede@redhat.com>
+ <20181009124755.25402-3-hdegoede@redhat.com>
+ <c0415f15-d3cf-2693-be61-26151c5c030b@broadcom.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <193d4020-1a7f-7a9e-1953-4da8a2509d89@redhat.com>
+Date:   Mon, 5 Nov 2018 15:32:54 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d35a411f-c660-4ac3-8205-08d6432b41ec
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2018 14:30:39.0979
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR05MB5364
+In-Reply-To: <c0415f15-d3cf-2693-be61-26151c5c030b@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add phy subcommands to enable/disable AMPDU/AMSDU aggregation.
+Hi,
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- nl80211.h |  6 ++++++
- phy.c     | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+
- 2 files changed, 66 insertions(+)
+Thank you for the reviews.
 
-diff --git a/nl80211.h b/nl80211.h
-index 1766a12..41eec4a 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2241,6 +2241,9 @@ enum nl80211_commands {
-  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
-  *	only if %NL80211_STA_FLAG_WME is set.
-  *
-+ * @NL80211_ATTR_WIPHY_AMPDU_ENABLED: enable/disable AMPDU aggregation.
-+ * @NL80211_ATTR_WIPHY_AMSDU_ENABLED: enable/disable AMSDU aggregation.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2682,6 +2685,9 @@ enum nl80211_attrs {
-=20
- 	NL80211_ATTR_HE_CAPABILITY,
-=20
-+	NL80211_ATTR_WIPHY_AMPDU_ENABLED,
-+	NL80211_ATTR_WIPHY_AMSDU_ENABLED,
-+
- 	/* add attributes here, update the policy in nl80211.c */
-=20
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/phy.c b/phy.c
-index 77df7a7..be949e7 100644
---- a/phy.c
-+++ b/phy.c
-@@ -843,3 +843,63 @@ static int handle_get_txq(struct nl80211_state *state,
- COMMAND(get, txq, "",
- 	NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_get_txq,
- 	"Get TXQ parameters.");
-+
-+static int handle_ampdu(struct nl80211_state *state,
-+			struct nl_msg *msg,
-+			int argc, char **argv,
-+			enum id_input id)
-+{
-+	unsigned int ampdu;
-+
-+	if (argc !=3D 1)
-+		return 1;
-+
-+	if (strcmp(argv[0], "on") =3D=3D 0)
-+		ampdu =3D 1;
-+	else if (strcmp(argv[0], "off") =3D=3D 0)
-+		ampdu =3D 0;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_AMPDU_ENABLED, ampdu);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, ampdu, "<on|off>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_ampdu,
-+	"Enable/disable AMPDU aggregation.");
-+
-+static int handle_amsdu(struct nl80211_state *state,
-+			struct nl_msg *msg,
-+			int argc, char **argv,
-+			enum id_input id)
-+{
-+	unsigned int amsdu;
-+
-+	if (argc !=3D 1)
-+		return 1;
-+
-+	if (strcmp(argv[0], "on") =3D=3D 0)
-+		amsdu =3D 1;
-+	else if (strcmp(argv[0], "off") =3D=3D 0)
-+		amsdu =3D 0;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_AMSDU_ENABLED, amsdu);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, amsdu, "<on|off>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_amsdu,
-+	"Enable/disable AMSDU aggregation.");
---=20
-2.11.0
+On 05-11-18 12:41, Arend van Spriel wrote:
+> On 10/9/2018 2:47 PM, Hans de Goede wrote:
+>> The nvram files which some brcmfmac chips need are board-specific. To be
+>> able to distribute these as part of linux-firmware, so that devices with
+>> such a wifi chip will work OOTB, multiple (one per board) versions must
+>> co-exist under /lib/firmware.
+>>
+>> This commit adds support for callers of the brcmfmac/firmware.c code to
+>> pass in a board_type parameter through the request structure.
+>>
+>> If that parameter is set then the code will first try to load
+>> chipmodel.board_type.txt before falling back to the old chipmodel.txt name.
+> 
+> minor comment below...
+> 
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  .../broadcom/brcm80211/brcmfmac/firmware.c    | 27 ++++++++++++++++++-
+>>  .../broadcom/brcm80211/brcmfmac/firmware.h    |  1 +
+>>  2 files changed, 27 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> index 08aaf99fee34..6755b2388fbc 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> @@ -532,6 +532,31 @@ static int brcmf_fw_complete_request(const struct firmware *fw,
+>>      return (cur->flags & BRCMF_FW_REQF_OPTIONAL) ? 0 : ret;
+>>  }
+>>
+>> +static int brcmf_fw_request_firmware(const struct firmware **fw,
+>> +                     struct brcmf_fw *fwctx)
+>> +{
+>> +    struct brcmf_fw_item *cur = &fwctx->req->items[fwctx->curpos];
+>> +    int ret;
+>> +
+>> +    /* nvram files are board-specific, first try a board-specific path */
+>> +    if (cur->type == BRCMF_FW_TYPE_NVRAM && fwctx->req->board_type) {
+>> +        char alt_path[BRCMF_FW_NAME_LEN];
+>> +
+>> +        strlcpy(alt_path, cur->path, BRCMF_FW_NAME_LEN);
+>> +        /* strip .txt at the end */
+>> +        alt_path[strlen(alt_path) - 4] = 0;
+>> +        strlcat(alt_path, ".", BRCMF_FW_NAME_LEN);
+> 
+> why not string just "txt"?
 
+I'm not entirely sure what your question exactly is here?
+
+Regards,
+
+Hans
+
+
+> 
+>> +        strlcat(alt_path, fwctx->req->board_type, BRCMF_FW_NAME_LEN);
+>> +        strlcat(alt_path, ".txt", BRCMF_FW_NAME_LEN);
+>> +
+>> +        ret = request_firmware(fw, alt_path, fwctx->dev);
+>> +        if (ret == 0)
+>> +            return ret;
+>> +    }
+>> +
+>> +    return request_firmware(fw, cur->path, fwctx->dev);
+>> +}
+>> +
+>>  static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+>>  {
+>>      struct brcmf_fw *fwctx = ctx;
+>> @@ -544,7 +569,7 @@ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+>>
+>>      while (ret == 0 && ++fwctx->curpos < fwctx->req->n_items) {
+>>          cur = &fwctx->req->items[fwctx->curpos];
+>> -        request_firmware(&fw, cur->path, fwctx->dev);
+>> +        brcmf_fw_request_firmware(&fw, fwctx);
+>>          ret = brcmf_fw_complete_request(fw, ctx);
+>>      }
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+>> index 2893e56910f0..a0834be8864e 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+>> @@ -70,6 +70,7 @@ struct brcmf_fw_request {
+>>      u16 domain_nr;
+>>      u16 bus_nr;
+>>      u32 n_items;
+>> +    const char *board_type;
+>>      struct brcmf_fw_item items[0];
+>>  };
+>>
+>>
+> 
