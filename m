@@ -3,114 +3,104 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96265C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:54:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 057CBC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:58:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D57F2085A
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:54:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEF802085A
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 14:58:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LSY3wZCC";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fRVaKPdr"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5D57F2085A
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JR+bKfl9";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JR+bKfl9"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BEF802085A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387467AbeKFAOv (ORCPT
+        id S1729646AbeKFASL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 19:14:51 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:45338 "EHLO
+        Mon, 5 Nov 2018 19:18:11 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:48178 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387465AbeKFAOu (ORCPT
+        with ESMTP id S1726255AbeKFASL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 19:14:50 -0500
+        Mon, 5 Nov 2018 19:18:11 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 220E4607CA; Mon,  5 Nov 2018 14:54:45 +0000 (UTC)
+        id B321E6044B; Mon,  5 Nov 2018 14:58:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541429685;
-        bh=s0fEBYdz/bB4E2xo1PX2jwHst/MNI9qTCJGd14ma4Pk=;
+        s=default; t=1541429884;
+        bh=MOfga+nQ2MjsB0mxkj/noLSfLl/ulvT7ms9sHlVVpmk=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=LSY3wZCC/cRpnjZV0GsmCP171vjOht9NPYrhYLcZtTLz3af455RqcZOM3Mg0P79PG
-         SbMc3h61U0aTwvvb0284uOnQefAY/HPaqgHXZfdB8n1jNwBO2aZc+mp0Kbmar3Nv+T
-         IGtwQXtAnVPAortHGfo+s4rjrdurd/x0r8XuPI5o=
-Received: from x230.qca.qualcomm.com (87-93-163-19.bb.dnainternet.fi [87.93.163.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        b=JR+bKfl9E7Ek9igXyc27LHz/zO+cJDHIWINeYORL61TbFLmlPkArmp6dwv9vX3mtj
+         twwUcB9nyr1mWEwtZ6uBkmEYd5hxVhX3FfPaOpor8l5jPvNO5Q6P7EXe6M0dJVq4cO
+         AW0yRvllN9atKONM8WDhH65pvluqYUGCrECNYw3E=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 09D666044B;
-        Mon,  5 Nov 2018 14:54:42 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 88B7160271;
+        Mon,  5 Nov 2018 14:58:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541429684;
-        bh=s0fEBYdz/bB4E2xo1PX2jwHst/MNI9qTCJGd14ma4Pk=;
+        s=default; t=1541429884;
+        bh=MOfga+nQ2MjsB0mxkj/noLSfLl/ulvT7ms9sHlVVpmk=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=fRVaKPdrGlHQcoJmR9rzcLWLzcI91JoY+0XzmHgXi9q1Y/Iow+/i6zMWQxFwwOk9B
-         P9Zb6Aq0AbIHiFA+nAa7mW5dYTtGpgEiN6JwyYFPM6SW+O6XbN4BOxr+ywEjew/AT9
-         tWQvti9yYuxdSaOU/YzvHrg+eWcFKUjV7BYaXTZU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 09D666044B
+        b=JR+bKfl9E7Ek9igXyc27LHz/zO+cJDHIWINeYORL61TbFLmlPkArmp6dwv9vX3mtj
+         twwUcB9nyr1mWEwtZ6uBkmEYd5hxVhX3FfPaOpor8l5jPvNO5Q6P7EXe6M0dJVq4cO
+         AW0yRvllN9atKONM8WDhH65pvluqYUGCrECNYw3E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 88B7160271
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     nbd@nbd.name, sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-        arnd@arndb.de
-Subject: Re: [PATCH] mt76: fix building without CONFIG_LEDS_CLASS
-References: <cover.1541150589.git.lorenzo.bianconi@redhat.com>
-        <5d0d7286445acef822a806dc89fcbf9eb2672ade.1541150589.git.lorenzo.bianconi@redhat.com>
-        <87r2g3btnd.fsf@purkki.adurom.net>
-        <20181102132006.GA27823@localhost.localdomain>
-Date:   Mon, 05 Nov 2018 16:54:40 +0200
-In-Reply-To: <20181102132006.GA27823@localhost.localdomain> (Lorenzo
-        Bianconi's message of "Fri, 2 Nov 2018 14:20:07 +0100")
-Message-ID: <87k1lrfubz.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76x0: use band parameter for LC calibration
+References: <1540484313-9354-1-git-send-email-sgruszka@redhat.com>
+        <20181030131854.GA26291@redhat.com>
+Date:   Mon, 05 Nov 2018 16:58:00 +0200
+In-Reply-To: <20181030131854.GA26291@redhat.com> (Stanislaw Gruszka's message
+        of "Tue, 30 Oct 2018 14:20:59 +0100")
+Message-ID: <87efbzbmh3.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
->> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+> On Thu, Oct 25, 2018 at 06:18:33PM +0200, Stanislaw Gruszka wrote:
+>> We use always 1 as band parameter for MCU_CAL_LC, this break 2GHz,
+>> we should use 0 for this band instead.
 >> 
->> > From: Arnd Bergmann <arnd@arndb.de>
->> >
->> > When CONFIG_LEDS_CLASS is disabled, or it is a loadable module while
->> > mt76 is built-in, we run into a link error:
->> >
->> > drivers/net/wireless/mediatek/mt76/mac80211.o: In function `mt76_register_device':
->> > mac80211.c:(.text+0xb78): relocation truncated to fit:
->> > R_AARCH64_CALL26 against undefined symbol
->> > `devm_of_led_classdev_register'
->> >
->> > We don't really need a hard dependency here as the driver can presumably
->> > work just fine without LEDs, so this follows the iwlwifi example and
->> > adds a separate Kconfig option for the LED support, this will be available
->> > whenever it will link, and otherwise the respective code gets left out from
->> > the driver object.
->> >
->> > Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
->> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> Patch fixes problems happened sometimes when try to associate with 2GHz
+>> AP and manifest by errors like below:
 >> 
->> Should this go to 4.20? A linker error is pretty bad, even though I
->> think this is few months old issue already.
+>> [14680.920823] wlan0: authenticate with 18:31:bf:c0:51:b0
+>> [14681.109506] wlan0: send auth to 18:31:bf:c0:51:b0 (try 1/3)
+>> [14681.310454] wlan0: send auth to 18:31:bf:c0:51:b0 (try 2/3)
+>> [14681.518469] wlan0: send auth to 18:31:bf:c0:51:b0 (try 3/3)
+>> [14681.726499] wlan0: authentication with 18:31:bf:c0:51:b0 timed out
+>> 
+>> Fixes: 9aec146d0f6b ("mt76x0: pci: introduce mt76x0_phy_calirate routine")
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> ---
+>> This is for 4.20.
 >
->  I guess so. The patch is based on top of Felix's repository so it apply with a
->  'fuzz' on net-next/wireless-drivers-next but the patch is ok. Do I need to
->  resend or it is ok?
+> Actually it is not needed for 4.20, bacause the new calibrate code is
+> not use for USB in 4.20. It start to be used since:
+>
+> commit e868a944c55b1f42303ab2941dc1aaada9a3570c
+> Author: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Date:   Mon Oct 15 14:18:05 2018 +0200
+>
+>     mt76x0: phy: unify calibration between mt76x0u and mt76x0e
 
-Doesn't seem to apply to wireless-drivers (which I fast forwarded to
-v4.20-rc1 today):
-
-Failed to apply the patch: ['git', 'am', '-s', '-3'] failed: 128
-fatal: sha1 information is lacking or useless (drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c).
-error: could not build fake ancestor
-
-So please rebase and resend.
+So what should happen to this patch? Will Felix take it?
 
 -- 
 Kalle Valo
