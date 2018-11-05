@@ -7,58 +7,57 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB8E6C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:41:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DB3C46475
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BF8D20827
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:41:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F4B020827
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:42:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UeMiiSPl"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8BF8D20827
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VJaT1pt7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3F4B020827
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728094AbeKEVBR (ORCPT
+        id S1729577AbeKEVCJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 16:01:17 -0500
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:40048 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726358AbeKEVBR (ORCPT
+        Mon, 5 Nov 2018 16:02:09 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:52828 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726358AbeKEVCI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 16:01:17 -0500
-Received: by mail-wm1-f67.google.com with SMTP id b203-v6so7731494wme.5
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 03:41:57 -0800 (PST)
+        Mon, 5 Nov 2018 16:02:08 -0500
+Received: by mail-wm1-f66.google.com with SMTP id l66-v6so1840089wml.2
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 03:42:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:subject:to:references:cc:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=//z7l6DVI1abFt+VPZmQMCRCvkAOn/Gt6m2fzAYppIk=;
-        b=UeMiiSPlElqs74M8QCMrX6Ubetabguwxwrl9787k+aUv+5AJOu1PjTK9pxQWlgnOQk
-         GooC73zLeVtAmKdalNpZd/DECIUT7eZthv9ZoU0BWWRjVNLDPaYMD6pt05b3utf2lFCb
-         mB38aBB5UHivVoeCCHSTO52McVhkwyph11jiU=
+        bh=shmYwTo+gykgr368SEU/+i34i31i2JPV6vj9elmRgFo=;
+        b=VJaT1pt7Cxu0xWFoYC3P40C/zJj/wihdt3dNETqDhycn0sQw6wr0lDXaNo7RhCrxA5
+         RSIVb/IKkcUXTW+QwLUbu3/fgA/ROy4XV6yLecAAV37wV34NEmXhzblu7M1yilz879oJ
+         R9/92QW1bJ9yMjk4Nc+9U6LMbfH+qdp7pvOik=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:subject:to:references:cc:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=//z7l6DVI1abFt+VPZmQMCRCvkAOn/Gt6m2fzAYppIk=;
-        b=d4ndK+ioDwJPZeqykDMIN6aviuLuqz4wWbFPURfPv6qt4Z6xmQDfb3PBL/oRxw1gsQ
-         fY1zyqE8I4W3u4XUqCKebUSl+IxKnEczcNlUTpavQXAsMYwqPz00HnxYH9NG9GwPIMqL
-         Zv+OjZU0y/GEh3tFVo6l3mlrB44XU8Y0c6uav6T5mPtPvIOYwXssiZBxvt2s0P4uFPoP
-         ISqmbAqLQumFn/YRXSUqMk43z/BHXRqlZKx2+hJqX6z5xDVvyVZsDQMAtXW0OxDjcifb
-         NJaxY+qv5MMQOfN90meIow9WVChgc51rjBTKNJaP9RfOClxfAd73KARo93eKPO8pdUmp
-         viYw==
-X-Gm-Message-State: AGRZ1gKw9qKu03k8xLDO1seJUU7cmy5tg+GIE54FcD5aURFVtOKBA96a
-        zVEnu/ypKS2c1rh14TJUPpkhfoOG3yGUjA==
-X-Google-Smtp-Source: AJdET5eqQAtEt8cFCI1ZR+PSB9OXXjYClxzc/59kpzNvxA8SZObGV2RjBYG/MHzHwF7t6iGZgmtSpw==
-X-Received: by 2002:a1c:b7c4:: with SMTP id h187-v6mr5677831wmf.70.1541418116823;
-        Mon, 05 Nov 2018 03:41:56 -0800 (PST)
+        bh=shmYwTo+gykgr368SEU/+i34i31i2JPV6vj9elmRgFo=;
+        b=a0igkkMlB270LKUPIwkV5jZ51V3sh1uN4hjkhznMB7pzXTYaCKngIJQZ7p8BVM6xLe
+         209Pd9P4tv3ihI6NS/mChjWjnTGl3/zUR+UXL7/6cv1nf5PuxT+FRaUZ76vjI54Glu98
+         YhEQFlkWVg462ub0eEj5E89j1ivEh65pEG3vmcP3BFVcpknL7q7zG8GkjkzP3UbQYsAa
+         hl3gtvrJCiwr4uMGmP9yZmz+GSQrrSu/xDmVaBAqXqsSVncnwf2whSaVsud2G4XbNAg1
+         XcSSQCm3VPcjQwW4M7XFBzuZcq0JnWRwgdbPCC0v1B2Qe4MSS2HtzV0UxfSBORRCVSAw
+         aC7A==
+X-Gm-Message-State: AGRZ1gJyCzdghVdOFI2Bi/92hCC67gqZiM4ZIa1Oiv0vLr2ee44WW9T7
+        fKQPpLwLSrlbVvPg4J7Eyg/M2A==
+X-Google-Smtp-Source: AJdET5eBLafoZDNrQymuwYc2EN9g6RPEAuByPpW6gRfiEB2HHi5JK/V6OLg2P9rj84DHAPMbGAAKWA==
+X-Received: by 2002:a1c:9609:: with SMTP id y9-v6mr5718827wmd.67.1541418168153;
+        Mon, 05 Nov 2018 03:42:48 -0800 (PST)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id o130-v6sm41217244wmd.11.2018.11.05.03.41.55
+        by smtp.gmail.com with ESMTPSA id g10-v6sm3226136wrs.95.2018.11.05.03.42.47
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 03:41:56 -0800 (PST)
+        Mon, 05 Nov 2018 03:42:47 -0800 (PST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 4/6] brcmfmac: Set board_type used for nvram file
- selection to machine-compatible
+Subject: Re: [PATCH 6/6] brcmfmac: Cleanup brcmf_fw_request_done()
 To:     Hans de Goede <hdegoede@redhat.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
@@ -66,14 +65,14 @@ To:     Hans de Goede <hdegoede@redhat.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>
 References: <20181009124755.25402-1-hdegoede@redhat.com>
- <20181009124755.25402-4-hdegoede@redhat.com>
+ <20181009124755.25402-6-hdegoede@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Message-ID: <455259e6-91b2-53fd-b9aa-758fcdf777a7@broadcom.com>
-Date:   Mon, 5 Nov 2018 12:41:55 +0100
+Message-ID: <9741c4fc-fbe2-c45c-9775-18b71dbcfc85@broadcom.com>
+Date:   Mon, 5 Nov 2018 12:42:46 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <20181009124755.25402-4-hdegoede@redhat.com>
+In-Reply-To: <20181009124755.25402-6-hdegoede@redhat.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -82,20 +81,16 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 10/9/2018 2:47 PM, Hans de Goede wrote:
-> For of/devicetree using machines, set the board_type used for nvram file
-> selection to the first string listed in the top-level's node compatible
-> string, aka the machine-compatible as used by of_machine_is_compatible().
->
-> The board_type setting is used to load the board-specific nvram file with
-> a board-specific name so that we can ship files for each supported board
-> in linux-firmware.
+> The "cur" variable is now only used for a debug print and we already
+> print the same info from brcmf_fw_complete_request(), so the debug print
+> does not provide any extra info and we can remove it.
+
+I guess this could have been collapsed in the first patch introducing 
+brcmf_fw_complete_request(). All-in-all a nice cleanup. Thanks.
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 > ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/common.h |  1 +
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 11 ++++++++++-
->  .../net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   |  1 +
->  .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   |  1 +
->  4 files changed, 13 insertions(+), 1 deletion(-)
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c   | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 
