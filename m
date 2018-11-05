@@ -2,42 +2,42 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0C0C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 16:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B09C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 16:57:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 814992081D
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 16:56:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 481EB2081D
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 16:57:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VGI7lACS"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 814992081D
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="fTLEMUld"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 481EB2081D
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729820AbeKFCQd (ORCPT
+        id S2387773AbeKFCRv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 21:16:33 -0500
-Received: from nbd.name ([46.4.11.11]:45316 "EHLO nbd.name"
+        Mon, 5 Nov 2018 21:17:51 -0500
+Received: from nbd.name ([46.4.11.11]:45364 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729762AbeKFCQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 21:16:33 -0500
+        id S2387771AbeKFCRv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Nov 2018 21:17:51 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=jy009HqMO299eFJZ8KEfktu9y60pQRrpeg3CzNEPGS4=; b=VGI7lACSC+rnJZAZQZN1lCA9Ic
-        xKP6PcoLucLQyT+CRS0OnDAK7y2vrBSCLB+0UHnTiMnS13+59us8eTNO9LMcWuvaw8E3t+OrbkFvN
-        lAZ/QuYFkKCQOmU6YocoFO7It2VHfurnT1bSOvfkywEKqFkmDiig7NY+2laMqknDGdmE=;
-Subject: Re: [PATCH] mt76x0: phy: use mt76_poll_msec in mt76x0_phy_temp_sensor
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1540666225.git.lorenzo.bianconi@redhat.com>
- <9156c75f22776e304b562654fff027f8c91e0943.1540666225.git.lorenzo.bianconi@redhat.com>
+        bh=Mx3fi4UOCkm51ygvwkjRpLkZ2OS3Vw+QYJvQn4jG9ps=; b=fTLEMUld6xZxriZtsZdrxxR8Qq
+        YikokbVi6IcrxTIcEo7O+6pMd7wRxMfEwTz6isXdnfjt5bgT7RWpF/+FnHXLmOSpBEleAPPgmZSKZ
+        covcmAj3VuINLh5QKJl8hDZpP8LMD5y2IJKtOZIoTiAYvg1Z3sTQrQFLYXEH5aNrqyM8=;
+Subject: Re: [PATCH 0/4] mt76: mcu api clenups
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless@vger.kernel.org
+References: <1540555229-28582-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <8df7600d-5a8b-686d-85e9-2449415dfb47@nbd.name>
-Date:   Mon, 5 Nov 2018 17:55:57 +0100
+Message-ID: <ec2345d4-9f36-454b-e497-e8eeee62a5f0@nbd.name>
+Date:   Mon, 5 Nov 2018 17:57:14 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <9156c75f22776e304b562654fff027f8c91e0943.1540666225.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <1540555229-28582-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,14 +77,20 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-10-27 21:06, Lorenzo Bianconi wrote:
-> Use mt76_poll_msec utility routine for CORE_R34 register polling
-> instead of mt76_poll in order to allow the hw to complete requested
-> calibration since on slow devices (e.g. mt7620 based boards) calibration
-> takes longer than 2ms
+On 2018-10-26 14:00, Stanislaw Gruszka wrote:
+> Simplify mcu api and wait for response for mcu commands the same
+> as vendor driver.
 > 
-> Fixes: 66a34c66e0cb ("mt76x0: phy: add phy/vco temperature compensation")
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Applied, thanks.
+> This is on top of:
+> [PATCH] mt76x0: use band parameter for LC calibration
+> 
+> Stanislaw Gruszka (4):
+>   mt76: remove mcu_msg_alloc
+>   mt76: remove wait argument from mt76x02_mcu_calibrate
+>   mt76: remove wait argument from mt76x02_mcu_function_select
+>   mt76: remove wait argument from mt76x02_mcu_set_radio_state
+Applied patches 1,3,4.
+
+Thanks,
 
 - Felix
