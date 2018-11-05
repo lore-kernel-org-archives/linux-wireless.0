@@ -2,117 +2,138 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0770BC0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80509ECDE44
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:19:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0F0020854
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:13:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="e/qp1co6"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C0F0020854
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	by mail.kernel.org (Postfix) with ESMTP id 48F6120869
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:19:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 48F6120869
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ucw.cz
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727795AbeKESce (ORCPT
+        id S1727332AbeKEShz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 13:32:34 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:42693 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726774AbeKEScd (ORCPT
+        Mon, 5 Nov 2018 13:37:55 -0500
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46087 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726086AbeKEShz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 13:32:33 -0500
-Received: by mail-wr1-f67.google.com with SMTP id y15-v6so8580869wru.9
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 01:13:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=wA7TyDJb/otO8QhHIlksbXuo8LT1Oi0HmcIwXXvvRmQ=;
-        b=e/qp1co6W/KuTAqloqSSr5Ugq/YYo6wC5XXlVKi9YpBNKj5YsD86IKyKjjpEBpqFfL
-         MNZzyCgRXpIkknQ2xvvydk6HX9iNjDZWG1jj0ozJtc9jkWvbVz9v1uQsDVF9pd/5QwIv
-         eIo7d0BVUhtMj1z8lTUcnIECtqnjoyAn2XUpQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=wA7TyDJb/otO8QhHIlksbXuo8LT1Oi0HmcIwXXvvRmQ=;
-        b=bHMM0WAZ/6hL8r8JOXuHmDNc6rzEuUWNoHrAE11UUG1BDmK/AZap8OMODVVENqMk8S
-         w0+xJDnRWONCBPvFYZq3EyuJdvfUNdHgZbyAtbSrDP4fiV37sl1hu02Y3SjOthDXlpwN
-         aOKrALvHA7Aq8J5d0248qjGItgJyEiX5+LgbTdgIdB2+vLhH8UtKf+3evfA65FMDJeyL
-         rXx6t25p11A88PqfhOqeVT8Cp0Tw+1Vm9Jzw2FRqaeWX73zK7FbMi1JaXZSLRKdCYaG1
-         GVX3gov69NMLb0S33blKVj13SBFlSWZJdqCu66u9uFkLOf5yeTIutOEftqIywlcFSoFI
-         B8cA==
-X-Gm-Message-State: AGRZ1gJimZ7iKV+E3OoIGPYRe9t3bJ6qBqIyxUzgrdZupjYTPx/CrwKD
-        /G9VsKikQqtsadyXYTnTkS63rAUGWQgJzw==
-X-Google-Smtp-Source: AJdET5drZNWJdxfR0XoW8eU1R/PmptP/mqhIYAeBmn2NSFx5W4Ig3LkJGc/fPX4awJbv226t+QeKnA==
-X-Received: by 2002:adf:cc81:: with SMTP id p1-v6mr809562wrj.139.1541409228885;
-        Mon, 05 Nov 2018 01:13:48 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id i7-v6sm8600443wrs.55.2018.11.05.01.13.47
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 01:13:48 -0800 (PST)
-Subject: Re: [PATCH 2/5] brcmfmac: Use common CORDIC_FLOAT macro from lib
-To:     Kalle Valo <kvalo@codeaurora.org>, Priit Laes <plaes@plaes.org>
-References: <cover.f21c8e62e188620d586edb3f77514e6237122c4c.1541238842.git-series.plaes@plaes.org>
- <4bd6e7758bc0d88b33cdb09448633bb5b97aba7c.1541238842.git-series.plaes@plaes.org>
- <877ehrhp21.fsf@codeaurora.org>
-Cc:     linux-kernel@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+        Mon, 5 Nov 2018 13:37:55 -0500
+Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
+        id B6F6A807E4; Mon,  5 Nov 2018 10:19:05 +0100 (CET)
+Date:   Mon, 5 Nov 2018 10:19:07 +0100
+From:   Pavel Machek <pavel@ucw.cz>
+To:     Lubomir Rintel <lkundrak@v3.sk>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <21e6a75b-7728-761d-d899-395864226fb5@broadcom.com>
-Date:   Mon, 5 Nov 2018 10:13:47 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] libertas: don't set URB_ZERO_PACKET on IN USB transfer
+Message-ID: <20181105091907.GC4439@amd>
+References: <20181006201232.2789936-1-lkundrak@v3.sk>
 MIME-Version: 1.0
-In-Reply-To: <877ehrhp21.fsf@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="gr/z0/N6AeWAPJVB"
+Content-Disposition: inline
+In-Reply-To: <20181006201232.2789936-1-lkundrak@v3.sk>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/5/2018 10:05 AM, Kalle Valo wrote:
-> Priit Laes <plaes@plaes.org> writes:
->
->> Now that cordic library has the CORDIC_FLOAT macro, use that
->>
->> Signed-off-by: Priit Laes <plaes@plaes.org>
->> ---
->>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c | 4 ++--
->>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 4 ++--
->
-> The driver is "brcmsmac" (note the 's', not 'f'), you should fix the
-> title accordingly.
->
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
->> @@ -3447,8 +3447,8 @@ wlc_lcnphy_start_tx_tone(struct brcms_phy *pi, s32 f_kHz, u16 max_val,
->>
->>  		theta += rot;
->>
->> -		i_samp = (u16) (FLOAT(tone_samp.i * max_val) & 0x3ff);
->> -		q_samp = (u16) (FLOAT(tone_samp.q * max_val) & 0x3ff);
->> +		i_samp = (u16)(CORDIC_FLOAT(tone_samp.i * max_val) & 0x3ff);
->> +		q_samp = (u16)(CORDIC_FLOAT(tone_samp.q * max_val) & 0x3ff);
->
-> I haven't seen the patch 1 yet, but just from seeing this patch I don't
-> get what's the benefit.
 
-The FLOAT macro was defined in brcmsmac (see patch 3). It is now moved 
-to the cordic library simply because it is more closely related to that.
+--gr/z0/N6AeWAPJVB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Arend
+On Sat 2018-10-06 22:12:32, Lubomir Rintel wrote:
+> The USB core gets rightfully upset:
+>=20
+>   usb 1-1: BOGUS urb flags, 240 --> 200
+>   WARNING: CPU: 0 PID: 60 at drivers/usb/core/urb.c:503 usb_submit_urb+0x=
+2f8/0x3ed
+>   Modules linked in:
+>   CPU: 0 PID: 60 Comm: kworker/0:3 Not tainted 4.19.0-rc6-00319-g5206d00a=
+45c7 #39
+>   Hardware name: OLPC XO/XO, BIOS OLPC Ver 1.00.01 06/11/2014
+>   Workqueue: events request_firmware_work_func
+>   EIP: usb_submit_urb+0x2f8/0x3ed
+>   Code: 75 06 8b 8f 80 00 00 00 8d 47 78 89 4d e4 89 55 e8 e8 35 1c f6 ff=
+ 8b 55 e8 56 52 8b 4d e4 51 50 68 e3 ce c7 c0 e8 ed 18 c6 ff <0f> 0b 83 c4 =
+14 80 7d ef 01 74 0a 80 7d ef 03 0f 85 b8 00 00 00 8b
+>   EAX: 00000025 EBX: ce7d4980 ECX: 00000000 EDX: 00000001
+>   ESI: 00000200 EDI: ce7d8800 EBP: ce7f5ea8 ESP: ce7f5e70
+>   DS: 007b ES: 007b FS: 0000 GS: 00e0 SS: 0068 EFLAGS: 00210292
+>   CR0: 80050033 CR2: 00000000 CR3: 00e80000 CR4: 00000090
+>   Call Trace:
+>    ? if_usb_fw_timeo+0x64/0x64
+>    __if_usb_submit_rx_urb+0x85/0xe6
+>    ? if_usb_fw_timeo+0x64/0x64
+>    if_usb_submit_rx_urb_fwload+0xd/0xf
+>    if_usb_prog_firmware+0xc0/0x3db
+>    ? _request_firmware+0x54/0x47b
+>    ? _request_firmware+0x89/0x47b
+>    ? if_usb_probe+0x412/0x412
+>    lbs_fw_loaded+0x55/0xa6
+>    ? debug_smp_processor_id+0x12/0x14
+>    helper_firmware_cb+0x3c/0x3f
+>    request_firmware_work_func+0x37/0x6f
+>    process_one_work+0x164/0x25a
+>    worker_thread+0x1c4/0x284
+>    kthread+0xec/0xf1
+>    ? cancel_delayed_work_sync+0xf/0xf
+>    ? kthread_create_on_node+0x1a/0x1a
+>    ret_from_fork+0x2e/0x38
+>   ---[ end trace 3ef1e3b2dd53852f ]---
+>=20
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
 
+Acked-by: Pavel Machek <pavel@ucw.cz>
+
+> ---
+>  drivers/net/wireless/marvell/libertas/if_usb.c | 2 --
+>  1 file changed, 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net=
+/wireless/marvell/libertas/if_usb.c
+> index 5fee555a3d60..220dcdee8d2b 100644
+> --- a/drivers/net/wireless/marvell/libertas/if_usb.c
+> +++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+> @@ -459,8 +459,6 @@ static int __if_usb_submit_rx_urb(struct if_usb_card =
+*cardp,
+>  			  MRVDRV_ETH_RX_PACKET_BUFFER_SIZE, callbackfn,
+>  			  cardp);
+> =20
+> -	cardp->rx_urb->transfer_flags |=3D URB_ZERO_PACKET;
+> -
+>  	lbs_deb_usb2(&cardp->udev->dev, "Pointer for rx_urb %p\n", cardp->rx_ur=
+b);
+>  	if ((ret =3D usb_submit_urb(cardp->rx_urb, GFP_ATOMIC))) {
+>  		lbs_deb_usbd(&cardp->udev->dev, "Submit Rx URB failed: %d\n", ret);
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--gr/z0/N6AeWAPJVB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlvgCwsACgkQMOfwapXb+vL21QCgilEZgq1eVkymkhwXl3HQzKFG
+tosAoL9s4UFoDpJrImORnVfqMk4nAbJV
+=PgN1
+-----END PGP SIGNATURE-----
+
+--gr/z0/N6AeWAPJVB--
