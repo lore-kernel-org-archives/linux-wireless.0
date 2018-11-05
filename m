@@ -4,89 +4,91 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD4FEC46475
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DC80C46475
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:13:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92E9520869
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:12:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54B7020825
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:13:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IADJ+1gu";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XEt2yWnZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 92E9520869
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aHvu4MR4";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iib0lRkZ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 54B7020825
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728718AbeKEUbo (ORCPT
+        id S1729189AbeKEUcj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 15:31:44 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34682 "EHLO
+        Mon, 5 Nov 2018 15:32:39 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:35468 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727337AbeKEUbo (ORCPT
+        with ESMTP id S1727337AbeKEUcj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 15:31:44 -0500
+        Mon, 5 Nov 2018 15:32:39 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 289C260AD8; Mon,  5 Nov 2018 11:12:33 +0000 (UTC)
+        id C9786607CA; Mon,  5 Nov 2018 11:13:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541416353;
-        bh=nagwEuImJjA11ZEolLPlBP9kifGUh8PIxeGs/4Obtek=;
+        s=default; t=1541416407;
+        bh=u4t0c4PT1pkU1Hl3KEcULCkk1ZRLGY9WpGrSbWlS+z0=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=IADJ+1guu0vcPaVMNoWVWvKYxr/VrtJShT1eVhk9vX/jZUx0rBwgFJ+LNkpSRXiZA
-         Hw3FOnfZEw62QS7QYctADrWpvxIsjJMXhwbAK7+BQcXUXB8yyW10d0E81bGz4jAXM5
-         AtPPkO+ZKop9q2h5K3WBcDnyEcDOLK4kPVvb3V/M=
+        b=aHvu4MR4qO7FQqoWKvBlF4BNn3ir257yXMhBYq6Luye3WZj3VUav5VwMoj+3b1X1o
+         5OPDRF5fJ2lCQYdikVPH6nXPwJL1NwIVeYmeYb3DlWUFCbMJiQwt/8PQvMPBakLP91
+         V59TBSlQc6KUuFivaSNjDo9GM2BVzVaLLrDMH2lQ=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B72496044B;
-        Mon,  5 Nov 2018 11:12:30 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2F47260247;
+        Mon,  5 Nov 2018 11:13:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541416352;
-        bh=nagwEuImJjA11ZEolLPlBP9kifGUh8PIxeGs/4Obtek=;
+        s=default; t=1541416407;
+        bh=u4t0c4PT1pkU1Hl3KEcULCkk1ZRLGY9WpGrSbWlS+z0=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=XEt2yWnZco3Mo2NXxqU3H1fM2wbKptPoGmb/kfQxeXSU6Nsqjy173RVLdU2Z0OnOV
-         OtsbTEOEoyPUqbzL3G31lWEmIuaqkWsQa2rvXw8ql7xEE50p93DpfVIf00z4vaUmob
-         TJGN+/8xhKH2kwg4r1OTaKMLjkY8fGxYu/brO60I=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B72496044B
+        b=iib0lRkZNbk8qX6VcoKKXI4QCU8tXjeB3FTnxb7BJbzoMyv7FuierFxK0fll8v9+c
+         /CqJbSszHuB/EmIcTNMkBIjlhdZxDua2PEpx7toDwfUlV0JcsSZdZkqYfJX9Yx2/vT
+         +bRFqXkBFyVyXL8ExBVrvh40+8FWFEqm38qYqSY4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2F47260247
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][ath10k-next] ath10k: fix some spelling mistakes
+Subject: Re: [PATCH] ath10k: remove set but not used variable 'tlv_len'
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20181018215104.10444-1-colin.king@canonical.com>
-References: <20181018215104.10444-1-colin.king@canonical.com>
-To:     Colin King <colin.king@canonical.com>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+In-Reply-To: <1539951626-185764-1-git-send-email-yuehaibing@huawei.com>
+References: <1539951626-185764-1-git-send-email-yuehaibing@huawei.com>
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     YueHaibing <yuehaibing@huawei.com>, <ath10k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20181105111233.289C260AD8@smtp.codeaurora.org>
-Date:   Mon,  5 Nov 2018 11:12:33 +0000 (UTC)
+Message-Id: <20181105111327.C9786607CA@smtp.codeaurora.org>
+Date:   Mon,  5 Nov 2018 11:13:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin King <colin.king@canonical.com> wrote:
+YueHaibing <yuehaibing@huawei.com> wrote:
 
-> Trivial fix to some spelling mistakes in ath10k_err and ath10k_dbg
-> messages:
-> "capablity" -> "capability"
-> "registed" -> "registered"
+> Fixes gcc '-Wunused-but-set-variable' warning:
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function 'ath10k_wmi_tlv_op_gen_config_pno_start':
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c:3455:6: warning:
+>  variable 'tlv_len' set but not used [-Wunused-but-set-variable]
+> 
+> It never used since inroduction in commit
+> ce834e280f2f ("ath10k: support NET_DETECT WoWLAN feature")
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-eb9bd8b963d6 ath10k: fix some spelling mistakes
+3468404f78e1 ath10k: remove set but not used variable 'tlv_len'
 
 -- 
-https://patchwork.kernel.org/patch/10648317/
+https://patchwork.kernel.org/patch/10649069/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
