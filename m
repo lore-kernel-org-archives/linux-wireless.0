@@ -2,96 +2,163 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5BB6C46475
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 17:02:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E929EC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 17:49:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 713432081D
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 17:02:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A95F320700
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 17:49:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="eKOYeH4N"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 713432081D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=pass (1024-bit key) header.d=linaro.org header.i=@linaro.org header.b="VfMQlgDK"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A95F320700
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linaro.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387589AbeKFCXF (ORCPT
+        id S2387656AbeKFDK0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 21:23:05 -0500
-Received: from nbd.name ([46.4.11.11]:45600 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387458AbeKFCXF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 21:23:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=1vqG9LYSDCM05rjhQ4DChs3Fv0Rxo8oGv0M71LL2cPc=; b=eKOYeH4N9NyjH/b/YhjIedQOSr
-        Avh2Y+1WHoN68RtXlnm+uT9GHAC0mkLN4UC4D/npiH7Z40K3NQc5qx7l7PEMu/k8p355x8p9rbb6J
-        vHI9+b3lrtKkbEazxy5ateF8KgqiZ+MBOkdax16/LSM4LKojBWHh0HszyCJkqELWHyzU=;
-Subject: Re: [PATCH v3 1/2] mt76x02: run calibration after scanning
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        linux-wireless@vger.kernel.org
-References: <1541086502-21239-1-git-send-email-sgruszka@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <441ec23f-ac64-4b07-5115-208d614a8b11@nbd.name>
-Date:   Mon, 5 Nov 2018 18:02:27 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        Mon, 5 Nov 2018 22:10:26 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:44798 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387595AbeKFDK0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Nov 2018 22:10:26 -0500
+Received: by mail-wr1-f66.google.com with SMTP id j17-v6so5372339wrq.11
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 09:49:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=K6FhVTqVVUuW/ADxHVPs56HcvIicW0s7Z480AD0vQpg=;
+        b=VfMQlgDK1Xqb0qf9C/ar2i16zKqVIEq2XmQ3LffLeJ1emNizQPMCEVG7k7NjQKoJuH
+         JxU6IGSXtllqNhPr8xyLhHvRcGkpYsdGPsIa0iDCfyLqMCSOeXYTNmh0a7RSBVr2Gzgs
+         SwjSXIBaZJDDWg/ascnYjdWcd9KLQUjy5E39c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=K6FhVTqVVUuW/ADxHVPs56HcvIicW0s7Z480AD0vQpg=;
+        b=COuD1gYrYfd/zSNYKXxC0i6YdZh/lkpG8gn7NH0kPwvw/G02FNTFmmVK1KfPpKTOuX
+         osTJCSMZAqbIBS1mlqyZOzrd7qRsFF4KJPMf0hoSsgOrGPewOdMiImoUygQH0IZOtkAn
+         WOGFOFy50YAynH/Jkxn6gGeiy8WF1VliYANFjHYB2yf7JD5sV2FSvvgwDe40SA6tpcZk
+         tqrxXOiAgOcZRaCuLOpwMsZSMeNiLOWVEKde0ffDQu65HAUaKDIrDtX30QNokaO8bog2
+         nZtiBkSySi/FAI9Y+KdgyXVIXZMDC6WoW5pyKQp6HPGUYHGFRt/1LvDo3AUmY9vQF0hm
+         7V6w==
+X-Gm-Message-State: AGRZ1gKSeMjA13IS+PNjHCgxMSJytszemozOgJ67ETuDURRkTq1WPdq4
+        aRdL/9jtN4sjGpKcErHIvgJ7LtKvVGpv7oLF7vV3qg==
+X-Google-Smtp-Source: AJdET5eQq0knOziaKk0pw+yGa/C8oKMmqg6Ax5/xPHPpM1zIVd/Nak3s9R+idlQJPU43C4p6GfxKNQ2T/zEqdRGhLDA=
+X-Received: by 2002:adf:9f0b:: with SMTP id l11-v6mr20511899wrf.206.1541440178262;
+ Mon, 05 Nov 2018 09:49:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1541086502-21239-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: by 2002:a1c:4054:0:0:0:0:0 with HTTP; Mon, 5 Nov 2018 09:49:37 -0800 (PST)
+In-Reply-To: <87o9b3g927.fsf@codeaurora.org>
+References: <1540490241-32021-1-git-send-email-john.stultz@linaro.org> <87o9b3g927.fsf@codeaurora.org>
+From:   John Stultz <john.stultz@linaro.org>
+Date:   Mon, 5 Nov 2018 09:49:37 -0800
+Message-ID: <CALAqxLXPWLp_ah7qO9AdGrk=Wh00iD_VHFD-qBrmgAUys+165g@mail.gmail.com>
+Subject: Re: [RFC][PATCH] wlcore: Fixup "Add support for optional wakeirq"
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     lkml <linux-kernel@vger.kernel.org>,
+        Tony Lindgren <tony@atomide.com>, Eyal Reizer <eyalr@ti.com>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-11-01 16:35, Stanislaw Gruszka wrote:
-> If we are associated and scanning is performed, sw_scan_complete callback
-> is done after we get back to operating channel, so we do not perform
-> queue cal work. Fix this queue cal work from sw_scan_complete().
-> 
-> On mt76x0 we have to restore gain in MT_BBP(AGC, 8) register after
-> scanning, as it was multiple times modified by channel switch code.
-> So queue cal work without any delay to set AGC gain value.
-> 
-> Similar like in mt76x2 init AGC gain only when set operating channel
-> and just check before queuing cal work in sw_scan_complete() if 
-> initialization was already done.
-> 
-> Fixes: bbd10586f0df ("mt76x0: phy: do not run calibration during channel switch")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Applied both patches, thanks.
+On Mon, Nov 5, 2018 at 1:36 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> John Stultz <john.stultz@linaro.org> writes:
+>
+>> After commit 3c83dd577c7f ("wlcore: Add support for optional
+>> wakeirq") landed upstream, I started seeing the following oops
+>> on my HiKey board:
+>>
+>> [    1.870279] Unable to handle kernel read from unreadable memory at virtual address 0000000000000010
+>> [    1.870283] Mem abort info:
+>> [    1.870287]   ESR = 0x96000005
+>> [    1.870292]   Exception class = DABT (current EL), IL = 32 bits
+>> [    1.870296]   SET = 0, FnV = 0
+>> [    1.870299]   EA = 0, S1PTW = 0
+>> [    1.870302] Data abort info:
+>> [    1.870306]   ISV = 0, ISS = 0x00000005
+>> [    1.870309]   CM = 0, WnR = 0
+>> [    1.870312] [0000000000000010] user address but active_mm is swapper
+>> [    1.870318] Internal error: Oops: 96000005 [#1] PREEMPT SMP
+>> [    1.870327] CPU: 0 PID: 5 Comm: kworker/0:0 Not tainted 4.19.0-05129-gb3d1e8e #48
+>> [    1.870331] Hardware name: HiKey Development Board (DT)
+>> [    1.870350] Workqueue: events_freezable mmc_rescan
+>> [    1.870358] pstate: 60400005 (nZCv daif +PAN -UAO)
+>> [    1.870366] pc : wl1271_probe+0x210/0x350
+>> [    1.870371] lr : wl1271_probe+0x210/0x350
+>> [    1.870374] sp : ffffff80080739b0
+>> [    1.870377] x29: ffffff80080739b0 x28: 0000000000000000
+>> [    1.870384] x27: 0000000000000000 x26: 0000000000000000
+>> [    1.870391] x25: 0000000000000036 x24: ffffffc074ecb598
+>> [    1.870398] x23: ffffffc07ffdce78 x22: ffffffc0744ed808
+>> [    1.870404] x21: ffffffc074ecbb98 x20: ffffff8008ff9000
+>> [    1.870411] x19: ffffffc0744ed800 x18: ffffff8008ff9a48
+>> [    1.870418] x17: 0000000000000000 x16: 0000000000000000
+>> [    1.870425] x15: ffffffc074ecb503 x14: ffffffffffffffff
+>> [    1.870431] x13: ffffffc074ecb502 x12: 0000000000000030
+>> [    1.870438] x11: 0101010101010101 x10: 0000000000000040
+>> [    1.870444] x9 : ffffffc075400248 x8 : ffffffc075400270
+>> [    1.870451] x7 : 0000000000000000 x6 : 0000000000000000
+>> [    1.870457] x5 : 0000000000000000 x4 : 0000000000000000
+>> [    1.870463] x3 : 0000000000000000 x2 : 0000000000000000
+>> [    1.870469] x1 : 0000000000000028 x0 : 0000000000000000
+>> [    1.870477] Process kworker/0:0 (pid: 5, stack limit = 0x(____ptrval____))
+>> [    1.870480] Call trace:
+>> [    1.870485]  wl1271_probe+0x210/0x350
+>> [    1.870491]  sdio_bus_probe+0x100/0x128
+>> [    1.870500]  really_probe+0x1a8/0x2b8
+>> [    1.870506]  driver_probe_device+0x58/0x100
+>> [    1.870511]  __device_attach_driver+0x94/0xd8
+>> [    1.870517]  bus_for_each_drv+0x70/0xc8
+>> [    1.870522]  __device_attach+0xe0/0x140
+>> [    1.870527]  device_initial_probe+0x10/0x18
+>> [    1.870532]  bus_probe_device+0x94/0xa0
+>> [    1.870537]  device_add+0x374/0x5b8
+>> [    1.870542]  sdio_add_func+0x60/0x88
+>> [    1.870546]  mmc_attach_sdio+0x1b0/0x358
+>> [    1.870551]  mmc_rescan+0x2cc/0x390
+>> [    1.870558]  process_one_work+0x12c/0x320
+>> [    1.870563]  worker_thread+0x48/0x458
+>> [    1.870569]  kthread+0xf8/0x128
+>> [    1.870575]  ret_from_fork+0x10/0x18
+>> [    1.870583] Code: 92400c21 b2760021 a90687a2 97e95bf9 (f9400803)
+>> [    1.870587] ---[ end trace 1e15f81d3c139ca9 ]---
+>>
+>> It seems since we don't have a wakeirq value in the dts, the wakeirq
+>> value in wl1271_probe() is zero, which then causes trouble in
+>> irqd_get_trigger_type(irq_get_irq_data(wakeirq)).
+>>
+>> This patch tries to address this by checking if wakeirq is zero,
+>> and not trying to add it to the resources if that is the case.
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>> Cc: Eyal Reizer <eyalr@ti.com>
+>> Cc: Anders Roxell <anders.roxell@linaro.org>
+>> Cc: linux-wireless@vger.kernel.org
+>> Acked-by: Tony Lindgren <tony@atomide.com>
+>> Signed-off-by: John Stultz <john.stultz@linaro.org>
+>
+> Any particular reason why you marked this as RFC? I'm asking because I
 
-- Felix
+Mostly out of habit. I do that on the first pass submissions. But yea,
+no objection if it were to be taken.
+
+> would like to apply this patch as is and push to 4.20.
+>
+> I'll just add:
+>
+> Fixes: 3c83dd577c7f ("wlcore: Add support for optional wakeirq")
+
+That would be great!
+
+thanks
+-john
