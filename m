@@ -7,71 +7,75 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C087BC0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0770BC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:13:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8907420854
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:11:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0F0020854
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:13:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BwDJ6BHt"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8907420854
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="e/qp1co6"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C0F0020854
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728643AbeKESa2 (ORCPT
+        id S1727795AbeKESce (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 13:30:28 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:34760 "EHLO
+        Mon, 5 Nov 2018 13:32:34 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:42693 "EHLO
         mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726723AbeKESa1 (ORCPT
+        with ESMTP id S1726774AbeKEScd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 13:30:27 -0500
-Received: by mail-wr1-f67.google.com with SMTP id j26-v6so8609342wre.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 01:11:44 -0800 (PST)
+        Mon, 5 Nov 2018 13:32:33 -0500
+Received: by mail-wr1-f67.google.com with SMTP id y15-v6so8580869wru.9
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 01:13:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:references:cc:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=ZaoArPrTwYU4hI21Rt0EWf2M/5RvCoKRpba4MYaagb4=;
-        b=BwDJ6BHthF7TMNlQsPCz6bgbiKLuNmzOMK2n0Ui7qvtP/tYJOcD49BX8zNT6nLlZ+1
-         kGNOJ8ObUA5StkfGgnSfnFA/jMO55epnNPclj0LT7aAvCN2e6iUgteBSyD6LrSNEbfiF
-         /3WQzzWdqPa3OwAUf6/k4hLEGwBQAnxqFUbwY=
+        bh=wA7TyDJb/otO8QhHIlksbXuo8LT1Oi0HmcIwXXvvRmQ=;
+        b=e/qp1co6W/KuTAqloqSSr5Ugq/YYo6wC5XXlVKi9YpBNKj5YsD86IKyKjjpEBpqFfL
+         MNZzyCgRXpIkknQ2xvvydk6HX9iNjDZWG1jj0ozJtc9jkWvbVz9v1uQsDVF9pd/5QwIv
+         eIo7d0BVUhtMj1z8lTUcnIECtqnjoyAn2XUpQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:cc:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=ZaoArPrTwYU4hI21Rt0EWf2M/5RvCoKRpba4MYaagb4=;
-        b=YF6ghHCfBthAPz16OLdLmGgoyJoHiUFLQ64MCwq+ud41Vs3rLH2xXu3s/nRTYe/ZGB
-         i6WQJaZ/w/HyVji54inrahlwtnG6woQ9IpFRudc79jQSAs5Cgd8vJvIpY6yxIjJ9OYBZ
-         eK+EO/IBseUfaF5CfOfm/sbxKcgEJCvxHs57hrRCgX6djwU1tDMWj8QyPGTwGrFBCtf/
-         +VKsOYT75hlXmmLPFZpdFqMYaRIPQg1ffLKoRlAvBZTSTt5+GY8Q06VqGy70oj83byru
-         X7eLDidLoW+tHJ3pon9ANuRWOfN5ouP+RbiV2VPGdeVZ22/eNPOraSf3+e0fDXqo3B43
-         LKlg==
-X-Gm-Message-State: AGRZ1gKmXuLmkbj+K64FxNZ1XntxObJN4X54m9Ly5ENh4ym1jEwQzdHq
-        lhzC+KMe0MWgYGzzmGO5lr0BZQ==
-X-Google-Smtp-Source: AJdET5fiqP7FzSHEWO/x9nnBWrz/2BcOoBq50gBNzJ9RuCd7M4BGIycXWjXshw0PKhcSsgDsbbhvmQ==
-X-Received: by 2002:adf:fb4b:: with SMTP id c11-v6mr18093152wrs.117.1541409103326;
-        Mon, 05 Nov 2018 01:11:43 -0800 (PST)
+        bh=wA7TyDJb/otO8QhHIlksbXuo8LT1Oi0HmcIwXXvvRmQ=;
+        b=bHMM0WAZ/6hL8r8JOXuHmDNc6rzEuUWNoHrAE11UUG1BDmK/AZap8OMODVVENqMk8S
+         w0+xJDnRWONCBPvFYZq3EyuJdvfUNdHgZbyAtbSrDP4fiV37sl1hu02Y3SjOthDXlpwN
+         aOKrALvHA7Aq8J5d0248qjGItgJyEiX5+LgbTdgIdB2+vLhH8UtKf+3evfA65FMDJeyL
+         rXx6t25p11A88PqfhOqeVT8Cp0Tw+1Vm9Jzw2FRqaeWX73zK7FbMi1JaXZSLRKdCYaG1
+         GVX3gov69NMLb0S33blKVj13SBFlSWZJdqCu66u9uFkLOf5yeTIutOEftqIywlcFSoFI
+         B8cA==
+X-Gm-Message-State: AGRZ1gJimZ7iKV+E3OoIGPYRe9t3bJ6qBqIyxUzgrdZupjYTPx/CrwKD
+        /G9VsKikQqtsadyXYTnTkS63rAUGWQgJzw==
+X-Google-Smtp-Source: AJdET5drZNWJdxfR0XoW8eU1R/PmptP/mqhIYAeBmn2NSFx5W4Ig3LkJGc/fPX4awJbv226t+QeKnA==
+X-Received: by 2002:adf:cc81:: with SMTP id p1-v6mr809562wrj.139.1541409228885;
+        Mon, 05 Nov 2018 01:13:48 -0800 (PST)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id i7-v6sm66453201wrb.30.2018.11.05.01.11.42
+        by smtp.gmail.com with ESMTPSA id i7-v6sm8600443wrs.55.2018.11.05.01.13.47
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 01:11:42 -0800 (PST)
-Subject: Re: [PATCH 5/5] b43: Drop internal cordic algorithm implementation
+        Mon, 05 Nov 2018 01:13:48 -0800 (PST)
+Subject: Re: [PATCH 2/5] brcmfmac: Use common CORDIC_FLOAT macro from lib
 To:     Kalle Valo <kvalo@codeaurora.org>, Priit Laes <plaes@plaes.org>
 References: <cover.f21c8e62e188620d586edb3f77514e6237122c4c.1541238842.git-series.plaes@plaes.org>
- <51f98dbd0efe48c315d8e7876074aeaa22fde580.1541238842.git-series.plaes@plaes.org>
- <87y3a7gaag.fsf@codeaurora.org>
-Cc:     linux-kernel@vger.kernel.org,
+ <4bd6e7758bc0d88b33cdb09448633bb5b97aba7c.1541238842.git-series.plaes@plaes.org>
+ <877ehrhp21.fsf@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dff744c6-8256-cd52-dc69-37ea51106950@broadcom.com>
-Date:   Mon, 5 Nov 2018 10:11:41 +0100
+Message-ID: <21e6a75b-7728-761d-d899-395864226fb5@broadcom.com>
+Date:   Mon, 5 Nov 2018 10:13:47 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <87y3a7gaag.fsf@codeaurora.org>
+In-Reply-To: <877ehrhp21.fsf@codeaurora.org>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -79,16 +83,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/5/2018 10:09 AM, Kalle Valo wrote:
+On 11/5/2018 10:05 AM, Kalle Valo wrote:
 > Priit Laes <plaes@plaes.org> writes:
 >
+>> Now that cordic library has the CORDIC_FLOAT macro, use that
+>>
 >> Signed-off-by: Priit Laes <plaes@plaes.org>
+>> ---
+>>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c | 4 ++--
+>>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 4 ++--
 >
-> No empty commit logs, please.
+> The driver is "brcmsmac" (note the 's', not 'f'), you should fix the
+> title accordingly.
 >
-> And IMHO you could fold patch 5 into patch 4.
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
+>> @@ -3447,8 +3447,8 @@ wlc_lcnphy_start_tx_tone(struct brcms_phy *pi, s32 f_kHz, u16 max_val,
+>>
+>>  		theta += rot;
+>>
+>> -		i_samp = (u16) (FLOAT(tone_samp.i * max_val) & 0x3ff);
+>> -		q_samp = (u16) (FLOAT(tone_samp.q * max_val) & 0x3ff);
+>> +		i_samp = (u16)(CORDIC_FLOAT(tone_samp.i * max_val) & 0x3ff);
+>> +		q_samp = (u16)(CORDIC_FLOAT(tone_samp.q * max_val) & 0x3ff);
+>
+> I haven't seen the patch 1 yet, but just from seeing this patch I don't
+> get what's the benefit.
 
-Similarly 2 and 3.
+The FLOAT macro was defined in brcmsmac (see patch 3). It is now moved 
+to the cordic library simply because it is more closely related to that.
 
 Regards,
 Arend
