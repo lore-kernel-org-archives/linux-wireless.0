@@ -2,95 +2,114 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DB3C46475
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2961AC0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F4B020827
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:42:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D175320825
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 11:52:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VJaT1pt7"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3F4B020827
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LS3xRTKr";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oPuvXxJ7"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D175320825
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729577AbeKEVCJ (ORCPT
+        id S1727337AbeKEVLk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 16:02:09 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:52828 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726358AbeKEVCI (ORCPT
+        Mon, 5 Nov 2018 16:11:40 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:39796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727035AbeKEVLk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 16:02:08 -0500
-Received: by mail-wm1-f66.google.com with SMTP id l66-v6so1840089wml.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Nov 2018 03:42:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:subject:to:references:cc:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=shmYwTo+gykgr368SEU/+i34i31i2JPV6vj9elmRgFo=;
-        b=VJaT1pt7Cxu0xWFoYC3P40C/zJj/wihdt3dNETqDhycn0sQw6wr0lDXaNo7RhCrxA5
-         RSIVb/IKkcUXTW+QwLUbu3/fgA/ROy4XV6yLecAAV37wV34NEmXhzblu7M1yilz879oJ
-         R9/92QW1bJ9yMjk4Nc+9U6LMbfH+qdp7pvOik=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:references:cc:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=shmYwTo+gykgr368SEU/+i34i31i2JPV6vj9elmRgFo=;
-        b=a0igkkMlB270LKUPIwkV5jZ51V3sh1uN4hjkhznMB7pzXTYaCKngIJQZ7p8BVM6xLe
-         209Pd9P4tv3ihI6NS/mChjWjnTGl3/zUR+UXL7/6cv1nf5PuxT+FRaUZ76vjI54Glu98
-         YhEQFlkWVg462ub0eEj5E89j1ivEh65pEG3vmcP3BFVcpknL7q7zG8GkjkzP3UbQYsAa
-         hl3gtvrJCiwr4uMGmP9yZmz+GSQrrSu/xDmVaBAqXqsSVncnwf2whSaVsud2G4XbNAg1
-         XcSSQCm3VPcjQwW4M7XFBzuZcq0JnWRwgdbPCC0v1B2Qe4MSS2HtzV0UxfSBORRCVSAw
-         aC7A==
-X-Gm-Message-State: AGRZ1gJyCzdghVdOFI2Bi/92hCC67gqZiM4ZIa1Oiv0vLr2ee44WW9T7
-        fKQPpLwLSrlbVvPg4J7Eyg/M2A==
-X-Google-Smtp-Source: AJdET5eBLafoZDNrQymuwYc2EN9g6RPEAuByPpW6gRfiEB2HHi5JK/V6OLg2P9rj84DHAPMbGAAKWA==
-X-Received: by 2002:a1c:9609:: with SMTP id y9-v6mr5718827wmd.67.1541418168153;
-        Mon, 05 Nov 2018 03:42:48 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id g10-v6sm3226136wrs.95.2018.11.05.03.42.47
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 05 Nov 2018 03:42:47 -0800 (PST)
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 6/6] brcmfmac: Cleanup brcmf_fw_request_done()
-To:     Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-References: <20181009124755.25402-1-hdegoede@redhat.com>
- <20181009124755.25402-6-hdegoede@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Message-ID: <9741c4fc-fbe2-c45c-9775-18b71dbcfc85@broadcom.com>
-Date:   Mon, 5 Nov 2018 12:42:46 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        Mon, 5 Nov 2018 16:11:40 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 833276053D; Mon,  5 Nov 2018 11:52:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541418738;
+        bh=SPi2NEZ1aCarU7Vmvqeq3w/NhfzIM0NPl1x6LZeapmU=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=LS3xRTKrQf4cUX8vmrtgauq+dp8qel41z68drHXa/S5l3keTta9h/va7EX0rHjjKM
+         ouUgJb/N1NmEIl2mV+EUvAsk8frfva2LPZIqXChJFRVnwkW4NUtpcUA0JXR8WSJiyX
+         lhBqiNZA2hVXyEW75Pg/twcoSfIZlk7EdWMPaydo=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2BC2560112;
+        Mon,  5 Nov 2018 11:52:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541418738;
+        bh=SPi2NEZ1aCarU7Vmvqeq3w/NhfzIM0NPl1x6LZeapmU=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=oPuvXxJ7/n9T4T1W+hzsZOG7nxeXnGbVZC5Gny5zAeSa4mU5Si2vGuv0H4HjlkYXf
+         p4I+eA86Pak2qRJUIrchvw8i885knAUDxelKX1r8KgFZYQrG8RqFzbyJbUga/QO8gE
+         ck9KI9hG9kokeUaO13pIcslYkTit+jx9RipbzRFQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2BC2560112
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20181009124755.25402-6-hdegoede@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2] ath10k: report tx rate using ieee80211_tx_rate_update()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1540530438-11292-1-git-send-email-akolli@codeaurora.org>
+References: <1540530438-11292-1-git-send-email-akolli@codeaurora.org>
+To:     Anilkumar Kolli <akolli@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20181105115218.833276053D@smtp.codeaurora.org>
+Date:   Mon,  5 Nov 2018 11:52:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/9/2018 2:47 PM, Hans de Goede wrote:
-> The "cur" variable is now only used for a debug print and we already
-> print the same info from brcmf_fw_complete_request(), so the debug print
-> does not provide any extra info and we can remove it.
+Anilkumar Kolli <akolli@codeaurora.org> wrote:
 
-I guess this could have been collapsed in the first patch introducing 
-brcmf_fw_complete_request(). All-in-all a nice cleanup. Thanks.
+> Mesh path metric needs tx rate information from ieee80211_tx_status()
+> call but in ath10k there is no mechanism to report tx rate information
+> via ieee80211_tx_status(), the tx rate is only accessible via
+> sta_statiscs() op.
+> 
+> Per peer tx stats has tx rate info available, Tx rate is available
+> to ath10k driver after every 4 PPDU sent in the air. For each PPDU,
+> ath10k driver updates rate informattion to mac80211 using
+> ieee80211_tx_rate_update().
+> 
+> Per peer txrate information is updated through per peer statistics
+> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
+> 
+> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
+> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
+> 
+> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c   | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
+The corresponding mac80211 patch is not yet in ath-next branch, I'll
+wait for that.
+
+drivers/net/wireless/ath/ath10k/htt_rx.c: In function 'ath10k_update_per_peer_tx_stats':
+drivers/net/wireless/ath/ath10k/htt_rx.c:3060:3: error: implicit declaration of function 'ieee80211_tx_rate_update'; did you mean 'ieee80211_tx_dequeue'? [-Werror=implicit-function-declaration]
+   ieee80211_tx_rate_update(ar->hw, sta, &arsta->tx_info);
+   ^~~~~~~~~~~~~~~~~~~~~~~~
+   ieee80211_tx_dequeue
+cc1: some warnings being treated as errors
+make[5]: *** [drivers/net/wireless/ath/ath10k/htt_rx.o] Error 1
+make[5]: *** Waiting for unfinished jobs....
+make[4]: *** [drivers/net/wireless/ath/ath10k] Error 2
+make[3]: *** [drivers/net/wireless/ath] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
+
+Patch set to Awaiting Upstream.
+
+-- 
+https://patchwork.kernel.org/patch/10656925/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
