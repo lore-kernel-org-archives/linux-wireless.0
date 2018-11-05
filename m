@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BFC1ECDE44
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 05:51:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFECFECDE44
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 05:52:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C27020827
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 05:51:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D3B820819
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 05:52:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="RK0ZanES"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C27020827
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="HqYROc72"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8D3B820819
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729318AbeKEPJx (ORCPT
+        id S1729321AbeKEPJ6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 10:09:53 -0500
-Received: from mail-sn1nam02on0122.outbound.protection.outlook.com ([104.47.36.122]:15392
+        Mon, 5 Nov 2018 10:09:58 -0500
+Received: from mail-sn1nam02on0127.outbound.protection.outlook.com ([104.47.36.127]:60736
         "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728985AbeKEPJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 10:09:53 -0500
+        id S1728985AbeKEPJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Nov 2018 10:09:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G5LiTqO2GwiFWevR9XtTSscp2BjRLs3TYF0Qc8vQzgc=;
- b=RK0ZanESWlfJKnp1jLxqHlmWDm81HjPkRTZoWAxo0s7N5CI3FlhqVWNvdfIHep2a872TKGdlOKbfeSVs8fDj6Y/9eTt1u3LV+SerSellN3Okpd3QwbqOvd8+P7gtzFjrXc0EFd/t+LTyngoYJZcWQlaBsWGhdzZOgAvBRPcDN9Q=
+ bh=dyuzGjDL1uuprkTfKxgRYQMc8OGyf2EkNqZ/SVEiTTA=;
+ b=HqYROc72HrXnF/QanstxgEgf1Q0gnGjizA31Suyn7z6sNsMR8GSIAV3CuiAJbYkbWN3A9pW1U9FOil/95R9RE67RTcDtgWua8S+iY2RzMtebK6IgvtV49l68D5q2j3aca6ejqN7DSSCWqVR91W2NqQ7FeiiQY8nhod9WSMfzLIY=
 Received: from BYAPR06MB3992.namprd06.prod.outlook.com (52.135.200.22) by
  BYAPR06MB4231.namprd06.prod.outlook.com (52.135.238.140) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.26; Mon, 5 Nov 2018 05:51:54 +0000
+ 15.20.1294.26; Mon, 5 Nov 2018 05:51:59 +0000
 Received: from BYAPR06MB3992.namprd06.prod.outlook.com
  ([fe80::2147:2944:5ff:e986]) by BYAPR06MB3992.namprd06.prod.outlook.com
  ([fe80::2147:2944:5ff:e986%3]) with mapi id 15.20.1294.032; Mon, 5 Nov 2018
- 05:51:54 +0000
+ 05:51:59 +0000
 From:   Wright Feng <Wright.Feng@cypress.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Wright Feng <Wright.Feng@cypress.com>,
@@ -49,47 +49,49 @@ CC:     Wright Feng <Wright.Feng@cypress.com>,
         Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
         "brcm80211-dev-list.pdl@broadcom.com" 
         <brcm80211-dev-list.pdl@broadcom.com>
-Subject: [PATCH v3 1/3] brcmfmac: add credit numbers updating support
-Thread-Topic: [PATCH v3 1/3] brcmfmac: add credit numbers updating support
-Thread-Index: AQHUdMunJ0F2PsdgjEmrkPMlafJbpQ==
-Date:   Mon, 5 Nov 2018 05:51:54 +0000
-Message-ID: <20181105055137.13333-2-wright.feng@cypress.com>
+Subject: [PATCH v3 2/3] brcmfmac: enable frameburst mode in default firmware
+ setting
+Thread-Topic: [PATCH v3 2/3] brcmfmac: enable frameburst mode in default
+ firmware setting
+Thread-Index: AQHUdMuqErtUcTUsu0eaZklfOw1bKw==
+Date:   Mon, 5 Nov 2018 05:51:59 +0000
+Message-ID: <20181105055137.13333-3-wright.feng@cypress.com>
 References: <20181105055137.13333-1-wright.feng@cypress.com>
 In-Reply-To: <20181105055137.13333-1-wright.feng@cypress.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: TYAPR01CA0049.jpnprd01.prod.outlook.com
- (2603:1096:404:2b::13) To BYAPR06MB3992.namprd06.prod.outlook.com
+x-clientproxiedby: OSAPR01CA0165.jpnprd01.prod.outlook.com
+ (2603:1096:604:d::33) To BYAPR06MB3992.namprd06.prod.outlook.com
  (2603:10b6:a02:90::22)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Wright.Feng@cypress.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [61.222.14.99]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR06MB4231;6:fUR840DJd+fNOJ/Mi/o3THxh4v0XPpDsZyTZ1LNXgPWP7MCLtrYak1aKkBuT3REjbJrnOpkNPLn1yaUhr49vwWpFFZYvg1WiDNeSRf6P+vBusEwBIy8rcRHFUUVOgZf9WWTE/dk/Z2bm/QyPYhJUvXZ9ZyylUvXy34XSzvcodPoWJ+NfA0LIdopnPRayhJeKhdtkiznTUR/3CaWiCOMU00R8+BV0jDRy8Qvs+nhewGMPoiP0RahiFQkHm04kBZYFEqQ9jHuLsGXLTfnV+M37yRdRFypNH87sEecTaq4OZzwEmlYjWndAyBZcK3wV5f5MmuVMkwzF1TZ8ml6/noeB623PlQxs1u/qyMYqEJkCA7K6jhtaH6LBtSl5d+frYNYD/vXzitnkmxN7O9fa3K9IM5TEDvP4vtsLUo3rTKnNJTCTuN0dKNu+cH9SmIFIa0Ewt2naduDq6iiw/ZKq4CUxlg==;5:cZ2rycjTp/YB88zDLsAfHv7psfvrPh46MMEVvdixgP5JRAP272MycC6c2P9smPVQjEzYZwb02AzzLF8HOPDp4Bk9AsgifJsEtdxwOhMTm8T3dzn9ILk1+rToV8vKbQ4X7tocfInKUdi0ewYgBJ4T8FB9Sg7L9ifRSQRiyRYfk5k=;7:n+tZd4/sInBw0/noRHqec/wNHvhhTJCQC64Q+SPneLb+nHGsIlmn5DT9dUUqqnSMf894ra13iDInAVtKnm4gh1E5eDiawazCQ2CxA67DpCjZpZT3yXcNdhV/i9moyyPZKFUw9dKOjg9KYha8fDVbfg==
-x-ms-office365-filtering-correlation-id: 66c0742e-025d-4d93-5874-08d642e2ca37
+x-microsoft-exchange-diagnostics: 1;BYAPR06MB4231;6:67OyRpJq61gh1FrFzcQ0i1/AwaRmQf0y0k60J7ATpNV2IHvTHfaPdkt6z6KDaB4MIv/ma9UupXnhWVdSR6ko+nEEdp7gAMIAMTlPIDto5IhE4AQ7Ij/amtSmBVsIPsqxDL/AbDwz9kWIoyxbE64mT8xftzovM46mUtdj3quNwzDzfVa8wRGOR18Dh5z7MlTyR5arv/9dYCokn0W4zr6rKKv4S57P/E4x4BQFqlvEcZLHR6shk32ay4n+ZcRGszqVmfPOgWcswKEEqV9KYnsucZD+f/OtSQ/RrqQOCkAS6fltQa0FQMRk87vC/cpn/bHIuk2uhNChM2GE+tUL3kkqR0IgdKIxaNBLGGn4ApmLrGIGILgdwZRLcnt2gDZXx2nVoTGgSJXUIwBJ93ZHare3Y/RLl8ZFsQ7ValOf5OhnctJRviUiPEWF2kK0zhU7jHl2clNMs3zNBhahe75zLBmqnQ==;5:nIx/39fW8OznBX0lHFLCtg0+Vz3GqRwrXPtY7JfPuTnpKgJfYb94z11PzVzQwZuQF1Tk3thbZ9qEKH4P5f7/Z15+z21j+I+LMMVc+mVwIsvKyoWFRBDYo5+H5Odl/9n6jMZ7Yb9cx1J0eg8KOC+jxoaiKDz0zo60ZBWe/8cFS70=;7:hMM4TC++B6dcy9B/AzMsg22gzKugDWLEAIFQcLBEWSqRZlnUfPBayNgpme/w7c5oEkDEh0771VSddFnxF4SKLrzcBdU1hojDT7AxEnd1TEpPcd1AxJqrG7rutftjKkX/dfW3EVkAqhewtlb62SFS/w==
+x-ms-office365-filtering-correlation-id: bb69dbb1-7acd-442c-8605-08d642e2cd0e
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BYAPR06MB4231;
 x-ms-traffictypediagnostic: BYAPR06MB4231:
-x-microsoft-antispam-prvs: <BYAPR06MB423169E1699E4A51E9B260BCFBCA0@BYAPR06MB4231.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(788757137089)(258095267146985);
+x-microsoft-antispam-prvs: <BYAPR06MB42310451B49472FFEA00D85EFBCA0@BYAPR06MB4231.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(258095267146985);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(10201501046)(3002001)(93006095)(93001095)(3231382)(944501410)(52105095)(6055026)(148016)(149066)(150057)(6041310)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(20161123564045)(20161123560045)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:BYAPR06MB4231;BCL:0;PCL:0;RULEID:;SRVR:BYAPR06MB4231;
 x-forefront-prvs: 08476BC6EF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(376002)(136003)(346002)(39860400002)(366004)(199004)(189003)(6116002)(3846002)(97736004)(99286004)(1076002)(4326008)(102836004)(71190400001)(71200400001)(76176011)(68736007)(6506007)(386003)(106356001)(36756003)(105586002)(2351001)(6436002)(5640700003)(5660300001)(2906002)(2900100001)(2501003)(53936002)(6486002)(6512007)(72206003)(478600001)(14454004)(6916009)(54906003)(186003)(52116002)(26005)(7736002)(316002)(476003)(11346002)(8936002)(81156014)(81166006)(305945005)(66066001)(256004)(2616005)(446003)(14444005)(25786009)(44832011)(486006)(8676002)(86362001);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR06MB4231;H:BYAPR06MB3992.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(376002)(136003)(346002)(39860400002)(366004)(199004)(189003)(6116002)(3846002)(97736004)(99286004)(1076002)(4326008)(102836004)(71190400001)(71200400001)(76176011)(68736007)(6506007)(386003)(106356001)(36756003)(105586002)(2351001)(6436002)(5640700003)(5660300001)(2906002)(2900100001)(2501003)(53936002)(6486002)(6512007)(72206003)(478600001)(14454004)(6916009)(54906003)(186003)(52116002)(26005)(7736002)(316002)(476003)(11346002)(8936002)(81156014)(81166006)(305945005)(66066001)(256004)(2616005)(446003)(25786009)(44832011)(486006)(8676002)(86362001);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR06MB4231;H:BYAPR06MB3992.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: cypress.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: KW4xT1AtNwL8rd76PBjAxZzb8zhXr70dAUO9mEMyT6OtpQMbE4QuIVwloeS749UvHjjsYHIoSvwSNDK48oRwK4bW7pFf3hkJcw1i6LUO6Q3FbYV1GFK5xN20snGoJbH/rjbe3IfMEOt14gRKKY0yIsOjeKS+bKyWlvbtXGNqrW7pIDmn1RunPRyjYYIK2ofY0zJteA9fqlJD3ETf5sAb/+5VBuotG/W+usBG0ZWFPE/+93v6vLRwdTiX+oHWPqlpGZoFjLxZ5WZTmAQa2CAxqXL5vfEgkJiZ8ln85SWJDHRGF526uKz4LqZ7WVJlu1JrBybCyEDYmNu9U1HqKDqLBSTE53cSEnbDE4oyhM756a4=
+x-microsoft-antispam-message-info: oE5zjRh4NGSSSGMp7rcwkNZkuBmOT99m5eCycteYNoHGPAlxkuObaCyo8OgBT6f9sDcBeEsDaoR0nFZ8jcxhuoHyKTuU5IIdkgreBa4hwDEHzeDHl6hlOYFH2R0W17j2raWbK67g1J5En3Ut9mBjY2hQmV0nSoN2DL/5fYX5MEgeeXFfNXi2V2E05bLA01p8g2JICSghl4DJtVcJ5AIdLUfT46T53nLYeX1tSz6M4A5d5QtQ2qlBy9H4vvu9yZRwq9DB85YBDj+u+mRoqeYM/6CnEZfrlAq5Sxrl6Bewv+Z5E2SEZ8I/gDZN4oyU6l+ISHlpEBxT9TCX07Y+YluBFeE0HnlG6QoXCf8ro/5HD4k=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66c0742e-025d-4d93-5874-08d642e2ca37
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2018 05:51:54.5295
+X-MS-Exchange-CrossTenant-Network-Message-Id: bb69dbb1-7acd-442c-8605-08d642e2cd0e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2018 05:51:59.4045
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
@@ -99,104 +101,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The credit numbers are static and tunable per chip in firmware side.
-However the credit number may be changed that is based on packet pool
-length and will send BRCMF_E_FIFO_CREDIT_MAP event to notify host driver
-updates the credit numbers during interface up.
-The purpose of this patch is making host driver has ability of updating
-the credit numbers when receiving the BRCMF_E_FIFO_CREDIT_MAP event.
+The frameburst feature can enable per-packet framebursting in firmware
+side and get higher TX throughput in High Throughput(HT) mode. To enhance
+TX throughput, we enable frameburst mode in default firmware setting.
 
 Signed-off-by: Wright Feng <wright.feng@cypress.com>
 ---
-v2: Replace brcmf_err with WARN_ONCE
+v3: Enable frameburst in default instead of being a module parameter
 ---
- .../broadcom/brcm80211/brcmfmac/fwsignal.c    | 23 ++++++++++++-------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 ++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h     | 1 +
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/=
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index f3cbf78c8899..c75be2703b3e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -511,6 +511,7 @@ struct brcmf_fws_info {
- 	struct work_struct fws_dequeue_work;
- 	u32 fifo_enqpkt[BRCMF_FWS_FIFO_COUNT];
- 	int fifo_credit[BRCMF_FWS_FIFO_COUNT];
-+	int init_fifo_credit[BRCMF_FWS_FIFO_COUNT];
- 	int credits_borrowed[BRCMF_FWS_FIFO_AC_VO + 1];
- 	int deq_node_pos[BRCMF_FWS_FIFO_COUNT];
- 	u32 fifo_credit_map;
-@@ -1237,6 +1238,9 @@ static void brcmf_fws_return_credits(struct brcmf_fws=
-_info *fws,
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/=
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 230a378c26fc..a7361d142a27 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6638,6 +6638,12 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211=
+_info *cfg)
 =20
- 	fws->fifo_credit[fifo] +=3D credits;
-+	if (fws->fifo_credit[fifo] > fws->init_fifo_credit[fifo])
-+		fws->fifo_credit[fifo] =3D fws->init_fifo_credit[fifo];
+ 	brcmf_configure_arp_nd_offload(ifp, true);
+=20
++	err =3D brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_FAKEFRAG, 1);
++	if (err) {
++		brcmf_err("failed to set frameburst mode\n");
++		goto default_conf_out;
++	}
 +
- }
+ 	cfg->dongle_up =3D true;
+ default_conf_out:
 =20
- static void brcmf_fws_schedule_deq(struct brcmf_fws_info *fws)
-@@ -1595,19 +1599,21 @@ static int brcmf_fws_notify_credit_map(struct brcmf=
-_if *ifp,
- 		brcmf_err("event payload too small (%d)\n", e->datalen);
- 		return -EINVAL;
- 	}
--	if (fws->creditmap_received)
--		return 0;
-=20
- 	fws->creditmap_received =3D true;
-=20
- 	brcmf_dbg(TRACE, "enter: credits %pM\n", credits);
- 	brcmf_fws_lock(fws);
- 	for (i =3D 0; i < ARRAY_SIZE(fws->fifo_credit); i++) {
--		if (*credits)
-+		fws->fifo_credit[i] +=3D credits[i] - fws->init_fifo_credit[i];
-+		fws->init_fifo_credit[i] =3D credits[i];
-+		if (fws->fifo_credit[i] > 0)
- 			fws->fifo_credit_map |=3D 1 << i;
- 		else
- 			fws->fifo_credit_map &=3D ~(1 << i);
--		fws->fifo_credit[i] =3D *credits++;
-+		WARN_ONCE(fws->fifo_credit[i] < 0,
-+			  "fifo_credit[%d] is negative(%d)\n", i,
-+			  fws->fifo_credit[i]);
- 	}
- 	brcmf_fws_schedule_deq(fws);
- 	brcmf_fws_unlock(fws);
-@@ -2013,7 +2019,7 @@ static int brcmf_fws_borrow_credit(struct brcmf_fws_i=
-nfo *fws)
- 	}
-=20
- 	for (lender_ac =3D 0; lender_ac <=3D BRCMF_FWS_FIFO_AC_VO; lender_ac++) {
--		if (fws->fifo_credit[lender_ac]) {
-+		if (fws->fifo_credit[lender_ac] > 0) {
- 			fws->credits_borrowed[lender_ac]++;
- 			fws->fifo_credit[lender_ac]--;
- 			if (fws->fifo_credit[lender_ac] =3D=3D 0)
-@@ -2210,8 +2216,9 @@ static void brcmf_fws_dequeue_worker(struct work_stru=
-ct *worker)
- 			}
- 			continue;
- 		}
--		while ((fws->fifo_credit[fifo]) || ((!fws->bcmc_credit_check) &&
--		       (fifo =3D=3D BRCMF_FWS_FIFO_BCMC))) {
-+		while ((fws->fifo_credit[fifo] > 0) ||
-+		       ((!fws->bcmc_credit_check) &&
-+			(fifo =3D=3D BRCMF_FWS_FIFO_BCMC))) {
- 			skb =3D brcmf_fws_deq(fws, fifo);
- 			if (!skb)
- 				break;
-@@ -2222,7 +2229,7 @@ static void brcmf_fws_dequeue_worker(struct work_stru=
-ct *worker)
- 				break;
- 		}
- 		if ((fifo =3D=3D BRCMF_FWS_FIFO_AC_BE) &&
--		    (fws->fifo_credit[fifo] =3D=3D 0) &&
-+		    (fws->fifo_credit[fifo] <=3D 0) &&
- 		    (!fws->bus_flow_blocked)) {
- 			while (brcmf_fws_borrow_credit(fws) =3D=3D 0) {
- 				skb =3D brcmf_fws_deq(fws, fifo);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
+index 63b1287e2e6d..b6b183b18413 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
+@@ -80,6 +80,7 @@
+ #define BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON	201
+ #define BRCMF_C_SET_ASSOC_PREFER		205
+ #define BRCMF_C_GET_VALID_CHANNELS		217
++#define BRCMF_C_SET_FAKEFRAG			219
+ #define BRCMF_C_GET_KEY_PRIMARY			235
+ #define BRCMF_C_SET_KEY_PRIMARY			236
+ #define BRCMF_C_SET_SCAN_PASSIVE_TIME		258
 --=20
 2.19.1
 
