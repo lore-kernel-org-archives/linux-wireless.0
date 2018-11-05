@@ -2,138 +2,157 @@ Return-Path: <SRS0=oBLS=NQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80509ECDE44
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70EC5ECDE44
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:36:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48F6120869
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:19:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 48F6120869
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ucw.cz
+	by mail.kernel.org (Postfix) with ESMTP id 2E250204FD
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:36:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H3Tw0rNy";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pNUGLgin"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2E250204FD
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727332AbeKEShz (ORCPT
+        id S1728084AbeKESz1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 13:37:55 -0500
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46087 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726086AbeKEShz (ORCPT
+        Mon, 5 Nov 2018 13:55:27 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:46600 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726086AbeKESz1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 13:37:55 -0500
-Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
-        id B6F6A807E4; Mon,  5 Nov 2018 10:19:05 +0100 (CET)
-Date:   Mon, 5 Nov 2018 10:19:07 +0100
-From:   Pavel Machek <pavel@ucw.cz>
-To:     Lubomir Rintel <lkundrak@v3.sk>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] libertas: don't set URB_ZERO_PACKET on IN USB transfer
-Message-ID: <20181105091907.GC4439@amd>
-References: <20181006201232.2789936-1-lkundrak@v3.sk>
+        Mon, 5 Nov 2018 13:55:27 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 1FB23611F1; Mon,  5 Nov 2018 09:36:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541410597;
+        bh=83hXxKdlWXHJz/Amse22GhmjLie8dwvrHLJuDSATidE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=H3Tw0rNyNTpkZJjKYE56zfN/9hO6sCv05ex+hkv/F5Q/72/oRQVez2UKlXIeadUb1
+         rIDd1ibdiSKmlja0aA5IBADbKZ3w7fFR1vRq8fzTQOtsdGvexlZioQgq3/iURCXf8e
+         z1Xss4i6kw/lMVXH4yrch0qF9zCgchFP0KYCfMiE=
+Received: from x230.qca.qualcomm.com (37-33-75-124.bb.dnainternet.fi [37.33.75.124])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E043060B7A;
+        Mon,  5 Nov 2018 09:36:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541410596;
+        bh=83hXxKdlWXHJz/Amse22GhmjLie8dwvrHLJuDSATidE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=pNUGLginyfl8/Jpcj/IseqhPDcv8Cc8003jR5wADkUW0bmyK34LF3P+a8O1klZuoG
+         s+rWaqmfC7Zl9nPzYqBzJ/suXiPRYTJ09llsR2k+ur2Sil74O+ea/AN7TMOLCjYNHb
+         +JwURceGVAL3fZAzD4kLnudyIsbpJ2M1z+oi975o=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E043060B7A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     John Stultz <john.stultz@linaro.org>
+Cc:     lkml <linux-kernel@vger.kernel.org>,
+        Tony Lindgren <tony@atomide.com>, Eyal Reizer <eyalr@ti.com>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [RFC][PATCH] wlcore: Fixup "Add support for optional wakeirq"
+References: <1540490241-32021-1-git-send-email-john.stultz@linaro.org>
+Date:   Mon, 05 Nov 2018 11:36:32 +0200
+In-Reply-To: <1540490241-32021-1-git-send-email-john.stultz@linaro.org> (John
+        Stultz's message of "Thu, 25 Oct 2018 10:57:21 -0700")
+Message-ID: <87o9b3g927.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="gr/z0/N6AeWAPJVB"
-Content-Disposition: inline
-In-Reply-To: <20181006201232.2789936-1-lkundrak@v3.sk>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+John Stultz <john.stultz@linaro.org> writes:
 
---gr/z0/N6AeWAPJVB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> After commit 3c83dd577c7f ("wlcore: Add support for optional
+> wakeirq") landed upstream, I started seeing the following oops
+> on my HiKey board:
+>
+> [    1.870279] Unable to handle kernel read from unreadable memory at virtual address 0000000000000010
+> [    1.870283] Mem abort info:
+> [    1.870287]   ESR = 0x96000005
+> [    1.870292]   Exception class = DABT (current EL), IL = 32 bits
+> [    1.870296]   SET = 0, FnV = 0
+> [    1.870299]   EA = 0, S1PTW = 0
+> [    1.870302] Data abort info:
+> [    1.870306]   ISV = 0, ISS = 0x00000005
+> [    1.870309]   CM = 0, WnR = 0
+> [    1.870312] [0000000000000010] user address but active_mm is swapper
+> [    1.870318] Internal error: Oops: 96000005 [#1] PREEMPT SMP
+> [    1.870327] CPU: 0 PID: 5 Comm: kworker/0:0 Not tainted 4.19.0-05129-gb3d1e8e #48
+> [    1.870331] Hardware name: HiKey Development Board (DT)
+> [    1.870350] Workqueue: events_freezable mmc_rescan
+> [    1.870358] pstate: 60400005 (nZCv daif +PAN -UAO)
+> [    1.870366] pc : wl1271_probe+0x210/0x350
+> [    1.870371] lr : wl1271_probe+0x210/0x350
+> [    1.870374] sp : ffffff80080739b0
+> [    1.870377] x29: ffffff80080739b0 x28: 0000000000000000
+> [    1.870384] x27: 0000000000000000 x26: 0000000000000000
+> [    1.870391] x25: 0000000000000036 x24: ffffffc074ecb598
+> [    1.870398] x23: ffffffc07ffdce78 x22: ffffffc0744ed808
+> [    1.870404] x21: ffffffc074ecbb98 x20: ffffff8008ff9000
+> [    1.870411] x19: ffffffc0744ed800 x18: ffffff8008ff9a48
+> [    1.870418] x17: 0000000000000000 x16: 0000000000000000
+> [    1.870425] x15: ffffffc074ecb503 x14: ffffffffffffffff
+> [    1.870431] x13: ffffffc074ecb502 x12: 0000000000000030
+> [    1.870438] x11: 0101010101010101 x10: 0000000000000040
+> [    1.870444] x9 : ffffffc075400248 x8 : ffffffc075400270
+> [    1.870451] x7 : 0000000000000000 x6 : 0000000000000000
+> [    1.870457] x5 : 0000000000000000 x4 : 0000000000000000
+> [    1.870463] x3 : 0000000000000000 x2 : 0000000000000000
+> [    1.870469] x1 : 0000000000000028 x0 : 0000000000000000
+> [    1.870477] Process kworker/0:0 (pid: 5, stack limit = 0x(____ptrval____))
+> [    1.870480] Call trace:
+> [    1.870485]  wl1271_probe+0x210/0x350
+> [    1.870491]  sdio_bus_probe+0x100/0x128
+> [    1.870500]  really_probe+0x1a8/0x2b8
+> [    1.870506]  driver_probe_device+0x58/0x100
+> [    1.870511]  __device_attach_driver+0x94/0xd8
+> [    1.870517]  bus_for_each_drv+0x70/0xc8
+> [    1.870522]  __device_attach+0xe0/0x140
+> [    1.870527]  device_initial_probe+0x10/0x18
+> [    1.870532]  bus_probe_device+0x94/0xa0
+> [    1.870537]  device_add+0x374/0x5b8
+> [    1.870542]  sdio_add_func+0x60/0x88
+> [    1.870546]  mmc_attach_sdio+0x1b0/0x358
+> [    1.870551]  mmc_rescan+0x2cc/0x390
+> [    1.870558]  process_one_work+0x12c/0x320
+> [    1.870563]  worker_thread+0x48/0x458
+> [    1.870569]  kthread+0xf8/0x128
+> [    1.870575]  ret_from_fork+0x10/0x18
+> [    1.870583] Code: 92400c21 b2760021 a90687a2 97e95bf9 (f9400803)
+> [    1.870587] ---[ end trace 1e15f81d3c139ca9 ]---
+>
+> It seems since we don't have a wakeirq value in the dts, the wakeirq
+> value in wl1271_probe() is zero, which then causes trouble in
+> irqd_get_trigger_type(irq_get_irq_data(wakeirq)).
+>
+> This patch tries to address this by checking if wakeirq is zero,
+> and not trying to add it to the resources if that is the case.
+>
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Eyal Reizer <eyalr@ti.com>
+> Cc: Anders Roxell <anders.roxell@linaro.org>
+> Cc: linux-wireless@vger.kernel.org
+> Acked-by: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: John Stultz <john.stultz@linaro.org>
 
-On Sat 2018-10-06 22:12:32, Lubomir Rintel wrote:
-> The USB core gets rightfully upset:
->=20
->   usb 1-1: BOGUS urb flags, 240 --> 200
->   WARNING: CPU: 0 PID: 60 at drivers/usb/core/urb.c:503 usb_submit_urb+0x=
-2f8/0x3ed
->   Modules linked in:
->   CPU: 0 PID: 60 Comm: kworker/0:3 Not tainted 4.19.0-rc6-00319-g5206d00a=
-45c7 #39
->   Hardware name: OLPC XO/XO, BIOS OLPC Ver 1.00.01 06/11/2014
->   Workqueue: events request_firmware_work_func
->   EIP: usb_submit_urb+0x2f8/0x3ed
->   Code: 75 06 8b 8f 80 00 00 00 8d 47 78 89 4d e4 89 55 e8 e8 35 1c f6 ff=
- 8b 55 e8 56 52 8b 4d e4 51 50 68 e3 ce c7 c0 e8 ed 18 c6 ff <0f> 0b 83 c4 =
-14 80 7d ef 01 74 0a 80 7d ef 03 0f 85 b8 00 00 00 8b
->   EAX: 00000025 EBX: ce7d4980 ECX: 00000000 EDX: 00000001
->   ESI: 00000200 EDI: ce7d8800 EBP: ce7f5ea8 ESP: ce7f5e70
->   DS: 007b ES: 007b FS: 0000 GS: 00e0 SS: 0068 EFLAGS: 00210292
->   CR0: 80050033 CR2: 00000000 CR3: 00e80000 CR4: 00000090
->   Call Trace:
->    ? if_usb_fw_timeo+0x64/0x64
->    __if_usb_submit_rx_urb+0x85/0xe6
->    ? if_usb_fw_timeo+0x64/0x64
->    if_usb_submit_rx_urb_fwload+0xd/0xf
->    if_usb_prog_firmware+0xc0/0x3db
->    ? _request_firmware+0x54/0x47b
->    ? _request_firmware+0x89/0x47b
->    ? if_usb_probe+0x412/0x412
->    lbs_fw_loaded+0x55/0xa6
->    ? debug_smp_processor_id+0x12/0x14
->    helper_firmware_cb+0x3c/0x3f
->    request_firmware_work_func+0x37/0x6f
->    process_one_work+0x164/0x25a
->    worker_thread+0x1c4/0x284
->    kthread+0xec/0xf1
->    ? cancel_delayed_work_sync+0xf/0xf
->    ? kthread_create_on_node+0x1a/0x1a
->    ret_from_fork+0x2e/0x38
->   ---[ end trace 3ef1e3b2dd53852f ]---
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
+Any particular reason why you marked this as RFC? I'm asking because I
+would like to apply this patch as is and push to 4.20.
 
-Acked-by: Pavel Machek <pavel@ucw.cz>
+I'll just add:
 
-> ---
->  drivers/net/wireless/marvell/libertas/if_usb.c | 2 --
->  1 file changed, 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net=
-/wireless/marvell/libertas/if_usb.c
-> index 5fee555a3d60..220dcdee8d2b 100644
-> --- a/drivers/net/wireless/marvell/libertas/if_usb.c
-> +++ b/drivers/net/wireless/marvell/libertas/if_usb.c
-> @@ -459,8 +459,6 @@ static int __if_usb_submit_rx_urb(struct if_usb_card =
-*cardp,
->  			  MRVDRV_ETH_RX_PACKET_BUFFER_SIZE, callbackfn,
->  			  cardp);
-> =20
-> -	cardp->rx_urb->transfer_flags |=3D URB_ZERO_PACKET;
-> -
->  	lbs_deb_usb2(&cardp->udev->dev, "Pointer for rx_urb %p\n", cardp->rx_ur=
-b);
->  	if ((ret =3D usb_submit_urb(cardp->rx_urb, GFP_ATOMIC))) {
->  		lbs_deb_usbd(&cardp->udev->dev, "Submit Rx URB failed: %d\n", ret);
+Fixes: 3c83dd577c7f ("wlcore: Add support for optional wakeirq")
 
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---gr/z0/N6AeWAPJVB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlvgCwsACgkQMOfwapXb+vL21QCgilEZgq1eVkymkhwXl3HQzKFG
-tosAoL9s4UFoDpJrImORnVfqMk4nAbJV
-=PgN1
------END PGP SIGNATURE-----
-
---gr/z0/N6AeWAPJVB--
+-- 
+Kalle Valo
