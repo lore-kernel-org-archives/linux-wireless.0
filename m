@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E1B4C0044C
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:06:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6972C0044C
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:07:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41F8C2082A
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:06:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE93C20854
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Nov 2018 09:07:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DE0u1Wh2";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="j+NpO5Fc"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 41F8C2082A
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YLpTwMHH";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YLpTwMHH"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AE93C20854
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726706AbeKESY3 (ORCPT
+        id S1726494AbeKESZ4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Nov 2018 13:24:29 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:54440 "EHLO
+        Mon, 5 Nov 2018 13:25:56 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57902 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726086AbeKESY3 (ORCPT
+        with ESMTP id S1726125AbeKESZ4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Nov 2018 13:24:29 -0500
+        Mon, 5 Nov 2018 13:25:56 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F137A6077A; Mon,  5 Nov 2018 09:05:47 +0000 (UTC)
+        id B3DCC601DA; Mon,  5 Nov 2018 09:07:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541408748;
-        bh=Aup7kmp58nYkN7emvwrVAtGV3wOfSPGPpWC1Tk7FBKg=;
+        s=default; t=1541408834;
+        bh=DC79dbbQm2wnZq9Nl8afw+KfYrwJBh3H+bpIx1O7JjQ=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=DE0u1Wh2DdVjM9Tv/XddKR02uexAM9ad6J5UeCbXAShF8YsFmXKZ/DVRldgGD6a/v
-         b3oAHW1MyVqSEQpJ6irGnK+1zSJVGHPyCoRiA/1kZQJ52wuF4H2NmRaMtJhWcGHv/H
-         CoQbc7fR8HpAGHvFXDTlQzLj6+05O5huyM6QlwsU=
+        b=YLpTwMHHwYEBwO6hBEElpFJjBy/SZ3lne1MbbzrjXg0qG2sAaTg1OyL10IaX/0Xl+
+         AAvDc6Y5hP19sW2RuHgv8s49rAPEuBnxSe8l1peMhWDeH7P+z3MaZkixQrwoPzy9Z4
+         Dp7QxXZZmqWnOFK+u5nEpy5Mn7WcW5FNnmzdL58U=
 Received: from x230.qca.qualcomm.com (37-33-75-124.bb.dnainternet.fi [37.33.75.124])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C867C6044B;
-        Mon,  5 Nov 2018 09:05:44 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 82800601DA;
+        Mon,  5 Nov 2018 09:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541408747;
-        bh=Aup7kmp58nYkN7emvwrVAtGV3wOfSPGPpWC1Tk7FBKg=;
+        s=default; t=1541408834;
+        bh=DC79dbbQm2wnZq9Nl8afw+KfYrwJBh3H+bpIx1O7JjQ=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=j+NpO5Fc9bKqqLLCiO2+SkCl35z1Cj67ygxxRnAabhaMWWDBF1uAh4jj/7EzVC0Ge
-         Sqiow1s8UxANiwOzgCkAuC+IpxEJgHrgCMYLEiW0uzyrNs1AgZQORTKQ3yjli4n0YP
-         phMLqqs5sPkD0cgJ0Jbtpq3tFtxjDKpwZ2JiAxvU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C867C6044B
+        b=YLpTwMHHwYEBwO6hBEElpFJjBy/SZ3lne1MbbzrjXg0qG2sAaTg1OyL10IaX/0Xl+
+         AAvDc6Y5hP19sW2RuHgv8s49rAPEuBnxSe8l1peMhWDeH7P+z3MaZkixQrwoPzy9Z4
+         Dp7QxXZZmqWnOFK+u5nEpy5Mn7WcW5FNnmzdL58U=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 82800601DA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -63,13 +63,13 @@ Cc:     linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: Re: [PATCH 2/5] brcmfmac: Use common CORDIC_FLOAT macro from lib
+Subject: Re: [PATCH 3/5] brcmfmac: Drop unused cordic defines and macros
 References: <cover.f21c8e62e188620d586edb3f77514e6237122c4c.1541238842.git-series.plaes@plaes.org>
-        <4bd6e7758bc0d88b33cdb09448633bb5b97aba7c.1541238842.git-series.plaes@plaes.org>
-Date:   Mon, 05 Nov 2018 11:05:42 +0200
-In-Reply-To: <4bd6e7758bc0d88b33cdb09448633bb5b97aba7c.1541238842.git-series.plaes@plaes.org>
-        (Priit Laes's message of "Sat, 3 Nov 2018 11:59:41 +0200")
-Message-ID: <877ehrhp21.fsf@codeaurora.org>
+        <7f3dbe604102f7d765149fffef8a4e6b9fa15552.1541238842.git-series.plaes@plaes.org>
+Date:   Mon, 05 Nov 2018 11:07:09 +0200
+In-Reply-To: <7f3dbe604102f7d765149fffef8a4e6b9fa15552.1541238842.git-series.plaes@plaes.org>
+        (Priit Laes's message of "Sat, 3 Nov 2018 11:59:42 +0200")
+Message-ID: <8736sfhozm.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -80,29 +80,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Priit Laes <plaes@plaes.org> writes:
 
-> Now that cordic library has the CORDIC_FLOAT macro, use that
+> Now that we use library macros, we can drop internal copies
 >
 > Signed-off-by: Priit Laes <plaes@plaes.org>
 > ---
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c | 4 ++--
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   | 4 ++--
+>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h | 7 +-------
 
-The driver is "brcmsmac" (note the 's', not 'f'), you should fix the
-title accordingly.
+Also here this is about brcmsmac.
 
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c
-> @@ -3447,8 +3447,8 @@ wlc_lcnphy_start_tx_tone(struct brcms_phy *pi, s32 f_kHz, u16 max_val,
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
+> @@ -220,13 +220,6 @@ enum phy_cal_mode {
+>  #define BB_MULT_MASK		0x0000ffff
+>  #define BB_MULT_VALID_MASK	0x80000000
 >  
->  		theta += rot;
->  
-> -		i_samp = (u16) (FLOAT(tone_samp.i * max_val) & 0x3ff);
-> -		q_samp = (u16) (FLOAT(tone_samp.q * max_val) & 0x3ff);
-> +		i_samp = (u16)(CORDIC_FLOAT(tone_samp.i * max_val) & 0x3ff);
-> +		q_samp = (u16)(CORDIC_FLOAT(tone_samp.q * max_val) & 0x3ff);
+> -#define CORDIC_AG	39797
+> -#define	CORDIC_NI	18
+> -#define	FIXED(X)	((s32)((X) << 16))
+> -
+> -#define	FLOAT(X) \
+> -	(((X) >= 0) ? ((((X) >> 15) + 1) >> 1) : -((((-(X)) >> 15) + 1) >> 1))
+> -
 
-I haven't seen the patch 1 yet, but just from seeing this patch I don't
-get what's the benefit.
+Ah, now I see the benefit from patch 2. IMHO you could just fold patch 3
+into patch 2, no need to split them.
 
 -- 
 Kalle Valo
