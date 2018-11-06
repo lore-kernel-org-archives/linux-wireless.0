@@ -2,153 +2,96 @@ Return-Path: <SRS0=+Mnd=NR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28292C32789
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 12:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BFCC32789
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 12:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC81D20862
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 12:40:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBF1B20862
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 12:50:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JtSrnQlW";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JtSrnQlW"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DC81D20862
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QDOyo/zn"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EBF1B20862
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387813AbeKFWFy (ORCPT
+        id S2388020AbeKFWPE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Nov 2018 17:05:54 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:44262 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387454AbeKFWFx (ORCPT
+        Tue, 6 Nov 2018 17:15:04 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:40345 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387704AbeKFWPE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Nov 2018 17:05:53 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DFF7B60B7D; Tue,  6 Nov 2018 12:40:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541508050;
-        bh=m3cOvyL7fZADAa6xGih7P1stUu+bk6oCjpk5n8aadKE=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=JtSrnQlWWc+1TzzVnEKB9AHbhzsyoUm6yBvCMv5Elcqns0FJH7Lr36nfeSvJYtybG
-         UXABmIlG49Jcvxl/SU/EKoRQOJagHc3s07qUWBFE26ICttz/Vc4DPtB+uZcVtYG0D7
-         EemsO1zUKrmLvKHip1fny4JPdzk8jtxWIEEbTxc4=
-Received: from x230.qca.qualcomm.com (unknown [83.145.195.18])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0578560C4B;
-        Tue,  6 Nov 2018 12:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541508050;
-        bh=m3cOvyL7fZADAa6xGih7P1stUu+bk6oCjpk5n8aadKE=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=JtSrnQlWWc+1TzzVnEKB9AHbhzsyoUm6yBvCMv5Elcqns0FJH7Lr36nfeSvJYtybG
-         UXABmIlG49Jcvxl/SU/EKoRQOJagHc3s07qUWBFE26ICttz/Vc4DPtB+uZcVtYG0D7
-         EemsO1zUKrmLvKHip1fny4JPdzk8jtxWIEEbTxc4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0578560C4B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     merez@codeaurora.org
-Cc:     Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH 07/16] wil6210: refactor disconnect flow
-References: <1540975944-30576-1-git-send-email-merez@codeaurora.org>
-        <1540975944-30576-8-git-send-email-merez@codeaurora.org>
-        <871s7ybir0.fsf@purkki.adurom.net>
-        <6852209b6e110737dc189ec89a49078f@codeaurora.org>
-        <874lcue6ft.fsf@codeaurora.org>
-        <98ff59749bbf386ba92faec2203ac3e9@codeaurora.org>
-Date:   Tue, 06 Nov 2018 14:40:46 +0200
-In-Reply-To: <98ff59749bbf386ba92faec2203ac3e9@codeaurora.org>
-        (merez@codeaurora.org's message of "Tue, 06 Nov 2018 14:38:22 +0200")
-Message-ID: <87va5acrap.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 6 Nov 2018 17:15:04 -0500
+Received: by mail-wm1-f65.google.com with SMTP id b203-v6so11678510wme.5
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2018 04:49:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=ss7EPADjlHzCT4+KoTMK42l9ZG6ZHVmIq8Bia4nO8E4=;
+        b=QDOyo/znINFVdjE4nYH4mmExTKAI+Bio2AUyUE4PDwMnuS5HHBtvn2hx3N4zyzhCeB
+         gCU+7UaakA2JVIPWrjogusNLJ8F0OUN+r+EhUS4NLfqvTuVHpxThHj+isJQTsPE/gQtJ
+         l3/mty+4oi4igjOi2CNX5prDLW1lqZDxMKqog=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=ss7EPADjlHzCT4+KoTMK42l9ZG6ZHVmIq8Bia4nO8E4=;
+        b=SWVtD9xUwQfJskGfDqYy0lS4K0L8CwzaABR/MOa7HgGXr4Ob7LNXepzF49VjXYWAKs
+         VatkffN4Pp/vF3e2Bljym3Lh3UYLh9o5lSy6Zk/rHp1yNZUUaMn+QOLOG2AZVDMEZKfF
+         xvmtg/nJ+tmQ2ktpfiQg6gp5plxfFtJHD+P6ahwdZMekkvcH4GHIWgCdGPQpj/5Llc2j
+         yXimLQsEfOVeODylViYVxmXaFF3vFY340rN9rMfcGHrNbpg0XYj0K0/fab+RTuRtBUAx
+         JBBZGKprur46x/7T5GV/su6aeHOOMVf6IG/PP6ULbspYKsZgT8SnHZrN0/mp5d7VMa9m
+         hpVw==
+X-Gm-Message-State: AGRZ1gISCKMA4ILeegDZWrpY9e1Xx107Y2/86MVfwkMxgDVf896IAfD2
+        PdDa8WS4M1ulIOKX4zd57nVXw7RQXYyYXQ==
+X-Google-Smtp-Source: AJdET5dwxekAZQa/FS/HudQ51D0toasEPxBRjANeeQZybBVm1t7Scx6htOR56a6TS70yLjFHgaCYEg==
+X-Received: by 2002:a1c:58c5:: with SMTP id m188-v6mr1800133wmb.85.1541508598383;
+        Tue, 06 Nov 2018 04:49:58 -0800 (PST)
+Received: from [10.177.251.64] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id m16-v6sm2054194wmd.35.2018.11.06.04.49.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 06 Nov 2018 04:49:57 -0800 (PST)
+Subject: Re: [PATCH v2 1/3] lib: cordic: Move cordic macros and defines to
+ header file
+To:     Priit Laes <plaes@plaes.org>
+References: <cover.9ec98292c595a111ae78f31383ff8618c9cb04da.1541446422.git-series.plaes@plaes.org>
+ <3be396e01b33905e9ac5c80e7038b7aacf72eaf8.1541446422.git-series.plaes@plaes.org>
+ <8eb0e232-d14b-60d9-e3c8-008c46659a30@broadcom.com>
+ <20181106071455.ch6wooqibm76tyjl@plaes.org>
+Cc:     linux-kernel@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <2dbd0169-6a07-2ff0-6ea7-99acd624db9f@broadcom.com>
+Date:   Tue, 6 Nov 2018 13:49:56 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20181106071455.ch6wooqibm76tyjl@plaes.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-merez@codeaurora.org writes:
-
-> On 2018-11-06 14:28, Kalle Valo wrote:
->> merez@codeaurora.org writes:
+On 11/6/2018 8:14 AM, Priit Laes wrote:
+> On Mon, Nov 05, 2018 at 11:02:35PM +0100, Arend van Spriel wrote:
+>> On 11/5/2018 8:37 PM, Priit Laes wrote:
+>>> Also append CORDIC_ prefix to nonprefixed macros.
 >>
->>> On 2018-11-06 12:30, Kalle Valo wrote:
->>>> Maya Erez <merez@codeaurora.org> writes:
->>>>
->>>>> From: Ahmad Masri <amasri@codeaurora.org>
->>>>>
->>>>> Separate sending command to the fw from the event handling
->>>>> function to
->>>>> simplify the disconnect flow and track the from_event flag
->>>>> correctly.
->>>>>
->>>>> Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
->>>>> Signed-off-by: Maya Erez <merez@codeaurora.org>
->>>>
->>>> [...]
->>>>
->>>>> +static int wil_disconnect_cid(struct wil6210_vif *vif, int cid,
->>>>> +			      u16 reason_code)
->>>>> +__acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
->>>>> +{
->>>>> +	struct wil6210_priv *wil = vif_to_wil(vif);
->>>>> +	struct wireless_dev *wdev = vif_to_wdev(vif);
->>>>> +	struct wil_sta_info *sta = &wil->sta[cid];
->>>>> +	bool del_sta = false;
->>>>> +
->>>>> +	might_sleep();
->>>>> +	wil_dbg_misc(wil, "disconnect_cid: CID %d, MID %d, status %d\n",
->>>>> +		     cid, sta->mid, sta->status);
->>>>> +
->>>>> +	if (sta->status == wil_sta_unused)
->>>>> +		return 0;
->>>>> +
->>>>> +	if (vif->mid != sta->mid) {
->>>>> +		wil_err(wil, "STA MID mismatch with VIF MID(%d)\n", vif->mid);
->>>>> +		return -EINVAL;
->>>>> +	}
->>>>> +
->>>>> +	/* inform lower layers */
->>>>> +	if (wdev->iftype == NL80211_IFTYPE_AP && disable_ap_sme)
->>>>> +		del_sta = true;
->>>>> +
->>>>> +	/* disconnect by sending command disconnect/del_sta and wait
->>>>> +	 * synchronously for WMI_DISCONNECT_EVENTID event.
->>>>> +	 */
->>>>> +	return wmi_disconnect_sta(vif, sta->addr, reason_code, del_sta);
->>>>> +}
->>>>
->>>> I don't get use of __acquires() and __releases() in this function. I
->>>> see
->>>> similar pattern already in wil6210 but care to explain why this is
->>>> needed? I don't see the function even accessing tid_rx_lock so I'm
->>>> very
->>>> confused.
->>>
->>> I assume it is a copy / paste leftover that we missed in the code
->>> review. We will remove it.
->>
->> Actually I already removed the annotations from the pending branch and
->> no need to resend, it's faster that way. Please double check if you
->> can,
->> unfortunately I cannot provide a direct link cgit doesn't show the new
->> commit yet.
+>> Bit annoying that you made me look at LKML for this patch. Can you just post
+>> the entire series to linux-wireless so Kalle can take it all through his
+>> tree. Also the commit message is a bit thin. Please explain why these are
+>> moved to the header file.
 >
-> In such a case you can go ahead and apply the patches without
-> "wil6210: ignore HALP ICR if already handled". I'll upstream its fixed
-> version
-> in the next set of wil6210 patches.
+> Sorry, I messed up again while trying to automate the send-email with
+> get_maintainers script (dry-run argument did not work .gitconfig :S)
 
-Ok, I dropped "wil6210: ignore HALP ICR if already handled" and I'm
-planning to apply the rest.
+No worries. It was only a bit annoying ;-)
 
--- 
-Kalle Valo
+Regards,
+Arend
