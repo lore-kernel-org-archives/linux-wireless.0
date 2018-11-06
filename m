@@ -2,99 +2,103 @@ Return-Path: <SRS0=+Mnd=NR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C94C32789
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB15C32789
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C66412081D
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C66412081D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 792FA2081D
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ltU1qq2T";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L5p26fea"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 792FA2081D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389495AbeKGC0Y (ORCPT
+        id S2389547AbeKGC0z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Nov 2018 21:26:24 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:38607 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389285AbeKGC0X (ORCPT
+        Tue, 6 Nov 2018 21:26:55 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58230 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389285AbeKGC0y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Nov 2018 21:26:23 -0500
-Received: by mail-wm1-f66.google.com with SMTP id l2-v6so12862204wmh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2018 09:00:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=JynL7O12bknstPoP9n4LYotMSCHrMx0BQnxUnYeAqa0=;
-        b=WYZgEhT+UXkQ3T53O8O94VXOixw/Z4ve8d3o5HeXsr+iSVsS36OrVnrafMbRQ7v6hv
-         njn5Q0DbNjNOcHNW5WPsm5/3OhHMCXRzMF+58Nle8+2XnHuJyJTXulbp87GQsE8yuIyy
-         qqnn/IfX62ylmbKugrZyLK9AtRLjyc4A5vWv9C/AifdmcP0H/fP0gZ39edNLL1G7Alxb
-         TV8bYPYZ80WGMb2SewoXd3mlN/oING3V6J5bA6vj1itYueZhheIqCSLyx5FZ0Dg+KoL1
-         xrOLa6uAYHePgE30gnr5Wc8e0nk7AGFgPsMP/VeDGnz2xW4GsV+/0RE1rsUb4pwRCA2u
-         GoIA==
-X-Gm-Message-State: AGRZ1gJ11Msj9hbZS3LrM2Y2Ycj7397P2ZIB06pO4EndnNizVkUnvX/0
-        Rrmy3RP98g1zR2/PPdUDPE1lZw==
-X-Google-Smtp-Source: AJdET5eDRi8s/ovZeHqpFzOXyTSdoJpZlgvZ8PA46Xl0yCHJbN/wIrCWvZYZsSjN7fZD8ZZIsddTzw==
-X-Received: by 2002:a1c:5788:: with SMTP id l130-v6mr2603946wmb.60.1541523614885;
-        Tue, 06 Nov 2018 09:00:14 -0800 (PST)
-Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id x142-v6sm649271wmd.20.2018.11.06.09.00.13
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 06 Nov 2018 09:00:14 -0800 (PST)
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     nbd@nbd.name
-Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] mt76x2u: init: remove mt76x2u_init_beacon_offsets routine
-Date:   Tue,  6 Nov 2018 17:59:48 +0100
-Message-Id: <76835f131fa51259fcbf79df7b7073f808aa7cd2.1541522368.git.lorenzo.bianconi@redhat.com>
-X-Mailer: git-send-email 2.17.2
-In-Reply-To: <cover.1541522368.git.lorenzo.bianconi@redhat.com>
-References: <cover.1541522368.git.lorenzo.bianconi@redhat.com>
+        Tue, 6 Nov 2018 21:26:54 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0C98E6053D; Tue,  6 Nov 2018 17:00:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541523647;
+        bh=CrI7q0jneloLOpDoz+IoAKiqCZMUtdwfFxmhByKRO3k=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=ltU1qq2TBJV/bg2a6lQeinYCw/TPcVcSiev3OZFnjcJfzqwsq+Wuw0aHGOup7M2ao
+         8Y6WZyyqHXAh6jZXxN6qjOVPHunySwA0XVZUK2CdAkMq9p4QihGXBO4m4kGEmREd7c
+         NqE3447LT0RDeqUhdChi5osA/ptaesxYVil7LQlk=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2CE8C601DA;
+        Tue,  6 Nov 2018 17:00:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541523646;
+        bh=CrI7q0jneloLOpDoz+IoAKiqCZMUtdwfFxmhByKRO3k=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=L5p26fea6RkffJ95WzU3J1igRuzTAsSCs1aNZwMoe8sE/9dS/iyHgCPGdsyl9z8ud
+         NTsnU1xWyrIwvXFmZxkC5LyPvZNPPynlu0l9mYhDbFkMjdVNc8OzQCRgLQicYDL7Gh
+         AzRWGSptN7C/mhvl3k9ju1YOh2RgxolRaBWoj2aI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2CE8C601DA
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 07/20] iwlegacy: 4965-mac: mark expected switch
+ fall-through
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <8d72b8a6f1529906672ac458e96d272bc55a1410.1540239684.git.gustavo@embeddedor.com>
+References: <8d72b8a6f1529906672ac458e96d272bc55a1410.1540239684.git.gustavo@embeddedor.com>
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20181106170047.0C98E6053D@smtp.codeaurora.org>
+Date:   Tue,  6 Nov 2018 17:00:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove mt76x2u_init_beacon_offsets routine since the driver supports
-just STA mode
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c | 10 ----------
- 1 file changed, 10 deletions(-)
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-index 8b280a4ea792..de0fbdb02c4d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_init.c
-@@ -156,14 +156,6 @@ struct mt76x02_dev *mt76x2u_alloc_device(struct device *pdev)
- 	return dev;
- }
- 
--static void mt76x2u_init_beacon_offsets(struct mt76x02_dev *dev)
--{
--	mt76_wr(dev, MT_BCN_OFFSET(0), 0x18100800);
--	mt76_wr(dev, MT_BCN_OFFSET(1), 0x38302820);
--	mt76_wr(dev, MT_BCN_OFFSET(2), 0x58504840);
--	mt76_wr(dev, MT_BCN_OFFSET(3), 0x78706860);
--}
--
- int mt76x2u_init_hardware(struct mt76x02_dev *dev)
- {
- 	int i, k, err;
-@@ -200,8 +192,6 @@ int mt76x2u_init_hardware(struct mt76x02_dev *dev)
- 	mt76x02_mac_setaddr(dev, dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
- 	dev->mt76.rxfilter = mt76_rr(dev, MT_RX_FILTR_CFG);
- 
--	mt76x2u_init_beacon_offsets(dev);
--
- 	if (!mt76x02_wait_for_txrx_idle(&dev->mt76))
- 		return -ETIMEDOUT;
- 
+14 patches applied to wireless-drivers-next.git, thanks.
+
+e9904084dd1b iwlegacy: 4965-mac: mark expected switch fall-through
+af71f8fef45c iwlegacy: common: mark expected switch fall-throughs
+d56b26801e1d orinoco_usb: mark expected switch fall-through
+d22b8fadd08e prism54: isl_38xx: Mark expected switch fall-through
+3d238b9d5048 prism54: isl_ioctl: mark expected switch fall-through
+38a0792d08e9 prism54: islpci_dev: mark expected switch fall-through
+63fdc952df36 mwifiex: Mark expected switch fall-through
+6eba8fd22352 rt2x00: rt2400pci: mark expected switch fall-through
+10bb92217747 rt2x00: rt2500pci: mark expected switch fall-through
+916e6bbcfcff rt2x00: rt2800lib: mark expected switch fall-throughs
+641dd8068ecb rt2x00: rt61pci: mark expected switch fall-through
+d22d2492a35d ray_cs: mark expected switch fall-throughs
+89e54fa4562e rtlwifi: rtl8821ae: phy: Mark expected switch fall-through
+7cbbe1597e44 zd1201: mark expected switch fall-through
+
 -- 
-2.17.2
+https://patchwork.kernel.org/patch/10652563/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
