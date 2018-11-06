@@ -6,51 +6,51 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF294C32789
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F298C32789
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3A482081D
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C3A482081D
+	by mail.kernel.org (Postfix) with ESMTP id 14A802081D
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Nov 2018 17:00:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 14A802081D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389472AbeKGC0T (ORCPT
+        id S2389482AbeKGC0V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Nov 2018 21:26:19 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:39888 "EHLO
+        Tue, 6 Nov 2018 21:26:21 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:46763 "EHLO
         mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389285AbeKGC0S (ORCPT
+        with ESMTP id S2389285AbeKGC0V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Nov 2018 21:26:18 -0500
-Received: by mail-wr1-f67.google.com with SMTP id r10-v6so14348737wrv.6
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2018 09:00:10 -0800 (PST)
+        Tue, 6 Nov 2018 21:26:21 -0500
+Received: by mail-wr1-f67.google.com with SMTP id 74-v6so14335557wrb.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Nov 2018 09:00:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ApYZFf76b5XRsmIvDN9IPXMTLRw15PGsC2g0FCH5Zfg=;
-        b=J87F8uJPBPGRXY4LjB2J4EH0mm3MWXSGUb8UknOJ7UMZh37csFb+XT/Pi5hRjNoLXY
-         3WnG9xBJosfHdhCaxhsHheBcxj7Ikkvh7w711X8YZIXlJAbDhGntl8rC/WnuA/gh7Q1P
-         O/oq/6V0tEbAJUWDlEtxewjun3HKRtY37TIUJhZpo6QOnNGpXgmlNd8xKEpkuCXutSZC
-         QoGEOL2lH5baVxQvci0glk95WM4M/0v6Hsqf3CMlcp4kRDPJ2m0Ovrh4EyDjPHf8iTCN
-         9Zo2lIsGkYn5xnrbBJdFF82JFuKAhUfibzRz7essg2AKTwB4Ke71LwnHRBs9fqgSfjDs
-         Pvsg==
-X-Gm-Message-State: AGRZ1gL4l2gszpOi6Yag07b4IdZTx1p47nRyX+Wk30HDdd0weKSZ+fPc
-        vtWUAJyz6Wh4UEK9i4Vimd9Osg==
-X-Google-Smtp-Source: AJdET5dCOy44sh/qlOCafTukmL1sdOf72rjNqvBXdy+L+uCUmx4uyzluv+V9LTCrA7IyN+iLpl/kuQ==
-X-Received: by 2002:adf:fe44:: with SMTP id m4-v6mr7152359wrs.309.1541523609731;
-        Tue, 06 Nov 2018 09:00:09 -0800 (PST)
+        bh=gDQUstN8ielQYKv4iw7PRV0NeDRDMswtkC8vk+awLq8=;
+        b=USiMU5h8/a5BST41h4y7l9v1x76wkRsObs+71Fen4+xLt3VCP10GDwMoFa8TjYILFJ
+         v8o8iplnBVPMOSsdeHQDORHgDwrhpizq8a7TUTbdg3m4fEbBMXXiVv3fr3LmqpRI+oXS
+         3v/UG9K1zOOCiIrVVkICc7S+ZCcZvFgtO0boOwMuI449emLmQ+Y7PO4D030Km00n1FgC
+         euyTBo+05fvJkKiMWLamNuCCw9d8Gh874QrOHMpEYc537HDM/VAqCZcBQOgKlP+SDrqC
+         6tLxXgENMfIJsMMxcMxf91ngpfBimVuL92SJlQEnCHhxCxo2CMRHaL/g41wrU4L3cUrP
+         iWQQ==
+X-Gm-Message-State: AGRZ1gKDb6xexiZW5kadEf+Nbhy3HjHl7ETK+qe14X/Tiv3YNI/eF3I0
+        n4QzQgTtjN94yh9pLLYVCK3lyP430YQ=
+X-Google-Smtp-Source: AJdET5eXLdg6tRHB/zpzHGTv5RX/9JqPDmuossNJzRyTCCpFTWr7s/9xt8ufCXEQfov/PyCqLeXu1w==
+X-Received: by 2002:adf:e406:: with SMTP id g6-v6mr17422552wrm.277.1541523612231;
+        Tue, 06 Nov 2018 09:00:12 -0800 (PST)
 Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id x142-v6sm649271wmd.20.2018.11.06.09.00.08
+        by smtp.gmail.com with ESMTPSA id x142-v6sm649271wmd.20.2018.11.06.09.00.11
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 06 Nov 2018 09:00:09 -0800 (PST)
+        Tue, 06 Nov 2018 09:00:11 -0800 (PST)
 From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To:     nbd@nbd.name
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] mt76x2u: phy: run phy_channel_calibrate after channel switch
-Date:   Tue,  6 Nov 2018 17:59:46 +0100
-Message-Id: <b61ef7cc5e7e940e168e95201bfb03cf8c205af5.1541522368.git.lorenzo.bianconi@redhat.com>
+Subject: [PATCH 3/4] mt76x2u: main: use mt76x02_bss_info_changed utility routine
+Date:   Tue,  6 Nov 2018 17:59:47 +0100
+Message-Id: <ebaa54c4790fd9072a423f0a0bbdc2de5df15c0d.1541522368.git.lorenzo.bianconi@redhat.com>
 X-Mailer: git-send-email 2.17.2
 In-Reply-To: <cover.1541522368.git.lorenzo.bianconi@redhat.com>
 References: <cover.1541522368.git.lorenzo.bianconi@redhat.com>
@@ -59,103 +59,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Perform channel calibration after each channel switch and not only after
-connection establishment since NetworkManager perform multiple frequency
-scanning if RSSI in lower a given threshold
+Initialize bss_info_changed mac80211 callback to
+mt76x02_bss_info_changed utility routine and remove duplicated code.
+Use 8 as WCID index for sta interface
 
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../wireless/mediatek/mt76/mt76x2/mt76x2u.h    |  1 -
- .../wireless/mediatek/mt76/mt76x2/usb_main.c   |  5 -----
- .../wireless/mediatek/mt76/mt76x2/usb_phy.c    | 18 +++++++++++++++---
- 3 files changed, 15 insertions(+), 9 deletions(-)
+ .../wireless/mediatek/mt76/mt76x2/usb_main.c  | 23 +++----------------
+ 1 file changed, 3 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
-index 833974de5c80..0b0075411b34 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mt76x2u.h
-@@ -43,7 +43,6 @@ int mt76x2u_mac_stop(struct mt76x02_dev *dev);
- int mt76x2u_phy_set_channel(struct mt76x02_dev *dev,
- 			    struct cfg80211_chan_def *chandef);
- void mt76x2u_phy_calibrate(struct work_struct *work);
--void mt76x2u_phy_channel_calibrate(struct mt76x02_dev *dev);
- 
- void mt76x2u_mcu_complete_urb(struct urb *urb);
- int mt76x2u_mcu_init(struct mt76x02_dev *dev);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-index c2e0a43082e5..cad99715997e 100644
+index cad99715997e..a9ecc92875ae 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_main.c
-@@ -91,11 +91,6 @@ mt76x2u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mutex_lock(&dev->mt76.mutex);
- 
--	if (changed & BSS_CHANGED_ASSOC) {
--		mt76x2u_phy_channel_calibrate(dev);
--		mt76x2_apply_gain_adj(dev);
--	}
--
- 	if (changed & BSS_CHANGED_BSSID) {
- 		mt76_wr(dev, MT_MAC_BSSID_DW0,
- 			get_unaligned_le32(info->bssid));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
-index 24e292e895b6..a64268e8db42 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb_phy.c
-@@ -18,15 +18,20 @@
- #include "eeprom.h"
- #include "../mt76x02_phy.h"
- 
--void mt76x2u_phy_channel_calibrate(struct mt76x02_dev *dev)
-+static void
-+mt76x2u_phy_channel_calibrate(struct mt76x02_dev *dev, bool mac_stopped)
+@@ -50,11 +50,12 @@ static int mt76x2u_add_interface(struct ieee80211_hw *hw,
+ 				 struct ieee80211_vif *vif)
  {
- 	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
- 	bool is_5ghz = chan->band == NL80211_BAND_5GHZ;
+ 	struct mt76x02_dev *dev = hw->priv;
++	unsigned int idx = 8;
  
-+	if (dev->cal.channel_cal_done)
-+		return;
-+
- 	if (mt76x2_channel_silent(dev))
- 		return;
+ 	if (!ether_addr_equal(dev->mt76.macaddr, vif->addr))
+ 		mt76x02_mac_setaddr(dev, vif->addr);
  
--	mt76x2u_mac_stop(dev);
-+	if (!mac_stopped)
-+		mt76x2u_mac_stop(dev);
- 
- 	if (is_5ghz)
- 		mt76x02_mcu_calibrate(dev, MCU_CAL_LC, 0, false);
-@@ -37,7 +42,11 @@ void mt76x2u_phy_channel_calibrate(struct mt76x02_dev *dev)
- 	mt76x02_mcu_calibrate(dev, MCU_CAL_TEMP_SENSOR, 0, false);
- 	mt76x02_mcu_calibrate(dev, MCU_CAL_TX_SHAPING, 0, false);
- 
--	mt76x2u_mac_resume(dev);
-+	if (!mac_stopped)
-+		mt76x2u_mac_resume(dev);
-+	mt76x2_apply_gain_adj(dev);
-+
-+	dev->cal.channel_cal_done = true;
+-	mt76x02_vif_init(dev, vif, 0);
++	mt76x02_vif_init(dev, vif, idx);
+ 	return 0;
  }
  
- void mt76x2u_phy_calibrate(struct work_struct *work)
-@@ -45,6 +54,7 @@ void mt76x2u_phy_calibrate(struct work_struct *work)
- 	struct mt76x02_dev *dev;
+@@ -83,24 +84,6 @@ mt76x2u_set_channel(struct mt76x02_dev *dev,
+ 	return err;
+ }
  
- 	dev = container_of(work, struct mt76x02_dev, cal_work.work);
-+	mt76x2u_phy_channel_calibrate(dev, false);
- 	mt76x2_phy_tssi_compensate(dev, false);
- 	mt76x2_phy_update_channel_gain(dev);
- 
-@@ -165,7 +175,9 @@ int mt76x2u_phy_set_channel(struct mt76x02_dev *dev,
- 	if (scan)
- 		return 0;
- 
-+	mt76x2u_phy_channel_calibrate(dev, true);
- 	mt76x02_init_agc_gain(dev);
-+
- 	if (mt76x2_tssi_enabled(dev)) {
- 		/* init default values for temp compensation */
- 		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
+-static void
+-mt76x2u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			 struct ieee80211_bss_conf *info, u32 changed)
+-{
+-	struct mt76x02_dev *dev = hw->priv;
+-
+-	mutex_lock(&dev->mt76.mutex);
+-
+-	if (changed & BSS_CHANGED_BSSID) {
+-		mt76_wr(dev, MT_MAC_BSSID_DW0,
+-			get_unaligned_le32(info->bssid));
+-		mt76_wr(dev, MT_MAC_BSSID_DW1,
+-			get_unaligned_le16(info->bssid + 4));
+-	}
+-
+-	mutex_unlock(&dev->mt76.mutex);
+-}
+-
+ static int
+ mt76x2u_config(struct ieee80211_hw *hw, u32 changed)
+ {
+@@ -150,7 +133,7 @@ const struct ieee80211_ops mt76x2u_ops = {
+ 	.ampdu_action = mt76x02_ampdu_action,
+ 	.config = mt76x2u_config,
+ 	.wake_tx_queue = mt76_wake_tx_queue,
+-	.bss_info_changed = mt76x2u_bss_info_changed,
++	.bss_info_changed = mt76x02_bss_info_changed,
+ 	.configure_filter = mt76x02_configure_filter,
+ 	.conf_tx = mt76x02_conf_tx,
+ 	.sw_scan_start = mt76x02_sw_scan,
 -- 
 2.17.2
 
