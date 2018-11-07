@@ -2,105 +2,113 @@ Return-Path: <SRS0=0pA5=NS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10916C46465
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Nov 2018 09:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1417DC0044C
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Nov 2018 10:02:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC0912085B
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Nov 2018 09:46:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFEB920827
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Nov 2018 10:02:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TUBHbljM"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CC0912085B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HAasIuaV";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="l9HU3nz9"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CFEB920827
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730619AbeKGTQL (ORCPT
+        id S1726385AbeKGTce (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Nov 2018 14:16:11 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:46887 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726223AbeKGTQL (ORCPT
+        Wed, 7 Nov 2018 14:32:34 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34194 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726218AbeKGTce (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Nov 2018 14:16:11 -0500
-Received: by mail-wr1-f66.google.com with SMTP id 74-v6so16628698wrb.13
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Nov 2018 01:46:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Vojn0juE2KpW/Cfa+SaA1FzF9GXqHINf2TjGHVDef+Y=;
-        b=TUBHbljM8rvu4xY2FQ0cCcVRa+Q7YoKMjMf/Y3E9r+fuvm4wwMiuFiysb0TTS4OhcJ
-         y+zp4gcQZ672cPGtyNa9ENRVM79fn9nKYVxi/l4REhGaWfHBk7oYtRHcITCfetW+vZob
-         Ud16rhrnmGDeg1FbQCI/vvuo070dmcbg7iv9p2Yd46dMCRmX6yXTKVitbp8TsWYOVMTy
-         5arVshKkkzUSkW4CdrWPXa6pGjao2pcdSJTJwz7JWXsHkTuwnKeVgI8+9MmAE72mzxST
-         XJDfaQ68rzLL5aMhfDaT9njyDH2hnVCoLsGvK5Gs7rRVo3h4zXYmRXhUpkrZgTGXwJi0
-         /Q2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Vojn0juE2KpW/Cfa+SaA1FzF9GXqHINf2TjGHVDef+Y=;
-        b=T61Pyd6P+S/7nOlI2NLgniJTaVZ2raBcgS6X4u7qI4ZFU2iG34HXUkBz/efnJ7c4+N
-         i33kmaFWfyPfv8UMuyO0YtY3ACPnuzbTIwHdK9ghkN0gZ+lgs9cvXZBV2yHYUjb9lJjd
-         AsJm5hUHzcb7WGRKukQWOo4CMaOfFCbRG4pOjsBuCxRL5bdeueeSdeGai4kr1NYha7pH
-         UE8iEoTTcCylwO6SnZO4bl3oy811jB8z2gxaRGUhX3dHicUOhWA5P/dMG5PVP8wvseQK
-         //VKEZWJJb6R5yft9xJT1Iu3zX3sC2sqDDUVWYTrgUPf63sVylxr7Cl3wQwaV9N98RQJ
-         9/vg==
-X-Gm-Message-State: AGRZ1gKNWy4nx/BLnZLdWMnVwPi5vOqIULUw+nONJgCs2+KBRSp40poD
-        +MF/z1wnjAnACqrFZDQNHqoSZUDupmMwKkhpT2Y=
-X-Google-Smtp-Source: AJdET5c4imuSRZcbVOg5/FLOvVttJJIcyrLurC7Oc0mNz8YeDgh841cfppAKN86L6dWTfWsUFwgxLitC2XstmOTPR5Y=
-X-Received: by 2002:adf:afdc:: with SMTP id y28-v6mr1247641wrd.176.1541583994340;
- Wed, 07 Nov 2018 01:46:34 -0800 (PST)
-MIME-Version: 1.0
-References: <1539289141-13689-1-git-send-email-dan.haab@luxul.com>
-In-Reply-To: <1539289141-13689-1-git-send-email-dan.haab@luxul.com>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date:   Wed, 7 Nov 2018 10:46:23 +0100
-Message-ID: <CACna6rxJUxGLw1P7d4nCRocHxSs3nyxBvHzr4YaDH9ES+kg39g@mail.gmail.com>
-Subject: Re: [PATCH] brcmfmac: support STA info struct v7
-To:     Rip Route <riproute@gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Wed, 7 Nov 2018 14:32:34 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0036B60591; Wed,  7 Nov 2018 10:02:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541584976;
+        bh=aNf0CnptxyjMLxNf3ley7xT85S9DXtn01YOO00QIwNI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=HAasIuaVJmr3rMi/513CJsGQcyF/MTzlNjI1UvZ4ytMNmBGI1dpxyIzI/dVhqfS4p
+         Der3EOB+gjtPLkS+7tH4MLqZqpRpQ3+iJ1UIEgGRLeOg+P2C6+UbyLJA7+E+Qksn0+
+         WSqVb2s3EnFyYF+QuEUUHtxun5W5LFWldP8rXpiU=
+Received: from x230.qca.qualcomm.com (85-76-66-16-nat.elisa-mobile.fi [85.76.66.16])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 14A6660271;
+        Wed,  7 Nov 2018 10:02:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541584975;
+        bh=aNf0CnptxyjMLxNf3ley7xT85S9DXtn01YOO00QIwNI=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=l9HU3nz9cS5zHuNDCnsa7i9dDEjFSTeJjRvI56T88EoFsUUS1tTO7CjKeUyC04nsz
+         lvXL79P3snNjjvXQRCQ1PSvdOVdjqy1hYsRZ4qXWd5sGavt0g+EoqytbQ+EBG8SrBo
+         M0/Hwt5wGsL7R7ZAILik/1m1rtBoAwIrUP5efGLo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 14A6660271
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc:     Rip Route <riproute@gmail.com>,
         Arend Van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
         David Miller <davem@davemloft.net>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
         Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>," 
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        \<brcm80211-dev-list.pdl\@broadcom.com\>\," 
         <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>," 
+        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        \<brcm80211-dev-list.pdl\@broadcom.com\>\," 
         <brcm80211-dev-list@cypress.com>, Dan HAAB <dan.haab@luxul.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH] brcmfmac: support STA info struct v7
+References: <1539289141-13689-1-git-send-email-dan.haab@luxul.com>
+        <CACna6rxJUxGLw1P7d4nCRocHxSs3nyxBvHzr4YaDH9ES+kg39g@mail.gmail.com>
+Date:   Wed, 07 Nov 2018 12:02:48 +0200
+In-Reply-To: <CACna6rxJUxGLw1P7d4nCRocHxSs3nyxBvHzr4YaDH9ES+kg39g@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Wed, 7 Nov 2018
+ 10:46:23 +0100")
+Message-ID: <87r2fxciif.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 11 Oct 2018 at 22:21, Dan Haab <riproute@gmail.com> wrote:
-> The newest firmwares provide STA info using v7 of the struct. As v7
-> isn't backward compatible, a union is needed.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+
+> On Thu, 11 Oct 2018 at 22:21, Dan Haab <riproute@gmail.com> wrote:
+>> The newest firmwares provide STA info using v7 of the struct. As v7
+>> isn't backward compatible, a union is needed.
+>>
+>> Even though brcmfmac does not use any of the new info it's important to
+>> provide the proper struct buffer. Without this change new firmwares will
+>> fallback to the very limited v3 instead of something in between such as
+>> v4.
+>>
+>> Signed-off-by: Dan Haab <dan.haab@luxul.com>
 >
-> Even though brcmfmac does not use any of the new info it's important to
-> provide the proper struct buffer. Without this change new firmwares will
-> fallback to the very limited v3 instead of something in between such as
-> v4.
+> It's too bad Broadcom's existing struct has been changed instead of
+> just being extended.
 >
-> Signed-off-by: Dan Haab <dan.haab@luxul.com>
+> The patch looks good to me though. I just wanted to share my opinion /
+> ping due to patch being marked as "Deferred".
+>
+> Reviewed-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 
-It's too bad Broadcom's existing struct has been changed instead of
-just being extended.
+Good that you brought this up, I wasn't sure what to do with it so I
+marked as Deferred. Arend, please let me know what I should do.
 
-The patch looks good to me though. I just wanted to share my opinion /
-ping due to patch being marked as "Deferred".
-
-Reviewed-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+--=20
+Kalle Valo
