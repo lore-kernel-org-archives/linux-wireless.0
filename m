@@ -2,140 +2,187 @@ Return-Path: <SRS0=/7yp=NT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BA3ECDE4B
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:31:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB7AECDE4B
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 274A220818
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:31:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 538C12081C
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:47:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Q0BtwzS9"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 274A220818
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EY8HLHyW";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YvBfiBE0"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 538C12081C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726780AbeKIDIP (ORCPT
+        id S1727019AbeKIDX7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Nov 2018 22:08:15 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:52623 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726684AbeKIDIP (ORCPT
+        Thu, 8 Nov 2018 22:23:59 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58744 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726585AbeKIDX7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Nov 2018 22:08:15 -0500
-Received: by mail-it1-f194.google.com with SMTP id t190-v6so2758263itb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 09:31:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VdYF3WX3GJAY0kanvw201TBbKXMrlke2gUcOPt/8g8c=;
-        b=Q0BtwzS9i0uXnSMZNmNl8gwVXuSQbdCrM8x2W8oYKA4/XBi02mzkXWg+GdsDS61dz7
-         N12JEEoas3U0c1dZ/eRnN8cHJgB8GgDV4ol9SPH0Cs3+Ha7X+RMB2RNCcisBd5LMMRUS
-         hjNLY0GgTI+TxRyd+p3SaCm+Odt91x2OuzMws=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=VdYF3WX3GJAY0kanvw201TBbKXMrlke2gUcOPt/8g8c=;
-        b=AVrKAM3KSklqwaN0SXfSWRtae531aNA2J0vGkFqRF73WKtSMYLeGncotjKAQzxDFqV
-         B2RKmN5a0PKFGNGHEDLjJH51siOBAzQkNCBYXTgvktLbeWca0qpty3ROQ67ezNMdMcsV
-         bgp1RLjD5aDlf6SBh0j5NUoNd25Av6oIE6Nx7zdGJ0fjes/nwa3zVXvyIOaeCfCH6+Q9
-         2hd6m8WT55edyjs0BK0cmaPaxcvPXJ/kHCCGr8FfH2QNQtBbq9atVfjGAoPkyACagVpG
-         dFN7ER7mVRRPEBGkbbvov0UZ4i4cTUsLWoFt53wSVyeCmuDog3i456OOFtuKQL9dxFGY
-         3FaA==
-X-Gm-Message-State: AGRZ1gIj+gnyJqHnShGK6rpYjTHo6DPd5u+TpVzqwR6ZcYbxJn9PDDBO
-        Nv5NGTCz3pQfum+eq31dD3ejiXxJk+E=
-X-Google-Smtp-Source: AJdET5cPa32lyvFo+sUayzH4RfKkhl/wtGTU+dlfuJpCupjKDXNYBPvqQUnYXkppj62qAOt5jFgnig==
-X-Received: by 2002:a24:9717:: with SMTP id k23-v6mr2009446ite.94.1541698303072;
-        Thu, 08 Nov 2018 09:31:43 -0800 (PST)
-Received: from mail-io1-f41.google.com (mail-io1-f41.google.com. [209.85.166.41])
-        by smtp.gmail.com with ESMTPSA id x26-v6sm801960ita.34.2018.11.08.09.30.59
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 08 Nov 2018 09:31:12 -0800 (PST)
-Received: by mail-io1-f41.google.com with SMTP id f12-v6so15246620iog.0
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 09:30:59 -0800 (PST)
-X-Received: by 2002:a6b:d541:: with SMTP id x1-v6mr4659579ioc.113.1541698256286;
- Thu, 08 Nov 2018 09:30:56 -0800 (PST)
+        Thu, 8 Nov 2018 22:23:59 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 962BC6074F; Thu,  8 Nov 2018 17:47:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541699243;
+        bh=JvNUhfliZxR4nVTtqCE070Zw+o3u99Ock1Gvvwd+S2A=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=EY8HLHyWFpzDjPXKvwNuwek3IXGI9OY7zpN3N8u2BzZg3NrCcPrDfuTo9Z8GlSO/p
+         jDCkozt0EgTsqg8dnLmCA6mLNIim09RGcYz752jwDLU7ppI1t/conv0mUe11UZrLuA
+         7wBsiZx/w7cCJqlOViQWZOW8o6E3RHNLWtAKaO3A=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id B49BA6074F;
+        Thu,  8 Nov 2018 17:47:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541699242;
+        bh=JvNUhfliZxR4nVTtqCE070Zw+o3u99Ock1Gvvwd+S2A=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=YvBfiBE0/AQDUo+mINS8ZreNtV1KuYg5x/c8PgY9cvd1FQBRzcPrwAQtK4n+afiwo
+         50MyfURAxszDr8kdyQqAz3X2a+6Sac0o3EDA813B07NwpnZqVlWQyU+N0Y1bUHGjaX
+         8mFNmg4oJ8wSNG7YBhtcUl61HUc/ttuXhAxvGkls=
 MIME-Version: 1.0
-References: <20181107185643.240346-1-briannorris@chromium.org>
- <7f2ef494f4a2aba1845a157da8fec449@codeaurora.org> <b1a64bd66fa25f274af8c018c6fc02f4@codeaurora.org>
-In-Reply-To: <b1a64bd66fa25f274af8c018c6fc02f4@codeaurora.org>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Thu, 8 Nov 2018 09:30:43 -0800
-X-Gmail-Original-Message-ID: <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
-Message-ID: <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
-Subject: Re: [PATCH REGRESSION] Revert "ath10k: add quiet mode support for QCA6174/QCA9377"
-To:     govinds@codeaurora.org
-Cc:     rmanohar@codeaurora.org, ath10k@lists.infradead.org,
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 08 Nov 2018 23:17:22 +0530
+From:   Tamizh chelvam <tamizhr@codeaurora.org>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc:     ath10k@lists.infradead.org, johannes@sipsolutions.net,
         linux-wireless@vger.kernel.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        yyuwang@codeaurora.org, pillair@codeaurora.org,
-        stable <stable@vger.kernel.org>,
-        linux-wireless-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 1/4] New netlink command for TID specific configuration
+In-Reply-To: <20181107140552.zfuusbapgqjumoln@bars>
+References: <1540230918-27712-1-git-send-email-tamizhr@codeaurora.org>
+ <1540230918-27712-2-git-send-email-tamizhr@codeaurora.org>
+ <20181107140552.zfuusbapgqjumoln@bars>
+Message-ID: <0b75171a7777bd25e203240a3a119cb5@codeaurora.org>
+X-Sender: tamizhr@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Nov 7, 2018 at 8:32 PM Govind Singh <govinds@codeaurora.org> wrote:
-> On 2018-11-08 03:00, Rajkumar Manoharan wrote:
-> > On 2018-11-07 10:56, Brian Norris wrote:
-> >> This reverts commit cfb353c0dc058bc1619cc226d3cbbda1f360bdd3.
-> >>
-> >> WCN3990 firmware does not yet implement this feature, and so it
-> >> crashes
-> >> like this:
-> >>
-> >>   fatal error received: err_qdi.c:456:EX:wlan_process:1:WLAN
-> >> RT:207a:PC=b001b4f0
-> >>
-> >> This feature can be re-implemented with a proper service bitmap or
-> >> other
-> >> feature-discovery mechanism in the future. But it should not break
-> >> working boards.
-> >>
-> > Brian,
-> >
-> > The change "ath10k: add quiet mode support for QCA6174/QCA9377" was
-> > merged even
-> > before full WCN3990 device support was added in ath10k. How come it
-> > could be regression
-> > for WCN3990. I know both are sharing same WMI-TLV interface but
-> > reverting this
-> > will break QCA6174/QCA9377. no?
 
-I don't see how the revert would "break" QCA6174 -- QCA6174 worked
-just fine without this feature and should continue to do so.
+> Hello Tamizh,
+> 
+>> Co-Developed-by: Tamizh Chelvam <tamizhr@codeaurora.org>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+>> Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+>> ---
+>>  include/net/cfg80211.h       |   14 +++++++
+>>  include/uapi/linux/nl80211.h |   69 +++++++++++++++++++++++++++++++++
+>>  net/wireless/nl80211.c       |   86 
+>> ++++++++++++++++++++++++++++++++++++++++++
+>>  net/wireless/rdev-ops.h      |   15 ++++++++
+>>  net/wireless/trace.h         |   27 +++++++++++++
+>>  5 files changed, 211 insertions(+)
+> 
+> ...
+> 
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index d744388..d386ad7 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+> 
+> ...
+> 
+>> +static int nl80211_set_tid_config(struct sk_buff *skb,
+>> +                                 struct genl_info *info)
+>> +{
+>> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> +       struct nlattr *attrs[NL80211_ATTR_TID_MAX + 1];
+>> +       struct nlattr *tid;
+>> +       struct net_device *dev = info->user_ptr[1];
+>> +       const char *peer = NULL;
+>> +       u8 tid_no;
+>> +       int ret = -EINVAL, retry_short = -1, retry_long = -1;
+>> +
+>> +       tid = info->attrs[NL80211_ATTR_TID_CONFIG];
+>> +       if (!tid)
+>> +               return -EINVAL;
+>> +
+>> +       ret = nla_parse_nested(attrs, NL80211_ATTR_TID_MAX, tid,
+>> +                              nl80211_attr_tid_policy, info->extack);
+>> +       if (ret)
+>> +               return ret;
+>> +
+>> +       if (!attrs[NL80211_ATTR_TID])
+>> +               return -EINVAL;
+>> +
+>> +       if (attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
+>> +               retry_short = 
+>> nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_SHORT]);
+>> +               if (!retry_short ||
+>> +                   retry_short > rdev->wiphy.max_data_retry_count)
+>> +                       return -EINVAL;
+>> +       }
+>> +
+>> +       if (attrs[NL80211_ATTR_TID_RETRY_LONG]) {
+>> +               retry_long = 
+>> nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_LONG]);
+>> +               if (!retry_long ||
+>> +                   retry_long > rdev->wiphy.max_data_retry_count)
+>> +                       return -EINVAL;
+>> +       }
+>> +
+>> +       tid_no = nla_get_u8(attrs[NL80211_ATTR_TID]);
+>> +       if (tid_no >= IEEE80211_FIRST_TSPEC_TSID)
+>> +               return -EINVAL;
+>> +
+>> +       if (info->attrs[NL80211_ATTR_MAC])
+>> +               peer = nla_data(info->attrs[NL80211_ATTR_MAC]);
+>> +
+>> +       if (nla_get_flag(attrs[NL80211_ATTR_TID_RETRY_CONFIG])) {
+> 
+> Do we really need this additional flag to indicate retry data ?
+> Maybe we can simply check retry attrs or even retry data, e.g.:
 
-> This regression is found while we switched from 4.18 + WCN3990
-> back-ports to 4.19.
+Yes, because this implementation gives provision to set default retry 
+count for TID traffic type for a station.
+Since we use single NL command for all TID configurations, this flag 
+will be useful to notify the driver about
+retry TID configuration change.
+> 
+> if (attrs[NL80211_ATTR_TID_RETRY_LONG] ||
+>     attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
+>     ...
+> 
+> if ((retry_short > 0) || (retry_long > 0)) {
+>     ...
+> 
+>> +               if (!wiphy_ext_feature_isset(
+>> +                               &rdev->wiphy,
+>> +                               
+>> NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG))
+>> +                       return -EOPNOTSUPP;
+>> +
+>> +               if (peer && !wiphy_ext_feature_isset(
+>> +                               &rdev->wiphy,
+>> +                               
+>> NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG))
+>> +                       return -EOPNOTSUPP;
+>> +
+>> +               if (!rdev->ops->set_data_retry_count ||
+>> +                   !rdev->wiphy.max_data_retry_count)
+>> +                       return -EOPNOTSUPP;
+>> +
+>> +               ret = rdev_set_data_retry_count(rdev, dev, peer, 
+>> tid_no,
+>> +                                               retry_short, 
+>> retry_long);
+>> +       }
+>> +
+>> +       return ret;
+>> +}
+> 
+> Regards,
+> Sergey
 
-^^ What Govind said. WCN3990 support has been trickling in over a few
-releases, and it doesn't seem kosher to allow people to submit
-regressions in the midst of that.
-
-> > I would prefer to handle this within WMI callback or upper layer.
-> >
->
-> IMO, we should use (WMI_SERVICE_THERMAL_MGMT | WMI_SERVICE_THERM_THROT )
-> service bitmap check and call
-> ath10k_thermal_set_throttling only if fw supports THERMAL THROTTLE
-> feature. But we need to ensure all
-> available ath10k fw's are reporting this service.
-
-And the above notes from Govind highlight this -- if the feature was
-not protected by the appropriate service flags, then we can't be sure
-that you didn't break a bunch of other firmware releases out there.
-Linux should not break for everyone just because you spun a firmware
-release.
-
-Of course, I'll leave it up to Kalle as to how he wants to mediate
-this. And if you come up with a solid patch soon that can fix this
-without dropping the feature, then so be it.
-
-Brian
+Thanks,
+Tamizh.
