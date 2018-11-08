@@ -4,77 +4,76 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86009C32789
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 11:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69646C32789
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 11:53:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F9EB20892
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 11:53:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E15A20892
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 11:53:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UBGmMiHH"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4F9EB20892
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bt0seOLv"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2E15A20892
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbeKHV2j (ORCPT
+        id S1726936AbeKHV2q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Nov 2018 16:28:39 -0500
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:45838 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726304AbeKHV2i (ORCPT
+        Thu, 8 Nov 2018 16:28:46 -0500
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:46441 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726304AbeKHV2q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Nov 2018 16:28:38 -0500
-Received: by mail-yw1-f68.google.com with SMTP id p18-v6so5662948ywg.12
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 03:53:30 -0800 (PST)
+        Thu, 8 Nov 2018 16:28:46 -0500
+Received: by mail-yb1-f195.google.com with SMTP id i17-v6so1889916ybp.13
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 03:53:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:subject:to:references:cc:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=ulRe8aNUh9F+iCkh0IJ28fFheoyZPfIeD4YqSQwrhRE=;
-        b=UBGmMiHHTb/X05JoYvJOuRoMPwEQYY6P2DYEOld/HyGqxfJrwjqgW9dldGrUUBOtyM
-         RUqEMFlBa1wdzxrICG2U8IIyfADZaqobT/6/UBuxdIrte2a+QwtI/Qqk2s/utaJPZbbR
-         5JtZT/AJeeZ5eGprkNKiM99EVYJpMlCHVBkbg=
+        bh=SF0J1arw+DtvUBFqsvZRKWbquMI4DaRrX3eCBPNlmVg=;
+        b=bt0seOLvRdZeX85WeEGdGjivB3cqLkS/Tx37d3B14Ll0wsw8yKkFWh57iZY4rgblOu
+         wEQH/jRThCPzqkvsQ6ENiRW0NjBqDrw4A297Jf+d6Ihw5o/HAhAa/1pfQoSz/wEKrqa/
+         +uHmgGQ3fi1CmVYdP+ElNkh49VokrTmqcZvSk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:subject:to:references:cc:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=ulRe8aNUh9F+iCkh0IJ28fFheoyZPfIeD4YqSQwrhRE=;
-        b=LSgw+VlZO3GM02hoOYO1knArflw/IeuB2c2mkAH7wfOKWnBHcxSElUY2i1oOL/brEW
-         R2OJmP0tUddgvaYtgpgKD+Jy2sPRor//i6O1msU6DmwqJKSPypUeE/gTt1wmFiEgLhV/
-         nX9aP1ipdam90uuEDqqeVy0Zp6aOQDbsuup2BJqqgHUuw3bEJHjKGrjiKeYq28CD2RjN
-         5InFHg+zIHWop+7xXF1TqFqNxZzHaiZH7k9FuhELPtxnquJeD7nkd5PRZv+Fi3c4O0s1
-         pumAzbk/7BdFVYAw4c+ZRFXPeMudUdKBnSChpXkEvAIqAHlqexMtTPxou0c60o4UFOcR
-         66Kw==
-X-Gm-Message-State: AGRZ1gKSa4zbh1Or4XJiQ48PALjbFKNbdEpriFos5nQ2ANCfJ469Kl79
-        +UTG3qeGOw9m9WTJ9famueg65Q==
-X-Google-Smtp-Source: AJdET5dCbxM2BZbyDefyOYzYrV5JH9IfGTVVO9bTLtLrB9VPM3EvIUOk9/xnxqHbrhoQM+11SK6ZdQ==
-X-Received: by 2002:a81:7a90:: with SMTP id v138-v6mr3748012ywc.100.1541678009511;
-        Thu, 08 Nov 2018 03:53:29 -0800 (PST)
+        bh=SF0J1arw+DtvUBFqsvZRKWbquMI4DaRrX3eCBPNlmVg=;
+        b=n+mg3DxGUf4qPYFfIzwtR3E1GfCb5gSjev/gm509FC5DNJTipRwFHsR4fJNIShFYuf
+         dHstHrOh0V9UDl1sGllyPmefBxha2wP3hBfaqWr7z8KmFomW/se97f/rQ6DC9vaPCI6x
+         iPwiCSPmvT/rRzCVqs6ySse+WplrePGcfi8TM5B0Kuo6ZHk7b+pjIntv68M5y9oveIv8
+         c4dbZBCU/Q7OMytsubzof8KoQiZyXcgZ5rlJjLP/2rlc7R0rfGDqtjqoCitpM7nNwSRp
+         Svrsi1QJLjagZRTbFClhkSJ3cH5quj3qHl490C8YCOEA2zz1ECMkOjLLrj8HC1NWXtED
+         Vcjg==
+X-Gm-Message-State: AGRZ1gJVYiV0XACqLAPcNY3S24kEl0pYgd7TWeYvxfMNRKw/vrDdC+uN
+        3bLNz5RWPfpVmLAdBUzGcuUBhg==
+X-Google-Smtp-Source: AJdET5fz5uMwcTWwNIJ68fEij3uyn6w7WbwaGKIUGj3vvuTFq91YXs0PmZsd7aENlD7TltDzrV6EgQ==
+X-Received: by 2002:a25:4e86:: with SMTP id c128-v6mr3804197ybb.186.1541678017068;
+        Thu, 08 Nov 2018 03:53:37 -0800 (PST)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id k185-v6sm854256ywc.98.2018.11.08.03.53.27
+        by smtp.gmail.com with ESMTPSA id 200-v6sm863571ywq.97.2018.11.08.03.53.35
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 08 Nov 2018 03:53:29 -0800 (PST)
+        Thu, 08 Nov 2018 03:53:36 -0800 (PST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 03/11] brcmfmac: set SDIO F1 MesBusyCtrl for CYW4373
+Subject: Re: [PATCH 04/11] brcmfmac: add support for CYW43012 SDIO chipset
 To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 References: <1541476188-75475-1-git-send-email-chi-hsien.lin@cypress.com>
- <1541476188-75475-4-git-send-email-chi-hsien.lin@cypress.com>
+ <1541476188-75475-5-git-send-email-chi-hsien.lin@cypress.com>
 Cc:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
         brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Madhan Mohan R <MadhanMohan.R@cypress.com>
-Message-ID: <62e88e38-b4d9-957d-12c9-60469687a4be@broadcom.com>
-Date:   Thu, 8 Nov 2018 12:53:26 +0100
+        Kalle Valo <kvalo@codeaurora.org>
+Message-ID: <faa2ef32-5816-506a-4ee0-d686e9ced4a8@broadcom.com>
+Date:   Thu, 8 Nov 2018 12:53:34 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <1541476188-75475-4-git-send-email-chi-hsien.lin@cypress.com>
+In-Reply-To: <1541476188-75475-5-git-send-email-chi-hsien.lin@cypress.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -83,41 +82,73 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 11/6/2018 4:50 AM, Chi-Hsien Lin wrote:
-> From: Madhan Mohan R <MadhanMohan.R@cypress.com>
->
-> Along with F2 watermark (existing) configuration, F1 MesBusyCtrl
-> should be enabled & configured to avoid overflow errors.
+> CYW43012 is a 1x1 802.11a/b/g/n Dual-Band HT20, 256-QAM/Turbo QAM. It
+> is an Ultra Low Power WLAN+BT combo chip.
+
+comments below....
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Madhan Mohan R <madhanmohan.r@cypress.com>
 > Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 > ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h | 3 +++
->  2 files changed, 6 insertions(+)
+>  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  1 +
+>  .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  9 ++++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 40 ++++++++++++++++++----
+>  .../broadcom/brcm80211/include/brcm_hw_ids.h       |  1 +
+>  include/linux/mmc/sdio_ids.h                       |  1 +
+>  5 files changed, 45 insertions(+), 7 deletions(-)
 >
 > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index 541d54661c9e..34a838fcc319 100644
+> index 34a838fcc319..299f59f58d8c 100644
 > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -51,6 +51,7 @@
+> @@ -677,6 +679,15 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+>  	/* 1st KSO write goes to AOS wake up core if device is asleep  */
+>  	brcmf_sdiod_writeb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR, wr_val, &err);
 >
->  #define DEFAULT_F2_WATERMARK    0x8
->  #define CY_4373_F2_WATERMARK    0x40
-> +#define CY_4373_F1_MESBUSYCTRL  (CY_4373_F2_WATERMARK | SBSDIO_MESBUSYCTRL_ENAB)
+> +	/* In case of 43012 chip, the chip could go down immediately after
+> +	 * KSO bit is cleared. So the further reads of KSO register could
+> +	 * fail. Thereby just bailing out immediately after clearing KSO
+> +	 * bit, to avoid polling of KSO bit.
+> +	 */
+> +	if (!on && bus->ci->chip == CY_CC_43012_CHIP_ID) {
+> +		return err;
+> +	}
 
-I don't see much value for this define. It is use once below so just or 
-it there. That way you can "directly" see what is written to the register.
+kernel coding style does not require curly braces here.
 
->  #ifdef DEBUG
->
-> @@ -4118,6 +4119,8 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
->  			devctl |= SBSDIO_DEVCTL_F2WM_ENAB;
->  			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
->  					   &err);
-> +			brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
-> +					   CY_4373_F1_MESBUSYCTRL, &err);
+>  	if (on) {
+>  		/* device WAKEUP through KSO:
+>  		 * write bit 0 & read back until
+> @@ -2436,9 +2447,20 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+>  		/* Force backplane clocks to assure F2 interrupt propagates */
+>  		saveclk = brcmf_sdiod_readb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+>  					    &err);
+> -		if (!err)
+> -			brcmf_sdiod_writeb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
+> -					   (saveclk | SBSDIO_FORCE_HT), &err);
+> +		if (!err) {
+> +			if (bus->ci->chip == CY_CC_43012_CHIP_ID) {
+> +				brcmf_sdiod_writeb(sdiodev,
+> +						   SBSDIO_FUNC1_CHIPCLKCSR,
+> +						   (saveclk |
+> +						    SBSDIO_HT_AVAIL_REQ),
+> +						   &err);
+> +			} else {
+> +				brcmf_sdiod_writeb(sdiodev,
+> +						   SBSDIO_FUNC1_CHIPCLKCSR,
+> +						   (saveclk | SBSDIO_FORCE_HT),
+> +						   &err);
+> +			}
+> +		}
 
-just use 'CY_4373_F2_WATERMARK | SBSDIO_MESBUSYCTRL_ENAB' here. No 
-braces needed.
+I prefer we avoid checks for chip id as much as possible. Maybe have 
+chip module provide helper function, ie.
 
+		if (!err) {
+			bpreq = saveclk;
+			bpreq |= brcmf_chip_is_ulp(bus->ci) ?
+				 SBSDIO_HT_AVAIL_REQ : SBSDIO_FORCE_HT;
+			brcmf_sdio_writeb(sdiodev,
+					  SBSDIO_FUNC1_CHIPCLKCSR,
+					  bpreq, &err);
+		}
