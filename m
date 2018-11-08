@@ -2,129 +2,124 @@ Return-Path: <SRS0=/7yp=NT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1CDECDE4B
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 16:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BBCECDE4B
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 16:27:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3848320825
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 16:05:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD4AC20827
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 16:27:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BAFx68xG"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3848320825
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="xNKlsxfE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DD4AC20827
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727719AbeKIBmD (ORCPT
+        id S1726744AbeKICEL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Nov 2018 20:42:03 -0500
-Received: from nbd.name ([46.4.11.11]:58738 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726700AbeKIBmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Nov 2018 20:42:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=I/T4+DOrlrHMD6JUBsTZXsm5ViDt1Qa0P5wvv8skX8c=; b=BAFx68xG2tDe2Vo1ifvvpvKjiV
-        rFdHhqir9vLTjD2Wqp9hOi6srVt2sdsuHMb2g5CEUtI7G8NUGEIOKKp9tWCwcKk6TgnnivvFHvY1U
-        DEkoppwc632CZQyGCBIAR0dtRFXGXhJn/LD4DkgMLyla62YuEre+gTOgfLJDEdGaaEJg=;
-Subject: Re: [RFC/RFT 2/4] mt76x02: reserve wcid 0 for global traffic
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-References: <1541688430-31855-1-git-send-email-sgruszka@redhat.com>
- <1541688430-31855-3-git-send-email-sgruszka@redhat.com>
- <CAJ0CqmXS6zkJf3FHb5wYyPPzvqG5OBZDfcYWSjbaJY_nhcErzA@mail.gmail.com>
- <20181108155403.GB13621@redhat.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <714c8e65-da0d-3043-ff4c-33c8931e4710@nbd.name>
-Date:   Thu, 8 Nov 2018 17:05:51 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
-MIME-Version: 1.0
-In-Reply-To: <20181108155403.GB13621@redhat.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 8 Nov 2018 21:04:11 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:18404 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726421AbeKICEL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Nov 2018 21:04:11 -0500
+X-IronPort-AV: E=Sophos;i="5.54,480,1534834800"; 
+   d="scan'208";a="23017623"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 08 Nov 2018 09:27:55 -0700
+Received: from NAM05-CO1-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Thu, 8 Nov 2018 09:27:55 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector1-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0a/w/CrM6Aiw8Ts5CeNV4ursrE1YinKONLRYAhgpBow=;
+ b=xNKlsxfEIX1W91I9MvfHog1ywjdEcw3bJsSZkEiNLfzTpxNPjnFCKNetrYRmMJj7UMjj6EsyyrHuNWOQxEDueTU8mq+mUDKaKiCm5PvyqsfZyg6Xaf1f9ipUNuKkPL389l6MJKX3uTdV0IXPR37AAdDRg1yQ/sykXOO0h7OoaVs=
+Received: from SN6PR11MB3407.namprd11.prod.outlook.com (52.135.111.96) by
+ SN6PR11MB2814.namprd11.prod.outlook.com (52.135.93.17) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.26; Thu, 8 Nov 2018 16:27:52 +0000
+Received: from SN6PR11MB3407.namprd11.prod.outlook.com
+ ([fe80::7d22:c5b8:9e2e:2281]) by SN6PR11MB3407.namprd11.prod.outlook.com
+ ([fe80::7d22:c5b8:9e2e:2281%2]) with mapi id 15.20.1294.034; Thu, 8 Nov 2018
+ 16:27:52 +0000
+From:   <Adham.Abozaeid@microchip.com>
+To:     <gregkh@linuxfoundation.org>
+CC:     <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <johannes@sipsolutions.net>, <Aditya.Shankar@microchip.com>,
+        <Ganesh.Krishna@microchip.com>
+Subject: Re: [PATCH v3 2/4] staging: wilc1000: validate cfg parameters before
+ scheduling the work
+Thread-Topic: [PATCH v3 2/4] staging: wilc1000: validate cfg parameters before
+ scheduling the work
+Thread-Index: AQHUdWPXxcun4ZLEiEWHqfumlI+XRaVFv+IAgABVUIA=
+Date:   Thu, 8 Nov 2018 16:27:52 +0000
+Message-ID: <6463e809-bb0f-60cb-56b9-fc9b0c0cc203@microchip.com>
+References: <20181106000109.6178-1-adham.abozaeid@microchip.com>
+ <20181106000109.6178-3-adham.abozaeid@microchip.com>
+ <20181108112228.GA9001@kroah.com>
+In-Reply-To: <20181108112228.GA9001@kroah.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [198.175.253.81]
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101
+ Thunderbird/58.0
+x-clientproxiedby: BYAPR07CA0094.namprd07.prod.outlook.com
+ (2603:10b6:a03:12b::35) To SN6PR11MB3407.namprd11.prod.outlook.com
+ (2603:10b6:805:bd::32)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Adham.Abozaeid@microchip.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;SN6PR11MB2814;6:74FXSDrfK009gFX3mB0fSIgn10Ackm86hCRvLuNRlLLVH+pTWXWdnXw/U1S+4yetY1TfL6+mZ3AuIvbqECKwLfMQNkDO56vtobRV6KBAjaBd1iUEAVQFv8O6IRCbNqLjTf0Sx1RnrStFCqmr6a9FEfVZQIAWyuUT83+hHP0x5mT8DWYg4j/NVuxcIh2seYwtJiSI0lY3mLG3sceQGy1kkxH3RMpHwby0m9u7Tfx25BsixYbXOHD1DYVLb+Pv9PqYXk6eM1Vz8uukZV73ICqBvUSo/MExIzvDdMjsXDXisGmkae+S/8f/FG9INvxPan96mM4cdtJ1Km0QDBxsRGN2uWQZ9qnVYiohg3C6H49i8NG1UplWS9Ve1aPz/SAHejr/GlDhXPiz3ycV32DXl1HbDuHnkFm096tPKb2Wfkeb2I7AyDGdYWcdS1dFdZO+DenN6opjgpujH9uFtMutuk9IUA==;5:o9BOwwm7jIXrouDGpCMJ1sCHY3Jl/KEdttPAsbHMtWL3631c2UvZ9wwtz5Q9ZGuZBgET8pYtJWaGq5Jh4GJzyP1U7rOEXpmNhGLRe7IdggY4OtTjNl2un++3jyDNIl1SXGBt3YiLv7arO+IsqNxrxhXKfyl1tT00GZHAquLpuEU=;7:tw5rTHZ32VxfAsYq7AZWVcnhoJOjwHlFP/7ZkP1aXl2SSLhUeP7L6ZvnxcJ4/fezffCSNCLU6jmIlDUZ6yHY4G1lv7sG/5gMYwULMYWrxdPTAA7r58yGKDbfhdq4h3P3u179uZVNf0S/ZU0B86hddg==
+x-ms-office365-filtering-correlation-id: ad842049-2b10-41d7-dd41-08d645972135
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:SN6PR11MB2814;
+x-ms-traffictypediagnostic: SN6PR11MB2814:
+x-microsoft-antispam-prvs: <SN6PR11MB2814AC9A86E7F929C66C4C6E8DC50@SN6PR11MB2814.namprd11.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(10201501046)(3231382)(944501410)(52105095)(93006095)(93001095)(3002001)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:SN6PR11MB2814;BCL:0;PCL:0;RULEID:;SRVR:SN6PR11MB2814;
+x-forefront-prvs: 0850800A29
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(376002)(346002)(136003)(199004)(189003)(4326008)(99286004)(76176011)(25786009)(65826007)(52116002)(86362001)(229853002)(31696002)(305945005)(7736002)(6916009)(8936002)(6436002)(6116002)(3846002)(478600001)(81156014)(5660300001)(6486002)(6512007)(36756003)(8676002)(81166006)(31686004)(68736007)(106356001)(105586002)(107886003)(386003)(6246003)(53546011)(6506007)(2906002)(26005)(15650500001)(53936002)(97736004)(256004)(186003)(486006)(2616005)(476003)(11346002)(65806001)(446003)(14454004)(64126003)(66066001)(65956001)(58126008)(54906003)(316002)(14444005)(71190400001)(2900100001)(71200400001)(102836004)(72206003);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR11MB2814;H:SN6PR11MB3407.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: /kIpzDcF7Mc6360j7p1LiV6DhLQVFTKUz1U4g8cSaEx3ccNom+gIvNzMUKSBTYwMAlxVD5r6Gg90QwGvLPUf90uyPmz65g1E0lPgbGr45H6ooskSrvtIq92ykHoLQGttxO/JfHZv10yRWw5mdhMwklBAB2LEOVLkKNgHem3QHK9WtY7KEJBQzkdB5NAkTdreq7LpXt92AS46+vwpKaGV+eTUACd97El6skRGHG2CxJlK8opvZcyxPcIOW/sMPp3RIXF+ZP2yMHDKPdXLefmKWwrss9FUHVh5nKeITzveUXhtU+Qg34zrgC1GDrjobT0eR5MRjA+F2XwXiiF6R63L9HcukONywvOHvZPTkqS3SNA=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2D755B600EEFB946A36256654985589D@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: ad842049-2b10-41d7-dd41-08d645972135
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2018 16:27:52.3279
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2814
+X-OriginatorOrg: microchip.com
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-11-08 16:54, Stanislaw Gruszka wrote:
-> On Thu, Nov 08, 2018 at 04:01:54PM +0100, Lorenzo Bianconi wrote:
->> > Restore behaviour on mt76x0 before commit  1bb04bb4b838 ("mt76: move
->> > mt76x02_init_device in mt76x02-lib module"). This will allow to use
->> > wcid 1 for AP when we work in station mode. It's not clear if this
->> > is needed, but this is how vendor driver assign wcid's in STA mode.
->> > This should be harmless for mt76x2.
->> >
->> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> > ---
->> >  drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 6 +++++-
->> >  1 file changed, 5 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
->> > index 2be4b527477f..e624397b3d8b 100644
->> > --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
->> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
->> > @@ -113,7 +113,11 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
->> >         ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
->> >         ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
->> >
->> > -       dev->mt76.global_wcid.idx = 255;
->> > +       /* Reserve WCID 0 for mcast - thanks to this APs WCID will go to
->> > +        * entry no. 1 like it does in the vendor driver.
->> > +        */
->> > +       dev->mt76.wcid_mask[0] |= 1;
->> > +       dev->mt76.global_wcid.idx = 0;
->> >         dev->mt76.global_wcid.hw_key_idx = -1;
->> >         dev->slottime = 9;
->> >
->> 
->> Does it make any difference in AP mode?
-> 
-> First sta will get wcid = 1 instead of 0.
-> 
->> What about using 0 instead of
->> 255 for global_wcid.idx?
-> 
-> Patch do exactly that , it assigns:
-> 
-> 	dev->mt76.global_wcid.idx = 0;
-I don't think we should reserve WCID0 just because the vendor driver
-does it, unless we can find a case where it actually makes a meaningful
-difference. WCID entries >128 are useless for normal stations, so let's
-use those for reserved entries instead of reducing the effective station
-number limit.
-
-- Felix
+DQpPbiAxMS84LzE4IDQ6MjIgQU0sIEdyZWcgS0ggd3JvdGU6DQo+IE9uIFR1ZSwgTm92IDA2LCAy
+MDE4IGF0IDEyOjAxOjE4QU0gKzAwMDAsIEFkaGFtLkFib3phZWlkQG1pY3JvY2hpcC5jb20gd3Jv
+dGU6DQo+PiBGcm9tOiBBZGhhbSBBYm96YWVpZCA8YWRoYW0uYWJvemFlaWRAbWljb2NoaXAuY29t
+Pg0KPj4NCj4+IFZhbGlkYXRlIGNmZyBwYXJhbWV0ZXJzIGFmdGVyIGJlaW5nIGNhbGxlZCBieSBj
+Zmc4MDIxMSBpbiBzZXRfd2lwaHlfcGFyYW1zDQo+PiBiZWZvcmUgc2NoZWR1bGluZyB0aGUgd29y
+ayBleGVjdXRlZCBpbiBoYW5kbGVfY2ZnX3BhcmFtDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogQWRo
+YW0gQWJvemFlaWQgPGFkaGFtLmFib3phZWlkQG1pY3JvY2hpcC5jb20+DQo+PiAtLS0NCj4+ICBk
+cml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvaG9zdF9pbnRlcmZhY2UuYyAgICAgfCA2MSArKysrKyst
+LS0tLS0tLS0tLS0tDQo+PiAgLi4uL3N0YWdpbmcvd2lsYzEwMDAvd2lsY193ZmlfY2Znb3BlcmF0
+aW9ucy5jIHwgNTAgKysrKysrKysrKysrLS0tDQo+PiAgMiBmaWxlcyBjaGFuZ2VkLCA2MiBpbnNl
+cnRpb25zKCspLCA0OSBkZWxldGlvbnMoLSkNCj4gUGxlYXNlIGZpeCB0aGlzIHVwIHNvIHRoYXQg
+dGhlIDAtZGF5IGJvdCBkb2VzIG5vdCBjb21wbGFpbiBhYm91dCBpdC4NCg0KU3VyZSBHcmVnLiBJ
+J2xsIHN1Ym1pdCB2NCB3aXRoIHRoZSBmaXggZm9yIHRoZSBib3Qgd2FybmluZy4NCkkgYXNzdW1l
+IEkgc2hvdWxkbid0IGluY2x1ZGUgcGF0Y2ggMS80IGluIHRoZSBuZXcgdmVyc2lvbiBvZiB0aGUg
+c2VyaWVzIHNpbmNlIEkgc2VlIGl0IHdhcyBhcHBsaWVkIGFscmVhZHksIHNvIEknbGwgb25seSBy
+ZXNlbmQgdGhlIG90aGVyIDMgcGF0Y2hlcw0KDQpUaGFua3MsDQpBZGhhbQ0KDQo=
