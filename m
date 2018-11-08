@@ -2,125 +2,133 @@ Return-Path: <SRS0=/7yp=NT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C000EECDE4B
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:19:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E215ECDE4B
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:53:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 875632081C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:19:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C73B2081C
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:53:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g2dVvZ1X"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 875632081C
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="adnew7e4";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="adnew7e4"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4C73B2081C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727065AbeKIE4U (ORCPT
+        id S1726995AbeKIF3x (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Nov 2018 23:56:20 -0500
-Received: from mail-yw1-f67.google.com ([209.85.161.67]:36040 "EHLO
-        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726860AbeKIE4U (ORCPT
+        Fri, 9 Nov 2018 00:29:53 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:45642 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725199AbeKIF3x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Nov 2018 23:56:20 -0500
-Received: by mail-yw1-f67.google.com with SMTP id h21-v6so8452144ywa.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 11:19:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=d1mQq6fsydBsnVXfxacDYfY1HmHIATQTUe/HSV8Oi7E=;
-        b=g2dVvZ1XqOwXhNxKBtw5Sfdvph+5SzJne6Vl1EvE7qNzpF32YFWjDQEUh3C0iaCco7
-         T+OJv0AQgnp64kdgst44cr6+e7xx+lVFDDZm0fb+8Oafb+f6s+t4YSMH0YXG8xY1pSDX
-         hzpSDfJ3SE2orgutfaOg2L3dd7VkvlD9s7mCU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=d1mQq6fsydBsnVXfxacDYfY1HmHIATQTUe/HSV8Oi7E=;
-        b=o9OFCM+ONDynpNtJh97ogFWz4LaTtQt4K+p8u4bm0CV8OAp6cjh+gQ7vVOCZQ+QIL9
-         ElQGh8RrimBVt5RlhPzxYH/RML5B2lymov808J9XEhouWBghtVurFu58pf0db9b9nKNv
-         ow5rBOdI1FrN4ek1kkmI5LmpNT4LHPJV3LNtDbHRYT0zir/7b3gQAe5rshKAC55kQTml
-         6SXAHJKPLRSGc73IrVIwmd5jzuU914+7nOzBQJDMtLRX7R9fVySkRDAUdhV+EDm2+2UB
-         PooHJKcte9XTh5yGlzfVh1tOAqOg8VulV7iwK4cWVmB3LJzfUKgHOSneAdNqNfox+o/z
-         4noQ==
-X-Gm-Message-State: AGRZ1gIVHnMJTEMbSuHTFkTEKrMeTyFugDSvDlHpk7dKjA0a3HqlEj7P
-        3iRhpcaZipP91DdCB23VmBY5w+TYPlqtCGOO1gNuew==
-X-Google-Smtp-Source: AJdET5efJErY4pJzSEwSFrgQf3MgolVe0d8iWAD1MaLfv06iQfIDs1uGmDJNHaYtWFvikt4kBi2Y2VmIUIhO+5qmuxI=
-X-Received: by 2002:a81:2a83:: with SMTP id q125-v6mr5702921ywq.480.1541704766663;
- Thu, 08 Nov 2018 11:19:26 -0800 (PST)
+        Fri, 9 Nov 2018 00:29:53 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id D1EA4601D7; Thu,  8 Nov 2018 19:52:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541706773;
+        bh=XFpxOxE45vJ85tfFSq2rlEM5qRaOaNKq5Ty6GNRkpPg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=adnew7e4AIIJ3f7UHSnHTHcP8mBBq14vF3nj+LG1RJw1piOyGp+xQsYWQMIgC0znN
+         goTxSw4xpS931P0lhEs1QOaAlWQPq8wBKE41kSbpcspdJDRaDsyRdvDVtacykda+Dl
+         6xaGpOEZyTF1gP2OLjNVrC8lPa/wXiIFfFkIXeXU=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 620886029D;
+        Thu,  8 Nov 2018 19:52:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1541706773;
+        bh=XFpxOxE45vJ85tfFSq2rlEM5qRaOaNKq5Ty6GNRkpPg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=adnew7e4AIIJ3f7UHSnHTHcP8mBBq14vF3nj+LG1RJw1piOyGp+xQsYWQMIgC0znN
+         goTxSw4xpS931P0lhEs1QOaAlWQPq8wBKE41kSbpcspdJDRaDsyRdvDVtacykda+Dl
+         6xaGpOEZyTF1gP2OLjNVrC8lPa/wXiIFfFkIXeXU=
 MIME-Version: 1.0
-References: <1541648845-194984-1-git-send-email-chi-hsien.lin@cypress.com> <1541648845-194984-3-git-send-email-chi-hsien.lin@cypress.com>
-In-Reply-To: <1541648845-194984-3-git-send-email-chi-hsien.lin@cypress.com>
-From:   Franky Lin <franky.lin@broadcom.com>
-Date:   Thu, 8 Nov 2018 11:19:15 -0800
-Message-ID: <CA+8PC_fZ8u+ii_6vdvuLSqszzFcNzhd6dz-AHGR6tByfAgPgcg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] brcmfmac: remove "arp_hostip_clear" from "brcmf_netdev_stop"
-To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Cc:     "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
-        <linux-wireless@vger.kernel.org>, brcm80211-dev-list@broadcom.com,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 08 Nov 2018 11:52:53 -0800
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     govinds@codeaurora.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        yyuwang@codeaurora.org, pillair@codeaurora.org,
+        stable <stable@vger.kernel.org>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH REGRESSION] Revert "ath10k: add quiet mode support for
+ QCA6174/QCA9377"
+In-Reply-To: <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
+References: <20181107185643.240346-1-briannorris@chromium.org>
+ <7f2ef494f4a2aba1845a157da8fec449@codeaurora.org>
+ <b1a64bd66fa25f274af8c018c6fc02f4@codeaurora.org>
+ <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
+Message-ID: <f1abeef79b579f91850cab298a32fe00@codeaurora.org>
+X-Sender: rmanohar@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Nov 7, 2018 at 7:48 PM Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com> wrote:
->
-> From: Wright Feng <wright.feng@cypress.com>
->
-> The firmware does not respond ARP request and causes ping failure with
-> following steps:
->
-> 1. Bring up interface
->    ifconfig wlan0 up or start wpa_supplicant
-> 2. Set the IP address
->    ifconfig wlan0 192.168.100.10
-> 3. Bring down interface or
->    ifconfig wlan0 down or kill wpa_supplicant
-> 4. Bring up interface again and set the same IP address
-> 5. Connect to AP(192.168.100.1) and ping to AP will be failed.
->
-> FMAC clears arp_hostip when bringing down the interface, but not set it
-> back if setting the same IP address. We are able to see the IP address
-> in interface info(inconfig wlan0) but the ping still cannot work because
-> the firmware ARP offload does not respond the ARP request.
-> Because of that, we remove "arp_hostip_clear" from function
-> "brcmf_netdev_stop"
+On 2018-11-08 09:30, Brian Norris wrote:
+> On Wed, Nov 7, 2018 at 8:32 PM Govind Singh <govinds@codeaurora.org> 
+> wrote:
+>> On 2018-11-08 03:00, Rajkumar Manoharan wrote:
+>> >
+>> > The change "ath10k: add quiet mode support for QCA6174/QCA9377" was
+>> > merged even
+>> > before full WCN3990 device support was added in ath10k. How come it
+>> > could be regression
+>> > for WCN3990. I know both are sharing same WMI-TLV interface but
+>> > reverting this
+>> > will break QCA6174/QCA9377. no?
+> 
+> I don't see how the revert would "break" QCA6174 -- QCA6174 worked
+> just fine without this feature and should continue to do so.
+> 
 
-Shouldn't brcmf_inetaddr_changed get called when the interface up again?
+I meant that the revert commit remove quiet mode support from QCA6174 & 
+QCA9377.
 
-Thanks,
-- Franky
+>> This regression is found while we switched from 4.18 + WCN3990
+>> back-ports to 4.19.
+> 
+> ^^ What Govind said. WCN3990 support has been trickling in over a few
+> releases, and it doesn't seem kosher to allow people to submit
+> regressions in the midst of that.
+> 
+Nobody prefers regression :). WCN3990 support was still in progress, at
+the time the commit got merged into upstream. My point is that we can't 
+expect
+the community to validate the changes against in-progress platform.
 
->
-> Signed-off-by: Wright Feng <wright.feng@cypress.com>
-> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index b1f702faff4f..e1666cf3801c 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -533,8 +533,6 @@ static int brcmf_netdev_stop(struct net_device *ndev)
->
->         brcmf_cfg80211_down(ndev);
->
-> -       brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
-> -
->         brcmf_net_setcarrier(ifp, false);
->
->         return 0;
-> --
-> 2.1.0
->
+>> 
+>> IMO, we should use (WMI_SERVICE_THERMAL_MGMT | WMI_SERVICE_THERM_THROT 
+>> )
+>> service bitmap check and call
+>> ath10k_thermal_set_throttling only if fw supports THERMAL THROTTLE
+>> feature. But we need to ensure all
+>> available ath10k fw's are reporting this service.
+> 
+> And the above notes from Govind highlight this -- if the feature was
+> not protected by the appropriate service flags, then we can't be sure
+> that you didn't break a bunch of other firmware releases out there.
+> Linux should not break for everyone just because you spun a firmware
+> release.
+> 
+That is true. Any new features or interface changes in firmware will be
+advertised by feature bit. But the quiet param was available in firmware
+since first release.
+
+> Of course, I'll leave it up to Kalle as to how he wants to mediate
+> this. And if you come up with a solid patch soon that can fix this
+> without dropping the feature, then so be it.
+> 
+Govind is working on to handle this properly either by instantiating
+new WMI-TLV table for WCNxxxx or by adding conditional check in exiting 
+path.
+
+-Rajkumar
