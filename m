@@ -2,187 +2,125 @@ Return-Path: <SRS0=/7yp=NT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB7AECDE4B
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C000EECDE4B
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:19:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 538C12081C
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 17:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 875632081C
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Nov 2018 19:19:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EY8HLHyW";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YvBfiBE0"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 538C12081C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g2dVvZ1X"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 875632081C
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727019AbeKIDX7 (ORCPT
+        id S1727065AbeKIE4U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Nov 2018 22:23:59 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:58744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbeKIDX7 (ORCPT
+        Thu, 8 Nov 2018 23:56:20 -0500
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:36040 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726860AbeKIE4U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Nov 2018 22:23:59 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 962BC6074F; Thu,  8 Nov 2018 17:47:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541699243;
-        bh=JvNUhfliZxR4nVTtqCE070Zw+o3u99Ock1Gvvwd+S2A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=EY8HLHyWFpzDjPXKvwNuwek3IXGI9OY7zpN3N8u2BzZg3NrCcPrDfuTo9Z8GlSO/p
-         jDCkozt0EgTsqg8dnLmCA6mLNIim09RGcYz752jwDLU7ppI1t/conv0mUe11UZrLuA
-         7wBsiZx/w7cCJqlOViQWZOW8o6E3RHNLWtAKaO3A=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id B49BA6074F;
-        Thu,  8 Nov 2018 17:47:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1541699242;
-        bh=JvNUhfliZxR4nVTtqCE070Zw+o3u99Ock1Gvvwd+S2A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=YvBfiBE0/AQDUo+mINS8ZreNtV1KuYg5x/c8PgY9cvd1FQBRzcPrwAQtK4n+afiwo
-         50MyfURAxszDr8kdyQqAz3X2a+6Sac0o3EDA813B07NwpnZqVlWQyU+N0Y1bUHGjaX
-         8mFNmg4oJ8wSNG7YBhtcUl61HUc/ttuXhAxvGkls=
+        Thu, 8 Nov 2018 23:56:20 -0500
+Received: by mail-yw1-f67.google.com with SMTP id h21-v6so8452144ywa.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Nov 2018 11:19:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=d1mQq6fsydBsnVXfxacDYfY1HmHIATQTUe/HSV8Oi7E=;
+        b=g2dVvZ1XqOwXhNxKBtw5Sfdvph+5SzJne6Vl1EvE7qNzpF32YFWjDQEUh3C0iaCco7
+         T+OJv0AQgnp64kdgst44cr6+e7xx+lVFDDZm0fb+8Oafb+f6s+t4YSMH0YXG8xY1pSDX
+         hzpSDfJ3SE2orgutfaOg2L3dd7VkvlD9s7mCU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=d1mQq6fsydBsnVXfxacDYfY1HmHIATQTUe/HSV8Oi7E=;
+        b=o9OFCM+ONDynpNtJh97ogFWz4LaTtQt4K+p8u4bm0CV8OAp6cjh+gQ7vVOCZQ+QIL9
+         ElQGh8RrimBVt5RlhPzxYH/RML5B2lymov808J9XEhouWBghtVurFu58pf0db9b9nKNv
+         ow5rBOdI1FrN4ek1kkmI5LmpNT4LHPJV3LNtDbHRYT0zir/7b3gQAe5rshKAC55kQTml
+         6SXAHJKPLRSGc73IrVIwmd5jzuU914+7nOzBQJDMtLRX7R9fVySkRDAUdhV+EDm2+2UB
+         PooHJKcte9XTh5yGlzfVh1tOAqOg8VulV7iwK4cWVmB3LJzfUKgHOSneAdNqNfox+o/z
+         4noQ==
+X-Gm-Message-State: AGRZ1gIVHnMJTEMbSuHTFkTEKrMeTyFugDSvDlHpk7dKjA0a3HqlEj7P
+        3iRhpcaZipP91DdCB23VmBY5w+TYPlqtCGOO1gNuew==
+X-Google-Smtp-Source: AJdET5efJErY4pJzSEwSFrgQf3MgolVe0d8iWAD1MaLfv06iQfIDs1uGmDJNHaYtWFvikt4kBi2Y2VmIUIhO+5qmuxI=
+X-Received: by 2002:a81:2a83:: with SMTP id q125-v6mr5702921ywq.480.1541704766663;
+ Thu, 08 Nov 2018 11:19:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 08 Nov 2018 23:17:22 +0530
-From:   Tamizh chelvam <tamizhr@codeaurora.org>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     ath10k@lists.infradead.org, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: Re: [PATCH 1/4] New netlink command for TID specific configuration
-In-Reply-To: <20181107140552.zfuusbapgqjumoln@bars>
-References: <1540230918-27712-1-git-send-email-tamizhr@codeaurora.org>
- <1540230918-27712-2-git-send-email-tamizhr@codeaurora.org>
- <20181107140552.zfuusbapgqjumoln@bars>
-Message-ID: <0b75171a7777bd25e203240a3a119cb5@codeaurora.org>
-X-Sender: tamizhr@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+References: <1541648845-194984-1-git-send-email-chi-hsien.lin@cypress.com> <1541648845-194984-3-git-send-email-chi-hsien.lin@cypress.com>
+In-Reply-To: <1541648845-194984-3-git-send-email-chi-hsien.lin@cypress.com>
+From:   Franky Lin <franky.lin@broadcom.com>
+Date:   Thu, 8 Nov 2018 11:19:15 -0800
+Message-ID: <CA+8PC_fZ8u+ii_6vdvuLSqszzFcNzhd6dz-AHGR6tByfAgPgcg@mail.gmail.com>
+Subject: Re: [PATCH 2/5] brcmfmac: remove "arp_hostip_clear" from "brcmf_netdev_stop"
+To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Cc:     "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
+        <linux-wireless@vger.kernel.org>, brcm80211-dev-list@broadcom.com,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Wed, Nov 7, 2018 at 7:48 PM Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com> wrote:
+>
+> From: Wright Feng <wright.feng@cypress.com>
+>
+> The firmware does not respond ARP request and causes ping failure with
+> following steps:
+>
+> 1. Bring up interface
+>    ifconfig wlan0 up or start wpa_supplicant
+> 2. Set the IP address
+>    ifconfig wlan0 192.168.100.10
+> 3. Bring down interface or
+>    ifconfig wlan0 down or kill wpa_supplicant
+> 4. Bring up interface again and set the same IP address
+> 5. Connect to AP(192.168.100.1) and ping to AP will be failed.
+>
+> FMAC clears arp_hostip when bringing down the interface, but not set it
+> back if setting the same IP address. We are able to see the IP address
+> in interface info(inconfig wlan0) but the ping still cannot work because
+> the firmware ARP offload does not respond the ARP request.
+> Because of that, we remove "arp_hostip_clear" from function
+> "brcmf_netdev_stop"
 
-> Hello Tamizh,
-> 
->> Co-Developed-by: Tamizh Chelvam <tamizhr@codeaurora.org>
->> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
->> Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
->> ---
->>  include/net/cfg80211.h       |   14 +++++++
->>  include/uapi/linux/nl80211.h |   69 +++++++++++++++++++++++++++++++++
->>  net/wireless/nl80211.c       |   86 
->> ++++++++++++++++++++++++++++++++++++++++++
->>  net/wireless/rdev-ops.h      |   15 ++++++++
->>  net/wireless/trace.h         |   27 +++++++++++++
->>  5 files changed, 211 insertions(+)
-> 
-> ...
-> 
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index d744388..d386ad7 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
-> 
-> ...
-> 
->> +static int nl80211_set_tid_config(struct sk_buff *skb,
->> +                                 struct genl_info *info)
->> +{
->> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +       struct nlattr *attrs[NL80211_ATTR_TID_MAX + 1];
->> +       struct nlattr *tid;
->> +       struct net_device *dev = info->user_ptr[1];
->> +       const char *peer = NULL;
->> +       u8 tid_no;
->> +       int ret = -EINVAL, retry_short = -1, retry_long = -1;
->> +
->> +       tid = info->attrs[NL80211_ATTR_TID_CONFIG];
->> +       if (!tid)
->> +               return -EINVAL;
->> +
->> +       ret = nla_parse_nested(attrs, NL80211_ATTR_TID_MAX, tid,
->> +                              nl80211_attr_tid_policy, info->extack);
->> +       if (ret)
->> +               return ret;
->> +
->> +       if (!attrs[NL80211_ATTR_TID])
->> +               return -EINVAL;
->> +
->> +       if (attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
->> +               retry_short = 
->> nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_SHORT]);
->> +               if (!retry_short ||
->> +                   retry_short > rdev->wiphy.max_data_retry_count)
->> +                       return -EINVAL;
->> +       }
->> +
->> +       if (attrs[NL80211_ATTR_TID_RETRY_LONG]) {
->> +               retry_long = 
->> nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_LONG]);
->> +               if (!retry_long ||
->> +                   retry_long > rdev->wiphy.max_data_retry_count)
->> +                       return -EINVAL;
->> +       }
->> +
->> +       tid_no = nla_get_u8(attrs[NL80211_ATTR_TID]);
->> +       if (tid_no >= IEEE80211_FIRST_TSPEC_TSID)
->> +               return -EINVAL;
->> +
->> +       if (info->attrs[NL80211_ATTR_MAC])
->> +               peer = nla_data(info->attrs[NL80211_ATTR_MAC]);
->> +
->> +       if (nla_get_flag(attrs[NL80211_ATTR_TID_RETRY_CONFIG])) {
-> 
-> Do we really need this additional flag to indicate retry data ?
-> Maybe we can simply check retry attrs or even retry data, e.g.:
-
-Yes, because this implementation gives provision to set default retry 
-count for TID traffic type for a station.
-Since we use single NL command for all TID configurations, this flag 
-will be useful to notify the driver about
-retry TID configuration change.
-> 
-> if (attrs[NL80211_ATTR_TID_RETRY_LONG] ||
->     attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
->     ...
-> 
-> if ((retry_short > 0) || (retry_long > 0)) {
->     ...
-> 
->> +               if (!wiphy_ext_feature_isset(
->> +                               &rdev->wiphy,
->> +                               
->> NL80211_EXT_FEATURE_PER_TID_RETRY_CONFIG))
->> +                       return -EOPNOTSUPP;
->> +
->> +               if (peer && !wiphy_ext_feature_isset(
->> +                               &rdev->wiphy,
->> +                               
->> NL80211_EXT_FEATURE_PER_STA_RETRY_CONFIG))
->> +                       return -EOPNOTSUPP;
->> +
->> +               if (!rdev->ops->set_data_retry_count ||
->> +                   !rdev->wiphy.max_data_retry_count)
->> +                       return -EOPNOTSUPP;
->> +
->> +               ret = rdev_set_data_retry_count(rdev, dev, peer, 
->> tid_no,
->> +                                               retry_short, 
->> retry_long);
->> +       }
->> +
->> +       return ret;
->> +}
-> 
-> Regards,
-> Sergey
+Shouldn't brcmf_inetaddr_changed get called when the interface up again?
 
 Thanks,
-Tamizh.
+- Franky
+
+>
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index b1f702faff4f..e1666cf3801c 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -533,8 +533,6 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+>
+>         brcmf_cfg80211_down(ndev);
+>
+> -       brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
+> -
+>         brcmf_net_setcarrier(ifp, false);
+>
+>         return 0;
+> --
+> 2.1.0
+>
