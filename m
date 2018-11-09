@@ -2,107 +2,79 @@ Return-Path: <SRS0=rx5y=NU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F5D2C43441
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 16:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF747C43441
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 16:25:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4563720825
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 16:23:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JYNw3e4J"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4563720825
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 7F3BF20825
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 16:25:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7F3BF20825
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728266AbeKJCEm (ORCPT
+        id S1728351AbeKJCGk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 21:04:42 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:39439 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727941AbeKJCEm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Nov 2018 21:04:42 -0500
-Received: by mail-wm1-f68.google.com with SMTP id u13-v6so2463255wmc.4
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2018 08:23:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uFNSWfjEVRjxBVi/h0p6c5lkg8AafdP2KyZdJzBrb98=;
-        b=JYNw3e4JXPurJLVbVKsKlXe4aWnP+mmgFjbPALew/gjv2XixpxlfkX6sfLc76E8nKb
-         Xyf+VBf21x80Yy+X35kN9okgvYamvvm7VjM8n++8SAOY1CJnV+4qMR505dbVr+ank8ED
-         ZKnsToQ0XofGGAbDf87NhARNitwpMhm/w2kqjFt0XaxtqM0Vmd5SzxLvglC0WrVTlpsr
-         HluLqmG7FAD4d8APdJtaKquQscmsdeiktTEpHwRHYBNyXNS4lJXdy4unF67zdSVtj6CT
-         tkE3yG3H8d6cGIALbG8k5K8Hb5RwasE8HY0+iZEdhOqN71IFYpamofwqrbC1LQR9yZK1
-         GPIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uFNSWfjEVRjxBVi/h0p6c5lkg8AafdP2KyZdJzBrb98=;
-        b=fE0B2xnAymQE49W+FehL6iRgGK/L5f45hxfY4wR1S3Upr7Ac69+7KKyKrrnesRqnnF
-         Zm/6m7bsOUyqui+Eon6JlS7U0bWiopa6dQWkuC4QhsfYVZvsTA/rDHZWxaSrg8bYW6oG
-         LyavAguA6Tq2x2NkwZwupEDZnPAGFT10SmZLnnjzqYk77EOt0ymcEB0lSAvI9cz/L/qW
-         4MqVebwvzJBW3RwWqIRqQJd9LkEni09XBH5Kr921Qd4aDQsQ/xN85sqT8wn5PQQmR6rR
-         HESnWJrsAAB9PLidXO/HKrLLh7ch1Pj68zBc0uig7/gXhGngKL8qDMxX6KtqmSMvU+ub
-         pHsw==
-X-Gm-Message-State: AGRZ1gLTXUVgS7dpyICdmR8o/S3cmKEFI7ebuj6Vm4eRx/MOoeuuL4Mn
-        HZdD6Od6VDjV4a7s0d0IuA==
-X-Google-Smtp-Source: AJdET5ew6RHzpVOD2yK/zhFG9zEd3eThKJAlO3e1ciSCKXBz5kaeyqgXXq6Ua5uIz7wzAaSdSaCBXQ==
-X-Received: by 2002:a1c:f008:: with SMTP id a8-v6mr17800wmb.5.1541780605237;
-        Fri, 09 Nov 2018 08:23:25 -0800 (PST)
-Received: from localhost (1.red-83-37-105.dynamicip.rima-tde.net. [83.37.105.1])
-        by smtp.gmail.com with ESMTPSA id r76-v6sm2462842wmb.21.2018.11.09.08.23.24
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 09 Nov 2018 08:23:24 -0800 (PST)
-From:   Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc:     Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        WIRELESS ML <linux-wireless@vger.kernel.org>,
-        REGDB ML <wireless-regdb@lists.infradead.org>
-Subject: [PATCH] crda: add URLs to README
-Date:   Fri,  9 Nov 2018 17:23:23 +0100
-Message-Id: <20181109162323.25024-1-xose.vazquez@gmail.com>
-X-Mailer: git-send-email 2.19.1
+        Fri, 9 Nov 2018 21:06:40 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:48810 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727845AbeKJCGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Nov 2018 21:06:39 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C6B4AC04B2C6;
+        Fri,  9 Nov 2018 16:25:22 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.84])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 40DF46B8CD;
+        Fri,  9 Nov 2018 16:25:10 +0000 (UTC)
+Date:   Fri, 9 Nov 2018 17:25:08 +0100
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/5] mt76x02: initalize mutli bss mode by default
+Message-ID: <20181109162507.GA2124@redhat.com>
+References: <1541758814-2046-1-git-send-email-sgruszka@redhat.com>
+ <1541758814-2046-3-git-send-email-sgruszka@redhat.com>
+ <20181109112651.GF4174@localhost.localdomain>
+ <20181109131028.GA8054@redhat.com>
+ <20181109133130.GA9453@localhost.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181109133130.GA9453@localhost.localdomain>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Fri, 09 Nov 2018 16:25:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Cc: Luis R. Rodriguez <mcgrof@kernel.org>
-Cc: WIRELESS ML <linux-wireless@vger.kernel.org>
-Cc: REGDB ML <wireless-regdb@lists.infradead.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- README | 2 ++
- 1 file changed, 2 insertions(+)
+On Fri, Nov 09, 2018 at 02:31:31PM +0100, Lorenzo Bianconi wrote:
+> > 
+> > Anyway I think, to support MAC address change, we should not filter
+> > based on MAC address, but maybe only on BSSID ? 
+> > 
+> > Thanks
+> > Stanislaw
+> 
+> You can create the interface with a given mac address
+> 
+> # iw phy phy0 interface add wlp0s4u1 type managed addr 00:11:22:33:44:55
 
-diff --git a/README b/README
-index 5d89b83..88f2623 100644
---- a/README
-+++ b/README
-@@ -1,5 +1,6 @@
-  Central Regulatory Domain Agent (CRDA)
- ========================================
-+<https://wireless.wiki.kernel.org/en/developers/regulatory/crda>
- 
- This is the Central Regulatory Domain Agent for Linux. It serves one
- purpose: tell Linux kernel what to enforce. In essence it is a udev
-@@ -46,6 +47,7 @@ with this package as regulatory.rules
- 
-  OVERVIEW
- ==========
-+<https://wireless.wiki.kernel.org/en/developers/regulatory>
- 
- The database is maintained on the wireless-regdb.git tree. This git
- tree maintains a binary regulatory database file which is produced
--- 
-2.19.1
+I realized I have ancient version of iw :-)
 
+Ok, so to do not break that we can add it to common function like this:
+
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		if (idx == 0)
++			mt76x02_mac_init_mbss(dev, vif->addr);
+ 		idx += 8;
++	}
+
+Thanks
+Stanislaw
+ 
