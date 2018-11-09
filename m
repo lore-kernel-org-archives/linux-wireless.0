@@ -7,75 +7,74 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A46C6C0044C
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 247F7C43441
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:49:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D08420840
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:49:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6B332081C
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:49:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZNAEhtl/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6D08420840
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fTN+vJo9"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E6B332081C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727797AbeKIW3r (ORCPT
+        id S1727818AbeKIWaC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 17:29:47 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:43229 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727667AbeKIW3r (ORCPT
+        Fri, 9 Nov 2018 17:30:02 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:55892 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727802AbeKIWaC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Nov 2018 17:29:47 -0500
-Received: by mail-wr1-f68.google.com with SMTP id y3-v6so1759607wrh.10
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2018 04:49:18 -0800 (PST)
+        Fri, 9 Nov 2018 17:30:02 -0500
+Received: by mail-wm1-f65.google.com with SMTP id s10-v6so1905490wmc.5
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2018 04:49:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:subject:to:references:cc:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=fEI/qhiXh1N4hrwSyCwB9KEOiwAc56NuglC7/P0ldQg=;
-        b=ZNAEhtl/mUFzm6Ts213tr+2nyO0SS9GQXO8/AVh4OnTKJcD6ZWUl+t5r2bawVzWmXA
-         U9sZvUFFwbTLgz+CdSjL9V+vQh7B9Q6bXXCPtWlvvglXLiUklbha7pTh2FvnKwbIVdiB
-         BnvjyHTTCLn/bV73UAXFJpS1/qc1zZdasmeT0=
+        bh=zAnMdBE4YwsTBbatsiaJMrRZ890a8jjA1NLQW4u6kZs=;
+        b=fTN+vJo9DOUer4BWHwJr+faBmjLTnjxXxY785ccNKxdZRDmaDv2sVJqgPRhzKTRYFq
+         osMaEIoYgSe/S1yric2qi/hjvvR0aTgHXhaPiuHe+4+EDrfiXDAfjHAN+FA8iamVojMG
+         BWYAnrrnBrZPFutP7POjggSfoa7NqGu3Sp2wQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:subject:to:references:cc:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=fEI/qhiXh1N4hrwSyCwB9KEOiwAc56NuglC7/P0ldQg=;
-        b=lUoOAPEdkox4ilYfB4XrNBEq4WF5dUN2ymiJiqpZSjJUm3RmtVt3KuRE/G0Ds32XlL
-         TI06NDCSrx2ddnMEdFHiQJJmipk5KQkKNT2ik6HwtmO9gEtbp545bWCwEBZ0vahlcjsF
-         rdXntLvhtFzERL7Q5qa4kXHz5lDLipxeraIf7ujpFRfFQSRigUMuIcG/IUHiTWhiRn30
-         YmUoAbVXITviZiDzL5qpkeU3LDsdWTKe1qFwn36cY5pQYgvZ6p/vU7GxNnwiXOylj4vG
-         cOfJohfZBfnepBhZ/5q0NS9CA6+qdNiekE583V3VLZy6VCgi0lhYiPjd7QG+FRmB0PN1
-         Mnxw==
-X-Gm-Message-State: AGRZ1gIiVGwJdyVhYzLJ2duO3OmDcnkdgM4Ax/D/bw7xXjTuy7gMKFrg
-        K5VnI10CqK5VK486loN6tulyZA==
-X-Google-Smtp-Source: AJdET5fNH/sXMuTl1LAESPy6rP/di8iTMpaQsH9zSr1qb3vQkcVjJnM6RUvXRw/gjCCMFogd/qqtng==
-X-Received: by 2002:a5d:5111:: with SMTP id s17-v6mr7972493wrt.162.1541767757890;
-        Fri, 09 Nov 2018 04:49:17 -0800 (PST)
+        bh=zAnMdBE4YwsTBbatsiaJMrRZ890a8jjA1NLQW4u6kZs=;
+        b=jWwNAQfDrQXd2N/0NbpboHOT2UeiSuYJSbabzWKD3+vSJbqMiTBBzni9lU+uiiuwnl
+         hQLtrpr2D0dE4T+NXqFa4B8d9oiT+9y0M4f4W2pUxUEpmXa9b4zpMbhQUkPLninvCYw/
+         kO354LfrLYmlAHPY6kHAtyiKVTDvFYcbP+SsRIt2RUv0BGb7a5gYZzX3bPlMkE5vIi6d
+         sz5+AstqP7IaWqOLQ1Uuy/y86fJfU7THC9umaNOxZzb/+drC5wHMNeigpVbR0MbI6MlP
+         Ccq+nZ0ZJFlMsDDfyFJdp0QnTILYPsmeMOstyEVU4tZlsxhxVw67LLvZxxQiBSf7FFlD
+         /jog==
+X-Gm-Message-State: AGRZ1gJnPWEE3c6R0CmeMp8Hmt9+bpBGQTw2taiHJUrBX+PkNi4Jine1
+        XM6kSTFNJECJPzI9S7VBboeqAA==
+X-Google-Smtp-Source: AJdET5d14AtsmBGfHJr6e4DRImpvred8p4/jKsEt3uM7FESJD4TiYPSlm5Ls/0wsUoHg5oSbi/GRdA==
+X-Received: by 2002:a1c:930d:: with SMTP id v13-v6mr4605902wmd.26.1541767772020;
+        Fri, 09 Nov 2018 04:49:32 -0800 (PST)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id z8sm7109069wrw.78.2018.11.09.04.49.16
+        by smtp.gmail.com with ESMTPSA id v3-v6sm1033836wmf.2.2018.11.09.04.49.31
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 09 Nov 2018 04:49:17 -0800 (PST)
+        Fri, 09 Nov 2018 04:49:31 -0800 (PST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 4/5] brcmfmac: only generate random p2p address when
- needed
+Subject: Re: [PATCH 5/5] brcmfmac: add vendor ie for association responses
 To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 References: <1541648845-194984-1-git-send-email-chi-hsien.lin@cypress.com>
- <1541648845-194984-5-git-send-email-chi-hsien.lin@cypress.com>
+ <1541648845-194984-6-git-send-email-chi-hsien.lin@cypress.com>
 Cc:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
         brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Hans de Goede <hdegoede@redhat.com>
-Message-ID: <b3baaaec-d7ae-fead-f83c-2ed529f41830@broadcom.com>
-Date:   Fri, 9 Nov 2018 13:49:16 +0100
+        Ryohei Kondo <Ryohei.Kondo@cypress.com>
+Message-ID: <c4a98211-496b-c3ef-dfa0-bcce53129be4@broadcom.com>
+Date:   Fri, 9 Nov 2018 13:49:30 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <1541648845-194984-5-git-send-email-chi-hsien.lin@cypress.com>
+In-Reply-To: <1541648845-194984-6-git-send-email-chi-hsien.lin@cypress.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -83,23 +82,22 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ Hans
-
 On 11/8/2018 4:48 AM, Chi-Hsien Lin wrote:
-> P2p spec mentioned that the p2p device address should be the globally
-> administered address with locally administered bit set. Therefore,
-> follow this guideline by default.
+> From: Ryohei Kondo <ryohei.kondo@cypress.com>
 >
-> When the primary interface is set to a locally administered address, the
-> locally administered bit cannot be set again. Generate a random locally
-> administered address for this case.
-
-We discussed this on the linux-wireless list a while ago. I have no 
-problem with the approach in this patch.
+> Miracast Certification clause 6.1.2 may fail if there is no WFD IE in
+> p2p assoc response. This change allows WFD IE to be added to p2p assoc
+> response.
+>
+> Related WFA certification:
+> 6.1.2 P-SnUT operating as a Group Owner accepts a WFD Session with a
+> Reference Source
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Ryohei Kondo <ryohei.kondo@cypress.com>
 > Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 > ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 18 ++++++++++++++++--
->  1 file changed, 16 insertions(+), 2 deletions(-)
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 ++++++++++++++
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h    |  4 ++++
+>  2 files changed, 18 insertions(+)
 
