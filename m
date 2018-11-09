@@ -2,62 +2,64 @@ Return-Path: <SRS0=rx5y=NU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 999A8C43441
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 18:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B66CC0044C
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 18:20:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B76A20855
+	by mail.kernel.org (Postfix) with ESMTP id DA81E20855
 	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 18:20:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="s85paprp"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3B76A20855
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="bkkM00kI"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA81E20855
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728198AbeKJECC (ORCPT
+        id S1728437AbeKJECD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 23:02:02 -0500
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:23471 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        Fri, 9 Nov 2018 23:02:03 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:59961 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
         with ESMTP id S1727961AbeKJECC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 9 Nov 2018 23:02:02 -0500
 X-IronPort-AV: E=Sophos;i="5.54,484,1534834800"; 
-   d="scan'208";a="20184473"
+   d="scan'208";a="22615794"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 09 Nov 2018 11:20:17 -0700
-Received: from NAM01-BN3-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.76.49) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Fri, 9 Nov 2018 11:20:17 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 09 Nov 2018 11:20:18 -0700
+Received: from NAM04-SN1-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.76.106) with Microsoft SMTP Server (TLS) id
+ 14.3.352.0; Fri, 9 Nov 2018 11:20:18 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gmv34gVxDQpqGEUnvlzxZpmduqWrMn4ennRuizkRvSg=;
- b=s85paprpouu2FcYsc2UNVcv+yxZ/pstihzrHEuLyjcnZcnA+YbpWKA0cYOlWaclQhH1kvd9+kJi4v5WnUTjvKBEf5uOwu+rNQD3sMmgdhXyyQ+1PAKKmxe9iH+pt3Sh3rB7ug+43WefJWsjIDWl0tOZY3wlkOHMUrMcV/0YgfRc=
+ bh=TwYCMsnyjyNtuCKX3djKXmiWxH12KND11OArhXtXNOk=;
+ b=bkkM00kIajBH2mUWP5st40u+KwXB8nm1QWCjRXSXtJIvupDMyNMyt7e8TkA9dja0YGLHLbGe7szi+hRNpS86qYUM2P3V/7kGvg4T4b3RDA/YY36z0DpxVJ+OTFccTGnCDbCh36oMXZG4EVRDp0YhlzC4Eq94Ea4M0npS7yoTu9U=
 Received: from SN6PR11MB3407.namprd11.prod.outlook.com (52.135.111.96) by
- SN6PR11MB3055.namprd11.prod.outlook.com (52.135.126.23) with Microsoft SMTP
+ SN6PR11MB3392.namprd11.prod.outlook.com (52.135.111.160) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.22; Fri, 9 Nov 2018 18:20:15 +0000
+ 15.20.1294.26; Fri, 9 Nov 2018 18:20:16 +0000
 Received: from SN6PR11MB3407.namprd11.prod.outlook.com
  ([fe80::7d22:c5b8:9e2e:2281]) by SN6PR11MB3407.namprd11.prod.outlook.com
  ([fe80::7d22:c5b8:9e2e:2281%2]) with mapi id 15.20.1294.034; Fri, 9 Nov 2018
- 18:20:15 +0000
+ 18:20:16 +0000
 From:   <Adham.Abozaeid@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Ganesh.Krishna@microchip.com>, <Aditya.Shankar@microchip.com>,
         <johannes@sipsolutions.net>
-Subject: [PATCH v5 0/3] staging: wilc1000: validate input to set_wiphy_param
- and return proper
-Thread-Topic: [PATCH v5 0/3] staging: wilc1000: validate input to
- set_wiphy_param and return proper
-Thread-Index: AQHUeFjcVojKii+LiEGxqD0MQgrkPQ==
-Date:   Fri, 9 Nov 2018 18:20:15 +0000
-Message-ID: <20181109182008.4328-1-adham.abozaeid@microchip.com>
+Subject: [PATCH v5 2/3] staging: wilc1000: Don't keep a copy of wiphy
+ parameters in the driver
+Thread-Topic: [PATCH v5 2/3] staging: wilc1000: Don't keep a copy of wiphy
+ parameters in the driver
+Thread-Index: AQHUeFjdAXf0QM8tu02vMmwkEhGbJA==
+Date:   Fri, 9 Nov 2018 18:20:16 +0000
+Message-ID: <20181109182008.4328-3-adham.abozaeid@microchip.com>
+References: <20181109182008.4328-1-adham.abozaeid@microchip.com>
+In-Reply-To: <20181109182008.4328-1-adham.abozaeid@microchip.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -70,30 +72,30 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Adham.Abozaeid@microchip.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;SN6PR11MB3055;6:HhoziPY4T6nYhipVoNFQaa7pSrlIwvcMv/ST8Oc9W7zGVikSdGk+e+QlAgrEScQhGJVZcD8EhRVEhHWPnK8M7aYxk1k799qaRzX8YR4VeYVkif70+Z4XwpnO93XnsrfBqxvq/HGr2wZcxVCLFkbshGalQ7DrgEiBaFhIhPQu00kpTcb34cDSZNPMRFd5W++ceImBWHPgy5lvA+YGbjcOOwtTKHzFHkLZIn4ng9jhwrGeO+NHGVFF/y8LRlmYs5X1NKu9xRAi2FJ5IBRn562F46iftbx8LyuKNyHVlhyThD9kv6LtJrGrBjx/PukPn5Y/FZ6ZjBemmNmBzwGs7a0bmJVk3p/b2UKADUIrUq7VneDJlbw21LAw1q2FngJNCMtWLN+1y1zmSSy01dul/GhUJASFDGN6Yhu/mJZRASWZOnWAGmJXEv6hE3AdoaZTehAePYl+BMTtmX96U2w7EiwMyQ==;5:AJojyVqNpsqe2ni31LxcyOlfJIScdA9yUNmphx5Bisa/7BGw7XYDjAPhZJxfXxOlER1uSDMmHd4dudI8PzhXEbCWV2a/KoeIcpYriOefRubH/xvBH8bdORc94QA/4cJkY8d5S++JXCEdFiFxLuZgNwmVFMhK5g7Ga1+tvFltrlM=;7:oHMnJKxe+lS8ehTmKs0/w2fbpBPiOZayn2F4r9AacOyqYfpwfo9/hoDRTRaw4AKdJ1yzGR01TJ1rAaq8e6vbN0cLH+BNwrCOEyF3nMEQ/v3gIwY4YoHZ1iY9mRNPOD5nQ7FOHhgC7mCUY4UfTmJH6g==
-x-ms-office365-filtering-correlation-id: 68654d68-8946-4475-6a5c-08d6466ffebc
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:SN6PR11MB3055;
-x-ms-traffictypediagnostic: SN6PR11MB3055:
-x-microsoft-antispam-prvs: <SN6PR11MB3055D6CEB4144A15974BB0328DC60@SN6PR11MB3055.namprd11.prod.outlook.com>
+x-microsoft-exchange-diagnostics: 1;SN6PR11MB3392;6:SjLZeEovTmAfNyXxdMTUMIQk2SslzdMJgkRajZ743Kg9ATnAIvOkecSAPXYVGifm/hYD7H+VYbrfsmNw8QjzMFTkauQtE89VJ+XItAHEipEiTeUcm5MmjqqBMcgykXNeprPJYNVblLHpgE+QE+B3NQuw1+q94KPTTVZ3CQlPgREjXcD0EaaWmdabl7+ogYBaA61p2SkynUmhQyArA2EE5Ayxa7mSeTXnIrB9hp5yZwPADmkhZwpUVJErb48P0+yofJ/axOOCpVljCyVTw4v2zsvIWKgVLfzoPxeOcqqHsc8XnOxwja0uydQN3cacGm1DeUSpMfQwEZEfVAidRN8GsrPhRNZRdMpYgbAwse2NtvypuxknGhfd86yT+nwCe37nVn76MydugO30XlBdzg1urgD6yiri9nC+012amz0k4zdYyxJsc65JCURHadzaWEs7wEb74BxRKs7hm+AmgMUtrg==;5:kgqCsa3M8jhGQfc3Ueq/f0OZQwQWDpr8SvbZ3c0QRU6kGzzx8NvJXnzN2q4iHrmGjWjCuR6raubiq4IBwAYMBkj8PGznYREC2Nw2NQylyuYnfIHH49o34ot/PZp1Y6e0VrSMr9oOAuF1mPIvXavBFkIg1uYV/OPhhC5Ixgk7d5c=;7:UjB4qYNELEZ+1EF1keXgkThKfuMN5D9aiR3qW7jNKWpm4mjQtjdXtA8Nmt7zMTaXLE7g9rVL4DZxyCGQihc0ltANVZ0XCEH65ldHwGcMtyeQabH+hoByGKczfGYQOW0KMfMGsi2GTGJqFIV4vq5WAQ==
+x-ms-office365-filtering-correlation-id: 736cfe6d-44dd-46f9-11fc-08d6466fffa6
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:SN6PR11MB3392;
+x-ms-traffictypediagnostic: SN6PR11MB3392:
+x-microsoft-antispam-prvs: <SN6PR11MB33926B69DE473007D9B8326C8DC60@SN6PR11MB3392.namprd11.prod.outlook.com>
 x-exchange-antispam-report-test: UriScan:;
 x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(10201501046)(3002001)(3231382)(944501410)(52105095)(148016)(149066)(150057)(6041310)(20161123558120)(20161123564045)(20161123560045)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:SN6PR11MB3055;BCL:0;PCL:0;RULEID:;SRVR:SN6PR11MB3055;
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(5005006)(8121501046)(93006095)(93001095)(10201501046)(3002001)(3231382)(944501410)(52105095)(148016)(149066)(150057)(6041310)(20161123564045)(20161123562045)(20161123558120)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:SN6PR11MB3392;BCL:0;PCL:0;RULEID:;SRVR:SN6PR11MB3392;
 x-forefront-prvs: 08512C5403
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(366004)(39860400002)(136003)(396003)(199004)(189003)(6512007)(8676002)(54906003)(305945005)(66066001)(478600001)(2501003)(2900100001)(81166006)(72206003)(105586002)(476003)(81156014)(106356001)(316002)(68736007)(7736002)(486006)(97736004)(6486002)(2616005)(14444005)(256004)(6436002)(86362001)(5660300001)(6506007)(386003)(53936002)(52116002)(26005)(6916009)(15650500001)(71190400001)(5640700003)(102836004)(71200400001)(14454004)(99286004)(2351001)(36756003)(2906002)(4326008)(3846002)(6116002)(8936002)(1076002)(25786009)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR11MB3055;H:SN6PR11MB3407.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(136003)(396003)(346002)(376002)(39860400002)(199004)(189003)(14454004)(5640700003)(6436002)(386003)(52116002)(102836004)(76176011)(14444005)(53936002)(256004)(2900100001)(81166006)(2351001)(6512007)(81156014)(6506007)(4326008)(72206003)(36756003)(25786009)(6486002)(8936002)(8676002)(71200400001)(478600001)(68736007)(2906002)(1076002)(86362001)(5660300001)(6116002)(6916009)(3846002)(71190400001)(66066001)(476003)(2616005)(105586002)(11346002)(446003)(26005)(106356001)(99286004)(486006)(305945005)(54906003)(2501003)(316002)(97736004)(186003)(7736002);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR11MB3392;H:SN6PR11MB3407.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: bWTCVmCjJ0yw9xPHq2hPnPpi2bXGmQtNZADAv1HC3HOlvqVhhzJ6Jjkd+DCLksr8AdZ9tAfZguOsm4tUh+DbKraLSCqCvK6/XH8V/WBI+qTs0YYqqtm3xTN9CYOjwneIhinZx+yAgieCyvonZrZdAWewLQ79SD4lxMGxEp0pPwq8+fXXfRZJkx0MY0hHw4ndesc5iXnP5sTaa9DXuZP6D6pj50pAtMqHH18V80Imrmpr364bXqSjhSIrqzqzDAH1AVKgkB076SA4uNtXvb5lGbcPtN12NhnZG4HZ/uy8aDlNjRr9CbDNtkSYchvLb3PqH4oPmkXUiWwPGAmlPwX1SpZTk4INBwe+XbOLRHPM6No=
+x-microsoft-antispam-message-info: sXiTumJfIJW2o44U4NbNCI3543wpgFPTOYL13cPsBISJJSVHbr9HOsVXpMEPZ23TYMrRU/HMHBMXyXOqoZR6xWqjeMCyAQEwkitpSG6N38lHHISb4KrktYOSrgiJabbIrPnnWJnwOxYvgHfck3dmhaA68IItK/g3gvXVqI/+7aHH9CCgkY1qTbMTUUenKyl7odJQDDalTif5Bgj0lu67zU9ZNAHYDFzGbja0cGEFnvBVdXpLAHQ2kSJdKRboz/8mYOkRVf6bfZTfaN/T9exAB5u1HIRNVdUm7B6+kITrQVRGE/1U7ueX9iTpVdK/sfKQGffU/SxUPeqgCtzDJvCrlqWWdLRvSSiqHxkayO4dUao=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 68654d68-8946-4475-6a5c-08d6466ffebc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2018 18:20:15.0922
+X-MS-Exchange-CrossTenant-Network-Message-Id: 736cfe6d-44dd-46f9-11fc-08d6466fffa6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2018 18:20:16.5766
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3055
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3392
 X-OriginatorOrg: microchip.com
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -102,36 +104,86 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Adham Abozaeid <adham.abozaeid@microchip.com>
 
-Validate input parameters to set_wiphy_param before scheduling
-handle_cfg_param() to validate them.
-This way proper errors can be returned to caller.
-Also cleaned up unused code in handle_cfg_param.
+host_if_drv.cfg_values is a write only member, and can be removed
 
-Changes since v1:
-- Correction spelling in subject of patch#2
-- Added From: tag to have correct email from value
+Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 13 -------------
+ drivers/staging/wilc1000/host_interface.h |  1 -
+ 2 files changed, 14 deletions(-)
 
-Changes since v2:
-- Reverted unnecessary file permission changes
-
-Changes since v3:
-- Fixed 0-day bot warnings for always true conditions for retry_short and
-retry_long
-- Fixed typo in From: tag
-
-Changes since v4:
-- Fixed duplicate From: tag
-
-Adham Abozaeid (3):
-  staging: wilc1000: validate cfg parameters before scheduling the work
-  staging: wilc1000: Don't keep a copy of wiphy parameters in the driver
-  staging: wilc1000: Remove unused mutex cfg_values_lock
-
- drivers/staging/wilc1000/host_interface.c     | 75 ++++---------------
- drivers/staging/wilc1000/host_interface.h     |  3 -
- .../staging/wilc1000/wilc_wfi_cfgoperations.c | 32 +++++++-
- 3 files changed, 44 insertions(+), 66 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
+lc1000/host_interface.c
+index c1215c194907..8d1142776310 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -375,43 +375,31 @@ static void handle_cfg_param(struct work_struct *work=
+)
+ 	mutex_lock(&hif_drv->cfg_values_lock);
+=20
+ 	if (param->flag & RETRY_SHORT) {
+-		u16 retry_limit =3D param->short_retry_limit;
+-
+ 		wid_list[i].id =3D WID_SHORT_RETRY_LIMIT;
+ 		wid_list[i].val =3D (s8 *)&param->short_retry_limit;
+ 		wid_list[i].type =3D WID_SHORT;
+ 		wid_list[i].size =3D sizeof(u16);
+-		hif_drv->cfg_values.short_retry_limit =3D retry_limit;
+ 		i++;
+ 	}
+ 	if (param->flag & RETRY_LONG) {
+-		u16 limit =3D param->long_retry_limit;
+-
+ 		wid_list[i].id =3D WID_LONG_RETRY_LIMIT;
+ 		wid_list[i].val =3D (s8 *)&param->long_retry_limit;
+ 		wid_list[i].type =3D WID_SHORT;
+ 		wid_list[i].size =3D sizeof(u16);
+-		hif_drv->cfg_values.long_retry_limit =3D limit;
+ 		i++;
+ 	}
+ 	if (param->flag & FRAG_THRESHOLD) {
+-		u16 frag_th =3D param->frag_threshold;
+-
+ 		wid_list[i].id =3D WID_FRAG_THRESHOLD;
+ 		wid_list[i].val =3D (s8 *)&param->frag_threshold;
+ 		wid_list[i].type =3D WID_SHORT;
+ 		wid_list[i].size =3D sizeof(u16);
+-		hif_drv->cfg_values.frag_threshold =3D frag_th;
+ 		i++;
+ 	}
+ 	if (param->flag & RTS_THRESHOLD) {
+-		u16 rts_th =3D param->rts_threshold;
+-
+ 		wid_list[i].id =3D WID_RTS_THRESHOLD;
+ 		wid_list[i].val =3D (s8 *)&param->rts_threshold;
+ 		wid_list[i].type =3D WID_SHORT;
+ 		wid_list[i].size =3D sizeof(u16);
+-		hif_drv->cfg_values.rts_threshold =3D rts_th;
+ 		i++;
+ 	}
+=20
+@@ -3256,7 +3244,6 @@ int wilc_init(struct net_device *dev, struct host_if_=
+drv **hif_drv_handler)
+ 	mutex_lock(&hif_drv->cfg_values_lock);
+=20
+ 	hif_drv->hif_state =3D HOST_IF_IDLE;
+-	hif_drv->cfg_values.scan_source =3D DEFAULT_SCAN;
+=20
+ 	hif_drv->p2p_timeout =3D 0;
+=20
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wi=
+lc1000/host_interface.h
+index df9fc33be094..1e2e50e91f76 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -293,7 +293,6 @@ struct host_if_drv {
+ 	enum host_if_state hif_state;
+=20
+ 	u8 assoc_bssid[ETH_ALEN];
+-	struct cfg_param_attr cfg_values;
+ 	/*lock to protect concurrent setting of cfg params*/
+ 	struct mutex cfg_values_lock;
+=20
 --=20
 2.17.1
 
