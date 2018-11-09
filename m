@@ -2,97 +2,126 @@ Return-Path: <SRS0=rx5y=NU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D07C43441
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 11:55:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54467C43441
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 11:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5F820827
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 11:55:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SrA+ARM4"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5B5F820827
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	by mail.kernel.org (Postfix) with ESMTP id 1B86D20827
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 11:55:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 1B86D20827
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728277AbeKIVfd (ORCPT
+        id S1727969AbeKIVfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 16:35:33 -0500
-Received: from mail-vs1-f67.google.com ([209.85.217.67]:39036 "EHLO
-        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727885AbeKIVfd (ORCPT
+        Fri, 9 Nov 2018 16:35:42 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:56830 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727662AbeKIVfm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Nov 2018 16:35:33 -0500
-Received: by mail-vs1-f67.google.com with SMTP id h78so852290vsi.6
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2018 03:55:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yDWwgG2caqnKg2r1bkOdZbs8GHcoZkw1iBz96V7CASE=;
-        b=SrA+ARM4PIdOCTjkV8HV6kLcMMJw1MosqhgEeEu4dnzKEVxTo2kkQlcEJ8wY6mg4NY
-         PHEAnS1kqFcqWvYG+qFcspHPdLZpohG+ZfsR3kL7i67y27u0vTc/jPnYOduO1oXJtExP
-         J9U3tXqMQ96rqBdVT82APTp2C/kTSL8T60111WKKqsODSxaZQUNyA+SYu6utzagwxrb6
-         V+vXUHWE9DYsA8SDVjI7hbTkVYKU85DtwwiaS8HfhKWX23mN1/1HeLeNXRjeA5+gaid0
-         TCdIJ5YI255zZdglI5zneIL6srxL3hpEWMbbIm2izbFTHXQu4kBzUH/Wx7etwZ9IIBgn
-         g9dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=yDWwgG2caqnKg2r1bkOdZbs8GHcoZkw1iBz96V7CASE=;
-        b=lvSzy027MXK1utaRmFxevN7Pzrk6w0OqS0RVndyV9MfRLmO0Nw0iFc90viN6K6+iUR
-         tSZUJFTugxfe83VX2QCabej35+ddoyEwpyGpCdg3tuhF5/GDvXeCcIsGES681dTTCwVL
-         JUaa6zzke+1n8rdxzaIipSD6GLqlq4mVEEjTQqHfFVeKDLvwnrWSSRngiBuwhWYsmTUU
-         Yea5YWuNsGOlKckZQe/i3q4RJ9IRATeb84GgslhyUQAtppemp3UvfCLnTbglARAfIc0+
-         1OeK8wE/f5A67YxTwngm9vEOvHGvsSgor51Vl+tiBpWzA3ft5bFj0whs9rmLKCIepKVm
-         f4EA==
-X-Gm-Message-State: AGRZ1gLK/DmZiXNp5zf9ICBh2lAbgAibADw6LPBEwn3disP+N5RyI90V
-        B0WP7a91gd2dDH1/rLgMM6qC/dxDjC4SGEVY15Y=
-X-Google-Smtp-Source: AJdET5c0RAmPHmEaMwWdbP/7YCEbO0CNVT31JLKuGj2Ga71s/lDY3M2qgNvA/56cETTjkRBuxwXz3N4dqwUXViSuIho=
-X-Received: by 2002:a67:4c8f:: with SMTP id h15mr3582202vsg.110.1541764514747;
- Fri, 09 Nov 2018 03:55:14 -0800 (PST)
-MIME-Version: 1.0
-References: <20181018083547.23262-1-johannes@sipsolutions.net>
- <CANGSkXRMOK7dJwyRZOgBZbypvAPyV6DUEtE+2LGodtiN5=BqmQ@mail.gmail.com>
- <CANGSkXSox2BquGzhXzALtLxVe8nY67iOfe-kHtRnhg2FEFE6Pg@mail.gmail.com> <37faa3760d0b2d9e3aa5c13de283763838e58c20.camel@sipsolutions.net>
-In-Reply-To: <37faa3760d0b2d9e3aa5c13de283763838e58c20.camel@sipsolutions.net>
-From:   Siva Rebbagondla <siva8118@gmail.com>
-Date:   Fri, 9 Nov 2018 17:25:00 +0530
-Message-ID: <CANGSkXQc4eRVGFE65-1Ugw6qSKJ8hgt8WD=QKV7fTsfT0BRzjw@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: allow hardware scan to fall back to software
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Linux Wireless <linux-wireless@vger.kernel.org>,
-        sushant kumar mishra <sushant2k1513@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>
+        Fri, 9 Nov 2018 16:35:42 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1gL5Nj-0003zV-G4; Fri, 09 Nov 2018 12:55:23 +0100
+Message-ID: <f9be46875c90f00a79f03838944bbf23f05d2c0d.camel@sipsolutions.net>
+Subject: Re: [PATCH 3/3] mac80211: Implement functionality to monitor
+ station's signal stregnth
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Tamizh chelvam <tamizhr@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 09 Nov 2018 12:55:22 +0100
+In-Reply-To: <1539626250-769-4-git-send-email-tamizhr@codeaurora.org>
+References: <1539626250-769-1-git-send-email-tamizhr@codeaurora.org>
+         <1539626250-769-4-git-send-email-tamizhr@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Nov 9, 2018 at 4:49 PM Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> On Fri, 2018-11-09 at 11:48 +0530, Siva Rebbagondla wrote:
-> > Hi,
-> > Gentle Remainder..!!!.
-> > Any update required for this patch?. If not, When can i expect this
-> > patch to be available in wireless-next?.
->
-> Sorry, I hadn't been merging things for a while due to the merge window.
->
-> I just put it into mac80211-next, so I guess the answer should be
-> "soon".
-Thank you. I was waiting for a long time for this patch.
+Oh, umm, that patch is still here ...
 
-Best Regards,
-Siva Rebbagondla
->
-> johannes
->
+I guess we can combine 2 and 3 too.
+
+
+> +	if (sta->rssi_low && bss_conf->enable_beacon) {
+> +		int last_event =
+> +			sta->last_rssi_event_value;
+> +		int sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
+> +		int low = sta->rssi_low;
+> +		int high = sta->rssi_high;
+
+This doesn't really support a list, like in patch 2 where you store
+sta_info::rssi_tholds?
+
+> +		if (sig < low &&
+> +		    (last_event == 0 || last_event >= low)) {
+> +			sta->last_rssi_event_value = sig;
+> +			cfg80211_sta_mon_rssi_notify(
+> +				rx->sdata->dev, sta->addr,
+> +				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+> +				sig, GFP_ATOMIC);
+> +			rssi_cross = true;
+> +		} else if (sig > high &&
+> +			   (last_event == 0 || last_event <= high)) {
+> +			sta->last_rssi_event_value = sig;
+> +			cfg80211_sta_mon_rssi_notify(
+> +				rx->sdata->dev, sta->addr,
+> +				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+> +				sig, GFP_ATOMIC);
+> +			rssi_cross = true;
+> +		}
+> +	}
+> +
+> +	if (rssi_cross) {
+> +		ieee80211_update_rssi_config(sta);
+> +		rssi_cross = false;
+> +	}
+> +}
+
+Ah, but it does, just hard to understand.
+
+However, this does mean what I suspected on the other patch is true -
+you're calling ieee80211_update_rssi_config() here, and that uses the
+sta->rssi_tholds array without any protection, while a concurrent change
+of configuration can free the data.
+
+You need to sort that out. I would suggest to stick all the sta->rssi_*
+fields you add into a new struct (you even had an empty one), and
+protect that struct using RCU. That also saves the memory in case it's
+not assigned at all. Something like
+
+struct sta_mon_rssi_config {
+	struct rcu_head rcu_head;
+	int n_thresholds;
+	s32 low, high;
+	u32 hyst;
+	s32 last_value;
+	s32 thresholds[];
+};
+
+then you can kfree_rcu() it, and just do a single allocation using
+struct_size() for however many entries you need.
+
+> + * @count_rx_signal: Number of data frames used in averaging station signal.
+> + *	This can be used to avoid generating less reliable station rssi cross
+> + *	events that would be based only on couple of received frames.
+>   */
+>  struct sta_info {
+>  	/* General information, mostly static */
+> @@ -600,6 +603,7 @@ struct sta_info {
+>  	s32 rssi_high;
+>  	u32 rssi_hyst;
+>  	s32 last_rssi_event_value;
+> +	unsigned int count_rx_signal;
+
+I guess that would also move into the new struct.
+
+johannes
+
