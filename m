@@ -2,198 +2,178 @@ Return-Path: <SRS0=rx5y=NU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2095DC43441
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 09:30:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA65C43441
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 09:40:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA2F220840
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 09:29:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DA2F220840
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id 5775620827
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 09:40:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="0xsdkCiQ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5775620827
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=quantenna.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728071AbeKITJl (ORCPT
+        id S1727598AbeKITUZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 14:09:41 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:53888 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727995AbeKITJl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Nov 2018 14:09:41 -0500
-Received: by mail-wm1-f66.google.com with SMTP id f10-v6so1325786wme.3
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Nov 2018 01:29:57 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=L8AYgvUWj9Ukkg2GVuswIyoL/8rS++xAM4+KqvN5/hg=;
-        b=POUFM4eYo3o8j/cbQmtHmJq4zNbbzjx0o+biq1NSxo6BoxPiVjYrwciJM3pBbdvwjk
-         95q0f88VgQKjljXy6uGl6fGj8pXEL7+zAAeLMJ0edG0rmqM0hLTOFh31Edhqiz1MR+x9
-         oJ5cSAvW2ALR/HQ5/X9CGWDXYUwYBtUKQ5KgC+KLlYji4xF5v51SyNSkmYIH9icEfHW0
-         Ie48/FmLs/iRwkbpUcyo6WaloBuFBG+qAp82cq6GuQlw7tdh5dlwmqbqNbAJAOk0Wwz7
-         6+xWNI2ohjgj0BW21lxF2H4jEr0aeniWwhxnlL08k9s3+kEOp+Z4bhtkxJT3K9gSok5u
-         FUTQ==
-X-Gm-Message-State: AGRZ1gL7fWbz1X4nE8iYwwD3x27W87jEFLm442i0OkRTJygfbGXtCKJX
-        RWuJiCPYnuTQoBPMaDnaGQlP2Q==
-X-Google-Smtp-Source: AJdET5ef9Ln04AR5GdMunWi0d079727uo2YvAB1uQ7pZSZ6FDeXGEt5aQKPxQAI5sC9FFpkgw4Z3Ug==
-X-Received: by 2002:a1c:ee8d:: with SMTP id j13-v6mr4070965wmi.125.1541755796201;
-        Fri, 09 Nov 2018 01:29:56 -0800 (PST)
-Received: from localhost.localdomain (nat-pool-mxp-t.redhat.com. [149.6.153.186])
-        by smtp.gmail.com with ESMTPSA id a18-v6sm7657000wrt.79.2018.11.09.01.29.55
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 09 Nov 2018 01:29:55 -0800 (PST)
-Date:   Fri, 9 Nov 2018 10:29:51 +0100
-From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT 4/4] mt76x02: set protection according to ht
- capabilities
-Message-ID: <20181109092951.GC4174@localhost.localdomain>
-References: <1541688430-31855-1-git-send-email-sgruszka@redhat.com>
- <1541688430-31855-5-git-send-email-sgruszka@redhat.com>
+        Fri, 9 Nov 2018 14:20:25 -0500
+Received: from mail-by2nam03on0080.outbound.protection.outlook.com ([104.47.42.80]:11697
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727561AbeKITUY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Nov 2018 14:20:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vrwxrky4Emf+2qiZwCQpLbVe053uUUdlYs+fhh2i3lQ=;
+ b=0xsdkCiQ29EhlS/tPZYGs6bra0L4wdQze62cs0bBTvIQ91sNlYSl4bW1Ro2R7W5AmbWlz2a2tuADhhK58gDmk9x/QFhsNaayx+rBNwZDay1TmqIncYDLIq0gHls34Mv+rgmVC8PxahGzIWqKb0XVbDUMuSnMS+yQPpAJQFvlA1M=
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com (20.177.144.212) by
+ BL0PR05MB4836.namprd05.prod.outlook.com (52.132.15.30) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.14; Fri, 9 Nov 2018 09:40:24 +0000
+Received: from BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156]) by BL0PR05MB4595.namprd05.prod.outlook.com
+ ([fe80::d16b:3a5b:aa09:b156%3]) with mapi id 15.20.1339.013; Fri, 9 Nov 2018
+ 09:40:24 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Tamizh chelvam <tamizhr@codeaurora.org>
+CC:     "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 1/4] New netlink command for TID specific configuration
+Thread-Topic: [PATCH 1/4] New netlink command for TID specific configuration
+Thread-Index: AQHUajCNBN9RHbfm70WKuA3PqJ0Zo6VEo+UAgAGd7QCAAQo/AA==
+Date:   Fri, 9 Nov 2018 09:40:24 +0000
+Message-ID: <20181109094017.j4vkhaprz4zmszch@bars>
+References: <1540230918-27712-1-git-send-email-tamizhr@codeaurora.org>
+ <1540230918-27712-2-git-send-email-tamizhr@codeaurora.org>
+ <20181107140552.zfuusbapgqjumoln@bars>
+ <0b75171a7777bd25e203240a3a119cb5@codeaurora.org>
+In-Reply-To: <0b75171a7777bd25e203240a3a119cb5@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM5PR0701CA0052.eurprd07.prod.outlook.com
+ (2603:10a6:203:2::14) To BL0PR05MB4595.namprd05.prod.outlook.com
+ (2603:10b6:208:5f::20)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BL0PR05MB4836;6:ET/f7ngASYr9Bn/yW565H8u9Ui0xtnF3ZXzIqJUzBnu5157PQLvNtfJDMY5bXk9Je4K2ScCLwnv+W0F//bgm5170jkBtcGPoFUwzf/LIMEFsq5GVEM8EznOOskSfYQSj+n49hYWesyZRYXN6dJM/x9Zra6JReMDq3GOgowNEp2TOYkVzN9Nmj1/GnK0gUioOK7wbq4f0K3usdK73aeHkYGszonaNYHjnVNoxYOq60gI2rXzVOorIg1g2VyQiAgUfdLTf/QREFZVAPPVe2ZYGYPj8g9ZgQo0j8N3pCCMVAgHfkhR9VIGfoGW8U8img8qbSlZgMozuy0qTvxzAWTFsTaVytRMBZUNb4PTJsQ1zqJ8GzxHQiibiG6wb3mzbK69xr21y5d+nKewSO2ozUxULLB21bapHz6i4r39VJi+NVG1EGXkia7C5TrRJCme4FCh/5qFiFhwijGr5UImeasn/0Q==;5:c2b+/kSSoL/KOtMEvpWIPxueBomzpj9ZSg/1pF5Z90SGeW4Nj1T60Yjf+GYX9s+CEpC3vT8GyjnH39Ll9gRdW0fB28GY90EgZkH6VJe36DPCe+t7GTZkqyYPay3cCyQMFWsXeEzcmIcMxEmvqDm1gF8Np+FX/AqT0I/7tU8qZCA=;7:cLUexfVpwR9VMn6W0UpCICkzvTh5spOKwtidwk+Ki79X2PSlrAzdhYd754zpPQsXuEg2akbNd1VRvBmfl136gHj14YlWx79gibwm4Y3wgecD4cShX+73p75TJVCXad/WYFEb/B0lL4DV8ChB9bwcUA==
+x-ms-office365-filtering-correlation-id: c1c31c16-a875-4122-3c8d-08d646275f36
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BL0PR05MB4836;
+x-ms-traffictypediagnostic: BL0PR05MB4836:
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=sergey.matyukevich.os@quantenna.com; 
+x-microsoft-antispam-prvs: <BL0PR05MB4836177CC0E62769738DDF75A3C60@BL0PR05MB4836.namprd05.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(3002001)(10201501046)(93006095)(93001095)(3231382)(944501410)(52105095)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123558120)(20161123562045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:BL0PR05MB4836;BCL:0;PCL:0;RULEID:;SRVR:BL0PR05MB4836;
+x-forefront-prvs: 08512C5403
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(366004)(346002)(136003)(396003)(376002)(39850400004)(199004)(189003)(486006)(256004)(106356001)(105586002)(476003)(186003)(11346002)(54906003)(26005)(66066001)(102836004)(446003)(5660300001)(6916009)(86362001)(4326008)(25786009)(76176011)(33716001)(8936002)(6246003)(93886005)(71190400001)(71200400001)(6486002)(68736007)(478600001)(2906002)(6436002)(97736004)(14454004)(1076002)(6116002)(3846002)(229853002)(33896004)(316002)(99286004)(52116002)(2900100001)(6506007)(386003)(6512007)(9686003)(305945005)(7736002)(81156014)(53936002)(8676002)(81166006);DIR:OUT;SFP:1101;SCL:1;SRVR:BL0PR05MB4836;H:BL0PR05MB4595.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: aclSXf4J8sdYVoQAR/m///2KG4EJXbOzy7KaQP/HxKe6x8vKJQJFl8bxuZ8WPTe9NInK9Tezx+aJ7nE1lvqppEoqxC+eaG1y2r/Ep+VWxy6of8A1GcEU4hqMlDy1PlTW2fz9VlyVfhbNtj4mjplTi6kbh+TdxFrXFCzlwNSPuBIBWAgqiX8TnpE+W/O8YK9DigxZnXAjjDEFq34Kz+aJekwY1oltmKzMVfrFJ4a2elPzMwluXHg2DjRvhaeH7DrSG5BhBR9va13X5Pi6sRIFiQklCF43ljVPFdG/QY6264g1DoDuQfVf3G65+eCJmOJgG9HpxqCAaYy/eJCekzpcAOlSHFP+rUlVG4yxY0CzwRM=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <D9016FE9226B684F93C920BFB685E5FD@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1541688430-31855-5-git-send-email-sgruszka@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c1c31c16-a875-4122-3c8d-08d646275f36
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2018 09:40:24.0536
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR05MB4836
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Use information about protection that mac80211 provide to us.
-> Used protection should be part of ht capabilites that either
-> remote AP provde to us in STA mode or is set in hostapd.conf
-> in ht_capab option.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76x02_mac.c  | 58 +++++++++++++++++++++++
->  drivers/net/wireless/mediatek/mt76/mt76x02_mac.h  |  2 +
->  drivers/net/wireless/mediatek/mt76/mt76x02_util.c |  4 ++
->  3 files changed, 64 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-> index 567a7ab47fab..6096efc4119b 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-> @@ -753,6 +753,64 @@ void mt76x02_mac_set_rts_thresh(struct mt76x02_dev *dev, u32 val)
->  		 MT_PROT_CFG_CTRL | MT_PROT_CFG_RTS_THRESH, data);
->  }
->  
-> +void mt76x02_mac_set_tx_protection(struct mt76x02_dev *dev, bool legacy_prot,
-> +				   int ht_mode)
-> +{
-> +	int mode = ht_mode & IEEE80211_HT_OP_MODE_PROTECTION;
-> +	bool non_gf = !!(ht_mode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
-> +	u32 prot[6];
-> +	bool ht_rts[4] = {};
-> +	int i;
-> +
-> +	for (i = 0; i < 6; i++) {
+Hello Tamizh,
 
-maybe better ARRAY_SIZE() here?
+...
 
-> +		prot[i] = mt76_rr(dev, MT_CCK_PROT_CFG + i * 4);
-> +		if (i >= 2)
-> +			prot[i] &= ~(MT_PROT_CFG_CTRL | MT_PROT_CFG_RATE);
-> +	}
-> +
-> +	if (legacy_prot) {
-> +		prot[1] &= ~MT_PROT_CFG_CTRL;
-> +		prot[1] |= MT_PROT_CTRL_CTS2SELF;
-> +
-> +		prot[2] |= MT_PROT_RATE_CCK_11;
-> +		prot[3] |= MT_PROT_RATE_CCK_11;
-> +		prot[4] |= MT_PROT_RATE_CCK_11;
-> +		prot[5] |= MT_PROT_RATE_CCK_11;
-> +	} else {
-> +		prot[2] |= MT_PROT_RATE_OFDM_24;
-> +		prot[3] |= MT_PROT_RATE_DUP_OFDM_24;
-> +		prot[4] |= MT_PROT_RATE_OFDM_24;
-> +		prot[5] |= MT_PROT_RATE_DUP_OFDM_24;
-> +	}
-> +
-> +	switch (mode) {
-> +	case IEEE80211_HT_OP_MODE_PROTECTION_NONE:
+> > > +static int nl80211_set_tid_config(struct sk_buff *skb,
+> > > +                                 struct genl_info *info)
+> > > +{
+> > > +       struct cfg80211_registered_device *rdev =3D info->user_ptr[0]=
+;
+> > > +       struct nlattr *attrs[NL80211_ATTR_TID_MAX + 1];
+> > > +       struct nlattr *tid;
+> > > +       struct net_device *dev =3D info->user_ptr[1];
+> > > +       const char *peer =3D NULL;
+> > > +       u8 tid_no;
+> > > +       int ret =3D -EINVAL, retry_short =3D -1, retry_long =3D -1;
+> > > +
+> > > +       tid =3D info->attrs[NL80211_ATTR_TID_CONFIG];
+> > > +       if (!tid)
+> > > +               return -EINVAL;
+> > > +
+> > > +       ret =3D nla_parse_nested(attrs, NL80211_ATTR_TID_MAX, tid,
+> > > +                              nl80211_attr_tid_policy, info->extack)=
+;
+> > > +       if (ret)
+> > > +               return ret;
+> > > +
+> > > +       if (!attrs[NL80211_ATTR_TID])
+> > > +               return -EINVAL;
+> > > +
+> > > +       if (attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
+> > > +               retry_short =3D
+> > > nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_SHORT]);
+> > > +               if (!retry_short ||
+> > > +                   retry_short > rdev->wiphy.max_data_retry_count)
+> > > +                       return -EINVAL;
+> > > +       }
+> > > +
+> > > +       if (attrs[NL80211_ATTR_TID_RETRY_LONG]) {
+> > > +               retry_long =3D
+> > > nla_get_u8(attrs[NL80211_ATTR_TID_RETRY_LONG]);
+> > > +               if (!retry_long ||
+> > > +                   retry_long > rdev->wiphy.max_data_retry_count)
+> > > +                       return -EINVAL;
+> > > +       }
+> > > +
+> > > +       tid_no =3D nla_get_u8(attrs[NL80211_ATTR_TID]);
+> > > +       if (tid_no >=3D IEEE80211_FIRST_TSPEC_TSID)
+> > > +               return -EINVAL;
+> > > +
+> > > +       if (info->attrs[NL80211_ATTR_MAC])
+> > > +               peer =3D nla_data(info->attrs[NL80211_ATTR_MAC]);
+> > > +
+> > > +       if (nla_get_flag(attrs[NL80211_ATTR_TID_RETRY_CONFIG])) {
+> >=20
+> > Do we really need this additional flag to indicate retry data ?
+> > Maybe we can simply check retry attrs or even retry data, e.g.:
+>=20
+> Yes, because this implementation gives provision to set default retry
+> count for TID traffic type for a station.
+> Since we use single NL command for all TID configurations, this flag
+> will be useful to notify the driver about
+> retry TID configuration change.
 
-I think you can cover it with 'default' case
+Ok. So if driver receives retry value (-1), it should reset to some
+default value known to driver or firmware. IMHO it worth making it
+more explicit: in its current form this convention will not be obvious
+for driver authors. Though I don't have a good idea how to do it.
+Maybe merge both aggregation and retry cfg80211 callbacks into one
+and use structure for params and bitmask for operations...
 
-> +		break;
-> +
-> +	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-> +		ht_rts[0] = ht_rts[1] = ht_rts[2] = ht_rts[3] = true;
-> +		break;
-> +
-> +	case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
-> +		ht_rts[1] = ht_rts[3] = true;
-> +		break;
-> +
-> +	case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
-> +		ht_rts[0] = ht_rts[1] = ht_rts[2] = ht_rts[3] = true;
-> +		break;
+> >=20
+> > if (attrs[NL80211_ATTR_TID_RETRY_LONG] ||
+> >     attrs[NL80211_ATTR_TID_RETRY_SHORT]) {
+> >     ...
+> >=20
+> > if ((retry_short > 0) || (retry_long > 0)) {
+> >     ...
 
-this code is duplicated of 'IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER'.
-maybe better to have:
-
-	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-	case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
-		ht_rts[0] = ht_rts[1] = ht_rts[2] = ht_rts[3] = true;
-		break;
-
-> +	}
-> +
-> +	if (non_gf)
-> +		ht_rts[2] = ht_rts[3] = true;
-> +
-> +	for (i = 0; i < 4; i++)
-
-ARRAY_SIZE() here?
-
-> +		if (ht_rts[i])
-> +			prot[i + 2] |= MT_PROT_CTRL_RTS_CTS;
-> +
-> +	for (i = 0; i < 6; i++)
-
-ARRAY_SIZE() here?
-
-> +		mt76_wr(dev, MT_CCK_PROT_CFG + i * 4, prot[i]);
-> +}
-> +
->  void mt76x02_update_channel(struct mt76_dev *mdev)
->  {
->  	struct mt76x02_dev *dev = container_of(mdev, struct mt76x02_dev, mt76);
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> index 34da8c600db8..9035397ae081 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> @@ -197,6 +197,8 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
->  			    struct mt76x02_tx_status *stat, u8 *update);
->  int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
->  			   void *rxi);
-> +void mt76x02_mac_set_tx_protection(struct mt76x02_dev *dev, bool legacy_prot,
-> +				   int ht_mode);
->  void mt76x02_mac_set_rts_thresh(struct mt76x02_dev *dev, u32 val);
->  void mt76x02_mac_setaddr(struct mt76x02_dev *dev, u8 *addr);
->  void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> index fda67b0923a6..51db4d3dcc13 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-> @@ -682,6 +682,10 @@ void mt76x02_bss_info_changed(struct ieee80211_hw *hw,
->  		tasklet_enable(&dev->pre_tbtt_tasklet);
->  	}
->  
-> +	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
-> +		mt76x02_mac_set_tx_protection(dev, info->use_cts_prot,
-> +					      info->ht_operation_mode);
-> +
->  	if (changed & BSS_CHANGED_BASIC_RATES &&
->  	    vif->type == NL80211_IFTYPE_STATION) {
->  		mt76_wr(dev, MT_LEGACY_BASIC_RATE, info->basic_rates);
-> -- 
-> 1.9.3
-> 
+Regards,
+Sergey
