@@ -2,65 +2,75 @@ Return-Path: <SRS0=rx5y=NU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.3 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70C3FC43441
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18E50C43441
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:39:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45FAA20825
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:24:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 45FAA20825
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id D51C820825
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Nov 2018 12:39:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="wLxa6AJJ"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D51C820825
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728023AbeKIWFU (ORCPT
+        id S1728005AbeKIWTi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Nov 2018 17:05:20 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:57508 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727835AbeKIWFU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Nov 2018 17:05:20 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gL5qG-0004fC-7b; Fri, 09 Nov 2018 13:24:52 +0100
-Message-ID: <dda0f03868f631ba9f76170e19dd28099a0e0add.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/4] New netlink command for TID specific configuration
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Cc:     "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Date:   Fri, 09 Nov 2018 13:24:51 +0100
-In-Reply-To: <20181109094017.j4vkhaprz4zmszch@bars>
-References: <1540230918-27712-1-git-send-email-tamizhr@codeaurora.org>
-         <1540230918-27712-2-git-send-email-tamizhr@codeaurora.org>
-         <20181107140552.zfuusbapgqjumoln@bars>
-         <0b75171a7777bd25e203240a3a119cb5@codeaurora.org>
-         <20181109094017.j4vkhaprz4zmszch@bars>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Fri, 9 Nov 2018 17:19:38 -0500
+Received: from mail.toke.dk ([52.28.52.200]:60671 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727662AbeKIWTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Nov 2018 17:19:38 -0500
+Date:   Fri, 09 Nov 2018 13:39:06 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1541767149; bh=4KjkzuqO9d8leHtnfZeoqpLHd9kYIBXWTowMv3YeeVI=;
+        h=Date:In-Reply-To:References:Subject:To:From:From;
+        b=wLxa6AJJO/2PqCPC+i8GUe6OuTYQ7IvnsHvghNEQDaWM6UXaRDg/9SNoR+h+Inoy5
+         EZD3zvoqwawh9wTk5pdZKLLKSaqE1l192vDSo+73W2Z/laufC4GQ3jcfVRxale5qvM
+         r4zl63x0AbrI6jYV7+QcQTBI9I+hBGRoXWqAGoGQ71yC0jtEVoXqAmlRlcCLikgXAi
+         kOSDapEdr4R2C9OFeNDt0y3PfYtN0G4BbVHH3MBtR2UpxpBL9UdSBkw6EeUQVj1X+H
+         KTW4OEA1lQei59XrnMbWdEA0WLSsCD1kaEKh/ufeGikw/tKeISv3xxCuKzpCm/gFLY
+         aXCJNPvc3cBfA==
+In-Reply-To: <78adf728bab8943152dc4db311c50fedbe5710f1.camel@sipsolutions.net>
+References: <1540033534-11211-1-git-send-email-rmanohar@codeaurora.org> <1540033534-11211-2-git-send-email-rmanohar@codeaurora.org> (sfid-20181020_130555_381291_6F3867B0) <78adf728bab8943152dc4db311c50fedbe5710f1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 1/6] mac80211: Add TXQ scheduling API
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+From:   =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <A76C82FF-46AD-4BDB-A5DA-932E97536FEB@toke.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2018-11-09 at 09:40 +0000, Sergey Matyukevich wrote:
-> 
-> Ok. So if driver receives retry value (-1), it should reset to some
-> default value known to driver or firmware. IMHO it worth making it
-> more explicit: in its current form this convention will not be obvious
-> for driver authors. Though I don't have a good idea how to do it.
-> Maybe merge both aggregation and retry cfg80211 callbacks into one
-> and use structure for params and bitmask for operations...
 
-I think we want that anyway, I just suggested to also add the "noack" to
-the same API, and indeed it's pointless to set retries and noack.
 
-johannes
+On 9 November 2018 13:00:04 CET, Johannes Berg <johannes@sipsolutions=2Ene=
+t> wrote:
+>On Sat, 2018-10-20 at 04:05 -0700, Rajkumar Manoharan wrote:
+>>=20
+>> + * @txq: pointer obtained from station or virtual interface, or from
+>> + *       ieee80211_next_txq()
+>
+>nit: please just indent by a single tab for continuation, trying to
+>line
+>it all up doesn't really make it more readable
 
+Not sure I agree about the "not more readable" part, but OK=2E
+
+>I see you're still discussing all this, so I'm going to assume you'll
+>resend this series eventually :-)
+
+Yup=2E Think we're getting close to something that might be mergeable=2E W=
+ill send another version then :)
+
+-Toke
