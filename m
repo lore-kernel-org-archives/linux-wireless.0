@@ -2,305 +2,103 @@ Return-Path: <SRS0=mdyG=NV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD7AC43441
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Nov 2018 16:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BDEC43441
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Nov 2018 20:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86A5120818
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Nov 2018 16:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AA3220840
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Nov 2018 20:25:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="Kkzfzc/W"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 86A5120818
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=wetzel-home.de
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BwTwELvX"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3AA3220840
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726910AbeKKCRc (ORCPT
+        id S1725787AbeKKGIU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Nov 2018 21:17:32 -0500
-Received: from 8.mo7.mail-out.ovh.net ([46.105.77.114]:48642 "EHLO
-        8.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726822AbeKKCRc (ORCPT
+        Sun, 11 Nov 2018 01:08:20 -0500
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:40320 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725772AbeKKGIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Nov 2018 21:17:32 -0500
-X-Greylist: delayed 12645 seconds by postgrey-1.27 at vger.kernel.org; Sat, 10 Nov 2018 21:17:28 EST
-Received: from player756.ha.ovh.net (unknown [10.109.159.139])
-        by mo7.mail-out.ovh.net (Postfix) with ESMTP id A7150E7162
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2018 13:54:06 +0100 (CET)
-Received: from awhome.eu (p57B7E4EB.dip0.t-ipconnect.de [87.183.228.235])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player756.ha.ovh.net (Postfix) with ESMTPSA id 725271200A6;
-        Sat, 10 Nov 2018 13:54:05 +0100 (CET)
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1541854444;
-        bh=qsPBlSnm7W83siU5sO898KLlo4NSKelu6jjvjGSAcVE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=Kkzfzc/WkmWqOYp2O59S4+6bg7f9wNg1Cjd+sy8BAsoXusO1ezduVUe+z8+BqK5Oo
-         m0wUeiQJh3+YCGwZXiEjirOg2C+cY3zZkmrDBSCEVVT3N8wdqwO1IrwZNCLG3KI4vY
-         cD1IwcJCXzVG5n97m1Bbx9RLSlzhqZ+Raq6HPJvQ=
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [RFC PATCH 2/2] mac80211: Add support for Extended Key ID
-Date:   Sat, 10 Nov 2018 13:53:31 +0100
-Message-Id: <20181110125331.2726-3-alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181110125331.2726-1-alexander@wetzel-home.de>
-References: <20181110125331.2726-1-alexander@wetzel-home.de>
+        Sun, 11 Nov 2018 01:08:20 -0500
+Received: by mail-yw1-f67.google.com with SMTP id l66-v6so2976125ywl.7
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Nov 2018 12:22:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=NbVbXgkSTWpTcUL6gGf02vRQEOF4VisTwyBjijCeHuI=;
+        b=BwTwELvX4GRPV8RudvocKsL0nLJwecgZBb9KdQVy1a10KTMx/Mgvab5XbQKzW+N5BJ
+         8eEdjMLKar+USjQZCMuwFhUaT55lIfVSm/GgaBCpRmWo1K0p+l9wzGo5ACx3jfYgzRNj
+         uMt8cunUtKVuP1Kb/PmH7kvxjEHQeslTaCTOQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=NbVbXgkSTWpTcUL6gGf02vRQEOF4VisTwyBjijCeHuI=;
+        b=SctaZzSJ/sysFqLShtbzWDMKp+3i2hghYOGa4KWPo1A4WrADHhkNuOEVj4xnJpzfF4
+         Efcx9UAKrDm4/0+gRjkmjis/z5peLjcum5JHDPF7zBGgEoTioCHlV8bmVmGdcR8rC8mt
+         sYs8SEuwzP6uU78nFbJb8O9VdDm8u1bBj5UjHWz6DY5v6uu/VbRCeOnplokZ+3vEfce3
+         jR1qPQ0OBd1lTUDO9sB6UtX2T+AKjlMkTCrCj+RvHXBAjV49i+0WfQJ1e+GeUqY5x+al
+         9wyBK3XKPmnWnxVpmcNyO+CXzgR72wR2vWAgpw4Zw1HcoNjC3ffz7Rqv293lIgYbuXyO
+         xZNA==
+X-Gm-Message-State: AGRZ1gIzqeE2woKGWVpsEIwRTOo6KClOYRtUSGMaZkZ/A1u/uINpi1nQ
+        tiTD+TZSSnL2OQxu8TQJLiAw3g==
+X-Google-Smtp-Source: AJdET5dGiCgI7gis9bPibCBtTHmVJhboOR5XXDrFiBYlQFCY0etD6Q/ggttShORkMiteXR1YuJiYxw==
+X-Received: by 2002:a81:8d43:: with SMTP id w3-v6mr13130552ywj.7.1541881327459;
+        Sat, 10 Nov 2018 12:22:07 -0800 (PST)
+Received: from [10.177.251.59] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id j65-v6sm2882223ywg.52.2018.11.10.12.22.04
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 10 Nov 2018 12:22:06 -0800 (PST)
+Subject: Re: [PATCH v2] brcmfmac: support STA info struct v7
+To:     Dan Haab <riproute@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
+References: <1541781535-10523-1-git-send-email-dan.haab@luxul.com>
+Cc:     Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Dan Haab <dan.haab@luxul.com>
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <24a7c83c-0fdd-5b2c-f9ad-813b4d17ab55@broadcom.com>
+Date:   Sat, 10 Nov 2018 21:22:03 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
 MIME-Version: 1.0
+In-Reply-To: <1541781535-10523-1-git-send-email-dan.haab@luxul.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 15343200984011447495
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtkedrkeehgdegiecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecu
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allow drivers using mac80211 to support Extended Key IDs.
+On 11/9/2018 5:38 PM, Dan Haab wrote:
+> The newest firmwares provide STA info using v7 of the struct. As v7
+> isn't backward compatible, a union is needed.
+>
+> Even though brcmfmac does not use any of the new info it's important to
+> provide the proper struct buffer. Without this change new firmwares will
+> fallback to the very limited v3 instead of something in between such as
+> v4.
 
-Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
----
- include/net/mac80211.h     |  6 +++++
- net/mac80211/cfg.c         | 30 ++++++++++++++++++++++++-
- net/mac80211/debugfs_sta.c |  1 +
- net/mac80211/key.c         | 46 ++++++++++++++++++++++++++++++--------
- net/mac80211/key.h         |  1 +
- net/mac80211/main.c        |  2 ++
- net/mac80211/sta_info.c    |  1 +
- net/mac80211/sta_info.h    |  1 +
- 8 files changed, 78 insertions(+), 10 deletions(-)
+I would expect a changelog, but looking at the patch is addresses my 
+comments nicely so....
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 71985e95d2d9..fb53e7c84c01 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1643,6 +1643,10 @@ struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif);
-  * @IEEE80211_KEY_FLAG_PUT_MIC_SPACE: This flag should be set by the driver for
-  *	a TKIP key if it only requires MIC space. Do not set together with
-  *	@IEEE80211_KEY_FLAG_GENERATE_MMIC on the same key.
-+ * @IEEE80211_KEY_FLAG_RX_ONLY: Set by mac80211 to indicate that the key
-+ *      must not be used for TX (yet).
-+ * @IEEE80211_KEY_FLAG_SET_TX: Set by mac80211 to indicate that a previously
-+ *      installed key with IEEE80211_KEY_FLAG_RX_ONLY should take over TX also.
-  */
- enum ieee80211_key_flags {
- 	IEEE80211_KEY_FLAG_GENERATE_IV_MGMT	= BIT(0),
-@@ -1654,6 +1658,8 @@ enum ieee80211_key_flags {
- 	IEEE80211_KEY_FLAG_RX_MGMT		= BIT(6),
- 	IEEE80211_KEY_FLAG_RESERVE_TAILROOM	= BIT(7),
- 	IEEE80211_KEY_FLAG_PUT_MIC_SPACE	= BIT(8),
-+	IEEE80211_KEY_FLAG_RX_ONLY		= BIT(9),
-+	IEEE80211_KEY_FLAG_SET_TX		= BIT(10),
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 51622333d460..c0af820bc557 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -365,6 +365,25 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 	if (!ieee80211_sdata_running(sdata))
- 		return -ENETDOWN;
- 
-+	if (pairwise && params->flag == NL80211_KEY_SET_TX) {
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mac_addr);
-+
-+		if (!sta ||
-+		   !(key = rcu_dereference(sta->ptk[key_idx])) ||
-+		   !(key->conf.flags | IEEE80211_KEY_FLAG_RX_ONLY)) {
-+			err = -ENOENT;
-+		} else {
-+			key->conf.flags &= ~IEEE80211_KEY_FLAG_RX_ONLY;
-+			key->conf.flags |= IEEE80211_KEY_FLAG_SET_TX;
-+			err = ieee80211_key_hw_activate_tx(key);
-+			if (!err)
-+				sta->ptk_idx = key_idx;
-+		}
-+		mutex_unlock(&local->sta_mtx);
-+		return err;
-+	}
-+
- 	/* reject WEP and TKIP keys if WEP failed to initialize */
- 	switch (params->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
-@@ -451,9 +470,18 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 	}
- 
--	if (sta)
-+	if (sta) {
- 		sta->cipher_scheme = cs;
- 
-+		/* Flag STA correctly when using Extended Key ID */
-+		if (pairwise && params->flag == NL80211_KEY_RX_ONLY &&
-+		    !test_sta_flag(sta, WLAN_STA_EXT_KEY_ID))
-+			set_sta_flag(sta, WLAN_STA_EXT_KEY_ID);
-+	}
-+
-+	if (params->flag == NL80211_KEY_RX_ONLY)
-+		key->conf.flags |= IEEE80211_KEY_FLAG_RX_ONLY;
-+
- 	err = ieee80211_key_link(key, sdata, sta);
- 
-  out_unlock:
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index af5185a836e5..d63dca26d504 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -81,6 +81,7 @@ static const char * const sta_flag_names[] = {
- 	FLAG(MPSP_OWNER),
- 	FLAG(MPSP_RECIPIENT),
- 	FLAG(PS_DELIVER),
-+	FLAG(EXT_KEY_ID),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 4700718e010f..05aa30827f56 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -124,6 +124,36 @@ static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata,
- 	sdata->crypto_tx_tailroom_needed_cnt -= delta;
- }
- 
-+int ieee80211_key_hw_activate_tx(struct ieee80211_key *key)
-+{
-+	struct ieee80211_sub_if_data *sdata = key->sdata;
-+	struct sta_info *sta = key->sta;
-+	int ret;
-+
-+	assert_key_lock(key->local);
-+
-+	if (!sta)
-+		return -EOPNOTSUPP;
-+
-+	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
-+		/* No need to inform driver, report success */
-+		return 0;
-+
-+	/* Inform driver that key is no longer RX only */
-+	ret = drv_set_key(key->local, SET_KEY, sdata,
-+			  &sta->sta, &key->conf);
-+	if (ret) {
-+		if (ret == 1)
-+			/* Software crypto, report success */
-+			return 0;
-+		sdata_err(sdata,
-+			  "failed to activate key for TX (%d, %pM) in hardware (%d)\n",
-+			  key->conf.keyidx,
-+			  sta->sta.addr, ret);
-+	}
-+	return ret;
-+}
-+
- static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- {
- 	struct ieee80211_sub_if_data *sdata = key->sdata;
-@@ -261,12 +291,13 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 
- static int ieee80211_hw_key_replace(struct ieee80211_key *old_key,
- 				    struct ieee80211_key *new_key,
--				    bool ptk0rekey)
-+				    bool pairwise)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_local *local;
- 	struct sta_info *sta;
- 	int ret;
-+	bool ext_key_id = test_sta_flag(sta, WLAN_STA_EXT_KEY_ID);
- 
- 	/* Aggregation sessions are OK when running on SW crypto.
- 	 * A broken remote STA may cause issues not observed with HW
-@@ -278,8 +309,8 @@ static int ieee80211_hw_key_replace(struct ieee80211_key *old_key,
- 	assert_key_lock(old_key->local);
- 	sta = old_key->sta;
- 
--	/* PTK only using key ID 0 needs special handling on rekey */
--	if (new_key && sta && ptk0rekey) {
-+	/* PTK rekey without Extended Key ID needs special handling */
-+	if (new_key && pairwise && sta && !ext_key_id) {
- 		local = old_key->local;
- 		sdata = old_key->sdata;
- 
-@@ -395,10 +426,6 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 
- 	if (old) {
- 		idx = old->conf.keyidx;
--		/* TODO: proper implement and test "Extended Key ID for
--		 * Individually Addressed Frames" from IEEE 802.11-2016.
--		 * Till then always assume only key ID 0 is used for
--		 * pairwise keys.*/
- 		ret = ieee80211_hw_key_replace(old, new, pairwise);
- 	} else {
- 		/* new must be provided in case old is not */
-@@ -415,8 +442,9 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 	if (sta) {
- 		if (pairwise) {
- 			rcu_assign_pointer(sta->ptk[idx], new);
--			sta->ptk_idx = idx;
--			if (new) {
-+			if (new &&
-+			    !(new->conf.flags & IEEE80211_KEY_FLAG_RX_ONLY)) {
-+				sta->ptk_idx = idx;
- 				clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 				ieee80211_check_fast_xmit(sta);
- 			}
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index ebdb80b85dc3..e0612a0b3adc 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -146,6 +146,7 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- int ieee80211_key_link(struct ieee80211_key *key,
- 		       struct ieee80211_sub_if_data *sdata,
- 		       struct sta_info *sta);
-+int ieee80211_key_hw_activate_tx(struct ieee80211_key *key);
- void ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom);
- void ieee80211_key_free_unused(struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 83e71e6b2ebe..8a8ca813494a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -574,6 +574,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS_STA);
- 	wiphy_ext_feature_set(wiphy,
- 			      NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211);
-+	/* !! DEVELOPMENT ONLY, must normally be set by driver !! */
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_EXT_KEY_ID);
- 
- 	if (!ops->hw_scan) {
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index fb8c2252ac0e..2d83d8e13769 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -350,6 +350,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.max_rx_aggregation_subframes =
- 		local->hw.max_rx_aggregation_subframes;
- 
-+	sta->ptk_idx = NUM_DEFAULT_KEYS - 1;
- 	sta->local = local;
- 	sta->sdata = sdata;
- 	sta->rx_stats.last_rx = jiffies;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9a04327d71d1..7787e773a350 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -101,6 +101,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_MPSP_OWNER,
- 	WLAN_STA_MPSP_RECIPIENT,
- 	WLAN_STA_PS_DELIVER,
-+	WLAN_STA_EXT_KEY_ID,
- 
- 	NUM_WLAN_STA_FLAGS,
- };
--- 
-2.19.1
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Dan Haab <dan.haab@luxul.com>
+> Reviewed-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 40 ++++++++++++++++++----
+>  1 file changed, 33 insertions(+), 7 deletions(-)
 
