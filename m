@@ -2,222 +2,145 @@ Return-Path: <SRS0=J0pC=NX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C72E7C43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 06:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3C2CC43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8150721722
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 06:40:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D7A721722
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:29:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ReFk6PpU";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KlqiuyZi"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8150721722
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="Ahp4mv9z"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D7A721722
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731784AbeKLQcR (ORCPT
+        id S1727000AbeKLRVY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Nov 2018 11:32:17 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:46120 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728340AbeKLQcR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Nov 2018 11:32:17 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 3AEA36086B; Mon, 12 Nov 2018 06:40:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542004825;
-        bh=6Bo5K/+HOmVmRkp02hrTPNEkiO1CndI1oVFKvDlFxJY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ReFk6PpUiTD/TbsCShDP6hzqQfOkvTwTljvhdD4IM7/5b2gJvOfApzdZm8B/vBced
-         CYt4knqondxJKFpc591UYC58SXEgzvzd0A4GAyPWXXhHDxWGcPFXHeYYDWjmVIq4PH
-         /j+2pCwtna6tq+n16FLSOXDvBG30+YpmEnWhpYT4=
-Received: from ubuntu-testltp.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: murugana@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 77752601D1;
-        Mon, 12 Nov 2018 06:40:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542004824;
-        bh=6Bo5K/+HOmVmRkp02hrTPNEkiO1CndI1oVFKvDlFxJY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=KlqiuyZi2x5j8td/9GO53yBdiAx11KsWQOO3Uo7N+zvrCvqDWOvgsZZYBG+HxKBKZ
-         0MuiOwHuWdjyvAD75BUp/qLa8vcW97t+Kb3bPY8KOEW+q2a0bMsfhZStnR49+9Gxe8
-         mTU8USuqy+Kbbphn4/nNmSiL81/Pwh9Xf1cyEBQw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 77752601D1
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=murugana@codeaurora.org
-From:   Sathishkumar Muruganandam <murugana@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-Subject: [PATCH v2] ath10k: Disable 4addr source port learning in 10.4 FW by default
-Date:   Mon, 12 Nov 2018 12:10:08 +0530
-Message-Id: <20181112064008.3610-1-murugana@codeaurora.org>
-X-Mailer: git-send-email 2.17.1
+        Mon, 12 Nov 2018 12:21:24 -0500
+Received: from mail-eopbgr760101.outbound.protection.outlook.com ([40.107.76.101]:14119
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725871AbeKLRVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Nov 2018 12:21:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+vDHBPvZzJ246celr17NhBuL/x+6t0UEFU0yhVBwguw=;
+ b=Ahp4mv9zlD3QyBvETrCoq/iIt+weSlw3Gmk8M7wv8Km1idZIm0UuoRrWGFXLO/1KT0C7cXJ+UFQiqZPlxweIee9hYhZa82sw0+qCB/DzUvx6TJwQzpvp0jd2mSVDlM3J/LBfaGAUOg8cUc5REYES1F2J1VOnxFRNRL+uYTsRCCk=
+Received: from BY1PR0601MB1436.namprd06.prod.outlook.com (10.162.111.23) by
+ BY1PR0601MB1126.namprd06.prod.outlook.com (10.160.196.15) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.29; Mon, 12 Nov 2018 07:29:20 +0000
+Received: from BY1PR0601MB1436.namprd06.prod.outlook.com
+ ([fe80::199f:c63e:1449:1979]) by BY1PR0601MB1436.namprd06.prod.outlook.com
+ ([fe80::199f:c63e:1449:1979%3]) with mapi id 15.20.1294.044; Mon, 12 Nov 2018
+ 07:29:20 +0000
+From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Subject: [PATCH V2 0/8] brcmfmac: chip related changes
+Thread-Topic: [PATCH V2 0/8] brcmfmac: chip related changes
+Thread-Index: AQHUellsRLJNfPzxwkaFe1xe76lSbQ==
+Date:   Mon, 12 Nov 2018 07:29:19 +0000
+Message-ID: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
+Accept-Language: en-US, zh-TW
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [12.110.209.245]
+x-clientproxiedby: HK0PR03CA0084.apcprd03.prod.outlook.com
+ (2603:1096:203:72::24) To BY1PR0601MB1436.namprd06.prod.outlook.com
+ (2a01:111:e400:522c::23)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1126;6:jQzRVbbJ3V3Zlpp3Y/Yvg+eOVojq0UD9I9ddbcmoDj4WNlP8yOSS7qHxg1bCg6E97MWyW9zrp67mVdkEbFBPOdb0OnEiYoOgpOaJ7t+hR0qE2XKPm2JcgQywG6Kc4QmoJTECzKI1upiHkAGN7SyVGImcUHV8rbMRsWC04JZ0scERXU6FYUCBOaRotbZOwmgdlQqb8bLsazXf9Mbn2mdcryfQpaHJEi8e4ceR4GndK+zPfnPAhrU106uJSuJiP3Jyvb9ESDHkvhWy6kBiIZeTMSD1uz4kMHD1kMFY2n/fu40jJl8jd7LdFDlPYhbLuG5MpZODbkM2y+V8f5s0W/zr9E/lP8HDqXxuSYiruBpRYYTfKPzc3BYT0OAhCPabEOfDrnD4wWtQhCC46UCi/Gco7H7IlM+2zWriWlMulhX427xv+zbtONg66kUjMnpaN2o+WuCxa/vTtbmSoM952EsvxA==;5:qZv5QBZskNhO+nrw9wb6jDY9ESYPsJokC3scTskBRUo3i+k59+XmQ1+aFydhgOUF8N3iYvYkfhOz0/GPMpoH9OYy9bGXxRpJZtWY/P5LEBtzWi+BxhUcSD9DB1Au+JIKyrIJN9BQ40NhHbw/KmCH8Vs15ChTZs5kpa96sOHBsiY=;7:QGiH2fyRh48nOspgsyVw9L3x9tCJ74Xa34iQ/tsD/RBAyVmkaPo8ouOI4oa3jH7krCF4TXNWO/FlPLQI6BincPDlr4dAeRHe0HhpVgBVXLKR5rH93Empgo7CivuDcfr3hllGPIfUGKPW9ixV0IIuvg==
+x-ms-office365-filtering-correlation-id: 4b6fa366-6164-43b8-6f2d-08d648708f16
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390040)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1126;
+x-ms-traffictypediagnostic: BY1PR0601MB1126:
+x-microsoft-antispam-prvs: <BY1PR0601MB11262599B01299E7385AF1B9BBC10@BY1PR0601MB1126.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:;
+x-ms-exchange-senderadcheck: 1
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3002001)(3231382)(944501410)(52105112)(93006095)(93001095)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:BY1PR0601MB1126;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1126;
+x-forefront-prvs: 0854128AF0
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(346002)(396003)(376002)(39850400004)(136003)(54534003)(189003)(199004)(25786009)(4326008)(2906002)(3846002)(6116002)(99286004)(52116002)(81156014)(81166006)(478600001)(68736007)(8676002)(6486002)(14454004)(66066001)(5640700003)(6436002)(72206003)(8936002)(14444005)(256004)(386003)(102836004)(6506007)(106356001)(105586002)(54906003)(6916009)(2351001)(86362001)(305945005)(2616005)(5660300001)(36756003)(7736002)(316002)(2900100001)(186003)(71200400001)(476003)(486006)(71190400001)(53936002)(6512007)(2501003)(97736004)(26005)(107886003);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1126;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+x-microsoft-antispam-message-info: b3OsuI5+5Dr4Bs/2k9v7XmwGFj+2X+qC/J9vcG8xflnc2S+wcW0RJG1lv6CRRuvvonfeTl6SWf05x7n9b6atDPUNnPdhwinBpw6ZcCBKxE1PHn6JpNgsgaAQqWDeRhPhT16SGStzLyK45rcjcnIcFfzYtxQa/+ufoAQFjyp4dnejB4j0ObDPLPqi4RvJfdeMjHVqnAPTfQNod3lVzDZRnoIqhe+r8llC/6DseU6oAK6dao5eOJ+mkUZ1EUnWQlKlr4c4ZOfzXukOdIbrdgNXbfvUsKG92l+gPq7pY0olhs3ySWs9UPuyyOVhY5S7IXy5CjDWbVYYVbLxnps1QymP/yLFxVmjLh95vj/+fCzL/lk=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4b6fa366-6164-43b8-6f2d-08d648708f16
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2018 07:29:20.0008
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY1PR0601MB1126
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently in 10.4 FW, all the received 4addr frames are processed for 
-source port learning which is enabled by default. This learning can't be 
-disabled by default in FW since it breaks backward compatibility.
+This patch series includes various chip-related changes:
+* 43012 support
+* 4373 saverestore support
+* SDIO bus settings
+* 4354 raw chipid
 
-Since ath10k uses mac80211 based 4addr mode, source port learning done in
-10.4 FW is redundant and also causes issues when 3addr frames are
-transmitted/received for a 4addr station. 
+Changelog:
+V2:
+ - Update commit message for patch 1.
+ - Update comments for patch 2.
+ - Remove CY_4373_F1_MESBUSYCTRL from patch 3.
+ - Collapse patch 6 (43102 sr support) in 4 (43012 support). Add helper fun=
+ctions.
+ - Remove sr_eng_en variable from patch 8.
+ - Collapse patch 10 and 11 in 9 (sdio_aos disable).
 
-One such visible functional impact is when GTK rekey frame from
-hostapd based AP to 4addr STA is dropped in AP's 10.4 FW. This is since
-GTK rekey EAPOL frame is 3addr frame on AP interface and STA enabled
-with 4addr is already allowed for receiving 3addr EAPOL frames.
+Chi-Hsien Lin (3):
+  brcmfmac: add support for CYW43012 SDIO chipset
+  brcmfmac: allow GCI core enumuration
+  brcmfmac: 4373 save-restore support
 
-Source port learning implementation in 10.4 FW drops this 3addr GTK rekey
-frame in AP destinated for 4addr STA causing disassociation and
-re-association for every GTK rekey session. GTK rekey issue is not seen
-when learning is disabled in FW.
+Madhan Mohan R (1):
+  brcmfmac: set SDIO F1 MesBusyCtrl for CYW4373
 
-To prevent such issues without breaking backward compatibility, FW
-advertises new service bit making the source port learning configurable and
-this learning is being currently disabled during ath10k vdev creation.
+Naveen Gupta (1):
+  brcmfmac: update 43012 F2 watermark setting to fix DMA Error during
+    UDP RX Traffic
 
-* Tested HW: QCA9984
-* Tested FW: 10.4-3.6.0.1-00004
+Winnie Chang (1):
+  brcmfmac: add 4354 raw pcie device id
 
-Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
----
-Changes in v2:
-	* Added the missing VDEV param assignments to 10.4 and 10.2.4
-	* Updated latest FW version
+Wright Feng (2):
+  brcmfmac: set F2 watermark to 256 for 4373
+  brcmfmac: disable command decode in sdio_aos
 
- drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  4 ++++
- drivers/net/wireless/ath/ath10k/wmi.h | 21 ++++++++++++++++++++-
- 3 files changed, 35 insertions(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  33 ++++--
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 119 +++++++++++++++++=
++---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   3 +
+ .../broadcom/brcm80211/include/brcm_hw_ids.h       |   2 +
+ include/linux/mmc/sdio_ids.h                       |   1 +
+ 7 files changed, 139 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c5130fa264eb..aac4d842d504 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5154,6 +5154,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err;
- 	}
- 
-+	if (test_bit(WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
-+		     ar->wmi.svc_map)) {
-+		vdev_param = ar->wmi.vdev_param->disable_4addr_src_lrn;
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
-+						WMI_VDEV_DISABLE_4_ADDR_SRC_LRN);
-+		if (ret && ret != -EOPNOTSUPP) {
-+			ath10k_warn(ar, "failed to disable 4addr src lrn vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
-+		}
-+	}
-+
- 	ar->free_vdev_map &= ~(1LL << arvif->vdev_id);
- 	spin_lock_bh(&ar->data_lock);
- 	list_add(&arvif->list, &ar->arvifs);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 659513bf4ddc..9b41cec6d887 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -825,6 +825,7 @@ static struct wmi_vdev_param_map wmi_vdev_param_map = {
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.disable_4addr_src_lrn = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- /* 10.X WMI VDEV param map */
-@@ -900,6 +901,7 @@ static struct wmi_vdev_param_map wmi_10x_vdev_param_map = {
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.disable_4addr_src_lrn = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
-@@ -974,6 +976,7 @@ static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
- 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
- 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.disable_4addr_src_lrn = WMI_VDEV_PARAM_UNSUPPORTED,
- };
- 
- static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
-@@ -1051,6 +1054,7 @@ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
- 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
- 	.inc_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
- 	.dec_tsf = WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
-+	.disable_4addr_src_lrn = WMI_10_4_VDEV_PARAM_DISABLE_4_ADDR_SRC_LRN,
- };
- 
- static struct wmi_pdev_param_map wmi_pdev_param_map = {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 58e33ab9e0e9..3e17be938420 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -205,6 +205,7 @@ enum wmi_service {
- 	WMI_SERVICE_SPOOF_MAC_SUPPORT,
- 	WMI_SERVICE_TX_DATA_ACK_RSSI,
- 	WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-+	WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
- 
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -359,6 +360,9 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_PEER_TID_CONFIGS_SUPPORT,
- 	WMI_10_4_SERVICE_VDEV_BCN_RATE_CONTROL,
- 	WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
-+	WMI_10_4_SERVICE_HTT_ASSERT_TRIGGER_SUPPORT,
-+	WMI_10_4_SERVICE_VDEV_FILTER_NEIGHBOR_RX_PACKETS,
-+	WMI_10_4_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
- };
- 
- static inline char *wmi_service_name(int service_id)
-@@ -786,6 +790,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_TX_DATA_ACK_RSSI, len);
- 	SVCMAP(WMI_10_4_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT,
- 	       WMI_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT, len);
-+	SVCMAP(WMI_10_4_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT,
-+	       WMI_SERVICE_VDEV_DISABLE_4_ADDR_SRC_LRN_SUPPORT, len);
- }
- 
- #undef SVCMAP
-@@ -5065,6 +5071,7 @@ struct wmi_vdev_param_map {
- 	u32 bw_nss_ratemask;
- 	u32 inc_tsf;
- 	u32 dec_tsf;
-+	u32 disable_4addr_src_lrn;
- };
- 
- #define WMI_VDEV_PARAM_UNSUPPORTED 0
-@@ -5404,7 +5411,19 @@ enum wmi_10_4_vdev_param {
- 	WMI_10_4_VDEV_PARAM_ATF_SSID_SCHED_POLICY,
- 	WMI_10_4_VDEV_PARAM_DISABLE_DYN_BW_RTS,
- 	WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
--};
-+	WMI_10_4_VDEV_PARAM_SELFGEN_FIXED_RATE,
-+	WMI_10_4_VDEV_PARAM_AMPDU_SUBFRAME_SIZE_PER_AC,
-+	WMI_10_4_VDEV_PARAM_NSS_VHT160,
-+	WMI_10_4_VDEV_PARAM_NSS_VHT80_80,
-+	WMI_10_4_VDEV_PARAM_AMSDU_SUBFRAME_SIZE_PER_AC,
-+	WMI_10_4_VDEV_PARAM_DISABLE_CABQ,
-+	WMI_10_4_VDEV_PARAM_SIFS_TRIGGER_RATE,
-+	WMI_10_4_VDEV_PARAM_TX_POWER,
-+	WMI_10_4_VDEV_PARAM_ENABLE_DISABLE_RTT_RESPONDER_ROLE,
-+	WMI_10_4_VDEV_PARAM_DISABLE_4_ADDR_SRC_LRN,
-+};
-+
-+#define WMI_VDEV_DISABLE_4_ADDR_SRC_LRN 1
- 
- #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
- #define WMI_VDEV_PARAM_TXBF_MU_TX_BFEE BIT(1)
--- 
-2.17.1
+--=20
+2.1.0
 
