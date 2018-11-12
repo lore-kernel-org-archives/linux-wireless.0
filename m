@@ -2,137 +2,94 @@ Return-Path: <SRS0=J0pC=NX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B88D1C43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 09:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E992DC43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 09:13:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80AAD223C6
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 09:05:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 80AAD223C6
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
+	by mail.kernel.org (Postfix) with ESMTP id AF75C223AE
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 09:13:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hZD9Ti4k"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF75C223AE
+Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728704AbeKLS5P (ORCPT
+        id S1729038AbeKLTF2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Nov 2018 13:57:15 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:36186 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727208AbeKLS5P (ORCPT
+        Mon, 12 Nov 2018 14:05:28 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:53512 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728810AbeKLTF2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Nov 2018 13:57:15 -0500
-Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.91)
-        (envelope-from <luca@coelho.fi>)
-        id 1gM89P-0000km-JU; Mon, 12 Nov 2018 11:04:56 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date:   Mon, 12 Nov 2018 11:04:50 +0200
-Message-Id: <20181112090450.2396-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20181111102627.18461-1-luca@coelho.fi>
-References: <20181111102627.18461-1-luca@coelho.fi>
+        Mon, 12 Nov 2018 14:05:28 -0500
+Received: by mail-wm1-f68.google.com with SMTP id f10-v6so7643462wme.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Nov 2018 01:13:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=v3ZXsj97Ul1YwMLd9OrQ3wnCuOCDePhmRLXcCK7h/Kg=;
+        b=hZD9Ti4kcKN035yWlaJLWTGAYv0e5NwnbmNvvRbrn1JL6XXfICoHp0MFhSIil38Omg
+         46JhIkephTzLt3Kkqf3qjDycttqNvh8c7yRbItIWk13qmv2v3JZhEMHJezXZa/mOqx97
+         dsotEMb0pGk3OhEaFTD8/ik95Vg95CCKOpTpw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=v3ZXsj97Ul1YwMLd9OrQ3wnCuOCDePhmRLXcCK7h/Kg=;
+        b=E91SQR4PMo14hiJ7M/JMiLflWx4PzZHbwOan51je+9w+GSE0SO8w83T0c3Ktzs/Ofr
+         5vaKEHQf60roAQYAj90GzIe43nkyTHf4zPnaQvq5tBGseYyoE6ALNjjlcBbNwdlryV0i
+         JAJi5GlbQTN5vDD4ggC8SB9wIH99AtIvf/ZLZl+Tw6RTK77LVMBdOCCrSskjPy/Llm7G
+         QsNFvib+m6HFW4MJqVkyFhs9HahlGTmL4dK4cwGFxnHOiNfJv6OWmNnapmooQfRbrSsV
+         7Fl5f0ekkRX7bKtsJwloSHFsjtGfmtodpMjZy3mkzpS+lwEIm83ocv/+o9DHGpQNYhwS
+         bedg==
+X-Gm-Message-State: AGRZ1gKlwIz/dxqA6q9r5U7dAPY1zI+Bpc8JV49IBdko2QEzHvAAeK3C
+        8fvkmsZr6hCqqiHV4DPp7IZeyw==
+X-Google-Smtp-Source: AJdET5eE8iZugpE7ERXuj15FbwvzzH0fFPJwKTmAeOl6fApAIZ3SWcZ4tR1OxfeN9/CSJe9eGuA7RA==
+X-Received: by 2002:a1c:9c85:: with SMTP id f127-v6mr6758174wme.73.1542013989379;
+        Mon, 12 Nov 2018 01:13:09 -0800 (PST)
+Received: from [10.176.68.125] ([192.19.248.250])
+        by smtp.gmail.com with ESMTPSA id k3-v6sm19637933wro.9.2018.11.12.01.13.08
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Nov 2018 01:13:08 -0800 (PST)
+Subject: Re: [PATCH V2 3/8] brcmfmac: set SDIO F1 MesBusyCtrl for CYW4373
+To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
+ <1542007730-47284-4-git-send-email-chi-hsien.lin@cypress.com>
+Cc:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Madhan Mohan R <MadhanMohan.R@cypress.com>
+From:   Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0925038a-a767-351d-5b03-f8fa10b8aad1@broadcom.com>
+Date:   Mon, 12 Nov 2018 10:13:07 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 5/5] iwlwifi: mvm: don't use SAR Geo if basic SAR is not used
+In-Reply-To: <1542007730-47284-4-git-send-email-chi-hsien.lin@cypress.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 11/12/2018 8:29 AM, Chi-Hsien Lin wrote:
+> From: Madhan Mohan R <MadhanMohan.R@cypress.com>
+>
+> Along with F2 watermark (existing) configuration, F1 MesBusyCtrl
+> should be enabled & configured to avoid overflow errors.
 
-We can't use SAR Geo if basic SAR is not enabled, since the SAR Geo
-tables define offsets in relation to the basic SAR table in use.
+I am a bit confused. Why is it necessary to program the watermark in 
+both SBSDIO_WATERMARK (0x10008) and SDSDIO_FUNC1_MESBUSYCTRL (0x1001D).
+Looks suspicious to me.
 
-To fix this, make iwl_mvm_sar_init() return one in case WRDS is not
-available, so we can skip reading WGDS entirely.
-
-Fixes: a6bff3cb19b7 ("iwlwifi: mvm: add GEO_TX_POWER_LIMIT cmd for geographic tx power table")
-Cc: stable@vger.kernel.org # 4.12+
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
-In v2:
-   * fix compilation when CONFIG_ACPI is not set;
-
-drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 36 ++++++++++++++++-----
- 1 file changed, 28 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 899f4a6432fb..2ba890445c35 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -928,6 +928,11 @@ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
- 	return -ENOENT;
- }
- 
-+static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
-+{
-+	return -ENOENT;
-+}
-+
- static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
- {
- 	return 0;
-@@ -954,8 +959,11 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 		IWL_DEBUG_RADIO(mvm,
- 				"WRDS SAR BIOS table invalid or unavailable. (%d)\n",
- 				ret);
--		/* if not available, don't fail and don't bother with EWRD */
--		return 0;
-+		/*
-+		 * If not available, don't fail and don't bother with EWRD.
-+		 * Return 1 to tell that we can't use WGDS either.
-+		 */
-+		return 1;
- 	}
- 
- 	ret = iwl_mvm_sar_get_ewrd_table(mvm);
-@@ -968,9 +976,13 @@ static int iwl_mvm_sar_init(struct iwl_mvm *mvm)
- 	/* choose profile 1 (WRDS) as default for both chains */
- 	ret = iwl_mvm_sar_select_profile(mvm, 1, 1);
- 
--	/* if we don't have profile 0 from BIOS, just skip it */
-+	/*
-+	 * If we don't have profile 0 from BIOS, just skip it.  This
-+	 * means that SAR Geo will not be enabled either, even if we
-+	 * have other valid profiles.
-+	 */
- 	if (ret == -ENOENT)
--		return 0;
-+		return 1;
- 
- 	return ret;
- }
-@@ -1168,11 +1180,19 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_UCODE_DOWN);
- 
- 	ret = iwl_mvm_sar_init(mvm);
--	if (ret)
--		goto error;
-+	if (ret == 0) {
-+		ret = iwl_mvm_sar_geo_init(mvm);
-+	} else if (ret > 0 && !iwl_mvm_sar_get_wgds_table(mvm)) {
-+		/*
-+		 * If basic SAR is not available, we check for WGDS,
-+		 * which should *not* be available either.  If it is
-+		 * available, issue an error, because we can't use SAR
-+		 * Geo without basic SAR.
-+		 */
-+		IWL_ERR(mvm, "BIOS contains WGDS but no WRDS\n");
-+	}
- 
--	ret = iwl_mvm_sar_geo_init(mvm);
--	if (ret)
-+	if (ret < 0)
- 		goto error;
- 
- 	iwl_mvm_leds_sync(mvm);
--- 
-2.19.1
-
+Regards,
+Arend
