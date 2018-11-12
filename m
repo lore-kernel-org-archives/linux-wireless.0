@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81514C43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA2FC43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A52121722
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6829321722
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="aTWvWhk1"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4A52121722
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="IMzyJ3Mm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6829321722
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727152AbeKLRV6 (ORCPT
+        id S1727182AbeKLRWF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Nov 2018 12:21:58 -0500
-Received: from mail-eopbgr760133.outbound.protection.outlook.com ([40.107.76.133]:54833
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        Mon, 12 Nov 2018 12:22:05 -0500
+Received: from mail-eopbgr720108.outbound.protection.outlook.com ([40.107.72.108]:21856
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727063AbeKLRV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Nov 2018 12:21:57 -0500
+        id S1727090AbeKLRWF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Nov 2018 12:22:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w70NKXnt9GJ9/b4qQ6KTrV3vkQH8rlh70UyNt8KXKjg=;
- b=aTWvWhk1bsEVFEEZxO2hA63gmSxB/jnPKDMNbpWgJ44bBVQSmFkTVlW9lvXNpBe1e6FRZ2uZLTvCjpWZTWnNOx3PkBP8a/TWFDmARBE+LEncHBCus/9U3PJxvH1SjYbGvPb0hs9MwYWLb8Zblwg29+0uPzm9QaVYpwZlo63HXpk=
+ bh=ODll1bNPEx6nnAWdPNxxeUfNx7WQz4dZMSIdzbpAaVM=;
+ b=IMzyJ3MmxGu3mChLU+xggq/DG9B0YEmSiDRad9S62qaVwQJQ9RAgQNe+uYg6ukLkDBpMmRiiheSjxxF5KBYfoUuuHxrTIKl6nxEu5r/QFi4SztOyhuzUFk4Op3BRiZEgyxGNgfO8WL8u5pju3oVxXsFzjcB5czQYZAw7Hde1NYc=
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com (10.162.111.23) by
- BY1PR0601MB1126.namprd06.prod.outlook.com (10.160.196.15) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.29; Mon, 12 Nov 2018 07:29:56 +0000
+ BY1PR0601MB1269.namprd06.prod.outlook.com (10.161.205.154) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1294.32; Mon, 12 Nov 2018 07:30:01 +0000
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::199f:c63e:1449:1979]) by BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::199f:c63e:1449:1979%3]) with mapi id 15.20.1294.044; Mon, 12 Nov 2018
- 07:29:56 +0000
+ 07:30:01 +0000
 From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
@@ -48,12 +48,14 @@ CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
+        Double Lo <Double.Lo@cypress.com>,
+        Madhan Mohan R <MadhanMohan.R@cypress.com>,
         Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: [PATCH V2 7/8] brcmfmac: 4373 save-restore support
-Thread-Topic: [PATCH V2 7/8] brcmfmac: 4373 save-restore support
-Thread-Index: AQHUelmCvSUU4MYki0WOXWO9KGq0hw==
-Date:   Mon, 12 Nov 2018 07:29:55 +0000
-Message-ID: <1542007730-47284-8-git-send-email-chi-hsien.lin@cypress.com>
+Subject: [PATCH V2 8/8] brcmfmac: disable command decode in sdio_aos
+Thread-Topic: [PATCH V2 8/8] brcmfmac: disable command decode in sdio_aos
+Thread-Index: AQHUelmF2vP3kzbp0k6zZArwSuxTeQ==
+Date:   Mon, 12 Nov 2018 07:30:01 +0000
+Message-ID: <1542007730-47284-9-git-send-email-chi-hsien.lin@cypress.com>
 References: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
 In-Reply-To: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
 Accept-Language: en-US, zh-TW
@@ -68,62 +70,82 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1126;6:XiJriCEGw4P/8g+SEC2yRqvx5xAzUMeuEXzTDv0kE57wi6B8i4McbbAr1tukFIyZO2K/LJ3edxIkK0zKS+o2aZ0t0bY94SSuE7fnKVshf9xKEoTQI3hsx+6QR4yk6LhDChB9V5LIxEJxmxIE+QUhd5TxAedj7Vf5frCNDd2Pq/L0CtkXx3X/8PuGz73gTx2Awje8b1dtVXPyNaf4UUi7zcce0/+sRl5p4wgCFkP1qlshQyVyJ9olOCEc2v/zzAi/s0ZnQfYOtSoW+T9mG4YtfslhBBJlB9QAUYbGpihfUG+2nyzLwp4e4su3r2cN/6ghD0kxr3P+/Fc0SZ3oNV5vX7wk+5xbD5poBFmmnlv3uwfNjDaalzqNOLe0unyDSzyWR/1ZocDS+CQpEXQtw/fmTsUqEi5Fi5Un+mWkG6Xh02kbtgDo2Dzrk5seEyTTiXGjXPFi5Zm6+iP61q5BDcrXlw==;5:P+6vkFqkQz9VSDktF4bAToT5J/Rxk+6znDLLYBcn7LwX/1B6mSCfEMALyyFS2sT5+k7GVKWqCD3T2Kmv4n0wt6QbtA9JVAOEtEK+ylbMt1OFMh1oga/OvfXTWxEJqPYf6E/r2GXoYY/B4sRvJbgzRnoZ/uDLmKuoTLidW4DVfPI=;7:At/lQP9PI7qrYdm1eVWZ3XgRoQsvRRxBwaKTDQW8kr/agJoGGOI3USzqxzuVrtacdgAqSzvgKjJc4XHBg+jxLucMChgHTU2gy8NHWHwtRjVrL1ls+HnSzeXRSl8CjI9gyNmglI8Dv8QOHg8LY85GtQ==
-x-ms-office365-filtering-correlation-id: d64485d0-12b2-42d4-c546-08d64870a48d
+x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1269;6:2uSZ+2iNcCXD326w6epPB3+uTCvQjPnb2JsLbslFid6q/SmxLrmelZ2e6WlcyV4WfgqJc9s6CbuI5z59LGrvsXTK/tWjaBFJue0GMy1eL4ABoAZRT4U45TSzPTiHOCpgr/87nSqBHmFMtOU+COq3qDjNJLOBF74bNSMvpEkWmbeM28MgF2LVh8lEZc2/Yp36Gs7EY5pdltWKPVIJ6cNrYh5fvpRCnuagwgDmuZDSmLDVY6iAl1spuRFTsLXYqGxgBCa0zVGqymed0ZqoIUL4w6UUUibscU9zxE6zi0WaQe5IoeJuZve/RFResJaICkZ5HznOhL0pte6CUu0I7Yfx47KnwhYMWhAqUq3a8dNJRwxuRP1Rh4v36XyVev5YYR2qRXQUyxSK3ZLohP93yPiuaWsFz0bqNaH2KlAUMPRHyrzna/JTpOTKWzDrHT5fKvi4wra9ocjL7CStIEBkUC1+Qg==;5:nxRlDtUOn2S1d5sWMRVj9dV2AbcVV3Ur+CsqlhEv0fANZkn8l7MbCTEzx5wRPTbJvXUwIf7hd8vPgxcy8kPbEARpCxY1KUbcr5nNQlpynyjcrg5clbnru2ofzd4GBa1O/1KvITVedLIz5aZfn7X/rzAGuBfJNNC1XntwymgQHS4=;7:jo8bgv2YUXxLeqGpWV5ECHO3C5ZjJ9NQFoYA/TlMiE85/2tV3L/WSRes/Qb9u7KmgkyhQWbmzqguhQ2H8e/DCCMMsogjncAMAHGHbB026jfTMzzM/Lz0Jxc7krEZxexm16YYwLBbCQ/IWuJtQfJrMg==
+x-ms-office365-filtering-correlation-id: f40b6478-09e7-4164-019e-08d64870a7cb
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390040)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1126;
-x-ms-traffictypediagnostic: BY1PR0601MB1126:
-x-microsoft-antispam-prvs: <BY1PR0601MB11264B93D22403241506E58BBBC10@BY1PR0601MB1126.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(208715162771679)(258095267146985);
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390040)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1269;
+x-ms-traffictypediagnostic: BY1PR0601MB1269:
+x-microsoft-antispam-prvs: <BY1PR0601MB12690ECB3125F1E3E230DFB2BBC10@BY1PR0601MB1269.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(258095267146985)(208715162771679);
 x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3002001)(3231382)(944501410)(52105112)(93006095)(93001095)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:BY1PR0601MB1126;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1126;
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231382)(944501410)(52105112)(10201501046)(3002001)(93006095)(93001095)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123564045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:BY1PR0601MB1269;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1269;
 x-forefront-prvs: 0854128AF0
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(346002)(396003)(376002)(39850400004)(136003)(189003)(199004)(25786009)(4326008)(2906002)(76176011)(3846002)(6116002)(99286004)(52116002)(81156014)(81166006)(478600001)(68736007)(8676002)(6486002)(14454004)(66066001)(5640700003)(6436002)(72206003)(8936002)(256004)(386003)(102836004)(6506007)(106356001)(105586002)(54906003)(6916009)(2351001)(86362001)(305945005)(2616005)(5660300001)(36756003)(7736002)(316002)(2900100001)(186003)(71200400001)(446003)(11346002)(476003)(486006)(71190400001)(53936002)(6512007)(2501003)(97736004)(26005)(107886003);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1126;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(979002)(366004)(346002)(39850400004)(136003)(396003)(376002)(189003)(199004)(72206003)(2906002)(76176011)(446003)(6916009)(6486002)(8936002)(478600001)(14454004)(11346002)(81156014)(66066001)(5660300001)(81166006)(7736002)(68736007)(2501003)(52116002)(86362001)(54906003)(305945005)(316002)(8676002)(2351001)(26005)(71200400001)(2616005)(186003)(6512007)(476003)(71190400001)(486006)(6436002)(106356001)(551934003)(25786009)(5640700003)(97736004)(4326008)(102836004)(386003)(105586002)(6506007)(256004)(14444005)(99286004)(107886003)(3846002)(6116002)(2900100001)(36756003)(53936002)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1269;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: cypress.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: 7zMD0iqOqSQEdlqLcUuHqqXZbs0KBz66FHaSR5Ao5wcW1zvSp+4/58gbAkCRjR4piIdZENEyCtA6oq39YFWGNlWaGdPuUQGWQ+lOnP61GZk8mSiEZ7697SK+xXMRYkktEN2+zE6QDw56TnEyAd5pkdyscNY5GtdnIO4UubIhMCGUxqjFrgBrdEtadb12upuqREnUXjva/4dPXC/7R/9+GbSKKd+h/M3sDNLRCuRlLqqzFHFadT/+xcLUqHF153DMiJ7Z3YvDJsA018/or7iG8xw0Ad3z62Y07bcFsbxns8JrGYQU6BSwIRTwngSo584z9aYpOMhLwnWXLRgEeTtgekTdTP2WHhyljIQOGKngcXk=
+x-microsoft-antispam-message-info: ZkOowNcKrjGyswkWuBSpKr4pIfSA0LBwrEd83sccz8FSlyX2vSfgE55xEH+7cbNHIc4iENtZEHpaJwA+V1Qls0HLI+KJv2IHFyc4L2Ot8CnYrxXXj55BiBfJpvqW6gi56v/h1tQ6NsOK9UMfatgp+CVQobx1bPl5uegrEOD8YnBnExhdPQDakciGKgwgDKqkRBm6Z/pRLBvc9PErHg/clnF8RUfYIsCyapL0RydifrJKPE7b3dKSGEmqJ2sNpzBFkyA2+qLjn0lUfisGWaR5qlMlDt9kPsZImb9+ht0r4/rJ4dEtGdxtk1KhCZaRiVwabY2NgvAHIYaUwSL7JO0qkQGcjOXFxE5usdlXM1U0sPo=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d64485d0-12b2-42d4-c546-08d64870a48d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2018 07:29:55.9780
+X-MS-Exchange-CrossTenant-Network-Message-Id: f40b6478-09e7-4164-019e-08d64870a7cb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2018 07:30:01.6757
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY1PR0601MB1126
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY1PR0601MB1269
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use sr_eng_en bit to check 4373 sr support.
+From: Wright Feng <wright.feng@cypress.com>
+
+AOS is a part of the SDIOD core that becomes active when the rest of
+SDIOD is sleeping to keep SDIO bus alive responding to reduced set of
+commands.
+
+Transaction between AOS and SDIOD is not protected, and if cmd 52 is
+received in AOS and in the middle of response state changed from AOS to
+SDIOD, response is corrupted and it causes to SDIO Host controller to
+hang.
+
+Command decode for below chips are disabled in this commit:
+ - 4339
+ - 4345
+ - 4354
+ - 4373
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Signed-off-by: Double Lo <double.lo@cypress.com>
+Signed-off-by: Madhan Mohan R <madhanmohan.r@cypress.com>
 Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/driv=
-ers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index a8d3b96b727f..08d5173d000c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1365,6 +1365,11 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- 		addr =3D CORE_CC_REG(base, sr_control1);
- 		reg =3D chip->ops->read32(chip->ctx, addr);
- 		return reg !=3D 0;
-+	case CY_CC_4373_CHIP_ID:
-+		/* explicitly check SR engine enable bit */
-+		addr =3D CORE_CC_REG(base, sr_control0);
-+		reg =3D chip->ops->read32(chip->ctx, addr);
-+		return (reg & BIT(0)) !=3D 0;
- 	case CY_CC_43012_CHIP_ID:
- 		addr =3D CORE_CC_REG(pmu->base, retention_ctl);
- 		reg =3D chip->ops->read32(chip->ctx, addr);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index e1708e297d07..e5f487b37c5a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3354,7 +3354,11 @@ static int brcmf_sdio_download_firmware(struct brcmf=
+_sdio *bus,
+=20
+ static bool brcmf_sdio_aos_no_decode(struct brcmf_sdio *bus)
+ {
+-	if (bus->ci->chip =3D=3D CY_CC_43012_CHIP_ID)
++	if (bus->ci->chip =3D=3D CY_CC_43012_CHIP_ID ||
++	    bus->ci->chip =3D=3D CY_CC_4373_CHIP_ID ||
++	    bus->ci->chip =3D=3D BRCM_CC_4339_CHIP_ID ||
++	    bus->ci->chip =3D=3D BRCM_CC_4345_CHIP_ID ||
++	    bus->ci->chip =3D=3D BRCM_CC_4354_CHIP_ID)
+ 		return true;
+ 	else
+ 		return false;
 --=20
 2.1.0
 
