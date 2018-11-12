@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D18CCC43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81514C43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9657521722
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:29:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A52121722
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Nov 2018 07:30:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="aQHXyDlD"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9657521722
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="aTWvWhk1"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4A52121722
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727147AbeKLRVx (ORCPT
+        id S1727152AbeKLRV6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Nov 2018 12:21:53 -0500
-Received: from mail-eopbgr760111.outbound.protection.outlook.com ([40.107.76.111]:51743
+        Mon, 12 Nov 2018 12:21:58 -0500
+Received: from mail-eopbgr760133.outbound.protection.outlook.com ([40.107.76.133]:54833
         "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725871AbeKLRVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Nov 2018 12:21:53 -0500
+        id S1727063AbeKLRV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Nov 2018 12:21:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=O1VCAHZvgi9BRHQ2RHE59GabMNr5piN6aM+mVEMjF4g=;
- b=aQHXyDlDV8uEOGdn6/CbS1zU/Q9vVHx8Nwpz23ogFAJ9XPn7/8T797ycuLaEeV7tlRPVwGzfOpAWCd2SskQIIsdQk6GImE0xSKQ8m4mOpxXzaRbcalowCEv7GC1OhAtCd7wUlReqTNq9OqMhgclkJzoiraU7xK08tDQ5NAKff7g=
+ bh=w70NKXnt9GJ9/b4qQ6KTrV3vkQH8rlh70UyNt8KXKjg=;
+ b=aTWvWhk1bsEVFEEZxO2hA63gmSxB/jnPKDMNbpWgJ44bBVQSmFkTVlW9lvXNpBe1e6FRZ2uZLTvCjpWZTWnNOx3PkBP8a/TWFDmARBE+LEncHBCus/9U3PJxvH1SjYbGvPb0hs9MwYWLb8Zblwg29+0uPzm9QaVYpwZlo63HXpk=
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com (10.162.111.23) by
  BY1PR0601MB1126.namprd06.prod.outlook.com (10.160.196.15) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1294.29; Mon, 12 Nov 2018 07:29:51 +0000
+ 15.20.1294.29; Mon, 12 Nov 2018 07:29:56 +0000
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::199f:c63e:1449:1979]) by BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::199f:c63e:1449:1979%3]) with mapi id 15.20.1294.044; Mon, 12 Nov 2018
- 07:29:51 +0000
+ 07:29:56 +0000
 From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
@@ -48,15 +48,12 @@ CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Naveen Gupta <Naveen.Gupta@cypress.com>,
         Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: [PATCH V2 6/8] brcmfmac: update 43012 F2 watermark setting to fix DMA
- Error during UDP RX Traffic
-Thread-Topic: [PATCH V2 6/8] brcmfmac: update 43012 F2 watermark setting to
- fix DMA Error during UDP RX Traffic
-Thread-Index: AQHUell/i2NozFkudUaxpNpPaeE67Q==
-Date:   Mon, 12 Nov 2018 07:29:51 +0000
-Message-ID: <1542007730-47284-7-git-send-email-chi-hsien.lin@cypress.com>
+Subject: [PATCH V2 7/8] brcmfmac: 4373 save-restore support
+Thread-Topic: [PATCH V2 7/8] brcmfmac: 4373 save-restore support
+Thread-Index: AQHUelmCvSUU4MYki0WOXWO9KGq0hw==
+Date:   Mon, 12 Nov 2018 07:29:55 +0000
+Message-ID: <1542007730-47284-8-git-send-email-chi-hsien.lin@cypress.com>
 References: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
 In-Reply-To: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
 Accept-Language: en-US, zh-TW
@@ -71,28 +68,28 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1126;6:82JajRksKs7gAeNEOe/TMMwyG3mWoNIZlqeObgwWlQcp47xYNtNNTjTkrT35q1WX9NCaxUe8VQykk7ynYLf3i0orw+pDZjslCzuVtfEGp9uULRq37xk9cS9fLWnHBri8cbrLad9tuTSBq1dWnNcUTvGahI1EyGLdr+rDfRLeJDcsgRvEUBX88oWofW4uDugtP6UP1vkKCaHQIbtwM6DvAbL/XJEh+ZEPfyPy2ZOVEawsjAWFn4zwqqMNNwnC6rJCUaFEBMU3Td9xHgh36xZIK/VpTNNX0M/78XYJllDhpLyG03+k+hatHw5TjNsuQrfcv+XK36Vjn89FUWg5SKB0dqlcGbisRqCkiM4Wt+GlSCJOSmIt8Yi4pVWgxZEA3roOzFIjraVm4cDThQb38OR/W+DbgDywoxyFVE5yz7pxVES8pOawkMPJNCwFZaQWoxGJ7mBZWIZO5Wli2zlZyu+tgg==;5:19i7D/45wvGF+LlXxQkimDTLvGr/CKMgBA8T24RP2nCgVsbGZBT0EHI6Qd59t0yCsozMkhu6IOAiqiL4Jm0ZgOPvP81yx9mKUn9XNGNxsui/avtB6MgrNGuOWGr8xazZT3O4ua4RqutffSFtS9Y4qptQJ/d3PcsGQq8d3GbycfY=;7:/WL4cemHYet4DymzJ9wksYy01zem+QtjFfSWzm3dWCuFOQhS8JvwErYOVIWIPNDOFrtXyQTVUx5Ia2HWQHAypESKEFRaM/gz709IqlSUpXN/ANR9NitcDwnek1SYcKqriJ/gscOegsmptRT9miamwg==
-x-ms-office365-filtering-correlation-id: d10d04cb-c8d4-43b1-286b-08d64870a1ae
+x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1126;6:XiJriCEGw4P/8g+SEC2yRqvx5xAzUMeuEXzTDv0kE57wi6B8i4McbbAr1tukFIyZO2K/LJ3edxIkK0zKS+o2aZ0t0bY94SSuE7fnKVshf9xKEoTQI3hsx+6QR4yk6LhDChB9V5LIxEJxmxIE+QUhd5TxAedj7Vf5frCNDd2Pq/L0CtkXx3X/8PuGz73gTx2Awje8b1dtVXPyNaf4UUi7zcce0/+sRl5p4wgCFkP1qlshQyVyJ9olOCEc2v/zzAi/s0ZnQfYOtSoW+T9mG4YtfslhBBJlB9QAUYbGpihfUG+2nyzLwp4e4su3r2cN/6ghD0kxr3P+/Fc0SZ3oNV5vX7wk+5xbD5poBFmmnlv3uwfNjDaalzqNOLe0unyDSzyWR/1ZocDS+CQpEXQtw/fmTsUqEi5Fi5Un+mWkG6Xh02kbtgDo2Dzrk5seEyTTiXGjXPFi5Zm6+iP61q5BDcrXlw==;5:P+6vkFqkQz9VSDktF4bAToT5J/Rxk+6znDLLYBcn7LwX/1B6mSCfEMALyyFS2sT5+k7GVKWqCD3T2Kmv4n0wt6QbtA9JVAOEtEK+ylbMt1OFMh1oga/OvfXTWxEJqPYf6E/r2GXoYY/B4sRvJbgzRnoZ/uDLmKuoTLidW4DVfPI=;7:At/lQP9PI7qrYdm1eVWZ3XgRoQsvRRxBwaKTDQW8kr/agJoGGOI3USzqxzuVrtacdgAqSzvgKjJc4XHBg+jxLucMChgHTU2gy8NHWHwtRjVrL1ls+HnSzeXRSl8CjI9gyNmglI8Dv8QOHg8LY85GtQ==
+x-ms-office365-filtering-correlation-id: d64485d0-12b2-42d4-c546-08d64870a48d
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390040)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1126;
 x-ms-traffictypediagnostic: BY1PR0601MB1126:
-x-microsoft-antispam-prvs: <BY1PR0601MB1126EC4ADBBA50477B995E78BBC10@BY1PR0601MB1126.namprd06.prod.outlook.com>
-x-exchange-antispam-report-test: UriScan:(258095267146985)(208715162771679);
+x-microsoft-antispam-prvs: <BY1PR0601MB11264B93D22403241506E58BBBC10@BY1PR0601MB1126.namprd06.prod.outlook.com>
+x-exchange-antispam-report-test: UriScan:(208715162771679)(258095267146985);
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(5005006)(8121501046)(3002001)(3231382)(944501410)(52105112)(93006095)(93001095)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123560045)(20161123564045)(20161123562045)(20161123558120)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:BY1PR0601MB1126;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1126;
 x-forefront-prvs: 0854128AF0
 x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(346002)(396003)(376002)(39850400004)(136003)(189003)(199004)(25786009)(4326008)(2906002)(76176011)(3846002)(6116002)(99286004)(52116002)(81156014)(81166006)(478600001)(68736007)(8676002)(6486002)(14454004)(66066001)(5640700003)(6436002)(72206003)(8936002)(256004)(386003)(102836004)(6506007)(106356001)(105586002)(54906003)(6916009)(2351001)(86362001)(305945005)(2616005)(5660300001)(36756003)(7736002)(316002)(2900100001)(186003)(71200400001)(446003)(11346002)(476003)(486006)(71190400001)(53936002)(6512007)(2501003)(97736004)(26005)(107886003);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1126;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: cypress.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: QcxcgEuGONSWKbp+CjB3sl7prX8QNMNfurDc10vQxzNY/JR1GpojX03Zo+rUui29fIDifAOXmwtRvjfmK7qAztwqUrCpNgpUjHkFZRY4YqxnYJzcMXWWSG5+fqraRDnKqUkrOpS/SNa7FD2BSHH7GIhXdZqRSXJw4Z0v66SI+BnH9+Xyh/Fn7ebCUEHCigk8zTH+N2EKTSnDOQig+E1qtyPmzOtf5gW8LEpc1aY9GOj7x7Z5oOQWKf+0RaBEx/NdlOcKJsYjhPECxaWN9WiR5GraplMRzhUFyUOqX8fUzYaFZh8bJrc+LBvGrLU2bgQrCXGpQAK5xrL7dLjXGQL3TkGnoISWk+TPD7JNS/SXHwU=
+x-microsoft-antispam-message-info: 7zMD0iqOqSQEdlqLcUuHqqXZbs0KBz66FHaSR5Ao5wcW1zvSp+4/58gbAkCRjR4piIdZENEyCtA6oq39YFWGNlWaGdPuUQGWQ+lOnP61GZk8mSiEZ7697SK+xXMRYkktEN2+zE6QDw56TnEyAd5pkdyscNY5GtdnIO4UubIhMCGUxqjFrgBrdEtadb12upuqREnUXjva/4dPXC/7R/9+GbSKKd+h/M3sDNLRCuRlLqqzFHFadT/+xcLUqHF153DMiJ7Z3YvDJsA018/or7iG8xw0Ad3z62Y07bcFsbxns8JrGYQU6BSwIRTwngSo584z9aYpOMhLwnWXLRgEeTtgekTdTP2WHhyljIQOGKngcXk=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d10d04cb-c8d4-43b1-286b-08d64870a1ae
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2018 07:29:51.2291
+X-MS-Exchange-CrossTenant-Network-Message-Id: d64485d0-12b2-42d4-c546-08d64870a48d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2018 07:29:55.9780
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
@@ -102,54 +99,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Naveen Gupta <naveen.gupta@cypress.com>
-
-The number of words that the read FIFO has to contain except
-the end of frame before sends data back to the host.
-Max watermark =3D (512B - 2* (BurstLength))/4 =3D
-(512 - 128)/4 =3D 384/4 =3D 0x60
-so if burst length (i.e. BurstLength =3D 64) is increased,
-watermark has to be reduced. This is the optimal setting for this chip.
+Use sr_eng_en bit to check 4373 sr support.
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Naveen Gupta <naveen.gupta@cypress.com>
 Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/driv=
-ers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 7707b0169c21..e1708e297d07 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -52,6 +52,7 @@
- /* watermark expressed in number of words */
- #define DEFAULT_F2_WATERMARK    0x8
- #define CY_4373_F2_WATERMARK    0x40
-+#define CY_43012_F2_WATERMARK    0x60
-=20
- #ifdef DEBUG
-=20
-@@ -4173,6 +4174,17 @@ static void brcmf_sdio_firmware_callback(struct devi=
-ce *dev, int err,
- 					   CY_4373_F2_WATERMARK |
- 					   SBSDIO_MESBUSYCTRL_ENAB, &err);
- 			break;
-+		case SDIO_DEVICE_ID_CYPRESS_43012:
-+			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
-+				  CY_43012_F2_WATERMARK);
-+			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-+					   CY_43012_F2_WATERMARK, &err);
-+			devctl =3D brcmf_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
-+						   &err);
-+			devctl |=3D SBSDIO_DEVCTL_F2WM_ENAB;
-+			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
-+					   &err);
-+			break;
- 		default:
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
- 					   DEFAULT_F2_WATERMARK, &err);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index a8d3b96b727f..08d5173d000c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -1365,6 +1365,11 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+ 		addr =3D CORE_CC_REG(base, sr_control1);
+ 		reg =3D chip->ops->read32(chip->ctx, addr);
+ 		return reg !=3D 0;
++	case CY_CC_4373_CHIP_ID:
++		/* explicitly check SR engine enable bit */
++		addr =3D CORE_CC_REG(base, sr_control0);
++		reg =3D chip->ops->read32(chip->ctx, addr);
++		return (reg & BIT(0)) !=3D 0;
+ 	case CY_CC_43012_CHIP_ID:
+ 		addr =3D CORE_CC_REG(pmu->base, retention_ctl);
+ 		reg =3D chip->ops->read32(chip->ctx, addr);
 --=20
 2.1.0
 
