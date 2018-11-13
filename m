@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA55C43441
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:50:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0F5C43441
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D993216FD
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:50:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAC2E216FD
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:50:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="MvpPHjYN"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2D993216FD
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KO95Y2OE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DAC2E216FD
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbeKNFuH (ORCPT
+        id S1728041AbeKNFuR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Nov 2018 00:50:07 -0500
-Received: from nbd.name ([46.4.11.11]:49896 "EHLO nbd.name"
+        Wed, 14 Nov 2018 00:50:17 -0500
+Received: from nbd.name ([46.4.11.11]:49904 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725748AbeKNFuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Nov 2018 00:50:07 -0500
+        id S1726295AbeKNFuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Nov 2018 00:50:17 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
         MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=QK+gY4b993aR72AdQPMYOAropPSaBuSCqaKs4R/FPt4=; b=MvpPHjYNvc8NSF4DzDtQLao2s5
-        U3DGjW+uX5Bz18HNALYwe4yjvBHrtjm9/SDFYuBPDcBfWtdKEcUU1r7sgBkZatCvRK5p+Z22lDrVY
-        3Pn1uN1Eh6eAMVmA/a8VuY1LH62miY6OsW5uUBN6H7wpQxcpK4UsDmN2zb+s8lc1Hm1M=;
-Subject: Re: [PATCH] mt76: introduce mt76x02_config_mac_addr_list routine
+        bh=xwJeTI+NO8LCHT3fMo0ALLsXI/IXLIiQUJEfBRLc92I=; b=KO95Y2OE1HTmrf0cJv6eiYFJs2
+        3WnHIGBSV8eV3PYVmse/ipJr6bgVwoehT5xTedGJnMgIFVmHaA4wbTwSiJBce3S1jpDqFpsdInKUp
+        Z8iZtw51AprLeGdT7OH/Pib6Ms1L0uiwZisdKJCsiByjkL0+RSpW2mkjJlpCL0zdObpA=;
+Subject: Re: [PATCH] mt76x0: pci: enable VHT rates in IBSS mode
 To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Cc:     sgruszka@redhat.com, linux-wireless@vger.kernel.org
-References: <cover.1541544212.git.lorenzo.bianconi@redhat.com>
- <c9e89034e9d421bd1f2b159050c95fb1d6c236e8.1541544212.git.lorenzo.bianconi@redhat.com>
+References: <cover.1541544682.git.lorenzo.bianconi@redhat.com>
+ <8c804773aee7cc2d99bacc8facd62c0e39d6a100.1541544682.git.lorenzo.bianconi@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
 Openpgp: preference=signencrypt
 Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
@@ -63,12 +63,12 @@ Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
  RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <4f94b074-0b89-c176-a24e-006287d031d5@nbd.name>
-Date:   Tue, 13 Nov 2018 20:50:27 +0100
+Message-ID: <a24f6302-6204-9c5a-77f7-df856de53053@nbd.name>
+Date:   Tue, 13 Nov 2018 20:50:37 +0100
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
  Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <c9e89034e9d421bd1f2b159050c95fb1d6c236e8.1541544212.git.lorenzo.bianconi@redhat.com>
+In-Reply-To: <8c804773aee7cc2d99bacc8facd62c0e39d6a100.1541544682.git.lorenzo.bianconi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,10 +77,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-11-06 23:49, Lorenzo Bianconi wrote:
-> Add mt76x02_config_mac_addr_list routine in order to set
-> the mac address list supported by the driver. Initialize
-> wiphy->addresses/n_addresses for mt76x0e driver
+On 2018-11-06 23:54, Lorenzo Bianconi wrote:
+> Enable VHT tx rates in ad-hoc mode for mt76x0e driver.
 > 
 > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Applied, thanks.
