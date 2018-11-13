@@ -2,128 +2,87 @@ Return-Path: <SRS0=dsQx=NY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD363C43610
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A94C43441
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:45:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F15020818
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CA7D216FD
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:45:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LGyb98Iq"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F15020818
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="r3/PNOn/"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3CA7D216FD
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727562AbeKNFlA (ORCPT
+        id S1728686AbeKNFpN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Nov 2018 00:41:00 -0500
-Received: from nbd.name ([46.4.11.11]:49574 "EHLO nbd.name"
+        Wed, 14 Nov 2018 00:45:13 -0500
+Received: from nbd.name ([46.4.11.11]:49742 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726408AbeKNFlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Nov 2018 00:41:00 -0500
+        id S1728349AbeKNFpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Nov 2018 00:45:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=1bdCCyAEMZ4kxIyEgmZSvqXC61lK81z6JW9+GfDxpw0=; b=LGyb98IqvUJuhQf2XNjnizowdr
-        0EzUcU4sMBmzpsot9qRW9RnJAi6TpOa++mbF51MvlaCqdoZWxralgq/lVIfrpQgC1dhsV69Jx9MF4
-        NIQHJRjETiNOmqsYxyKKMY5M7laiiywg+6mmSVJHulrz/l6j7XjxoQXF4sRVkkfeNx20=;
-Received: by maeck.lan (Postfix, from userid 501)
-        id 71500453098F; Tue, 13 Nov 2018 20:41:23 +0100 (CET)
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=BMws2OxH2v2htieraU4UM1KK1IUHbYrXc24cazfn+BY=; b=r3/PNOn/UJeg8aawpFXY+KN3w/
+        7YRayrPfgfH043cW+atNLgHOU8mdjK9i2QCXgs4ZsnHHkWcoT4/Qd1LCMoy+rHh2P2OEYEBA7a98A
+        BoBuZg6r/VL4YgUikbUcF7DX+Iyqn0l/3MsnNe3Z7sOP0RY1gazbSgVUyXWVRSwWfWiI=;
+Subject: Re: [PATCH v2] mt76: remove wait argument from mt76x02_mcu_calibrate
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+References: <1541760970-26622-1-git-send-email-sgruszka@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] mt76: add mt76_sta_remove helper
-Date:   Tue, 13 Nov 2018 20:41:23 +0100
-Message-Id: <20181113194123.93313-4-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
-In-Reply-To: <20181113194123.93313-1-nbd@nbd.name>
-References: <20181113194123.93313-1-nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <ef37f066-c98a-1405-eaf5-a63acfb32e61@nbd.name>
+Date:   Tue, 13 Nov 2018 20:45:34 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
+MIME-Version: 1.0
+In-Reply-To: <1541760970-26622-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This allows station removal code to be used by mt7603 later
+On 2018-11-09 11:56, Stanislaw Gruszka wrote:
+> We always wait for CMD_CALIBRATION_OP mcu message, but wait argument is used
+> for do additional MT_MCU_COM_REG0 register operations, which are needed
+> for mt76x2e devices and we can use appropriate check instead of wait argument.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This doesn't apply on my tree. Am I missing some other patch?
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 19 +++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
- .../net/wireless/mediatek/mt76/mt76x02_util.c | 12 +++---------
- 3 files changed, 24 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 3be73b021d27..1098919f5498 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -630,3 +630,22 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
- 	mt76_rx_complete(dev, &frames, napi);
- }
- EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
-+
-+void mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
-+		     struct ieee80211_sta *sta)
-+{
-+	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
-+	int idx = wcid->idx;
-+	int i;
-+
-+	rcu_assign_pointer(dev->wcid[idx], NULL);
-+	synchronize_rcu();
-+
-+	mutex_lock(&dev->mutex);
-+	mt76_tx_status_check(dev, wcid, true);
-+	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
-+		mt76_txq_remove(dev, sta->txq[i]);
-+	mt76_wcid_free(dev->wcid_mask, idx);
-+	mutex_unlock(&dev->mutex);
-+}
-+EXPORT_SYMBOL_GPL(mt76_sta_remove);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index ea74ba00aebc..878836fe80d3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -664,6 +664,8 @@ void mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb,
- void mt76_tx_complete_skb(struct mt76_dev *dev, struct sk_buff *skb);
- void mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 			  bool flush);
-+void mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
-+		     struct ieee80211_sta *sta);
- 
- struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index cd32ef5864b5..dc25de2d02d5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -210,19 +210,13 @@ int mt76x02_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta)
- {
- 	struct mt76x02_dev *dev = hw->priv;
--	struct mt76x02_sta *msta = (struct mt76x02_sta *)sta->drv_priv;
--	int idx = msta->wcid.idx;
--	int i;
-+	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
-+	int idx = wcid->idx;
- 
--	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
--	synchronize_rcu();
-+	mt76_sta_remove(&dev->mt76, vif, sta);
- 
- 	mutex_lock(&dev->mt76.mutex);
--	mt76_tx_status_check(&dev->mt76, &msta->wcid, true);
--	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
--		mt76_txq_remove(&dev->mt76, sta->txq[i]);
- 	mt76x02_mac_wcid_set_drop(dev, idx, true);
--	mt76_wcid_free(dev->mt76.wcid_mask, idx);
- 	mutex_unlock(&dev->mt76.mutex);
- 
- 	return 0;
--- 
-2.17.0
-
+- Felix
