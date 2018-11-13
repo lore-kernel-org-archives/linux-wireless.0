@@ -6,321 +6,124 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B97D0C43441
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD363C43610
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F2C920818
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F15020818
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:41:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XZmK4aMC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6F2C920818
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LGyb98Iq"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8F15020818
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727670AbeKNFlB (ORCPT
+        id S1727562AbeKNFlA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Nov 2018 00:41:01 -0500
-Received: from nbd.name ([46.4.11.11]:49578 "EHLO nbd.name"
+        Wed, 14 Nov 2018 00:41:00 -0500
+Received: from nbd.name ([46.4.11.11]:49574 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726481AbeKNFlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726408AbeKNFlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 14 Nov 2018 00:41:00 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=BNjxIzvcGvQYYfb4HENosIozLSXRanbFWRAlsZ1n/JU=; b=XZmK4aMCZlZ/GxnN1XHAnAHBW1
-        GuHrKc15HlCmhDbKLIO3Y1ZzRqIlYV2T+YX8lkbmTyY2eRa/gJwjJjFFpaMX+LEYU1V+STlHA/BWG
-        pnVoHzXNmgBUwLbrrSnnT6Se446jA3CZE8cJIivQ+o//lrUf+rEej0TrhYv8Hu2Mgj/0=;
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=1bdCCyAEMZ4kxIyEgmZSvqXC61lK81z6JW9+GfDxpw0=; b=LGyb98IqvUJuhQf2XNjnizowdr
+        0EzUcU4sMBmzpsot9qRW9RnJAi6TpOa++mbF51MvlaCqdoZWxralgq/lVIfrpQgC1dhsV69Jx9MF4
+        NIQHJRjETiNOmqsYxyKKMY5M7laiiywg+6mmSVJHulrz/l6j7XjxoQXF4sRVkkfeNx20=;
 Received: by maeck.lan (Postfix, from userid 501)
-        id 76A634530991; Tue, 13 Nov 2018 20:41:23 +0100 (CET)
+        id 71500453098F; Tue, 13 Nov 2018 20:41:23 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mt76: avoid queue/status spinlocks while passing tx status to mac80211
-Date:   Tue, 13 Nov 2018 20:41:20 +0100
-Message-Id: <20181113194123.93313-1-nbd@nbd.name>
+Subject: [PATCH 4/4] mt76: add mt76_sta_remove helper
+Date:   Tue, 13 Nov 2018 20:41:23 +0100
+Message-Id: <20181113194123.93313-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20181113194123.93313-1-nbd@nbd.name>
+References: <20181113194123.93313-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is some code in the mac80211 tx status processing code that could
-potentially call back into the tx codepath.
-To avoid deadlocks, make sure that no tx related spinlocks are taken
-during the ieee80211_tx_status call.
+This allows station removal code to be used by mt7603 later
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c      | 11 ++--
- drivers/net/wireless/mediatek/mt76/mac80211.c |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     | 30 ++++------
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 11 ++--
- .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 +-
- drivers/net/wireless/mediatek/mt76/tx.c       | 58 ++++++++++++++++---
- 6 files changed, 76 insertions(+), 38 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 19 +++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
+ .../net/wireless/mediatek/mt76/mt76x02_util.c | 12 +++---------
+ 3 files changed, 24 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 2d7bd26875c6..d62f8d9f2ea1 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -157,17 +157,20 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 		if (entry.schedule)
- 			q->swq_queued--;
- 
--		if (entry.skb)
-+		q->tail = (q->tail + 1) % q->ndesc;
-+		q->queued--;
-+
-+		if (entry.skb) {
-+			spin_unlock_bh(&q->lock);
- 			dev->drv->tx_complete_skb(dev, q, &entry, flush);
-+			spin_lock_bh(&q->lock);
-+		}
- 
- 		if (entry.txwi) {
- 			mt76_put_txwi(dev, entry.txwi);
- 			wake = true;
- 		}
- 
--		q->tail = (q->tail + 1) % q->ndesc;
--		q->queued--;
--
- 		if (!flush && q->tail == last)
- 			last = ioread32(&q->regs->dma_idx);
- 	}
 diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 85e05a825b5d..3be73b021d27 100644
+index 3be73b021d27..1098919f5498 100644
 --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
 +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -359,7 +359,7 @@ void mt76_unregister_device(struct mt76_dev *dev)
- {
- 	struct ieee80211_hw *hw = dev->hw;
- 
--	mt76_tx_status_flush(dev, NULL);
-+	mt76_tx_status_check(dev, NULL, true);
- 	ieee80211_unregister_hw(hw);
- 	mt76_tx_free(dev);
+@@ -630,3 +630,22 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
+ 	mt76_rx_complete(dev, &frames, napi);
  }
+ EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
++
++void mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
++		     struct ieee80211_sta *sta)
++{
++	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
++	int idx = wcid->idx;
++	int i;
++
++	rcu_assign_pointer(dev->wcid[idx], NULL);
++	synchronize_rcu();
++
++	mutex_lock(&dev->mutex);
++	mt76_tx_status_check(dev, wcid, true);
++	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
++		mt76_txq_remove(dev, sta->txq[i]);
++	mt76_wcid_free(dev->wcid_mask, idx);
++	mutex_unlock(&dev->mutex);
++}
++EXPORT_SYMBOL_GPL(mt76_sta_remove);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index e1d89163ee6b..ea74ba00aebc 100644
+index ea74ba00aebc..878836fe80d3 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -648,28 +648,22 @@ void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid);
- 
- void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 			 struct ieee80211_key_conf *key);
-+
-+void mt76_tx_status_lock(struct mt76_dev *dev, struct sk_buff_head *list)
-+			 __acquires(&dev->status_list.lock);
-+void mt76_tx_status_unlock(struct mt76_dev *dev, struct sk_buff_head *list)
-+			   __releases(&dev->status_list.lock);
-+
- int mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 			   struct sk_buff *skb);
- struct sk_buff *mt76_tx_status_skb_get(struct mt76_dev *dev,
--				       struct mt76_wcid *wcid, int pktid);
--void mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb);
-+				       struct mt76_wcid *wcid, int pktid,
-+				       struct sk_buff_head *list);
-+void mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb,
-+			     struct sk_buff_head *list);
+@@ -664,6 +664,8 @@ void mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb,
  void mt76_tx_complete_skb(struct mt76_dev *dev, struct sk_buff *skb);
--
--static inline void
--mt76_tx_status_check(struct mt76_dev *dev)
--{
--	spin_lock_bh(&dev->status_list.lock);
--	mt76_tx_status_skb_get(dev, NULL, 0);
--	spin_unlock_bh(&dev->status_list.lock);
--}
--
--static inline void
--mt76_tx_status_flush(struct mt76_dev *dev, struct mt76_wcid *wcid)
--{
--	spin_lock_bh(&dev->status_list.lock);
--	mt76_tx_status_skb_get(dev, wcid, -1);
--	spin_unlock_bh(&dev->status_list.lock);
--}
-+void mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid,
-+			  bool flush);
+ void mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ 			  bool flush);
++void mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
++		     struct ieee80211_sta *sta);
  
  struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb);
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 59b336e34cb5..4c35d3f7fb15 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -438,12 +438,13 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 	struct mt76_wcid *wcid = NULL;
- 	struct mt76x02_sta *msta = NULL;
- 	struct mt76_dev *mdev = &dev->mt76;
-+	struct sk_buff_head list;
- 
- 	if (stat->pktid == MT_PACKET_ID_NO_ACK)
- 		return;
- 
- 	rcu_read_lock();
--	spin_lock_bh(&mdev->status_list.lock);
-+	mt76_tx_status_lock(mdev, &list);
- 
- 	if (stat->wcid < ARRAY_SIZE(dev->mt76.wcid))
- 		wcid = rcu_dereference(dev->mt76.wcid[stat->wcid]);
-@@ -459,7 +460,7 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 	if (wcid) {
- 		if (stat->pktid)
- 			status.skb = mt76_tx_status_skb_get(mdev, wcid,
--							    stat->pktid);
-+							    stat->pktid, &list);
- 		if (status.skb)
- 			status.info = IEEE80211_SKB_CB(status.skb);
- 	}
-@@ -490,12 +491,12 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 	}
- 
- 	if (status.skb)
--		mt76_tx_status_skb_done(mdev, status.skb);
-+		mt76_tx_status_skb_done(mdev, status.skb, &list);
- 	else
- 		ieee80211_tx_status_ext(mt76_hw(dev), &status);
- 
- out:
--	spin_unlock_bh(&mdev->status_list.lock);
-+	mt76_tx_status_unlock(mdev, &list);
- 	rcu_read_unlock();
- }
- 
-@@ -818,7 +819,7 @@ void mt76x02_mac_work(struct work_struct *work)
- 	if (!dev->beacon_mask)
- 		mt76x02_check_mac_err(dev);
- 
--	mt76_tx_status_check(&dev->mt76);
-+	mt76_tx_status_check(&dev->mt76, NULL, false);
- 
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mac_work,
- 				     MT_CALIBRATE_INTERVAL);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 87ce6a51fb05..850b0f050da5 100644
+index cd32ef5864b5..dc25de2d02d5 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -215,7 +215,7 @@ int mt76x02_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	int i;
+@@ -210,19 +210,13 @@ int mt76x02_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta)
+ {
+ 	struct mt76x02_dev *dev = hw->priv;
+-	struct mt76x02_sta *msta = (struct mt76x02_sta *)sta->drv_priv;
+-	int idx = msta->wcid.idx;
+-	int i;
++	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
++	int idx = wcid->idx;
+ 
+-	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
+-	synchronize_rcu();
++	mt76_sta_remove(&dev->mt76, vif, sta);
  
  	mutex_lock(&dev->mt76.mutex);
--	mt76_tx_status_flush(&dev->mt76, &msta->wcid);
-+	mt76_tx_status_check(&dev->mt76, &msta->wcid, true);
- 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		mt76_txq_remove(&dev->mt76, sta->txq[i]);
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index e6cd583aafd3..e42a24628e4f 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -103,8 +103,33 @@ mt76_check_agg_ssn(struct mt76_txq *mtxq, struct sk_buff *skb)
- 	mtxq->agg_ssn = le16_to_cpu(hdr->seq_ctrl) + 0x10;
- }
+-	mt76_tx_status_check(&dev->mt76, &msta->wcid, true);
+-	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
+-		mt76_txq_remove(&dev->mt76, sta->txq[i]);
+ 	mt76x02_mac_wcid_set_drop(dev, idx, true);
+-	mt76_wcid_free(dev->mt76.wcid_mask, idx);
+ 	mutex_unlock(&dev->mt76.mutex);
  
-+void
-+mt76_tx_status_lock(struct mt76_dev *dev, struct sk_buff_head *list)
-+		   __acquires(&dev->status_list.lock)
-+{
-+	__skb_queue_head_init(list);
-+	spin_lock_bh(&dev->status_list.lock);
-+	__acquire(&dev->status_list.lock);
-+}
-+EXPORT_SYMBOL_GPL(mt76_tx_status_lock);
-+
-+void
-+mt76_tx_status_unlock(struct mt76_dev *dev, struct sk_buff_head *list)
-+		      __releases(&dev->status_list.unlock)
-+{
-+	struct sk_buff *skb;
-+
-+	spin_unlock_bh(&dev->status_list.lock);
-+	__release(&dev->status_list.unlock);
-+
-+	while ((skb = __skb_dequeue(list)) != NULL)
-+		ieee80211_tx_status(dev->hw, skb);
-+}
-+EXPORT_SYMBOL_GPL(mt76_tx_status_unlock);
-+
- static void
--__mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb, u8 flags)
-+__mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb, u8 flags,
-+			  struct sk_buff_head *list)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct mt76_tx_cb *cb = mt76_tx_skb_cb(skb);
-@@ -125,13 +150,14 @@ __mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb, u8 flags)
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 	}
- 
--	ieee80211_tx_status(dev->hw, skb);
-+	__skb_queue_tail(list, skb);
- }
- 
- void
--mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb)
-+mt76_tx_status_skb_done(struct mt76_dev *dev, struct sk_buff *skb,
-+			struct sk_buff_head *list)
- {
--	__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_TXS_DONE);
-+	__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_TXS_DONE, list);
- }
- EXPORT_SYMBOL_GPL(mt76_tx_status_skb_done);
- 
-@@ -173,7 +199,8 @@ mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt76_wcid *wcid,
- EXPORT_SYMBOL_GPL(mt76_tx_status_skb_add);
- 
- struct sk_buff *
--mt76_tx_status_skb_get(struct mt76_dev *dev, struct mt76_wcid *wcid, int pktid)
-+mt76_tx_status_skb_get(struct mt76_dev *dev, struct mt76_wcid *wcid, int pktid,
-+		       struct sk_buff_head *list)
- {
- 	struct sk_buff *skb, *tmp;
- 
-@@ -194,23 +221,36 @@ mt76_tx_status_skb_get(struct mt76_dev *dev, struct mt76_wcid *wcid, int pktid)
- 			continue;
- 
- 		__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_TXS_FAILED |
--						    MT_TX_CB_TXS_DONE);
-+						    MT_TX_CB_TXS_DONE, list);
- 	}
- 
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(mt76_tx_status_skb_get);
- 
-+void
-+mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid, bool flush)
-+{
-+	struct sk_buff_head list;
-+
-+	mt76_tx_status_lock(dev, &list);
-+	mt76_tx_status_skb_get(dev, wcid, flush ? -1 : 0, &list);
-+	mt76_tx_status_unlock(dev, &list);
-+}
-+EXPORT_SYMBOL_GPL(mt76_tx_status_check);
-+
- void mt76_tx_complete_skb(struct mt76_dev *dev, struct sk_buff *skb)
- {
-+	struct sk_buff_head list;
-+
- 	if (!skb->prev) {
- 		ieee80211_free_txskb(dev->hw, skb);
- 		return;
- 	}
- 
--	spin_lock_bh(&dev->status_list.lock);
--	__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_DMA_DONE);
--	spin_unlock_bh(&dev->status_list.lock);
-+	mt76_tx_status_lock(dev, &list);
-+	__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_DMA_DONE, &list);
-+	mt76_tx_status_unlock(dev, &list);
- }
- EXPORT_SYMBOL_GPL(mt76_tx_complete_skb);
- 
+ 	return 0;
 -- 
 2.17.0
 
