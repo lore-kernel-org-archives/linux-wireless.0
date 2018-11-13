@@ -2,86 +2,68 @@ Return-Path: <SRS0=dsQx=NY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B27C43441
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 13:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04CF1C43441
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36CA3223AE
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 13:34:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=newmedia-net.de header.i=@newmedia-net.de header.b="dRHLZrgi"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 36CA3223AE
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=newmedia-net.de
+	by mail.kernel.org (Postfix) with ESMTP id C6B5520896
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Nov 2018 19:22:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C6B5520896
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387489AbeKMXcn (ORCPT
+        id S1726659AbeKNFWG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Nov 2018 18:32:43 -0500
-Received: from webmail.newmedia-net.de ([185.84.6.166]:43518 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733229AbeKMXcn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Nov 2018 18:32:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=newmedia-net.de; s=mikd;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:References:Cc:To:From:Subject; bh=JhIgv2ztgNUTSaJomMtqq/Ao6XEI+705GkZSL6PDSzA=;
-        b=dRHLZrgixM/GlBWUL4FsPPmvn/aUH9SKSv7lkwOj2KBKJQ5GBYTsxq1HMaKegh2eQc2lnbUNTwWwgg/dte+rbyy8rfQKK/vSQTHbn4ilKrPcYcYET6maDk2QNQuM1mFwm/EeJ66dP63XgzgMGdBCTQ6zgV12VeBvtHppHmCjpm8=;
-Subject: Re: [EXTERNAL] Re: [PATCH] ath10k: Disable 4addr source port learning
- in 10.4 FW by default
-From:   Sebastian Gottschall <s.gottschall@newmedia-net.de>
-To:     Sathishkumar Muruganandam <murugana@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <20181109061121.4184-1-murugana@codeaurora.org>
- <0d74b002-e36d-8169-34e8-59338eac6918@newmedia-net.de>
- <00fd01d4798e$1c0d2f10$54278d30$@codeaurora.org>
- <18df2020-f8c4-b9f7-cf9c-63802ea02429@newmedia-net.de>
- <cc8040a6-47f8-c8f0-0451-2e220d91d62c@newmedia-net.de>
- <4ec664290c20a58f36f2183fc2fd0b4f@codeaurora.org>
- <095fa4b0-883e-192c-e919-0dd0ace026e8@newmedia-net.de>
-Message-ID: <cef269dc-b4bc-54a0-5f04-7e4e06bbfe81@newmedia-net.de>
-Date:   Tue, 13 Nov 2018 14:34:25 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
-In-Reply-To: <095fa4b0-883e-192c-e919-0dd0ace026e8@newmedia-net.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Received:  from [212.111.244.1] (helo=[172.29.0.186])
-        by webmail.newmedia-net.de with esmtpsa (TLSv1:AES128-SHA:128)
-        (Exim 4.72)
-        (envelope-from <s.gottschall@newmedia-net.de>)
-        id 1gMYpr-0002Kx-TV; Tue, 13 Nov 2018 14:34:31 +0100
+        Wed, 14 Nov 2018 00:22:06 -0500
+Received: from mga18.intel.com ([134.134.136.126]:12222 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725748AbeKNFWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Nov 2018 00:22:06 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Nov 2018 11:22:36 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,229,1539673200"; 
+   d="scan'208";a="249424370"
+Received: from jprestwo.jf.intel.com ([10.54.74.49])
+  by orsmga004.jf.intel.com with ESMTP; 13 Nov 2018 11:22:36 -0800
+From:   James Prestwood <james.prestwood@linux.intel.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     James Prestwood <james.prestwood@linux.intel.com>
+Subject: [PATCH] mac80211_hwsim: fixes kernel crash during mac80211_hwsim init
+Date:   Tue, 13 Nov 2018 11:26:42 -0800
+Message-Id: <20181113192642.32308-1-james.prestwood@linux.intel.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-is it possible to supply a firmware for 99X0 based devices which suffer 
-from the same issue? i know the firmware codebase is the same for these 
-chipsets and there are alot of embedded
-devices around which this older one. unfortunatly this device suffers 
-from the same issue
+Creating radios during startup follows a different code path than
+HWSIM_CMD_NEW_RADIO. The problem was that param.iftypes was not
+being set to the deafult before calling mac80211_hwsim_new_radio
 
-Sebastian
+Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Am 12.11.2018 um 08:33 schrieb Sebastian Gottschall:
-> no problem. glad to help you.
->
-> Sebastian
->
-> Am 12.11.2018 um 06:34 schrieb Sathishkumar Muruganandam:
->> On 2018-11-12 09:40, Sebastian Gottschall wrote:
->>> i tested my proposal now and it fixes the issue. the submitted patch
->>> was simply broken at that small point
->>>
->>
->> You're right. Thanks for your finding !
->>
->> Due to some reason, my patch formatting missed the vdev param
->> assignments to 10.4 and 10.2.4 (unsupported).
->>
->> Sorry for the confusion, let me resend the patch.
->>
->
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4033a800b209..2a5a133f23cf 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3884,6 +3884,7 @@ static int __init init_mac80211_hwsim(void)
+ 
+ 		param.p2p_device = support_p2p_device;
+ 		param.use_chanctx = channels > 1;
++		param.iftypes = HWSIM_IFTYPE_SUPPORT_MASK;
+ 
+ 		err = mac80211_hwsim_new_radio(NULL, &param);
+ 		if (err < 0)
+-- 
+2.17.1
+
