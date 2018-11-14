@@ -6,125 +6,122 @@ X-Spam-Status: No, score=-1.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDEDAC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 11:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9693AC43610
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 11:41:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 928CC2243E
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 11:29:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B51121582
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 11:41:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PevdFL0E"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 928CC2243E
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FMuCCcpq"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5B51121582
 Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727598AbeKNVcW (ORCPT
+        id S1728391AbeKNVnz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Nov 2018 16:32:22 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:37075 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728141AbeKNVcW (ORCPT
+        Wed, 14 Nov 2018 16:43:55 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36262 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727649AbeKNVnz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Nov 2018 16:32:22 -0500
-Received: by mail-pg1-f193.google.com with SMTP id 80so7250114pge.4
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2018 03:29:30 -0800 (PST)
+        Wed, 14 Nov 2018 16:43:55 -0500
+Received: by mail-wr1-f68.google.com with SMTP id z13-v6so16923842wrs.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Nov 2018 03:41:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:references:cc:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=Y+mOCcBGQHK0ojrMn0beD9G5K2cewNlgIzf+7gAKeuU=;
-        b=PevdFL0E4aYKcWoA9OTfhkuIfcBwdlWIimaz8TejUJnyg7qOe1jUBNC83dJdW2pB39
-         BLHd0IHIBpuWnVpWptSCdc4qB+cnqeFdkRn5wYXAQwiwQkQ1EHR9vIIrwd2LL6xpnZqV
-         Bo6PlmLkTL/BjMq6VWrL/Vz5uX11NvYo90Lt0=
+        bh=jnKqbYjVEidtDKMCPwkGrZLBtF5zni8QCnxGLC8SpuM=;
+        b=FMuCCcpq8rF4Mm3jpmHHF5+nRL5XoO88BIOrgdfYOM8fs/cOyl7QC/7Mor0IC/qskM
+         dGQ6cOhZSksJ2Rvc31cbSnsGMI3EW2ASmvng7W8UR1PZhSrJQRwwYA7DqFpEanoBeyOX
+         BycIdS6dngJgdPgWB6jLnqrDC9nVgVkcBjF28=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:cc:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=Y+mOCcBGQHK0ojrMn0beD9G5K2cewNlgIzf+7gAKeuU=;
-        b=enylQey6xximnT0hoP+CWZTrfMgwlH518jmRbITeNznZ1Ko5IBaGYsIgaJlBff/Kb7
-         8jmAMNx69g3fEP8oDLsFl7pf6BkHctUeHtNBpQrGyq+24SoBje9yvTIae+b/zBBdfzYW
-         Vz9nBup0xIi6QPNbrOId+cJmpz5ORePFj2g3/6UedJHHcXD8/Fj2E6K+j7yxayePsvfK
-         pFwkIOaZECABTP8m6Sy0PUTafDeD7zP3cBWzlH/U7txSw7nR5IfJekdZwjGdeDtcbNHB
-         wlTe77eU5O3BzcdLPPV4EeCcmq/hrZw0U4zonMGZBw2teQcthzXkUtgBLRMiBF6+TQZk
-         w2tQ==
-X-Gm-Message-State: AGRZ1gItNR0Z6y+brCyXbyGBa+UqpSvLFtPuy9nik9pOjgxE3vpWomPB
-        cqiWZlUpGdRKWnuMA5OUyr4EGLQVwJbWhg==
-X-Google-Smtp-Source: AJdET5fcAcxctEAPB6/P8wlXpjup2SHb+XY7ISwrhwcyakbZsas/T1xebFrXsBur5kXFCZm6o3M+oA==
-X-Received: by 2002:a62:5343:: with SMTP id h64-v6mr1549618pfb.226.1542194970057;
-        Wed, 14 Nov 2018 03:29:30 -0800 (PST)
+        bh=jnKqbYjVEidtDKMCPwkGrZLBtF5zni8QCnxGLC8SpuM=;
+        b=MRUe1M4PWI1SGogze6SctnYyXCrFZPxmlPr/4ulotAuNjaOv0pFIBm7XH38/FFohGb
+         P9qH3oy6u9UmOrgBk2mA1ePncql5j/IFg4bWFh7Jh1VAKCKfF8pwFGDo20FOi4vmXigW
+         uzjJfV1cAMZUM3I1wCPq4vBqVebLkcN0aZvmvOekTQT4l6EZVQEI7n1/kUp5/n6sghfK
+         DhEbsWNvz52C8y0SHrpKtqmfdtGk6pj8+DKNTFaMDrPC4Ei/J/LBGjpIewdVggBqVs35
+         +3/BRejOuSziIemIjiTZo79b+Q+4qKru6KU7LHgzhNanxSBWaQ/7Jd+arIwdZCIzx4oK
+         FDsQ==
+X-Gm-Message-State: AGRZ1gJoVP+dIAkzU7dODeOGLZCP/XleFlrg1GdDLa6xxHQ6RdhL6owO
+        GwV+TdiBHpqSgrlM51Hi4VZx2A==
+X-Google-Smtp-Source: AJdET5eZ32OpUHgU0GXJRcbZr1Tcx73SuSuMjnYU1oLINQFa+fuaI/8llst7rUWurDyy/423GgMYqQ==
+X-Received: by 2002:a5d:6585:: with SMTP id q5-v6mr1509953wru.141.1542195659903;
+        Wed, 14 Nov 2018 03:40:59 -0800 (PST)
 Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id p84-v6sm3656107pfi.85.2018.11.14.03.29.28
+        by smtp.gmail.com with ESMTPSA id y21-v6sm11366259wma.36.2018.11.14.03.40.58
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 14 Nov 2018 03:29:29 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: Use standard SKB list accessors in
- brcmf_sdiod_sglist_rw.
-To:     Andy Duan <fugang.duan@nxp.com>,
-        David Miller <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-References: <20181110.163402.130407398146253939.davem@davemloft.net>
- <VI1PR0402MB36009CD578B9CDBF4449130FFFC30@VI1PR0402MB3600.eurprd04.prod.outlook.com>
- <9667eb4f-36a1-0439-867b-1defc5946bc2@broadcom.com>
- <VI1PR0402MB3600F31F8665EB1BDAFBAE36FFC30@VI1PR0402MB3600.eurprd04.prod.outlook.com>
- <6679c7f3-9df2-1eb0-6f0d-725717460a82@broadcom.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+        Wed, 14 Nov 2018 03:40:59 -0800 (PST)
+Subject: Re: AP6335 with mainline kernel
+To:     Vanessa Maegima <vanessa.maegima@nxp.com>,
+        "festevam@gmail.com" <festevam@gmail.com>
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+ <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
+ <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
+ <1510932224.22506.0.camel@nxp.com>
+ <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
+ <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+ <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
+ <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
+ <1512413992.18900.3.camel@nxp.com>
+ <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
+ <1512485878.9392.1.camel@nxp.com>
+ <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
+ <5A5E5EBE.7040301@broadcom.com> <1516276016.8817.1.camel@nxp.com>
+ <5A61B43C.4000305@broadcom.com> <1521646672.13983.1.camel@nxp.com>
+ <5AB4C8D5.40203@broadcom.com> <1521810882.19239.1.camel@nxp.com>
+ <1522067092.4780.3.camel@nxp.com> <1522071220.8102.0.camel@nxp.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
+        "embed3d@gmail.com" <embed3d@gmail.com>,
+        Cameron Kellough <cameron@paloaltoinnovation.com>
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c9020dd1-0ecb-5d2d-0e9e-2b31c38b2f64@broadcom.com>
-Date:   Wed, 14 Nov 2018 12:29:26 +0100
+Message-ID: <05ab43bd-0033-fc45-a992-0a20b91a0e74@broadcom.com>
+Date:   Wed, 14 Nov 2018 12:40:57 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.8.0
 MIME-Version: 1.0
-In-Reply-To: <6679c7f3-9df2-1eb0-6f0d-725717460a82@broadcom.com>
+In-Reply-To: <1522071220.8102.0.camel@nxp.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/14/2018 11:57 AM, Arend van Spriel wrote:
-> On 11/14/2018 11:54 AM, Andy Duan wrote:
->> From: Arend van Spriel [mailto:arend.vanspriel@broadcom.com] Sent:
->> 2018年11月14日 16:40
->>> To: Andy Duan <fugang.duan@nxp.com>; David Miller
->>> <davem@davemloft.net>; netdev@vger.kernel.org
->>> Cc: linux-wireless@vger.kernel.org
->>> Subject: Re: [PATCH] brcmfmac: Use standard SKB list accessors in
->>> brcmf_sdiod_sglist_rw.
->>>
->>> On 11/14/2018 4:28 AM, Andy Duan wrote:
->>>> From: David Miller <davem@davemloft.net> Sent: 2018年11月11日 8:34
->>>>> [ As I am trying to remove direct SKB list pointer accesses I am
->>>>>   committing this to net-next.  If this causes a lot of grief I
->>>>>   can and will revert, just let me know. ]
->>>
->>> [...]
->>>
->>>>
->>>> I just have bcm4339 in hands, test the patch on i.MX7D sdb board with
->>> bcm4339, it works fine with iperf testing.
->>>>
->>>> Tested-by: Fugang Duan <fugang.duan@nxp.com>
->>>
->>> Thanks, Andy
->>>
->>> Can you do one more check? Please insert brcmfmac with module parameter
->>> debug=2 and let me know if the following log message is seen:
->>>
->>> brcmfmac: brcmf_sdiod_sgtable_alloc: nents=X
->>>
->>> If not seen, the driver does not go through the patched code.
->> My kernel don't enable debug and DEBUG and CONFIG_BRCM_TRACING, I add
->> the debug info in the brcmf_sdiod_sgtable_alloc(), and the log show
->> the driver go through the sg path:
->> Log: brcmf_sdiod_sgtable_alloc: max_segs:128, sg_support:1, nents=35
->
-> Thanks, Andy
->
-> Works for me ;-)
++ Cameron
 
-I should better read the patch email. I tried to apply the patch to 
-wireless-testing, but it failed simply because the patch is already in 
-place through net-next as Dave mentioned. Anyway, it is good that it has 
-been tested to some extent.
+On 3/26/2018 3:34 PM, Vanessa Maegima wrote:
+> On Seg, 2018-03-26 at 09:24 -0300, Vanessa Maegima wrote:
+>> Hi Arend,
+>>
+>>>
+>>> Here's the hexdump: http://code.bulix.org/trv3o7-306254
+>>>
+>> The link above provides the hexdump from the html nvram, which makes
+>> wifi work on pico-imx7d.
+>>
+>> I also got the hexdump of the nvram file provided by TechNexion for
+>> comparison, which returns the error "brcmfmac: brcmf_sdio_htclk: HT
+>> Avail timeout (1000000): clkctl 0x50": http://code.bulix.org/mw4x62-3
+>> 09
+>> 095
+>
+> Fixing second URL: http://code.bulix.org/mw4x62-309095
+
+Hi Vanessa,
+
+It has been a while, but recently I was contacted by Cameron who was 
+facing same/similar issue. After some email exchanges with him he 
+uncovered that the problem with the TechNexion nvram file is with the 
+boardflags3 entry. On my suggestion he change the value from 0x08101188 
+to 0x101188. The dropped bit forces the clock hierarchy in the chip to 
+select external LPO. I found some schematics showing a 32kHz signal 
+hooked up to the LPO input coming from GPIO1_IO03. Could it be that it 
+is not properly setup? Devicetree maybe?
 
 Regards,
 Arend
