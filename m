@@ -2,42 +2,33 @@ Return-Path: <SRS0=SE/f=NZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.7 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25D2BC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 18:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4300C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 18:48:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEE23223DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 18:28:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=plaes.org header.i=@plaes.org header.b="BIdBLkpy"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DEE23223DD
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=plaes.org
+	by mail.kernel.org (Postfix) with ESMTP id 8AB232243E
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Nov 2018 18:48:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8AB232243E
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728127AbeKOEcR (ORCPT
+        id S1728351AbeKOEwl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Nov 2018 23:32:17 -0500
-Received: from plaes.org ([188.166.43.21]:55038 "EHLO plaes.org"
+        Wed, 14 Nov 2018 23:52:41 -0500
+Received: from bues.ch ([80.190.117.144]:38908 "EHLO bues.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727251AbeKOEcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Nov 2018 23:32:17 -0500
-Received: from localhost (85.253.196.132.cable.starman.ee [85.253.196.132])
-        by plaes.org (Postfix) with ESMTPSA id 51B8E402C1;
-        Wed, 14 Nov 2018 18:27:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=plaes.org; s=mail;
-        t=1542220077; bh=diEjknsMkw4mpSZFYnK2fJUbg9A7aw+hNi1EXh6HAnc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=BIdBLkpyAr5QjsbUmkpimmt0nBMHCI2SQIv0r337YbKA2VkZm06CUaF8NGFni5ThM
-         wgQmYPQSM99rDBZJJBF67s4AK74td5apgPaIMyJdu+h+YoLn+yaE84ClQAtVdjrUSK
-         o+vJPnEBNAP/N3aZWjCnOcrSepSbIccf1VVyvYfSPJBnM0Jg5rgPT3F8eo/8b7czVV
-         jhUPrrqfShSYbfxQRsgoi9FtVuWxPH07A9Ztz+2rFQIUU0ElFw9jjvUYby+VzExWTK
-         1W36jdzcW0WbvNeGpM1RMRyzuWmgKIzg0ktuH5JkPR4anLV2T5nduBgFmwYjhG7Pyc
-         Z9vifk9fueVUg==
-From:   Priit Laes <plaes@plaes.org>
-To:     Kees Cook <keescook@chromium.org>,
+        id S1727251AbeKOEwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Nov 2018 23:52:40 -0500
+Received: by bues.ch with esmtpsa (Exim 4.89)
+        (envelope-from <m@bues.ch>)
+        id 1gN0Cj-0002hI-VO; Wed, 14 Nov 2018 19:47:58 +0100
+Date:   Wed, 14 Nov 2018 19:46:28 +0100
+From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To:     Priit Laes <plaes@plaes.org>
+Cc:     Kees Cook <keescook@chromium.org>,
         Jia-Ju Bai <baijiaju1990@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Larry Finger <Larry.Finger@lwfinger.net>,
@@ -47,54 +38,71 @@ To:     Kees Cook <keescook@chromium.org>,
         Varsha Rao <rvarsha016@gmail.com>,
         linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Cc:     Priit Laes <plaes@plaes.org>
-Subject: [PATCH v3 0/3] wireless: Use common cordic algorithm for b43 driver
-Date:   Wed, 14 Nov 2018 20:27:49 +0200
-Message-Id: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
-X-Mailer: git-send-email 2.19.1
+Subject: Re: [PATCH v3 3/3] b43: Use cordic algorithm from kernel library
+Message-ID: <20181114194628.0f485637@wiggum>
+In-Reply-To: <d93962cdc5a32fe99e6e5a25172920d28583aa6a.1542219596.git-series.plaes@plaes.org>
+References: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
+ <d93962cdc5a32fe99e6e5a25172920d28583aa6a.1542219596.git-series.plaes@plaes.org>
+X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/v/Gtp+3WZf2T0zsNVwRZBC/"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-b43 wireless driver includes an internal implementation of
-cordic algorithm, although there's a common cordic library
-which was split out from brcmsmac driver. Use that and drop
-internal implementation.
+--Sig_/v/Gtp+3WZf2T0zsNVwRZBC/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-During the process, cordic-algorithm related macros in
-brcmfmac driver were also removed and use general macros.
+On Wed, 14 Nov 2018 20:27:52 +0200
+Priit Laes <plaes@plaes.org> wrote:
 
-Please note that this series is only compile-tested, as I
-do not have access to the hardware.
+> Kernel library has a common cordic algorithm which is identical
+> to internally implementatd one, so use it and drop the duplicate
+> implementation.
 
-Changes since v2:
-- Improvements to commit messages. No functional changes.
-- Collect reviewed-by bits.
 
-Changes since v1:
-- Merged brcmsmac driver patches into single patch
-- Merged b43 driver patches into single patch
+In v2 of the series it has been said that:
 
-Priit Laes (3):
-  lib: cordic: Move cordic macros and defines to header file
-  brcmsmac: Use cordic-related macros from common cordic library
-  b43: Use cordic algorithm from kernel library
+Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> I recall doing a comparison between the algorithms and thought I put=20
+> that in the original commit message. However, it is not there. It is not=
+=20
+> exactly the same as in b43 so there are difference for certain angles,=20
+> most results are the same however. This implementation is slightly more=20
+> accurate on the full scale.
 
- drivers/net/wireless/broadcom/b43/Kconfig                      |  1 +-
- drivers/net/wireless/broadcom/b43/phy_common.c                 | 47 +-------
- drivers/net/wireless/broadcom/b43/phy_common.h                 |  9 +-
- drivers/net/wireless/broadcom/b43/phy_lp.c                     | 13 +-
- drivers/net/wireless/broadcom/b43/phy_n.c                      | 13 +-
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h |  7 +-
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c |  4 +-
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   |  4 +-
- include/linux/cordic.h                                         |  9 +-
- lib/cordic.c                                                   | 23 +---
- 10 files changed, 35 insertions(+), 95 deletions(-)
 
-base-commit: ccda4af0f4b92f7b4c308d3acc262f4a7e3affad
--- 
-git-series 0.9.1
+That's not my definition of "identical".
+
+Please do not apply this patch without doing a thorough regression test
+on actual b43 LP hardware.
+
+
+--=20
+Michael
+
+--Sig_/v/Gtp+3WZf2T0zsNVwRZBC/
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlvsbYQACgkQ9TK+HZCN
+iw4ikA/9F3YX8qJLGOLZS+Mj84G+Pgbka+VHeXYzsA+7fl5qbRjf9LFz0/t3gpmS
+3VjpleNONAEBrEmt6jTCEOL6/c3MiBHlCZjG75zuybjjoHPkkpDv+0MMzNZP1SmS
+UfXDlXL8pvIp4rwDJvS7UEglfa9hjjUMUwLPwM/vJJ+I+dZWkgG/WB36J5r5o0uf
+rqWw944Ta21vm/tb5bhaH63WZx4/yO68K3vWUFASgysIIschAbiYI1hr6ewEx5yo
+7s+dahHO0pEWkf+C0bQ95a5+GSCC6mrphkonyQhYt1QYdsUQeS48Aog1HlEA2DWr
+H8kjt6pxgyNHrxHxni6zK/DTP72k4UUfVo5PPgNQrPazMAefimFWqwBGUp9zw9rw
+otpPxq2VsBD9tYVEwHuYrXanNI7gAqcirL8Dri931sm4dtKuHdKmid3JLzXBVgqF
+4qvGsbH8fcW63OPTHPYzrfSZj+gYquf+F86KK91PPopXvb0byUGgA5kNz/Uev2G/
+OmS0lPuPgwi2CgdfYKfRxLsA5dYhNNty030faoClat1jDII5gNecmt/54jj7XDbT
+o/OLLEw4YaiFPAfOwMh+l78iE6awbGlKmQdKczL4QuUs4SByXZAdAkfZTF/utIFe
+9OEaWjH0pP9jit1b0/7hp44fptvanh8zspM82+n/U/wlHLuWEq0=
+=VqWV
+-----END PGP SIGNATURE-----
+
+--Sig_/v/Gtp+3WZf2T0zsNVwRZBC/--
