@@ -3,143 +3,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 208DCC43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 11:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 041F6C43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 11:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D75A52086C
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 11:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFA5E2086C
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 11:09:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="R3phv8cP"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D75A52086C
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="orKSZg04";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="orKSZg04"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BFA5E2086C
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732655AbeKOVQl (ORCPT
+        id S2387839AbeKOVQo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Nov 2018 16:16:41 -0500
-Received: from nbd.name ([46.4.11.11]:40822 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725827AbeKOVQl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Nov 2018 16:16:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=bzGIccfhrqEdxhQpNnp0dS/+camL9si+7bgdOwhBVjg=; b=R3phv8cPlz3JFUf5VuxSJbwXVQ
-        adIph15REkIMQ5VeS00EMtIg8MYNPTuHpm/6QXG7C5LQONRuq58q3hEz7drPv1PFwOkOSgxK9nsA/
-        OisN+UJfqJmmGRGhorO6fyXe4eOALkhJLw28myt06leTlBVFhMUv/vDdKtKEBTsr1FYE=;
-Subject: Re: [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to
- TXQs
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc:     make-wifi-fast@lists.bufferbloat.net
-References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org>
- <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org>
- <e5344cad-2a18-a938-f2ed-43870027251c@nbd.name> <871s7nv9pl.fsf@toke.dk>
-From:   Felix Fietkau <nbd@nbd.name>
-Openpgp: preference=signencrypt
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name>
-Date:   Thu, 15 Nov 2018 12:09:08 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
- Gecko/20100101 Thunderbird/52.9.1
+        Thu, 15 Nov 2018 16:16:44 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47308 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725827AbeKOVQo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Nov 2018 16:16:44 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E84A16074C; Thu, 15 Nov 2018 11:09:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542280160;
+        bh=4IX02k814g0S5SB8mgcMOt5wAAb/6ikhwZhQtgMHV5s=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=orKSZg046kqzSzETNp400EjEr8dSPkMhtz6lMe5px40+wgy6BwrLbJY+pxqoOmP1L
+         Rau9fmf93iW+VRt19xElZuoqd//QjbcL0YojAsFzpykKQh5EYRhphxQbUtnwCN1PZh
+         e1wRCRpkJRjNlWneKNzd3WkRVveCcZIMWRzWliIY=
+Received: from x230.qca.qualcomm.com (87-95-226-75.bb.dnainternet.fi [87.95.226.75])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 63B556024C;
+        Thu, 15 Nov 2018 11:09:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542280160;
+        bh=4IX02k814g0S5SB8mgcMOt5wAAb/6ikhwZhQtgMHV5s=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=orKSZg046kqzSzETNp400EjEr8dSPkMhtz6lMe5px40+wgy6BwrLbJY+pxqoOmP1L
+         Rau9fmf93iW+VRt19xElZuoqd//QjbcL0YojAsFzpykKQh5EYRhphxQbUtnwCN1PZh
+         e1wRCRpkJRjNlWneKNzd3WkRVveCcZIMWRzWliIY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 63B556024C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Priit Laes <plaes@plaes.org>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Varsha Rao <rvarsha016@gmail.com>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] wireless: Use common cordic algorithm for b43 driver
+References: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
+Date:   Thu, 15 Nov 2018 13:09:14 +0200
+In-Reply-To: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
+        (Priit Laes's message of "Wed, 14 Nov 2018 20:27:49 +0200")
+Message-ID: <87a7mad2cl.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <871s7nv9pl.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2018-11-14 18:40, Toke Høiland-Jørgensen wrote:
->> This part doesn't really make much sense to me, but maybe I'm
->> misunderstanding how the code works.
->> Let's assume we have a driver like ath9k or mt76, which tries to keep a
->> number of aggregates in the hardware queue, and the hardware queue is
->> currently empty.
->> If the current txq entry is kept at the head of the schedule list,
->> wouldn't the code just pull from that one over and over again, until
->> enough packets are transmitted by the hardware and their tx status
->> processed?
->> It seems to me that while fairness is still preserved in the long run,
->> this could lead to rather bursty scheduling, which may not be
->> particularly latency friendly.
-> 
-> Yes, it'll be a bit more bursty when the hardware queue is completely
-> empty. However, when a TX completion comes back, that will adjust the
-> deficit of that sta and cause it to be rotated on the next dequeue. This
-> obviously relies on the fact that the lower-level hardware queue is
-> sufficiently shallow to not add a lot of latency. But we want that to be
-> the case anyway. In practice, it works quite well for ath9k, but not so
-> well for ath10k because it has a large buffer in firmware.
-> 
-> If we requeue the TXQ at the end of the list, a station that is taking
-> up too much airtime will fail to be throttled properly, so the
-> queue-at-head is kinda needed to ensure fairness...
-Thanks for the explanation, that makes sense to me. I have an idea on
-how to mitigate the burstiness within the driver. I'll write it down in
-pseudocode, please let me know if you think that'll work.
+Priit Laes <plaes@plaes.org> writes:
 
-do {
-	struct ieee80211_txq *pending_txq[4];
-	int n_pending_txq = 0;
-	int i;
+> b43 wireless driver includes an internal implementation of
+> cordic algorithm, although there's a common cordic library
+> which was split out from brcmsmac driver. Use that and drop
+> internal implementation.
+>
+> During the process, cordic-algorithm related macros in
+> brcmfmac driver were also removed and use general macros.
+>
+> Please note that this series is only compile-tested, as I
+> do not have access to the hardware.
 
-	if (hwq->pending < 4)
-		break;
+Thanks, this time all patches made it to patchwork:
 
-	nframes = 0;
+https://patchwork.kernel.org/project/linux-wireless/list/?series=43097
 
-	ieee80211_txq_schedule_start(hw, ac)
-	do {
-		bool requeue = false;
+I'll now wait for the review comments.
 
-		struct ieee80211_txq *txq;
-
-		txq = ieee80211_next_txq(hw, ac);
-		if (!txq)
-			break;
-
-		nframes += schedule_txq(txq, &requeue);
-		if (requeue)
-			pending_txq[n_pending_txq++] = txq;
-
-	} while (n_pending_txq < ARRAY_SIZE(pending_txq));
-
-	for (i = n_pending_txq; i > 0; i--)
-		ieee80211_return_txq(hw, pending_txq[i - 1]);
-
-	ieee80211_txq_schedule_end(hw, ac)
-} while (nframes);
-
-- Felix
+-- 
+Kalle Valo
