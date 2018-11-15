@@ -2,106 +2,134 @@ Return-Path: <SRS0=mfDp=N2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7830EC43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 18:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B168C43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 21:57:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3777A2146D
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 18:44:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="E0m6Svp+"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3777A2146D
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	by mail.kernel.org (Postfix) with ESMTP id F28AE208E7
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 21:57:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org F28AE208E7
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388329AbeKPExE (ORCPT
+        id S1726052AbeKPIGw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Nov 2018 23:53:04 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:38329 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726746AbeKPExE (ORCPT
+        Fri, 16 Nov 2018 03:06:52 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:36796 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725888AbeKPIGw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Nov 2018 23:53:04 -0500
-Received: by mail-pl1-f196.google.com with SMTP id p4-v6so9887593plo.5
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2018 10:44:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MJqJPDLhiEc6Ze//c46l5fgBIbQKAy8EIF1v7Gp3a8g=;
-        b=E0m6Svp+IStTIctOI1e3eB9HDoju1P1u6HlVf2sQaTFSNcCmKiwkt0i5N4EMcxTB22
-         O7m2n8k++Z/9eYYTa48p4RkI9EjWmFkCy7khrCPlBCD1F1fnbTNEWMH+09LLrtq/Tmjk
-         kII6+geQCAQSzCk/0C0T78fpyJqkEjr1uDsx0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=MJqJPDLhiEc6Ze//c46l5fgBIbQKAy8EIF1v7Gp3a8g=;
-        b=XwOlneBsd5TomvjSA3KrX4/ElrPru7y3it8hVIkoTRPlPJ0l84M7cixWXrFrCVfcKv
-         tRbaSoUQan4sYu18zcrjDEUHsEAAS8630MdQuqwteo+4Jo38EQl9UQzEzw757YF2wPIw
-         tXhJlVvXk9NylihUAqfEx50J+DKbiOIqM0e4/u9BDHHYve9PeWiAdozfxw8+xpo4nwBb
-         xmuya8mQEnxnte6Q7p8yn6M5RKqIboAYjTtNXqG1N9iHBnxbf7FUz/zRMDew/AS8hukU
-         rxZWvwUI9b8cdhAxCGYenebyZCcK+NnnObJRTcPRv+dCTogjp7rMfuuYgg5adG5Spg/R
-         lEQA==
-X-Gm-Message-State: AGRZ1gLqgzJWGQCP1eTS0yNxXy3wKRSfL8UHvbjhtqnM0h3qfJWvNMwH
-        kagSBbxBOFxl+h8oTUfRvI4KYg==
-X-Google-Smtp-Source: AJdET5ecljU/Ke8j4pdj7P58IFuPg525lnA/sboKj0dJKU4zsR2/qzj5Hn3ADX0/7g/0pEWb1RwZIg==
-X-Received: by 2002:a17:902:9a04:: with SMTP id v4-v6mr7240995plp.247.1542307448314;
-        Thu, 15 Nov 2018 10:44:08 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:299d:6b87:5478:d28a])
-        by smtp.gmail.com with ESMTPSA id t4-v6sm29064911pfh.21.2018.11.15.10.43.44
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 15 Nov 2018 10:43:52 -0800 (PST)
-Date:   Thu, 15 Nov 2018 10:43:33 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     Wen Gong <wgong@qti.qualcomm.com>
-Cc:     Wen Gong <wgong@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: support PCIe enter L1 state
-Message-ID: <20181115184333.GA87504@google.com>
-References: <1542163848-837-1-git-send-email-wgong@codeaurora.org>
- <20181115002836.GA71934@google.com>
- <c94346b26a6d4b11a045a176ca854051@aptaiexm02f.ap.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c94346b26a6d4b11a045a176ca854051@aptaiexm02f.ap.qualcomm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Fri, 16 Nov 2018 03:06:52 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gNPdR-0002r2-6E; Thu, 15 Nov 2018 23:57:13 +0200
+Message-ID: <36b1d59aec9ed10decb32d054de33bb108530a26.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Thu, 15 Nov 2018 23:57:11 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-Ef2QZ4R94O2Y8+Y6TJkQ"
+User-Agent: Evolution 3.30.1-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2018-11-15
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
 
-On Thu, Nov 15, 2018 at 06:38:25AM +0000, Wen Gong wrote:
-> > -----Original Message-----
-> > From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Brian Norris
-> > 
-> > Is there some reason L1 was disabled in the first place? Was it known to be
-> > unreliable?
->
-> Hi Brian,
-> It is a BUG for power, and it is not considered this BUG before.
-> So this change will fix the bug.
+--=-Ef2QZ4R94O2Y8+Y6TJkQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I understand that the existing behavior is suboptimal for power, but on
-the other hand, code that goes out of its way to *clear* the L1 flag
-doesn't just pop up out of nowhere. Somebody clearly wrote that! If it
-just meant "we didn't verify L1 at first", then maybe it's fine to
-enable it unconditionally and see what happens, but if it meant "we
-tried L1 on some old chip XXXX and it caused problems", then it would be
-nice to know what those problems were.
+Hi Kalle,
 
-Or maybe that is hard to figure out, given there's no public git history
-tracking the original code, and we just need to try it out.
+This is the first batch of fixes for v4.20.  More details about the
+contents in the tag description.
 
-Anyway, I'm giving it a try here, but I just wanted to ask :)
+I have sent this out before and kbuildbot reported success.
 
-Thanks,
-Brian
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit b374e8686fc35ae124e62dc78725ea656ba1ef8a=
+:
+
+  mt76: fix building without CONFIG_LEDS_CLASS (2018-11-06 18:46:33 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-for-kalle-2018-11-15
+
+for you to fetch changes up to 5d041c46ccb9b48acc110e214beff5e2789311df:
+
+  iwlwifi: mvm: don't use SAR Geo if basic SAR is not used (2018-11-15 23:5=
+0:59 +0200)
+
+----------------------------------------------------------------
+First batch of iwlwifi fixes for 4.20
+
+* New FW debugging infrastructure;
+* Some more work on 802.11ax;
+* Improve support for multiple RF modules with 22000 devices;
+* Remove an unused FW parameter;
+* Other debugging improvements;
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: support sta_statistics() even on older firmware
+      iwlwifi: mvm: fix regulatory domain update when the firmware starts
+
+Luca Coelho (1):
+      iwlwifi: mvm: don't use SAR Geo if basic SAR is not used
+
+Matt Chen (1):
+      iwlwifi: fix wrong WGDS_WIFI_DATA_SIZE
+
+Shahar S Matityahu (1):
+      iwlwifi: fix D3 debug data buffer memory leak
+
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h      |  4 +++-
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h   |  6 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 38 +++++++++++++++++++=
+++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 12 ++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c      |  5 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  2 ++
+ 6 files changed, 47 insertions(+), 20 deletions(-)
+
+--=-Ef2QZ4R94O2Y8+Y6TJkQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlvt67cACgkQoUecoho8
+xfp10A//bEHv4Rre3Zrk8mfZtrgcuvX38ponSynTFwi55WJgurxCb5rvlR1O29LG
+IBfrZ6ASDt0UTeNhx7YL4hIxxePEdPNvib0lZckb32P4kqSPSxSptHySOPFiJLsQ
+MdMcUpK7apQ5wm8cIrZQ6ZYGWveP4+hMrhdrWMJmr0JJ3M7n2+SlUQBZ5nRQ73lF
+mBB0gPgLznT0aOyNNy+LbYE0NzjGhafGerAraUYcAwZ75Tg+rv7DjDjIRW1iEpLv
+oETFe9nGz2UoSq7DdkbXGJZvb1566eqTUFU1Y1qaRO6I47m4gKhOa1D4Schzpq63
+TEiIVZ0GxVSKmGfnzbXz2Z2PUMSv/HXKeglhhdAN34a/uCDBb3Fk54mehEoGs5eU
+0hSyE2MxKfZjhyGjTWpdyS/B1szVCxoDNmRQ8+EHSn4sNo8oLcneY3ogh3Tg/lEe
+myFYrIiUORl+H09pHAn4tN+n0gw6BMbeIJlwP3EjMgW90JwdKMyVLtGy2LlqCPy2
+IFaEbTa9nChTdWA/buvIzVwWA7rjFFAGPv3JyHFLFQNyW1EFaaYWmd+oz/10WToI
+eyCvT3R2VukfcivjmayuAlYojgcN6eiKWznIkw1QI9adhdKkKIQ+zWzujiiAMUFk
+jzpnrZC2bdHHVwdxaCFT3xp9MyHQT+r97Hz7BIhfCyMNHMZunNA=
+=+L6M
+-----END PGP SIGNATURE-----
+
+--=-Ef2QZ4R94O2Y8+Y6TJkQ--
+
