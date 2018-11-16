@@ -2,108 +2,116 @@ Return-Path: <SRS0=ZGUU=N3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7003BC43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 08:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87644C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 09:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34A96208A3
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 08:54:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HWQhklZk";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MiaOPzlM"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 34A96208A3
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 340C5208A3
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 09:04:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 340C5208A3
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=milecki.pl
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389324AbeKPTGF (ORCPT
+        id S1727575AbeKPTPd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 14:06:05 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:42164 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727398AbeKPTGF (ORCPT
+        Fri, 16 Nov 2018 14:15:33 -0500
+Received: from mo183.mail-out.ovh.net ([178.32.228.183]:57527 "EHLO
+        mo183.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727405AbeKPTPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 14:06:05 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 4F52460591; Fri, 16 Nov 2018 08:54:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542358482;
-        bh=Ujk/FXE+8DOQQvtMf9xPaUsKS8I62iOuaeLZGq6JSNs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=HWQhklZk0Bh3MiGn0FL7SoqdNXk3FLs2QTDE/hqthHZVKwzzSCRBq5lDc95ZvNLOn
-         XFVxrUvDuUZlG1C3/HzF5ZY+dL8Duh5jGh5rt8UGZmD3d9GNlD0pWwe8hmuGMxgoqY
-         A9pX3LCUGbLRZl4RWUKSod8URNWwBVyFMiyYJ2Uo=
-Received: from x230.qca.qualcomm.com (87-95-226-75.bb.dnainternet.fi [87.95.226.75])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D2398601D4;
-        Fri, 16 Nov 2018 08:54:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542358481;
-        bh=Ujk/FXE+8DOQQvtMf9xPaUsKS8I62iOuaeLZGq6JSNs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=MiaOPzlMFAe4PTBdy14aZaG1ey0QznQZOadsSLS3q1DJ75sI9lD9Xx2ZbtZ2sxQYn
-         wH2SD1qXqqeLciuOzWXMWTtgeYMTHfbrqXw/DVG/a3MvSevfYQGvZmVCkr9HoUoSSC
-         nKIG2LmLJoqwLLMZGK8aBoUwIpjH0TpVoTmmwdHo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D2398601D4
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-wireless@vger.kernel.org
-Subject: Re: wiki: tree labels in patches
-References: <20181108150829.24842-1-zajec5@gmail.com>
-        <87lg62cpno.fsf@codeaurora.org>
-        <f1e1160ba35a42e12a0162629be23304@milecki.pl>
-        <87in0x8l4t.fsf_-_@codeaurora.org>
-        <c66fa62a88f1d99dc35019c5e7d00b062c6b1785.camel@sipsolutions.net>
-Date:   Fri, 16 Nov 2018 10:54:38 +0200
-In-Reply-To: <c66fa62a88f1d99dc35019c5e7d00b062c6b1785.camel@sipsolutions.net>
-        (Johannes Berg's message of "Fri, 16 Nov 2018 09:49:26 +0100")
-Message-ID: <87efbl8ks1.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 16 Nov 2018 14:15:33 -0500
+X-Greylist: delayed 515 seconds by postgrey-1.27 at vger.kernel.org; Fri, 16 Nov 2018 14:15:32 EST
+Received: from player735.ha.ovh.net (b3.ovh.net [213.186.33.53])
+        by mo183.mail-out.ovh.net (Postfix) with ESMTP id D36493B444C
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2018 09:55:13 +0100 (CET)
+Received: from RCM-web1.webmail.mail.ovh.net (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
+        (Authenticated sender: rafal@milecki.pl)
+        by player735.ha.ovh.net (Postfix) with ESMTPSA id A08E55CCACF;
+        Fri, 16 Nov 2018 08:55:12 +0000 (UTC)
+Received: from ip-194-187-74-233.konfederacka.maverick.com.pl
+ ([194.187.74.233])
+ via ip-194-187-74-233.konfederacka.maverick.com.pl
+ ([194.187.74.233])
+ by mail.ovh.net
+ with HTTP (HTTP/1.1 POST); Fri, 16 Nov 2018 09:55:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Fri, 16 Nov 2018 09:55:12 +0100
+From:   =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: wiki: tree labels in patches
+In-Reply-To: <87in0x8l4t.fsf_-_@codeaurora.org>
+References: <20181108150829.24842-1-zajec5@gmail.com>
+ <87lg62cpno.fsf@codeaurora.org>
+ <f1e1160ba35a42e12a0162629be23304@milecki.pl>
+ <87in0x8l4t.fsf_-_@codeaurora.org>
+Message-ID: <b5316181600c25788eb76f246d3482bc@milecki.pl>
+X-Sender: rafal@milecki.pl
+User-Agent: Roundcube Webmail/1.3.8
+X-Originating-IP: 194.187.74.233
+X-Webmail-UserID: rafal@milecki.pl
+X-Ovh-Tracer-Id: 9651495479433858584
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedtkedrleeigdduvdejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2018-11-16 at 10:46 +0200, Kalle Valo wrote:
->
->> Yes, I do see your FIX tag in patchwork:
+On 2018-11-16 09:46, Kalle Valo wrote:
+> (changing subject for better visibility and trimming Cc)
+> 
+> Rafał Miłecki <rafal@milecki.pl> writes:
+> 
+>> On 2018-11-09 15:05, Kalle Valo wrote:
+>>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>> 
+>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>> 
+>>>> Driver can report IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ so it's
+>>>> important to provide valid & complete info about supported bands for
+>>>> each channel. By default no support for 160 MHz should be assumed
+>>>> unless
+>>>> firmware reports it for a given channel later.
+>>>> 
+>>>> This fixes info passed to the userspace. Without that change 
+>>>> userspace
+>>>> could try to use invalid channel and fail to start an interface.
+>>>> 
+>>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>>>> Cc: stable@vger.kernel.org
+>>> 
+>>> Should this be queued to 4.20?
 >> 
->>  [ 31] [FIX] brcmfmac: fix reporting support for 160 MHz channels   2018-11-08 
+>> That's my suggestion.
 >> 
->> But "FIX" is a bit ambigous as not all fixes not go to wireless-drivers,
->> they can also go to wireless-drivers-next. So I prefer using the release
->> number (or name of the tree) like this:
->> 
->> [PATCH 4.20] brcmfmac: fix reporting support for 160 MHz channels
->
-> FWIW, davem/networking just use 
->
-> [PATCH net]
-> [PATCH net-next]
->
-> which puts a bit more effort on the submitter but is a bit easier on the
-> maintainer I suppose. Also, not really a problem here, but it would help
-> disambiguate different trees on the same mailing list. I don't really
-> mind either way.
+>> I try to mark fixes (patches for currently developed release) with an
+>> extra FIX tag in a subject. Do you have any other method in mind that
+>> would be preferred by you?
+> 
+> Yes, I do see your FIX tag in patchwork:
+> 
+>  [ 31] [FIX] brcmfmac: fix reporting support for 160 MHz channels   
+> 2018-11-08
+> 
+> But "FIX" is a bit ambigous as not all fixes not go to 
+> wireless-drivers,
+> they can also go to wireless-drivers-next. So I prefer using the 
+> release
+> number (or name of the tree) like this:
+> 
+> [PATCH 4.20] brcmfmac: fix reporting support for 160 MHz channels
+> 
+> After seeing your question I added something about this to the wiki
+> which hopefully helps others:
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#tree_labels
 
-Actually I already added that to the wiki[1] but made it optional just
-bacause it's harder for patch submitters who are not so familiar with
-our tree structure. But yes, I also like using the full tree name as the
-label, even more so as it would help me to automatically assign patches
-to correct maintainers in patchwork.
-
-[1] https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#tree_labels
-
--- 
-Kalle Valo
+Got it, thanks!
