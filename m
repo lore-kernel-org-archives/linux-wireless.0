@@ -3,144 +3,92 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F12A4C43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 10:15:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC2EC43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8A21208E3
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 10:15:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24EB72089D
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:05:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kcu0BD0g";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AvxDUOLo"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B8A21208E3
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="TsIKUEM9"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 24EB72089D
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=nbd.name
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727630AbeKPU0q (ORCPT
+        id S2389504AbeKPVRt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 15:26:46 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:36424 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727454AbeKPU0p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 15:26:45 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F3239612F3; Fri, 16 Nov 2018 10:15:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542363305;
-        bh=dlTW5ELU6sT+EzPDlJ/bdlTI9lbRzlOWNxXypVwzB3w=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=kcu0BD0g9VKFxVMSAyZr5g58CmjbL6IQTvoax/xr/1jFweceEHdNnxZ+9UN3J0DEI
-         g7lb1GcoJM3N0t2vqQvHe6iUvxHdJ0xP8tGm5GxHAO6UXF4JOiTH3qwXKBFZZGd7uV
-         52LFScBhWXPc3rLD6NyaV066FQ83/Yh6Eyf0YWOE=
-Received: from x230.qca.qualcomm.com (87-95-226-75.bb.dnainternet.fi [87.95.226.75])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BFDEF60C4C;
-        Fri, 16 Nov 2018 10:15:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542363304;
-        bh=dlTW5ELU6sT+EzPDlJ/bdlTI9lbRzlOWNxXypVwzB3w=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=AvxDUOLosOaNGl1jjdYy0BPnUUG/yBid15Z3YRBz5yi58PoBx2bdc+C7sLwg/EoTk
-         MxveKnoUXRB5PTdSyOHlet96xgSmDdyBhewOTJV6AmxOgCnT50B/cIVX0CfS30ecCy
-         smZZohoyr2mUsQ8dCvxARJWAsIsFpOYtoYRmPxKI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BFDEF60C4C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     govinds@codeaurora.org, yyuwang@codeaurora.org,
-        rmanohar@codeaurora.org, linux-wireless-owner@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        ath10k@lists.infradead.org, pillair@codeaurora.org,
-        stable <stable@vger.kernel.org>
-Subject: Re: [PATCH REGRESSION] Revert "ath10k: add quiet mode support for QCA6174/QCA9377"
-References: <20181107185643.240346-1-briannorris@chromium.org>
-        <7f2ef494f4a2aba1845a157da8fec449@codeaurora.org>
-        <b1a64bd66fa25f274af8c018c6fc02f4@codeaurora.org>
-        <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
-Date:   Fri, 16 Nov 2018 12:14:59 +0200
-In-Reply-To: <CA+ASDXOqJ1-G2amyu7sJCnzKf1oY_2j9Qw4WS0VTf8EqGr6Uqw@mail.gmail.com>
-        (Brian Norris's message of "Thu, 8 Nov 2018 09:30:43 -0800")
-Message-ID: <87k1ld72ho.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 16 Nov 2018 16:17:49 -0500
+Received: from nbd.name ([46.4.11.11]:34162 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727633AbeKPVRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Nov 2018 16:17:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:References:To:From:Subject:Sender:Reply-To:Cc:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=Me4UQHyB0uB87ZYs4NdXCGDTzC+FHibdtxACB7uvcHE=; b=TsIKUEM91TTJ9N2sgGgpOWns5R
+        vCNDW1Z7DqXzrYoXqRz4lkScQc2EPmlYw0G9Mgq4kvYpltP8tL+O8gxpKXBZIsJ8EEjaURrImD06B
+        MXmHOQUzd3Ba0eSzW+5u+I3TeNP0qexkCimFaStbzSU99633jTuz5vuEqn5DZEK/oL0Q=;
+Subject: Re: [PATCH 3/4] mt76: fix race condition in station removal
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+References: <20181113194123.93313-1-nbd@nbd.name>
+ <20181113194123.93313-3-nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <b696a8b8-d180-e618-008c-39d6cf4a23ac@nbd.name>
+Date:   Fri, 16 Nov 2018 12:05:55 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:52.0)
+ Gecko/20100101 Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20181113194123.93313-3-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> writes:
+On 2018-11-13 20:41, Felix Fietkau wrote:
+> If there are still pending packets in the tx queue when removing a station,
+> it could possibly lead to a call to further attempts to pull packets from
+> the mac80211 tx queue after it has already been removed from the scheduling
+> list.
+> Prevent this from happening by calling synchronize_rcu after deleting the
+> wcid pointer before further cleaning up the tx queues.
+> To be extra careful, ensure that mtxq->list is always initialized properly.
+> 
+> Also drop the useless call to mt76x02_mac_wcid_setup, which only re-assigns
+> the bss index of the wcid entry, but does not help with the cleanup in any
+> way.
+I misread the code and the call to mt76x02_mac_wcid_setup matters after
+all. Will send a v2 of this series with further improvements.
 
-> On Wed, Nov 7, 2018 at 8:32 PM Govind Singh <govinds@codeaurora.org> wrote:
->> On 2018-11-08 03:00, Rajkumar Manoharan wrote:
->> > On 2018-11-07 10:56, Brian Norris wrote:
->> >> This reverts commit cfb353c0dc058bc1619cc226d3cbbda1f360bdd3.
->> >>
->> >> WCN3990 firmware does not yet implement this feature, and so it
->> >> crashes
->> >> like this:
->> >>
->> >>   fatal error received: err_qdi.c:456:EX:wlan_process:1:WLAN
->> >> RT:207a:PC=b001b4f0
->> >>
->> >> This feature can be re-implemented with a proper service bitmap or
->> >> other
->> >> feature-discovery mechanism in the future. But it should not break
->> >> working boards.
->> >>
->> > Brian,
->> >
->> > The change "ath10k: add quiet mode support for QCA6174/QCA9377" was
->> > merged even
->> > before full WCN3990 device support was added in ath10k. How come it
->> > could be regression
->> > for WCN3990. I know both are sharing same WMI-TLV interface but
->> > reverting this
->> > will break QCA6174/QCA9377. no?
->
-> I don't see how the revert would "break" QCA6174 -- QCA6174 worked
-> just fine without this feature and should continue to do so.
->
->> This regression is found while we switched from 4.18 + WCN3990
->> back-ports to 4.19.
->
-> ^^ What Govind said. WCN3990 support has been trickling in over a few
-> releases, and it doesn't seem kosher to allow people to submit
-> regressions in the midst of that.
-
-Yeah, I agree.
-
->> > I would prefer to handle this within WMI callback or upper layer.
->> >
->>
->> IMO, we should use (WMI_SERVICE_THERMAL_MGMT | WMI_SERVICE_THERM_THROT )
->> service bitmap check and call
->> ath10k_thermal_set_throttling only if fw supports THERMAL THROTTLE
->> feature. But we need to ensure all
->> available ath10k fw's are reporting this service.
->
-> And the above notes from Govind highlight this -- if the feature was
-> not protected by the appropriate service flags, then we can't be sure
-> that you didn't break a bunch of other firmware releases out there.
-> Linux should not break for everyone just because you spun a firmware
-> release.
->
-> Of course, I'll leave it up to Kalle as to how he wants to mediate
-> this. And if you come up with a solid patch soon that can fix this
-> without dropping the feature, then so be it.
-
-We should have a fix for this available next week which I'm planning to
-push to 4.20. If that does not happen my plan B is to apply Brian's
-revert to make wcn3990 working on 4.20.
-
-Thanks Brian for investigating this and providing the revert!
-
--- 
-Kalle Valo
+- Felix
