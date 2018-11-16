@@ -1,141 +1,113 @@
-Return-Path: <SRS0=mfDp=N2=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=ZGUU=N3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80EC0C43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 23:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC23C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 07:00:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42B1F20869
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Nov 2018 23:25:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5F4B20818
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 07:00:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=networkplumber-org.20150623.gappssmtp.com header.i=@networkplumber-org.20150623.gappssmtp.com header.b="JN8Qp413"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 42B1F20869
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=networkplumber.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VsjcGnCM";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Wd6kMrPw"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E5F4B20818
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbeKPJfG (ORCPT
+        id S1728022AbeKPRLk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 04:35:06 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:43363 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726233AbeKPJfG (ORCPT
+        Fri, 16 Nov 2018 12:11:40 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47124 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727380AbeKPRLk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 04:35:06 -0500
-Received: by mail-pf1-f195.google.com with SMTP id w73so1099171pfk.10
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Nov 2018 15:25:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=networkplumber-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id;
-        bh=YcYHXqI/NfdtSKqYHhxfGF1M2TQLyviW2hfD2mibNUQ=;
-        b=JN8Qp413KFESW69q+snGLZkzurXIZ//ACzjwWaAkLQULQIgnzHOR8tQIVFWGaWAdVG
-         oS5fnlxrbVj1xqhNDxJRLXqhslGkN0mHqhrYvK+BiOFK8iTNTbcT4TfAFxUFFfJeYyp1
-         gdMlbmbe/VCgNCyA5yLo6Zf/q+OhF62TE/CmOroXUbmK90izLijT6f+OoV1FJxUL4suy
-         WHQ0bx1aRW+cK6nXqzBgQblUcwGGii+aETQUdGd81HGWYe6pwXNchrMm64uQSTqKGRdI
-         l1Hyd8s50rJ7wfKpsVz24jNHab4IiNVqnNiW+6CanzOthdJ4I0+qS/ljnmBy4m6VcUkm
-         ak7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=YcYHXqI/NfdtSKqYHhxfGF1M2TQLyviW2hfD2mibNUQ=;
-        b=F+cPJTlyYiJi7+qoiKg1wj//2TBR3RrKh2+wDSQhDczIfPNB8Brx1QcOueIytsB91q
-         L+l9NInwMpYO1U2YMIt/FriR36ZXwXqpZnb/2X10AfOTUJlVgTCHM0W98L+woYvDfqTb
-         cTmq0FJIB0XmJS8cDCmdjaFkgCC2nm+oGcPiyKe69rWLKpvqPg+mYhYQkrp9kwpUODow
-         vGm6p9wQ5rmPzpqlLz0g1WCJAIEm/xbfXCWlDMdYt7HV9etv0emd7wzTq81Is9U4mpoZ
-         Mg43k7zaCdkeQoTLevktwhBnWWVa3YeebHhNsOenbjDC0whM3Ixck8Wpc4vJPoAjnSo3
-         1QaA==
-X-Gm-Message-State: AGRZ1gKHHBzdggHnLSp9XMeslUKbQSNr89UaRpcYmBYqej5pEMCek7TP
-        ZmL72B2XJw8jL3zsUzXI7eNk1lBasK7IUg==
-X-Google-Smtp-Source: AJdET5e/dGmXHrlg/ug0JTmK8wyrVfwok2qHy7Kyd3SgBY8NrZBKAbYwKBK+RWoEeQkGjRgNgXTIew==
-X-Received: by 2002:a62:6547:: with SMTP id z68-v6mr8343399pfb.169.1542324310632;
-        Thu, 15 Nov 2018 15:25:10 -0800 (PST)
-Received: from localhost.localdomain ([64.114.255.97])
-        by smtp.gmail.com with ESMTPSA id f3-v6sm24701318pgq.34.2018.11.15.15.25.09
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Nov 2018 15:25:09 -0800 (PST)
-From:   Stephen Hemminger <stephen@networkplumber.org>
-X-Google-Original-From: Stephen Hemminger <sthemmin@microsoft.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH] uapi/nl80211: fix spelling errors
-Date:   Thu, 15 Nov 2018 15:25:04 -0800
-Message-Id: <20181115232504.15770-1-sthemmin@microsoft.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 16 Nov 2018 12:11:40 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 52E766085F; Fri, 16 Nov 2018 07:00:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542351632;
+        bh=mywOIvUMnj6eiOLWZfPFWaWoDxxWD97muw0JSwPubqs=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=VsjcGnCMXYzAINY/rJeNLwwKhYzN5IZ7fUfjzHOLBsrJkIUGxPqyjUjayAJx83taR
+         6BOxeyNer0TecGAQEBNmm2GsdlB61BNmYoACxNIeMW1koIcpw5qhFq5D47rzRnYQD9
+         WToIggSzwrz8XJzrwQIacSb1ZkW0ImoFKjDzshwM=
+Received: from x230.qca.qualcomm.com (87-95-226-75.bb.dnainternet.fi [87.95.226.75])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 439C360452;
+        Fri, 16 Nov 2018 07:00:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542351631;
+        bh=mywOIvUMnj6eiOLWZfPFWaWoDxxWD97muw0JSwPubqs=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Wd6kMrPwi0nx/RIJihFRa3LM5r2QmKv+fJ46ynE6MpoQOzrLwd9Dse0uMlHZt5IVz
+         kgF16O2d/IsVTPWSWtaaOjb9sxxP1E4wke0dzE77CPP61mwG7VRK5lzNfZoqdeADas
+         5K9/Hl3/4XcyiOOI7d64x5fHc75gpyFwZVZ3Aaqo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 439C360452
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Wen Gong <wgong@qti.qualcomm.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Wen Gong <wgong@codeaurora.org>
+Subject: Re: [PATCH] ath10k: support PCIe enter L1 state
+References: <1542163848-837-1-git-send-email-wgong@codeaurora.org>
+        <20181115002836.GA71934@google.com>
+        <c94346b26a6d4b11a045a176ca854051@aptaiexm02f.ap.qualcomm.com>
+        <20181115184333.GA87504@google.com>
+Date:   Fri, 16 Nov 2018 09:00:27 +0200
+In-Reply-To: <20181115184333.GA87504@google.com> (Brian Norris's message of
+        "Thu, 15 Nov 2018 10:43:33 -0800")
+Message-ID: <87va4x8q2c.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Spelling errors found by codespell
+Brian Norris <briannorris@chromium.org> writes:
+> On Thu, Nov 15, 2018 at 06:38:25AM +0000, Wen Gong wrote:
+>> > 
+>> > Is there some reason L1 was disabled in the first place? Was it known to be
+>> > unreliable?
+>>
+>> Hi Brian,
+>> It is a BUG for power, and it is not considered this BUG before.
+>> So this change will fix the bug.
+>
+> I understand that the existing behavior is suboptimal for power, but on
+> the other hand, code that goes out of its way to *clear* the L1 flag
+> doesn't just pop up out of nowhere. Somebody clearly wrote that! If it
+> just meant "we didn't verify L1 at first", then maybe it's fine to
+> enable it unconditionally and see what happens, but if it meant "we
+> tried L1 on some old chip XXXX and it caused problems", then it would be
+> nice to know what those problems were.
+>
+> Or maybe that is hard to figure out, given there's no public git history
+> tracking the original code, and we just need to try it out.
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- include/uapi/linux/nl80211.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Yeah, it seems L1 was disabled already on the first ath10k commit:
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6d610bae30a9..da3ea1f75006 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1706,7 +1706,7 @@ enum nl80211_commands {
-  *	the values passed in @NL80211_ATTR_SCAN_SSIDS (eg. if an SSID
-  *	is included in the probe request, but the match attributes
-  *	will never let it go through), -EINVAL may be returned.
-- *	If ommited, no filtering is done.
-+ *	If omitted, no filtering is done.
-  *
-  * @NL80211_ATTR_INTERFACE_COMBINATIONS: Nested attribute listing the supported
-  *	interface combinations. In each nested item, it contains attributes
-@@ -1811,7 +1811,7 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_INACTIVITY_TIMEOUT: timeout value in seconds, this can be
-  *	used by the drivers which has MLME in firmware and does not have support
-- *	to report per station tx/rx activity to free up the staion entry from
-+ *	to report per station tx/rx activity to free up the station entry from
-  *	the list. This needs to be used when the driver advertises the
-  *	capability to timeout the stations.
-  *
-@@ -2172,7 +2172,7 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_SCHED_SCAN_RSSI_ADJUST: When present the RSSI level for BSSs in
-  *	the specified band is to be adjusted before doing
-- *	%NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI based comparision to figure out
-+ *	%NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI based comparison to figure out
-  *	better BSSs. The attribute value is a packed structure
-  *	value as specified by &struct nl80211_bss_select_rssi_adjust.
-  *
-@@ -4859,7 +4859,7 @@ enum nl80211_iface_limit_attrs {
-  *	numbers = [ #{STA} <= 1, #{P2P-client,P2P-GO} <= 3 ], max = 4
-  *	=> allows a STA plus three P2P interfaces
-  *
-- * The list of these four possiblities could completely be contained
-+ * The list of these four possibilities could completely be contained
-  * within the %NL80211_ATTR_INTERFACE_COMBINATIONS attribute to indicate
-  * that any of these groups must match.
-  *
-@@ -4889,7 +4889,7 @@ enum nl80211_if_combination_attrs {
-  * enum nl80211_plink_state - state of a mesh peer link finite state machine
-  *
-  * @NL80211_PLINK_LISTEN: initial state, considered the implicit
-- *	state of non existant mesh peer links
-+ *	state of non existent mesh peer links
-  * @NL80211_PLINK_OPN_SNT: mesh plink open frame has been sent to
-  *	this mesh peer
-  * @NL80211_PLINK_OPN_RCVD: mesh plink open frame has been received
-@@ -5381,7 +5381,7 @@ enum nl80211_timeout_reason {
-  *	request parameters IE in the probe request
-  * @NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP: accept broadcast probe responses
-  * @NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE: send probe request frames at
-- *	rate of at least 5.5M. In case non OCE AP is dicovered in the channel,
-+ *	rate of at least 5.5M. In case non OCE AP is discovered in the channel,
-  *	only the first probe req in the channel will be sent in high rate.
-  * @NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION: allow probe request
-  *	tx deferral (dot11FILSProbeDelay shall be set to 15ms)
+5e3dd157d7e70 (Kalle Valo                2013-06-12 20:52:10 +0300 2404)        pcie_config_flags &= ~PCIE_CONFIG_FLAG_ENABLE_L1;
+
+I don't remember anymore why but my guess is that the proprietary driver
+at the time didn't support it with QCA998X. Or maybe QCA988X doesn't
+even support L1? Michal, do you remember?
+
+Related to QCA988X supporting L1 state also the commit log is misleading
+as it only talks QCA6174/QCA9377, and has been only tested on QCA6174,
+but the actual change enables L1 on _all_ PCI and AHB devices. So this
+patch needs a lot more testing so that we have confidence that no
+existing setups break.
+
 -- 
-2.17.1
-
+Kalle Valo
