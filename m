@@ -2,33 +2,34 @@ Return-Path: <SRS0=ZGUU=N3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-14.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD18C07208
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3B2C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:31:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B785208A3
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:31:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9B785208A3
+	by mail.kernel.org (Postfix) with ESMTP id 04EC12086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:31:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 04EC12086A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389534AbeKPVnp (ORCPT
+        id S2389554AbeKPVnr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 16:43:45 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:47279 "EHLO
+        Fri, 16 Nov 2018 16:43:47 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:47281 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727567AbeKPVnp (ORCPT
+        with ESMTP id S2389523AbeKPVnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 16:43:45 -0500
+        Fri, 16 Nov 2018 16:43:47 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID wAGBVcTK020485, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID wAGBVdE2020489, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtitcasv01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id wAGBVcTK020485
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id wAGBVdE2020489
         (version=TLSv1 cipher=AES256-SHA bits=256 verify=NOT);
-        Fri, 16 Nov 2018 19:31:38 +0800
+        Fri, 16 Nov 2018 19:31:39 +0800
 Received: from localhost.localdomain (172.21.68.143) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
  14.3.408.0; Fri, 16 Nov 2018 19:31:38 +0800
@@ -36,9 +37,9 @@ From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
         <pkshih@realtek.com>, <tehuang@realtek.com>
-Subject: [PATCH v2 12/13] rtw88: Kconfig & Makefile
-Date:   Fri, 16 Nov 2018 19:31:18 +0800
-Message-ID: <1542367879-28880-13-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH v2 13/13] rtw88: add support for Realtek 802.11ac wireless chips
+Date:   Fri, 16 Nov 2018 19:31:19 +0800
+Message-ID: <1542367879-28880-14-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
 References: <1542367879-28880-1-git-send-email-yhchuang@realtek.com>
@@ -52,125 +53,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Kconfig & Makefile for Realtek 802.11ac wireless network chips
-
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/Kconfig        |  1 +
- drivers/net/wireless/realtek/Makefile       |  1 +
- drivers/net/wireless/realtek/rtw88/Kconfig  | 55 +++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/Makefile | 19 ++++++++++
- 4 files changed, 76 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/Kconfig
- create mode 100644 drivers/net/wireless/realtek/rtw88/Makefile
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/Kconfig b/drivers/net/wireless/realtek/Kconfig
-index 3db988e..9189fd6 100644
---- a/drivers/net/wireless/realtek/Kconfig
-+++ b/drivers/net/wireless/realtek/Kconfig
-@@ -14,5 +14,6 @@ if WLAN_VENDOR_REALTEK
- source "drivers/net/wireless/realtek/rtl818x/Kconfig"
- source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
- source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
-+source "drivers/net/wireless/realtek/rtw88/Kconfig"
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9ad052a..138515b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -12546,6 +12546,14 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.g
+ S:	Maintained
+ F:	drivers/net/wireless/realtek/rtlwifi/
  
- endif # WLAN_VENDOR_REALTEK
-diff --git a/drivers/net/wireless/realtek/Makefile b/drivers/net/wireless/realtek/Makefile
-index 9c78deb..118af99 100644
---- a/drivers/net/wireless/realtek/Makefile
-+++ b/drivers/net/wireless/realtek/Makefile
-@@ -6,4 +6,5 @@ obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
- obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
- obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
-+obj-$(CONFIG_RTW88)		+= rtw88/
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-new file mode 100644
-index 0000000..bd68c7c
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -0,0 +1,55 @@
-+menuconfig RTW88
-+	tristate "Realtek 802.11ac wireless chips support"
-+	depends on MAC80211
-+	default y
-+	help
-+	  This module adds support for mac80211-based wireless drivers that
-+	  enables Realtek IEEE 802.11ac wireless chipsets.
++REALTEK WIRELESS DRIVER (rtw88)
++M:	Yan-Hsuan Chuang <yhchuang@realtek.com>
++L:	linux-wireless@vger.kernel.org
++W:	http://wireless.kernel.org/
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
++S:	Maintained
++F:	drivers/net/wireless/realtek/rtw88/
 +
-+	  If you choose to build a module, it'll be called rtw88.
-+
-+if RTW88
-+
-+config RTW88_CORE
-+	tristate
-+
-+config RTW88_PCI
-+	tristate
-+
-+config RTW88_8822BE
-+	bool "Realtek 8822BE PCI wireless network adapter"
-+	depends on PCI
-+	select RTW88_CORE
-+	select RTW88_PCI
-+	help
-+	  Select this option will enable support for 8822BE chipset
-+
-+	  802.11ac PCIe wireless network adapter
-+
-+config RTW88_8822CE
-+	bool "Realtek 8822CE PCI wireless network adapter"
-+	depends on PCI
-+	select RTW88_CORE
-+	select RTW88_PCI
-+	help
-+	  Select this option will enable support for 8822CE chipset
-+
-+	  802.11ac PCIe wireless network adapter
-+
-+config RTW88_DEBUG
-+	bool "Realtek rtw88 debug support"
-+	depends on RTW88_CORE
-+	help
-+	  Enable debug support
-+
-+	  If unsure, say Y to simplify debug problems
-+
-+config RTW88_DEBUGFS
-+	bool "Realtek rtw88 debugfs support"
-+	depends on RTW88_CORE
-+	help
-+	  Enable debug support
-+
-+	  If unsure, say Y to simplify debug problems
-+
-+endif
-diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-new file mode 100644
-index 0000000..d70782a
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -0,0 +1,19 @@
-+obj-$(CONFIG_RTW88_CORE)	+= rtw88.o
-+rtw88-y += main.o \
-+	   mac80211.o \
-+	   debug.o \
-+	   tx.o \
-+	   rx.o \
-+	   mac.o \
-+	   phy.o \
-+	   efuse.o \
-+	   fw.o \
-+	   ps.o \
-+	   sec.o \
-+	   regd.o
-+
-+rtw88-$(CONFIG_RTW88_8822BE)	+= rtw8822b.o rtw8822b_table.o
-+rtw88-$(CONFIG_RTW88_8822CE)	+= rtw8822c.o rtw8822c_table.o
-+
-+obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
-+rtwpci-objs			:= pci.o
+ RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
+ M:	Jes Sorensen <Jes.Sorensen@gmail.com>
+ L:	linux-wireless@vger.kernel.org
 -- 
 2.7.4
 
