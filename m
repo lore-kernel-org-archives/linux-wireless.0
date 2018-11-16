@@ -2,138 +2,98 @@ Return-Path: <SRS0=ZGUU=N3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B568FC43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97D43C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 12:17:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76B972087A
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 11:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5329B208A3
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 12:17:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lVi6ckvk";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lVi6ckvk"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 76B972087A
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jaNtpkZl";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jaNtpkZl"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5329B208A3
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728189AbeKPVzM (ORCPT
+        id S1727825AbeKPW3h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 16:55:12 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34442 "EHLO
+        Fri, 16 Nov 2018 17:29:37 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:51920 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727775AbeKPVzM (ORCPT
+        with ESMTP id S1727727AbeKPW3h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 16:55:12 -0500
+        Fri, 16 Nov 2018 17:29:37 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 75BD1606E1; Fri, 16 Nov 2018 11:43:11 +0000 (UTC)
+        id 6D744606E1; Fri, 16 Nov 2018 12:17:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542368591;
-        bh=JsnXG3LeWLE9k3XUCEtezIgA+pxzBjZLXhX/MCL5JCQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lVi6ckvkMgwbKIKlYdI7Sp/pxXgC45cY5n8YQsZGpiuhAGVqhfn0HcjcTw73YQ0DV
-         ycN+bOlqyYrFa06y98vuFtGa8iXgHJEsjbA6f/p9C4c1jY8HXl+6rc9fyKHEvZlFJA
-         IAUCyyLB9UErw/0Pp0cDpBxKPpJTxvAQsAx+yF+I=
-Received: from vjakkam-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        s=default; t=1542370649;
+        bh=bk5FEvnJ2/kWE+2A1nRwqHlMNe7DhcUI2Wthd/UTpmk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=jaNtpkZlCbKB4Wqd9l78LK53Hpu+bbjvPyxx/kmkPIIwbzNfoy24ofMWkfG/eQ+uE
+         tDlnOfj5q4NDAfPVkK8HfE8X/vvU8xlE6x4v2EtUskfZ4V3hh+09kigEBg8iKTKyHY
+         XmvGknl8PK7Ju/xDKorl+w6+R6vJgfJbLgYUL73g=
+Received: from x230.qca.qualcomm.com (87-95-226-75.bb.dnainternet.fi [87.95.226.75])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: vjakkam@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F125B60591;
-        Fri, 16 Nov 2018 11:43:09 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8FA106035F;
+        Fri, 16 Nov 2018 12:17:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542368591;
-        bh=JsnXG3LeWLE9k3XUCEtezIgA+pxzBjZLXhX/MCL5JCQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lVi6ckvkMgwbKIKlYdI7Sp/pxXgC45cY5n8YQsZGpiuhAGVqhfn0HcjcTw73YQ0DV
-         ycN+bOlqyYrFa06y98vuFtGa8iXgHJEsjbA6f/p9C4c1jY8HXl+6rc9fyKHEvZlFJA
-         IAUCyyLB9UErw/0Pp0cDpBxKPpJTxvAQsAx+yF+I=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F125B60591
+        s=default; t=1542370649;
+        bh=bk5FEvnJ2/kWE+2A1nRwqHlMNe7DhcUI2Wthd/UTpmk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=jaNtpkZlCbKB4Wqd9l78LK53Hpu+bbjvPyxx/kmkPIIwbzNfoy24ofMWkfG/eQ+uE
+         tDlnOfj5q4NDAfPVkK8HfE8X/vvU8xlE6x4v2EtUskfZ4V3hh+09kigEBg8iKTKyHY
+         XmvGknl8PK7Ju/xDKorl+w6+R6vJgfJbLgYUL73g=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8FA106035F
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=vjakkam@codeaurora.org
-From:   Veerendranath Jakkam <vjakkam@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: Allow drivers to advertise supported AKM suites
-Date:   Fri, 16 Nov 2018 17:13:02 +0530
-Message-Id: <1542368582-3153-1-git-send-email-vjakkam@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 3/3] ath10k: Add support to configure ftm responder role
+References: <1534293018-4930-1-git-send-email-pradeepc@codeaurora.org>
+        <1534293018-4930-4-git-send-email-pradeepc@codeaurora.org>
+        <36962f12-84ff-d1a9-8273-a8e3444db108@dd-wrt.com>
+        <871s99lrlv.fsf@kamboji.qca.qualcomm.com>
+Date:   Fri, 16 Nov 2018 14:17:24 +0200
+In-Reply-To: <871s99lrlv.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Mon, 01 Oct 2018 16:32:44 +0300")
+Message-ID: <87ftw16wtn.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There was no such capability advertisement from the driver and thus the
-current user space has to assume the driver to support all the AKMs. While
-that may be the case with some drivers (e.g., mac80211-based ones), there
-are cfg80211-based drivers that have constraints on which AKMs can be used.
-Allow such drivers to advertise the exact set of supported AKMs so that
-user space tools can determine what network profile options should be
-allowed to be configured.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Veerendranath Jakkam <vjakkam@codeaurora.org>
----
- include/net/cfg80211.h       | 5 +++++
- include/uapi/linux/nl80211.h | 4 ++++
- net/wireless/nl80211.c       | 6 ++++++
- 3 files changed, 15 insertions(+)
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>> Am 15.08.2018 um 02:30 schrieb Pradeep Kumar Chitrapu:
+>>>   +	if (test_bit(WMI_SERVICE_RTT, ar->wmi.svc_map))
+>>> +		wiphy_ext_feature_set(ar->hw->wiphy,
+>>> +				      NL80211_EXT_FEATURE_SET_FTM_RESPONDER);
+>>> +
+>>
+>> not sure if this is accurate. even if WMI_SERVICE_RTT is set, the
+>> firmware may not support this feature. this feature doesnt seem to be
+>> implemented in current firmware releases
+>> i checked the firmware sourcecode i have from 3.4 series and it doesnt
+>> support this feature
+>
+> Pradeep, did you check this? It's really bad if ath10k enables the
+> feature even if the firmware doesn't support this.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ede7fcd..7cff5ab 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4110,6 +4110,8 @@ struct cfg80211_pmsr_capabilities {
-  * @signal_type: signal type reported in &struct cfg80211_bss.
-  * @cipher_suites: supported cipher suites
-  * @n_cipher_suites: number of supported cipher suites
-+ * @akm_suites: supported AKM suites
-+ * @n_akm_suites: number of supported AKM suites
-  * @retry_short: Retry limit for short frames (dot11ShortRetryLimit)
-  * @retry_long: Retry limit for long frames (dot11LongRetryLimit)
-  * @frag_threshold: Fragmentation threshold (dot11FragmentationThreshold);
-@@ -4308,6 +4310,9 @@ struct wiphy {
- 	int n_cipher_suites;
- 	const u32 *cipher_suites;
- 
-+	int n_akm_suites;
-+	const u32 *akm_suites;
-+
- 	u8 retry_short;
- 	u8 retry_long;
- 	u32 frag_threshold;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 51bd85b..c21c238 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1558,6 +1558,10 @@ enum nl80211_commands {
-  *	(a u32 with flags from &enum nl80211_wpa_versions).
-  * @NL80211_ATTR_AKM_SUITES: Used with CONNECT, ASSOCIATE, and NEW_BEACON to
-  *	indicate which key management algorithm(s) to use (an array of u32).
-+ *	This attribute is also sent in response to @NL80211_CMD_GET_WIPHY,
-+ *	indicating the supported AKM suites. If there is no such notification
-+ *	from the driver, user space should assume the driver supports all the
-+ *	AKM suites.
-  *
-  * @NL80211_ATTR_REQ_IE: (Re)association request information elements as
-  *	sent out by the card, for ROAM and successful CONNECT events.
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e20329b..3974752c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2269,6 +2269,12 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		if (nl80211_send_pmsr_capa(rdev, msg))
- 			goto nla_put_failure;
- 
-+		if (rdev->wiphy.akm_suites)
-+			if (nla_put(msg, NL80211_ATTR_AKM_SUITES,
-+				    sizeof(u32) * rdev->wiphy.n_akm_suites,
-+				    rdev->wiphy.akm_suites))
-+				goto nla_put_failure;
-+
- 		/* done */
- 		state->split_start = 0;
- 		break;
+Pradeep, please clarify the situation. I don't want to enable features
+when firmware doesn't support it.
+
 -- 
-1.9.1
-
+Kalle Valo
