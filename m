@@ -2,128 +2,81 @@ Return-Path: <SRS0=ZGUU=N3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE832C43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 16:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B676C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 20:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A90520858
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 16:24:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA4AB2086C
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Nov 2018 20:38:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YnJMnEab"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7A90520858
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XgSKLYRh"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EA4AB2086C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729055AbeKQChH (ORCPT
+        id S1727026AbeKQGwT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Nov 2018 21:37:07 -0500
-Received: from mail-yw1-f67.google.com ([209.85.161.67]:34338 "EHLO
-        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728628AbeKQChH (ORCPT
+        Sat, 17 Nov 2018 01:52:19 -0500
+Received: from mail-ot1-f50.google.com ([209.85.210.50]:39333 "EHLO
+        mail-ot1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725804AbeKQGwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Nov 2018 21:37:07 -0500
-Received: by mail-yw1-f67.google.com with SMTP id g75so5860814ywb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2018 08:24:05 -0800 (PST)
+        Sat, 17 Nov 2018 01:52:19 -0500
+Received: by mail-ot1-f50.google.com with SMTP id g27so22519539oth.6
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2018 12:38:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc;
-        bh=kpeE4oTAUctMa2536klbsKFBLoFQo2p5YKWtywzsAl8=;
-        b=YnJMnEabNFxwTavpQetuNTkjb1c4FbXazMfnKDm4PFVbQLE0X0GPA/CpIy66dmYDOJ
-         k+X5Lc3a2ksPS7aTnSFKaIgsFlBl+vHCqip6QsT72WB0vJ1wd53OIbI+OTehTlJuFS15
-         o8IXuMb816QTRG6Uyou+NSxkP1kZovAt32LLUZqBdZ4DDykvpDu/af7hYJoEpjHNYNuj
-         pwyiESrAzWphgADz3dKHltUjBwEsKJcyxexkLYAyUw/CdO2g62M/VRYCkDzBlMUV+dkv
-         ffn68kLt32rWLqgsJE64a+uQkBVYiae29rLeUrEX4GWIen3r8PkTOVpbXqdM+BUMZBuf
-         eEtA==
+        bh=SButerDLCsQDGPeEVESaZYRRpIEf4pP6XpvGnqv0994=;
+        b=XgSKLYRhGNZjV9Y4qOcei4UKarn3aSKfW/9Z7AyKJZ63Q30gRJt3JPJUTCvCpnjwz1
+         Mpu/uD//otBJqPVn2c0fp98pB/UMEc9G/2SDItladZHK7og08m2eXHN04WwKnhgGQhF2
+         RjXVvE9+BSg0ZAw4nuVarZrJW1zKzlicwxZ46PU+HiAw7n2nZGlwYfIyhr7eMgJ+6Kgs
+         dqtqo0GEP0/+DJmOsyETh8l5c7ZPS8t+NGSqELghztnTcygSlia6Lz/lN2wZ3NJMG17H
+         6qiRwHqt+gHe3n441D73didOfeS0N63vM65aILfV28SFiC+YsU9Ak4ctQ2GKQvJ0h9du
+         Y/6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
          :message-id:subject:to:cc;
-        bh=kpeE4oTAUctMa2536klbsKFBLoFQo2p5YKWtywzsAl8=;
-        b=fBLt+5pzyI7Qx0VBO9nWEJWYirPO+NuFisLfHYCf6AntZIo4IsEV6paMiTYUuo4wqR
-         kUE82Rh2oeD40OLVD2/vPj9zKnMHRRmu0jlnjBQRVHk9C0igc/Kg+vZJo19fg6c4Cz1V
-         VxpCgyzc7C+wP8RbvG2tAu8u9Rply/o9FMa3TCnrY/fl0gCgqrEDAS5vmcD9vS7m+klT
-         l8Y2oQQE2A/Yfdwk3hLkrjkiQP53bDQ3ioowZwFg5vR/eHHSirfcyVLuWGsXhdCRSQV2
-         Th6TV/wktH39XcTjbN4ILCoCL+LpZ/9UX7G88+TMoJF1bPwZpkLtgE1xxbS2e/eW6VaG
-         DxaQ==
-X-Gm-Message-State: AGRZ1gILCiaF/+BnQe7BkHoY+xYVQShf/soOae5lsN46azHndqehixLp
-        Arj84NXuFdIPxQNrF7l/o2D5JsVmxjYGiLnkjsRJfQ==
-X-Google-Smtp-Source: AJdET5cBHitVmpptQdwlU48scPcGFucxQy/OxL8zJOANNSPbkgMabZR6MZLOjasNdJ3AfNlwViSnGHYZuumTbOu8LfE=
-X-Received: by 2002:a0d:e984:: with SMTP id s126-v6mr10687099ywe.47.1542385445031;
- Fri, 16 Nov 2018 08:24:05 -0800 (PST)
+        bh=SButerDLCsQDGPeEVESaZYRRpIEf4pP6XpvGnqv0994=;
+        b=UG3u9BSU8efyK67JwowyA173j/a55HmQB1JqGedm2Muk5Prvclv375UyfTp75a5PD6
+         lVD8soh1UP47lCz32yy7Hdp6VDq+8AY+uvTYUQNUND2GB8c3AHBXSF9kbV2f0IgjkdVh
+         8mxt6ReHay6/uFbK5uybz55ulYmWkHCZk5OhoDCUBXSKINAc3psd1ia7OkugafQvLkRF
+         KK8irqVGTEspcNZhzcnRf15bx9nvwIy3uUQOw19mOUj1QZjiJRL0ZhyjsfUwdQRAf3Jo
+         TzRqK17XEa5l96s5a/LMY8qYCzvUlK7/66monBQDhAyTBIyLEqVTxrlXDizTtdFV77vJ
+         R9pA==
+X-Gm-Message-State: AGRZ1gKYDAcG/NilvXr5cWDE/1vcJfN777pkEXwgboqJBxIPSxpw3PSB
+        Zm2FsOnZQH2iZFSw7XPECOuBlcgHThUtkUcW4Bw=
+X-Google-Smtp-Source: AJdET5ek4YKt7D0POSyXoyNRXZArNyPCOqv8Xs51UpTxl+lGRueqHVcb5YeCFUW77hOuT6e1DEEQNTupcSTGh1Wtbrw=
+X-Received: by 2002:a9d:620f:: with SMTP id g15mr6854893otj.296.1542400704228;
+ Fri, 16 Nov 2018 12:38:24 -0800 (PST)
 MIME-Version: 1.0
-References: <20181116111235.86347-1-nbd@nbd.name> <20181116111235.86347-6-nbd@nbd.name>
-In-Reply-To: <20181116111235.86347-6-nbd@nbd.name>
-From:   Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Date:   Fri, 16 Nov 2018 17:23:53 +0100
-Message-ID: <CAA2SeNLOvRHq_wE+7iebAodU70Y54VHGn06NvJbVOwBiR_kA9A@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] mt76: mt76x02: remove mt76x02_txq_init
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Received: by 2002:a9d:2ea6:0:0:0:0:0 with HTTP; Fri, 16 Nov 2018 12:38:23
+ -0800 (PST)
+In-Reply-To: <87h8gibfps.fsf@codeaurora.org>
+References: <1536098037-3000-1-git-send-email-pozega.tomislav@gmail.com>
+ <8736um7ibj.fsf@kamboji.qca.qualcomm.com> <CAKR_QVKhAkOq7DydJ2sXBNZOpwmY=6WibOikN5xvehFBVQMMrQ@mail.gmail.com>
+ <87h8gibfps.fsf@codeaurora.org>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Fri, 16 Nov 2018 21:38:23 +0100
+Message-ID: <CAKR_QVKhUh6wXm=AFJTKZSOUDsw2No2S_ry_kWCuQHTVAcU9Fg@mail.gmail.com>
+Subject: Re: [EXTERNAL] [PATCH] ath9k_htc: add fw 1.4.1
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-firmware@kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        Adrian Chadd <adrian@freebsd.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Open-coding it simplifies the code
->
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 23 -------------------
->  .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  2 --
->  .../net/wireless/mediatek/mt76/mt76x02_util.c | 15 +++++++++---
->  3 files changed, 12 insertions(+), 28 deletions(-)
->
-
-[...]
-
-> @@ -191,8 +191,13 @@ int mt76x02_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->         msta->wcid.hw_key_idx = -1;
->         mt76x02_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
->         mt76x02_mac_wcid_set_drop(dev, idx, false);
-> -       for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
-> -               mt76x02_txq_init(dev, sta->txq[i]);
-> +       for (i = 0; i < ARRAY_SIZE(sta->txq); i++) {
-> +               struct mt76_txq *mtxq;
-> +
-> +               mtxq = (struct mt76_txq *) sta->txq[i]->drv_priv;
-
-I think sta->txq[i] can be NULL here
-
-> +               mtxq->wcid = &msta->wcid;
-> +               mt76_txq_init(&dev->mt76, sta->txq[i]);
-> +       }
->
->         if (vif->type == NL80211_IFTYPE_AP)
->                 set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
-> @@ -230,11 +235,15 @@ void mt76x02_vif_init(struct mt76x02_dev *dev, struct ieee80211_vif *vif,
->                       unsigned int idx)
->  {
->         struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
-> +       struct mt76_txq *mtxq;
->
->         mvif->idx = idx;
->         mvif->group_wcid.idx = MT_VIF_WCID(idx);
->         mvif->group_wcid.hw_key_idx = -1;
-> -       mt76x02_txq_init(dev, vif->txq);
-> +       mtxq = (struct mt76_txq *) vif->txq->drv_priv;
-> +       mtxq->wcid = &mvif->group_wcid;
-> +
-> +       mt76_txq_init(&dev->mt76, vif->txq);
->  }
->  EXPORT_SYMBOL_GPL(mt76x02_vif_init);
->
-> --
-> 2.17.0
->
-
-
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Every build attempt of the firmware without modifying the code results
+in same checksum of the built file. So I guess this should be easy to
+verify.
