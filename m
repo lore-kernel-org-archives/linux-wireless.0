@@ -2,144 +2,104 @@ Return-Path: <SRS0=ZKB3=N4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95E65C43441
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Nov 2018 02:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22EA8C04EBF
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Nov 2018 08:36:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5985C2086B
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Nov 2018 02:56:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D458620854
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Nov 2018 08:36:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FPKnr7XQ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 5985C2086B
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=plaes.org header.i=@plaes.org header.b="MSYAwE4H"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D458620854
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=plaes.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730015AbeKQNLY (ORCPT
+        id S1725875AbeKQSw1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Nov 2018 08:11:24 -0500
-Received: from mail-lj1-f170.google.com ([209.85.208.170]:40513 "EHLO
-        mail-lj1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729752AbeKQNLX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Nov 2018 08:11:23 -0500
-Received: by mail-lj1-f170.google.com with SMTP id n18-v6so1003390lji.7
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Nov 2018 18:56:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=JlLigIEsNMRUbimounGdcBvoKQ3Y4lYmA+4W42YllJA=;
-        b=FPKnr7XQhU7XCNexQgM4ZNi7xSWi5QXvDt6CQ6cDcr8JlXvBGLEGPeyo3hqjWtytST
-         kgT/lM89kBxuygszfRrXCm8WXxn5kRvpmjQyQQLf0TjIY1gAgFj4leX9Tlpy7lei1Mcd
-         qb9qdy0ls4fSVyF2PmE+ypeT52zzXgPaDgXMzx2KsfuaccyPubb7jgzG39MnF7JAajrz
-         Pesk/kiFQIZHnggXWIcJ1houeR9NkwQu2iq/hwBcGBk89PNay0MIo6IYPkTnIvgvoT5D
-         bZs6Svic9nXraNOZKmJU87IKtrfNSC9HsQ9g3SgVpUOJq/MdAbo2z3BjqwTjzrPj/O3U
-         kjEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=JlLigIEsNMRUbimounGdcBvoKQ3Y4lYmA+4W42YllJA=;
-        b=K3DxO87LTL6PzLopkTmcS/1TMRbnHKqvv28xlOEgzlY/05IwYd3Ok8FrFHuoZe9fQo
-         bYfHQKXaPybU/ceLYBn1uIjOaJJa07Udo6RrszLpYyoILK+nGKP1WZ/CGPckSawU9Tmh
-         C8nwcJ1VaA0PU03LyaA1M1S/GHqmb+wP9Ssuj8HI+4MSe/rF6QBDsANGbrl+N+zVgNfh
-         j1fq1KQXA/I2+N2K9+O1bKsT6Fz8wuJBKXetTlVgH6sebltwOzQIC1N4QeVfCciykknn
-         vrIuM64EqUMb7c2tccTTSlXNB93bjD36w/CqvB9N2aG2aZ6xj/udIhtymw/ahmzY8U2j
-         Y2XA==
-X-Gm-Message-State: AGRZ1gITINzWKklXuaCHBNAaDwiIrVhVje2W2PBllMAkYGAJLKbAgmx0
-        aNd1YyRP52X5X65USvEMojzUQhV2kOcvUJVYp9A91Ug5
-X-Google-Smtp-Source: AJdET5d/hwNlcMY0J2Do8j1+2GLKHfVXqu1jvwpDNvAaydjDVE0aVGczIoLtgduImXysp09liWHVZu6vLrk5IdHmz80=
-X-Received: by 2002:a2e:45d:: with SMTP id 90-v6mr7378391lje.110.1542423379180;
- Fri, 16 Nov 2018 18:56:19 -0800 (PST)
+        Sat, 17 Nov 2018 13:52:27 -0500
+Received: from plaes.org ([188.166.43.21]:38308 "EHLO plaes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725849AbeKQSw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Nov 2018 13:52:27 -0500
+Received: from plaes.org (localhost [127.0.0.1])
+        by plaes.org (Postfix) with ESMTPSA id 2378140227;
+        Sat, 17 Nov 2018 08:36:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=plaes.org; s=mail;
+        t=1542443789; bh=HzJVQx+Bg2X6T+cbuSuJAaQCs82gjYrYYb2Rq7ojpoA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MSYAwE4HHQMnQdXcs+TMWwHznIWMyLuG0N2X4gM/39vDaX7EqJWQk5pqEb98UOOyp
+         TY1Eg/d/HRtQgz+iOlVL7n/3Q8P64xvQhWwKVHn0A2yJBNjxwDTZuYEG14laZJq5wH
+         5YaY4uC8/DZd1entEjRBygCmeL/NGV3ZAt6JpAmW0kINPFmr7Or3/hvvqigyCDeJkI
+         XawqzQYQ5lVOR1abt0SLKtzOmMyFmyv8aFUTkoiOjjMoB/wgdgOJ68EPLDS5KoZVMD
+         oGl/EMZhYk8f7sK/I+6hcpDtfHAOWyVX1bcJyWYtyXFP7LhHYm/GNernLL8iAmRHIG
+         vKsWHj/4PpwhQ==
+Date:   Sat, 17 Nov 2018 08:36:28 +0000
+From:   Priit Laes <plaes@plaes.org>
+To:     Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Varsha Rao <rvarsha016@gmail.com>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] b43: Use cordic algorithm from kernel library
+Message-ID: <20181117083628.sm6juvz75kiargz4@plaes.org>
+References: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
+ <d93962cdc5a32fe99e6e5a25172920d28583aa6a.1542219596.git-series.plaes@plaes.org>
+ <20181114194628.0f485637@wiggum>
 MIME-Version: 1.0
-From:   Tom Gutteridge <thomas.gutteridge@gmail.com>
-Date:   Sat, 17 Nov 2018 15:55:42 +1300
-Message-ID: <CAHU9UF16g4ygW+mdfTBAchUYNhCa5x=vOXVRUh2+6xS5i8+9xg@mail.gmail.com>
-Subject: Intel 8260 Firmware Init Failure
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20181114194628.0f485637@wiggum>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-What can I do about this? My wireless card is unusable. Seems to be a
-spontaneous failure. This is the output of dmesg | grep iwlwifi:
+On Wed, Nov 14, 2018 at 07:46:28PM +0100, Michael Büsch wrote:
+> On Wed, 14 Nov 2018 20:27:52 +0200
+> Priit Laes <plaes@plaes.org> wrote:
+> 
+> > Kernel library has a common cordic algorithm which is identical
+> > to internally implementatd one, so use it and drop the duplicate
+> > implementation.
+> 
+> 
+> In v2 of the series it has been said that:
+> 
+> Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> > I recall doing a comparison between the algorithms and thought I put 
+> > that in the original commit message. However, it is not there. It is not 
+> > exactly the same as in b43 so there are difference for certain angles, 
+> > most results are the same however. This implementation is slightly more 
+> > accurate on the full scale.
+> 
+> 
+> That's not my definition of "identical".
+> 
+> Please do not apply this patch without doing a thorough regression test
+> on actual b43 LP hardware.
 
-[    7.206387] iwlwifi 0000:02:00.0: enabling device (0000 -> 0002)
-[    7.215066] iwlwifi 0000:02:00.0: loaded firmware version
-36.7596afd4.0 op_mode iwlmvm
-[    7.686950] iwlwifi 0000:02:00.0: Detected Intel(R) Dual Band
-Wireless AC 8260, REV=0x208
-[    7.769839] iwlwifi 0000:02:00.0: base HW address: 14:ab:c5:7c:5e:a2
-[    7.770427] iwlwifi 0000:02:00.0: Microcode SW error detected.
-Restarting 0x2000000.
-[    7.770555] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-[    7.770557] iwlwifi 0000:02:00.0: Status: 0x00000100, count: 6
-[    7.770559] iwlwifi 0000:02:00.0: Loaded firmware version: 36.7596afd4.0
-[    7.770561] iwlwifi 0000:02:00.0: 0x00001392 | ADVANCED_SYSASSERT
-[    7.770562] iwlwifi 0000:02:00.0: 0x000002F2 | trm_hw_status0
-[    7.770564] iwlwifi 0000:02:00.0: 0x00000000 | trm_hw_status1
-[    7.770565] iwlwifi 0000:02:00.0: 0x000124BE | branchlink2
-[    7.770566] iwlwifi 0000:02:00.0: 0x0001C1E2 | interruptlink1
-[    7.770568] iwlwifi 0000:02:00.0: 0x00000000 | interruptlink2
-[    7.770569] iwlwifi 0000:02:00.0: 0x0000010B | data1
-[    7.770570] iwlwifi 0000:02:00.0: 0x00000000 | data2
-[    7.770572] iwlwifi 0000:02:00.0: 0xDEADBEEF | data3
-[    7.770573] iwlwifi 0000:02:00.0: 0x00000000 | beacon time
-[    7.770574] iwlwifi 0000:02:00.0: 0x0000169F | tsf low
-[    7.770576] iwlwifi 0000:02:00.0: 0x00000000 | tsf hi
-[    7.770577] iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-[    7.770578] iwlwifi 0000:02:00.0: 0x0000169F | time gp2
-[    7.770580] iwlwifi 0000:02:00.0: 0x00000009 | uCode revision type
-[    7.770581] iwlwifi 0000:02:00.0: 0x00000024 | uCode version major
-[    7.770583] iwlwifi 0000:02:00.0: 0x7596AFD4 | uCode version minor
-[    7.770584] iwlwifi 0000:02:00.0: 0x00000201 | hw version
-[    7.770585] iwlwifi 0000:02:00.0: 0x00489008 | board version
-[    7.770587] iwlwifi 0000:02:00.0: 0x0010016A | hcmd
-[    7.770588] iwlwifi 0000:02:00.0: 0x02322080 | isr0
-[    7.770589] iwlwifi 0000:02:00.0: 0x00000000 | isr1
-[    7.770591] iwlwifi 0000:02:00.0: 0x28201802 | isr2
-[    7.770592] iwlwifi 0000:02:00.0: 0x004000C0 | isr3
-[    7.770593] iwlwifi 0000:02:00.0: 0x00000000 | isr4
-[    7.770595] iwlwifi 0000:02:00.0: 0x0010016A | last cmd Id
-[    7.770596] iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-[    7.770598] iwlwifi 0000:02:00.0: 0x0000E45C | l2p_control
-[    7.770599] iwlwifi 0000:02:00.0: 0x00001420 | l2p_duration
-[    7.770600] iwlwifi 0000:02:00.0: 0x00000000 | l2p_mhvalid
-[    7.770602] iwlwifi 0000:02:00.0: 0x00000000 | l2p_addr_match
-[    7.770603] iwlwifi 0000:02:00.0: 0x0000000D | lmpm_pmg_sel
-[    7.770604] iwlwifi 0000:02:00.0: 0x22040707 | timestamp
-[    7.770606] iwlwifi 0000:02:00.0: 0x00000818 | flow_handler
-[    7.770669] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-[    7.770670] iwlwifi 0000:02:00.0: Status: 0x00000100, count: 7
-[    7.770672] iwlwifi 0000:02:00.0: 0x00000070 | ADVANCED_SYSASSERT
-[    7.770673] iwlwifi 0000:02:00.0: 0x00000000 | umac branchlink1
-[    7.770674] iwlwifi 0000:02:00.0: 0xC0086AA4 | umac branchlink2
-[    7.770675] iwlwifi 0000:02:00.0: 0xC0083CB0 | umac interruptlink1
-[    7.770677] iwlwifi 0000:02:00.0: 0xC0083C90 | umac interruptlink2
-[    7.770678] iwlwifi 0000:02:00.0: 0x00000800 | umac data1
-[    7.770679] iwlwifi 0000:02:00.0: 0xC0083C90 | umac data2
-[    7.770682] iwlwifi 0000:02:00.0: 0xDEADBEEF | umac data3
-[    7.770683] iwlwifi 0000:02:00.0: 0x00000024 | umac major
-[    7.770684] iwlwifi 0000:02:00.0: 0x7596AFD4 | umac minor
-[    7.770686] iwlwifi 0000:02:00.0: 0xC088628C | frame pointer
-[    7.770687] iwlwifi 0000:02:00.0: 0xC088628C | stack pointer
-[    7.770688] iwlwifi 0000:02:00.0: 0x0010016A | last host cmd
-[    7.770690] iwlwifi 0000:02:00.0: 0x00000000 | isr status reg
-[    7.770697] iwlwifi 0000:02:00.0: Failed to run INIT calibrations: -5
-[    7.770699] iwlwifi 0000:02:00.0: Failed to run INIT ucode: -5
+Indeed, there's a big discrepancy in the results of both algorithms.
 
-uname -a gives:
-Linux tomg-p5510 4.19.1-1-MANJARO #1 SMP PREEMPT Sun Nov 4 16:05:34
-UTC 2018 x86_64 GNU/Linux
+Here's the test script:
+https://gist.github.com/plaes/284993a4fc65e0926d0628a11f0cf874
 
-This happened once before, about a year ago. It resolved itself when I
-tried installing Windows 10 and running an update. Now when I try a
-clean install of Windows 10 it bluescreens on startup with probable
-cause Netwtw06.sys.
+So at current state, this is self-NAK from me too and this patch should
+be dropped.
 
-Thanks,
-Tom.
+> 
+> -- 
+> Michael
+
+
