@@ -2,115 +2,156 @@ Return-Path: <SRS0=j5ME=N6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.7 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FDDC43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:10:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A73C43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 22:44:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA97620671
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:10:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C9120851
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 22:44:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=plaes.org header.i=@plaes.org header.b="NTsVT3Rv"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BA97620671
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=plaes.org
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="C38HQoPp"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B6C9120851
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730417AbeKTEe4 (ORCPT
+        id S1731627AbeKTJKi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Nov 2018 23:34:56 -0500
-Received: from plaes.org ([188.166.43.21]:48176 "EHLO plaes.org"
+        Tue, 20 Nov 2018 04:10:38 -0500
+Received: from mail.toke.dk ([52.28.52.200]:38287 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730394AbeKTEe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Nov 2018 23:34:56 -0500
-Received: from plaes.org (localhost [127.0.0.1])
-        by plaes.org (Postfix) with ESMTPSA id B21D340634;
-        Mon, 19 Nov 2018 18:10:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=plaes.org; s=mail;
-        t=1542651017; bh=yJheclpnSaUpxoEiTzq0NrE/h/4Wmm51fNAQpyPUHmM=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=NTsVT3RvHNPk0lowEBRCdB9u7Uqlh4wEINI/J1d4Foxz8BuFHYGgsF2w6Hfe5MhHZ
-         TQ+lMNV1b+Bf4oiFlkhgBrPFJztgzGlgpf8jr5mOTMAnSpJ1W7g9dO80HcnxB7PYjt
-         yccpgSPafxBBTsIEVBg4x1LXQIWWAE5Z+iE9Ri3FVl9DETl7JSDuRJA2fa+6PYY/wS
-         eobpmuqijw+bNh6/UvUOLq/ovV/vCfgcYf+SLYyIgJxyJvtExhoWcWYFxveQcVXBjK
-         AK9Qal9Py3q44NpllY8l8jDbbT7I4KjDn5r2SDbILf22Z5wLPI6tmNkGX84EXJGkRj
-         6FwpHrZ61zeIA==
-Date:   Mon, 19 Nov 2018 18:10:16 +0000
-From:   Priit Laes <plaes@plaes.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Varsha Rao <rvarsha016@gmail.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/4] wireless: Use common cordic algorithm for b43 driver
-Message-ID: <20181119181016.4fxuszvvyiokuqvl@plaes.org>
-References: <cover.87f16ede7954f8d9cde4ecae5f050bf8f4008dd8.1542649316.git-series.plaes@plaes.org>
+        id S1730462AbeKTJKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Nov 2018 04:10:38 -0500
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1542667484; bh=NSenRGaoRqBaT+BqUpssj0zo6bokX6V7DOHhvbh3cN0=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=C38HQoPpJ/ZtXVjEb+OEpViQreS4FSdg71qOEGBtdZWYpMJHGY2VEhBImlQGT7X4q
+         GIGKdRy7FN4nw+g4jRAOBsE1eB1y2C1A5AFHwGASqmrMqCAD2SLLeLBYtjZmMyrQqL
+         fK2/LWXYPP6888lDnL6/18cSzGjx4U/kQNy9DOVYHUKqERbMssYsoiUqyNdByuRbNe
+         +wAyywWJ6EQAcAlF1rhhdJewpKjQYgNMY8XJeKsW86i7E4QSTfP9+esMlDN2pr0KNA
+         DBIMOCkFoS24g77vWkNi7+oTWKUk7gGNZaxUYmxoNpvJHAr89bGFbJtddt2jMbqRhU
+         YkaWcmkJqhPhQ==
+To:     Dave Taht <dave@taht.net>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        make-wifi-fast@lists.bufferbloat.net
+Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to TXQs
+In-Reply-To: <878t1p2bqz.fsf@taht.net>
+References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org> <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org> <e5344cad-2a18-a938-f2ed-43870027251c@nbd.name> <871s7nv9pl.fsf@toke.dk> <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name> <87sh02tfsp.fsf@toke.dk> <878t1p2bqz.fsf@taht.net>
+Date:   Mon, 19 Nov 2018 14:44:43 -0800
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87muq4sn50.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.87f16ede7954f8d9cde4ecae5f050bf8f4008dd8.1542649316.git-series.plaes@plaes.org>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Nov 19, 2018 at 08:01:21PM +0200, Priit Laes wrote:
-> b43 wireless driver includes an internal implementation of
-> cordic algorithm, although there's a common cordic library
-> which was split out from brcmsmac driver. Use that and drop
-> internal implementation.
-> 
-> During the process, cordic-algorithm related macros in
-> brcmfmac driver were also removed and use general macros.
-> 
-> Please note that this series is only compile-tested, as I
-> do not have access to the hardware.
+Dave Taht <dave@taht.net> writes:
 
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
+>> Felix Fietkau <nbd@nbd.name> writes:
+>>
+>>> On 2018-11-14 18:40, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>>>> This part doesn't really make much sense to me, but maybe I'm
+>>>>> misunderstanding how the code works.
+>>>>> Let's assume we have a driver like ath9k or mt76, which tries to keep=
+ a
+>>>>> number of aggregates in the hardware queue, and the hardware queue is
+>>>>> currently empty.
+>>>>> If the current txq entry is kept at the head of the schedule list,
+>>>>> wouldn't the code just pull from that one over and over again, until
+>>>>> enough packets are transmitted by the hardware and their tx status
+>>>>> processed?
+>>>>> It seems to me that while fairness is still preserved in the long run,
+>>>>> this could lead to rather bursty scheduling, which may not be
+>>>>> particularly latency friendly.
+>>>>=20
+>>>> Yes, it'll be a bit more bursty when the hardware queue is completely
+>>>> empty. However, when a TX completion comes back, that will adjust the
+>>>> deficit of that sta and cause it to be rotated on the next dequeue. Th=
+is
+>>>> obviously relies on the fact that the lower-level hardware queue is
+>>>> sufficiently shallow to not add a lot of latency. But we want that to =
+be
+>>>> the case anyway. In practice, it works quite well for ath9k, but not so
+>>>> well for ath10k because it has a large buffer in firmware.
+>>>>=20
+>>>> If we requeue the TXQ at the end of the list, a station that is taking
+>>>> up too much airtime will fail to be throttled properly, so the
+>>>> queue-at-head is kinda needed to ensure fairness...
+>>> Thanks for the explanation, that makes sense to me. I have an idea on
+>>> how to mitigate the burstiness within the driver. I'll write it down in
+>>> pseudocode, please let me know if you think that'll work.
+>>
+>> I don't think it will, unfortunately. For example, consider the case
+>> where there are two stations queued; one with a large negative deficit
+>> (say, -10ms), and one with a positive deficit.
+>
+> Perhaps a flag for one way or the other?
+>
+> if(driver->has_absurd_hardware_queue_depth) doitthisway(); else
+> doitabetterway();
 
-Gah.. I missed the series version in subject. Shall I resend?
+Well, there's going to be a BQL-like queue limit (but for airtime) on
+top, which drivers can opt-in to if the hardware has too much queueing.
 
-> 
-> --
-> 
-> Changes since v3:
-> - Added ACKed-By bits for patches 1, 4
-> - Added new patch for stable by Larry as patch 3
-> - Fixed argument scaling for b43 driver in patch 4
-> 
-> Changes since v2:
-> - Improvements to commit messages. No functional changes.
-> - Collect reviewed-by bits.
-> 
-> Changes since v1:
-> - Merged brcmsmac driver patches into single patch
-> - Merged b43 driver patches into single patch
-> 
-> Larry Finger (1):
->   b43: Fix error in cordic routine
-> 
-> Priit Laes (3):
->   lib: cordic: Move cordic macros and defines to header file
->   brcmsmac: Use cordic-related macros from common cordic library
->   b43: Use cordic algorithm from kernel library
-> 
->  drivers/net/wireless/broadcom/b43/Kconfig                      |  1 +-
->  drivers/net/wireless/broadcom/b43/phy_common.c                 | 47 +-------
->  drivers/net/wireless/broadcom/b43/phy_common.h                 |  9 +-
->  drivers/net/wireless/broadcom/b43/phy_lp.c                     | 13 +-
->  drivers/net/wireless/broadcom/b43/phy_n.c                      | 13 +-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h |  7 +-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_lcn.c |  4 +-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c   |  4 +-
->  include/linux/cordic.h                                         |  9 +-
->  lib/cordic.c                                                   | 23 +---
->  10 files changed, 35 insertions(+), 95 deletions(-)
-> 
-> base-commit: 9ff01193a20d391e8dbce4403dd5ef87c7eaaca6
-> -- 
-> git-series 0.9.1
+>> In this case, we really need to throttle the station with a negative
+>> deficit. But if the driver loops and caches txqs, we'll get something
+>> like the following:
+>>
+>> - First driver loop iteration: returns TXQ with positive deficit.
+>> - Second driver loop iteration: Only the negative-deficit TXQ is in the
+>>   mac80211 list, so it will loop until that TXQ's deficit turns positive
+>>   and return it.
+>>
+>> Because of this, the negative-deficit station won't be throttled, and we
+>> won't get fairness.
+>>
+>> How many frames will mt76 queue up below the driver point? I.e., how
+>> much burstiness are you expecting this will introduce on that driver?
+>>
+>> Taking a step back, it's clear that it would be good to be able to
+>> dequeue packets to multiple STAs at once (we need that for MU-MIMO on
+>> ath10k as well). However, I don't think we can do that with the
+>> round-robin fairness scheduler; so we are going to need a different
+>> algorithm. I *think* it may be possible to do this with a virtual-time
+>> scheduler, but I haven't sat down and worked out the details yet...
+>
+> The answer to which did not fit on the margins of your thesis. :)
+>
+> I too have been trying to come up with a better means of gang
+> scheduling... for about 2 years now. In terms of bitmaps it looks a bit
+> like QFQ, but honestly...
+
+It's not the gang scheduling we need, deciding which devices to send to
+at once is generally done in firmware anyway. We just need to be able to
+dequeue packets for more than one station when possible. I don't think
+we need the fancy bitmap stuff from QFQ since we don't have that many
+stations to schedule at once; so we can probably live with O(log(n)) in
+the number of active stations.
+
+> Is there going to be some point where whatever we have here is
+> significantly better than what we had? Or not significantly worse? Or
+> handwavy enough to fix the rest once enlightenment arrives?
+>
+> The perfect is the enemy of the good.
+
+Well, what we have now works for ath9k, works reasonably well for ath10k
+in pull mode, not so well for ath10k in push mode, and then there's
+Felix' comments in this thread...
+
+> I'd rather like the intel folk to be weighing in on this stuff, too,
+> trying to get an API right requires use cases.
+
+Johannes has already reviewed a previous version, and I do believe he
+said he'd review it again once we have converged on something :)
+
+-Toke
