@@ -3,155 +3,110 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A73C43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 22:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E0AC43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 23:02:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6C9120851
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 22:44:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 159F02080C
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 23:02:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="C38HQoPp"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B6C9120851
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="WP8lfD14"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 159F02080C
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731627AbeKTJKi (ORCPT
+        id S1731513AbeKTJ2t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Nov 2018 04:10:38 -0500
-Received: from mail.toke.dk ([52.28.52.200]:38287 "EHLO mail.toke.dk"
+        Tue, 20 Nov 2018 04:28:49 -0500
+Received: from mail.toke.dk ([52.28.52.200]:46957 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730462AbeKTJKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Nov 2018 04:10:38 -0500
+        id S1731164AbeKTJ2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Nov 2018 04:28:49 -0500
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1542667484; bh=NSenRGaoRqBaT+BqUpssj0zo6bokX6V7DOHhvbh3cN0=;
+        t=1542668571; bh=r0zkPtNh1fdkyLfxhd6PdDI3vCgInr/zZWfL+E2RVN0=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=C38HQoPpJ/ZtXVjEb+OEpViQreS4FSdg71qOEGBtdZWYpMJHGY2VEhBImlQGT7X4q
-         GIGKdRy7FN4nw+g4jRAOBsE1eB1y2C1A5AFHwGASqmrMqCAD2SLLeLBYtjZmMyrQqL
-         fK2/LWXYPP6888lDnL6/18cSzGjx4U/kQNy9DOVYHUKqERbMssYsoiUqyNdByuRbNe
-         +wAyywWJ6EQAcAlF1rhhdJewpKjQYgNMY8XJeKsW86i7E4QSTfP9+esMlDN2pr0KNA
-         DBIMOCkFoS24g77vWkNi7+oTWKUk7gGNZaxUYmxoNpvJHAr89bGFbJtddt2jMbqRhU
-         YkaWcmkJqhPhQ==
-To:     Dave Taht <dave@taht.net>
-Cc:     Felix Fietkau <nbd@nbd.name>,
+        b=WP8lfD1424sd4hOC5gofgjso1gd1YdxfLwxLHAZ6iBAPjZ/Xx2RoNlBMGhjNTFp/Q
+         YLg+skMX3hZGmDh3nvDTeZ7ppUrZ+CjSXp/2sRmsnTl1ZPkOH470lxJx6eIeyTxQdy
+         SOJlwL2SohtfMufUGxxxBb85/9blCGdxFPF3vohh6SfsdD5HUYkuRItwJQB33m6Afw
+         P3CvaTC66J0OljbDH6b4PF+cob/ZHX1jUyjrJ3zDmRfT0JTtAI6In01pVbKz8E1mqC
+         SGiCDz9Z1RaNbSVzFWrk7Hiu0QhEwk/NC5EvveKw8IE9/K4mWIAqu3d0EEpaIvn0bV
+         1vJxTNWJbx9mw==
+To:     Felix Fietkau <nbd@nbd.name>,
         Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        make-wifi-fast@lists.bufferbloat.net
-Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to TXQs
-In-Reply-To: <878t1p2bqz.fsf@taht.net>
-References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org> <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org> <e5344cad-2a18-a938-f2ed-43870027251c@nbd.name> <871s7nv9pl.fsf@toke.dk> <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name> <87sh02tfsp.fsf@toke.dk> <878t1p2bqz.fsf@taht.net>
-Date:   Mon, 19 Nov 2018 14:44:43 -0800
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc:     make-wifi-fast@lists.bufferbloat.net
+Subject: Re: [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to TXQs
+In-Reply-To: <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name>
+References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org> <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org> <e5344cad-2a18-a938-f2ed-43870027251c@nbd.name> <871s7nv9pl.fsf@toke.dk> <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name>
+Date:   Mon, 19 Nov 2018 15:02:50 -0800
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87muq4sn50.fsf@toke.dk>
+Message-ID: <87k1l8smat.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dave Taht <dave@taht.net> writes:
+Hi Felix
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+Thinking a bit more about this, I think that rather than having the
+driver work around the API as in your example...
+
+> do {
+> 	struct ieee80211_txq *pending_txq[4];
+> 	int n_pending_txq = 0;
+> 	int i;
 >
->> Felix Fietkau <nbd@nbd.name> writes:
->>
->>> On 2018-11-14 18:40, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->>>>> This part doesn't really make much sense to me, but maybe I'm
->>>>> misunderstanding how the code works.
->>>>> Let's assume we have a driver like ath9k or mt76, which tries to keep=
- a
->>>>> number of aggregates in the hardware queue, and the hardware queue is
->>>>> currently empty.
->>>>> If the current txq entry is kept at the head of the schedule list,
->>>>> wouldn't the code just pull from that one over and over again, until
->>>>> enough packets are transmitted by the hardware and their tx status
->>>>> processed?
->>>>> It seems to me that while fairness is still preserved in the long run,
->>>>> this could lead to rather bursty scheduling, which may not be
->>>>> particularly latency friendly.
->>>>=20
->>>> Yes, it'll be a bit more bursty when the hardware queue is completely
->>>> empty. However, when a TX completion comes back, that will adjust the
->>>> deficit of that sta and cause it to be rotated on the next dequeue. Th=
-is
->>>> obviously relies on the fact that the lower-level hardware queue is
->>>> sufficiently shallow to not add a lot of latency. But we want that to =
-be
->>>> the case anyway. In practice, it works quite well for ath9k, but not so
->>>> well for ath10k because it has a large buffer in firmware.
->>>>=20
->>>> If we requeue the TXQ at the end of the list, a station that is taking
->>>> up too much airtime will fail to be throttled properly, so the
->>>> queue-at-head is kinda needed to ensure fairness...
->>> Thanks for the explanation, that makes sense to me. I have an idea on
->>> how to mitigate the burstiness within the driver. I'll write it down in
->>> pseudocode, please let me know if you think that'll work.
->>
->> I don't think it will, unfortunately. For example, consider the case
->> where there are two stations queued; one with a large negative deficit
->> (say, -10ms), and one with a positive deficit.
+> 	if (hwq->pending < 4)
+> 		break;p
 >
-> Perhaps a flag for one way or the other?
+> 	nframes = 0;
 >
-> if(driver->has_absurd_hardware_queue_depth) doitthisway(); else
-> doitabetterway();
-
-Well, there's going to be a BQL-like queue limit (but for airtime) on
-top, which drivers can opt-in to if the hardware has too much queueing.
-
->> In this case, we really need to throttle the station with a negative
->> deficit. But if the driver loops and caches txqs, we'll get something
->> like the following:
->>
->> - First driver loop iteration: returns TXQ with positive deficit.
->> - Second driver loop iteration: Only the negative-deficit TXQ is in the
->>   mac80211 list, so it will loop until that TXQ's deficit turns positive
->>   and return it.
->>
->> Because of this, the negative-deficit station won't be throttled, and we
->> won't get fairness.
->>
->> How many frames will mt76 queue up below the driver point? I.e., how
->> much burstiness are you expecting this will introduce on that driver?
->>
->> Taking a step back, it's clear that it would be good to be able to
->> dequeue packets to multiple STAs at once (we need that for MU-MIMO on
->> ath10k as well). However, I don't think we can do that with the
->> round-robin fairness scheduler; so we are going to need a different
->> algorithm. I *think* it may be possible to do this with a virtual-time
->> scheduler, but I haven't sat down and worked out the details yet...
+> 	ieee80211_txq_schedule_start(hw, ac)
+> 	do {
+> 		bool requeue = false;
 >
-> The answer to which did not fit on the margins of your thesis. :)
+> 		struct ieee80211_txq *txq;
 >
-> I too have been trying to come up with a better means of gang
-> scheduling... for about 2 years now. In terms of bitmaps it looks a bit
-> like QFQ, but honestly...
-
-It's not the gang scheduling we need, deciding which devices to send to
-at once is generally done in firmware anyway. We just need to be able to
-dequeue packets for more than one station when possible. I don't think
-we need the fancy bitmap stuff from QFQ since we don't have that many
-stations to schedule at once; so we can probably live with O(log(n)) in
-the number of active stations.
-
-> Is there going to be some point where whatever we have here is
-> significantly better than what we had? Or not significantly worse? Or
-> handwavy enough to fix the rest once enlightenment arrives?
+> 		txq = ieee80211_next_txq(hw, ac);
+> 		if (!txq)
+> 			break;
 >
-> The perfect is the enemy of the good.
+> 		nframes += schedule_txq(txq, &requeue);
+> 		if (requeue)
+> 			pending_txq[n_pending_txq++] = txq;
+>
+> 	} while (n_pending_txq < ARRAY_SIZE(pending_txq));
+>
+> 	for (i = n_pending_txq; i > 0; i--)
+> 		ieee80211_return_txq(hw, pending_txq[i - 1]);
+>
+> 	ieee80211_txq_schedule_end(hw, ac)
+> } while (nframes);
 
-Well, what we have now works for ath9k, works reasonably well for ath10k
-in pull mode, not so well for ath10k in push mode, and then there's
-Felix' comments in this thread...
+... really what we want is that the driver can just do this:
 
-> I'd rather like the intel folk to be weighing in on this stuff, too,
-> trying to get an API right requires use cases.
+ieee80211_txq_schedule_start(hw, ac);
+while ((txq = ieee80211_next_txq(hw, ac)) {
+	schedule_txq(txq, &requeue);
+        return_txq(txq);
+}
+ieee80211_txq_schedule_end(hw, ac);
 
-Johannes has already reviewed a previous version, and I do believe he
-said he'd review it again once we have converged on something :)
+and expect so get through all eligible TXQs. Note that there will be
+cases where there is only a single eligible TXQ (such as the example I
+gave in the other email); in which case the current version is fine. But
+there is (probably) also going to be cases where more than one TXQ is
+eligible at the same time, which we cannot handle with the current RR
+scheduler.
+
+However, I think that assuming we can get the scheduler to guarantee
+that it will return all eligible TXQs between each pair of calls to
+schedule_start()/schedule_end(), we should be fine with the current API.
+Do you agree with this?
 
 -Toke
