@@ -1,395 +1,255 @@
-Return-Path: <SRS0=hThr=N5=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=j5ME=N6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37DF6C43610
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Nov 2018 19:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4C2AC43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 07:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF12020869
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Nov 2018 19:36:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6693620684
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 07:50:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KGMulZRk"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DF12020869
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lwfinger.net
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ksGoFK/V";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="O7hmSYK/"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 6693620684
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726175AbeKSF5G (ORCPT
+        id S1726398AbeKSSMu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Nov 2018 00:57:06 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:37412 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725812AbeKSF5F (ORCPT
+        Mon, 19 Nov 2018 13:12:50 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:59192 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726348AbeKSSMu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Nov 2018 00:57:05 -0500
-Received: by mail-ot1-f67.google.com with SMTP id 40so25812023oth.4;
-        Sun, 18 Nov 2018 11:35:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:subject:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language;
-        bh=s+NNnct2IJGmIUrNgaz8ix2VFknPNnqkrN45qKqKZQ4=;
-        b=KGMulZRkmfpp67m+a9AR19UOvPGeXwHHgoO5LodgdUQ9WJ3JD44h1lf0dzaHvltShU
-         oiZK+eCQ6+zNSEUok1kdGWQ+FnTio+cfvWJkxbshB3fbPdEepad/AKtzrTqJP71hnAmU
-         scPb+qtmB9iQOi5wjkyF7V6dUnSh9joJkml3iZJ8fzQyB45xazyOXs3z+/zchHcXzzMn
-         fYg9naPjgulqHSg09y9rN/yb6bjGrlIfooq1Jywu+L7a6i9+NV59jLDYQ464i6KNIZK5
-         VTQEi8TRKtuVWLGp8l4BH0I+7iRPj3KAHKSfhoQ/4oBVrnpRm4BW45P6GYWb3aSwkIoW
-         FuEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:subject:to:cc:references:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language;
-        bh=s+NNnct2IJGmIUrNgaz8ix2VFknPNnqkrN45qKqKZQ4=;
-        b=BjMkBH7pE2dAlxXQCz3IxidffNVAru6oaOc+lgx+5oCaGr7i9P/AMAaiKvxHQF1KTT
-         WQwIf9EsuexJmaTVi6NRY5HSsGvHN78CHg9d2ORqubYgBZRdO6cgMaM9Z00dNVvD43K/
-         ChkBHpvqpYpP9GFhztxRyKPUfDxB38FDDNXYidsKc/DtLCc90blkHWvw/RTCC/Qlpy9N
-         yBH+gkFIb6QXZsMz3iCeqFiQV985s03XJa51okOGRXvwFkFJlzQJ/6sanL10/xF+u8TI
-         T8VLkzwkPGgWM82lP5HMdgrbfDx9rirnhvIfr9KzSiGLB7W6o395e3969vVjnqc4w1s2
-         Xd8A==
-X-Gm-Message-State: AGRZ1gJBZOYziFTd3sYgS3pU+yNJnc0gKbjsO/xlaBZd0AkFGf2G30OH
-        x1vbsF3vlATG5Yw1HLF+Y79NOTvu
-X-Google-Smtp-Source: AJdET5d3csLZvJZMojhVGO+KpBRsDodUvmjEPvBbEOfI8lAL7NE3gJpofizKZTN43E/t5E4lYraxQg==
-X-Received: by 2002:a9d:3408:: with SMTP id v8mr12111708otb.237.1542569756536;
-        Sun, 18 Nov 2018 11:35:56 -0800 (PST)
-Received: from [192.168.1.104] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id p203sm20826582oic.49.2018.11.18.11.35.55
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 18 Nov 2018 11:35:55 -0800 (PST)
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v3 3/3] b43: Use cordic algorithm from kernel library
-To:     Priit Laes <plaes@plaes.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Varsha Rao <rvarsha016@gmail.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-References: <cover.c0b1738f3f06bbf87f4ad3200ece93322a5f135f.1542219596.git-series.plaes@plaes.org>
- <d93962cdc5a32fe99e6e5a25172920d28583aa6a.1542219596.git-series.plaes@plaes.org>
- <d630ca3e-4070-5395-54c2-e20e0c552dc3@lwfinger.net>
- <20181118082327.ttrz2nl5owi2hoqv@plaes.org>
-Message-ID: <df798743-10bb-0455-be83-2fb59eca3209@lwfinger.net>
-Date:   Sun, 18 Nov 2018 13:35:57 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
-In-Reply-To: <20181118082327.ttrz2nl5owi2hoqv@plaes.org>
-Content-Type: multipart/mixed;
- boundary="------------A4EEE76D88D7EF2499287287"
-Content-Language: en-US
+        Mon, 19 Nov 2018 13:12:50 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id D182B607F7; Mon, 19 Nov 2018 07:49:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542613799;
+        bh=oELrnCKFqAkK9S/CU6/96gYvRF0yfs6371qmYqPOoz0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ksGoFK/VDMPyFVyJ2zzVB38wUfc5ED0NBZPBiOcgXOE4mAneYmwqys8/gD64Bp6yI
+         e/8J9iFXtK3QwvFbjMAAKpmR5w5yVvewwCAJ3yId+rlM7k4HFNe/Ed4QSXRypU+H/K
+         KbSW5ETGs9XHxsA/7NKT4O5JiCXypyb1xp7bDN/8=
+Received: from localhost (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: bperumal@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4FAA360452;
+        Mon, 19 Nov 2018 07:49:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542613798;
+        bh=oELrnCKFqAkK9S/CU6/96gYvRF0yfs6371qmYqPOoz0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=O7hmSYK/0pZmStlEUEApCI4owxbGoRzAAbAcknBz62ZppObiTE2LZoH5laHROx3zC
+         kMM8nbNlH90feo5krf1kwzjemwFwoLY1T4ag5amcFe2DFNifMToluE5xr9K4sZmFdT
+         xodoB3uL2O8Fg+aSm94MtNc5u8HUDpt8E64GikuM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4FAA360452
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=bperumal@codeaurora.org
+From:   Bhagavathi Perumal S <bperumal@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Bhagavathi Perumal S <bperumal@codeaurora.org>
+Subject: [PATCH] ath10k: Fix warning due to msdu limit error
+Date:   Mon, 19 Nov 2018 13:18:23 +0530
+Message-Id: <1542613703-9704-1-git-send-email-bperumal@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------A4EEE76D88D7EF2499287287
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Some hardwares variants(QCA99x0) are limiting msdu deaggregation with
+some threshold value(default limit in QCA99x0 is 64 msdus), it was introduced to
+avoid excessive MSDU-deaggregation in error cases. When number of sub frames
+exceeds the limit, target hardware will send all msdus starting from present
+msdu in RAW format as a single msdu packet and it will be indicated with
+error status bit "RX_MSDU_END_INFO0_MSDU_LIMIT_ERR" set in rx descriptor.
+This msdu frame is a partial raw MSDU and does't have first msdu and ieee80211
+header. It caused below warning message.
 
-On 11/18/18 2:23 AM, Priit Laes wrote:
-> On Sat, Nov 17, 2018 at 09:31:35PM -0600, Larry Finger wrote:
->> On 11/14/18 12:27 PM, Priit Laes wrote:
->>> Kernel library has a common cordic algorithm which is identical
->>> to internally implementatd one, so use it and drop the duplicate
->>> implementation.
->>>
->>> Signed-off-by: Priit Laes <plaes@plaes.org>
->>> ---
->>>    drivers/net/wireless/broadcom/b43/Kconfig      |  1 +-
->>>    drivers/net/wireless/broadcom/b43/phy_common.c | 47 +-------------------
->>>    drivers/net/wireless/broadcom/b43/phy_common.h |  9 +----
->>>    drivers/net/wireless/broadcom/b43/phy_lp.c     | 13 ++---
->>>    drivers/net/wireless/broadcom/b43/phy_n.c      | 13 ++---
->>>    5 files changed, 15 insertions(+), 68 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/b43/Kconfig b/drivers/net/wireless/broadcom/b43/Kconfig
->>> index fba8560..3e41457 100644
->>> --- a/drivers/net/wireless/broadcom/b43/Kconfig
->>> +++ b/drivers/net/wireless/broadcom/b43/Kconfig
->>> @@ -4,6 +4,7 @@ config B43
->>>    	select BCMA if B43_BCMA
->>>    	select SSB if B43_SSB
->>>    	select FW_LOADER
->>> +	select CORDIC
->>>    	---help---
->>>    	  b43 is a driver for the Broadcom 43xx series wireless devices.
->>> diff --git a/drivers/net/wireless/broadcom/b43/phy_common.c b/drivers/net/wireless/broadcom/b43/phy_common.c
->>> index 85f2ca9..98c4fa5 100644
->>> --- a/drivers/net/wireless/broadcom/b43/phy_common.c
->>> +++ b/drivers/net/wireless/broadcom/b43/phy_common.c
->>> @@ -604,50 +604,3 @@ void b43_phy_force_clock(struct b43_wldev *dev, bool force)
->>>    #endif
->>>    	}
->>>    }
->>> -
->>> -/* http://bcm-v4.sipsolutions.net/802.11/PHY/Cordic */
->>> -struct b43_c32 b43_cordic(int theta)
->>> -{
->>> -	static const u32 arctg[] = {
->>> -		2949120, 1740967, 919879, 466945, 234379, 117304,
->>> -		  58666,   29335,  14668,   7334,   3667,   1833,
->>> -		    917,     458,    229,    115,     57,     29,
->>> -	};
->>> -	u8 i;
->>> -	s32 tmp;
->>> -	s8 signx = 1;
->>> -	u32 angle = 0;
->>> -	struct b43_c32 ret = { .i = 39797, .q = 0, };
->>> -
->>> -	while (theta > (180 << 16))
->>> -		theta -= (360 << 16);
->>> -	while (theta < -(180 << 16))
->>> -		theta += (360 << 16);
->>> -
->>> -	if (theta > (90 << 16)) {
->>> -		theta -= (180 << 16);
->>> -		signx = -1;
->>> -	} else if (theta < -(90 << 16)) {
->>> -		theta += (180 << 16);
->>> -		signx = -1;
->>> -	}
->>> -
->>> -	for (i = 0; i <= 17; i++) {
->>> -		if (theta > angle) {
->>> -			tmp = ret.i - (ret.q >> i);
->>> -			ret.q += ret.i >> i;
->>> -			ret.i = tmp;
->>> -			angle += arctg[i];
->>> -		} else {
->>> -			tmp = ret.i + (ret.q >> i);
->>> -			ret.q -= ret.i >> i;
->>> -			ret.i = tmp;
->>> -			angle -= arctg[i];
->>> -		}
->>> -	}
->>> -
->>> -	ret.i *= signx;
->>> -	ret.q *= signx;
->>> -
->>> -	return ret;
->>> -}
->>> diff --git a/drivers/net/wireless/broadcom/b43/phy_common.h b/drivers/net/wireless/broadcom/b43/phy_common.h
->>> index 57a1ad8..4213cac 100644
->>> --- a/drivers/net/wireless/broadcom/b43/phy_common.h
->>> +++ b/drivers/net/wireless/broadcom/b43/phy_common.h
->>> @@ -7,13 +7,6 @@
->>>    struct b43_wldev;
->>> -/* Complex number using 2 32-bit signed integers */
->>> -struct b43_c32 { s32 i, q; };
->>> -
->>> -#define CORDIC_CONVERT(value)	(((value) >= 0) ? \
->>> -				 ((((value) >> 15) + 1) >> 1) : \
->>> -				 -((((-(value)) >> 15) + 1) >> 1))
->>> -
->>>    /* PHY register routing bits */
->>>    #define B43_PHYROUTE			0x0C00 /* PHY register routing bits mask */
->>>    #define  B43_PHYROUTE_BASE		0x0000 /* Base registers */
->>> @@ -450,6 +443,4 @@ bool b43_is_40mhz(struct b43_wldev *dev);
->>>    void b43_phy_force_clock(struct b43_wldev *dev, bool force);
->>> -struct b43_c32 b43_cordic(int theta);
->>> -
->>>    #endif /* LINUX_B43_PHY_COMMON_H_ */
->>> diff --git a/drivers/net/wireless/broadcom/b43/phy_lp.c b/drivers/net/wireless/broadcom/b43/phy_lp.c
->>> index 6922cbb..1718e3b 100644
->>> --- a/drivers/net/wireless/broadcom/b43/phy_lp.c
->>> +++ b/drivers/net/wireless/broadcom/b43/phy_lp.c
->>> @@ -23,6 +23,7 @@
->>>    */
->>> +#include <linux/cordic.h>
->>>    #include <linux/slab.h>
->>>    #include "b43.h"
->>> @@ -1780,9 +1781,9 @@ static void lpphy_start_tx_tone(struct b43_wldev *dev, s32 freq, u16 max)
->>>    {
->>>    	struct b43_phy_lp *lpphy = dev->phy.lp;
->>>    	u16 buf[64];
->>> -	int i, samples = 0, angle = 0;
->>> +	int i, samples = 0, theta = 0;
->>>    	int rotation = (((36 * freq) / 20) << 16) / 100;
->>> -	struct b43_c32 sample;
->>> +	struct cordic_iq sample;
->>>    	lpphy->tx_tone_freq = freq;
->>> @@ -1798,10 +1799,10 @@ static void lpphy_start_tx_tone(struct b43_wldev *dev, s32 freq, u16 max)
->>>    	}
->>>    	for (i = 0; i < samples; i++) {
->>> -		sample = b43_cordic(angle);
->>> -		angle += rotation;
->>> -		buf[i] = CORDIC_CONVERT((sample.i * max) & 0xFF) << 8;
->>> -		buf[i] |= CORDIC_CONVERT((sample.q * max) & 0xFF);
->>> +		sample = cordic_calc_iq(theta);
->>> +		theta += rotation;
->>> +		buf[i] = CORDIC_FLOAT((sample.i * max) & 0xFF) << 8;
->>> +		buf[i] |= CORDIC_FLOAT((sample.q * max) & 0xFF);
->>>    	}
->>>    	b43_lptab_write_bulk(dev, B43_LPTAB16(5, 0), samples, buf);
->>> diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
->>> index 44ab080..1f9378a 100644
->>> --- a/drivers/net/wireless/broadcom/b43/phy_n.c
->>> +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
->>> @@ -23,6 +23,7 @@
->>>    */
->>> +#include <linux/cordic.h>
->>>    #include <linux/delay.h>
->>>    #include <linux/slab.h>
->>>    #include <linux/types.h>
->>> @@ -1513,7 +1514,7 @@ static void b43_radio_init2055(struct b43_wldev *dev)
->>>    /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/LoadSampleTable */
->>>    static int b43_nphy_load_samples(struct b43_wldev *dev,
->>> -					struct b43_c32 *samples, u16 len) {
->>> +					struct cordic_iq *samples, u16 len) {
->>>    	struct b43_phy_n *nphy = dev->phy.n;
->>>    	u16 i;
->>>    	u32 *data;
->>> @@ -1544,7 +1545,7 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
->>>    {
->>>    	int i;
->>>    	u16 bw, len, rot, angle;
->>> -	struct b43_c32 *samples;
->>> +	struct cordic_iq *samples;
->>>    	bw = b43_is_40mhz(dev) ? 40 : 20;
->>>    	len = bw << 3;
->>> @@ -1561,7 +1562,7 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
->>>    		len = bw << 1;
->>>    	}
->>> -	samples = kcalloc(len, sizeof(struct b43_c32), GFP_KERNEL);
->>> +	samples = kcalloc(len, sizeof(struct cordic_iq), GFP_KERNEL);
->>>    	if (!samples) {
->>>    		b43err(dev->wl, "allocation for samples generation failed\n");
->>>    		return 0;
->>> @@ -1570,10 +1571,10 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
->>>    	angle = 0;
->>>    	for (i = 0; i < len; i++) {
->>> -		samples[i] = b43_cordic(angle);
->>> +		samples[i] = cordic_calc_iq(angle);
->>>    		angle += rot;
->>> -		samples[i].q = CORDIC_CONVERT(samples[i].q * max);
->>> -		samples[i].i = CORDIC_CONVERT(samples[i].i * max);
->>> +		samples[i].q = CORDIC_FLOAT(samples[i].q * max);
->>> +		samples[i].i = CORDIC_FLOAT(samples[i].i * max);
->>>    	}
->>>    	i = b43_nphy_load_samples(dev, samples, len);
->>
->> There is a fundamental flaw in this patch. Routine b43_cordic() takes an
->> angle in degrees scaled by 2^16, whereas cordic_calc_iq() takes an angle in
->> degrees. For a given input, the two routines must get different answers. At
->> a minimum, the calculation of rot would need to remove the left shift of 16.
-> 
-> Thanks for the hint. I modified my "test harness" a bit to plot out values
-> from -360 .. 360 and transformed the theta for b43_cordic argument using CORDIC_FIXED macro:
-> 
-> b43_cordic(CORDIC_FIXED(theta));
-> cordic_calc_iq(theta);
-> 
-> Then I plotted the results and well.. they are not that pretty. While the results give
-> identical answers between certain ranges of degrees, the cordic algorithm for b43 seems
-> to be broken for certain ranges: (-270..-180 ; -90 .. 0; 90.. 180 and 270..360).
-> 
-> You can find my test harnesses here:
-> 
-> https://gist.github.com/plaes/284993a4fc65e0926d0628a11f0cf874
+[  320.151332] ------------[ cut here ]------------
+[  320.155006] WARNING: CPU: 0 PID: 3 at drivers/net/wireless/ath/ath10k/htt_rx.c:1188
 
-I found a problem with the b43 implementation. The local variables for that 
-routine includes
+In our issue case, MSDU limit error happened due to FCS error and generated
+this warning message.
 
-         u32 angle = 0;
+This fixes the warning by handling the MSDU limit error. If msdu limit error
+happens, driver adds first MSDU's ieee80211 header and sets A-MSDU present bit
+in QOS header so that upper layer processes this frame if it is valid or drop it
+if FCS error set. And removed the warning message, hence partial msdus without
+first msdu is expected in msdu limit error cases.
 
-If one looks further down in the algorithm, if the reduced value of "theta" is 
-less than 0, then "angle" should be negative. That causes the calculation to 
-blow up. This explains why some ranges of angles got the same result for both 
-routines. When that declaration is changed to "int angle = 0", the two routines 
-give the same answer for all inputs.
+Tested on QCA9984, Firmware 10.4-3.6-00104
 
-My test setup has a hardware failure, thus I cannot test your patch, but I now 
-believe it to be correct. Thus your first and third patches may be annotated with
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-One thing that should be done is to fix the error in the b43 code for stable as 
-it was introduced in 2.6.34. I propose adding the attached patched to your 
-series placed between your current 2nd and 3rd patches so that the old kernels 
-get fixed. Of course, your 3rd patch will need to be revised. If all 4 of the 
-patches get submitted together there will be no problems with the timing. My 
-change will exist for seconds in the mainline kernel, but it will get propagated 
-back through stable.
-
-Thanks,
-
-Larry
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---------------A4EEE76D88D7EF2499287287
-Content-Type: text/x-patch;
- name="0001-b43-Fix-error-in-cordic-routine.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment;
- filename="0001-b43-Fix-error-in-cordic-routine.patch"
-
-From b42ae73ef7505de93e4c66fb9f66930e3f3d969a Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sun, 18 Nov 2018 13:15:07 -0600
-Subject: [PATCH] b43: Fix error in cordic routine
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-
-The cordic routine for calculating sines and cosines that was added in
-commit 986504540306 ("b43: make cordic common (LP-PHY and N-PHY need it)")
-contains an error whereby a quantity declared u32 can in fact go negative.
-
-This problem was detected by Priit Laes who is switching b43 to use the
-routine in the library functions of the kernel.
-
-Fixes: 986504540306 ("b43: make cordic common (LP-PHY and N-PHY need it)")
-Reported-by: Priit Laes <plaes@plaes.org>
-Cc: Rafał Miłecki <zajec5@gmail.com>
-Cc: Stable <stable@vger.kernel.org> # 2.6.34
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Bhagavathi Perumal S <bperumal@codeaurora.org>
 ---
- drivers/net/wireless/broadcom/b43/phy_common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c  | 41 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/hw.c      |  7 ++++++
+ drivers/net/wireless/ath/ath10k/hw.h      | 10 ++++++++
+ drivers/net/wireless/ath/ath10k/rx_desc.h |  7 ++++++
+ 4 files changed, 61 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_common.c b/drivers/net/wireless/broadcom/b43/phy_common.c
-index 85f2ca989565..ef3ffa5ad466 100644
---- a/drivers/net/wireless/broadcom/b43/phy_common.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_common.c
-@@ -616,7 +616,7 @@ struct b43_c32 b43_cordic(int theta)
- 	u8 i;
- 	s32 tmp;
- 	s8 signx = 1;
--	u32 angle = 0;
-+	s32 angle = 0;
- 	struct b43_c32 ret = { .i = 39797, .q = 0, };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 984b045..a42f4d9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1159,7 +1159,8 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 					struct sk_buff *msdu,
+ 					struct ieee80211_rx_status *status,
+ 					enum htt_rx_mpdu_encrypt_type enctype,
+-					bool is_decrypted)
++					bool is_decrypted,
++					const u8 first_hdr[64])
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	struct htt_rx_desc *rxd;
+@@ -1167,6 +1168,9 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 	size_t crypto_len;
+ 	bool is_first;
+ 	bool is_last;
++	bool msdu_limit_err;
++	int bytes_aligned = ar->hw_params.decap_align_bytes;
++	u8 *qos;
  
- 	while (theta > (180 << 16))
+ 	rxd = (void *)msdu->data - sizeof(*rxd);
+ 	is_first = !!(rxd->msdu_end.common.info0 &
+@@ -1184,16 +1188,45 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
+ 	 * [FCS] <-- at end, needs to be trimmed
+ 	 */
+ 
++	/* Some hardwares(QCA99x0 variants) limit number of msdus in a-msdu when
++	 * deaggregate, so that unwanted MSDU-deaggregation is avoided for
++	 * error packets. If limit exceeds, hw sends all remaining MSDUs as
++	 * a single last MSDU with this msdu limit error set.
++	 */
++	msdu_limit_err = ath10k_rx_desc_msdu_limit_error(&ar->hw_params, rxd);
++
++	/* If MSDU limit error happens, then don't warn on, the partial raw MSDU
++	 * without first MSDU is expected in that case, and handled later here.
++	 */
+ 	/* This probably shouldn't happen but warn just in case */
+-	if (WARN_ON_ONCE(!is_first))
++	if (WARN_ON_ONCE(!is_first && !msdu_limit_err))
+ 		return;
+ 
+ 	/* This probably shouldn't happen but warn just in case */
+-	if (WARN_ON_ONCE(!(is_first && is_last)))
++	if (WARN_ON_ONCE(!(is_first && is_last) && !msdu_limit_err))
+ 		return;
+ 
+ 	skb_trim(msdu, msdu->len - FCS_LEN);
+ 
++	/* Push original 80211 header */
++	if (unlikely(msdu_limit_err)) {
++		hdr = (struct ieee80211_hdr *)first_hdr;
++		hdr_len = ieee80211_hdrlen(hdr->frame_control);
++		crypto_len = ath10k_htt_rx_crypto_param_len(ar, enctype);
++
++		if (ieee80211_is_data_qos(hdr->frame_control)) {
++			qos = ieee80211_get_qos_ctl(hdr);
++			qos[0] |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++		}
++
++		if (crypto_len)
++			memcpy(skb_push(msdu, crypto_len),
++			       (void *)hdr + round_up(hdr_len, bytes_aligned),
++			       crypto_len);
++
++		memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
++	}
++
+ 	/* In most cases this will be true for sniffed frames. It makes sense
+ 	 * to deliver them as-is without stripping the crypto param. This is
+ 	 * necessary for software based decryption.
+@@ -1467,7 +1500,7 @@ static void ath10k_htt_rx_h_undecap(struct ath10k *ar,
+ 	switch (decap) {
+ 	case RX_MSDU_DECAP_RAW:
+ 		ath10k_htt_rx_h_undecap_raw(ar, msdu, status, enctype,
+-					    is_decrypted);
++					    is_decrypted, first_hdr);
+ 		break;
+ 	case RX_MSDU_DECAP_NATIVE_WIFI:
+ 		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index af8ae81..61ecf93 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -1119,8 +1119,15 @@ static int ath10k_qca99x0_rx_desc_get_l3_pad_bytes(struct htt_rx_desc *rxd)
+ 		  RX_MSDU_END_INFO1_L3_HDR_PAD);
+ }
+ 
++static bool ath10k_qca99x0_rx_desc_msdu_limit_error(struct htt_rx_desc *rxd)
++{
++	return !!(rxd->msdu_end.common.info0 &
++		  __cpu_to_le32(RX_MSDU_END_INFO0_MSDU_LIMIT_ERR));
++}
++
+ const struct ath10k_hw_ops qca99x0_ops = {
+ 	.rx_desc_get_l3_pad_bytes = ath10k_qca99x0_rx_desc_get_l3_pad_bytes,
++	.rx_desc_get_msdu_limit_error = ath10k_qca99x0_rx_desc_msdu_limit_error,
+ };
+ 
+ const struct ath10k_hw_ops qca6174_ops = {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 1b5da27..e50a8dc5 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -624,6 +624,7 @@ struct ath10k_hw_ops {
+ 	int (*rx_desc_get_l3_pad_bytes)(struct htt_rx_desc *rxd);
+ 	void (*set_coverage_class)(struct ath10k *ar, s16 value);
+ 	int (*enable_pll_clk)(struct ath10k *ar);
++	bool (*rx_desc_get_msdu_limit_error)(struct htt_rx_desc *rxd);
+ };
+ 
+ extern const struct ath10k_hw_ops qca988x_ops;
+@@ -642,6 +643,15 @@ struct ath10k_hw_ops {
+ 	return 0;
+ }
+ 
++static inline bool
++ath10k_rx_desc_msdu_limit_error(struct ath10k_hw_params *hw,
++				struct htt_rx_desc *rxd)
++{
++	if (hw->hw_ops->rx_desc_get_msdu_limit_error)
++		return hw->hw_ops->rx_desc_get_msdu_limit_error(rxd);
++	return false;
++}
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index 310674d..b626cc2 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -572,6 +572,7 @@ struct rx_msdu_start {
+ #define RX_MSDU_END_INFO0_REPORTED_MPDU_LENGTH_LSB  0
+ #define RX_MSDU_END_INFO0_FIRST_MSDU                BIT(14)
+ #define RX_MSDU_END_INFO0_LAST_MSDU                 BIT(15)
++#define RX_MSDU_END_INFO0_MSDU_LIMIT_ERR            BIT(18)
+ #define RX_MSDU_END_INFO0_PRE_DELIM_ERR             BIT(30)
+ #define RX_MSDU_END_INFO0_RESERVED_3B               BIT(31)
+ 
+@@ -676,6 +677,12 @@ struct rx_msdu_end {
+  *		Indicates the last MSDU of the A-MSDU.  MPDU end status is
+  *		only valid when last_msdu is set.
+  *
++ *msdu_limit_error
++ * 		Indicates that the MSDU threshold was exceeded and thus
++ *		all the rest of the MSDUs will not be scattered and
++ *		will not be decapsulated but will be received in RAW format
++ *		as a single MSDU buffer.
++ *
+  *reserved_3a
+  *		Reserved: HW should fill with zero.  FW should ignore.
+  *
 -- 
-2.16.4
+1.9.1
 
-
---------------A4EEE76D88D7EF2499287287--
