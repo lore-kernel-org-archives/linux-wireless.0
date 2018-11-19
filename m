@@ -2,142 +2,142 @@ Return-Path: <SRS0=j5ME=N6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=DKIM_ADSP_ALL,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA6C43441
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3902C43441
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:01:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CFC7221104
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:01:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CFC7221104
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=taht.net
+	by mail.kernel.org (Postfix) with ESMTP id 9F77F21104
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Nov 2018 18:01:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=plaes.org header.i=@plaes.org header.b="XZGiKwIj"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9F77F21104
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=plaes.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731600AbeKTE0P convert rfc822-to-8bit (ORCPT
+        id S1732066AbeKTE0R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Nov 2018 23:26:15 -0500
-Received: from mail.taht.net ([176.58.107.8]:56594 "EHLO mail.taht.net"
+        Mon, 19 Nov 2018 23:26:17 -0500
+Received: from plaes.org ([188.166.43.21]:48044 "EHLO plaes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730227AbeKTE0O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Nov 2018 23:26:14 -0500
-X-Greylist: delayed 370 seconds by postgrey-1.27 at vger.kernel.org; Mon, 19 Nov 2018 23:26:13 EST
-Received: from dancer.taht.net (unknown [IPv6:2603:3024:1536:86f0:eea8:6bff:fefe:9a2])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.taht.net (Postfix) with ESMTPSA id 4E44121367;
-        Mon, 19 Nov 2018 17:55:29 +0000 (UTC)
-From:   Dave Taht <dave@taht.net>
-To:     Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        make-wifi-fast@lists.bufferbloat.net
-Subject: Re: [Make-wifi-fast] [PATCH v3 3/6] mac80211: Add airtime accounting and scheduling to TXQs
-References: <1542063113-22438-1-git-send-email-rmanohar@codeaurora.org>
-        <1542063113-22438-4-git-send-email-rmanohar@codeaurora.org>
-        <e5344cad-2a18-a938-f2ed-43870027251c@nbd.name>
-        <871s7nv9pl.fsf@toke.dk>
-        <8e7847ff-4c88-10ae-2223-2fc7321641d9@nbd.name>
-        <87sh02tfsp.fsf@toke.dk>
-Date:   Mon, 19 Nov 2018 09:55:16 -0800
-In-Reply-To: <87sh02tfsp.fsf@toke.dk> ("Toke \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\=
- \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\= message of
-        "Thu, 15 Nov 2018 09:24:22 -0800")
-Message-ID: <878t1p2bqz.fsf@taht.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        id S1731493AbeKTE0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Nov 2018 23:26:17 -0500
+Received: from localhost (85.253.196.132.cable.starman.ee [85.253.196.132])
+        by plaes.org (Postfix) with ESMTPSA id 1F3D540717;
+        Mon, 19 Nov 2018 18:01:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=plaes.org; s=mail;
+        t=1542650501; bh=ihZKLRanXwtAPkeZZ0ztYQHLsrnqMv1YvZeqoutHMFs=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=XZGiKwIjUcFnvE4XAC6OBEO1GDZlpfqp9NBSg5FMikCTccSb27TYffbGYBn8lfzjt
+         TMk6V61qXRi4hkj29aNPUQFnJtGNsVdperlf2oB7D6vlpR0gESI6O1kHEhRFye5Jg1
+         wdwO991N1ULVFmxTjQDIP4JhIlHKVYzQoDDBrjof/P2kuNRHFTa9C9E0x0bvT9wxol
+         RDnGEyWJXjvGY3ijWM4jUqLWV0IUalnhtZZKam9jzZlpuMi877VozlZrHm5yKABHIU
+         BG0SUCRZUtdBaVJHDOKMTY5bLK0XyxpsJvn1/ypUxFuYCcy7FhS5MX5TEb4Q6P3WzH
+         K00rrNkq83k/Q==
+From:   Priit Laes <plaes@plaes.org>
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Priit Laes <plaes@plaes.org>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Varsha Rao <rvarsha016@gmail.com>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: [PATCH 1/4] lib: cordic: Move cordic macros and defines to header file
+Date:   Mon, 19 Nov 2018 20:01:22 +0200
+Message-Id: <f8fe8791a325686cafa8d0b841951e27f68e29d6.1542649316.git-series.plaes@plaes.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <cover.87f16ede7954f8d9cde4ecae5f050bf8f4008dd8.1542649316.git-series.plaes@plaes.org>
+References: <cover.87f16ede7954f8d9cde4ecae5f050bf8f4008dd8.1542649316.git-series.plaes@plaes.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Toke Høiland-Jørgensen <toke@toke.dk> writes:
+Now that these macros are in header file, we can eventually
+clean up the duplicate macros present in the drivers that
+utilize the same cordic algorithm implementation.
 
-> Felix Fietkau <nbd@nbd.name> writes:
->
->> On 2018-11-14 18:40, Toke Høiland-Jørgensen wrote:
->>>> This part doesn't really make much sense to me, but maybe I'm
->>>> misunderstanding how the code works.
->>>> Let's assume we have a driver like ath9k or mt76, which tries to keep a
->>>> number of aggregates in the hardware queue, and the hardware queue is
->>>> currently empty.
->>>> If the current txq entry is kept at the head of the schedule list,
->>>> wouldn't the code just pull from that one over and over again, until
->>>> enough packets are transmitted by the hardware and their tx status
->>>> processed?
->>>> It seems to me that while fairness is still preserved in the long run,
->>>> this could lead to rather bursty scheduling, which may not be
->>>> particularly latency friendly.
->>> 
->>> Yes, it'll be a bit more bursty when the hardware queue is completely
->>> empty. However, when a TX completion comes back, that will adjust the
->>> deficit of that sta and cause it to be rotated on the next dequeue. This
->>> obviously relies on the fact that the lower-level hardware queue is
->>> sufficiently shallow to not add a lot of latency. But we want that to be
->>> the case anyway. In practice, it works quite well for ath9k, but not so
->>> well for ath10k because it has a large buffer in firmware.
->>> 
->>> If we requeue the TXQ at the end of the list, a station that is taking
->>> up too much airtime will fail to be throttled properly, so the
->>> queue-at-head is kinda needed to ensure fairness...
->> Thanks for the explanation, that makes sense to me. I have an idea on
->> how to mitigate the burstiness within the driver. I'll write it down in
->> pseudocode, please let me know if you think that'll work.
->
-> I don't think it will, unfortunately. For example, consider the case
-> where there are two stations queued; one with a large negative deficit
-> (say, -10ms), and one with a positive deficit.
+Also add CORDIC_ prefix to nonprefixed macros.
 
-Perhaps a flag for one way or the other?
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ include/linux/cordic.h |  9 +++++++++
+ lib/cordic.c           | 23 +++++++----------------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
-if(driver->has_absurd_hardware_queue_depth) doitthisway(); else
-doitabetterway();
-
->
-> In this case, we really need to throttle the station with a negative
-> deficit. But if the driver loops and caches txqs, we'll get something
-> like the following:
->
-> - First driver loop iteration: returns TXQ with positive deficit.
-> - Second driver loop iteration: Only the negative-deficit TXQ is in the
->   mac80211 list, so it will loop until that TXQ's deficit turns positive
->   and return it.
->
-> Because of this, the negative-deficit station won't be throttled, and we
-> won't get fairness.
->
-> How many frames will mt76 queue up below the driver point? I.e., how
-> much burstiness are you expecting this will introduce on that driver?
->
-> Taking a step back, it's clear that it would be good to be able to
-> dequeue packets to multiple STAs at once (we need that for MU-MIMO on
-> ath10k as well). However, I don't think we can do that with the
-> round-robin fairness scheduler; so we are going to need a different
-> algorithm. I *think* it may be possible to do this with a virtual-time
-> scheduler, but I haven't sat down and worked out the details yet...
-
-The answer to which did not fit on the margins of your thesis. :)
-
-I too have been trying to come up with a better means of gang
-scheduling... for about 2 years now. In terms of bitmaps it looks a bit
-like QFQ, but honestly...
-
-Is there going to be some point where whatever we have here is
-significantly better than what we had? Or not significantly worse? Or
-handwavy enough to fix the rest once enlightenment arrives?
-
-The perfect is the enemy of the good.
-
-I'd rather like the intel folk to be weighing in on this stuff, too,
-trying to get an API right requires use cases.
-
->
-> -Toke
-> _______________________________________________
-> Make-wifi-fast mailing list
-> Make-wifi-fast@lists.bufferbloat.net
-> https://lists.bufferbloat.net/listinfo/make-wifi-fast
+diff --git a/include/linux/cordic.h b/include/linux/cordic.h
+index cf68ca4..3d656f5 100644
+--- a/include/linux/cordic.h
++++ b/include/linux/cordic.h
+@@ -18,6 +18,15 @@
+ 
+ #include <linux/types.h>
+ 
++#define CORDIC_ANGLE_GEN	39797
++#define CORDIC_PRECISION_SHIFT	16
++#define CORDIC_NUM_ITER	(CORDIC_PRECISION_SHIFT + 2)
++
++#define CORDIC_FIXED(X)	((s32)((X) << CORDIC_PRECISION_SHIFT))
++#define CORDIC_FLOAT(X)	(((X) >= 0) \
++		? ((((X) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1) \
++		: -((((-(X)) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1))
++
+ /**
+  * struct cordic_iq - i/q coordinate.
+  *
+diff --git a/lib/cordic.c b/lib/cordic.c
+index 6cf4778..8ef27c1 100644
+--- a/lib/cordic.c
++++ b/lib/cordic.c
+@@ -16,15 +16,6 @@
+ #include <linux/module.h>
+ #include <linux/cordic.h>
+ 
+-#define CORDIC_ANGLE_GEN	39797
+-#define CORDIC_PRECISION_SHIFT	16
+-#define	CORDIC_NUM_ITER		(CORDIC_PRECISION_SHIFT + 2)
+-
+-#define	FIXED(X)	((s32)((X) << CORDIC_PRECISION_SHIFT))
+-#define	FLOAT(X)	(((X) >= 0) \
+-		? ((((X) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1) \
+-		: -((((-(X)) >> (CORDIC_PRECISION_SHIFT - 1)) + 1) >> 1))
+-
+ static const s32 arctan_table[] = {
+ 	2949120,
+ 	1740967,
+@@ -64,16 +55,16 @@ struct cordic_iq cordic_calc_iq(s32 theta)
+ 	coord.q = 0;
+ 	angle = 0;
+ 
+-	theta = FIXED(theta);
++	theta = CORDIC_FIXED(theta);
+ 	signtheta = (theta < 0) ? -1 : 1;
+-	theta = ((theta + FIXED(180) * signtheta) % FIXED(360)) -
+-		FIXED(180) * signtheta;
++	theta = ((theta + CORDIC_FIXED(180) * signtheta) % CORDIC_FIXED(360)) -
++		CORDIC_FIXED(180) * signtheta;
+ 
+-	if (FLOAT(theta) > 90) {
+-		theta -= FIXED(180);
++	if (CORDIC_FLOAT(theta) > 90) {
++		theta -= CORDIC_FIXED(180);
+ 		signx = -1;
+-	} else if (FLOAT(theta) < -90) {
+-		theta += FIXED(180);
++	} else if (CORDIC_FLOAT(theta) < -90) {
++		theta += CORDIC_FIXED(180);
+ 		signx = -1;
+ 	}
+ 
+-- 
+git-series 0.9.1
