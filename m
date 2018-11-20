@@ -3,112 +3,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD1ADC18DF5
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 09:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 354DEC04EBC
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 13:23:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C2E2206BB
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 09:53:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8074A206BB
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 13:22:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OOCb1fxa"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9C2E2206BB
-Authentication-Results: mail.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=broadcom.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="f4zpDz2y";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="izJzBMED"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 8074A206BB
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727998AbeKTUVv (ORCPT
+        id S1727429AbeKTXv5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Nov 2018 15:21:51 -0500
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:38291 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727985AbeKTUVv (ORCPT
+        Tue, 20 Nov 2018 18:51:57 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34104 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725843AbeKTXv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Nov 2018 15:21:51 -0500
-Received: by mail-yw1-f66.google.com with SMTP id i20so519556ywc.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2018 01:53:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=a7/W7byzzrm2azhPYA+Q8+0uHnI9zjKDlQsyKHPmnbY=;
-        b=OOCb1fxausnD7bdvZDLaiAtNyqMZX24koQuTttiYDdujw2JLZvx++hg4wCAYHn5yqL
-         U+0Yx8U3fXcHuyWqOvbLDNYYICsD1dYJd023mYJnCdkVh52E9+dVMZ9iuKoebG5mjq+6
-         oSzPTcPU3olewnvHaEInXzRu7cOSXtS2r7PfY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=a7/W7byzzrm2azhPYA+Q8+0uHnI9zjKDlQsyKHPmnbY=;
-        b=s8tQ+v9gkx/fUMQEtQpm+Jy6K7hrhWs9nF4i/QAPrpGmrZBKo3UMDvdiZYhNDpAJln
-         XMESFdj7J4RYnQJ8lC4RWYlssBwBxHyWMjnIih5fE0BImGdPkpOI9wAd8qnOA3NhCyeB
-         L4gTQj/9sQWC8KE4FyQjcP8v0jKZZVLkESgWVXzq7/Th3D18hS6thhHuXD/GWWNPJNxh
-         XQviXNXkNrC2NIxnjTLE30lclabhWbLy38ZFAh5QdKyYFpw0tCjBsNec8PkTEOUWlpoX
-         vBWEE3gY8rBxPg9QPy9a0c1qaWOB1t2c2VYiuwI/G6aDoPDJ1uSgth2Wk4Jw7hLwCPrt
-         gUCg==
-X-Gm-Message-State: AGRZ1gL0ovMVWuW3kcWcml2g5aBTsVOfaj50lan3OdEuE1C2FwxptSwZ
-        uSHSLx9CpxTjBDLToUYl+xZmcg==
-X-Google-Smtp-Source: AJdET5erdYi5rsxJRxuLm38fnqHn8roh98RoDBI2QG/HiDLkiH/vMurt6MiMXdsAHCEzegUDdul6Jg==
-X-Received: by 2002:a81:33c4:: with SMTP id z187mr1134853ywz.294.1542707614893;
-        Tue, 20 Nov 2018 01:53:34 -0800 (PST)
-Received: from [10.176.68.125] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id g81-v6sm5311245ywa.100.2018.11.20.01.53.33
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 20 Nov 2018 01:53:34 -0800 (PST)
-Subject: Re: [PATCH V2 3/8] brcmfmac: set SDIO F1 MesBusyCtrl for CYW4373
-To:     Madhan Mohan R <MadhanMohan.R@cypress.com>
-References: <1542007730-47284-1-git-send-email-chi-hsien.lin@cypress.com>
- <1542007730-47284-4-git-send-email-chi-hsien.lin@cypress.com>
- <0925038a-a767-351d-5b03-f8fa10b8aad1@broadcom.com>
- <20181120085049.GB1563@aremote02.aus.cypress.com>
-Cc:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <4cfaa1cc-2561-6c8d-18b1-4f5a61790cfe@broadcom.com>
-Date:   Tue, 20 Nov 2018 10:53:32 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        Tue, 20 Nov 2018 18:51:57 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9C95660B13; Tue, 20 Nov 2018 13:22:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542720170;
+        bh=MKpuK3NpSbH2OhF67xWi5Tm6JcHg/NSEphXIahQ0j8E=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=f4zpDz2y/0ttz5gRjCFtjIlmT6Mnj9wpdQKb7ve4uoS77ZbEoAPvN2NlNbXpI9vB2
+         b65gS+wu9EU9OlovT4a3tgoNHoH1ER67y9e1quYpljsm04J2IPmqXjDZ6JuXAdoJb6
+         azvwMaO+mpATHotx4gbegTYeJhrh7eNODrHdnWFk=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8E8786071B;
+        Tue, 20 Nov 2018 13:22:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542720169;
+        bh=MKpuK3NpSbH2OhF67xWi5Tm6JcHg/NSEphXIahQ0j8E=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=izJzBMEDbSAqj3EKdAdoRPJ4/yLOZglnX+95BdH2yIWLHkOe8OUsbpN3Ty0ggeS/f
+         EA6gY0wPlpK8jp8UQQlhAvwKxhTOm5dy9A4/aGZk5ISeCjpYHaPQ0I2wMH5awvbgnB
+         W0PZlF05j3Nu2jLu6RXon5sBr5DdGqRoZs6k/A/8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8E8786071B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Priit Laes <plaes@plaes.org>
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Varsha Rao <rvarsha016@gmail.com>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH 0/4] wireless: Use common cordic algorithm for b43 driver
+References: <cover.87f16ede7954f8d9cde4ecae5f050bf8f4008dd8.1542649316.git-series.plaes@plaes.org>
+        <20181119181016.4fxuszvvyiokuqvl@plaes.org>
+Date:   Tue, 20 Nov 2018 15:22:44 +0200
+In-Reply-To: <20181119181016.4fxuszvvyiokuqvl@plaes.org> (Priit Laes's message
+        of "Mon, 19 Nov 2018 18:10:16 +0000")
+Message-ID: <871s7fdgt7.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20181120085049.GB1563@aremote02.aus.cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/20/2018 9:50 AM, Madhan Mohan R wrote:
-> On Mon, Nov 12, 2018 at 10:13:07AM +0100, Arend van Spriel wrote:
->> On 11/12/2018 8:29 AM, Chi-Hsien Lin wrote:
->>> From: Madhan Mohan R <MadhanMohan.R@cypress.com>
->>>
->>> Along with F2 watermark (existing) configuration, F1 MesBusyCtrl
->>> should be enabled & configured to avoid overflow errors.
->>
->> I am a bit confused. Why is it necessary to program the watermark in
->> both SBSDIO_WATERMARK (0x10008) and SDSDIO_FUNC1_MESBUSYCTRL
->> (0x1001D).
->> Looks suspicious to me.
->>
->> Regards,
->> Arend
+Priit Laes <plaes@plaes.org> writes:
+
+> On Mon, Nov 19, 2018 at 08:01:21PM +0200, Priit Laes wrote:
+>> b43 wireless driver includes an internal implementation of
+>> cordic algorithm, although there's a common cordic library
+>> which was split out from brcmsmac driver. Use that and drop
+>> internal implementation.
+>> 
+>> During the process, cordic-algorithm related macros in
+>> brcmfmac driver were also removed and use general macros.
+>> 
+>> Please note that this series is only compile-tested, as I
+>> do not have access to the hardware.
 >
-> Hi Arend,
 >
-> Register SDSDIO_FUNC1_MESBUSYCTRL(0x1001D) Bits [6:0] is programmed with
-> SDIO RX path watermark whereas the register SBSDIO_WATERMARK(0x10008) is
-> for the SDIO TX path.
+> Gah.. I missed the series version in subject. Shall I resend?
 
-Thanks, Madhan
+No need, I'll remember now that this is v4.
 
-That makes sense. Maybe it would be good to express the tx vs rx detail 
-in the code.
-
-Regards,
-Arend
+-- 
+Kalle Valo
