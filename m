@@ -1,200 +1,803 @@
-Return-Path: <SRS0=1os+=N7=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=oODW=OA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DED4DC5ACBA
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 21:22:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F3BBC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:17:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0117F2080F
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Nov 2018 21:21:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECFD02145D
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:17:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=pobox.com header.i=@pobox.com header.b="E+j/GWRP"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0117F2080F
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=pobox.com
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ch115Hf9"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ECFD02145D
+Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=google.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726553AbeKUHwo (ORCPT
+        id S1726423AbeKUNt0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Nov 2018 02:52:44 -0500
-Received: from pb-smtp2.pobox.com ([64.147.108.71]:53059 "EHLO
-        pb-smtp2.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725828AbeKUHwn (ORCPT
+        Wed, 21 Nov 2018 08:49:26 -0500
+Received: from mail-ua1-f73.google.com ([209.85.222.73]:37093 "EHLO
+        mail-ua1-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726135AbeKUNt0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Nov 2018 02:52:43 -0500
-Received: from pb-smtp2.pobox.com (unknown [127.0.0.1])
-        by pb-smtp2.pobox.com (Postfix) with ESMTP id E6DE512BF29;
-        Tue, 20 Nov 2018 16:21:31 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=pobox.com; h=to:from
-        :subject:message-id:date:mime-version:content-type
-        :content-transfer-encoding; s=sasl; bh=2lzVvbDFxTyFby8oZWB4vObKj
-        GQ=; b=E+j/GWRPTbeTMIoC1zvpH3Cmrk1pofNLFGyHkVfF5y7zz//ZA5Tc/JN83
-        wGXiOFTVUpAh6cNLlJ6c5IVMEHBNgqNgh68JyuMO03Uq81yNsdmYA7PE7Dk0O8q7
-        u7SYq8JXcIgt+4Ct/TJQlmvruFzDERVRD57KL1uCcyifPrk23I=
-DomainKey-Signature: a=rsa-sha1; c=nofws; d=pobox.com; h=to:from:subject
-        :message-id:date:mime-version:content-type
-        :content-transfer-encoding; q=dns; s=sasl; b=upyZ3NV28EVpHFNy+Fo
-        yIouyQql6pwETTpB2LXz3tvjEEQA4zFh/ZOo/jrMcKHhrCC+CUeaHrgJOuAXzHcP
-        V69Dq7XTQVuxwhfJ7hwHMUZdgc3RbnLSYssDUP8A6aRQ6CCKYR2o2mf9RWnybo2w
-        nUoNNBB1JbMQr4qqcW5YmO/A=
-Received: from pb-smtp2.nyi.icgroup.com (unknown [127.0.0.1])
-        by pb-smtp2.pobox.com (Postfix) with ESMTP id E00ED12BF28;
-        Tue, 20 Nov 2018 16:21:31 -0500 (EST)
-Received: from [10.69.183.138] (unknown [108.91.94.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by pb-smtp2.pobox.com (Postfix) with ESMTPSA id 2E77F12BF27;
-        Tue, 20 Nov 2018 16:21:31 -0500 (EST)
-To:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless@vger.kernel.org
-From:   Daniel Santos <daniel.santos@pobox.com>
-Subject: rt2800 tx frame dropping issue.
-Message-ID: <bc0bc5ea-dd10-a5a5-87ff-00a93bcf814c@pobox.com>
-Date:   Tue, 20 Nov 2018 15:20:01 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-X-Pobox-Relay-ID: 4001D12E-ED0A-11E8-84E2-BFB3E64BB12D-06139138!pb-smtp2.pobox.com
-Content-Transfer-Encoding: quoted-printable
+        Wed, 21 Nov 2018 08:49:26 -0500
+Received: by mail-ua1-f73.google.com with SMTP id k15so992540uaq.4
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2018 19:16:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=O8GdVLuWLmNepTIzkVv5o07tGoAaDoHoNEFhgo6E5OQ=;
+        b=Ch115Hf9JCF4ylPNLxl+MHWtqOG+CUT8pNAW+kp5uRwL68jDdWaJVcnNG2KAO9gLAh
+         N37jCZGNjGB8CEldoNhmuk6CGyNbbmIrXqfvfHsvyDPfarkEPjh/a8oE/YTo4FbAtOui
+         fTZAL6y7VxD4rkR6qVrsVdhvoXHoakCSP3C2TqWmE4EnWmbx+T2R7U1WZ1I1PIqB1WI+
+         pL11cf14RmG2dWJdDjeCE5q17Y/F2PgeogQV+1Z562FSeIjdTuTDiqJi4TLavneMzIzL
+         IlL/YSH5NQ/1V2C1EvzkuNangxrOyb0Go0HMtvyjF83fUM+Y2y+GQdsRAqK1WoQaWI/W
+         wVuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=O8GdVLuWLmNepTIzkVv5o07tGoAaDoHoNEFhgo6E5OQ=;
+        b=RW+LGTPY5U01/iQjqeahrxItMZ1B2QaGEiwNiFKBfEUCrnHFU79NZ28DSnEmn4EgcR
+         rcAxsGK+QKPHv3Sb1CsRsM1KqUGsd9VpVpc2D/Zf3YY/SwOGAreEswaV15E+TEaMj35h
+         Sv71RXUgkPwWNbKSXAOqsIP7S5Y3QMD6hLFcqAmZ5weYD0bpO0wsUUE/z4ljeImV3b4/
+         Lc3zUM5flg0FlqDVnOoBtB17ihIjs0lda7o+tm/oLVOLpgXIxUciu9zHa9vai3Qt395e
+         gYncjGxEEwhPDII5NkP+n5AXmvUGd0iBQF0QY8Ahs05B+q46tfojohSFmBczZgmNV+z2
+         Pd+w==
+X-Gm-Message-State: AGRZ1gLRHCmNLbQAset/AnJEm5xGu5WPB20b8Mc0xUgNsuGeQWuebE73
+        33dVX4bvPkNpPklj6q8WnDIvfxzK/5x6zIbe
+X-Google-Smtp-Source: AJdET5f1iHq/5kZEqaLsAFApBr2uLrCNkBE/fMUt6Q7JTJUgeEKBlk3Zzi/B7PkmK2g3Gf7NbBuEz/lZkW/5aIIj
+X-Received: by 2002:a67:3e58:: with SMTP id l85mr3940029vsa.14.1542770215743;
+ Tue, 20 Nov 2018 19:16:55 -0800 (PST)
+Date:   Tue, 20 Nov 2018 19:14:49 -0800
+Message-Id: <20181121031449.255314-1-schuffelen@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.19.1.1215.g8438c0b245-goog
+Subject: [PATCH mac80211-next v4] mac80211-next: rtnetlink wifi simulation device
+From:   Cody Schuffelen <schuffelen@google.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel-team@android.com,
+        Cody Schuffelen <schuffelen@google.com>,
+        Alistair Strachan <astrachan@google.com>,
+        Greg Hartman <ghartman@google.com>,
+        Tristan Muntsinger <muntsinger@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+This device takes over an existing network device and produces a
+new one that appears like a wireless connection, returning enough canned
+responses to nl80211 to satisfy a standard connection manager. If
+necessary, it can also be set up one step removed from an existing
+network device, such as through a vlan/80211Q or macvlan connection to
+not disrupt the existing network interface.
 
-I'm coming to this issue rather late and I realize there has been much
-ado about it.=C2=A0 I want to follow up on a thread from 3 months ago
-https://marc.info/?l=3Dlinux-wireless&m=3D153511575812945
+To use it to wrap a bare ethernet connection:
 
-> I get testing results from T-Bone user in bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D82751
->
-> And get this:
->
-> [  781.644185] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Drop=
-ping frame due \
-> to full tx queue 2 [  781.662620] 2 d1 s1 p1 ms1
->
-> Looks like rt2x00 correctly stop queue in mac80211, but sill get skb's.=
-=20
->
-> So we can do 3 things: increase queue size to 128, increase threshold
-> to 16 and make the massage debug one instead of error (I checked
-> some other drivers and looks most of them silently drop the frame
-> in case queue is full). Especially removing the message can be
-> useful since printk can somehow make mt7620 router unresponsive
-> for some time resulting in connection drops.
->
-> Thoughts ?
->
-> Regards
-> Stanislaw
+ip link add link eth0 name wlan0 type virt_wifi
 
-I believe I have the answer as to why we're getting frames after we stop
-the queue.=C2=A0 I had a little chat about this in #kernelnewbies and som=
-e
-other devs believe it is intentional.
+You may have to rename or otherwise hide the eth0 from your connection
+manager, as the original network link will become unusuable and only
+the wireless wrapper will be functional. This can also be combined with
+vlan or macvlan links on top of eth0 to share the network between
+distinct links, but that requires support outside the machine for
+accepting vlan-tagged packets or packets from multiple MAC addresses.
 
-There is a race in ieee80211_tx_frags (net/mac80211/tx.c) between
-releasing local->queue_stop_reason_lock and calling the driver's tx
-until we lock queue->tx_lock in rt2x00queue_write_tx_frame -- in between
-these two points the thread can be preempted.=C2=A0 So while we stop the
-queue in one thread, there can be 20 other threads in between that have
-already checked that the queue was running and have a frame buffer
-sitting on their stacks.=C2=A0 I think it could be fixed with the below
-patch, but I'm being told that it doesn't need it and that the driver
-should just *quietly* drop the frame:
+This is being used for Google's Remote Android Virtual Device project,
+which runs Android devices in virtual machines. The standard network
+interfaces provided inside the virtual machines are all ethernet.
+However, Android is not interested in ethernet devices and would rather
+connect to a wireless interface. This patch allows the virtual machine
+guest to treat one of its network connections as wireless rather than
+ethernet, satisfying Android's network connection requirements.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d43dab4..29009e0 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1117,6 +1117,7 @@ struct ieee80211_local {
- 	int q_stop_reasons[IEEE80211_MAX_QUEUES][IEEE80211_QUEUE_STOP_REASONS];
- 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
- 	spinlock_t queue_stop_reason_lock;
-+	spinlock_t tx_path_lock;
-=20
- 	int open_count;
- 	int monitors, cooked_mntrs;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4f8eceb..2312ac9 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -609,6 +609,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t pri=
-v_data_len,
- 	spin_lock_init(&local->filter_lock);
- 	spin_lock_init(&local->rx_path_lock);
- 	spin_lock_init(&local->queue_stop_reason_lock);
-+	spin_lock_init(&local->tx_path_lock);
-=20
- 	INIT_LIST_HEAD(&local->chanctx_list);
- 	mutex_init(&local->chanctx_mtx);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 87d807f..8d43e2a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1311,6 +1311,7 @@ static bool ieee80211_tx_frags(struct ieee80211_loc=
-al *local,
- 		}
- #endif
-=20
-+		spin_lock_bh(&local->tx_path_lock);
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		if (local->queue_stop_reasons[q] ||
- 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
-@@ -1327,6 +1328,7 @@ static bool ieee80211_tx_frags(struct ieee80211_loc=
-al *local,
- 					spin_unlock_irqrestore(
- 						&local->queue_stop_reason_lock,
- 						flags);
-+					spin_unlock_bh(&local->tx_path_lock);
- 					ieee80211_purge_tx_queue(&local->hw,
- 								 skbs);
- 					return true;
-@@ -1347,6 +1349,7 @@ static bool ieee80211_tx_frags(struct ieee80211_loc=
-al *local,
-=20
- 				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
- 						       flags);
-+				spin_unlock_bh(&local->tx_path_lock);
- 				return false;
- 			}
- 		}
-@@ -1356,6 +1359,7 @@ static bool ieee80211_tx_frags(struct ieee80211_loc=
-al *local,
-=20
- 		__skb_unlink(skb, skbs);
- 		ieee80211_drv_tx(local, vif, sta, skb);
-+		spin_unlock_bh(&local->tx_path_lock);
- 	}
-=20
- 	return true;
+We believe this is a generally useful driver for simulating wireless
+network connections in other environments where a wireless connection is
+desired by some userspace process but is not available.
 
+This is distinct from other testing efforts such as mac80211_hwsim by
+being a cfg80211 device instead of mac80211 device, allowing straight
+pass-through on the data plane instead of forcing packaging of ethernet
+data into mac80211 frames.
 
-Could anybody illuminate for me why this isn't done?=C2=A0 I know that th=
-ere
-has to be a point where we realize there are too many items in the queue
-and we can't keep up, but this would seem to be a terrible way to do
-that.=C2=A0 Is it one of those things where it isn't worth the performanc=
-e
-degradation?=C2=A0 Any insights would be most appreciated!! :)
+Signed-off-by: A. Cody Schuffelen <schuffelen@google.com>
+Acked-by: Alistair Strachan <astrachan@google.com>
+Acked-by: Greg Hartman <ghartman@google.com>
+Acked-by: Tristan Muntsinger <muntsinger@google.com>
+---
+Thanks for the comments on previous changes. Patch comments are now
+addressed in responses to those emails. There will be a slight delay as I
+get the appropriate lkml.org link to reference the code review comments to
+this new patch.
 
-Like Stanislaw, I have not been able to reproduce the problem for
-testing, but somebody who has the problem (in production) is going to
-get a build where the only change is to remove the rt2x00_err message.=C2=
-=A0
-It makes sense that it would be the problem as you mentioned.=C2=A0 I sup=
-pose
-the proper thing to do is to just quietly drop it and increment the
-struct net_device stats.tx_dropped?
+I apologize for the long delay in creating this new version.
 
-Thanks,
-Daniel
+First version: https://lkml.org/lkml/2018/7/27/947
+First review: https://lore.kernel.org/lkml/1535460343.5895.56.camel@sipsolutions.net/
+Second version: https://lore.kernel.org/lkml/20180926194324.71290-1-schuffelen@google.com/
+Second review: Comments of https://www.lkml.org/lkml/2018/9/26/1169
+Third review: https://lkml.org/lkml/2018/10/4/966
+
+ drivers/net/wireless/Kconfig     |   7 +
+ drivers/net/wireless/Makefile    |   2 +
+ drivers/net/wireless/virt_wifi.c | 632 +++++++++++++++++++++++++++++++
+ 3 files changed, 641 insertions(+)
+ create mode 100644 drivers/net/wireless/virt_wifi.c
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 166920ae23f8..f4e808411634 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -114,4 +114,11 @@ config USB_NET_RNDIS_WLAN
+ 
+ 	  If you choose to build a module, it'll be called rndis_wlan.
+ 
++config VIRT_WIFI
++	bool "Wifi wrapper for ethernet drivers"
++	depends on CFG80211
++	---help---
++	  This option adds support for ethernet connections to appear as if they
++	  are wifi connections through a special rtnetlink device.
++
+ endif # WLAN
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 7fc96306712a..6cfe74515c95 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -27,3 +27,5 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
+ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ 
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
++
++obj-$(CONFIG_VIRT_WIFI)	+= virt_wifi.o
+diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
+new file mode 100644
+index 000000000000..64b218699656
+--- /dev/null
++++ b/drivers/net/wireless/virt_wifi.c
+@@ -0,0 +1,632 @@
++// SPDX-License-Identifier: GPL-2.0
++/* drivers/net/wireless/virt_wifi.c
++ *
++ * A fake implementation of cfg80211_ops that can be tacked on to an ethernet
++ * net_device to make it appear as a wireless connection.
++ *
++ * Copyright (C) 2018 Google, Inc.
++ *
++ * Author: schuffelen@google.com
++ */
++
++#include <net/cfg80211.h>
++#include <net/rtnetlink.h>
++#include <linux/etherdevice.h>
++#include <linux/module.h>
++
++#include <net/cfg80211.h>
++#include <net/rtnetlink.h>
++#include <linux/etherdevice.h>
++#include <linux/module.h>
++
++static struct wiphy *common_wiphy;
++
++struct virt_wifi_wiphy_priv {
++	struct delayed_work scan_result;
++	struct cfg80211_scan_request *scan_request;
++	bool being_deleted;
++};
++
++static struct ieee80211_channel channel_2ghz = {
++	.band = NL80211_BAND_2GHZ,
++	.center_freq = 2432,
++	.hw_value = 2432,
++	.max_power = 20,
++};
++
++static struct ieee80211_rate bitrates_2ghz[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20 },
++	{ .bitrate = 55 },
++	{ .bitrate = 110 },
++	{ .bitrate = 60 },
++	{ .bitrate = 120 },
++	{ .bitrate = 240 },
++};
++
++static struct ieee80211_supported_band band_2ghz = {
++	.channels = &channel_2ghz,
++	.bitrates = bitrates_2ghz,
++	.band = NL80211_BAND_2GHZ,
++	.n_channels = 1,
++	.n_bitrates = ARRAY_SIZE(bitrates_2ghz),
++	.ht_cap = {
++		.ht_supported = true,
++		.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++		       IEEE80211_HT_CAP_GRN_FLD |
++		       IEEE80211_HT_CAP_SGI_20 |
++		       IEEE80211_HT_CAP_SGI_40 |
++		       IEEE80211_HT_CAP_DSSSCCK40,
++		.ampdu_factor = 0x3,
++		.ampdu_density = 0x6,
++		.mcs = {
++			.rx_mask = {0xff, 0xff},
++			.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
++		},
++	},
++};
++
++static struct ieee80211_channel channel_5ghz = {
++	.band = NL80211_BAND_5GHZ,
++	.center_freq = 5240,
++	.hw_value = 5240,
++	.max_power = 20,
++};
++
++static struct ieee80211_rate bitrates_5ghz[] = {
++	{ .bitrate = 60 },
++	{ .bitrate = 120 },
++	{ .bitrate = 240 },
++};
++
++#define RX_MCS_MAP (IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14)
++
++#define TX_MCS_MAP (IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 | \
++		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14)
++
++static struct ieee80211_supported_band band_5ghz = {
++	.channels = &channel_5ghz,
++	.bitrates = bitrates_5ghz,
++	.band = NL80211_BAND_5GHZ,
++	.n_channels = 1,
++	.n_bitrates = ARRAY_SIZE(bitrates_5ghz),
++	.ht_cap = {
++		.ht_supported = true,
++		.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
++		       IEEE80211_HT_CAP_GRN_FLD |
++		       IEEE80211_HT_CAP_SGI_20 |
++		       IEEE80211_HT_CAP_SGI_40 |
++		       IEEE80211_HT_CAP_DSSSCCK40,
++		.ampdu_factor = 0x3,
++		.ampdu_density = 0x6,
++		.mcs = {
++			.rx_mask = {0xff, 0xff},
++			.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
++		},
++	},
++	.vht_cap = {
++		.vht_supported = true,
++		.cap = IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
++		       IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ |
++		       IEEE80211_VHT_CAP_RXLDPC |
++		       IEEE80211_VHT_CAP_SHORT_GI_80 |
++		       IEEE80211_VHT_CAP_SHORT_GI_160 |
++		       IEEE80211_VHT_CAP_TXSTBC |
++		       IEEE80211_VHT_CAP_RXSTBC_1 |
++		       IEEE80211_VHT_CAP_RXSTBC_2 |
++		       IEEE80211_VHT_CAP_RXSTBC_3 |
++		       IEEE80211_VHT_CAP_RXSTBC_4 |
++		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
++		.vht_mcs = {
++			.rx_mcs_map = cpu_to_le16(RX_MCS_MAP),
++			.tx_mcs_map = cpu_to_le16(TX_MCS_MAP),
++		}
++	},
++};
++
++/* Assigned at module init. Guaranteed locally-administered and unicast. */
++static u8 fake_router_bssid[ETH_ALEN] __ro_after_init = {};
++
++/* Called with the rtnl lock held. */
++static int virt_wifi_scan(struct wiphy *wiphy,
++			  struct cfg80211_scan_request *request)
++{
++	struct virt_wifi_wiphy_priv *priv = wiphy_priv(wiphy);
++
++	wiphy_debug(wiphy, "scan\n");
++
++	if (priv->scan_request || priv->being_deleted)
++		return -EBUSY;
++
++	priv->scan_request = request;
++	schedule_delayed_work(&priv->scan_result, HZ * 2);
++
++	return 0;
++}
++
++/* Acquires and releases the rdev BSS lock. */
++static void virt_wifi_scan_result(struct work_struct *work)
++{
++	struct {
++		u8 tag;
++		u8 len;
++		u8 ssid[8];
++	} __packed ssid = {
++		.tag = WLAN_EID_SSID, .len = 8, .ssid = "VirtWifi",
++	};
++	struct cfg80211_bss *informed_bss;
++	struct virt_wifi_wiphy_priv *priv =
++		container_of(work, struct virt_wifi_wiphy_priv,
++			     scan_result.work);
++	struct wiphy *wiphy = priv_to_wiphy(priv);
++	struct cfg80211_scan_info scan_info = { .aborted = false };
++
++	informed_bss = cfg80211_inform_bss(wiphy, &channel_5ghz,
++					   CFG80211_BSS_FTYPE_PRESP,
++					   fake_router_bssid,
++					   ktime_get_boot_ns(),
++					   WLAN_CAPABILITY_ESS, 0,
++					   (void *)&ssid, sizeof(ssid),
++					   DBM_TO_MBM(-50), GFP_KERNEL);
++	cfg80211_put_bss(wiphy, informed_bss);
++
++	/* Schedules work which acquires and releases the rtnl lock. */
++	cfg80211_scan_done(priv->scan_request, &scan_info);
++	priv->scan_request = NULL;
++}
++
++/* May acquire and release the rdev BSS lock. */
++static void virt_wifi_cancel_scan(struct wiphy *wiphy)
++{
++	struct virt_wifi_wiphy_priv *priv = wiphy_priv(wiphy);
++
++	cancel_delayed_work_sync(&priv->scan_result);
++	/* Clean up dangling callbacks if necessary. */
++	if (priv->scan_request) {
++		struct cfg80211_scan_info scan_info = { .aborted = true };
++		/* Schedules work which acquires and releases the rtnl lock. */
++		cfg80211_scan_done(priv->scan_request, &scan_info);
++		priv->scan_request = NULL;
++	}
++}
++
++struct virt_wifi_netdev_priv {
++	struct delayed_work connect;
++	struct net_device *lowerdev;
++	struct net_device *upperdev;
++	u32 tx_packets;
++	u32 tx_failed;
++	u8 connect_requested_bss[ETH_ALEN];
++	bool is_up;
++	bool is_connected;
++	bool being_deleted;
++};
++
++/* Called with the rtnl lock held. */
++static int virt_wifi_connect(struct wiphy *wiphy, struct net_device *netdev,
++			     struct cfg80211_connect_params *sme)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
++	bool could_schedule;
++
++	if (priv->being_deleted || !priv->is_up)
++		return -EBUSY;
++
++	could_schedule = schedule_delayed_work(&priv->connect, HZ * 2);
++	if (!could_schedule)
++		return -EBUSY;
++
++	if (sme->bssid)
++		ether_addr_copy(priv->connect_requested_bss, sme->bssid);
++	else
++		eth_zero_addr(priv->connect_requested_bss);
++
++	wiphy_debug(wiphy, "connect\n");
++
++	return 0;
++}
++
++/* Acquires and releases the rdev event lock. */
++static void virt_wifi_connect_complete(struct work_struct *work)
++{
++	struct virt_wifi_netdev_priv *priv =
++		container_of(work, struct virt_wifi_netdev_priv, connect.work);
++	u8 *requested_bss = priv->connect_requested_bss;
++	bool has_addr = !is_zero_ether_addr(requested_bss);
++	bool right_addr = ether_addr_equal(requested_bss, fake_router_bssid);
++	u16 status = WLAN_STATUS_SUCCESS;
++
++	if (!priv->is_up || (has_addr && !right_addr))
++		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
++	else
++		priv->is_connected = true;
++
++	/* Schedules an event that acquires the rtnl lock. */
++	cfg80211_connect_result(priv->upperdev, requested_bss, NULL, 0, NULL, 0,
++				status, GFP_KERNEL);
++	netif_carrier_on(priv->upperdev);
++}
++
++/* May acquire and release the rdev event lock. */
++static void virt_wifi_cancel_connect(struct net_device *netdev)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
++
++	/* If there is work pending, clean up dangling callbacks. */
++	if (cancel_delayed_work_sync(&priv->connect)) {
++		/* Schedules an event that acquires the rtnl lock. */
++		cfg80211_connect_result(priv->upperdev,
++					priv->connect_requested_bss, NULL, 0,
++					NULL, 0,
++					WLAN_STATUS_UNSPECIFIED_FAILURE,
++					GFP_KERNEL);
++	}
++}
++
++/* Called with the rtnl lock held. Acquires the rdev event lock. */
++static int virt_wifi_disconnect(struct wiphy *wiphy, struct net_device *netdev,
++				u16 reason_code)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
++
++	if (priv->being_deleted)
++		return -EBUSY;
++
++	wiphy_debug(wiphy, "disconnect\n");
++	virt_wifi_cancel_connect(netdev);
++
++	cfg80211_disconnected(netdev, reason_code, NULL, 0, true, GFP_KERNEL);
++	priv->is_connected = false;
++	netif_carrier_off(netdev);
++
++	return 0;
++}
++
++/* Called with the rtnl lock held. */
++static int virt_wifi_get_station(struct wiphy *wiphy, struct net_device *dev,
++				 const u8 *mac, struct station_info *sinfo)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++
++	wiphy_debug(wiphy, "get_station\n");
++
++	if (!priv->is_connected || !ether_addr_equal(mac, fake_router_bssid))
++		return -ENOENT;
++
++	sinfo->filled = BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
++		BIT_ULL(NL80211_STA_INFO_TX_FAILED) |
++		BIT_ULL(NL80211_STA_INFO_SIGNAL) |
++		BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
++	sinfo->tx_packets = priv->tx_packets;
++	sinfo->tx_failed = priv->tx_failed;
++	/* For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_ */
++	sinfo->signal = -50;
++	sinfo->txrate = (struct rate_info) {
++		.legacy = 10, /* units are 100kbit/s */
++	};
++	return 0;
++}
++
++/* Called with the rtnl lock held. */
++static int virt_wifi_dump_station(struct wiphy *wiphy, struct net_device *dev,
++				  int idx, u8 *mac, struct station_info *sinfo)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++
++	wiphy_debug(wiphy, "dump_station\n");
++
++	if (idx != 0 || !priv->is_connected)
++		return -ENOENT;
++
++	ether_addr_copy(mac, fake_router_bssid);
++	return virt_wifi_get_station(wiphy, dev, fake_router_bssid, sinfo);
++}
++
++static const struct cfg80211_ops virt_wifi_cfg80211_ops = {
++	.scan = virt_wifi_scan,
++
++	.connect = virt_wifi_connect,
++	.disconnect = virt_wifi_disconnect,
++
++	.get_station = virt_wifi_get_station,
++	.dump_station = virt_wifi_dump_station,
++};
++
++/* Acquires and releases the rtnl lock. */
++static struct wiphy *virt_wifi_make_wiphy(void)
++{
++	struct wiphy *wiphy;
++	struct virt_wifi_wiphy_priv *priv;
++	int err;
++
++	wiphy = wiphy_new(&virt_wifi_cfg80211_ops, sizeof(*priv));
++
++	if (!wiphy)
++		return NULL;
++
++	wiphy->max_scan_ssids = 4;
++	wiphy->max_scan_ie_len = 1000;
++	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++
++	wiphy->bands[NL80211_BAND_2GHZ] = &band_2ghz;
++	wiphy->bands[NL80211_BAND_5GHZ] = &band_5ghz;
++	wiphy->bands[NL80211_BAND_60GHZ] = NULL;
++
++	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++
++	priv = wiphy_priv(wiphy);
++	priv->being_deleted = false;
++	priv->scan_request = NULL;
++	INIT_DELAYED_WORK(&priv->scan_result, virt_wifi_scan_result);
++
++	err = wiphy_register(wiphy);
++	if (err < 0) {
++		wiphy_free(wiphy);
++		return NULL;
++	}
++
++	return wiphy;
++}
++
++/* Acquires and releases the rtnl lock. */
++static void virt_wifi_destroy_wiphy(struct wiphy *wiphy)
++{
++	struct virt_wifi_wiphy_priv *priv;
++
++	WARN(!wiphy, "%s called with null wiphy", __func__);
++	if (!wiphy)
++		return;
++
++	priv = wiphy_priv(wiphy);
++	priv->being_deleted = true;
++	virt_wifi_cancel_scan(wiphy);
++
++	if (wiphy->registered)
++		wiphy_unregister(wiphy);
++	wiphy_free(wiphy);
++}
++
++/* Enters and exits a RCU-bh critical section. */
++static netdev_tx_t virt_wifi_start_xmit(struct sk_buff *skb,
++					struct net_device *dev)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++
++	priv->tx_packets++;
++	if (!priv->is_connected) {
++		priv->tx_failed++;
++		return NET_XMIT_DROP;
++	}
++
++	skb->dev = priv->lowerdev;
++	return dev_queue_xmit(skb);
++}
++
++/* Called with rtnl lock held. */
++static int virt_wifi_net_device_open(struct net_device *dev)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++
++	priv->is_up = true;
++	return 0;
++}
++
++/* Called with rtnl lock held. */
++static int virt_wifi_net_device_stop(struct net_device *dev)
++{
++	struct virt_wifi_netdev_priv *n_priv = netdev_priv(dev);
++	struct virt_wifi_wiphy_priv *w_priv;
++
++	n_priv->is_up = false;
++
++	if (!dev->ieee80211_ptr)
++		return 0;
++	w_priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
++
++	virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
++	virt_wifi_cancel_connect(dev);
++	netif_carrier_off(dev);
++
++	return 0;
++}
++
++static const struct net_device_ops virt_wifi_ops = {
++	.ndo_start_xmit = virt_wifi_start_xmit,
++	.ndo_open = virt_wifi_net_device_open,
++	.ndo_stop = virt_wifi_net_device_stop,
++};
++
++/* Invoked as part of rtnl lock release. */
++static void virt_wifi_net_device_destructor(struct net_device *dev)
++{
++	/* Delayed past dellink to allow nl80211 to react to the device being
++	 * deleted.
++	 */
++	kfree(dev->ieee80211_ptr);
++	dev->ieee80211_ptr = NULL;
++	free_netdev(dev);
++}
++
++/* No lock interaction. */
++static void virt_wifi_setup(struct net_device *dev)
++{
++	ether_setup(dev);
++	dev->netdev_ops = &virt_wifi_ops;
++	dev->priv_destructor = virt_wifi_net_device_destructor;
++}
++
++/* Called in a RCU read critical section from netif_receive_skb */
++static rx_handler_result_t virt_wifi_rx_handler(struct sk_buff **pskb)
++{
++	struct sk_buff *skb = *pskb;
++	struct virt_wifi_netdev_priv *priv =
++		rcu_dereference(skb->dev->rx_handler_data);
++
++	if (!priv->is_connected)
++		return RX_HANDLER_PASS;
++
++	/* GFP_ATOMIC because this is a packet interrupt handler. */
++	skb = skb_share_check(skb, GFP_ATOMIC);
++	if (!skb) {
++		dev_err(&priv->upperdev->dev, "can't skb_share_check\n");
++		return RX_HANDLER_CONSUMED;
++	}
++
++	*pskb = skb;
++	skb->dev = priv->upperdev;
++	skb->pkt_type = PACKET_HOST;
++	return RX_HANDLER_ANOTHER;
++}
++
++/* Called with rtnl lock held. */
++static int virt_wifi_newlink(struct net *src_net, struct net_device *dev,
++			     struct nlattr *tb[], struct nlattr *data[],
++			     struct netlink_ext_ack *extack)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++	int err;
++
++	if (!tb[IFLA_LINK])
++		return -EINVAL;
++
++	netif_carrier_off(dev);
++
++	priv->upperdev = dev;
++	priv->lowerdev = __dev_get_by_index(src_net,
++					    nla_get_u32(tb[IFLA_LINK]));
++
++	if (!priv->lowerdev)
++		return -ENODEV;
++	if (!tb[IFLA_MTU])
++		dev->mtu = priv->lowerdev->mtu;
++	else if (dev->mtu > priv->lowerdev->mtu)
++		return -EINVAL;
++
++	err = netdev_rx_handler_register(priv->lowerdev, virt_wifi_rx_handler,
++					 priv);
++	if (err) {
++		dev_err(&priv->lowerdev->dev,
++			"can't netdev_rx_handler_register: %d\n", err);
++		return err;
++	}
++
++	eth_hw_addr_inherit(dev, priv->lowerdev);
++	netif_stacked_transfer_operstate(priv->lowerdev, dev);
++
++	SET_NETDEV_DEV(dev, &priv->lowerdev->dev);
++	dev->ieee80211_ptr = kzalloc(sizeof(*dev->ieee80211_ptr), GFP_KERNEL);
++
++	if (!dev->ieee80211_ptr)
++		goto remove_handler;
++
++	dev->ieee80211_ptr->iftype = NL80211_IFTYPE_STATION;
++	dev->ieee80211_ptr->wiphy = common_wiphy;
++
++	err = register_netdevice(dev);
++	if (err) {
++		dev_err(&priv->lowerdev->dev, "can't register_netdevice: %d\n",
++			err);
++		goto free_wireless_dev;
++	}
++
++	err = netdev_upper_dev_link(priv->lowerdev, dev, extack);
++	if (err) {
++		dev_err(&priv->lowerdev->dev, "can't netdev_upper_dev_link: %d\n",
++			err);
++		goto unregister_netdev;
++	}
++
++	priv->being_deleted = false;
++	priv->is_connected = false;
++	priv->is_up = false;
++	INIT_DELAYED_WORK(&priv->connect, virt_wifi_connect_complete);
++
++	return 0;
++unregister_netdev:
++	unregister_netdevice(dev);
++free_wireless_dev:
++	kfree(dev->ieee80211_ptr);
++	dev->ieee80211_ptr = NULL;
++remove_handler:
++	netdev_rx_handler_unregister(priv->lowerdev);
++
++	return err;
++}
++
++/* Called with rtnl lock held. */
++static void virt_wifi_dellink(struct net_device *dev,
++			      struct list_head *head)
++{
++	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
++
++	if (dev->ieee80211_ptr)
++		virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
++
++	priv->being_deleted = true;
++	virt_wifi_cancel_connect(dev);
++	netif_carrier_off(dev);
++
++	netdev_rx_handler_unregister(priv->lowerdev);
++	netdev_upper_dev_unlink(priv->lowerdev, dev);
++
++	unregister_netdevice_queue(dev, head);
++
++	/* Deleting the wiphy is handled in the module destructor. */
++}
++
++static struct rtnl_link_ops virt_wifi_link_ops = {
++	.kind		= "virt_wifi",
++	.setup		= virt_wifi_setup,
++	.newlink	= virt_wifi_newlink,
++	.dellink	= virt_wifi_dellink,
++	.priv_size	= sizeof(struct virt_wifi_netdev_priv),
++};
++
++/* Acquires and releases the rtnl lock. */
++static int __init virt_wifi_init_module(void)
++{
++	int err;
++
++	/* Guaranteed to be locallly-administered and not multicast. */
++	eth_random_addr(fake_router_bssid);
++
++	common_wiphy = virt_wifi_make_wiphy();
++	if (!common_wiphy)
++		return -ENOMEM;
++
++	err = rtnl_link_register(&virt_wifi_link_ops);
++	if (err)
++		virt_wifi_destroy_wiphy(common_wiphy);
++
++	return err;
++}
++
++/* Acquires and releases the rtnl lock. */
++static void __exit virt_wifi_cleanup_module(void)
++{
++	/* Will delete any devices that depend on the wiphy. */
++	rtnl_link_unregister(&virt_wifi_link_ops);
++	virt_wifi_destroy_wiphy(common_wiphy);
++}
++
++module_init(virt_wifi_init_module);
++module_exit(virt_wifi_cleanup_module);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Cody Schuffelen <schuffelen@google.com>");
++MODULE_DESCRIPTION("Driver for a wireless wrapper of ethernet devices");
++MODULE_ALIAS_RTNL_LINK("virt_wifi");
+-- 
+2.19.1.1215.g8438c0b245-goog
 
