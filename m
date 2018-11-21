@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DB8C18E01
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73FCCC28CF8
 	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 06:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2D5020672
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 06:57:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C72F20672
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 06:57:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="IFzd/y00"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B2D5020672
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="y9RRYqbo"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3C72F20672
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=cypress.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728136AbeKURan (ORCPT
+        id S1728163AbeKURaq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Nov 2018 12:30:43 -0500
+        Wed, 21 Nov 2018 12:30:46 -0500
 Received: from mail-eopbgr680102.outbound.protection.outlook.com ([40.107.68.102]:59472
         "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728028AbeKURam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Nov 2018 12:30:42 -0500
+        id S1728028AbeKURap (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Nov 2018 12:30:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yszK0sgGuc7rC0dOUh9okPjq2IPBgKxkWQICDZb1kG4=;
- b=IFzd/y00eBBAOXOL7lJqx++l+WUMaqZ//j2XqiObUIfnMcm3RZjKdELgJHQwueE4qka68n50dKdZkhT/kqvrzERVkymr1ob5eIAKfXXoUWISzNTbDXQr7COFwWiXA0S3Qt5t4MZJ+ao8qB/Y8+ZC5MEnywZLUYhXCqqw0w5cm+M=
+ bh=0xYa+rLADLiuDpBLow1a1pM9JOcXqYj3lsA0JNSZ0Yg=;
+ b=y9RRYqbolWWkE1Yvctau3BjfC6gHmoL1rKxK8reRem5BiE+SlxM9H15qhuAVrf+CDPc+ruVIMQNMtgESQZyWe/2sl1D7GxEdtZ5Kkb95EwYznhlGxK7vMErIENdfjv7tjPHo+BmDxkH/6wZwLF8K3QbvNs2ie4PVHPPjpp9Wtyw=
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com (10.162.111.23) by
  BY1PR0601MB1349.namprd06.prod.outlook.com (10.161.206.147) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1361.15; Wed, 21 Nov 2018 06:57:16 +0000
+ 15.20.1361.15; Wed, 21 Nov 2018 06:57:19 +0000
 Received: from BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::809a:6ca8:db12:f5ae]) by BY1PR0601MB1436.namprd06.prod.outlook.com
  ([fe80::809a:6ca8:db12:f5ae%4]) with mapi id 15.20.1339.027; Wed, 21 Nov 2018
- 06:57:16 +0000
+ 06:57:19 +0000
 From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
@@ -49,11 +49,11 @@ CC:     "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
         Wright Feng <Wright.Feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-Subject: [PATCH 5/8] brcmfmac: allow GCI core enumuration
-Thread-Topic: [PATCH 5/8] brcmfmac: allow GCI core enumuration
-Thread-Index: AQHUgWdw+wcKRPXid0aREvgv3qBPlQ==
-Date:   Wed, 21 Nov 2018 06:57:16 +0000
-Message-ID: <1542783402-112482-6-git-send-email-chi-hsien.lin@cypress.com>
+Subject: [PATCH 7/8] brcmfmac: 4373 save-restore support
+Thread-Topic: [PATCH 7/8] brcmfmac: 4373 save-restore support
+Thread-Index: AQHUgWdxWI/iMdOMSU+hf0zmB52JcQ==
+Date:   Wed, 21 Nov 2018 06:57:19 +0000
+Message-ID: <1542783402-112482-8-git-send-email-chi-hsien.lin@cypress.com>
 References: <1542783402-112482-1-git-send-email-chi-hsien.lin@cypress.com>
 In-Reply-To: <1542783402-112482-1-git-send-email-chi-hsien.lin@cypress.com>
 Accept-Language: en-US, zh-TW
@@ -68,27 +68,27 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1349;6:nJ8YVh5XtEk3EH1dY4SsKHMYn8J6IIhMMAXrm4zvCdk8G6n8tHlwzhdAUMkgi/JGuWJHeBc0gAHSz+SRqq1A1ocKvYOiwd1tQymBDOWn/+skfGeafqHByxznd/L4JkIuL37cS0iVXXVXp0a8lo5hFQM1H9TWDRSBEEce0J+GQzLE3aF8w6xkaxkDoj4sblgvae1XCwQn08YIqQzRhJacXCoIZhKozpW5a/ZvJviV9N90yS6shF6EtCIo6K7+YdRmhg4tfze12lmNFWRJ8FBg+tSb7m3+1bjDJ/eBf8qGy628eZge6HXuFKEwHBBrPdwsJbTOT+k44lLN3XXi+V7Hxfjox0DPp0/VdXsGC+RF/XB2grBvgyjuyu0o6X+Rgd7QnS2Dp9MN1ambhLxv8UTOu1HcAe9CFwQAuLn9rDyCUnaNHE35TEG7IK7wa7M7zcC0MhjnKwG7Xr4k7FcylxdUNg==;5:RPyJ1vk2viFcd3sAHLpD3AD3vxYf8mlvzWRWS1r3VgWck/O0YTQogPrItZowGxZ8pReTM2/NiXRh2x4ku0agwZDE3oEEROJCA9MR7xnM531Wrr/XDKURD7Octmy5sjWAD+heEyR7CLZKAJcxg4h12YRJvbAdU4ulJDszCpYN/pI=;7:Imbe/x1pN8en5H7M5uaVkdPzJlffvDnYjI1zzf8HySd0+XEx2S7PSJF/AnlP4Hb1d40NbaBbha5YFuWnwZUbqhEAIDO1Sa9G+U7sXo8L2KR9BKWEMm+/E3NCc73UED9AUO6YFTeqZWUbmiHZhj83Vw==
-x-ms-office365-filtering-correlation-id: 57cb6549-b3d9-4b12-ee5f-08d64f7e922e
+x-microsoft-exchange-diagnostics: 1;BY1PR0601MB1349;6:q9hKPDBYk5a/CJJ3mhG96iDkMRUuS077jUSgC/cxVO5mPte4jCVM7XMJpAkhAWmPWPjY87T8C3B9Dmk9tY74EzIiBRK5/XtnCeYjjyZv1zLkP4QK+Yctk7pjcaGQ9XpgCnEm5S66sOQ+SUzyWZkw7HXt8NhstAnZNzMc2YbfRfRgzx9+EMcg4JZ2mvebbYunQPkvfXA/JRYZSTRlEYcWnMRg6XCJdKt+wth9xPGcJSmMvcyy6HYJFevVIwlO8XvDqi1MTz5LCPLdYZ/qPBBzowJIYKNJfEJfOP9VA0XWTHjpKEWsHSvgJRzpUOGOSS/DVAGmc4qsOptEAwfQGVzADbuhcFWOnf3xBf4MALJguRkZBoAPfXZtZYNSpSRddzyn9Zd5au7Yct9edrPrvPiJssMHVx2xq0TDKHqY4R/f9o3fHw4s2hRa6wZfOzUy+7H5t9zGdL/rwrJhbWcOBjoy5w==;5:yMc3TKMs9zfnMndf85c38hQDhJxLCv11WcjGMtdi6t1qf2QV9sAEznNvWzQTLOY1Fb7NbuSV+CSLhtcTkFCR7h7zeCI1KKj3HUllGp0PYELeO7ZUeJAYDYhHCOS4su54V5wFChR/SfJeRc+5ZMtrka7oDEAx9HHOxdGFlH11QBk=;7:s1jqiwl4CDF0pPoP6STT5e8U9632gFPvQpwZkrQu/0dpfsnX3JGjP9pQhPjKdOOxGHWqIgEHLbhhmuS8o17QRsomUqxClPDFqGLbR8tCgRGHTVb5Sh9+FnEL+PFTFDEH1jX6HisUzbnPVleUUgJpLw==
+x-ms-office365-filtering-correlation-id: 9145d7dc-4987-4da7-b765-08d64f7e93d9
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:BY1PR0601MB1349;
 x-ms-traffictypediagnostic: BY1PR0601MB1349:
-x-microsoft-antispam-prvs: <BY1PR0601MB1349678516B455689AEC26C9BBDA0@BY1PR0601MB1349.namprd06.prod.outlook.com>
+x-microsoft-antispam-prvs: <BY1PR0601MB13494836B5C1E333FCD68060BBDA0@BY1PR0601MB1349.namprd06.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(93006095)(93001095)(3002001)(3231442)(944501410)(52105112)(10201501046)(6055026)(148016)(149066)(150057)(6041310)(20161123562045)(20161123564045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123560045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:BY1PR0601MB1349;BCL:0;PCL:0;RULEID:;SRVR:BY1PR0601MB1349;
 x-forefront-prvs: 08635C03D4
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39860400002)(346002)(376002)(136003)(396003)(366004)(189003)(199004)(5640700003)(446003)(478600001)(316002)(54906003)(97736004)(6486002)(2351001)(6436002)(6512007)(486006)(5660300001)(86362001)(6116002)(256004)(476003)(105586002)(3846002)(72206003)(2906002)(11346002)(106356001)(2616005)(25786009)(305945005)(7736002)(66066001)(2900100001)(76176011)(6916009)(68736007)(107886003)(26005)(36756003)(6506007)(8676002)(186003)(8936002)(2501003)(386003)(4326008)(14454004)(102836004)(81166006)(81156014)(71190400001)(71200400001)(99286004)(53936002)(52116002);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1349;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39860400002)(346002)(376002)(136003)(396003)(366004)(189003)(199004)(5640700003)(446003)(478600001)(316002)(54906003)(97736004)(6486002)(2351001)(6436002)(6512007)(486006)(5660300001)(86362001)(575784001)(6116002)(256004)(476003)(105586002)(3846002)(72206003)(2906002)(11346002)(106356001)(2616005)(25786009)(305945005)(7736002)(66066001)(2900100001)(76176011)(6916009)(68736007)(107886003)(26005)(36756003)(6506007)(8676002)(186003)(8936002)(2501003)(386003)(4326008)(14454004)(102836004)(81166006)(81156014)(71190400001)(71200400001)(99286004)(53936002)(52116002);DIR:OUT;SFP:1102;SCL:1;SRVR:BY1PR0601MB1349;H:BY1PR0601MB1436.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: cypress.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: /TwxIy4aAaopR2JH7YmAJsD4pVonodl8sAjjy9pX9jHi1+4J8NTijka8IZvFv3CIsjs2qMMZQFTE61cIjVks52MaiqdPdfoC/AoyC/dgbMh4u5+gPYGJ/OWfhKagcqQ9yJZ941CDcN5B5MuNK3Gc8HdSPrUQ9OoNen1Jmtv23QJmSNfM7IN2gaWsGthkc+2oU30jIPRCzQ/KNz/9GPyL/ZvJpG6RI4ugg5X+1kYtfeAfgRNWM6GMs26SZV+ut/wPW2T+TzbwGietztNhGnBEWshYtMV1aGv58nHLv497ySVQYO5bWPCHKkltashIEDa53hAfnZg51q1VESQxnfiZfOY67nCeADXiNbsveJwKpMs=
+x-microsoft-antispam-message-info: ypiN+LV+9GOs36Bz3ghsbnrNctyvh8TEZtunppV9klEHN8xfAtdUPrzhxuuvYTvwugX2DrZdW5LxlWtojpov8uaBvI1qlArGA4TTufsdS4+15r83tBAxgI4A0+eqlIjvWpjjQ72fZZWqFZZCEJ8Bo8UYbWE1JlwnLOvyjS4vCaNOO/Tnmcj1rD0oBU4i8UG1K4nhCYavVQaBNwGIzMs4Zkv5cIdhXzyXy3TfEVR8E07SC0xmY/qd4th+h/Rc7HQxgTXMLUFnw0orS0K8HRXuR2F25fnLX6fKQ3pg4snWnFvAf3u1GD/sF7gTA0fF+nUZ7wojT+D7+g0tJVN+rm1xBHMXIQKtIuIXNTheHXv8vMM=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 57cb6549-b3d9-4b12-ee5f-08d64f7e922e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2018 06:57:16.5589
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9145d7dc-4987-4da7-b765-08d64f7e93d9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2018 06:57:19.0277
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
@@ -98,67 +98,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-GCI core is needed for ULP operation. Allow GCI core enumuration with
-below changes:
- - Allow GCI to be added to core list even when it doesn't have a wrapper.
- - Allow 8K address space size.
- - Don't overwrite the address value when an additional size descriptor
-   is in place.
+Use chipcommon sr_control0 register to check 4373 sr support.
 
 Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 14 ++++++++-----=
--
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  5 +++++
+ .../broadcom/brcm80211/include/chipcommon.h        | 25 ++++++++++++++++++=
+++++
+ 2 files changed, 30 insertions(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/driv=
 ers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index a3c857721446..a8d3b96b727f 100644
+index a8d3b96b727f..22534bf2a90c 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -786,7 +786,7 @@ static int brcmf_chip_dmp_get_regaddr(struct brcmf_chip=
-_priv *ci, u32 *eromaddr,
- 				      u32 *regbase, u32 *wrapbase)
- {
- 	u8 desc;
--	u32 val;
-+	u32 val, szdesc;
- 	u8 mpnum =3D 0;
- 	u8 stype, sztype, wraptype;
+@@ -1365,6 +1365,11 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+ 		addr =3D CORE_CC_REG(base, sr_control1);
+ 		reg =3D chip->ops->read32(chip->ctx, addr);
+ 		return reg !=3D 0;
++	case CY_CC_4373_CHIP_ID:
++		/* explicitly check SR engine enable bit */
++		addr =3D CORE_CC_REG(base, sr_control0);
++		reg =3D chip->ops->read32(chip->ctx, addr);
++		return (reg & CC_SR_CTL0_ENABLE_MASK) !=3D 0;
+ 	case CY_CC_43012_CHIP_ID:
+ 		addr =3D CORE_CC_REG(pmu->base, retention_ctl);
+ 		reg =3D chip->ops->read32(chip->ctx, addr);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/chipcommon.h b=
+/drivers/net/wireless/broadcom/brcm80211/include/chipcommon.h
+index e1fd499930a0..5b9195d4f073 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/chipcommon.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/chipcommon.h
+@@ -269,6 +269,28 @@ struct chipcregs {
+ /* GSIO (spi/i2c) present, rev >=3D 37 */
+ #define	CC_CAP2_GSIO		0x00000002
 =20
-@@ -832,14 +832,15 @@ static int brcmf_chip_dmp_get_regaddr(struct brcmf_ch=
-ip_priv *ci, u32 *eromaddr,
++/* sr_control0, rev >=3D 48 */
++#define CC_SR_CTL0_ENABLE_MASK			BIT(0)
++#define CC_SR_CTL0_ENABLE_SHIFT		0
++#define CC_SR_CTL0_EN_SR_ENG_CLK_SHIFT	1 /* sr_clk to sr_memory enable */
++#define CC_SR_CTL0_RSRC_TRIGGER_SHIFT	2 /* Rising edge resource trigger 0 =
+to
++					   * sr_engine
++					   */
++#define CC_SR_CTL0_MIN_DIV_SHIFT	6 /* Min division value for fast clk
++					   * in sr_engine
++					   */
++#define CC_SR_CTL0_EN_SBC_STBY_SHIFT		16
++#define CC_SR_CTL0_EN_SR_ALP_CLK_MASK_SHIFT	18
++#define CC_SR_CTL0_EN_SR_HT_CLK_SHIFT		19
++#define CC_SR_CTL0_ALLOW_PIC_SHIFT	20 /* Allow pic to separate power
++					    * domains
++					    */
++#define CC_SR_CTL0_MAX_SR_LQ_CLK_CNT_SHIFT	25
++#define CC_SR_CTL0_EN_MEM_DISABLE_FOR_SLEEP	30
++
++#define CC_SR_CTL1_SR_INIT_MASK		0x3FF
++#define CC_SR_CTL1_SR_INIT_SHIFT	0
++
+ /* pmucapabilities */
+ #define PCAP_REV_MASK	0x000000ff
+ #define PCAP_RC_MASK	0x00001f00
+@@ -293,6 +315,9 @@ struct chipcregs {
+ #define PMU_RCTL_MACPHY_DISABLE_MASK        (1 << 26)
+ #define PMU_RCTL_LOGIC_DISABLE_MASK         (1 << 27)
 =20
- 		/* next size descriptor can be skipped */
- 		if (sztype =3D=3D DMP_SLAVE_SIZE_DESC) {
--			val =3D brcmf_chip_dmp_get_desc(ci, eromaddr, NULL);
-+			szdesc =3D brcmf_chip_dmp_get_desc(ci, eromaddr, NULL);
- 			/* skip upper size descriptor if present */
--			if (val & DMP_DESC_ADDRSIZE_GT32)
-+			if (szdesc & DMP_DESC_ADDRSIZE_GT32)
- 				brcmf_chip_dmp_get_desc(ci, eromaddr, NULL);
- 		}
++#define ECI_INLO_PKTDUR_MASK    0x000000f0 /* [7:4] - 4 bits */
++#define ECI_INLO_PKTDUR_SHIFT   4
++
 =20
--		/* only look for 4K register regions */
--		if (sztype !=3D DMP_SLAVE_SIZE_4K)
-+		/* look for 4K or 8K register regions */
-+		if (sztype !=3D DMP_SLAVE_SIZE_4K &&
-+		    sztype !=3D DMP_SLAVE_SIZE_8K)
- 			continue;
-=20
- 		stype =3D (val & DMP_SLAVE_TYPE) >> DMP_SLAVE_TYPE_S;
-@@ -896,7 +897,8 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip_priv *ci=
-)
-=20
- 		/* need core with ports */
- 		if (nmw + nsw =3D=3D 0 &&
--		    id !=3D BCMA_CORE_PMU)
-+		    id !=3D BCMA_CORE_PMU &&
-+		    id !=3D BCMA_CORE_GCI)
- 			continue;
-=20
- 		/* try to obtain register address info */
+ /*
+ * Maximum delay for the PMU state transition in us.
 --=20
 2.1.0
 
