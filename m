@@ -2,65 +2,177 @@ Return-Path: <SRS0=oODW=OA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A21A0C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 09:11:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 551F6C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 11:04:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AB4B2145D
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 09:11:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2AB4B2145D
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=sipsolutions.net
+	by mail.kernel.org (Postfix) with ESMTP id 0D1B120989
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 11:04:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oJBKlPgy";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oJBKlPgy"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0D1B120989
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729093AbeKUTo5 (ORCPT
+        id S1729557AbeKUVhz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Nov 2018 14:44:57 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:39772 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726665AbeKUTo4 (ORCPT
+        Wed, 21 Nov 2018 16:37:55 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:60734 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728344AbeKUVhz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Nov 2018 14:44:56 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1gPOXS-0000U5-Rp; Wed, 21 Nov 2018 10:11:15 +0100
-Message-ID: <a88ba8b1e23b5e461f492f050cfd67c0222cf662.camel@sipsolutions.net>
-Subject: Re: mac80211_hwsim: multiple antennas
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Ramon Fontes <ramonreisfontes@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date:   Wed, 21 Nov 2018 10:11:13 +0100
-In-Reply-To: <CAK8U23bW5ov=FfD0xBnio7FwS9NTjoyewfHWZhHAmZNPsA16Jw@mail.gmail.com> (sfid-20181120_203341_461821_AD8C0481)
-References: <CAK8U23bW5ov=FfD0xBnio7FwS9NTjoyewfHWZhHAmZNPsA16Jw@mail.gmail.com>
-         (sfid-20181120_203341_461821_AD8C0481)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-1.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        Wed, 21 Nov 2018 16:37:55 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id ACC2A60770; Wed, 21 Nov 2018 11:03:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542798237;
+        bh=rZFpsPWbeMyg5JPPnXtzJIS1+LvRS/mtKHKN+k67v3o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oJBKlPgyjpkll/dMkzjUSQw2Dt9uhX6JZhb9lK93bSaf7icW842BeW8/4fOrCgxrN
+         OnErylnFFVV+b3e5GXlKCul0GQYh1yPKrFomvXlC6nsHZ6lqFmxoDQ0WI2xuS3gogj
+         pw1l6rP0vJfTum/qBu9bUTOfmzmVj+7VctGMdM90=
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: mpubbise@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 024A960452;
+        Wed, 21 Nov 2018 11:03:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1542798237;
+        bh=rZFpsPWbeMyg5JPPnXtzJIS1+LvRS/mtKHKN+k67v3o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oJBKlPgyjpkll/dMkzjUSQw2Dt9uhX6JZhb9lK93bSaf7icW842BeW8/4fOrCgxrN
+         OnErylnFFVV+b3e5GXlKCul0GQYh1yPKrFomvXlC6nsHZ6lqFmxoDQ0WI2xuS3gogj
+         pw1l6rP0vJfTum/qBu9bUTOfmzmVj+7VctGMdM90=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 024A960452
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
+From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] {nl,mac}80211: allow 4addr AP operation on crypto controlled devices
+Date:   Wed, 21 Nov 2018 16:33:48 +0530
+Message-Id: <1542798228-3293-1-git-send-email-mpubbise@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2018-11-20 at 16:33 -0300, Ramon Fontes wrote:
-> Would be possible to simulate (or even add support to) multiple
-> antennas? I was trying to extend wmediumd to 802.11n according the
-> rates provided by http://mcsindex.com/, but the maximum rate I get is
-> ~33Mbps, even if I set the MCS index to 15. Given the result, I
-> thought that it could be related to the number of antennas. Is my
-> assumption correct?
+As per the current design, for sw crypto controlled devices, it is
+the device which has to advertise the support for AP/VLAN iftype
+based on it's capability to tranmsit packets encrypted in software
+(In VLAN functionality, group traffic generated for a specific
+VLAN group is always encrypted in software). Commit db3bdcb9c3ff
+("mac80211: allow AP_VLAN operation on crypto controlled devices")
+has introduced this change.
 
-I'm not sure what you mean by "the maximum rate I get is ~33Mbps".
+Since 4addr AP operation also uses AP/VLAN iftype, this conditional
+way of advertising AP/VLAN support has broken 4addr AP mode operation on
+crypto controlled devices which do not support VLAN functionality.
 
-Are you trying to actually _measure_ it? Then, on a decent platform, you
-should probably get many *gigabits*.
+For example:
+In the case of ath10k driver, not all firmwares have support for VLAN
+functionality but all can support 4addr AP operation. Because AP/VLAN
+support is not advertised for these devices, 4addr AP operations are
+also blocked.
 
-Or are you trying to look at the rate in "iw station dump" or in
-radiotap? Then you should see higher rates since hwsim is configured to
-pretend to have 4 spatial streams (IIRC)
+Fix this by allowing 4addr opertion on devices which do not advertise
+AP/VLAN iftype but which can support 4addr operation (the desicion is
+taken based on the wiphy flag WIPHY_FLAG_4ADDR_AP).
 
-johannes
+Fixes: Commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on
+crypto controlled devices")
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+ include/net/cfg80211.h |  3 ++-
+ net/mac80211/util.c    |  4 +++-
+ net/wireless/core.c    |  9 +++++++--
+ net/wireless/nl80211.c | 10 ++++++++--
+ 4 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ede7fcd..666e5a3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3708,7 +3708,8 @@ struct cfg80211_ops {
+  *	on wiphy_new(), but can be changed by the driver if it has a good
+  *	reason to override the default
+  * @WIPHY_FLAG_4ADDR_AP: supports 4addr mode even on AP (with a single station
+- *	on a VLAN interface)
++ *	on a VLAN interface). This flag also serves an extra purpose of
++ *	supporting 4ADDR AP mode on devices which do not support AP/VLAN iftype.
+  * @WIPHY_FLAG_4ADDR_STATION: supports 4addr mode even as a station
+  * @WIPHY_FLAG_CONTROL_PORT_PROTOCOL: This device supports setting the
+  *	control port protocol ethertype. The device also honours the
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index bec4243..6a8571d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3643,7 +3643,9 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* Always allow software iftypes */
+-	if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
++	if (local->hw.wiphy->software_iftypes & BIT(iftype) ||
++	    (iftype == NL80211_IFTYPE_AP_VLAN &&
++	     local->hw.wiphy->flags & WIPHY_FLAG_4ADDR_AP)) {
+ 		if (radar_detect)
+ 			return -EINVAL;
+ 		return 0;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 623dfe5..93085fb 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1394,8 +1394,13 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		}
+ 		break;
+ 	case NETDEV_PRE_UP:
+-		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+-			return notifier_from_errno(-EOPNOTSUPP);
++		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype))) {
++			if (!(wdev->iftype == NL80211_IFTYPE_AP_VLAN &&
++			      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP &&
++			      wdev->use_4addr))
++				return notifier_from_errno(-EOPNOTSUPP);
++		}
++
+ 		if (rfkill_blocked(rdev->rfkill))
+ 			return notifier_from_errno(-ERFKILL);
+ 		break;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e20329b..2863d9a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3383,8 +3383,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_IFTYPE])
+ 		type = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
+ 
+-	if (!rdev->ops->add_virtual_intf ||
+-	    !(rdev->wiphy.interface_modes & (1 << type)))
++	if (!rdev->ops->add_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
+ 	if ((type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN ||
+@@ -3403,6 +3402,13 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
++	if (!(rdev->wiphy.interface_modes & (1 << type))) {
++		if (!(type == NL80211_IFTYPE_AP_VLAN &&
++		      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP &&
++		      params.use_4addr))
++			return -EOPNOTSUPP;
++	}
++
+ 	err = nl80211_parse_mon_options(rdev, type, info, &params);
+ 	if (err < 0)
+ 		return err;
+-- 
+2.7.4
 
