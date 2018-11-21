@@ -2,802 +2,230 @@ Return-Path: <SRS0=oODW=OA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F3BBC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:17:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 405D1C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECFD02145D
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 007292146D
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Nov 2018 03:20:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ch115Hf9"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ECFD02145D
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ouj+K6SE"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 007292146D
 Authentication-Results: mail.kernel.org; dmarc=fail (p=reject dis=none) header.from=google.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726423AbeKUNt0 (ORCPT
+        id S1726483AbeKUNwo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Nov 2018 08:49:26 -0500
-Received: from mail-ua1-f73.google.com ([209.85.222.73]:37093 "EHLO
-        mail-ua1-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726135AbeKUNt0 (ORCPT
+        Wed, 21 Nov 2018 08:52:44 -0500
+Received: from mail-it1-f196.google.com ([209.85.166.196]:39933 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725995AbeKUNwo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Nov 2018 08:49:26 -0500
-Received: by mail-ua1-f73.google.com with SMTP id k15so992540uaq.4
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2018 19:16:56 -0800 (PST)
+        Wed, 21 Nov 2018 08:52:44 -0500
+Received: by mail-it1-f196.google.com with SMTP id m15so6903847itl.4
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Nov 2018 19:20:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=O8GdVLuWLmNepTIzkVv5o07tGoAaDoHoNEFhgo6E5OQ=;
-        b=Ch115Hf9JCF4ylPNLxl+MHWtqOG+CUT8pNAW+kp5uRwL68jDdWaJVcnNG2KAO9gLAh
-         N37jCZGNjGB8CEldoNhmuk6CGyNbbmIrXqfvfHsvyDPfarkEPjh/a8oE/YTo4FbAtOui
-         fTZAL6y7VxD4rkR6qVrsVdhvoXHoakCSP3C2TqWmE4EnWmbx+T2R7U1WZ1I1PIqB1WI+
-         pL11cf14RmG2dWJdDjeCE5q17Y/F2PgeogQV+1Z562FSeIjdTuTDiqJi4TLavneMzIzL
-         IlL/YSH5NQ/1V2C1EvzkuNangxrOyb0Go0HMtvyjF83fUM+Y2y+GQdsRAqK1WoQaWI/W
-         wVuA==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FiCdHyIa9h0bIFMQcO0jsjWyTGYGB+3PczdquQhm+rI=;
+        b=ouj+K6SENJQXFkwKw30Nr4Msrh5cI8xfES5ypVpTveAjHBqjCJ/4wtVuetO07qiqLv
+         a63WAP0N++gXvyovfXDM6wipHBEJR8kCREKjuNrba7gSmxrZI4ridNZP/eL7z5i2Cb8K
+         UbjLlIz8fZaiOTfsae+Lid27pqabIiQ2SJkkrn7Vb5LkfQLOOmR+KzC8G7cXIQOo4Vu0
+         coYuefPogyqHaMRcL8ouS/4phBja17BoScUx/zZU/X1nIXQivaWdDLPY7lS34J/7k5hW
+         1AenbF0X0jyyqiON+sDh+0S6XJVHXz22SZy6R3yFY/H5x1A1P9uALYd3sHosDUEvAUTT
+         I72A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=O8GdVLuWLmNepTIzkVv5o07tGoAaDoHoNEFhgo6E5OQ=;
-        b=RW+LGTPY5U01/iQjqeahrxItMZ1B2QaGEiwNiFKBfEUCrnHFU79NZ28DSnEmn4EgcR
-         rcAxsGK+QKPHv3Sb1CsRsM1KqUGsd9VpVpc2D/Zf3YY/SwOGAreEswaV15E+TEaMj35h
-         Sv71RXUgkPwWNbKSXAOqsIP7S5Y3QMD6hLFcqAmZ5weYD0bpO0wsUUE/z4ljeImV3b4/
-         Lc3zUM5flg0FlqDVnOoBtB17ihIjs0lda7o+tm/oLVOLpgXIxUciu9zHa9vai3Qt395e
-         gYncjGxEEwhPDII5NkP+n5AXmvUGd0iBQF0QY8Ahs05B+q46tfojohSFmBczZgmNV+z2
-         Pd+w==
-X-Gm-Message-State: AGRZ1gLRHCmNLbQAset/AnJEm5xGu5WPB20b8Mc0xUgNsuGeQWuebE73
-        33dVX4bvPkNpPklj6q8WnDIvfxzK/5x6zIbe
-X-Google-Smtp-Source: AJdET5f1iHq/5kZEqaLsAFApBr2uLrCNkBE/fMUt6Q7JTJUgeEKBlk3Zzi/B7PkmK2g3Gf7NbBuEz/lZkW/5aIIj
-X-Received: by 2002:a67:3e58:: with SMTP id l85mr3940029vsa.14.1542770215743;
- Tue, 20 Nov 2018 19:16:55 -0800 (PST)
-Date:   Tue, 20 Nov 2018 19:14:49 -0800
-Message-Id: <20181121031449.255314-1-schuffelen@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.19.1.1215.g8438c0b245-goog
-Subject: [PATCH mac80211-next v4] mac80211-next: rtnetlink wifi simulation device
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FiCdHyIa9h0bIFMQcO0jsjWyTGYGB+3PczdquQhm+rI=;
+        b=VNsTjYXVS3E9Wg7a2Ugg/+67COsGfUdTptoSlAekbcR176F1vdV7K8ur5WRMDk7fzn
+         LsjHcDQLR25zEpr8nz7FiGk7n0Sf3/PlvBB/jRz8ELNDJpIMwoEH60MDYNnlauvQ3eHD
+         GVYu9vEe0oz5k/zsEi/gniOnhsZmecyeS/+lzL/CvH/PJ7gMGkX7lqxQLsSWv8nuYSET
+         W6GO1bE4OEjotPYJ+AU1dKbbo3HpTOeXIrux4U6MNiMVO6GlQZaSmhItAhiTPW9ojZKs
+         63ghBc+YVEyZ5xGAp76k7L6VnYM6z7d+v7LN5mgEOgKTH7Fp1Jz7dhKCawRZYqBlhyE8
+         qJHw==
+X-Gm-Message-State: AGRZ1gKtMt384xu0sFraaGgKom2uma2qgwS7bS0DdRJJtj9f4v6doo6j
+        KRRLw6jJowPWro0g/K2NjGzF5qciSIQC3V+pgavocQ==
+X-Google-Smtp-Source: AJdET5fXgCSb44+b6dUu/o5s62y3cnd57bgPrSMqquCEqtVz3sA4DDmjDLDvKbxBY2Fxej0UB6sy5nJeVhbBLeoJ2jM=
+X-Received: by 2002:a24:db02:: with SMTP id c2mr4630454itg.137.1542770413258;
+ Tue, 20 Nov 2018 19:20:13 -0800 (PST)
+MIME-Version: 1.0
+References: <20181004195906.201895-1-schuffelen@google.com> <20181005143323.ezyd2x6x5ymlb7rg@bars>
+In-Reply-To: <20181005143323.ezyd2x6x5ymlb7rg@bars>
 From:   Cody Schuffelen <schuffelen@google.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+Date:   Tue, 20 Nov 2018 19:20:01 -0800
+Message-ID: <CAAELVAF+-6F0Qvj3wU-sO0+EF5Qs0VXYqD9GEeV0ZuP-dKOoFA@mail.gmail.com>
+Subject: Re: [PATCH net-next v3] wireless-drivers: rtnetlink wifi simulation device
+To:     sergey.matyukevich.os@quantenna.com
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-team@android.com,
-        Cody Schuffelen <schuffelen@google.com>,
-        Alistair Strachan <astrachan@google.com>,
-        Greg Hartman <ghartman@google.com>,
-        Tristan Muntsinger <muntsinger@google.com>
+        netdev@vger.kernel.org, kernel-team@android.com
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This device takes over an existing network device and produces a
-new one that appears like a wireless connection, returning enough canned
-responses to nl80211 to satisfy a standard connection manager. If
-necessary, it can also be set up one step removed from an existing
-network device, such as through a vlan/80211Q or macvlan connection to
-not disrupt the existing network interface.
+> > +       informed_bss =
+> > +               cfg80211_inform_bss_data(wiphy, &mock_inform_bss,
+> > +                                        CFG80211_BSS_FTYPE_PRESP,
+> > +                                        fake_router_bssid,
+> > +                                        mock_inform_bss.boottime_ns,
+> > +                                        WLAN_CAPABILITY_ESS, 0, ssid.data,
+> > +                                        sizeof(ssid), GFP_KERNEL);
+>
+> It is possible to simplify this part switching to cfg80211_inform_bss
+> function: this function wraps your scan data in into cfg80211_inform_bss
+> structure internally using some reasonable defaults, e.g. channel width.
+>
+> Besides, signal strength for scan entries should be passed in mBm units,
+> so use DBM_TO_MBM macro. For instance, with your current code 'iw' tool
+> produces the following output:
+> $ sudo iw dev wlan0 scan
+>         ...
+>         signal: 0.-60 dBm
+>         ...
 
-To use it to wrap a bare ethernet connection:
+Good catch, fixed.
 
-ip link add link eth0 name wlan0 type virt_wifi
+> > +static void virt_wifi_connect_complete(struct work_struct *work)
+> > +{
+> > +       struct virt_wifi_priv *priv =
+> > +               container_of(work, struct virt_wifi_priv, connect.work);
+> > +       u8 *requested_bss = priv->connect_requested_bss;
+> > +       bool has_addr = !is_zero_ether_addr(requested_bss);
+> > +       bool right_addr = ether_addr_equal(requested_bss, fake_router_bssid);
+> > +       u16 status = WLAN_STATUS_SUCCESS;
+> > +
+> > +       rtnl_lock();
+> > +       if (!priv->netdev_is_up || (has_addr && !right_addr))
+> > +               status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+> > +       else
+> > +               priv->is_connected = true;
+> > +
+> > +       cfg80211_connect_result(priv->netdev, requested_bss, NULL, 0, NULL, 0,
+> > +                               status, GFP_KERNEL);
+> > +       rtnl_unlock();
+> > +}
+>
+> Carrier state for wireless device depends on its connection state.
+> E.g., carrier is set when wireless connection succeeds and cleared
+> when device disconnects. So use netif_carrier_on/netif_carrier_off
+> calls in connect/disconnect handlers to set correct carrier state.
+> IIUC the following locations look reasonable:
+>  - netif_carrier_off on init
+>  - netif_carrier_on in virt_wifi_connect_complete on success
+>  - netif_carrier_off in virt_wifi_disconnect
 
-You may have to rename or otherwise hide the eth0 from your connection
-manager, as the original network link will become unusuable and only
-the wireless wrapper will be functional. This can also be combined with
-vlan or macvlan links on top of eth0 to share the network between
-distinct links, but that requires support outside the machine for
-accepting vlan-tagged packets or packets from multiple MAC addresses.
+Thanks, added.
 
-This is being used for Google's Remote Android Virtual Device project,
-which runs Android devices in virtual machines. The standard network
-interfaces provided inside the virtual machines are all ethernet.
-However, Android is not interested in ethernet devices and would rather
-connect to a wireless interface. This patch allows the virtual machine
-guest to treat one of its network connections as wireless rather than
-ethernet, satisfying Android's network connection requirements.
+> > +static void virt_wifi_disconnect_complete(struct work_struct *work)
+> > +{
+> > +       struct virt_wifi_priv *priv =
+> > +               container_of(work, struct virt_wifi_priv, disconnect.work);
+> > +
+> > +       cfg80211_disconnected(priv->netdev, priv->disconnect_reason, NULL, 0,
+> > +                             true, GFP_KERNEL);
+> > +       priv->is_connected = false;
+> > +}
+>
+> Why do you need delayed disconnect processing ? IIUC it can be dropped
+> and cfg80211_disconnected call can be moved to virt_wifi_disconnect.
 
-We believe this is a generally useful driver for simulating wireless
-network connections in other environments where a wireless connection is
-desired by some userspace process but is not available.
+Done.
 
-This is distinct from other testing efforts such as mac80211_hwsim by
-being a cfg80211 device instead of mac80211 device, allowing straight
-pass-through on the data plane instead of forcing packaging of ethernet
-data into mac80211 frames.
+> > +
+> > +static int virt_wifi_get_station(struct wiphy *wiphy,
+> > +                                struct net_device *dev,
+> > +                                const u8 *mac,
+> > +                                struct station_info *sinfo)
+> > +{
+> > +       wiphy_debug(wiphy, "get_station\n");
+> > +
+> > +       if (!ether_addr_equal(mac, fake_router_bssid))
+> > +               return -ENOENT;
+> > +
+> > +       sinfo->filled = BIT(NL80211_STA_INFO_TX_PACKETS) |
+> > +               BIT(NL80211_STA_INFO_TX_FAILED) | BIT(NL80211_STA_INFO_SIGNAL) |
+> > +               BIT(NL80211_STA_INFO_TX_BITRATE);
+>
+> Recently some of NL80211_STA_INFO_ attribute types has been modified to
+> use BIT_ULL macro. Could you please check commit 22d0d2fafca93ba1d92a
+> for details and modify your coded if needed.
 
-Signed-off-by: A. Cody Schuffelen <schuffelen@google.com>
-Acked-by: Alistair Strachan <astrachan@google.com>
-Acked-by: Greg Hartman <ghartman@google.com>
-Acked-by: Tristan Muntsinger <muntsinger@google.com>
----
-Thanks for the comments on previous changes. Patch comments are now
-addressed in responses to those emails. There will be a slight delay as I
-get the appropriate lkml.org link to reference the code review comments to
-this new patch.
+Thanks for the the reference, updated to use BIT_ULL with the station commands.
 
-I apologize for the long delay in creating this new version.
+> > +       sinfo->tx_packets = 1;
+>
+> Only one packet, really ? Not sure if you plan to use the output of 'iw'
+> or any other tool. If yes, then it probably makes sense to use stats
+> from the original network link. Otherwise, your 'iw' output is
+> going to look like this:
+>
+> $ iw dev wlan0 station dump
+>         ...
+>         tx packets:     1
+>         ...
+>
+> > +       sinfo->tx_failed = 0;
+>
+> ...
 
-First version: https://lkml.org/lkml/2018/7/27/947
-First review: https://lore.kernel.org/lkml/1535460343.5895.56.camel@sipsolutions.net/
-Second version: https://lore.kernel.org/lkml/20180926194324.71290-1-schuffelen@google.com/
-Second review: Comments of https://www.lkml.org/lkml/2018/9/26/1169
-Third review: https://lkml.org/lkml/2018/10/4/966
+Added bookkeeping to the net_device packet forwarded to track how many
+packets were sent, and how many failed being sent due to no
+connection.
 
- drivers/net/wireless/Kconfig     |   7 +
- drivers/net/wireless/Makefile    |   2 +
- drivers/net/wireless/virt_wifi.c | 632 +++++++++++++++++++++++++++++++
- 3 files changed, 641 insertions(+)
- create mode 100644 drivers/net/wireless/virt_wifi.c
+> > +static int virt_wifi_dump_station(struct wiphy *wiphy,
+> > +                                 struct net_device *dev,
+> > +                                 int idx,
+> > +                                 u8 *mac,
+> > +                                 struct station_info *sinfo)
+> > +{
+> > +       wiphy_debug(wiphy, "dump_station\n");
+> > +
+> > +       if (idx != 0)
+> > +               return -ENOENT;
+> > +
+> > +       ether_addr_copy(mac, fake_router_bssid);
+> > +       return virt_wifi_get_station(wiphy, dev, fake_router_bssid, sinfo);
+> > +}
+>
+> Callback dump_station should return AP data only when STA is connected.
+> Currently your driver returns fake AP data even when it is not
+> connected.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 166920ae23f8..f4e808411634 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -114,4 +114,11 @@ config USB_NET_RNDIS_WLAN
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
-+config VIRT_WIFI
-+	bool "Wifi wrapper for ethernet drivers"
-+	depends on CFG80211
-+	---help---
-+	  This option adds support for ethernet connections to appear as if they
-+	  are wifi connections through a special rtnetlink device.
-+
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 7fc96306712a..6cfe74515c95 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -27,3 +27,5 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
- obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- 
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-+
-+obj-$(CONFIG_VIRT_WIFI)	+= virt_wifi.o
-diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
-new file mode 100644
-index 000000000000..64b218699656
---- /dev/null
-+++ b/drivers/net/wireless/virt_wifi.c
-@@ -0,0 +1,632 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* drivers/net/wireless/virt_wifi.c
-+ *
-+ * A fake implementation of cfg80211_ops that can be tacked on to an ethernet
-+ * net_device to make it appear as a wireless connection.
-+ *
-+ * Copyright (C) 2018 Google, Inc.
-+ *
-+ * Author: schuffelen@google.com
-+ */
-+
-+#include <net/cfg80211.h>
-+#include <net/rtnetlink.h>
-+#include <linux/etherdevice.h>
-+#include <linux/module.h>
-+
-+#include <net/cfg80211.h>
-+#include <net/rtnetlink.h>
-+#include <linux/etherdevice.h>
-+#include <linux/module.h>
-+
-+static struct wiphy *common_wiphy;
-+
-+struct virt_wifi_wiphy_priv {
-+	struct delayed_work scan_result;
-+	struct cfg80211_scan_request *scan_request;
-+	bool being_deleted;
-+};
-+
-+static struct ieee80211_channel channel_2ghz = {
-+	.band = NL80211_BAND_2GHZ,
-+	.center_freq = 2432,
-+	.hw_value = 2432,
-+	.max_power = 20,
-+};
-+
-+static struct ieee80211_rate bitrates_2ghz[] = {
-+	{ .bitrate = 10 },
-+	{ .bitrate = 20 },
-+	{ .bitrate = 55 },
-+	{ .bitrate = 110 },
-+	{ .bitrate = 60 },
-+	{ .bitrate = 120 },
-+	{ .bitrate = 240 },
-+};
-+
-+static struct ieee80211_supported_band band_2ghz = {
-+	.channels = &channel_2ghz,
-+	.bitrates = bitrates_2ghz,
-+	.band = NL80211_BAND_2GHZ,
-+	.n_channels = 1,
-+	.n_bitrates = ARRAY_SIZE(bitrates_2ghz),
-+	.ht_cap = {
-+		.ht_supported = true,
-+		.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		       IEEE80211_HT_CAP_GRN_FLD |
-+		       IEEE80211_HT_CAP_SGI_20 |
-+		       IEEE80211_HT_CAP_SGI_40 |
-+		       IEEE80211_HT_CAP_DSSSCCK40,
-+		.ampdu_factor = 0x3,
-+		.ampdu_density = 0x6,
-+		.mcs = {
-+			.rx_mask = {0xff, 0xff},
-+			.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
-+		},
-+	},
-+};
-+
-+static struct ieee80211_channel channel_5ghz = {
-+	.band = NL80211_BAND_5GHZ,
-+	.center_freq = 5240,
-+	.hw_value = 5240,
-+	.max_power = 20,
-+};
-+
-+static struct ieee80211_rate bitrates_5ghz[] = {
-+	{ .bitrate = 60 },
-+	{ .bitrate = 120 },
-+	{ .bitrate = 240 },
-+};
-+
-+#define RX_MCS_MAP (IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14)
-+
-+#define TX_MCS_MAP (IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 | \
-+		    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14)
-+
-+static struct ieee80211_supported_band band_5ghz = {
-+	.channels = &channel_5ghz,
-+	.bitrates = bitrates_5ghz,
-+	.band = NL80211_BAND_5GHZ,
-+	.n_channels = 1,
-+	.n_bitrates = ARRAY_SIZE(bitrates_5ghz),
-+	.ht_cap = {
-+		.ht_supported = true,
-+		.cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+		       IEEE80211_HT_CAP_GRN_FLD |
-+		       IEEE80211_HT_CAP_SGI_20 |
-+		       IEEE80211_HT_CAP_SGI_40 |
-+		       IEEE80211_HT_CAP_DSSSCCK40,
-+		.ampdu_factor = 0x3,
-+		.ampdu_density = 0x6,
-+		.mcs = {
-+			.rx_mask = {0xff, 0xff},
-+			.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
-+		},
-+	},
-+	.vht_cap = {
-+		.vht_supported = true,
-+		.cap = IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
-+		       IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ |
-+		       IEEE80211_VHT_CAP_RXLDPC |
-+		       IEEE80211_VHT_CAP_SHORT_GI_80 |
-+		       IEEE80211_VHT_CAP_SHORT_GI_160 |
-+		       IEEE80211_VHT_CAP_TXSTBC |
-+		       IEEE80211_VHT_CAP_RXSTBC_1 |
-+		       IEEE80211_VHT_CAP_RXSTBC_2 |
-+		       IEEE80211_VHT_CAP_RXSTBC_3 |
-+		       IEEE80211_VHT_CAP_RXSTBC_4 |
-+		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
-+		.vht_mcs = {
-+			.rx_mcs_map = cpu_to_le16(RX_MCS_MAP),
-+			.tx_mcs_map = cpu_to_le16(TX_MCS_MAP),
-+		}
-+	},
-+};
-+
-+/* Assigned at module init. Guaranteed locally-administered and unicast. */
-+static u8 fake_router_bssid[ETH_ALEN] __ro_after_init = {};
-+
-+/* Called with the rtnl lock held. */
-+static int virt_wifi_scan(struct wiphy *wiphy,
-+			  struct cfg80211_scan_request *request)
-+{
-+	struct virt_wifi_wiphy_priv *priv = wiphy_priv(wiphy);
-+
-+	wiphy_debug(wiphy, "scan\n");
-+
-+	if (priv->scan_request || priv->being_deleted)
-+		return -EBUSY;
-+
-+	priv->scan_request = request;
-+	schedule_delayed_work(&priv->scan_result, HZ * 2);
-+
-+	return 0;
-+}
-+
-+/* Acquires and releases the rdev BSS lock. */
-+static void virt_wifi_scan_result(struct work_struct *work)
-+{
-+	struct {
-+		u8 tag;
-+		u8 len;
-+		u8 ssid[8];
-+	} __packed ssid = {
-+		.tag = WLAN_EID_SSID, .len = 8, .ssid = "VirtWifi",
-+	};
-+	struct cfg80211_bss *informed_bss;
-+	struct virt_wifi_wiphy_priv *priv =
-+		container_of(work, struct virt_wifi_wiphy_priv,
-+			     scan_result.work);
-+	struct wiphy *wiphy = priv_to_wiphy(priv);
-+	struct cfg80211_scan_info scan_info = { .aborted = false };
-+
-+	informed_bss = cfg80211_inform_bss(wiphy, &channel_5ghz,
-+					   CFG80211_BSS_FTYPE_PRESP,
-+					   fake_router_bssid,
-+					   ktime_get_boot_ns(),
-+					   WLAN_CAPABILITY_ESS, 0,
-+					   (void *)&ssid, sizeof(ssid),
-+					   DBM_TO_MBM(-50), GFP_KERNEL);
-+	cfg80211_put_bss(wiphy, informed_bss);
-+
-+	/* Schedules work which acquires and releases the rtnl lock. */
-+	cfg80211_scan_done(priv->scan_request, &scan_info);
-+	priv->scan_request = NULL;
-+}
-+
-+/* May acquire and release the rdev BSS lock. */
-+static void virt_wifi_cancel_scan(struct wiphy *wiphy)
-+{
-+	struct virt_wifi_wiphy_priv *priv = wiphy_priv(wiphy);
-+
-+	cancel_delayed_work_sync(&priv->scan_result);
-+	/* Clean up dangling callbacks if necessary. */
-+	if (priv->scan_request) {
-+		struct cfg80211_scan_info scan_info = { .aborted = true };
-+		/* Schedules work which acquires and releases the rtnl lock. */
-+		cfg80211_scan_done(priv->scan_request, &scan_info);
-+		priv->scan_request = NULL;
-+	}
-+}
-+
-+struct virt_wifi_netdev_priv {
-+	struct delayed_work connect;
-+	struct net_device *lowerdev;
-+	struct net_device *upperdev;
-+	u32 tx_packets;
-+	u32 tx_failed;
-+	u8 connect_requested_bss[ETH_ALEN];
-+	bool is_up;
-+	bool is_connected;
-+	bool being_deleted;
-+};
-+
-+/* Called with the rtnl lock held. */
-+static int virt_wifi_connect(struct wiphy *wiphy, struct net_device *netdev,
-+			     struct cfg80211_connect_params *sme)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
-+	bool could_schedule;
-+
-+	if (priv->being_deleted || !priv->is_up)
-+		return -EBUSY;
-+
-+	could_schedule = schedule_delayed_work(&priv->connect, HZ * 2);
-+	if (!could_schedule)
-+		return -EBUSY;
-+
-+	if (sme->bssid)
-+		ether_addr_copy(priv->connect_requested_bss, sme->bssid);
-+	else
-+		eth_zero_addr(priv->connect_requested_bss);
-+
-+	wiphy_debug(wiphy, "connect\n");
-+
-+	return 0;
-+}
-+
-+/* Acquires and releases the rdev event lock. */
-+static void virt_wifi_connect_complete(struct work_struct *work)
-+{
-+	struct virt_wifi_netdev_priv *priv =
-+		container_of(work, struct virt_wifi_netdev_priv, connect.work);
-+	u8 *requested_bss = priv->connect_requested_bss;
-+	bool has_addr = !is_zero_ether_addr(requested_bss);
-+	bool right_addr = ether_addr_equal(requested_bss, fake_router_bssid);
-+	u16 status = WLAN_STATUS_SUCCESS;
-+
-+	if (!priv->is_up || (has_addr && !right_addr))
-+		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
-+	else
-+		priv->is_connected = true;
-+
-+	/* Schedules an event that acquires the rtnl lock. */
-+	cfg80211_connect_result(priv->upperdev, requested_bss, NULL, 0, NULL, 0,
-+				status, GFP_KERNEL);
-+	netif_carrier_on(priv->upperdev);
-+}
-+
-+/* May acquire and release the rdev event lock. */
-+static void virt_wifi_cancel_connect(struct net_device *netdev)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
-+
-+	/* If there is work pending, clean up dangling callbacks. */
-+	if (cancel_delayed_work_sync(&priv->connect)) {
-+		/* Schedules an event that acquires the rtnl lock. */
-+		cfg80211_connect_result(priv->upperdev,
-+					priv->connect_requested_bss, NULL, 0,
-+					NULL, 0,
-+					WLAN_STATUS_UNSPECIFIED_FAILURE,
-+					GFP_KERNEL);
-+	}
-+}
-+
-+/* Called with the rtnl lock held. Acquires the rdev event lock. */
-+static int virt_wifi_disconnect(struct wiphy *wiphy, struct net_device *netdev,
-+				u16 reason_code)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(netdev);
-+
-+	if (priv->being_deleted)
-+		return -EBUSY;
-+
-+	wiphy_debug(wiphy, "disconnect\n");
-+	virt_wifi_cancel_connect(netdev);
-+
-+	cfg80211_disconnected(netdev, reason_code, NULL, 0, true, GFP_KERNEL);
-+	priv->is_connected = false;
-+	netif_carrier_off(netdev);
-+
-+	return 0;
-+}
-+
-+/* Called with the rtnl lock held. */
-+static int virt_wifi_get_station(struct wiphy *wiphy, struct net_device *dev,
-+				 const u8 *mac, struct station_info *sinfo)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+
-+	wiphy_debug(wiphy, "get_station\n");
-+
-+	if (!priv->is_connected || !ether_addr_equal(mac, fake_router_bssid))
-+		return -ENOENT;
-+
-+	sinfo->filled = BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+		BIT_ULL(NL80211_STA_INFO_TX_FAILED) |
-+		BIT_ULL(NL80211_STA_INFO_SIGNAL) |
-+		BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
-+	sinfo->tx_packets = priv->tx_packets;
-+	sinfo->tx_failed = priv->tx_failed;
-+	/* For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_ */
-+	sinfo->signal = -50;
-+	sinfo->txrate = (struct rate_info) {
-+		.legacy = 10, /* units are 100kbit/s */
-+	};
-+	return 0;
-+}
-+
-+/* Called with the rtnl lock held. */
-+static int virt_wifi_dump_station(struct wiphy *wiphy, struct net_device *dev,
-+				  int idx, u8 *mac, struct station_info *sinfo)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+
-+	wiphy_debug(wiphy, "dump_station\n");
-+
-+	if (idx != 0 || !priv->is_connected)
-+		return -ENOENT;
-+
-+	ether_addr_copy(mac, fake_router_bssid);
-+	return virt_wifi_get_station(wiphy, dev, fake_router_bssid, sinfo);
-+}
-+
-+static const struct cfg80211_ops virt_wifi_cfg80211_ops = {
-+	.scan = virt_wifi_scan,
-+
-+	.connect = virt_wifi_connect,
-+	.disconnect = virt_wifi_disconnect,
-+
-+	.get_station = virt_wifi_get_station,
-+	.dump_station = virt_wifi_dump_station,
-+};
-+
-+/* Acquires and releases the rtnl lock. */
-+static struct wiphy *virt_wifi_make_wiphy(void)
-+{
-+	struct wiphy *wiphy;
-+	struct virt_wifi_wiphy_priv *priv;
-+	int err;
-+
-+	wiphy = wiphy_new(&virt_wifi_cfg80211_ops, sizeof(*priv));
-+
-+	if (!wiphy)
-+		return NULL;
-+
-+	wiphy->max_scan_ssids = 4;
-+	wiphy->max_scan_ie_len = 1000;
-+	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
-+
-+	wiphy->bands[NL80211_BAND_2GHZ] = &band_2ghz;
-+	wiphy->bands[NL80211_BAND_5GHZ] = &band_5ghz;
-+	wiphy->bands[NL80211_BAND_60GHZ] = NULL;
-+
-+	wiphy->regulatory_flags = REGULATORY_WIPHY_SELF_MANAGED;
-+	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+
-+	priv = wiphy_priv(wiphy);
-+	priv->being_deleted = false;
-+	priv->scan_request = NULL;
-+	INIT_DELAYED_WORK(&priv->scan_result, virt_wifi_scan_result);
-+
-+	err = wiphy_register(wiphy);
-+	if (err < 0) {
-+		wiphy_free(wiphy);
-+		return NULL;
-+	}
-+
-+	return wiphy;
-+}
-+
-+/* Acquires and releases the rtnl lock. */
-+static void virt_wifi_destroy_wiphy(struct wiphy *wiphy)
-+{
-+	struct virt_wifi_wiphy_priv *priv;
-+
-+	WARN(!wiphy, "%s called with null wiphy", __func__);
-+	if (!wiphy)
-+		return;
-+
-+	priv = wiphy_priv(wiphy);
-+	priv->being_deleted = true;
-+	virt_wifi_cancel_scan(wiphy);
-+
-+	if (wiphy->registered)
-+		wiphy_unregister(wiphy);
-+	wiphy_free(wiphy);
-+}
-+
-+/* Enters and exits a RCU-bh critical section. */
-+static netdev_tx_t virt_wifi_start_xmit(struct sk_buff *skb,
-+					struct net_device *dev)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+
-+	priv->tx_packets++;
-+	if (!priv->is_connected) {
-+		priv->tx_failed++;
-+		return NET_XMIT_DROP;
-+	}
-+
-+	skb->dev = priv->lowerdev;
-+	return dev_queue_xmit(skb);
-+}
-+
-+/* Called with rtnl lock held. */
-+static int virt_wifi_net_device_open(struct net_device *dev)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+
-+	priv->is_up = true;
-+	return 0;
-+}
-+
-+/* Called with rtnl lock held. */
-+static int virt_wifi_net_device_stop(struct net_device *dev)
-+{
-+	struct virt_wifi_netdev_priv *n_priv = netdev_priv(dev);
-+	struct virt_wifi_wiphy_priv *w_priv;
-+
-+	n_priv->is_up = false;
-+
-+	if (!dev->ieee80211_ptr)
-+		return 0;
-+	w_priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
-+
-+	virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
-+	virt_wifi_cancel_connect(dev);
-+	netif_carrier_off(dev);
-+
-+	return 0;
-+}
-+
-+static const struct net_device_ops virt_wifi_ops = {
-+	.ndo_start_xmit = virt_wifi_start_xmit,
-+	.ndo_open = virt_wifi_net_device_open,
-+	.ndo_stop = virt_wifi_net_device_stop,
-+};
-+
-+/* Invoked as part of rtnl lock release. */
-+static void virt_wifi_net_device_destructor(struct net_device *dev)
-+{
-+	/* Delayed past dellink to allow nl80211 to react to the device being
-+	 * deleted.
-+	 */
-+	kfree(dev->ieee80211_ptr);
-+	dev->ieee80211_ptr = NULL;
-+	free_netdev(dev);
-+}
-+
-+/* No lock interaction. */
-+static void virt_wifi_setup(struct net_device *dev)
-+{
-+	ether_setup(dev);
-+	dev->netdev_ops = &virt_wifi_ops;
-+	dev->priv_destructor = virt_wifi_net_device_destructor;
-+}
-+
-+/* Called in a RCU read critical section from netif_receive_skb */
-+static rx_handler_result_t virt_wifi_rx_handler(struct sk_buff **pskb)
-+{
-+	struct sk_buff *skb = *pskb;
-+	struct virt_wifi_netdev_priv *priv =
-+		rcu_dereference(skb->dev->rx_handler_data);
-+
-+	if (!priv->is_connected)
-+		return RX_HANDLER_PASS;
-+
-+	/* GFP_ATOMIC because this is a packet interrupt handler. */
-+	skb = skb_share_check(skb, GFP_ATOMIC);
-+	if (!skb) {
-+		dev_err(&priv->upperdev->dev, "can't skb_share_check\n");
-+		return RX_HANDLER_CONSUMED;
-+	}
-+
-+	*pskb = skb;
-+	skb->dev = priv->upperdev;
-+	skb->pkt_type = PACKET_HOST;
-+	return RX_HANDLER_ANOTHER;
-+}
-+
-+/* Called with rtnl lock held. */
-+static int virt_wifi_newlink(struct net *src_net, struct net_device *dev,
-+			     struct nlattr *tb[], struct nlattr *data[],
-+			     struct netlink_ext_ack *extack)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+	int err;
-+
-+	if (!tb[IFLA_LINK])
-+		return -EINVAL;
-+
-+	netif_carrier_off(dev);
-+
-+	priv->upperdev = dev;
-+	priv->lowerdev = __dev_get_by_index(src_net,
-+					    nla_get_u32(tb[IFLA_LINK]));
-+
-+	if (!priv->lowerdev)
-+		return -ENODEV;
-+	if (!tb[IFLA_MTU])
-+		dev->mtu = priv->lowerdev->mtu;
-+	else if (dev->mtu > priv->lowerdev->mtu)
-+		return -EINVAL;
-+
-+	err = netdev_rx_handler_register(priv->lowerdev, virt_wifi_rx_handler,
-+					 priv);
-+	if (err) {
-+		dev_err(&priv->lowerdev->dev,
-+			"can't netdev_rx_handler_register: %d\n", err);
-+		return err;
-+	}
-+
-+	eth_hw_addr_inherit(dev, priv->lowerdev);
-+	netif_stacked_transfer_operstate(priv->lowerdev, dev);
-+
-+	SET_NETDEV_DEV(dev, &priv->lowerdev->dev);
-+	dev->ieee80211_ptr = kzalloc(sizeof(*dev->ieee80211_ptr), GFP_KERNEL);
-+
-+	if (!dev->ieee80211_ptr)
-+		goto remove_handler;
-+
-+	dev->ieee80211_ptr->iftype = NL80211_IFTYPE_STATION;
-+	dev->ieee80211_ptr->wiphy = common_wiphy;
-+
-+	err = register_netdevice(dev);
-+	if (err) {
-+		dev_err(&priv->lowerdev->dev, "can't register_netdevice: %d\n",
-+			err);
-+		goto free_wireless_dev;
-+	}
-+
-+	err = netdev_upper_dev_link(priv->lowerdev, dev, extack);
-+	if (err) {
-+		dev_err(&priv->lowerdev->dev, "can't netdev_upper_dev_link: %d\n",
-+			err);
-+		goto unregister_netdev;
-+	}
-+
-+	priv->being_deleted = false;
-+	priv->is_connected = false;
-+	priv->is_up = false;
-+	INIT_DELAYED_WORK(&priv->connect, virt_wifi_connect_complete);
-+
-+	return 0;
-+unregister_netdev:
-+	unregister_netdevice(dev);
-+free_wireless_dev:
-+	kfree(dev->ieee80211_ptr);
-+	dev->ieee80211_ptr = NULL;
-+remove_handler:
-+	netdev_rx_handler_unregister(priv->lowerdev);
-+
-+	return err;
-+}
-+
-+/* Called with rtnl lock held. */
-+static void virt_wifi_dellink(struct net_device *dev,
-+			      struct list_head *head)
-+{
-+	struct virt_wifi_netdev_priv *priv = netdev_priv(dev);
-+
-+	if (dev->ieee80211_ptr)
-+		virt_wifi_cancel_scan(dev->ieee80211_ptr->wiphy);
-+
-+	priv->being_deleted = true;
-+	virt_wifi_cancel_connect(dev);
-+	netif_carrier_off(dev);
-+
-+	netdev_rx_handler_unregister(priv->lowerdev);
-+	netdev_upper_dev_unlink(priv->lowerdev, dev);
-+
-+	unregister_netdevice_queue(dev, head);
-+
-+	/* Deleting the wiphy is handled in the module destructor. */
-+}
-+
-+static struct rtnl_link_ops virt_wifi_link_ops = {
-+	.kind		= "virt_wifi",
-+	.setup		= virt_wifi_setup,
-+	.newlink	= virt_wifi_newlink,
-+	.dellink	= virt_wifi_dellink,
-+	.priv_size	= sizeof(struct virt_wifi_netdev_priv),
-+};
-+
-+/* Acquires and releases the rtnl lock. */
-+static int __init virt_wifi_init_module(void)
-+{
-+	int err;
-+
-+	/* Guaranteed to be locallly-administered and not multicast. */
-+	eth_random_addr(fake_router_bssid);
-+
-+	common_wiphy = virt_wifi_make_wiphy();
-+	if (!common_wiphy)
-+		return -ENOMEM;
-+
-+	err = rtnl_link_register(&virt_wifi_link_ops);
-+	if (err)
-+		virt_wifi_destroy_wiphy(common_wiphy);
-+
-+	return err;
-+}
-+
-+/* Acquires and releases the rtnl lock. */
-+static void __exit virt_wifi_cleanup_module(void)
-+{
-+	/* Will delete any devices that depend on the wiphy. */
-+	rtnl_link_unregister(&virt_wifi_link_ops);
-+	virt_wifi_destroy_wiphy(common_wiphy);
-+}
-+
-+module_init(virt_wifi_init_module);
-+module_exit(virt_wifi_cleanup_module);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR("Cody Schuffelen <schuffelen@google.com>");
-+MODULE_DESCRIPTION("Driver for a wireless wrapper of ethernet devices");
-+MODULE_ALIAS_RTNL_LINK("virt_wifi");
--- 
-2.19.1.1215.g8438c0b245-goog
+Thanks, fixed.
 
+> > +static const struct cfg80211_ops virt_wifi_cfg80211_ops = {
+> > +       .scan = virt_wifi_scan,
+> > +
+> > +       .connect = virt_wifi_connect,
+> > +       .disconnect = virt_wifi_disconnect,
+> > +
+> > +       .get_station = virt_wifi_get_station,
+> > +       .dump_station = virt_wifi_dump_station,
+> > +};
+>
+> Hey, this minimal cfg80211 implementation works fine with wpa_supplicant
+> and open AP config. By the way, if you plan to add more features, then
+> I would suggest to consider the following cfg80211 callbacks:
+> - change_station, get_channel
+>   to provide more info in connected state, e.g. compare the output
+>   of the following commands between your virtual interface and
+>   actual wireless interface:
+>   $ iw dev wlan0 link
+>   $ iw dev wlan0 info
+>
+> - stubs for add_key, del_key to enable encrypted AP simulation
+
+Thanks for testing it out!
+
+I've uploaded the new version here: https://lkml.org/lkml/2018/11/21/251
