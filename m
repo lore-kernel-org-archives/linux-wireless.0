@@ -2,101 +2,173 @@ Return-Path: <SRS0=iPli=OC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40225C43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 09:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D0CC43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03CD720685
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 09:45:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IWM3pLq7";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E9mToPlZ"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 03CD720685
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	by mail.kernel.org (Postfix) with ESMTP id 3CB0A20659
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:19:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 3CB0A20659
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394471AbeKWU2n (ORCPT
+        id S2390850AbeKWWDN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Nov 2018 15:28:43 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:53282 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390621AbeKWU2m (ORCPT
+        Fri, 23 Nov 2018 17:03:13 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:38218 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729651AbeKWWDN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Nov 2018 15:28:42 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 251A761805; Fri, 23 Nov 2018 09:45:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542966311;
-        bh=KgTgwfn6oJLuORyaOwV4ggCv8budLYOJF7toWsrPwiw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=IWM3pLq7ZnAnwsE+1QIyGXOHvVbcfKrYulMr0rR0qZL7QyBCEYEJI9fSpb97Y3077
-         MNbnr1XKptUDCejYWE210drQOoVqKgfh1POuh2GyK7Fc3IeunsywyuPZo+UmlDEbEo
-         P4OFQWtqqWhTK4NhpQ0wfiwbljfIsVza4T/RyvK0=
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A98F561609;
-        Fri, 23 Nov 2018 09:45:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1542966309;
-        bh=KgTgwfn6oJLuORyaOwV4ggCv8budLYOJF7toWsrPwiw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=E9mToPlZW65P/qCN/Dbw7nxR+UgWlIcmVtxEB6RDPMrxsPRojOiTWTZ1n78ipol8+
-         Xpty/llJhmfZdxa6m8va5oXfUZToizMN/99v8iuLDNrKWgRoB9fEG4bWGEVLjWfRKR
-         J+0CP/KQxwgjZg2A9HTNkwEzUQn6GVw6OB7k3emM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A98F561609
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Peter Robinson <pbrobinson@gmail.com>
-Subject: Re: [PATCH] brcmfmac: Call brcmf_dmi_probe before brcmf_of_probe
-References: <20181123091148.12742-1-hdegoede@redhat.com>
-Date:   Fri, 23 Nov 2018 11:45:04 +0200
-In-Reply-To: <20181123091148.12742-1-hdegoede@redhat.com> (Hans de Goede's
-        message of "Fri, 23 Nov 2018 10:11:48 +0100")
-Message-ID: <87efbc9lgf.fsf@purkki.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 23 Nov 2018 17:03:13 -0500
+Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.91)
+        (envelope-from <luca@coelho.fi>)
+        id 1gQ9UW-0008G3-G0; Fri, 23 Nov 2018 13:19:21 +0200
+Message-ID: <f7e2243ec8a8bcc65ee44146d7486b8f7586eea1.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Date:   Fri, 23 Nov 2018 13:19:18 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-gWjuyKNK/okN2SF580JR"
+User-Agent: Evolution 3.30.2-1 
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-11-23
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hans de Goede <hdegoede@redhat.com> writes:
 
-> ARM systems with UEFI may have both devicetree (of) and DMI data in this
-> case we end up setting brcmf_mp_device.board_type twice.
->
-> In this case we should prefer the devicetree data, because:
-> 1) The devicerree data is more reliable
-> 2) Some ARM systems (e.g. the Raspberry Pi 3 models) support both UEFI and
->    classic uboot booting, the devicetree data is always there, so using it
->    makes sure we ask for the same nvram file independent of how we booted.
->
-> This commit moves the brcmf_dmi_probe call to before the brcmf_of_probe
-> call, so that the latter can override the value of the first if both are
-> set.
->
-> Fixes: bd1e82bb420a ("brcmfmac: Set board_type from DMI on x86 based ...")
-> Cc: Peter Robinson <pbrobinson@gmail.com>
-> Tested-and-reported-by: Peter Robinson <pbrobinson@gmail.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+--=-gWjuyKNK/okN2SF580JR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Note to myself: commit bd1e82bb420a is on wireless-drivers-next so need
-to queue for 4.20.
+Hi Kalle,
 
--- 
-Kalle Valo
+This is the second batch of patches intended for v4.21.  This includes
+only the last patchset I sent.  Usual development work, mostly in the
+debugging infrastructure and small fixes and cleanups.  More details
+about the contents in the tag description.
+
+I have sent this out before and kbuildbot reported success.
+
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 12d56175c89c8a8cc41e478775155709274ff733=
+:
+
+  Merge tag 'iwlwifi-next-for-kalle-2018-11-11' of git://git.kernel.org/pub=
+/scm/linux/kernel/git/iwlwifi/iwlwifi-next (2018-11-15 16:59:01 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-11-23
+
+for you to fetch changes up to 520229e4b02dc4f5241a251a569fe0691a2c2e2c:
+
+  iwlwifi: mvm: set HW capability VHT_EXT_NSS_BW (2018-11-23 13:01:08 +0200=
+)
+
+----------------------------------------------------------------
+second batch of iwlwifi patches intended for v4.21
+
+* New FW debugging infrastructure;
+* Some more work on 802.11ax;
+* Improve support for multiple RF modules with 22000 devices;
+* Remove an unused FW parameter;
+* Other debugging improvements;
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: remove assignment of the reciprocal
+      iwlwifi: mvm: add support for TWT capabilities
+
+Lior Cohen (2):
+      iwlwifi: add fw dump upon RT ucode start failure
+      iwlwifi: add debugfs file to read fw debug data recording
+
+Luca Coelho (1):
+      iwlwifi: fix cfg structs for 22000 with different RF modules
+
+Sara Sharon (8):
+      iwlwifi: dbg: don't limit dump decisions to all or monitor
+      iwlwifi: dbg: split fifos dump
+      iwlwifi: fw: add FW API of new TLV infrastructure
+      iwlwifi: trans: parse and store debug ini TLVs
+      iwlwifi: trans: support loading ini TLVs from external file
+      iwlwifi: dbg: disable triggers for ini
+      iwlwifi: dbg: add apply point logic
+      iwlwifi: fw: support API change to debug TLVs
+
+Shaul Triebitz (3):
+      iwlwifi: mvm: set MAC_FILTER_IN_11AX in AP mode
+      iwlwifi: mvm: send the STA_HE_CTXT command in AP mode
+      iwlwifi: mvm: set HW capability VHT_EXT_NSS_BW
+
+ drivers/net/wireless/intel/iwlwifi/Makefile         |   1 +
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c      |   1 -
+ drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h | 401 ++++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/mac.h     |  39 +++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c         | 277 ++++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h         |  22 ++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h        |   7 ++
+ drivers/net/wireless/intel/iwlwifi/fw/img.h         |  26 +++++++
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h     |   3 +
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c    | 230 ++++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h    |  87 ++++++++++++++++=
+++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c        |  24 +++++-
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h  |   2 +
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h      |  23 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c         |   5 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c   |  39 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c        |   1 -
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h  |  44 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c     | 213 ++++++++++++++++=
++++++++++++++++++++++++++++++++-----
+ 21 files changed, 1374 insertions(+), 77 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
+
+--=-gWjuyKNK/okN2SF580JR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlv34jcACgkQoUecoho8
+xfqj4xAAqhnIEq8KQLwTxTSOLfDb2jw7jJofltT+C1tj6OMGiQ/W0KAOYeRa+abV
+qqrxG/5208ivF7MLbFbpfdFOwJTl0a4ruRnylrrfNvbILciFWwsDMAucC8b49xqg
+WeqcN6BxoZly/niU+1U8GwJA0onqnTKX4GBtZKxYsPTEOWFHqn9hAtOLT89a9eps
+xqdj27gHswTBWmL6xKahxLlNvm2CaiaVV2BGOg3kem7BnHSiHHjPUg1oRgKsOH59
+kNluJO14R9IDO3SEgAXjWntQfrlJgLIuIw1RQvpnNyqV3XLFR3J9fGiXNhHcXy6G
+JKPn5ahoZRHN2tMuXI1x10bqT6qEbWFxd7BbpsaNHmveTVcHheFK31g0kp2P5tkJ
+yx4mZLftN8ta9ZxVDJNssF1qsBlJEUYXJp66HI2HOxgw/9chY2ZpzTwgH/kNZo9Y
+dsQPLveh7HDvcFrO+mNMYdXUCh6FQUmryJNOFU33qLF23m1BVpk0P8OEtGiT+uUC
+Sx+p3yuPXXUcKWZ1w8gH+VXcN32pjT6PI+/PadRt8KOrCdYOpEIcVsPRh+XAsN5p
+3UOjA506Il0v3934FYhqIEokmtZ3vMsXRcpBEKBxYOY/fv2hzT4IDiYA7r2tl/2X
+TUy2JIfDUCurLorwG9uceMeGzqtyrr+yzGF2lG611v5hlrlPN5o=
+=3MoG
+-----END PGP SIGNATURE-----
+
+--=-gWjuyKNK/okN2SF580JR--
+
