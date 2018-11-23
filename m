@@ -6,620 +6,270 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AED6C43441
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9E0C43441
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB8E7206B2
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:26:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BB8E7206B2
+	by mail.kernel.org (Postfix) with ESMTP id 17427206B2
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Nov 2018 11:27:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17427206B2
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=coelho.fi
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394374AbeKWWKd (ORCPT
+        id S2405218AbeKWWKv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Nov 2018 17:10:33 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:38240 "EHLO
+        Fri, 23 Nov 2018 17:10:51 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:38338 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388128AbeKWWKd (ORCPT
+        with ESMTP id S2394365AbeKWWKv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Nov 2018 17:10:33 -0500
+        Fri, 23 Nov 2018 17:10:51 -0500
 Received: from 91-156-4-241.elisa-laajakaista.fi ([91.156.4.241] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.91)
         (envelope-from <luca@coelho.fi>)
-        id 1gQ9bZ-0008GU-Lu; Fri, 23 Nov 2018 13:26:38 +0200
+        id 1gQ9bi-0008GU-Tu; Fri, 23 Nov 2018 13:26:47 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Fri, 23 Nov 2018 13:26:18 +0200
-Message-Id: <20181123112631.29360-3-luca@coelho.fi>
+Date:   Fri, 23 Nov 2018 13:26:28 +0200
+Message-Id: <20181123112631.29360-13-luca@coelho.fi>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181123112631.29360-1-luca@coelho.fi>
 References: <20181123112631.29360-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/15] iwlwifi: dbg: dump data according to the new ini TLVs
+Subject: [PATCH 12/15] iwlwifi: mvm: add L-SIG length to radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-When ini TLVs are loaded, dump data according to the
-stored configuration.
+We may have the L-SIG length depending on the phy_data info type;
+add it to radiotap when we do.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Move getting the phy_data out one layer up and the info type into
+it so we can use this data more generically. We need to call the
+iwl_mvm_rx_he() function for other reasons as well, so can't just
+combine all of that into something like iwl_mvm_parse_phy_data().
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 263 +++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |   2 +-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  17 ++
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |   6 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  12 +-
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |  13 +-
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |   2 +-
- .../wireless/intel/iwlwifi/pcie/internal.h    |   5 +
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  71 +++--
- 9 files changed, 355 insertions(+), 36 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 96 ++++++++++++-------
+ 1 file changed, 60 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 76050cc3532a..58771e253396 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -605,6 +605,28 @@ static void iwl_fw_dump_mem(struct iwl_fw_runtime *fwrt,
- 	IWL_DEBUG_INFO(fwrt, "WRT memory dump. Type=%u\n", dump_mem->type);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index d7f6b7aec981..87c245c85d9c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -864,6 +864,7 @@ static void iwl_mvm_flip_address(u8 *addr)
  }
  
-+static void iwl_fw_dump_named_mem(struct iwl_fw_runtime *fwrt,
-+				  struct iwl_fw_error_dump_data **dump_data,
-+				  u32 len, u32 ofs, u8 *name, u8 name_len)
-+{
-+	struct iwl_fw_error_dump_named_mem *dump_mem;
-+
-+	if (!len)
-+		return;
-+
-+	(*dump_data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
-+	(*dump_data)->len = cpu_to_le32(len + sizeof(*dump_mem));
-+	dump_mem = (void *)(*dump_data)->data;
-+	dump_mem->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_NAMED_MEM);
-+	dump_mem->offset = cpu_to_le32(ofs);
-+	dump_mem->name_len = name_len;
-+	memcpy(dump_mem->name, name, name_len);
-+	iwl_trans_read_mem_bytes(fwrt->trans, ofs, dump_mem->data, len);
-+	*dump_data = iwl_fw_error_next_data(*dump_data);
-+
-+	IWL_DEBUG_INFO(fwrt, "WRT memory dump. Type=%u\n", dump_mem->type);
-+}
-+
- #define ADD_LEN(len, item_len, const_len) \
- 	do {size_t item = item_len; len += (!!item) * const_len + item; } \
- 	while (0)
-@@ -928,6 +950,238 @@ _iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
- 	return dump_file;
- }
- 
-+static void iwl_dump_prph_ini(struct iwl_trans *trans,
-+			      struct iwl_fw_error_dump_data **data,
-+			      struct iwl_fw_ini_region_cfg *reg)
-+{
-+	struct iwl_fw_error_dump_prph *prph;
-+	unsigned long flags;
-+	u32 i, size = le32_to_cpu(reg->num_regions);
-+
-+	IWL_DEBUG_INFO(trans, "WRT PRPH dump\n");
-+
-+	if (!iwl_trans_grab_nic_access(trans, &flags))
-+		return;
-+
-+	for (i = 0; i < size; i++) {
-+		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PRPH);
-+		(*data)->len = cpu_to_le32(le32_to_cpu(reg->size) +
-+					   sizeof(*prph));
-+		prph = (void *)(*data)->data;
-+		prph->prph_start = reg->start_addr[i];
-+		prph->data[0] = cpu_to_le32(iwl_read_prph_no_grab(trans,
-+								  le32_to_cpu(prph->prph_start)));
-+		*data = iwl_fw_error_next_data(*data);
-+	}
-+	iwl_trans_release_nic_access(trans, &flags);
-+}
-+
-+static void iwl_dump_csr_ini(struct iwl_trans *trans,
-+			     struct iwl_fw_error_dump_data **data,
-+			     struct iwl_fw_ini_region_cfg *reg)
-+{
-+	int i, num = le32_to_cpu(reg->num_regions);
-+	u32 size = le32_to_cpu(reg->size);
-+
-+	IWL_DEBUG_INFO(trans, "WRT CSR dump\n");
-+
-+	for (i = 0; i < num; i++) {
-+		u32 add = le32_to_cpu(reg->start_addr[i]);
-+		__le32 *val;
-+		int j;
-+
-+		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_CSR);
-+		(*data)->len = cpu_to_le32(size);
-+		val = (void *)(*data)->data;
-+
-+		for (j = 0; j < size; j += 4)
-+			*val++ = cpu_to_le32(iwl_trans_read32(trans, j + add));
-+
-+		*data = iwl_fw_error_next_data(*data);
-+	}
-+}
-+
-+static int iwl_fw_ini_get_trigger_len(struct iwl_fw_runtime *fwrt,
-+				      struct iwl_fw_ini_trigger *trigger)
-+{
-+	int i, num, size = 0, hdr_len = sizeof(struct iwl_fw_error_dump_data);
-+
-+	if (!trigger || !trigger->num_regions)
-+		return 0;
-+
-+	num = le32_to_cpu(trigger->num_regions);
-+	for (i = 0; i < num; i++) {
-+		u32 reg_id = le32_to_cpu(trigger->data[i]);
-+		struct iwl_fw_ini_region_cfg *reg;
-+		enum iwl_fw_ini_region_type type;
-+		u32 num_entries;
-+
-+		if (WARN_ON(reg_id >= ARRAY_SIZE(fwrt->dump.active_regs)))
-+			continue;
-+
-+		reg = fwrt->dump.active_regs[reg_id].reg;
-+		if (WARN(!reg, "Unassigned region %d\n", reg_id))
-+			continue;
-+
-+		type = le32_to_cpu(reg->region_type);
-+		num_entries = le32_to_cpu(reg->num_regions);
-+
-+		switch (type) {
-+		case IWL_FW_INI_REGION_DEVICE_MEMORY:
-+			size += hdr_len +
-+				sizeof(struct iwl_fw_error_dump_named_mem) +
-+				le32_to_cpu(reg->size);
-+			break;
-+		case IWL_FW_INI_REGION_PERIPHERY_MAC:
-+		case IWL_FW_INI_REGION_PERIPHERY_PHY:
-+		case IWL_FW_INI_REGION_PERIPHERY_AUX:
-+			size += num_entries *
-+				(hdr_len +
-+				 sizeof(struct iwl_fw_error_dump_prph) +
-+				 sizeof(u32));
-+			break;
-+		case IWL_FW_INI_REGION_TXF:
-+			size += iwl_fw_txf_len(fwrt, &fwrt->smem_cfg);
-+			break;
-+		case IWL_FW_INI_REGION_RXF:
-+			size += iwl_fw_rxf_len(fwrt, &fwrt->smem_cfg);
-+			break;
-+		case IWL_FW_INI_REGION_PAGING:
-+			if (!iwl_fw_dbg_is_paging_enabled(fwrt))
-+				break;
-+			size += fwrt->num_of_paging_blk *
-+				(hdr_len +
-+				 sizeof(struct iwl_fw_error_dump_paging) +
-+				 PAGING_BLOCK_SIZE);
-+			break;
-+		case IWL_FW_INI_REGION_CSR:
-+			size += num_entries *
-+				(hdr_len + le32_to_cpu(reg->size));
-+			break;
-+		case IWL_FW_INI_REGION_DRAM_BUFFER:
-+			/* Transport takes care of DRAM dumping */
-+		case IWL_FW_INI_REGION_INTERNAL_BUFFER:
-+		case IWL_FW_INI_REGION_DRAM_IMR:
-+			/* Undefined yet */
-+		default:
-+			break;
-+		}
-+	}
-+	return size;
-+}
-+
-+static void iwl_fw_ini_dump_trigger(struct iwl_fw_runtime *fwrt,
-+				    struct iwl_fw_ini_trigger *trigger,
-+				    struct iwl_fw_error_dump_data **data,
-+				    u32 *dump_mask)
-+{
-+	int i, num = le32_to_cpu(trigger->num_regions);
-+
-+	for (i = 0; i < num; i++) {
-+		u32 reg_id = le32_to_cpu(trigger->data[i]);
-+		enum iwl_fw_ini_region_type type;
-+		struct iwl_fw_ini_region_cfg *reg;
-+
-+		if (reg_id >= ARRAY_SIZE(fwrt->dump.active_regs))
-+			continue;
-+
-+		reg = fwrt->dump.active_regs[reg_id].reg;
-+		/* Don't warn, get_trigger_len already warned */
-+		if (!reg)
-+			continue;
-+
-+		type = le32_to_cpu(reg->region_type);
-+		switch (type) {
-+		case IWL_FW_INI_REGION_DEVICE_MEMORY:
-+			if (WARN_ON(le32_to_cpu(reg->num_regions) > 1))
-+				continue;
-+			iwl_fw_dump_named_mem(fwrt, data,
-+					      le32_to_cpu(reg->size),
-+					      le32_to_cpu(reg->start_addr[0]),
-+					      reg->name,
-+					      le32_to_cpu(reg->name_len));
-+			break;
-+		case IWL_FW_INI_REGION_PERIPHERY_MAC:
-+		case IWL_FW_INI_REGION_PERIPHERY_PHY:
-+		case IWL_FW_INI_REGION_PERIPHERY_AUX:
-+			iwl_dump_prph_ini(fwrt->trans, data, reg);
-+			break;
-+		case IWL_FW_INI_REGION_DRAM_BUFFER:
-+			*dump_mask |= IWL_FW_ERROR_DUMP_FW_MONITOR;
-+			break;
-+		case IWL_FW_INI_REGION_PAGING:
-+			if (iwl_fw_dbg_is_paging_enabled(fwrt))
-+				iwl_dump_paging(fwrt, data);
-+			else
-+				*dump_mask |= IWL_FW_ERROR_DUMP_PAGING;
-+			break;
-+		case IWL_FW_INI_REGION_TXF:
-+			iwl_fw_dump_txf(fwrt, data);
-+			break;
-+		case IWL_FW_INI_REGION_RXF:
-+			iwl_fw_dump_rxf(fwrt, data);
-+			break;
-+		case IWL_FW_INI_REGION_CSR:
-+			iwl_dump_csr_ini(fwrt->trans, data, reg);
-+			break;
-+		case IWL_FW_INI_REGION_DRAM_IMR:
-+		case IWL_FW_INI_REGION_INTERNAL_BUFFER:
-+			/* This is undefined yet */
-+		default:
-+			break;
-+		}
-+	}
-+}
-+
-+static struct iwl_fw_error_dump_file *
-+_iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt,
-+		       struct iwl_fw_dump_ptrs *fw_error_dump,
-+		       u32 *dump_mask)
-+{
-+	int size, id = le32_to_cpu(fwrt->dump.desc->trig_desc.type);
-+	struct iwl_fw_error_dump_data *dump_data;
-+	struct iwl_fw_error_dump_file *dump_file;
-+	struct iwl_fw_ini_trigger *trigger, *ext;
-+
-+	if (id == FW_DBG_TRIGGER_FW_ASSERT)
-+		id = IWL_FW_TRIGGER_ID_FW_ASSERT;
-+	else if (id == FW_DBG_TRIGGER_USER)
-+		id = IWL_FW_TRIGGER_ID_USER_TRIGGER;
-+	else if (id < FW_DBG_TRIGGER_MAX)
-+		return NULL;
-+
-+	if (WARN_ON(id >= ARRAY_SIZE(fwrt->dump.active_trigs)))
-+		return NULL;
-+
-+	trigger = fwrt->dump.active_trigs[id].conf;
-+	ext = fwrt->dump.active_trigs[id].conf_ext;
-+
-+	size = sizeof(*dump_file);
-+	size += iwl_fw_ini_get_trigger_len(fwrt, trigger);
-+	size += iwl_fw_ini_get_trigger_len(fwrt, ext);
-+
-+	if (!size)
-+		return NULL;
-+
-+	dump_file = vzalloc(size);
-+	if (!dump_file)
-+		return NULL;
-+
-+	fw_error_dump->fwrt_ptr = dump_file;
-+
-+	dump_file->barker = cpu_to_le32(IWL_FW_ERROR_DUMP_BARKER);
-+	dump_data = (void *)dump_file->data;
-+	dump_file->file_len = cpu_to_le32(size);
-+
-+	*dump_mask = 0;
-+	if (trigger)
-+		iwl_fw_ini_dump_trigger(fwrt, trigger, &dump_data, dump_mask);
-+	if (ext)
-+		iwl_fw_ini_dump_trigger(fwrt, ext, &dump_data, dump_mask);
-+
-+	return dump_file;
-+}
-+
- void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- {
- 	struct iwl_fw_dump_ptrs *fw_error_dump;
-@@ -948,13 +1202,18 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	if (!fw_error_dump)
- 		goto out;
- 
--	dump_file = _iwl_fw_error_dump(fwrt, fw_error_dump);
-+	if (fwrt->trans->ini_valid)
-+		dump_file = _iwl_fw_error_ini_dump(fwrt, fw_error_dump,
-+						   &dump_mask);
-+	else
-+		dump_file = _iwl_fw_error_dump(fwrt, fw_error_dump);
-+
- 	if (!dump_file) {
- 		kfree(fw_error_dump);
- 		goto out;
- 	}
- 
--	if (fwrt->dump.monitor_only)
-+	if (!fwrt->trans->ini_valid && fwrt->dump.monitor_only)
- 		dump_mask &= IWL_FW_ERROR_DUMP_FW_MONITOR;
- 
- 	fw_error_dump->trans_ptr = iwl_trans_dump_data(fwrt->trans, dump_mask);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index ab81ea8b636f..324ee063224d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -329,7 +329,7 @@ void iwl_fw_error_dump_wk(struct work_struct *work);
- 
- static inline bool iwl_fw_dbg_type_on(struct iwl_fw_runtime *fwrt, u32 type)
- {
--	return (fwrt->fw->dbg.dump_mask & BIT(type));
-+	return (fwrt->fw->dbg.dump_mask & BIT(type) || fwrt->trans->ini_valid);
- }
- 
- static inline bool iwl_fw_dbg_is_d3_debug_enabled(struct iwl_fw_runtime *fwrt)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 6fede174c664..cefafc9a082f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -249,6 +249,7 @@ struct iwl_fw_error_dump_prph {
- enum iwl_fw_error_dump_mem_type {
- 	IWL_FW_ERROR_DUMP_MEM_SRAM,
- 	IWL_FW_ERROR_DUMP_MEM_SMEM,
-+	IWL_FW_ERROR_DUMP_MEM_NAMED_MEM = 10,
+ struct iwl_mvm_rx_phy_data {
++	enum iwl_rx_phy_info_type info_type;
+ 	__le32 d0, d1, d2, d3;
+ 	__le16 d4;
  };
- 
- /**
-@@ -263,6 +264,22 @@ struct iwl_fw_error_dump_mem {
- 	u8 data[];
- };
- 
-+/**
-+ * struct iwl_fw_error_dump_named_mem - chunk of memory
-+ * @type: &enum iwl_fw_error_dump_mem_type
-+ * @offset: the offset from which the memory was read
-+ * @name_len: name length
-+ * @name: file name
-+ * @data: the content of the memory
-+ */
-+struct iwl_fw_error_dump_named_mem {
-+	__le32 type;
-+	__le32 offset;
-+	u8 name_len;
-+	u8 name[32];
-+	u8 data[];
-+};
-+
- /**
-  * struct iwl_fw_error_dump_rb - content of an Receive Buffer
-  * @index: the index of the Receive Buffer in the Rx queue
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 2084c63dc670..9d89b7d7f9fa 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -362,6 +362,12 @@
- #define MON_BUFF_END_ADDR		(0xa03c40)
- #define MON_BUFF_WRPTR			(0xa03c44)
- #define MON_BUFF_CYCLE_CNT		(0xa03c48)
-+/* FW monitor family 8000 and on */
-+#define MON_BUFF_BASE_ADDR_VER2		(0xa03c3c)
-+#define MON_BUFF_END_ADDR_VER2		(0xa03c20)
-+#define MON_BUFF_WRPTR_VER2		(0xa03c24)
-+#define MON_BUFF_CYCLE_CNT_VER2		(0xa03c28)
-+#define MON_BUFF_SHIFT_VER2		(0x8)
- 
- #define MON_DMARB_RD_CTL_ADDR		(0xa03c60)
- #define MON_DMARB_RD_DATA_ADDR		(0xa03c5c)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 263b03b3ea66..c55abc186a2e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1038,11 +1038,13 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
- 
--	mvm->fwrt.dump.conf = FW_DBG_INVALID;
--	/* if we have a destination, assume EARLY START */
--	if (mvm->fw->dbg.dest_tlv)
--		mvm->fwrt.dump.conf = FW_DBG_START_FROM_ALIVE;
--	iwl_fw_start_dbg_conf(&mvm->fwrt, FW_DBG_START_FROM_ALIVE);
-+	if (!mvm->trans->ini_valid) {
-+		mvm->fwrt.dump.conf = FW_DBG_INVALID;
-+		/* if we have a destination, assume EARLY START */
-+		if (mvm->fw->dbg.dest_tlv)
-+			mvm->fwrt.dump.conf = FW_DBG_START_FROM_ALIVE;
-+		iwl_fw_start_dbg_conf(&mvm->fwrt, FW_DBG_START_FROM_ALIVE);
-+	}
- 
- 	ret = iwl_send_tx_ant_cfg(mvm, iwl_mvm_get_valid_tx_ant(mvm));
- 	if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 05ed4fb88e0c..ceb3aa03d561 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -94,11 +94,14 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 		cpu_to_le64(trans_pcie->rxq->bd_dma);
- 
- 	/* Configure debug, for integration */
--	iwl_pcie_alloc_fw_monitor(trans, 0);
--	prph_sc_ctrl->hwm_cfg.hwm_base_addr =
--		cpu_to_le64(trans->fw_mon[0].physical);
--	prph_sc_ctrl->hwm_cfg.hwm_size =
--		cpu_to_le32(trans->fw_mon[0].size);
-+	if (!trans->ini_valid)
-+		iwl_pcie_alloc_fw_monitor(trans, 0);
-+	if (trans->num_blocks) {
-+		prph_sc_ctrl->hwm_cfg.hwm_base_addr =
-+			cpu_to_le64(trans->fw_mon[0].physical);
-+		prph_sc_ctrl->hwm_cfg.hwm_size =
-+			cpu_to_le32(trans->fw_mon[0].size);
-+	}
- 
- 	/* allocate ucode sections in dram and set addresses */
- 	ret = iwl_pcie_init_fw_sec(trans, fw, &prph_scratch->dram);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 6f45a0303ddd..7f4aaa810ea1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -227,7 +227,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
- 	iwl_enable_interrupts(trans);
- 
- 	/* Configure debug, if exists */
--	if (trans->dbg_dest_tlv)
-+	if (iwl_pcie_dbg_on(trans))
- 		iwl_pcie_apply_destination(trans);
- 
- 	/* kick FW self load */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 0f816761ca45..d6fc6ce73e0a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -1009,6 +1009,11 @@ static inline void __iwl_trans_pcie_set_bit(struct iwl_trans *trans,
- 	__iwl_trans_pcie_set_bits_mask(trans, reg, mask, mask);
- }
- 
-+static inline bool iwl_pcie_dbg_on(struct iwl_trans *trans)
-+{
-+	return (trans->dbg_dest_tlv || trans->ini_valid);
-+}
-+
- void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state);
- void iwl_trans_pcie_dump_regs(struct iwl_trans *trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 166bacc5ea54..f97aea5ffc44 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -924,6 +924,20 @@ void iwl_pcie_apply_destination(struct iwl_trans *trans)
- 	const struct iwl_fw_dbg_dest_tlv_v1 *dest = trans->dbg_dest_tlv;
- 	int i;
- 
-+	if (trans->ini_valid) {
-+		if (!trans->num_blocks)
-+			return;
-+
-+		iwl_write_prph(trans, MON_BUFF_BASE_ADDR_VER2,
-+			       trans->fw_mon[0].physical >>
-+			       MON_BUFF_SHIFT_VER2);
-+		iwl_write_prph(trans, MON_BUFF_END_ADDR_VER2,
-+			       (trans->fw_mon[0].physical +
-+				trans->fw_mon[0].size - 256) >>
-+			       MON_BUFF_SHIFT_VER2);
-+		return;
-+	}
-+
- 	IWL_INFO(trans, "Applying debug destination %s\n",
- 		 get_fw_dbg_mode_string(dest->monitor_mode));
- 
-@@ -1026,7 +1040,7 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
- 				       (trans->fw_mon[0].physical +
- 					trans->fw_mon[0].size) >> 4);
- 		}
--	} else if (trans->dbg_dest_tlv) {
-+	} else if (iwl_pcie_dbg_on(trans)) {
- 		iwl_pcie_apply_destination(trans);
- 	}
- 
-@@ -1047,7 +1061,7 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 	IWL_DEBUG_FW(trans, "working with %s CPU\n",
- 		     image->is_dual_cpus ? "Dual" : "Single");
- 
--	if (trans->dbg_dest_tlv)
-+	if (iwl_pcie_dbg_on(trans))
- 		iwl_pcie_apply_destination(trans);
- 
- 	IWL_DEBUG_POWER(trans, "Original WFPM value = 0x%08X\n",
-@@ -3015,6 +3029,34 @@ iwl_trans_pci_dump_marbh_monitor(struct iwl_trans *trans,
- 	return monitor_len;
- }
- 
-+static void
-+iwl_trans_pcie_dump_pointers(struct iwl_trans *trans,
-+			     struct iwl_fw_error_dump_fw_mon *fw_mon_data)
-+{
-+	u32 base, write_ptr, wrap_cnt;
-+
-+	/* If there was a dest TLV - use the values from there */
-+	if (trans->ini_valid) {
-+		base = MON_BUFF_BASE_ADDR_VER2;
-+		write_ptr = MON_BUFF_WRPTR_VER2;
-+		wrap_cnt = MON_BUFF_CYCLE_CNT_VER2;
-+	} else if (trans->dbg_dest_tlv) {
-+		write_ptr = le32_to_cpu(trans->dbg_dest_tlv->write_ptr_reg);
-+		wrap_cnt = le32_to_cpu(trans->dbg_dest_tlv->wrap_count);
-+		base = le32_to_cpu(trans->dbg_dest_tlv->base_reg);
-+	} else {
-+		base = MON_BUFF_BASE_ADDR;
-+		write_ptr = MON_BUFF_WRPTR;
-+		wrap_cnt = MON_BUFF_CYCLE_CNT;
-+	}
-+	fw_mon_data->fw_mon_wr_ptr =
-+		cpu_to_le32(iwl_read_prph(trans, write_ptr));
-+	fw_mon_data->fw_mon_cycle_cnt =
-+		cpu_to_le32(iwl_read_prph(trans, wrap_cnt));
-+	fw_mon_data->fw_mon_base_ptr =
-+		cpu_to_le32(iwl_read_prph(trans, base));
-+}
-+
- static u32
- iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 			    struct iwl_fw_error_dump_data **data,
-@@ -3024,30 +3066,14 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 
- 	if ((trans->num_blocks &&
- 	     trans->cfg->device_family == IWL_DEVICE_FAMILY_7000) ||
--	    trans->dbg_dest_tlv) {
-+	     (trans->dbg_dest_tlv && !trans->ini_valid) ||
-+	     (trans->ini_valid && trans->num_blocks)) {
- 		struct iwl_fw_error_dump_fw_mon *fw_mon_data;
--		u32 base, write_ptr, wrap_cnt;
+@@ -999,19 +1000,13 @@ static void iwl_mvm_decode_he_phy_data(struct iwl_mvm *mvm,
+ 				       struct ieee80211_rx_status *rx_status,
+ 				       u32 rate_n_flags, int queue)
+ {
+-	enum iwl_rx_phy_info_type info_type;
 -
--		/* If there was a dest TLV - use the values from there */
--		if (trans->dbg_dest_tlv) {
--			write_ptr =
--				le32_to_cpu(trans->dbg_dest_tlv->write_ptr_reg);
--			wrap_cnt = le32_to_cpu(trans->dbg_dest_tlv->wrap_count);
--			base = le32_to_cpu(trans->dbg_dest_tlv->base_reg);
--		} else {
--			base = MON_BUFF_BASE_ADDR;
--			write_ptr = MON_BUFF_WRPTR;
--			wrap_cnt = MON_BUFF_CYCLE_CNT;
--		}
+-	info_type = le32_get_bits(phy_data->d1, IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
+-
+-	switch (info_type) {
++	switch (phy_data->info_type) {
+ 	case IWL_RX_PHY_INFO_TYPE_NONE:
+ 	case IWL_RX_PHY_INFO_TYPE_CCK:
+ 	case IWL_RX_PHY_INFO_TYPE_OFDM_LGCY:
+-		return;
+ 	case IWL_RX_PHY_INFO_TYPE_HT:
+ 	case IWL_RX_PHY_INFO_TYPE_VHT_SU:
+ 	case IWL_RX_PHY_INFO_TYPE_VHT_MU:
+-		/* TODO: we have LSIG-LEN, where do we put it? */
+ 		return;
+ 	case IWL_RX_PHY_INFO_TYPE_HE_TB_EXT:
+ 		he->data1 |= cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE_KNOWN |
+@@ -1075,7 +1070,7 @@ static void iwl_mvm_decode_he_phy_data(struct iwl_mvm *mvm,
+ 		break;
+ 	}
  
- 		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FW_MONITOR);
- 		fw_mon_data = (void *)(*data)->data;
--		fw_mon_data->fw_mon_wr_ptr =
--			cpu_to_le32(iwl_read_prph(trans, write_ptr));
--		fw_mon_data->fw_mon_cycle_cnt =
--			cpu_to_le32(iwl_read_prph(trans, wrap_cnt));
--		fw_mon_data->fw_mon_base_ptr =
--			cpu_to_le32(iwl_read_prph(trans, base));
+-	switch (info_type) {
++	switch (phy_data->info_type) {
+ 	case IWL_RX_PHY_INFO_TYPE_HE_MU_EXT:
+ 		he_mu->flags1 |=
+ 			le16_encode_bits(le16_get_bits(phy_data->d4,
+@@ -1119,7 +1114,7 @@ static void iwl_mvm_decode_he_phy_data(struct iwl_mvm *mvm,
+ }
+ 
+ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+-			  struct iwl_rx_mpdu_desc *desc,
++			  struct iwl_mvm_rx_phy_data *phy_data,
+ 			  u32 rate_n_flags, u16 phy_info, int queue)
+ {
+ 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+@@ -1144,33 +1139,13 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				      IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN),
+ 	};
+ 	unsigned int radiotap_len = 0;
+-	struct iwl_mvm_rx_phy_data phy_data = {
+-		.d4 = desc->phy_data4,
+-	};
+-	enum iwl_rx_phy_info_type info_type = IWL_RX_PHY_INFO_TYPE_NONE;
+-
+-	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
+-		phy_data.d0 = desc->v3.phy_data0;
+-		phy_data.d1 = desc->v3.phy_data1;
+-		phy_data.d2 = desc->v3.phy_data2;
+-		phy_data.d3 = desc->v3.phy_data3;
+-	} else {
+-		phy_data.d0 = desc->v1.phy_data0;
+-		phy_data.d1 = desc->v1.phy_data1;
+-		phy_data.d2 = desc->v1.phy_data2;
+-		phy_data.d3 = desc->v1.phy_data3;
+-	}
+-
+-	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
+-		info_type = le32_get_bits(phy_data.d1,
+-					  IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
+ 
+ 	he = skb_put_data(skb, &known, sizeof(known));
+ 	radiotap_len += sizeof(known);
+ 	rx_status->flag |= RX_FLAG_RADIOTAP_HE;
+ 
+-	if (info_type == IWL_RX_PHY_INFO_TYPE_HE_MU ||
+-	    info_type == IWL_RX_PHY_INFO_TYPE_HE_MU_EXT) {
++	if (phy_data->info_type == IWL_RX_PHY_INFO_TYPE_HE_MU ||
++	    phy_data->info_type == IWL_RX_PHY_INFO_TYPE_HE_MU_EXT) {
+ 		he_mu = skb_put_data(skb, &mu_known, sizeof(mu_known));
+ 		radiotap_len += sizeof(mu_known);
+ 		rx_status->flag |= RX_FLAG_RADIOTAP_HE_MU;
+@@ -1179,18 +1154,18 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	/* temporarily hide the radiotap data */
+ 	__skb_pull(skb, radiotap_len);
+ 
+-	if (info_type == IWL_RX_PHY_INFO_TYPE_HE_SU) {
++	if (phy_data->info_type == IWL_RX_PHY_INFO_TYPE_HE_SU) {
+ 		/* report the AMPDU-EOF bit on single frames */
+ 		if (!queue && !(phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
+ 			rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
+ 			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+-			if (phy_data.d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
++			if (phy_data->d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+ 		}
+ 	}
+ 
+ 	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
+-		iwl_mvm_decode_he_phy_data(mvm, &phy_data, he, he_mu, rx_status,
++		iwl_mvm_decode_he_phy_data(mvm, phy_data, he, he_mu, rx_status,
+ 					   rate_n_flags, queue);
+ 
+ 	/* update aggregation data for monitor sake on default queue */
+@@ -1203,7 +1178,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		    (he_type == RATE_MCS_HE_TYPE_MU ||
+ 		     he_type == RATE_MCS_HE_TYPE_SU)) {
+ 			rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT_KNOWN;
+-			if (phy_data.d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
++			if (phy_data->d0 & cpu_to_le32(IWL_RX_PHY_DATA0_HE_DELIM_EOF))
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+ 		}
+ 	}
+@@ -1290,6 +1265,33 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				      IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
+ }
+ 
++static void iwl_mvm_decode_lsig(struct sk_buff *skb,
++				struct iwl_mvm_rx_phy_data *phy_data)
++{
++	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
++	struct ieee80211_radiotap_lsig *lsig;
 +
-+		iwl_trans_pcie_dump_pointers(trans, fw_mon_data);
++	switch (phy_data->info_type) {
++	case IWL_RX_PHY_INFO_TYPE_HT:
++	case IWL_RX_PHY_INFO_TYPE_VHT_SU:
++	case IWL_RX_PHY_INFO_TYPE_VHT_MU:
++	case IWL_RX_PHY_INFO_TYPE_HE_TB_EXT:
++	case IWL_RX_PHY_INFO_TYPE_HE_SU:
++	case IWL_RX_PHY_INFO_TYPE_HE_MU:
++	case IWL_RX_PHY_INFO_TYPE_HE_MU_EXT:
++	case IWL_RX_PHY_INFO_TYPE_HE_TB:
++		lsig = skb_put(skb, sizeof(*lsig));
++		lsig->data1 = cpu_to_le16(IEEE80211_RADIOTAP_LSIG_DATA1_LENGTH_KNOWN);
++		lsig->data2 = le16_encode_bits(le32_get_bits(phy_data->d1,
++							     IWL_RX_PHY_DATA1_LSIG_LEN_MASK),
++					       IEEE80211_RADIOTAP_LSIG_DATA2_LENGTH);
++		rx_status->flag |= RX_FLAG_RADIOTAP_LSIG;
++		break;
++	default:
++		break;
++	}
++}
++
+ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			struct iwl_rx_cmd_buffer *rxb, int queue)
+ {
+@@ -1304,6 +1306,10 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct sk_buff *skb;
+ 	u8 crypt_len = 0, channel, energy_a, energy_b;
+ 	size_t desc_size;
++	struct iwl_mvm_rx_phy_data phy_data = {
++		.d4 = desc->phy_data4,
++		.info_type = IWL_RX_PHY_INFO_TYPE_NONE,
++	};
  
- 		len += sizeof(**data) + sizeof(*fw_mon_data);
- 		if (trans->num_blocks) {
-@@ -3057,6 +3083,7 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
+ 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
+ 		return;
+@@ -1315,6 +1321,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		energy_a = desc->v3.energy_a;
+ 		energy_b = desc->v3.energy_b;
+ 		desc_size = sizeof(*desc);
++
++		phy_data.d0 = desc->v3.phy_data0;
++		phy_data.d1 = desc->v3.phy_data1;
++		phy_data.d2 = desc->v3.phy_data2;
++		phy_data.d3 = desc->v3.phy_data3;
+ 	} else {
+ 		rate_n_flags = le32_to_cpu(desc->v1.rate_n_flags);
+ 		channel = desc->v1.channel;
+@@ -1322,8 +1333,18 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		energy_a = desc->v1.energy_a;
+ 		energy_b = desc->v1.energy_b;
+ 		desc_size = IWL_RX_DESC_SIZE_V1;
++
++		phy_data.d0 = desc->v1.phy_data0;
++		phy_data.d1 = desc->v1.phy_data1;
++		phy_data.d2 = desc->v1.phy_data2;
++		phy_data.d3 = desc->v1.phy_data3;
+ 	}
  
- 			monitor_len = trans->fw_mon[0].size;
- 		} else if (trans->dbg_dest_tlv->monitor_mode == SMEM_MODE) {
-+			u32 base = le32_to_cpu(fw_mon_data->fw_mon_base_ptr);
- 			/*
- 			 * Update pointers to reflect actual values after
- 			 * shifting
++	if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
++		phy_data.info_type =
++			le32_get_bits(phy_data.d1,
++				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
++
+ 	hdr = (void *)(pkt->data + desc_size);
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	 * ieee80211_hdr pulled.
+@@ -1362,7 +1383,10 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	}
+ 
+ 	if (rate_n_flags & RATE_MCS_HE_MSK)
+-		iwl_mvm_rx_he(mvm, skb, desc, rate_n_flags, phy_info, queue);
++		iwl_mvm_rx_he(mvm, skb, &phy_data, rate_n_flags,
++			      phy_info, queue);
++
++	iwl_mvm_decode_lsig(skb, &phy_data);
+ 
+ 	rx_status = IEEE80211_SKB_RXCB(skb);
+ 
 -- 
 2.19.1
 
