@@ -2,153 +2,157 @@ Return-Path: <SRS0=Fc74=OH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD73EC43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 619E5C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:59:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D5BB206B6
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:43:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 7D5BB206B6
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
+	by mail.kernel.org (Postfix) with ESMTP id ECBB42081B
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:59:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AwkpdNOH"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ECBB42081B
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728827AbeK2CpU convert rfc822-to-8bit (ORCPT
+        id S1728488AbeK2DBf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Nov 2018 21:45:20 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:38552 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728217AbeK2CpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Nov 2018 21:45:20 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8D6DBC05000B;
-        Wed, 28 Nov 2018 15:43:15 +0000 (UTC)
-Received: from localhost (ovpn-200-34.brq.redhat.com [10.40.200.34])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3653F100191D;
-        Wed, 28 Nov 2018 15:43:07 +0000 (UTC)
-Date:   Wed, 28 Nov 2018 16:43:06 +0100
-From:   Jesper Dangaard Brouer <brouer@redhat.com>
-To:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@toke.dk>
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, nbd@nbd.name, brouer@redhat.com,
-        Daniel Borkmann <borkmann@iogearbox.net>,
-        Alexei Starovoitov <alexei.starovoitov@gmail.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
-Message-ID: <20181128164306.0135ca83@redhat.com>
-In-Reply-To: <87bm69v0ol.fsf@toke.dk>
-References: <cover.1543343124.git.lorenzo.bianconi@redhat.com>
-        <8736rla4ow.fsf@purkki.adurom.net>
-        <20181128104436.GA2298@localhost.localdomain>
-        <87bm69v0ol.fsf@toke.dk>
+        Wed, 28 Nov 2018 22:01:35 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:39863 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727979AbeK2DBf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Nov 2018 22:01:35 -0500
+Received: by mail-oi1-f196.google.com with SMTP id i6so11350326oia.6
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 07:59:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aJDqJJTJolXdIGj9SNnXtEE8GQr9n2a3zzx7Jjsq0Sw=;
+        b=AwkpdNOHJlYynHLzv5ukeoepeztaB+dARk38ydgPQ1jK3k7T2ofgqYevhC6lBO+Ve+
+         6XarK5bdlPyZ3qI/GQDySS7mpstvzsDLhcteJTWktsz1icVJrWKx8+7Monp96eWSidqm
+         /xEW3CaNOPjP0dDNFQm10pxEXCkX67e9eVyxBJw2K/OGyOCdddM9JH0OTtHbIAdedlQp
+         mfBYTdmC4ErPYdc9y7i6s+C77bSpR9WCq98MDBuAPGfDiIAZ+eiqt21xvkenQNBUAwSX
+         PRhmXaJYc17e88rddxpn4gP7WGXcD2UqLmS7sL05AjuQH00oxhxLCO51F52qzHKJqqYQ
+         rF7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aJDqJJTJolXdIGj9SNnXtEE8GQr9n2a3zzx7Jjsq0Sw=;
+        b=XdzPRvWCnkfUp256t5N/HM2oYhJiqitE3SK1h885j7OCUT+Ox75mZYlxpdnlFKWxpR
+         f9h3WuWxdQlLSYTBePXvleHdGUzgOhpGRLlmxMAtXpTDe2tSwszNeb/tNn/x+GZpJBn0
+         +OIdC/1oHDzsXKWEUqDQtEMV2RVdZAeMvSMhsLGincHE1A84W6Yaxi0eoZSMfc5qQ/lm
+         JcOiGmDL+MgLDAY5ZwHKcx6TCkoFVO1Yj3b8Jc06iE9bik+gqtb5kXbGF0sFujQAT0H6
+         zB7FodGqutHEzSBBLXgGhWJJMWug1XlmolidtL6v+Cc+V2khefV4nXwRuZDBsWMA/CgV
+         CYCg==
+X-Gm-Message-State: AGRZ1gKmUPHbIY4y1wTi6IgWe+QBtVspyzofJOeQa5MX/v6jvaeRqGSb
+        +rY9dMfvCMap9koVW/jLIDoyGp4Xy2olmTuHbeY=
+X-Google-Smtp-Source: AJdET5dJKJZQxfLSSdgMOIRLMRmDW0OwGiP52FtryZrpoVAdvFDMVKjwpR4KR9F+s7yBlHvlCbMLsrR5tjreppgwNGQ=
+X-Received: by 2002:aca:d056:: with SMTP id h83mr21989309oig.67.1543420766568;
+ Wed, 28 Nov 2018 07:59:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 28 Nov 2018 15:43:15 +0000 (UTC)
+References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
+ <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com> <1510916848.26896.2.camel@nxp.com>
+ <5A0EDC25.7030505@broadcom.com> <1510932224.22506.0.camel@nxp.com>
+ <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com> <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
+ <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
+ <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
+ <1512413992.18900.3.camel@nxp.com> <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
+ <1512485878.9392.1.camel@nxp.com> <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
+ <5A5E5EBE.7040301@broadcom.com> <1516276016.8817.1.camel@nxp.com>
+ <5A61B43C.4000305@broadcom.com> <1521646672.13983.1.camel@nxp.com>
+ <5AB4C8D5.40203@broadcom.com> <1521810882.19239.1.camel@nxp.com>
+ <1522067092.4780.3.camel@nxp.com> <1522071220.8102.0.camel@nxp.com>
+ <05ab43bd-0033-fc45-a992-0a20b91a0e74@broadcom.com> <CABACg+wyLwYQna+HDJyjNA8V1_3cSoMRDyiBpq=K+UXVXDrtBQ@mail.gmail.com>
+ <CAHWfWzm8Zwjc2tBQWVqpaa-cMYyEPWmUKYN7rspyb9W9spx2iQ@mail.gmail.com> <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
+In-Reply-To: <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
+From:   Fabio Estevam <festevam@gmail.com>
+Date:   Wed, 28 Nov 2018 13:59:19 -0200
+Message-ID: <CAOMZO5DtqVBkWuD0iR5JHEG4G-MoWYYxU8aSu99rW8mpd3+PYQ@mail.gmail.com>
+Subject: Re: AP6335 with mainline kernel
+To:     cameron@paloaltoinnovation.com
+Cc:     Vanessa Ayumi Maegima <van.ayumi@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Vanessa Maegima <vanessa.maegima@nxp.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        embed3d@gmail.com, John Weber <john.weber@technexion.com>,
+        Otavio Salvador <otavio@ossystems.com.br>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 28 Nov 2018 13:36:26 +0100
-Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+Hi Cameron,
 
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-> 
-> >> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-> >>   
-> >> > This series is intended as a playground to start experimenting/developing
-> >> > with XDP/eBPF over WiFi and collect ideas/concerns about it.
-> >> > Introduce XDP support to mt76x2e/mt76x0e drivers. Currently supported
-> >> > actions are:
-> >> > - XDP_PASS
-> >> > - XDP_ABORTED
-> >> > - XDP_DROP
-> >> > Introduce ndo_bpf mac80211 callback in order to to load a bpf
-> >> > program into low level driver XDP rx hook.
-> >> > This series has been tested through a simple bpf program (available here:
-> >> > https://github.com/LorenzoBianconi/bpf-workspace/tree/master/mt76_xdp_stats)
-> >> > used to count frame types received by the device.
-> >> > Possible eBPF use cases could be:
-> >> > - implement new statistics through bpf maps
-> >> > - implement fast packet filtering (e.g in monitor mode)
-> >> > - ...  
-> >
-> > Hi Kalle,
-> >  
-> >> 
-> >> This is most likely a stupid question, but why do this in the driver and
-> >> not in mac80211 so that all drivers could benefit from it? I guess there
-> >> are reasons for that, I just can't figure that out.  
-> 
-> XDP achieves its speedup by running the eBPF program inside the driver
-> NAPI loop, before the kernel even touches the data in any other capacity
-> (and in particular, before it allocates an SKB). Which kinda means the
-> hook needs to be in the driver... Could be a fallback in mac80211,
-> though; although we'd have to figure out how that interacts with Generic
-> XDP.
-> 
-> > This is an early stage implementation, at this point I would collect
-> > other people opinions/concerns about using bpf/xdp directly on 802.11
-> > frames.  
-> 
-> Thanks for looking into this!
-> 
-> I have two concerns with running XDP on 802.11 frames:
-> 
-> 1. It makes it more difficult to add other XDP actions (such as
->    REDIRECT), as the XDP program would then have to make sure that the
->    outer packet headers are removed before, say, redirecting the packet
->    out of an ethernet interface. Also, if we do add redirect, we would
->    be bypassing mac80211 entirely; to what extent would that mess up
->    internal state?
-> 
-> 2. UI consistency; suddenly, the user needs to know which kind of
->    frames to expect, and XDP program reuse becomes more difficult. This
->    may be unavoidable given the nature of XDP, but some thought needs to
->    go into this. Especially since we wouldn't necessarily be consistent
->    between WiFi drivers (there are fullmac devices that remove 802.11
->    headers before sending up the frame, right?).
-> 
-> 
-> Adding in Jesper; maybe he has some thoughts on this?
+On Sat, Nov 17, 2018 at 5:10 PM Fabio Estevam <festevam@gmail.com> wrote:
 
-Today XDP assumes the frame is an Ethernet frame.  With WiFi I guess
-this assumption change, right?
-  I worry a bit about this, as XDP is all about performance, and I don't
-want to add performance regressions, by requiring all XDP programs or
-core-code to having to check-frame-type before proceeding. That said, I
-do think it is doable, without adding performance regressions.
+> Could you please test the following patch against mainline that
+> implements this suggestion?
+> http://dark-code.bulix.org/4m18pb-507579
 
-Option #1 is to move the check-frame-type to setup time.  By either
-having frame-type be part of eBPF prog, or supply frame-type as option
-XDP attach call.  And then reject attaching XDP prog to a device, where
-the expected frame-type does not match.
+I finally managed to get Wifi working on the imx7d-pico-pi board using
+mainline 4.19.2 without any dts change.
 
-Option#2, leave it up to eBPF-programmer if they want to add runtime
-checks.  By extending xdp_rxq_info with frame-type (default to
-Ethernet), which allow the eBPF-programmer choose to write a generic
-XDP program that both work on Ethernet and WiFi, or skip-check as they
-know this will e.g. only run on Wifi.  (Note xdp_rxq_info is static
-read-only info per RX-queue, will all Wifi frames have same frame-type?.
+Only change I needed was the one suggested by Arend in the nvram file:
+changed boardflags3 entry.from 0x08101188 to 0x101188.
 
+With this change I get:
 
-Also consider what happens in case of XDP_REDIRECT, from a Wifi NIC to
-an Ethernet NIC.  It would of-cause be cool to get this working cross,
-Wifi-Ethernet.
+# iwconfig wlan0 essid ACCESSPOINT
+# wpa_passphrase ACCESSPOINT > /etc/wpa.conf
+*****
+# wpa_supplicant -Dwext -iwlan0 -c /etc/wpa.conf &
+# Successfully initialized wpa_supplicant
+[   59.091981] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   59.310095] brcmfmac: brcmf_run_escan: error (-52)
+[   59.314949] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
+ioctl[SIOCSIWSCAN]: Invalid exchange
+wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
+[   60.327177] brcmfmac: brcmf_run_escan: error (-52)
+[   60.332152] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
+ioctl[SIOCSIWSCAN]: Invalid exchange
+wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
+[   61.344358] brcmfmac: brcmf_run_escan: error (-52)
+[   61.349198] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
+ioctl[SIOCSIWSCAN]: Invalid exchange
+wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
+wlan0: Trying to associate with 94:2c:b3:31:dc:xx (SSID='ACCESSPOINT'
+freq=2462 MHz)
+wlan0: Associated with 94:2c:b3:31:dc:xx
+wlan0: [   65.266683] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+WPA: Key negotiation completed with 94:2c:b3:31:dc:xx [PTK=CCMP GTK=TKIP]
+wlan0: CTRL-EVENT-CONNECTED - Connection to 94:2c:b3:31:dc:xx
+completed [id=0 id_str=]
 
-Option#3 is to say, Wifi XDP is so different that we should create a
-new (enum) bpf_prog_type.  And then still see if we can leverage some
-of the same core-code (as long as it doesn't slowdown performance).
+# udhcpc -i wlan0
+udhcpc: started, v1.29.3
+[   73.015896] random: mktemp: uninitialized urandom read (6 bytes read)
+udhcpc: sending discover
+udhcpc: sending select for 192.168.0.14
+udhcpc: lease of 192.168.0.14 obtained, lease time 3600
+[   74.354463] brcmfmac: brcmf_inetaddr_changed: fail to get arp ip
+table err:-52
+deleting routers
+[   74.390701] random: mktemp: uninitialized urandom read (6 bytes read)
+adding dns 201.82.0.66
+adding dns 201.82.0.61
+adding dns 201.6.4.116
+#
+# ping google.com
+PING google.com (216.58.202.174): 56 data bytes
+64 bytes from 216.58.202.174: seq=0 ttl=50 time=26.328 ms
+64 bytes from 216.58.202.174: seq=1 ttl=50 time=22.751 ms
+64 bytes from 216.58.202.174: seq=2 ttl=50 time=48.735 ms
+64 bytes from 216.58.202.174: seq=3 ttl=50 time=58.955 ms
 
--- 
-Best regards,
-  Jesper Dangaard Brouer
-  MSc.CS, Principal Kernel Engineer at Red Hat
-  LinkedIn: http://www.linkedin.com/in/brouer
+If I change the dts as per my last patch the Wifi does not work.
+
+Regards,
+
+Fabio Estevam
