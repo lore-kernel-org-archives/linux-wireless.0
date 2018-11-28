@@ -4,57 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619E5C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:59:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F46C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 16:23:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECBB42081B
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 15:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17C1E2086B
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 16:23:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AwkpdNOH"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org ECBB42081B
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="odaV5HVU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17C1E2086B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728488AbeK2DBf (ORCPT
+        id S1728854AbeK2D0G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Nov 2018 22:01:35 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:39863 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727979AbeK2DBf (ORCPT
+        Wed, 28 Nov 2018 22:26:06 -0500
+Received: from mail-oi1-f176.google.com ([209.85.167.176]:45066 "EHLO
+        mail-oi1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728000AbeK2D0G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Nov 2018 22:01:35 -0500
-Received: by mail-oi1-f196.google.com with SMTP id i6so11350326oia.6
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 07:59:27 -0800 (PST)
+        Wed, 28 Nov 2018 22:26:06 -0500
+Received: by mail-oi1-f176.google.com with SMTP id b141so23026983oii.12
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 08:23:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=aJDqJJTJolXdIGj9SNnXtEE8GQr9n2a3zzx7Jjsq0Sw=;
-        b=AwkpdNOHJlYynHLzv5ukeoepeztaB+dARk38ydgPQ1jK3k7T2ofgqYevhC6lBO+Ve+
-         6XarK5bdlPyZ3qI/GQDySS7mpstvzsDLhcteJTWktsz1icVJrWKx8+7Monp96eWSidqm
-         /xEW3CaNOPjP0dDNFQm10pxEXCkX67e9eVyxBJw2K/OGyOCdddM9JH0OTtHbIAdedlQp
-         mfBYTdmC4ErPYdc9y7i6s+C77bSpR9WCq98MDBuAPGfDiIAZ+eiqt21xvkenQNBUAwSX
-         PRhmXaJYc17e88rddxpn4gP7WGXcD2UqLmS7sL05AjuQH00oxhxLCO51F52qzHKJqqYQ
-         rF7g==
+        bh=0mKmQl7EZtUVJ9cZl01dqRiU/qBmxIrcOm3xLOxxfnQ=;
+        b=odaV5HVUae75jGt73QZfUnoFx1wiU9Bs2PXnVevyw22P+qz7H6t7C079u3HelIdVz/
+         +wnzaUNqW3LYqKOrwY5APjTyhTi2qXGATIOWIYr0Pd5JqgvrQhJ4Ngho7n96q264Jl/3
+         c+chVCXaAJkU7Tj1fL5G6CfHy8FAtaxTWRxLutJTkTsrPHDZAzQ04POGwfY5D4OLB3Sz
+         TogLCOi9ZjmSsIqApftVebOZnufEf1vx48SSz899nBPi/wqqn7SWvbpO2Z4dkd4/M1hX
+         2KoBI/1UgvIh/yDQ/kiUGh65nxoat31ikvGWEs4RxrC8OvsgztKraWD04vuoJBSrVjuv
+         sP1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=aJDqJJTJolXdIGj9SNnXtEE8GQr9n2a3zzx7Jjsq0Sw=;
-        b=XdzPRvWCnkfUp256t5N/HM2oYhJiqitE3SK1h885j7OCUT+Ox75mZYlxpdnlFKWxpR
-         f9h3WuWxdQlLSYTBePXvleHdGUzgOhpGRLlmxMAtXpTDe2tSwszNeb/tNn/x+GZpJBn0
-         +OIdC/1oHDzsXKWEUqDQtEMV2RVdZAeMvSMhsLGincHE1A84W6Yaxi0eoZSMfc5qQ/lm
-         JcOiGmDL+MgLDAY5ZwHKcx6TCkoFVO1Yj3b8Jc06iE9bik+gqtb5kXbGF0sFujQAT0H6
-         zB7FodGqutHEzSBBLXgGhWJJMWug1XlmolidtL6v+Cc+V2khefV4nXwRuZDBsWMA/CgV
-         CYCg==
-X-Gm-Message-State: AGRZ1gKmUPHbIY4y1wTi6IgWe+QBtVspyzofJOeQa5MX/v6jvaeRqGSb
-        +rY9dMfvCMap9koVW/jLIDoyGp4Xy2olmTuHbeY=
-X-Google-Smtp-Source: AJdET5dJKJZQxfLSSdgMOIRLMRmDW0OwGiP52FtryZrpoVAdvFDMVKjwpR4KR9F+s7yBlHvlCbMLsrR5tjreppgwNGQ=
-X-Received: by 2002:aca:d056:: with SMTP id h83mr21989309oig.67.1543420766568;
- Wed, 28 Nov 2018 07:59:26 -0800 (PST)
+        bh=0mKmQl7EZtUVJ9cZl01dqRiU/qBmxIrcOm3xLOxxfnQ=;
+        b=JcUu5xrHUpyUwswbyV7ix4zXq7wbvl1K2CxWnVnskYGrv5Orq0omkb8dJBj3d7OOc5
+         Qvp2qgN+I1EKrBqBmW3gyRfxFSUDF2ITiN3CvAzdsFt9Ban/6cP/xd8br8RVi5mxeyNh
+         BPj25QqOSB8NPRTUvOlAIEUQ0F7xwd599BEauoUsScCpUDR6aAuM5e9plitOtFzRIInj
+         g9HNNjkDfZdf4EaMbMYj07BUYO+VSvg1H5Bju6N5XiHkj/ynlJrpqa0B1EzuAX0tEG/C
+         VHPFrQukmQ7/V+HtAi6rcwTjgnN5Gh3tPG4PZ0KfvtGkc9SV6LuMX6cpvi7w63618YMC
+         5j/w==
+X-Gm-Message-State: AGRZ1gJxM+GBUkBiZ3AUCtROjItIj6YYO+jO0UmSgUJpC6zuYlZmfcSp
+        WvsACeMFf9GrMWgcgMRoCpZbYM/kX911+V6TQ/m/2xzA
+X-Google-Smtp-Source: AJdET5dEjhlrI51O6Ulqv9KpRGqMJDW1vaSd7DmQsQEjZ62CTyZmrc6zOzKeJ+I08alNVeLwg5xNyPVQi+NllPu3Fbc=
+X-Received: by 2002:aca:cdd0:: with SMTP id d199mr22198852oig.266.1543422233494;
+ Wed, 28 Nov 2018 08:23:53 -0800 (PST)
 MIME-Version: 1.0
 References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
  <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com> <1510916848.26896.2.camel@nxp.com>
@@ -69,15 +69,17 @@ References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
  <5AB4C8D5.40203@broadcom.com> <1521810882.19239.1.camel@nxp.com>
  <1522067092.4780.3.camel@nxp.com> <1522071220.8102.0.camel@nxp.com>
  <05ab43bd-0033-fc45-a992-0a20b91a0e74@broadcom.com> <CABACg+wyLwYQna+HDJyjNA8V1_3cSoMRDyiBpq=K+UXVXDrtBQ@mail.gmail.com>
- <CAHWfWzm8Zwjc2tBQWVqpaa-cMYyEPWmUKYN7rspyb9W9spx2iQ@mail.gmail.com> <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
-In-Reply-To: <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
+ <CAHWfWzm8Zwjc2tBQWVqpaa-cMYyEPWmUKYN7rspyb9W9spx2iQ@mail.gmail.com>
+ <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
+ <CAOMZO5DtqVBkWuD0iR5JHEG4G-MoWYYxU8aSu99rW8mpd3+PYQ@mail.gmail.com> <CAF7Mx6p1DpRieCKy_1qOE5YT4_76UO8vhLMBFUD2B0FrQ9BJGw@mail.gmail.com>
+In-Reply-To: <CAF7Mx6p1DpRieCKy_1qOE5YT4_76UO8vhLMBFUD2B0FrQ9BJGw@mail.gmail.com>
 From:   Fabio Estevam <festevam@gmail.com>
-Date:   Wed, 28 Nov 2018 13:59:19 -0200
-Message-ID: <CAOMZO5DtqVBkWuD0iR5JHEG4G-MoWYYxU8aSu99rW8mpd3+PYQ@mail.gmail.com>
+Date:   Wed, 28 Nov 2018 14:23:45 -0200
+Message-ID: <CAOMZO5Ah9CLGud3seRcru8Roy3-ChSVDRhiM4ojvMh1XrcDUOg@mail.gmail.com>
 Subject: Re: AP6335 with mainline kernel
-To:     cameron@paloaltoinnovation.com
-Cc:     Vanessa Ayumi Maegima <van.ayumi@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc:     cameron@paloaltoinnovation.com,
+        Vanessa Ayumi Maegima <van.ayumi@gmail.com>,
         Vanessa Maegima <vanessa.maegima@nxp.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         embed3d@gmail.com, John Weber <john.weber@technexion.com>,
@@ -88,71 +90,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Cameron,
+Hi Arend,
 
-On Sat, Nov 17, 2018 at 5:10 PM Fabio Estevam <festevam@gmail.com> wrote:
+On Wed, Nov 28, 2018 at 2:11 PM Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
 
-> Could you please test the following patch against mainline that
-> implements this suggestion?
-> http://dark-code.bulix.org/4m18pb-507579
+> Does it mean there is a regression in 4.20 for this board?
 
-I finally managed to get Wifi working on the imx7d-pico-pi board using
-mainline 4.19.2 without any dts change.
+I haven't tested it with 4.20 yet.
 
-Only change I needed was the one suggested by Arend in the nvram file:
-changed boardflags3 entry.from 0x08101188 to 0x101188.
+>> Only change I needed was the one suggested by Arend in the nvram file:
+>> changed boardflags3 entry.from 0x08101188 to 0x101188.
+>
+>
+> Yes. That is understood. However, an external LPO clock may be more reliable than using the internal, which is consequence of changing boardflags3.
 
-With this change I get:
+Just to make sure I understand the change:
 
-# iwconfig wlan0 essid ACCESSPOINT
-# wpa_passphrase ACCESSPOINT > /etc/wpa.conf
-*****
-# wpa_supplicant -Dwext -iwlan0 -c /etc/wpa.conf &
-# Successfully initialized wpa_supplicant
-[   59.091981] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   59.310095] brcmfmac: brcmf_run_escan: error (-52)
-[   59.314949] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
-ioctl[SIOCSIWSCAN]: Invalid exchange
-wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
-[   60.327177] brcmfmac: brcmf_run_escan: error (-52)
-[   60.332152] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
-ioctl[SIOCSIWSCAN]: Invalid exchange
-wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
-[   61.344358] brcmfmac: brcmf_run_escan: error (-52)
-[   61.349198] brcmfmac: brcmf_cfg80211_scan: scan error (-52)
-ioctl[SIOCSIWSCAN]: Invalid exchange
-wlan0: CTRL-EVENT-SCAN-FAILED ret=-1 retry=1
-wlan0: Trying to associate with 94:2c:b3:31:dc:xx (SSID='ACCESSPOINT'
-freq=2462 MHz)
-wlan0: Associated with 94:2c:b3:31:dc:xx
-wlan0: [   65.266683] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-WPA: Key negotiation completed with 94:2c:b3:31:dc:xx [PTK=CCMP GTK=TKIP]
-wlan0: CTRL-EVENT-CONNECTED - Connection to 94:2c:b3:31:dc:xx
-completed [id=0 id_str=]
+boardflags3 0x08101188 --> Wifi uses an external clock
+boardflags3 0x101188 ---> Wifi uses an internal clock
 
-# udhcpc -i wlan0
-udhcpc: started, v1.29.3
-[   73.015896] random: mktemp: uninitialized urandom read (6 bytes read)
-udhcpc: sending discover
-udhcpc: sending select for 192.168.0.14
-udhcpc: lease of 192.168.0.14 obtained, lease time 3600
-[   74.354463] brcmfmac: brcmf_inetaddr_changed: fail to get arp ip
-table err:-52
-deleting routers
-[   74.390701] random: mktemp: uninitialized urandom read (6 bytes read)
-adding dns 201.82.0.66
-adding dns 201.82.0.61
-adding dns 201.6.4.116
-#
-# ping google.com
-PING google.com (216.58.202.174): 56 data bytes
-64 bytes from 216.58.202.174: seq=0 ttl=50 time=26.328 ms
-64 bytes from 216.58.202.174: seq=1 ttl=50 time=22.751 ms
-64 bytes from 216.58.202.174: seq=2 ttl=50 time=48.735 ms
-64 bytes from 216.58.202.174: seq=3 ttl=50 time=58.955 ms
+Current dts does not output the 32kHz from MX7D to the Wifi chip, so I
+guess the below is correct.
 
-If I change the dts as per my last patch the Wifi does not work.
+> So can the signal be measured with a scope to confirm it provides 32kHz?
 
-Regards,
+I am not sure if I can access this signal via scope.
 
-Fabio Estevam
+Thanks
