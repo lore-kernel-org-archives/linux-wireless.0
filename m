@@ -2,85 +2,94 @@ Return-Path: <SRS0=Fc74=OH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 645B0C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 14:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63FA8C43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 14:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F0F3206B6
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 14:00:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 221CF20832
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 14:19:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OYZ8KSQD";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jPdOAl+8"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0F0F3206B6
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="PH7VFqMk"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 221CF20832
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728236AbeK2BCG (ORCPT
+        id S1727970AbeK2BVN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Nov 2018 20:02:06 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:33694 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727982AbeK2BCG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Nov 2018 20:02:06 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 51EED60B26; Wed, 28 Nov 2018 14:00:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543413621;
-        bh=f95okssVqu5/kZ0dALYX6IF9C6oBKRHkfjpAu2DR+5k=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OYZ8KSQDv0B+6NBR8UnNz81y9Hi+jMTcXNOm9wBxyQH97Q/Rfq19N0ra936FPvPEF
-         kdJt4JE0BZfy3FNI/zWuw36uLjdF3Xr5bSiohircb+Q+XqtB04F3v4MqJZH/fEqwxK
-         Tmle1iPgh8FM3oeTA48rdm4FK2gA5CbNjcMYnGWg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C684B6147B;
-        Wed, 28 Nov 2018 14:00:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543413620;
-        bh=f95okssVqu5/kZ0dALYX6IF9C6oBKRHkfjpAu2DR+5k=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=jPdOAl+8phQzyKov4eR5rbhEcy2a4ucWSqk8js0VWBMo+5lNLe4ht3OY5J4KykbiT
-         sXEGc5bxy6Cloha+iinRWCNQEAsjv4ApVmqI7wnmUggwFKaeupwN/fh/P61J0UaMdF
-         Mp93nA2bMbABauS7kVCIuORPJQJtXH465yNtQy5o=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C684B6147B
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Govind Singh <govinds@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: update HOST capability qmi message
-References: <20181119113101.23359-1-govinds@codeaurora.org>
-Date:   Wed, 28 Nov 2018 16:00:16 +0200
-In-Reply-To: <20181119113101.23359-1-govinds@codeaurora.org> (Govind Singh's
-        message of "Mon, 19 Nov 2018 17:01:01 +0530")
-Message-ID: <87lg5d715b.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 28 Nov 2018 20:21:13 -0500
+Received: from mail.toke.dk ([52.28.52.200]:60457 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727832AbeK2BVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Nov 2018 20:21:13 -0500
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1543414762; bh=TLs8qIphhtmsSyX5+FmEBE5VmhgHnBNLRY3prgsC7Qs=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=PH7VFqMkL7wP63dNeLomzG/1J1JNsJp7TgPj/qy9NmGXxg2IwgmlXjGSrDGOpnx2D
+         kWYVoYbaF6q1p7iA+OmRGVwLJuAyTTENkUdhs9/YeJ2lZNJwuxx11iCJuhDA9t+2Vi
+         5o73OviEgggxkkkBc1olYxciWQjR2DN5vRFLVq+Lvw/QMPBxzHsNI9T9WP/U6wS+dr
+         GVuZSSh0TCnbW0HJIyoBTyXSvnMoTIVN8JnB1CJhxt116+hZpqnPG3MMTLX76uPDyc
+         iuJIKFU88Fmhcc5ztDxRBc6aAbXag64Csa6gIzweHH06Gi3R4aEI+mdwSjOMsoLIZo
+         n1uReZIzGUHwg==
+To:     =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>
+Cc:     lorenzo.bianconi@redhat.com, kvalo@codeaurora.org,
+        linux-wireless <linux-wireless@vger.kernel.org>, nbd@nbd.name,
+        brouer@redhat.com
+Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
+In-Reply-To: <CABvG-CWkb80iVR=Q-q9a-n0x8Yy9NJAYjnTsOhfErpiOz2SDCw@mail.gmail.com>
+References: <cover.1543343124.git.lorenzo.bianconi@redhat.com> <8736rla4ow.fsf@purkki.adurom.net> <20181128104436.GA2298@localhost.localdomain> <87bm69v0ol.fsf@toke.dk> <CABvG-CWkb80iVR=Q-q9a-n0x8Yy9NJAYjnTsOhfErpiOz2SDCw@mail.gmail.com>
+Date:   Wed, 28 Nov 2018 15:19:21 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <878t1duvx2.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Govind Singh <govinds@codeaurora.org> writes:
+Micha=C5=82 Kazior <kazikcz@gmail.com> writes:
 
-> HOST capability interface data structures are updated
-> in HL3.1 fw version. Update the qmi host capability
-> members for compatibility across different firmware
-> versions.
-> With this change HL2.0 fw upgrade is required as this
-> change breaks the backward compatibility with HL2.0 fw.
+> On Wed, 28 Nov 2018 at 13:39, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke=
+.dk> wrote:[...]
+>> > This is an early stage implementation, at this point I would collect
+>> > other people opinions/concerns about using bpf/xdp directly on 802.11
+>> > frames.
+>>
+>> Thanks for looking into this!
+>
+> I'm really hyped up with this especially when I think this could be
+> maybe offloaded to wlan cpu's for e.g. deep powersaving (allow host
+> system to suspend) without relying on blackbox logic you get today, or
+> 802.11 -> 802.3 conversion (to offload host cpu).
 
-The last sentence is not making any sense to me, does it have a typo or
-am I missing something?
+Yeah, good point!
 
-If there's a typo I can fix it, no need to resend.
+>> I have two concerns with running XDP on 802.11 frames:
+>>
+>> 1. It makes it more difficult to add other XDP actions (such as
+>>    REDIRECT), as the XDP program would then have to make sure that the
+>>    outer packet headers are removed before, say, redirecting the packet
+>>    out of an ethernet interface. Also, if we do add redirect, we would
+>>    be bypassing mac80211 entirely; to what extent would that mess up
+>>    internal state?
+>>
+>> 2. UI consistency; suddenly, the user needs to know which kind of
+>>    frames to expect, and XDP program reuse becomes more difficult. This
+>>    may be unavoidable given the nature of XDP, but some thought needs to
+>>    go into this. Especially since we wouldn't necessarily be consistent
+>>    between WiFi drivers (there are fullmac devices that remove 802.11
+>>    headers before sending up the frame, right?).
+>
+> Yep - you can expect 802.3 frames or amsdu subframes (DA+SA+length)
+> too. In some cases you could also expect internal events (broadcom if
+> I understand their fullmac arch).
 
--- 
-Kalle Valo
+Oh boy. I figured it was going to be a can of worms; didn't realise it
+was quite that big :/
+
+-Toke
