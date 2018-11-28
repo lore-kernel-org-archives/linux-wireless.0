@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F46C43441
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 16:23:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB9AC43441
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 18:08:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17C1E2086B
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 16:23:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03AC206B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Nov 2018 18:08:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="odaV5HVU"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17C1E2086B
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JnQYi1WI"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org D03AC206B2
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728854AbeK2D0G (ORCPT
+        id S1725859AbeK2FLV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Nov 2018 22:26:06 -0500
-Received: from mail-oi1-f176.google.com ([209.85.167.176]:45066 "EHLO
-        mail-oi1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728000AbeK2D0G (ORCPT
+        Thu, 29 Nov 2018 00:11:21 -0500
+Received: from mail-ot1-f49.google.com ([209.85.210.49]:42748 "EHLO
+        mail-ot1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725266AbeK2FLV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Nov 2018 22:26:06 -0500
-Received: by mail-oi1-f176.google.com with SMTP id b141so23026983oii.12
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 08:23:54 -0800 (PST)
+        Thu, 29 Nov 2018 00:11:21 -0500
+Received: by mail-ot1-f49.google.com with SMTP id v23so18969468otk.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 10:08:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=0mKmQl7EZtUVJ9cZl01dqRiU/qBmxIrcOm3xLOxxfnQ=;
-        b=odaV5HVUae75jGt73QZfUnoFx1wiU9Bs2PXnVevyw22P+qz7H6t7C079u3HelIdVz/
-         +wnzaUNqW3LYqKOrwY5APjTyhTi2qXGATIOWIYr0Pd5JqgvrQhJ4Ngho7n96q264Jl/3
-         c+chVCXaAJkU7Tj1fL5G6CfHy8FAtaxTWRxLutJTkTsrPHDZAzQ04POGwfY5D4OLB3Sz
-         TogLCOi9ZjmSsIqApftVebOZnufEf1vx48SSz899nBPi/wqqn7SWvbpO2Z4dkd4/M1hX
-         2KoBI/1UgvIh/yDQ/kiUGh65nxoat31ikvGWEs4RxrC8OvsgztKraWD04vuoJBSrVjuv
-         sP1w==
+        bh=zEeosWWJWGT6qd0TZiUirFN/CeQHoHGApomVHH52FBg=;
+        b=JnQYi1WIYwELV6v35HBicVumhRjXrp6xcQETo1mena3bVttkraAeTIxdRHJl/2XN+J
+         +tcLYslVzrJdJbID7AquOg3/bsr+6wsHKbUal8xFhAyLApZUoLbfa9Hj8BeDUPiyQokJ
+         zh15IinJuY4kNfFo1N0/MWVKRjXJXyq1R6/MZAM5Twxu5I9P9r6sebD9cjoNqGIYbC7C
+         TAqBwkkx1m6GL8X3nwmP/Fx68+462oZ0fInYY0T2+tkfmPACbKC42gi02PcN3h8/GPd6
+         bajHk4Ki+MXhHlN0WAPUCc/3Dsx4VVwEq8mzxucedpDB2QaEYqVEh42JDS7BsGscfj/a
+         6m4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=0mKmQl7EZtUVJ9cZl01dqRiU/qBmxIrcOm3xLOxxfnQ=;
-        b=JcUu5xrHUpyUwswbyV7ix4zXq7wbvl1K2CxWnVnskYGrv5Orq0omkb8dJBj3d7OOc5
-         Qvp2qgN+I1EKrBqBmW3gyRfxFSUDF2ITiN3CvAzdsFt9Ban/6cP/xd8br8RVi5mxeyNh
-         BPj25QqOSB8NPRTUvOlAIEUQ0F7xwd599BEauoUsScCpUDR6aAuM5e9plitOtFzRIInj
-         g9HNNjkDfZdf4EaMbMYj07BUYO+VSvg1H5Bju6N5XiHkj/ynlJrpqa0B1EzuAX0tEG/C
-         VHPFrQukmQ7/V+HtAi6rcwTjgnN5Gh3tPG4PZ0KfvtGkc9SV6LuMX6cpvi7w63618YMC
-         5j/w==
-X-Gm-Message-State: AGRZ1gJxM+GBUkBiZ3AUCtROjItIj6YYO+jO0UmSgUJpC6zuYlZmfcSp
-        WvsACeMFf9GrMWgcgMRoCpZbYM/kX911+V6TQ/m/2xzA
-X-Google-Smtp-Source: AJdET5dEjhlrI51O6Ulqv9KpRGqMJDW1vaSd7DmQsQEjZ62CTyZmrc6zOzKeJ+I08alNVeLwg5xNyPVQi+NllPu3Fbc=
-X-Received: by 2002:aca:cdd0:: with SMTP id d199mr22198852oig.266.1543422233494;
- Wed, 28 Nov 2018 08:23:53 -0800 (PST)
+        bh=zEeosWWJWGT6qd0TZiUirFN/CeQHoHGApomVHH52FBg=;
+        b=cRfVvpznvLmuX88+fa1iqII63YqyMEQktharyR7uFw1J2wWwCNFRk2ktTzl4ffF78T
+         YDyDtbe6MqMY5RZBKGsMFWmIDM8Pnn9TLTQKcpDlIB9yPdJ5VUTwUbRV2YSww0uFhzBT
+         VhA2y9DTDt09Avrt1a+QsjVh3R1vGQerJf4g/faGjyn5HHhbNOrSZxhPhnzMZfsoyBW/
+         eLXjW/Bmj2Wp2hZLjQBywvD8S6Ng4jML8R/mBzB6dsxoyklnel5lzdHdTilI4e3cQqn7
+         c9QKTt3liDHTj9pCkMeIV4QHxHUZbPULt8mZnZeHE+Rn4HGe0xbdiRoX3BMx4W4E84IE
+         r86g==
+X-Gm-Message-State: AA+aEWYkkBgwMgp7bByAe7g1tMhVL632mxbvX1OHOOlgChw8t2yVkb2T
+        h9coKo0sayvXHJfKywrmDiX9QhsAhqiI/r8tA5A=
+X-Google-Smtp-Source: AFSGD/W3/D/g9LDtET94t5mYlJ4sN/rrs8cf7hDU96ziZEBH0bbA312K54TBnwUNO+IzkiwadWC8fE7A8hgtSzcNrgA=
+X-Received: by 2002:a9d:421a:: with SMTP id q26mr22569649ote.255.1543428530892;
+ Wed, 28 Nov 2018 10:08:50 -0800 (PST)
 MIME-Version: 1.0
 References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
  <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com> <1510916848.26896.2.camel@nxp.com>
@@ -71,11 +71,12 @@ References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
  <05ab43bd-0033-fc45-a992-0a20b91a0e74@broadcom.com> <CABACg+wyLwYQna+HDJyjNA8V1_3cSoMRDyiBpq=K+UXVXDrtBQ@mail.gmail.com>
  <CAHWfWzm8Zwjc2tBQWVqpaa-cMYyEPWmUKYN7rspyb9W9spx2iQ@mail.gmail.com>
  <CAOMZO5C+r4s3Hn49QbP=0Y+hSYDT5-Y2ZY91E57JvAmq75CXLw@mail.gmail.com>
- <CAOMZO5DtqVBkWuD0iR5JHEG4G-MoWYYxU8aSu99rW8mpd3+PYQ@mail.gmail.com> <CAF7Mx6p1DpRieCKy_1qOE5YT4_76UO8vhLMBFUD2B0FrQ9BJGw@mail.gmail.com>
-In-Reply-To: <CAF7Mx6p1DpRieCKy_1qOE5YT4_76UO8vhLMBFUD2B0FrQ9BJGw@mail.gmail.com>
+ <CAOMZO5DtqVBkWuD0iR5JHEG4G-MoWYYxU8aSu99rW8mpd3+PYQ@mail.gmail.com>
+ <CAF7Mx6p1DpRieCKy_1qOE5YT4_76UO8vhLMBFUD2B0FrQ9BJGw@mail.gmail.com> <CAOMZO5Ah9CLGud3seRcru8Roy3-ChSVDRhiM4ojvMh1XrcDUOg@mail.gmail.com>
+In-Reply-To: <CAOMZO5Ah9CLGud3seRcru8Roy3-ChSVDRhiM4ojvMh1XrcDUOg@mail.gmail.com>
 From:   Fabio Estevam <festevam@gmail.com>
-Date:   Wed, 28 Nov 2018 14:23:45 -0200
-Message-ID: <CAOMZO5Ah9CLGud3seRcru8Roy3-ChSVDRhiM4ojvMh1XrcDUOg@mail.gmail.com>
+Date:   Wed, 28 Nov 2018 16:08:43 -0200
+Message-ID: <CAOMZO5D3d3ocHLkoQXTA+aSW=84X8CFN+xWTdZNuHasDqF8Azg@mail.gmail.com>
 Subject: Re: AP6335 with mainline kernel
 To:     Arend van Spriel <arend.vanspriel@broadcom.com>
 Cc:     cameron@paloaltoinnovation.com,
@@ -92,29 +93,13 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hi Arend,
 
-On Wed, Nov 28, 2018 at 2:11 PM Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
+On Wed, Nov 28, 2018 at 2:23 PM Fabio Estevam <festevam@gmail.com> wrote:
 
-> Does it mean there is a regression in 4.20 for this board?
+> I am not sure if I can access this signal via scope.
 
-I haven't tested it with 4.20 yet.
+Good news!
 
->> Only change I needed was the one suggested by Arend in the nvram file:
->> changed boardflags3 entry.from 0x08101188 to 0x101188.
->
->
-> Yes. That is understood. However, an external LPO clock may be more reliable than using the internal, which is consequence of changing boardflags3.
+I managed to make mx7d to generate the 32kHz clock and now Wifi works
+with the default nvram file value: boardflags3 0x08101188
 
-Just to make sure I understand the change:
-
-boardflags3 0x08101188 --> Wifi uses an external clock
-boardflags3 0x101188 ---> Wifi uses an internal clock
-
-Current dts does not output the 32kHz from MX7D to the Wifi chip, so I
-guess the below is correct.
-
-> So can the signal be measured with a scope to confirm it provides 32kHz?
-
-I am not sure if I can access this signal via scope.
-
-Thanks
+Thanks a lot for your help!
