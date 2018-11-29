@@ -2,68 +2,64 @@ Return-Path: <SRS0=Li3M=OI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A07EC43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 02:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0822BC43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 04:25:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25356206B6
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 02:38:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD5872081B
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 04:25:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="G964AWSC"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 25356206B6
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="oecDjT10";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lbE/bGil"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org BD5872081B
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727440AbeK2Nmi (ORCPT
+        id S1727590AbeK2P32 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 08:42:38 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:42704 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726954AbeK2Nmi (ORCPT
+        Thu, 29 Nov 2018 10:29:28 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:41084 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727359AbeK2P32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 08:42:38 -0500
-Received: by mail-pl1-f193.google.com with SMTP id x21-v6so228712pln.9
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Nov 2018 18:38:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CApyoOuU/oo6VDPTry9e5ylt0AFhnlyjooBhd+0eLUA=;
-        b=G964AWSCKYKc/nlogm8uTGETNhveH4rzsU9LyBjPH8gyxKcM4FJf9aJMrLnkuMwD5T
-         XWsre+ULMctgx5+neUVNJ2ayxH+J7KERHAu1BcKAyGbBhdgOsW4s0Pu/gQafifBxZ1t4
-         e/MVVv+nah7jLkWN+jJ8BidzSNiKzrFhjE3Xk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CApyoOuU/oo6VDPTry9e5ylt0AFhnlyjooBhd+0eLUA=;
-        b=ME5xuz3PsQbiJWDOxuomJdjRpHDa6YBHF0Xh6jZE4E7TvaYy0ObLi5EnvAF6QBd6xB
-         W8ReeZRi0PuQP/VPLACe4ka8iF8lVRBMeDilwDzIaThvgW8hxbgsjYTuzniOEuOHjsal
-         nMXxYUpWFdExJ4PUDS+6IYcQD8aOvKqjEEH8xHhIwHbwIlXD6zhuOXoSitRmQ6h05TfK
-         90ei/irb3YsU0BIAb5E/ztBL8Zlx/G/11CNOnmpmpaGLPBAqO16R5OjGi2np8OOCZimz
-         s+kvf2e8zYEEDY2wyuyl9hiQlAkJuL8M48Klmk/O/QDliB3G5GBCfNnDY8LdIIxpA9pc
-         HhmQ==
-X-Gm-Message-State: AA+aEWaiBVNE89BMLVTaLVUS24XsfFsxwRqcnNHZ7OQUFT8H0fiTSEEH
-        RpjX8zNJFvIkPn1nehoz9XdKVQ==
-X-Google-Smtp-Source: AFSGD/XwQlrgYDfUC64QIA+jQwJa8uQiX3SSrMxk4FdYbpU/TpsJ+jVdr15BB4WK+P11pqog5m6XFw==
-X-Received: by 2002:a17:902:7d82:: with SMTP id a2mr4854083plm.163.1543459132433;
-        Wed, 28 Nov 2018 18:38:52 -0800 (PST)
-Received: from smtp.gmail.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id q1sm414280pfb.96.2018.11.28.18.38.51
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 28 Nov 2018 18:38:51 -0800 (PST)
-From:   Brian Norris <briannorris@chromium.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
+        Thu, 29 Nov 2018 10:29:28 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id F352C60B26; Thu, 29 Nov 2018 04:25:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543465529;
+        bh=z8RL8MfzKBdyBKvEXSMkXTnaGCxjqar3UsvqEc8Mwyc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=oecDjT10jOeX36rJXGIgWInICnU+kNv9aBjEKzmUgIxcZ76RmZGqbCcVzo84AEHqc
+         ixpvtxPqtICSI7081pGT7dCVd3uZhFWz5rW2kRshwkbkw/3rIXTqNWVTGvmwVvVT8m
+         hMV3k6DGNRN16bVaSf581CtfxWbVEHM6io9l+TU8=
+Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: govinds@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 193D6606DC;
+        Thu, 29 Nov 2018 04:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543465528;
+        bh=z8RL8MfzKBdyBKvEXSMkXTnaGCxjqar3UsvqEc8Mwyc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=lbE/bGilvcyp6EHLo1/LWzS7LzporAClXF1rHs301PHn/cx/s5ycE/DdgEbgeOckr
+         nP2ZExaxvK4hNA45wwh2Dla3Z/BCum8DIpqE27nZ9i5BFzEcqhR7uQXSgha3dehCqU
+         IAjbYhZSiwAuWaEj8JOiTgb8a97SkCv0R5ACHJyQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 193D6606DC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
+From:   Govind Singh <govinds@codeaurora.org>
+To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] iw: dump 'rx bitrate' in link stats
-Date:   Wed, 28 Nov 2018 18:38:48 -0800
-Message-Id: <20181129023848.186299-1-briannorris@chromium.org>
-X-Mailer: git-send-email 2.20.0.rc0.387.gc7a69e6b6c-goog
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH] ath10k: Move non-fatal warn logs to dbg level
+Date:   Thu, 29 Nov 2018 09:55:22 +0530
+Message-Id: <20181129042522.11767-1-govinds@codeaurora.org>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -71,38 +67,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-We include it in 'station dump' but not 'link'.
+During driver load below warn logs are printed in the console.
+Since driver may not implement all wmi events sent by fw and
+all of them are non-fatal, move this log to debug level to
+remove un-necessary warn message on console.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+[  361.887230] ath10k_snoc a000000.wifi: Unknown eventid: 16393
+[  361.907037] ath10k_snoc a000000.wifi: Unknown eventid: 237569
+
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- link.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/link.c b/link.c
-index 0a323920ff2f..1ed7f631a121 100644
---- a/link.c
-+++ b/link.c
-@@ -121,6 +121,7 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-+		[NL80211_STA_INFO_RX_BITRATE] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
- 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
-@@ -160,6 +161,12 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
- 		printf("\tsignal: %d dBm\n",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
- 
-+	if (sinfo[NL80211_STA_INFO_RX_BITRATE]) {
-+		char buf[100];
-+
-+		parse_bitrate(sinfo[NL80211_STA_INFO_RX_BITRATE], buf, sizeof(buf));
-+		printf("\trx bitrate: %s\n", buf);
-+	}
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		char buf[100];
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index ad4114a88170..892bd8c30dd9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -621,7 +621,7 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_wmi_event_mgmt_tx_compl(ar, skb);
+ 		break;
+ 	default:
+-		ath10k_warn(ar, "Unknown eventid: %d\n", id);
++		ath10k_dbg(ar, ATH10K_DBG_WMI, "Unknown eventid: %d\n", id);
+ 		break;
+ 	}
  
 -- 
-2.20.0.rc0.387.gc7a69e6b6c-goog
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
