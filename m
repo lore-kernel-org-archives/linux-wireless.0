@@ -2,91 +2,108 @@ Return-Path: <SRS0=Li3M=OI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A1AC43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 10:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE5CC43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 11:49:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0325A20834
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 10:48:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B77EA205C9
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 11:49:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YOGM5oub"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 0325A20834
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=163.com
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WL+P570n";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PmS58J+j"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B77EA205C9
+Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727504AbeK2Vx3 (ORCPT
+        id S1728167AbeK2Wyy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 16:53:29 -0500
-Received: from m12-14.163.com ([220.181.12.14]:42147 "EHLO m12-14.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726740AbeK2Vx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 16:53:29 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=eUhoG1eAN6kMRBfGZM
-        GcU/MOPS+++sKe5nt78mRCxpo=; b=YOGM5oubWBEJvH+XzDzfF2AdyWwphnGpU2
-        pmZz0nRpnZBeO/HmI7C4bTz8DafJlyn0/dqPTesdN8mrCTPLO1v6Daj+LKfp05Am
-        b2b+yMHQ6y5nsJln+WNeFSFrKdwMNYzoawaCwyBIKDdnqERZMotVPIQErO9PaOnO
-        IcUO2/Z1s=
-Received: from bp.localdomain (unknown [106.120.213.96])
-        by smtp10 (Coremail) with SMTP id DsCowABHr87ow_9b8LwKCg--.25788S3;
-        Thu, 29 Nov 2018 18:48:11 +0800 (CST)
-From:   Pan Bian <bianpan2016@163.com>
-To:     Herton Ronaldo Krzesinski <herton@canonical.com>,
-        Hin-Tak Leung <htl10@users.sourceforge.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
-Subject: [PATCH] rtl818x: fix potential use after free
-Date:   Thu, 29 Nov 2018 18:48:10 +0800
-Message-Id: <1543488490-101743-1-git-send-email-bianpan2016@163.com>
-X-Mailer: git-send-email 2.7.4
-X-CM-TRANSID: DsCowABHr87ow_9b8LwKCg--.25788S3
-X-Coremail-Antispam: 1Uf129KBjvdXoWrZF1rArWUur4rXFyftF45trb_yoWDZFg_ur
-        W8KFs7ArWvkrs5ua13CayxAr4SyrWrXa1rCa9aqFyfGryYqFZ09rZ7ZasxX398GFy8uFy5
-        Jw4DJFyrJa4YqjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUnahF7UUUUU==
-X-Originating-IP: [106.120.213.96]
-X-CM-SenderInfo: held01tdqsiiqw6rljoofrz/xtbBzwsOclaD0dXx5QAAs9
+        Thu, 29 Nov 2018 17:54:54 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34770 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726946AbeK2Wyy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Nov 2018 17:54:54 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 9163760B26; Thu, 29 Nov 2018 11:49:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543492188;
+        bh=9+Sr6CFnJy2+v/mYjThoN4202AN3/1AoRxP6uB1gVV4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=WL+P570nzPgvXpcND6Oiuestu8gB3TkNAvxlD9Paddcfzwy5nAGgEv7KZV0EeT4Af
+         tPPHG7DKt8x1uqvv+W9Xzrz0QdtvsWmduU10F+Xk3rZl8bkNF5PeGG0KvBIycVOMR+
+         sQKvGr4WVTl7WMgCu5urZp80C3f8MGfcghR1pozA=
+Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A413860251;
+        Thu, 29 Nov 2018 11:49:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1543492187;
+        bh=9+Sr6CFnJy2+v/mYjThoN4202AN3/1AoRxP6uB1gVV4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=PmS58J+jLgrjDokKhTWo3T/ct1fUgl6SDui+97eDu3ceDsKd1Swg+sFeAsDEuAJ/L
+         oyTiC5nSQdMmEOCdDhQvR3Js4KmQ4r6xv9dr+rFGrW/bL7aOCpWhbGbjXF67m0BTKP
+         lQf6lk4O+ZvVtHYlOp4myXaDnYK7zRYpEVbGqmjc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A413860251
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        =?utf-8?Q?Rafa?= =?utf-8?Q?=C5=82_Mi=C5=82ecki?= 
+        <rafal@milecki.pl>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 4.19 06/68] brcmutil: really fix decoding channel info for 160 MHz bandwidth
+References: <20181129055559.159228-1-sashal@kernel.org>
+        <20181129055559.159228-6-sashal@kernel.org>
+Date:   Thu, 29 Nov 2018 13:49:43 +0200
+In-Reply-To: <20181129055559.159228-6-sashal@kernel.org> (Sasha Levin's
+        message of "Thu, 29 Nov 2018 00:54:57 -0500")
+Message-ID: <87y39c85ns.fsf@purkki.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-entry is released via usb_put_urb just after calling usb_submit_urb.
-However, entry is used if the submission fails, resulting in a use after
-free bug. The patch fixes this.
+Sasha Levin <sashal@kernel.org> writes:
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> [ Upstream commit 3401d42c7ea2d064d15c66698ff8eb96553179ce ]
+>
+> Previous commit /adding/ support for 160 MHz chanspecs was incomplete.
+> It didn't set bandwidth info and didn't extract control channel info. As
+> the result it was also using uninitialized "sb" var.
+>
+> This change has been tested for two chanspecs found to be reported by
+> some devices/firmwares:
+> 1) 60/160 (0xee32)
+>    Before: chnum:50 control_ch_num:36
+>     After: chnum:50 control_ch_num:60
+> 2) 120/160 (0xed72)
+>    Before: chnum:114 control_ch_num:100
+>     After: chnum:114 control_ch_num:120
+>
+> Fixes: 330994e8e8ec ("brcmfmac: fix for proper support of 160MHz bandwidt=
+h")
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index cec3778..1a2ea8b 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -444,12 +444,13 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 		skb_queue_tail(&priv->rx_queue, skb);
- 		usb_anchor_urb(entry, &priv->anchored);
- 		ret = usb_submit_urb(entry, GFP_KERNEL);
--		usb_put_urb(entry);
- 		if (ret) {
- 			skb_unlink(skb, &priv->rx_queue);
- 			usb_unanchor_urb(entry);
-+			usb_put_urb(entry);
- 			goto err;
- 		}
-+		usb_put_urb(entry);
- 	}
- 	return ret;
- 
--- 
-2.7.4
+Please mark your stable patches with:
 
+X-Patchwork-Hint: ignore
 
+This way patchwork ignores them and this saves my time. Thank you.
+
+--=20
+Kalle Valo
