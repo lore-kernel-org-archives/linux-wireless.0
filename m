@@ -2,195 +2,105 @@ Return-Path: <SRS0=Li3M=OI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF690C43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29843C43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:42:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4461208E7
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:29:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC4BD20868
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="vSxMCLLc"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org A4461208E7
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W/HK+ZJ+"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DC4BD20868
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727728AbeK3Aez (ORCPT
+        id S1728241AbeK3Ar2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 19:34:55 -0500
-Received: from mail.toke.dk ([52.28.52.200]:43569 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726724AbeK3Aez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 19:34:55 -0500
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1543498170; bh=IzBi4U0WWTQ+LwZ4CmrQNsZGDwJL3mfTH9Cd/OoXo9o=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=vSxMCLLcL70CjAPyFdGPaW5fzwvpJZnczGR5V9MZRcv6e60pmTQ6sWSL5aKl69Tfa
-         s1Xqi8IhLNeIXGsB34QHrQ79w7MAIZ9aPEG797UORQEV+AyDgytkYBTUxhZSArWBp9
-         u45nwTKr6qgVLXyNItKwW73oGO8V8wIpQX8UF6vjyGwr2cOaR1aqIDTgU0IhoNGW3p
-         CsHSA1U5fEZPwrjJLrwj9QyfHZyj8OgfYnPaRDYWjgtLSJU4RPE1RHxl8YQoNTStc0
-         8Ax+c2dFjnp6k17ej/FXAopq2FOLgu5xk21pv06dFgEs3V76QVN0cNrJ8Lx9l+qlZI
-         5z51bt2b2P8XQ==
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        nbd@nbd.name, brouer@redhat.com
-Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
-In-Reply-To: <20181129125929.GB6365@localhost.localdomain>
-References: <cover.1543343124.git.lorenzo.bianconi@redhat.com> <8736rla4ow.fsf@purkki.adurom.net> <20181128104436.GA2298@localhost.localdomain> <87bm69v0ol.fsf@toke.dk> <20181128131141.GD2298@localhost.localdomain> <875zwhuvta.fsf@toke.dk> <20181128143533.GE2298@localhost.localdomain> <87zhtttg8p.fsf@toke.dk> <20181128153508.GG2298@localhost.localdomain> <87in0gu78s.fsf@toke.dk> <20181129125929.GB6365@localhost.localdomain>
-Date:   Thu, 29 Nov 2018 14:29:29 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87pnuoqafa.fsf@toke.dk>
+        Thu, 29 Nov 2018 19:47:28 -0500
+Received: from mail-qt1-f179.google.com ([209.85.160.179]:46659 "EHLO
+        mail-qt1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728085AbeK3Ar2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Nov 2018 19:47:28 -0500
+Received: by mail-qt1-f179.google.com with SMTP id y20so1913919qtm.13;
+        Thu, 29 Nov 2018 05:42:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=i0tMYyx95RfrhexGklvC88Z3yhZc86SYfSpzIth7GqI=;
+        b=W/HK+ZJ+EKnrnNT+IxGe3o8IFe5+6F6jEx15ZabnUX6asxfvb7SnHywxne4m1ptA1z
+         /Ep90FJSGxnBac4YC3zgf5yjSbPt1bxAMMI6SrUCaWD5D7cPfJFeUACNClf7YEATNuG1
+         zwXpStXlw508qb1OSD17AKkQlqWjpn2ybeZ+IXlZIHXgtzakV9VbjcfRKvXwY/UaPCLS
+         iHK3UJU9Ea3kE9TYvR630fgzD8bzNIZN8TMebS4LSDoUZu+UyuNlyUHdUzVXc7xVZM9l
+         VgVShcfSViCWUSIcPmgY/NhnmQw10M9HwCQ5bE80N4xtAyOkgpziLcfNZC65pRlKd1Pl
+         E4aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=i0tMYyx95RfrhexGklvC88Z3yhZc86SYfSpzIth7GqI=;
+        b=Evh6a4j00C7XHBcbsgm/ijnJA5wSJ+Pdu1cZ8G6UgPC0U6yCTlfmQkNT8Skpjo0wfR
+         B/9+zcGE2TSEUtKZMpgZqsWXpZn06gaNaJwtdg3m2VFr/0tzoj1LfgN5rbQxcOlDoirN
+         o7px6stckHw5FItFK8lho0aMW8ufTK1/dkaxP+pMs5YGxVVFnbUorG+VmmRjp5U7orSd
+         rxg4v8zzN8M6iSAsTjflJ59smb648Flz+mXfShAephQP0gQ9YCm2tB1JykCauor6eBlU
+         3isllpwbRWSAf9N+Kej2s6koeN57ygDYYFx0rZsTRdY1Hi+P2oh6bOX6JskE2e2yzkKg
+         7Ajg==
+X-Gm-Message-State: AA+aEWYTUQXEOFDEsNBLX0sgfvhqgfggAW8pE0ht6kSZvUtfuQ1BgwF5
+        umZXTzPs5VsqkF+zYo/1IMOSx7LnNqSzVZ0tsBQ=
+X-Google-Smtp-Source: AFSGD/U2HD7A/FI3bh64cDD8S9effgKATSDKdkD3KPedpzGgnRYQDfsNRiufFyseAhNDOw7MJC8EiyQ5q1/E+bP3rz4=
+X-Received: by 2002:a0c:db04:: with SMTP id d4mr1418383qvk.114.1543498924103;
+ Thu, 29 Nov 2018 05:42:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+References: <cover.1543343124.git.lorenzo.bianconi@redhat.com>
+ <8736rla4ow.fsf@purkki.adurom.net> <20181128104436.GA2298@localhost.localdomain>
+ <87bm69v0ol.fsf@toke.dk> <20181128164306.0135ca83@redhat.com>
+ <20181129103054.GA6365@localhost.localdomain> <87sgzkqaip.fsf@toke.dk>
+In-Reply-To: <87sgzkqaip.fsf@toke.dk>
+From:   =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date:   Thu, 29 Nov 2018 14:41:51 +0100
+Message-ID: <CABvG-CVFYNaytwaUj9YGVUp38DBP9CVYkoU6EKvbJBPNmtK0Ag@mail.gmail.com>
+Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
+To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc:     lorenzo.bianconi@redhat.com, brouer@redhat.com,
+        kvalo@codeaurora.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, borkmann@iogearbox.net,
+        alexei.starovoitov@gmail.com,
+        Linux Kernel Network Developers <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
+On Thu, 29 Nov 2018 at 14:31, Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.d=
+k> wrote:
+[...]
+> >> Option#3 is to say, Wifi XDP is so different that we should create a
+> >> new (enum) bpf_prog_type.  And then still see if we can leverage some
+> >> of the same core-code (as long as it doesn't slowdown performance).
+> >>
+> >
+> > Do you think that Option#3 will be more 'future-proof' respect to
+> > Option#1?
+>
+> My feeling is that WiFi devices are not sufficiently different to
+> warrant a whole new program type. We risk combinatorial explosion for
+> all the stuff that is the same, but now need to be tested for two (or N)
+> types...
 
->> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->>=20
->> > On Nov 28, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> >> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->> >>=20
->> >> >> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->> >> >>=20
->> >> >> >> >> > This series is intended as a playground to start experimen=
-ting/developing
->> >> >> >> >> > with XDP/eBPF over WiFi and collect ideas/concerns about i=
-t.
->> >> >> >> >> > Introduce XDP support to mt76x2e/mt76x0e drivers. Currentl=
-y supported
->> >> >> >> >> > actions are:
->> >> >> >> >> > - XDP_PASS
->> >> >> >> >> > - XDP_ABORTED
->> >> >> >> >> > - XDP_DROP
->> >> >> >> >> > Introduce ndo_bpf mac80211 callback in order to to load a =
-bpf
->> >> >> >> >> > program into low level driver XDP rx hook.
->> >> >> >> >> > This series has been tested through a simple bpf program (=
-available here:
->> >> >> >> >> > https://github.com/LorenzoBianconi/bpf-workspace/tree/mast=
-er/mt76_xdp_stats)
->> >> >> >> >> > used to count frame types received by the device.
->> >> >> >> >> > Possible eBPF use cases could be:
->> >> >> >> >> > - implement new statistics through bpf maps
->> >> >> >> >> > - implement fast packet filtering (e.g in monitor mode)
->> >> >> >> >> > - ...
->> >> >> >> >
->> >> >> >> > Hi Kalle,
->> >> >> >> >
->> >> >> >> >>=20
->> >> >> >> >> This is most likely a stupid question, but why do this in th=
-e driver and
->> >> >> >> >> not in mac80211 so that all drivers could benefit from it? I=
- guess there
->> >> >> >> >> are reasons for that, I just can't figure that out.
->> >> >> >>=20
->> >> >> >> XDP achieves its speedup by running the eBPF program inside the=
- driver
->> >> >> >> NAPI loop, before the kernel even touches the data in any other=
- capacity
->> >> >> >> (and in particular, before it allocates an SKB). Which kinda me=
-ans the
->> >> >> >> hook needs to be in the driver... Could be a fallback in mac802=
-11,
->> >> >> >> though; although we'd have to figure out how that interacts wit=
-h Generic
->> >> >> >> XDP.
->> >> >> >>=20
->> >> >> >> > This is an early stage implementation, at this point I would =
-collect
->> >> >> >> > other people opinions/concerns about using bpf/xdp directly o=
-n 802.11
->> >> >> >> > frames.
->> >> >> >>=20
->> >> >> >> Thanks for looking into this!
->> >> >> >
->> >> >> > Hi Toke,
->> >> >> >
->> >> >> >>=20
->> >> >> >> I have two concerns with running XDP on 802.11 frames:
->> >> >> >>=20
->> >> >> >> 1. It makes it more difficult to add other XDP actions (such as
->> >> >> >>    REDIRECT), as the XDP program would then have to make sure t=
-hat the
->> >> >> >>    outer packet headers are removed before, say, redirecting th=
-e packet
->> >> >> >>    out of an ethernet interface. Also, if we do add redirect, w=
-e would
->> >> >> >>    be bypassing mac80211 entirely; to what extent would that me=
-ss up
->> >> >> >>    internal state?
->> >> >> >>=20
->> >> >> >
->> >> >> > You are right, my assumption here is the logic/complexity is mov=
-ed to
->> >> >> > the bpf program that needs to take care of all possible issues t=
-hat
->> >> >> > can be introduced. More or less it is the same if a bpf program =
-mess
->> >> >> > up with TCP segments on a wired connection, isn't it?
->> >> >>=20
->> >> >> No, I guess not; except here it potentially applies to all packets
->> >> >> (things like BAW tracking), and it is *in addition* to TCP.
->> >> >
->> >> > Yes, here it is a little bit harder, but I was meaning that the bpf=
- program
->> >> > has to be very careful when dropping a packet :)
->> >>=20
->> >> Yeah. What kind of filtering were you thinking you would use this for=
- in
->> >> the short term?
->> >>=20
->> >
->> > When I started working on XDP for mt76 I was thinking about BSSID
->> > filtering but I was looking for a more general solution respect to add
->> > that feature in the driver. Moreover we could use bpf for fast packet
->> > filtering when you add an interface in monitor mode.
->>=20
->> Yup, both of these make sense.
->>=20
->> > Nevertheless I guess there could be other use cases not limited to
->> > frame filtering. My primary goal with this series is to collect
->> > ideas/concerns on WiFi XDP/eBPF possible uses cases.
->>=20
->> Well, Micha=C5=82's idea about offloading is cool if it is possible to g=
-et
->> vendors to implement it.
->>=20
->
-> Yep, would be very cool :)
->
->> Other than that, if we can solve the issues with differences between
->> 802.11 and plain Ethernet frames, I see no reason why it wouldn't be
->> possible to implement an XDP fast-path for WiFi-to-Ethernet forwarding,
->> which might be useful in an access point, especially as WiFi speeds
->> increase.
->>=20
->
-> Agree
->
->> The other direction will probably be more difficult, at least if 802.11
->> frames need to be built in software. It *might* be possible with the XDP
->> egress hook we are planning (with a suitable set of helpers, the eBPF
->> program could build the 802.11 frames), but I'm not really sure if that
->> is worth doing as I'm quite sure there are some hairy edge cases
->> there...
->
-> The possible issue with XDP_DROP action you are referring to here is
-> A-MPDU reordering on rx side, right? If so I guess the issue will be
-> fixed by tid_agg_rx->reorder_timer. Are you referring to other
-> possible edge cases?
+I'm not sure if my understanding is correct, but XDP seems like it can
+(and intends to be able to?) act as a general purpose packet
+accelerator (REDIRECT action was mentioned so I'm inferring..). In
+such case you'll need to be able to perform transformations on packets
+too, e.g. strip/prepend vlan tags, gre headers and what have you. The
+802.3 <-> 802.11 conversion could be treated on equal terms.
 
-I'm not sure, which is why I was being deliberately vague... ;)
 
-Just something to be aware of when going beyond proof of concept, I
-guess: here be dragons.
-
--Toke
+Micha=C5=82
