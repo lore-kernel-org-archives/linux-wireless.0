@@ -4,39 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB27C43610
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 05:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D922C43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 06:03:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33EC420834
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 05:56:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 301472086B
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 06:03:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="AmwfTLGi"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 33EC420834
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="I9jE1Q6s"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 301472086B
 Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728075AbeK2RAk (ORCPT
+        id S1729956AbeK2RH6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 12:00:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33924 "EHLO mail.kernel.org"
+        Thu, 29 Nov 2018 12:07:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45998 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727024AbeK2RAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 12:00:40 -0500
+        id S1728038AbeK2RH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Nov 2018 12:07:58 -0500
 Received: from sasha-vm.mshome.net (unknown [37.142.5.207])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AE2C020834;
-        Thu, 29 Nov 2018 05:56:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3C76520834;
+        Thu, 29 Nov 2018 06:03:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1543470989;
+        s=default; t=1543471426;
         bh=jY7+2yB08jE8HxtxUtg+NxWiQ/iXK6M0A3+UFF+CLmE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AmwfTLGiuffGpk5emj5n5zyvS/U9odvo2eBmTpuumOpWxJbtDkiG4KJdnxhqQep9U
-         7d5W9JlrsoGnrH3eZfBw2dZ3EG4dS4xL6cIMQP74S8ghBigQhp7OHFG5AVypQKhDty
-         QIKra76IUDQfEV3PqY4b1ndKnylnfg7hI4FuY3jg=
+        b=I9jE1Q6sqZXRYfQRE8NHlQY2lBA/4Vd6zmazhnzcYCwyiQBxcEr+4YrQOrFX8ijVR
+         kNLGZKhkXdIdXgpbw++cTbDJJT46egtg1xLGFwevcQLlQwyrJ/ZLGEK28JG4b6Smoi
+         l3Syfyb0TDfPw9FuILfOPbfqduznL2ZoZjeMaclM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     stable@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
@@ -45,12 +44,12 @@ Cc:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/68] brcmutil: really fix decoding channel info for 160 MHz bandwidth
-Date:   Thu, 29 Nov 2018 00:54:57 -0500
-Message-Id: <20181129055559.159228-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 03/18] brcmutil: really fix decoding channel info for 160 MHz bandwidth
+Date:   Thu, 29 Nov 2018 01:03:15 -0500
+Message-Id: <20181129060331.160224-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20181129055559.159228-1-sashal@kernel.org>
-References: <20181129055559.159228-1-sashal@kernel.org>
+In-Reply-To: <20181129060331.160224-1-sashal@kernel.org>
+References: <20181129060331.160224-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
