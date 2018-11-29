@@ -2,96 +2,95 @@ Return-Path: <SRS0=Li3M=OI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DAE0C43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20A22C43441
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:53:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AF7020863
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:51:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB57220863
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 13:53:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OJFbh1Oq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OJFbh1Oq"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 2AF7020863
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="lyKT7wAU"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DB57220863
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727834AbeK3A4y (ORCPT
+        id S1728190AbeK3A6o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 19:56:54 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:57432 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726949AbeK3A4y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 19:56:54 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 98A5A6020A; Thu, 29 Nov 2018 13:51:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543499488;
-        bh=Zh8Ngj/DlZv+2avqklNQlcUXkbFd1Faq4e6cEhdYiSQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OJFbh1OqURIHDZbIk0IynwarPiFYkv3qZQUlfiedL0IOwvDLFqj6skj5mWPIZH3b5
-         BaGp1sbswTQhXAx4kWdSkPoo+WRxk8I7Sb3lJcHLFoDJO1NCmmdTBEobXdsz/6SknS
-         2+8/Vdycr6YHxjsgIb8es3OS5aVGz1WtFt2lz2E4=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EAF32602FE;
-        Thu, 29 Nov 2018 13:51:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1543499488;
-        bh=Zh8Ngj/DlZv+2avqklNQlcUXkbFd1Faq4e6cEhdYiSQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OJFbh1OqURIHDZbIk0IynwarPiFYkv3qZQUlfiedL0IOwvDLFqj6skj5mWPIZH3b5
-         BaGp1sbswTQhXAx4kWdSkPoo+WRxk8I7Sb3lJcHLFoDJO1NCmmdTBEobXdsz/6SknS
-         2+8/Vdycr6YHxjsgIb8es3OS5aVGz1WtFt2lz2E4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EAF32602FE
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Rakesh Pillai <pillair@codeaurora.org>, ath10k@lists.infradead.org,
-        kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: remove an unnecessary NULL check
-References: <20181129103214.5tudci6izlfaasqx@kili.mountain>
-Date:   Thu, 29 Nov 2018 15:51:24 +0200
-In-Reply-To: <20181129103214.5tudci6izlfaasqx@kili.mountain> (Dan Carpenter's
-        message of "Thu, 29 Nov 2018 13:32:14 +0300")
-Message-ID: <87sgzk56w3.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 29 Nov 2018 19:58:44 -0500
+Received: from mail.toke.dk ([52.28.52.200]:60295 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726736AbeK3A6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Nov 2018 19:58:44 -0500
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1543499596; bh=2GMwa70bjkVmfgsLJvB/gjbAvyIPTrx1uTQbJ/OOsuk=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=lyKT7wAUEqFFmQuh4FBX87S+xGHoocCAq2AhZovZ/elFxGc/U0uGbyGXx2M95cS/M
+         vjMHtgKj/nRr969vVqIlXjBxODUKT+Pcgf30T2T6sGqjrI9/rKi6Rt6xBVV+XYidqU
+         CKXxSH07XRcqopE6j8FHQ8hfZcZ4dee/tEUV7mEGW0snPMotHp9zUbKmme1AgyL7E6
+         yf/owikX0LebsMNRuOh+bJ8Ha+n2pBrdh+Ce1k5E8i9lKRztsO1bMZ/biYBnHjhfUe
+         yRMkzvuce2zdyIP7QIxcFZCgofHwqTMXl1TT0xMItHrRk7vBZ2+FIq/4iTB02j7GFN
+         U1m89YV6wXQQQ==
+To:     =?utf-8?Q?Micha=C5=82?= Kazior <kazikcz@gmail.com>,
+        lorenzo.bianconi@redhat.com
+Cc:     kvalo@codeaurora.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, brouer@redhat.com
+Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
+In-Reply-To: <CABvG-CVpYXpjE9vxsA90qzsGm3n48SBYv-dYWAB8vi9-dvhK4A@mail.gmail.com>
+References: <cover.1543343124.git.lorenzo.bianconi@redhat.com> <8736rla4ow.fsf@purkki.adurom.net> <20181128104436.GA2298@localhost.localdomain> <87bm69v0ol.fsf@toke.dk> <20181128131141.GD2298@localhost.localdomain> <875zwhuvta.fsf@toke.dk> <20181128143533.GE2298@localhost.localdomain> <87zhtttg8p.fsf@toke.dk> <20181128153508.GG2298@localhost.localdomain> <87in0gu78s.fsf@toke.dk> <20181129125929.GB6365@localhost.localdomain> <CABvG-CVpYXpjE9vxsA90qzsGm3n48SBYv-dYWAB8vi9-dvhK4A@mail.gmail.com>
+Date:   Thu, 29 Nov 2018 14:53:15 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87k1kwq9bo.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+Micha=C5=82 Kazior <kazikcz@gmail.com> writes:
 
-> The "survey" pointer is the address of an array element.  We know that
-> it can't be NULL so this check can be removed.
+> On Thu, 29 Nov 2018 at 14:00, Lorenzo Bianconi
+> <lorenzo.bianconi@redhat.com> wrote:
+> [...]
+>> > The other direction will probably be more difficult, at least if 802.11
+>> > frames need to be built in software. It *might* be possible with the X=
+DP
+>> > egress hook we are planning (with a suitable set of helpers, the eBPF
+>> > program could build the 802.11 frames), but I'm not really sure if that
+>> > is worth doing as I'm quite sure there are some hairy edge cases
+>> > there...
+>>
+>> The possible issue with XDP_DROP action you are referring to here is A-M=
+PDU
+>> reordering on rx side, right? If so I guess the issue will be fixed by
+>> tid_agg_rx->reorder_timer. Are you referring to other possible edge case=
+s?
 >
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 659513bf4ddc..6a04727b63ce 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2578,7 +2578,7 @@ static void ath10k_wmi_event_chan_info_unpaired(struct ath10k *ar,
->  
->  	survey = &ar->survey[idx];
->  
-> -	if (!params->mac_clk_mhz || !survey)
-> +	if (!params->mac_clk_mhz)
->  		return;
+> What I'm thinking is reordering could be one of possible things to
+> offload to an XDP program. It would require per-station data structure
+> to keep track of the frame sequence numbers (among other things). Same
+> could be said for crypto offloads (would require XDP programs to be
+> able to use crypto apis I guess?).
 
-Can you please CC linux-wireless so that patchwork sees this?
+In principle, all of this could be done. But we need to think carefully
+about what things it really makes sense to offload to XDP. In the
+general case, we will end up re-implementing all of mac80211 in eBPF,
+which is obviously not ideal. However, fast-path handling in XDP, which
+will punt to the full stack on edge cases, is probably doable (and is
+the general model we envision for XDP programs).
 
--- 
-Kalle Valo
+For crypto in particular, I wonder if there is much of a speedup to be
+had if the crypto is in software anyway. Wouldn't that dominate the
+processing time? Whereas, if the crypto is offloaded to hardware,
+fast-path packet processing in XDP might make sense. This would
+translate to the fallback mode I mention above: If hardware crypto is
+enabled, handle in XDP fast-path, otherwise punt to mac80211 for full
+(crypto) processing.
+
+-Toke
