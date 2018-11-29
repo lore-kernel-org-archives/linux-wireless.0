@@ -2,101 +2,99 @@ Return-Path: <SRS0=Li3M=OI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D47C43441
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 16:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF5DC04EBA
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 16:55:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 904F421019
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 16:06:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4802E20868
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Nov 2018 16:55:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="jGa7XipT"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 904F421019
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=toke.dk
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQ+sJ8Tm"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4802E20868
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729222AbeK3DMs (ORCPT
+        id S1729992AbeK3EBA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Nov 2018 22:12:48 -0500
-Received: from mail.toke.dk ([52.28.52.200]:44539 "EHLO mail.toke.dk"
+        Thu, 29 Nov 2018 23:01:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48738 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728635AbeK3DMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Nov 2018 22:12:48 -0500
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1543507614; bh=fS0b6oWvAVBbdxIB6+G6xBg2SyYYP0tUfeFQm7XB+gI=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=jGa7XipTq6A/wih5AlCgZDgaFuVrpLO4ocEkLuO3oBxWO+I9eQnbrJ2DrTj0NuxzA
-         skebdJIbuWNEgCEoDFiBmc7oxNraFpXan046ilHmvFjBSO7xz+BOAAqwlkbGmx0vvf
-         5fHBgIhCk6NbR7T9P+7t1buLw542OUQaq/BNC3RZOB4pzJ9DiKquIyX6prAfXn3cx2
-         Q5q5UkOM19UhgupJjsKRiMp9UDPLQ1upqQ9LUe0yFP3IX/Ph3map9tG88heC0UoQcd
-         nNsPCIeDfyNWWP67sBDWNar18d9Sx0WeH+A72XropRKdFMTc0vdFg+VI7nwZdReBYh
-         4u3ZuYpbivkQw==
-To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc:     Jesper Dangaard Brouer <brouer@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, nbd@nbd.name,
-        Daniel Borkmann <borkmann@iogearbox.net>,
-        Alexei Starovoitov <alexei.starovoitov@gmail.com>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [RFC 0/5] add XDP support to mt76x2e/mt76x0e drivers
-In-Reply-To: <20181129154502.GA29066@localhost.localdomain>
-References: <cover.1543343124.git.lorenzo.bianconi@redhat.com> <8736rla4ow.fsf@purkki.adurom.net> <20181128104436.GA2298@localhost.localdomain> <87bm69v0ol.fsf@toke.dk> <20181128164306.0135ca83@redhat.com> <20181129103054.GA6365@localhost.localdomain> <87sgzkqaip.fsf@toke.dk> <20181129135825.GD6365@localhost.localdomain> <87h8g0q8py.fsf@toke.dk> <20181129154502.GA29066@localhost.localdomain>
-Date:   Thu, 29 Nov 2018 17:06:54 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <8736rjrhpd.fsf@toke.dk>
+        id S1729753AbeK3EBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Nov 2018 23:01:00 -0500
+Received: from localhost (unknown [37.142.5.207])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C16A020868;
+        Thu, 29 Nov 2018 16:54:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1543510499;
+        bh=DztOIO2I15ErJ7QYcFBQ0XKeRAGlAxL01yn5r+Ff+Wc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XQ+sJ8TmiIAyjvqQ+Nco9TQeQaR3O7zfdp3wNR+FnwbHVmNvMofQkK5ObDYWa97F9
+         +ZVArpRpwaNiGJxROKsAoYfhUAG8Ycw8eVe6Gp7zcwXZrFCoDM5oztNX9ScW4kHw1r
+         nkN08cWcw0C/iZYu97jy6Fx+ZBHkuJOFrNQ/5NVc=
+Date:   Thu, 29 Nov 2018 11:54:56 -0500
+From:   Sasha Levin <sashal@kernel.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 4.19 06/68] brcmutil: really fix decoding channel
+ info for 160 MHz bandwidth
+Message-ID: <20181129165456.GC208508@sasha-vm>
+References: <20181129055559.159228-1-sashal@kernel.org>
+ <20181129055559.159228-6-sashal@kernel.org>
+ <87y39c85ns.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87y39c85ns.fsf@purkki.adurom.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
-
->> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->>=20
->> >> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->> >>=20
->> >> >> On Wed, 28 Nov 2018 13:36:26 +0100
->> >> >> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> wrote:
->> >> >>=20
+On Thu, Nov 29, 2018 at 01:49:43PM +0200, Kalle Valo wrote:
+>Sasha Levin <sashal@kernel.org> writes:
 >
-> [...]
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>>
+>> [ Upstream commit 3401d42c7ea2d064d15c66698ff8eb96553179ce ]
+>>
+>> Previous commit /adding/ support for 160 MHz chanspecs was incomplete.
+>> It didn't set bandwidth info and didn't extract control channel info. As
+>> the result it was also using uninitialized "sb" var.
+>>
+>> This change has been tested for two chanspecs found to be reported by
+>> some devices/firmwares:
+>> 1) 60/160 (0xee32)
+>>    Before: chnum:50 control_ch_num:36
+>>     After: chnum:50 control_ch_num:60
+>> 2) 120/160 (0xed72)
+>>    Before: chnum:114 control_ch_num:100
+>>     After: chnum:114 control_ch_num:120
+>>
+>> Fixes: 330994e8e8ec ("brcmfmac: fix for proper support of 160MHz bandwidth")
+>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>> Signed-off-by: Sasha Levin <sashal@kernel.org>
 >
->> >> >
->> >> > I guess it will be enough to avoid loading a 'non-WiFi' bpf program=
- on
->> >> > a 802.11 netdevice (and vice versa). We could add a flag (or someth=
-ing
->> >> > similar) in XDP_SETUP_PROG section of netdev_bpf data structure and
->> >> > use ieee80211_ptr netdevice pointer in order to guarantee that the =
-bpf
->> >> > program will work on the expected 'frame-type'
->> >>=20
->> >> Yeah, a flag would be good; we've been discussing that for other XDP =
-use
->> >> cases; it's not a done deal yet, but I think it would be useful.
->> >
->> > Do you think something wifi specific is ok (e.g bool wifi) or do you p=
-refer
->> > something more general (e.g u32 frame_type)?
->>=20
->> My thought was a feature flag where the program can set a flag which
->> means "I expect 802.11 frames", and the driver can set a flag saying "I
->> emit 802.11 frames", and if those two flags don't match, the verifier
->> can refuse to load the program. This would not be fool-proof (an XDP
->> program can still corrupt things if written incorrectly), but it would
->> at least protect against the most obvious mistakes.
+>Please mark your stable patches with:
 >
-> I guess we can use iee80211_ptr in dev_xdp_install to double check if it =
-is
-> allowed to upload a 802.11 (or 802.3) bpf program
+>X-Patchwork-Hint: ignore
+>
+>This way patchwork ignores them and this saves my time. Thank you.
 
-Yeah, I think it's more an issue of convincing the wider XDP community
-that support for feature flags is in fact needed ;)
+Will do, thanks!
 
--Toke
+--
+Thanks,
+Sasha
