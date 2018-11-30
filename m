@@ -2,117 +2,97 @@ Return-Path: <SRS0=8CYu=OJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E0F7C64EB4
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Nov 2018 20:17:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D471FC04EB8
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Nov 2018 21:00:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B933120863
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Nov 2018 20:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9718D20663
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Nov 2018 21:00:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nio365.onmicrosoft.com header.i=@nio365.onmicrosoft.com header.b="TE5Pp9y/"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B933120863
-Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=ni.com
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NW7BOVuO"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9718D20663
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726659AbeLAH1U (ORCPT
+        id S1726897AbeLAIKi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 1 Dec 2018 02:27:20 -0500
-Received: from mx0b-00010702.pphosted.com ([148.163.158.57]:36920 "EHLO
-        mx0b-00010702.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725941AbeLAH1U (ORCPT
+        Sat, 1 Dec 2018 03:10:38 -0500
+Received: from mail-io1-f44.google.com ([209.85.166.44]:33860 "EHLO
+        mail-io1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726814AbeLAIKg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Dec 2018 02:27:20 -0500
-Received: from pps.filterd (m0098779.ppops.net [127.0.0.1])
-        by mx0b-00010702.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAUKFrJk013023;
-        Fri, 30 Nov 2018 14:16:50 -0600
-Authentication-Results: ppops.net;
-        dkim=pass header.d=nio365.onmicrosoft.com header.s=selector1-ni-com
-Received: from nam05-dm3-obe.outbound.protection.outlook.com (mail-dm3nam05lp2051.outbound.protection.outlook.com [104.47.49.51])
-        by mx0b-00010702.pphosted.com with ESMTP id 2p2q3dbqyg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 30 Nov 2018 14:16:50 -0600
+        Sat, 1 Dec 2018 03:10:36 -0500
+Received: by mail-io1-f44.google.com with SMTP id f6so5671239iob.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2018 13:00:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=nio365.onmicrosoft.com; s=selector1-ni-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=b2NzQrtoxOiW1uAm5xnvy9nZA9ds2SmwUDBYSp0ceJk=;
- b=TE5Pp9y/8POTsj1D7LLBXXWjW0Wyy0HwQd1b0DtgUuXlPKlEeYgkhkHxpYCbYdwDZxArXRdf1aaaGcHKYZmoxdDAZLBo3WMhR/+ppTo08NyNHfTpBYUJcX7VVEQ5OjnV5RXTUZ9x7aBj1sS9W3JrBb6yncSO1paMATHBbrPoIKI=
-Received: from SN6PR04MB5343.namprd04.prod.outlook.com (20.177.255.221) by
- SN6PR04MB5296.namprd04.prod.outlook.com (20.177.254.27) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1382.18; Fri, 30 Nov 2018 20:16:48 +0000
-Received: from SN6PR04MB5343.namprd04.prod.outlook.com
- ([fe80::909f:3f84:b758:c843]) by SN6PR04MB5343.namprd04.prod.outlook.com
- ([fe80::909f:3f84:b758:c843%2]) with mapi id 15.20.1382.020; Fri, 30 Nov 2018
- 20:16:48 +0000
-From:   Kyle Roeschley <kyle.roeschley@ni.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "David S . Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath6kl: Only use match sets when firmware supports it
-Thread-Topic: [PATCH 1/3] ath6kl: Only use match sets when firmware supports
- it
-Thread-Index: AQHUd4FLMMXTWwhUh0Odo1dUEe1jaaVo5DkA
-Date:   Fri, 30 Nov 2018 20:16:48 +0000
-Message-ID: <20181130201646.GA16998@senary>
-References: <20181108163659.19535-1-kyle.roeschley@ni.com>
-In-Reply-To: <20181108163659.19535-1-kyle.roeschley@ni.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: SN6PR16CA0060.namprd16.prod.outlook.com
- (2603:10b6:805:ca::37) To SN6PR04MB5343.namprd04.prod.outlook.com
- (2603:10b6:805:fd::29)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [130.164.62.249]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;SN6PR04MB5296;6:VgodGTVCM64AT3isjNFTgARV2skFhMXSKpvnYLkZ6uvBVCUxxBo23qFrIbvAkMF6vPP+keavaZMT02wQHyYfg8E7mYL6N9sMOaKD6bZWeiWM1etl5bS1OKcjsy40iTcJPX4GMJj1DU8IHT75QF+LKQh+t9joyRU7JCCBrClzdYunBGR/C4TzFEWRoLorX3/xj2jMMzp7rH2GE1EJwVH7DxJuBkQJW0/DtYBDsl976SjeUjh0XkosFHG6MOtsBPo0E4fClc5xWBqmLC7c2eojFc5CGcYoqi9Ko2rkziUSXMmqIkpLnGu6dbNubvPk/iHx6hrJFhiE5+9iocEYIMtcyNiD8DO1ZP2GIUq4AupHdeTPiuZHO8/vOtwxgNtPu6+Nq9icjp3BloYSRH8MC57230iocC130NL71qDZTOP2B8pp2U6ArOoW5YwKUvZjC3LdCIr0M/D6/srLTLcr5j2pJQ==;5:F0c2kMb6cYeHu0Ueej1+PUTirVMpHw7gVc+dJ1xo6+4/bzknMjZhSc92d3ovv8A+u87iSRwzzCYIArK1PllfJh50NQt0zK0YppM0Jacra78KM10xGl9sryCa3yxWr2idtioB4UqLU17psSUqOkwTCiyDzO94M3dq1SF4M41ZB2M=;7:Vu9xhfNuRQI88yN9ah05qbBGaiK6+5BZXt9uBpWiaOk2VwHHPhVTN4BvhBFTNUfwAtAQCiPI7TiUhOWzbW+B67wZZZLuabiAOqlr6yv9pznmAyT7f0JQ16iEfN77Hfg8SgV/KGQCLp+qTnRzWz19Kg==
-x-ms-office365-filtering-correlation-id: f7097d64-ebc3-44d0-ed87-08d65700c1e8
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(5600074)(711020)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:SN6PR04MB5296;
-x-ms-traffictypediagnostic: SN6PR04MB5296:
-x-microsoft-antispam-prvs: <SN6PR04MB5296DB24B44BE7E2BC47DAF2F7D30@SN6PR04MB5296.namprd04.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(6040522)(2401047)(8121501046)(5005006)(3231453)(999002)(944501410)(52105112)(93006095)(93001095)(10201501046)(3002001)(148016)(149066)(150057)(6041310)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123564045)(20161123562045)(20161123558120)(201708071742011)(7699051)(76991095);SRVR:SN6PR04MB5296;BCL:0;PCL:0;RULEID:;SRVR:SN6PR04MB5296;
-x-forefront-prvs: 087223B4DA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(7916004)(136003)(39850400004)(396003)(376002)(346002)(366004)(189003)(199004)(558084003)(3846002)(6116002)(478600001)(386003)(33896004)(14454004)(486006)(476003)(6506007)(186003)(102836004)(11346002)(44832011)(446003)(33716001)(305945005)(66066001)(86362001)(6512007)(9686003)(25786009)(7736002)(2906002)(1076002)(99286004)(52116002)(53936002)(8936002)(81166006)(81156014)(4326008)(6246003)(5660300001)(8676002)(68736007)(33656002)(6436002)(316002)(54906003)(97736004)(106356001)(76176011)(105586002)(6916009)(71190400001)(71200400001)(229853002)(6486002)(256004)(26005)(32563001);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB5296;H:SN6PR04MB5343.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: ni.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: 2chKSVtDRidmrh+s0j9vUPQLCmuUyk4FkdesRxeFG1thuDjD2ngSAkahqRNaI/skLz2HMpJs18spkHsdw4kzKBUMCpzzHT98KieP3FFFEez3l3Tf2wUzsc2dZL4/mJpP0uNozE4BplINr8R2eghWabGINZZFjYGFDks7eXRNNsQ7QinBpc4FYRU+wmvzDiJjcNzTWXV0TRA9Ws1I6GYVSoBJQfgrh9T1pr0vJuoSw5FHCfAG3knKzDCVe+NTPECDihCYadrtB5/ezFAPbOA7zFeyRsGz09kY1j6578ffBm8vughWszuskkT/nepcoV1lt/ytlPCjh8jwEPBqw7CaahO+PCdfPjaW7/AWfG7tzlE=
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <125A1693D3196441AB5FC3EFF6816373@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=+OZW+mgJ+I72x3su7oeWvAOHTBaHHSjOQyXXHNjFeDM=;
+        b=NW7BOVuOTEfqbnIzjC3iWvSxRlMbofFIk2/SjhwWn1+xQCwp6KUuEDRuBjEgt9zUfI
+         aRAQrIiiy4MPrbMOph61zMN+Bg5PhUUs9AiRQHYAd97+ZCB43i15slBpMQwTr7M14Wek
+         GZsWRsiFw0pZxPYpBLwS+Ds7YM/SCGOpRbnCA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=+OZW+mgJ+I72x3su7oeWvAOHTBaHHSjOQyXXHNjFeDM=;
+        b=sm3N7Up1NytagHixhgqRSDv21I6xvqXES0s93w9W8H2GbwphPi+/SKeWF5L0VAEfo0
+         CURFiCN5FWmnG5OEeft9fiUFlRH87JbomeBGq+ygeFWYaQOvJfNxsCwfpj+min5R3WHp
+         etvugXChDCvzwkTkZryntXky3nNgpcF5FDAAjTZRXIKzRx8H67KIhbqDW637VjCoGAeR
+         aNgDR+Yfn5UcT8hWhJMBgr/wTdU3Z2XVaeMCk+PUP3dJ6SZwWqwmqkjU+MsQhi23cmyM
+         fbNz64luIQFDSZQ8g0UPRMdn92bZgeaw1djq5ky2yD6Um4Hqhl3qIqDzHvELPTEIwBd5
+         sXEw==
+X-Gm-Message-State: AA+aEWbFnRETrUMY5Skd0VadbJDjUScpLQ0OV0l/xRyYdWcOz14I8Ab/
+        FIrV15l8BQ9liGjvkqokdyapgIWYSiM=
+X-Google-Smtp-Source: AFSGD/UkniFCS3U41hHtf9/oFQXebu0nGVvw4Q7o94JOMuNCm94T1/H9vrJac9Vnixe30RQLsc0nIQ==
+X-Received: by 2002:a6b:750a:: with SMTP id l10mr2634571ioh.120.1543611602535;
+        Fri, 30 Nov 2018 13:00:02 -0800 (PST)
+Received: from mail-it1-f177.google.com (mail-it1-f177.google.com. [209.85.166.177])
+        by smtp.gmail.com with ESMTPSA id 137sm130230itm.21.2018.11.30.13.00.01
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 30 Nov 2018 13:00:01 -0800 (PST)
+Received: by mail-it1-f177.google.com with SMTP id c9so491953itj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2018 13:00:01 -0800 (PST)
+X-Received: by 2002:a05:660c:1cc:: with SMTP id s12mr295452itk.33.1543611600889;
+ Fri, 30 Nov 2018 13:00:00 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: ni.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f7097d64-ebc3-44d0-ed87-08d65700c1e8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Nov 2018 20:16:48.7610
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 87ba1f9a-44cd-43a6-b008-6fdb45a5204e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB5296
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2018-11-30_09:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=inbound_policy_notspam policy=inbound_policy score=30
- priorityscore=1501 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
- spamscore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=909 adultscore=0 classifier=spam adjust=30 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1811300172
+References: <20181129042522.11767-1-govinds@codeaurora.org>
+In-Reply-To: <20181129042522.11767-1-govinds@codeaurora.org>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Fri, 30 Nov 2018 12:59:49 -0800
+X-Gmail-Original-Message-ID: <CA+ASDXMOqzXk9HrX9AS58cUfKOHeXA7zN_ME3+zDZXQcok_0Tg@mail.gmail.com>
+Message-ID: <CA+ASDXMOqzXk9HrX9AS58cUfKOHeXA7zN_ME3+zDZXQcok_0Tg@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: Move non-fatal warn logs to dbg level
+To:     govinds@codeaurora.org
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+On Wed, Nov 28, 2018 at 8:25 PM Govind Singh <govinds@codeaurora.org> wrote:
+>
+> During driver load below warn logs are printed in the console.
+> Since driver may not implement all wmi events sent by fw and
+> all of them are non-fatal, move this log to debug level to
+> remove un-necessary warn message on console.
+>
+> [  361.887230] ath10k_snoc a000000.wifi: Unknown eventid: 16393
+> [  361.907037] ath10k_snoc a000000.wifi: Unknown eventid: 237569
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 
-Have you had a chance to check out these patches yet?
+Alternatively, you could add these ignored commands to wmi-tlv.h, and
+just ignore them specifically. That's better documentation, in case
+new WMI events come along that *are* important to notice when we
+ignore them. There are other recent examples of that sort of patch
+being merged.
 
---=20
-Kyle Roeschley
-Software Engineer
-National Instruments
+Brian
