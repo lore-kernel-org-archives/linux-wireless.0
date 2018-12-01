@@ -2,97 +2,114 @@ Return-Path: <SRS0=FAJS=OK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E2D6C04EB8
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Dec 2018 02:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D3EC04EB9
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Dec 2018 09:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48B522082F
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Dec 2018 02:27:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="S8/9do46"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 48B522082F
-Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=chromium.org
+	by mail.kernel.org (Postfix) with ESMTP id CD95E20834
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Dec 2018 09:56:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org CD95E20834
+Authentication-Results: mail.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726897AbeLANig (ORCPT
+        id S1726512AbeLAVIM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 1 Dec 2018 08:38:36 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:35846 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726424AbeLANig (ORCPT
+        Sat, 1 Dec 2018 16:08:12 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:54326 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726342AbeLAVIM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Dec 2018 08:38:36 -0500
-Received: by mail-pf1-f196.google.com with SMTP id b85so3692840pfc.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Nov 2018 18:27:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=kXcO7SxMiWUYuTHTZUP7IvQYRbDb/BJiQKAlC9Lz5vY=;
-        b=S8/9do46O8WuuaeptBdbOBsXY1E/KgwrGX1/cHI9mc+JsAx+n9aMnIJM6SL7wyUJm0
-         B5UapgbZ/39KBGsA4rLwj/QPo6XAgOgj++yjua7z13X+kHaJ/7zyUJYFckQvXxXBCECh
-         CR+Ttvrf8DP6Xs013qvy0BUD6Pb84GXyi8OWU=
+        Sat, 1 Dec 2018 16:08:12 -0500
+Received: by mail-wm1-f67.google.com with SMTP id z18so1223276wmc.4
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Dec 2018 01:56:03 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=kXcO7SxMiWUYuTHTZUP7IvQYRbDb/BJiQKAlC9Lz5vY=;
-        b=WGcRy+YpnyYHtQ75C8c7+ZYPdM6fyu0kBNt9RosofG3cn0AVWejh+LgVBn22wcDa2k
-         GPM1pEH6JzgoDcUZ2IUJtTpzdPVLlWqIGiHBvRZzo44y+YRNEsg5eV8D6s7HC8Uia6dC
-         O60QVvytP8BopHoJR2sWytze7LPvWZ0b13pnTHOA+OxjOXorsAUj/y4kHIbVT92Ot0Ao
-         1Wu1wYv4QrNk/7P/rdOLQt/So2VdWAxzwDb2llXtgFM0KuDFDwMl93jxCU+/S8cVOglm
-         Fvg5eqC31oyhvwBiyOg8L/p3vLZkX6QqYuhQE5c4noi+Y/c6clglNClm40Ur8oiI4Bum
-         riOw==
-X-Gm-Message-State: AA+aEWbJnBRBspyiAldphMZLpCflXyAdgEELttU8aVezqLn4h79w7pZC
-        Da0/aVruKcmOq2IsYKvsjp/3cg==
-X-Google-Smtp-Source: AFSGD/V6fyefkK+eHATdKcPNHYKSzN5ASWHGjZSDzXkebPRuC5h2WiZrst7FDyiMdK71L/HcrnIuSg==
-X-Received: by 2002:a63:db02:: with SMTP id e2mr6774601pgg.419.1543631233672;
-        Fri, 30 Nov 2018 18:27:13 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id x19sm10745926pfk.14.2018.11.30.18.27.12
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 30 Nov 2018 18:27:12 -0800 (PST)
-Date:   Fri, 30 Nov 2018 18:27:11 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     Ganapathi Bhat <gbhat@marvell.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [EXT] [4.20 PATCH] Revert "mwifiex: restructure
- rx_reorder_tbl_lock usage"
-Message-ID: <20181201022710.GA237752@google.com>
-References: <20181130175957.167031-1-briannorris@chromium.org>
- <2cbb1f04ef8545ad9eaf3d7551a5dc03@SC-EXCH02.marvell.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=w4VVcarR0quicuo6wDr7ZHlqKkiD7TbywVDf4EsV/J0=;
+        b=tmoAT+YhU1ujrqE6FnUcNbM6OP1idduHtM4pJdiVB6C+piNxnKKGQT+AcIDD1m7mXS
+         MPKeEbF/XEZSHdGrb9l7VbL4V0qPpF1SLooSatpWvyN08r2MR+FgP3YrOA3LBog+LJx6
+         zeVGfnyuGwa1XNd13QhmmYNO/Oj2m+QFuBBVQytGleylI6c2SU57DaXSlzZm77U/rQaO
+         64GIu90ly08kGC0fdjnUziS6Stphy0FV2zZToOA2uTCQ3HF9uzw0mKIMAJU0wuJFc8zr
+         bvZ5TGEO1jFnGgPa2s+ilaKM8/+1vpYnNDJrEQEJI+rjmS2I1dYkhRTsb0x7S52fhvTl
+         mFLg==
+X-Gm-Message-State: AA+aEWbnS5sXPSVT8aaM0eZA6B0oH8mmr39hznVnDzvMAMk0KySkSvqT
+        J+3uSUIUEO5uGP9H4z/6TJmwxJwDMY4=
+X-Google-Smtp-Source: AFSGD/WOJdZ5ljV7wXvbvrVtRmxqybRTF2R1Udraw6XnkO9JgjgxbR2u/T8p/bZzJQd3uxQCBt6efA==
+X-Received: by 2002:a1c:f707:: with SMTP id v7mr1001687wmh.18.1543658162548;
+        Sat, 01 Dec 2018 01:56:02 -0800 (PST)
+Received: from localhost.localdomain ([151.66.56.232])
+        by smtp.gmail.com with ESMTPSA id e17sm6793895wrs.79.2018.12.01.01.56.00
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 01 Dec 2018 01:56:01 -0800 (PST)
+From:   Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: dma: remove napi from mt76_dma_rx_fill signature
+Date:   Sat,  1 Dec 2018 10:55:06 +0100
+Message-Id: <289d48757b2dc8f07e8a4e1ca35df8476927935a.1543657995.git.lorenzo.bianconi@redhat.com>
+X-Mailer: git-send-email 2.19.2
+In-Reply-To: <cover.1543657995.git.lorenzo.bianconi@redhat.com>
+References: <cover.1543657995.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2cbb1f04ef8545ad9eaf3d7551a5dc03@SC-EXCH02.marvell.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Nov 30, 2018 at 07:04:49PM +0000, Ganapathi Bhat wrote:
-> > This was clearly not tested well at all. I simply performed 'wget' in a loop and
-> > it fell over within a few seconds.
-> Sorry. I had run a iperf test before sharing the patch (no regression observed).
-> It looks I failed to get this right for second time I will check this.
+Remove napi from mt76_dma_rx_fill routine signature since
+it is a leftover of a previous implementation and it is no
+longer used
 
-Were you running on an 11n/ac network? IIUC, the particular code that's
-being blamed is only active with 11n+ features.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-You might also make sure you test with stuff like lockdep enabled, as
-that gives nice warnings and can even preemptively warn about potential
-problems before they even occur, if you use the right settings. (Some
-lockdep configurations can slow things down significantly, BTW.)
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index e2ba26378575..1e557d16272e 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -318,7 +318,7 @@ int mt76_dma_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
+ EXPORT_SYMBOL_GPL(mt76_dma_tx_queue_skb);
+ 
+ static int
+-mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q, bool napi)
++mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q)
+ {
+ 	dma_addr_t addr;
+ 	void *buf;
+@@ -392,7 +392,7 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
+ 
+ 	mt76_dma_rx_cleanup(dev, q);
+ 	mt76_dma_sync_idx(dev, q);
+-	mt76_dma_rx_fill(dev, q, false);
++	mt76_dma_rx_fill(dev, q);
+ }
+ 
+ static void
+@@ -463,7 +463,7 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 		dev->drv->rx_skb(dev, q - dev->q_rx, skb);
+ 	}
+ 
+-	mt76_dma_rx_fill(dev, q, true);
++	mt76_dma_rx_fill(dev, q);
+ 	return done;
+ }
+ 
+@@ -504,7 +504,7 @@ mt76_dma_init(struct mt76_dev *dev)
+ 	for (i = 0; i < ARRAY_SIZE(dev->q_rx); i++) {
+ 		netif_napi_add(&dev->napi_dev, &dev->napi[i], mt76_dma_rx_poll,
+ 			       64);
+-		mt76_dma_rx_fill(dev, &dev->q_rx[i], false);
++		mt76_dma_rx_fill(dev, &dev->q_rx[i]);
+ 		skb_queue_head_init(&dev->rx_skb[i]);
+ 		napi_enable(&dev->napi[i]);
+ 	}
+-- 
+2.19.2
 
-Brian
