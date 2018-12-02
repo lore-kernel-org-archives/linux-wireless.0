@@ -6,37 +6,38 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18820C65BB0
-	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 09:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6016C64EB4
+	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 09:43:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDCBB2080A
-	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 09:43:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org DDCBB2080A
+	by mail.kernel.org (Postfix) with ESMTP id AF8502080A
+	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 09:43:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org AF8502080A
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725858AbeLBJny (ORCPT
+        id S1725862AbeLBJnz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Dec 2018 04:43:54 -0500
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:16566 "EHLO
+        Sun, 2 Dec 2018 04:43:55 -0500
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:35537 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725781AbeLBJnx (ORCPT
+        by vger.kernel.org with ESMTP id S1725834AbeLBJnz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Dec 2018 04:43:53 -0500
+        Sun, 2 Dec 2018 04:43:55 -0500
 X-IronPort-AV: E=Sophos;i="5.56,306,1539640800"; 
-   d="scan'208";a="1585245"
+   d="scan'208";a="1585247"
 Received: from ironmsg03-ams.qualcomm.com ([10.251.56.4])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 02 Dec 2018 10:43:45 +0100
-X-IronPort-AV: E=McAfee;i="5900,7806,9094"; a="6502877"
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 02 Dec 2018 10:43:46 +0100
+X-IronPort-AV: E=McAfee;i="5900,7806,9094"; a="6502879"
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg03-ams.qualcomm.com with ESMTP; 02 Dec 2018 10:43:45 +0100
+  by ironmsg03-ams.qualcomm.com with ESMTP; 02 Dec 2018 10:43:46 +0100
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 09/12] wil6210: ignore HALP ICR if already handled
-Date:   Sun,  2 Dec 2018 11:43:34 +0200
-Message-Id: <1543743817-10298-10-git-send-email-merez@codeaurora.org>
+Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 11/12] wil6210: align to latest auto generated wmi.h
+Date:   Sun,  2 Dec 2018 11:43:36 +0200
+Message-Id: <1543743817-10298-12-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1543743817-10298-1-git-send-email-merez@codeaurora.org>
 References: <1543743817-10298-1-git-send-email-merez@codeaurora.org>
@@ -45,74 +46,135 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-HALP ICR is set as long as the FW should stay awake.
-To prevent its multiple handling the driver masks this IRQ bit.
-However, if there is a different MISC ICR before the driver clears
-this bit, there is a risk of race condition between HALP mask and
-unmask. This race leads to HALP timeout, in case it is mistakenly
-masked.
-Add a flag to indicate if HALP ICR should be handled.
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
+Align to latest version of the auto generated wmi file
+describing the interface with FW.
+
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 10 +++++++---
- drivers/net/wireless/ath/wil6210/main.c      |  3 +++
- drivers/net/wireless/ath/wil6210/wil6210.h   |  1 +
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c |  7 +++++
+ drivers/net/wireless/ath/wil6210/wmi.h | 48 +++++++++++++++++++++++++++++++++-
+ 2 files changed, 54 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 5d287a8..e0eaeea 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -575,10 +575,14 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 509a255..88269e3 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -2954,6 +2954,10 @@ static const char *suspend_status2name(u8 status)
+ 	switch (status) {
+ 	case WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE:
+ 		return "LINK_NOT_IDLE";
++	case WMI_TRAFFIC_SUSPEND_REJECTED_DISCONNECT:
++		return "DISCONNECT";
++	case WMI_TRAFFIC_SUSPEND_REJECTED_OTHER:
++		return "OTHER";
+ 	default:
+ 		return "Untracked status";
  	}
+@@ -3043,6 +3047,9 @@ static void resume_triggers2string(u32 triggers, char *string, int str_size)
  
- 	if (isr & BIT_DMA_EP_MISC_ICR_HALP) {
--		wil_dbg_irq(wil, "irq_misc: HALP IRQ invoked\n");
--		wil6210_mask_halp(wil);
- 		isr &= ~BIT_DMA_EP_MISC_ICR_HALP;
--		complete(&wil->halp.comp);
-+		if (wil->halp.handle_icr) {
-+			/* no need to handle HALP ICRs until next vote */
-+			wil->halp.handle_icr = false;
-+			wil_dbg_irq(wil, "irq_misc: HALP IRQ invoked\n");
-+			wil6210_mask_halp(wil);
-+			complete(&wil->halp.comp);
-+		}
- 	}
+ 	if (triggers & WMI_RESUME_TRIGGER_WMI_EVT)
+ 		strlcat(string, " WMI_EVT", str_size);
++
++	if (triggers & WMI_RESUME_TRIGGER_DISCONNECT)
++		strlcat(string, " DISCONNECT", str_size);
+ }
  
- 	wil->isr_misc = isr;
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 14c908f..524e0ef 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1901,11 +1901,14 @@ void wil_halp_vote(struct wil6210_priv *wil)
+ int wmi_resume(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index b668758..cce5270 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -1982,6 +1982,7 @@ enum wmi_event_id {
+ 	WMI_BEAMFORMING_MGMT_DONE_EVENTID		= 0x1836,
+ 	WMI_BF_TXSS_MGMT_DONE_EVENTID			= 0x1837,
+ 	WMI_BF_RXSS_MGMT_DONE_EVENTID			= 0x1839,
++	WMI_BF_TRIG_EVENTID				= 0x183A,
+ 	WMI_RS_MGMT_DONE_EVENTID			= 0x1852,
+ 	WMI_RF_MGMT_STATUS_EVENTID			= 0x1853,
+ 	WMI_BF_SM_MGMT_DONE_EVENTID			= 0x1838,
+@@ -2267,7 +2268,9 @@ struct wmi_notify_req_done_event {
+ 	__le32 status;
+ 	__le64 tsf;
+ 	s8 rssi;
+-	u8 reserved0[3];
++	/* enum wmi_edmg_tx_mode */
++	u8 tx_mode;
++	u8 reserved0[2];
+ 	__le32 tx_tpt;
+ 	__le32 tx_goodput;
+ 	__le32 rx_goodput;
+@@ -3168,6 +3171,30 @@ struct wmi_brp_set_ant_limit_event {
+ 	u8 reserved[3];
+ } __packed;
  
- 	if (++wil->halp.ref_cnt == 1) {
- 		reinit_completion(&wil->halp.comp);
-+		/* mark to IRQ context to handle HALP ICR */
-+		wil->halp.handle_icr = true;
- 		wil6210_set_halp(wil);
- 		rc = wait_for_completion_timeout(&wil->halp.comp, to_jiffies);
- 		if (!rc) {
- 			wil_err(wil, "HALP vote timed out\n");
- 			/* Mask HALP as done in case the interrupt is raised */
-+			wil->halp.handle_icr = false;
- 			wil6210_mask_halp(wil);
- 		} else {
- 			wil_dbg_irq(wil,
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d614f57..f9eacfd 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -781,6 +781,7 @@ struct wil_halp {
- 	struct mutex		lock; /* protect halp ref_cnt */
- 	unsigned int		ref_cnt;
- 	struct completion	comp;
-+	bool			handle_icr;
++enum wmi_bf_type {
++	WMI_BF_TYPE_SLS		= 0x00,
++	WMI_BF_TYPE_BRP_RX	= 0x01,
++};
++
++/* WMI_BF_TRIG_CMDID */
++struct wmi_bf_trig_cmd {
++	/* enum wmi_bf_type - type of requested beamforming */
++	u8 bf_type;
++	/* used only for WMI_BF_TYPE_BRP_RX */
++	u8 cid;
++	/* used only for WMI_BF_TYPE_SLS */
++	u8 dst_mac[WMI_MAC_LEN];
++	u8 reserved[4];
++} __packed;
++
++/* WMI_BF_TRIG_EVENTID */
++struct wmi_bf_trig_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	u8 cid;
++	u8 reserved[2];
++} __packed;
++
+ /* broadcast connection ID */
+ #define WMI_LINK_MAINTAIN_CFG_CID_BROADCAST	(0xFFFFFFFF)
+ 
+@@ -3263,6 +3290,8 @@ struct wmi_link_maintain_cfg_read_done_event {
+ enum wmi_traffic_suspend_status {
+ 	WMI_TRAFFIC_SUSPEND_APPROVED			= 0x0,
+ 	WMI_TRAFFIC_SUSPEND_REJECTED_LINK_NOT_IDLE	= 0x1,
++	WMI_TRAFFIC_SUSPEND_REJECTED_DISCONNECT		= 0x2,
++	WMI_TRAFFIC_SUSPEND_REJECTED_OTHER		= 0x3,
  };
  
- struct wil_blob_wrapper {
+ /* WMI_TRAFFIC_SUSPEND_EVENTID */
+@@ -3282,6 +3311,7 @@ enum wmi_resume_trigger {
+ 	WMI_RESUME_TRIGGER_UCAST_RX	= 0x2,
+ 	WMI_RESUME_TRIGGER_BCAST_RX	= 0x4,
+ 	WMI_RESUME_TRIGGER_WMI_EVT	= 0x8,
++	WMI_RESUME_TRIGGER_DISCONNECT	= 0x10,
+ };
+ 
+ /* WMI_TRAFFIC_RESUME_EVENTID */
+@@ -4057,4 +4087,20 @@ struct wmi_set_vring_priority_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
++/* WMI_RADAR_PCI_CTRL_BLOCK struct */
++struct wmi_radar_pci_ctrl_block {
++	/* last fw tail address index */
++	__le32 fw_tail_index;
++	/* last SW head address index known to FW */
++	__le32 sw_head_index;
++	__le32 last_wr_pulse_tsf_low;
++	__le32 last_wr_pulse_count;
++	__le32 last_wr_in_bytes;
++	__le32 last_wr_pulse_id;
++	__le32 last_wr_burst_id;
++	/* When pre overflow detected, advance sw head in unit of pulses */
++	__le32 sw_head_inc;
++	__le32 reserved[8];
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
 -- 
 1.9.1
 
