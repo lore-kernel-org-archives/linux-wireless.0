@@ -6,58 +6,58 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD291C65BB2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A64DC65BAF
 	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 18:02:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CB3B2082F
+	by mail.kernel.org (Postfix) with ESMTP id 658DD20881
 	for <linux-wireless@archiver.kernel.org>; Sun,  2 Dec 2018 18:02:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="y6n/6fyh"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 9CB3B2082F
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="vCZAzjyj"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 658DD20881
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=microchip.com
 Authentication-Results: mail.kernel.org; spf=none smtp.mailfrom=linux-wireless-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725780AbeLBSCd (ORCPT
+        id S1725777AbeLBSCb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Dec 2018 13:02:33 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:23435 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725535AbeLBSCc (ORCPT
+        Sun, 2 Dec 2018 13:02:31 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:52831 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725535AbeLBSCa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Dec 2018 13:02:32 -0500
+        Sun, 2 Dec 2018 13:02:30 -0500
 X-IronPort-AV: E=Sophos;i="5.56,307,1539673200"; 
-   d="scan'208";a="23899242"
+   d="scan'208";a="23451081"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Dec 2018 11:02:30 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 02 Dec 2018 11:02:27 -0700
 Received: from NAM02-BL2-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.76.108) with Microsoft SMTP Server (TLS) id
- 14.3.352.0; Sun, 2 Dec 2018 11:02:30 -0700
+ 14.3.352.0; Sun, 2 Dec 2018 11:02:27 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector1-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v0r6edAlUbQT4ka5eHUVWJFCCsGTXJ7BrR0gqPRhb80=;
- b=y6n/6fyhcOMeShDmWMRlSn+/qbigwmGV0M/E5AE1bBd0/TneMMMZG65Pqhc39+vUJnB09KkBXuGe8DRxau940okPEws9iM47QoqfoTN0r08ml4xVrA3BpyiUrpFgrIpH6Kk1iZOdTMvDaYuQ2PUahGo33imJNNBwi2TOC0am5nA=
+ bh=njCKqgmGUQmx+6uZ8txvzbXOEy68fYV4ZtQRAVV/QDY=;
+ b=vCZAzjyjQ+K2Mi01n8JCDzLnOdQtpp5WeTPFLDt07+F0QdPD2Zl/IC5z+wC7QeH0qHShnRV5XaBP2J+TeWLAtNrzfLTvv8lkBskgXRkcnI55LDS2ETSRHfMuN5WxXMmupuPQ67rbHP6vfGMEqVm+kwzE7xK075iT41bC5j+fn+A=
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com (52.135.226.160) by
  BYAPR11MB3334.namprd11.prod.outlook.com (20.177.185.211) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1382.19; Sun, 2 Dec 2018 18:02:28 +0000
+ 15.20.1382.19; Sun, 2 Dec 2018 18:02:25 +0000
 Received: from BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::391c:cb9c:2556:436f]) by BYAPR11MB2567.namprd11.prod.outlook.com
  ([fe80::391c:cb9c:2556:436f%4]) with mapi id 15.20.1382.020; Sun, 2 Dec 2018
- 18:02:28 +0000
+ 18:02:25 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 05/29] staging: wilc1000: handle tx power related callback
- from cfg80211 context
-Thread-Topic: [PATCH 05/29] staging: wilc1000: handle tx power related
- callback from cfg80211 context
-Thread-Index: AQHUimkwoshV31LXWEqXoDquSCWAwA==
-Date:   Sun, 2 Dec 2018 18:02:28 +0000
-Message-ID: <1543773663-20561-6-git-send-email-ajay.kathat@microchip.com>
+Subject: [PATCH 04/29] staging: wilc1000: use mutex lock to synchronized
+ sending 'wid' cmd to firmware
+Thread-Topic: [PATCH 04/29] staging: wilc1000: use mutex lock to synchronized
+ sending 'wid' cmd to firmware
+Thread-Index: AQHUimkuJ+UGe/H8iEeaWt7U24vD6Q==
+Date:   Sun, 2 Dec 2018 18:02:25 +0000
+Message-ID: <1543773663-20561-5-git-send-email-ajay.kathat@microchip.com>
 References: <1543773663-20561-1-git-send-email-ajay.kathat@microchip.com>
 In-Reply-To: <1543773663-20561-1-git-send-email-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -72,25 +72,25 @@ authentication-results: spf=none (sender IP is )
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [183.82.18.98]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;BYAPR11MB3334;6:2voDG+aPfGW/AccEJe1l5HiyBL9w94hMrGdAUIfqLvC8hFhb1nLpLafv8m3VIv9aR6s59NzTYOx7unRncGZj4CR7J/i0ercYljqyeKK52BalCmvVgE4R6dmcuHDX9Xp2NQeQoDpacaZm6SAkm+tMiw6pRfcK5vGUIMcrW08ToW0c1n9ossbCkMRryKEswnyyc9mWhf7M0w8Oqs5SrVq+TJVr7kkPmPkkDOG6FqhjCPJNlOKIyzG98FhWgLHxNXkTvJaQ58EEkCwzwH/wa4r6oHDnxYE2VICfHx3SATK9x0K40Cl7lZHBtP5dWi+v9lIc1upt3/m47e6TOWajG+RTAZjU4P1myWQ2MardzzE0ED56K2Zpxh5nt4qNYBL7nlBOXWAwa1xJI5Y9Nl89pFg/TOSGaIwM/tRES4HAUDu/kUWVZOgGlwl4ZJA7TGm2yf/0t9ADjz4y+60h5td7dvAiFg==;5:m3NNz/5Lx6ofhjqc7+qh1/tv3aru+9KFXrARUqADHxqOi93AEPPGU7cI4QqcLhh35ulPKDseMpLsNinfYgMlB4QCmh24rGzebBfK6Mm9QUJXQXjjn2dkXk/o5cVlIERGH6Boao/ttY6iiwd3th6DBwtNLhowvFXYMiF4tSqJ6RY=;7:1Jppf4Y4EIplbTxRMCc2Lav/9tT+KUROEM0qWQfam6xkPVkHaaSdLdlWng0M8om/1lG2F4c5vnFHR2tgUtSrQ+MPeE8jekn/bonGiZ79XV29DR7i7M4UtvwurtcfQlo4qIRWH6wpZZIG5P8/5Sd//A==
-x-ms-office365-filtering-correlation-id: ff4cf538-43ae-4b8f-5c64-08d65880526f
+x-microsoft-exchange-diagnostics: 1;BYAPR11MB3334;6:GUUcwXRE1qx8+HTEWeQLIuI96Abwk0RXvZEZYVm7ONHjg0c3X+Gaqn5vRoN+lyEiwJuivbFDxW1kkRcjq58ja8D+YBVQj2Fin610V1B+cunbLREU6+Geb1vZPkX89D3nFBRQVPr0VUpDkJ4xtZDKXW4Qlc4j4scDqNYCdIVgfL9wnQhlU7ctUhAdnO/tMqCJcbxp5RRnLkNMI3hT2FTmIOXes2Y3jcJkrm+yFKzioHEUGYiJLuYHlT3Z2oYuAp+sswkFvpZXlxi3DroEc2avlxj6JOZfRde2OGLK+cSH6LWFjCn80Z7kkBy5wb1IcygtZiV3sFTYLH3Y7C7f+R2r5x0Ffjkf9OOCdHOdJ9ZwR2479mtwDVV7GQasSFdQUJbJKCk9hSp0jFQ9zenfraT//Kb79gkp1LmnR8SO45yvZc/Bvfn/6LQjasx7HbJRJotrX0jwJRcISNRDW9967dNkkw==;5:YAFpaTNGRfuiT1VZgrd4NTUYcLF2r5fYYA2r4t0r69EOVwT4DrlcAX0d1ZkJ7LDmZkcGzmpH2RH2Le2HRPpocDJfanW8ccyI2Gm1xBLzDT2ii+j3as/UUKn4h1wR2cQ5UD6+0n3x5PrXp/1olUaFuA72D2DTs1gS8PHxotOrgkk=;7:/Nz40RA2kcE+rEx9ldrBeZrtwYz9zHaNBg+3lmbGsXJ0P3ZGqkU4e0ojVz3RaxUUfO2Jdv2P4CcLF3QWZz/RoGKPjL1xFxIqE7IEoZeKjvH17SiP1uCmTJPNqHSRpU+d5VDZ/VtTkumX+1ZU79iVwA==
+x-ms-office365-filtering-correlation-id: 6b210567-c120-48b2-f08f-08d6588050b1
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390098)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600074)(711020)(2017052603328)(7153060)(7193020);SRVR:BYAPR11MB3334;
 x-ms-traffictypediagnostic: BYAPR11MB3334:
-x-microsoft-antispam-prvs: <BYAPR11MB33349100D39D44160ACF2B5CE3AD0@BYAPR11MB3334.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB333441CC1F8FF2CFE25277F7E3AD0@BYAPR11MB3334.namprd11.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(6040522)(2401047)(8121501046)(5005006)(10201501046)(3002001)(3231455)(999002)(944501491)(52105112)(93006095)(93001095)(148016)(149066)(150057)(6041310)(20161123558120)(20161123564045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(20161123562045)(201708071742011)(7699051)(76991095);SRVR:BYAPR11MB3334;BCL:0;PCL:0;RULEID:;SRVR:BYAPR11MB3334;
 x-forefront-prvs: 087474FBFA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(366004)(376002)(396003)(39850400004)(199004)(189003)(107886003)(6916009)(386003)(5660300001)(5640700003)(446003)(4326008)(11346002)(6506007)(78486014)(2906002)(6512007)(53936002)(54906003)(3846002)(6116002)(2351001)(81166006)(316002)(81156014)(52116002)(8676002)(26005)(8936002)(256004)(76176011)(6436002)(97736004)(106356001)(99286004)(486006)(6486002)(68736007)(105586002)(14454004)(478600001)(2616005)(7736002)(66066001)(36756003)(305945005)(72206003)(186003)(2501003)(86362001)(102836004)(476003)(71190400001)(25786009)(71200400001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3334;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(366004)(376002)(396003)(39850400004)(199004)(189003)(107886003)(6916009)(386003)(5660300001)(5640700003)(446003)(4326008)(11346002)(6506007)(78486014)(2906002)(6512007)(53936002)(54906003)(3846002)(6116002)(2351001)(81166006)(316002)(81156014)(52116002)(8676002)(26005)(8936002)(256004)(14444005)(76176011)(6436002)(97736004)(106356001)(99286004)(486006)(6486002)(68736007)(105586002)(14454004)(478600001)(2616005)(7736002)(66066001)(36756003)(305945005)(72206003)(186003)(2501003)(86362001)(575784001)(102836004)(476003)(71190400001)(25786009)(71200400001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3334;H:BYAPR11MB2567.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
-x-microsoft-antispam-message-info: qjG5RKsowgVQ5hfynZ+4OYRDN230ZkuFsAYiqQN4/uh1n29azMxmhGkeUOHD0gSb1/4Mqh1uhyel8aNpk73HSnu108he4dHqdpkgUny2KLa32rxnDEcMkOjHFQoFRK9+AAfM9gJmXgPyKFSkS+DznmTaqZwgRQHR4A0k8f4Zf4nWTv8+9FGNjqjOOosWp/xFcJa0p4Ui/Qwi+T49fmDfhePb98fkQ+68FzICOY0GTsQlreWYRMXRjytDJvpIRMebbR3Fv66Vr2uoO7qOVaH+9zGby7Rr40GXDYYAfzuUGtsZpWhCYiFNEA5ulcM5KzPvaqjFqNQnqUWMDhdNoHbviAxEySVQtYJWDdTJ33QYQrs=
+x-microsoft-antispam-message-info: vUDyjf8ZayDnCtPJnEMdUrjLvOSyWcJlYncUf0CaZKQND5NVB4CowOm4sALhMsO1qxuM6EIDcgbA2kCkGob968h13GJjDRTQtpUydfz/qq5kC7MHAl/WVVHydAc0mIOOvvEqiGTEBM1qFz1euLObVxiFqr5Goj8T8fQCjxbkHN+ogVMb5QgjumaqVrgvMg87ZTSu1b4SpFtMXZgbO3HZWZC8QRIJN6lcArJ+4Hh7TErhdgjatCSQC5enDogUbHVu+8WtqOTSQ+6PkVnMqvAdawAsn1lH2x2WydHPIRq+3zBOQdeGNS1ysvRDjl/3jHqMX5bpcDCzTquFHXAZtC0jqnEOALNhk+M5hrWGdKFhz84=
 spamdiagnosticoutput: 1:99
 spamdiagnosticmetadata: NSPM
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: ff4cf538-43ae-4b8f-5c64-08d65880526f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Dec 2018 18:02:28.4313
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6b210567-c120-48b2-f08f-08d6588050b1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Dec 2018 18:02:25.5272
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
@@ -103,147 +103,137 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Avoid the use of internal work queue to defer the handling of tx power
-related cfg operations callback. Now issuing the wid command to firmware
-directly from the caller context.
+Use mutex lock to protect the issuing of wid cmd to the firmware.
+Currently the wid commands are synchronized by use of hif_workqueue work
+queue.
+Now, these changes are required to synchronize the access to wid
+command, so the commands can be issued directly from cfg80211 context
+and 'WILC_wq' thread.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 85 +++++----------------------=
-----
- 1 file changed, 14 insertions(+), 71 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         |  2 ++
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 21 ++++++++++-----------
+ 3 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wi=
-lc1000/host_interface.c
-index e179a8e..88d9010 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -117,10 +117,6 @@ struct sta_inactive_t {
- 	u8 mac[6];
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc10=
+00/linux_wlan.c
+index c92ee79..e246d18 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -531,6 +531,7 @@ static void wlan_deinit_locks(struct net_device *dev)
 =20
--struct tx_power {
--	u8 tx_pwr;
--};
--
- union message_body {
- 	struct scan_attr scan_info;
- 	struct connect_attr con_info;
-@@ -145,7 +141,6 @@ union message_body {
- 	struct reg_frame reg_frame;
- 	char *data;
- 	struct del_all_sta del_all_sta_info;
--	struct tx_power tx_power;
- };
-=20
- struct host_if_msg {
-@@ -2371,48 +2366,6 @@ static void handle_set_mcast_filter(struct work_stru=
-ct *work)
- 	kfree(msg);
+ 	mutex_destroy(&wilc->hif_cs);
+ 	mutex_destroy(&wilc->rxq_cs);
++	mutex_destroy(&wilc->cfg_cmd_lock);
+ 	mutex_destroy(&wilc->txq_add_to_head_cs);
  }
 =20
--static void handle_set_tx_pwr(struct work_struct *work)
--{
--	struct host_if_msg *msg =3D container_of(work, struct host_if_msg, work);
--	struct wilc_vif *vif =3D msg->vif;
--	u8 tx_pwr =3D msg->body.tx_power.tx_pwr;
--	int ret;
--	struct wid wid;
--
--	wid.id =3D WID_TX_POWER;
--	wid.type =3D WID_CHAR;
--	wid.val =3D &tx_pwr;
--	wid.size =3D sizeof(char);
--
--	ret =3D wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
--				   wilc_get_vif_idx(vif));
--	if (ret)
--		netdev_err(vif->ndev, "Failed to set TX PWR\n");
--	kfree(msg);
--}
--
--/* Note: 'msg' will be free after using data */
--static void handle_get_tx_pwr(struct work_struct *work)
--{
--	struct host_if_msg *msg =3D container_of(work, struct host_if_msg, work);
--	struct wilc_vif *vif =3D msg->vif;
--	u8 *tx_pwr =3D &msg->body.tx_power.tx_pwr;
--	int ret;
--	struct wid wid;
--
--	wid.id =3D WID_TX_POWER;
--	wid.type =3D WID_CHAR;
--	wid.val =3D (s8 *)tx_pwr;
--	wid.size =3D sizeof(char);
--
--	ret =3D wilc_send_config_pkt(vif, WILC_GET_CFG, &wid, 1,
--				   wilc_get_vif_idx(vif));
--	if (ret)
--		netdev_err(vif->ndev, "Failed to get TX PWR\n");
--
--	complete(&msg->work_comp);
--}
--
- static void handle_scan_timer(struct work_struct *work)
- {
- 	struct host_if_msg *msg =3D container_of(work, struct host_if_msg, work);
-@@ -3740,19 +3693,15 @@ int wilc_setup_multicast_filter(struct wilc_vif *vi=
-f, bool enabled, u32 count,
- int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_power)
- {
- 	int ret;
--	struct host_if_msg *msg;
--
--	msg =3D wilc_alloc_work(vif, handle_set_tx_pwr, false);
--	if (IS_ERR(msg))
--		return PTR_ERR(msg);
-+	struct wid wid;
+@@ -592,6 +593,7 @@ static void wlan_init_locks(struct net_device *dev)
 =20
--	msg->body.tx_power.tx_pwr =3D tx_power;
-+	wid.id =3D WID_TX_POWER;
-+	wid.type =3D WID_CHAR;
-+	wid.val =3D &tx_power;
-+	wid.size =3D sizeof(char);
+ 	mutex_init(&wl->hif_cs);
+ 	mutex_init(&wl->rxq_cs);
++	mutex_init(&wl->cfg_cmd_lock);
 =20
--	ret =3D wilc_enqueue_work(msg);
--	if (ret) {
--		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
--		kfree(msg);
--	}
-+	ret =3D wilc_send_config_pkt(vif, WILC_SET_CFG, &wid, 1,
-+				   wilc_get_vif_idx(vif));
+ 	spin_lock_init(&wl->txq_spinlock);
+ 	mutex_init(&wl->txq_add_to_head_cs);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/stagin=
+g/wilc1000/wilc_wfi_netdevice.h
+index e71d949..02970c3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -247,7 +247,8 @@ struct wilc {
+ 	struct task_struct *txq_thread;
 =20
- 	return ret;
+ 	int quit;
+-	int cfg_frame_in_use;
++	/* lock to protect issue of wid command to firmware */
++	struct mutex cfg_cmd_lock;
+ 	struct wilc_cfg_frame cfg_frame;
+ 	u32 cfg_frame_offset;
+ 	int cfg_seq_no;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc100=
+0/wilc_wlan.c
+index f0b10e2..3c5e9e0 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1122,8 +1122,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start=
+, u16 wid, u8 *buffer,
+ 	int ret_size;
+ 	struct wilc *wilc =3D vif->wilc;
+=20
+-	if (wilc->cfg_frame_in_use)
+-		return 0;
++	mutex_lock(&wilc->cfg_cmd_lock);
+=20
+ 	if (start)
+ 		wilc->cfg_frame_offset =3D 0;
+@@ -1134,11 +1133,12 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int sta=
+rt, u16 wid, u8 *buffer,
+ 	offset +=3D ret_size;
+ 	wilc->cfg_frame_offset =3D offset;
+=20
+-	if (!commit)
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
+ 		return ret_size;
++	}
+=20
+ 	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
+-	wilc->cfg_frame_in_use =3D 1;
+=20
+ 	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
+ 		ret_size =3D 0;
+@@ -1149,9 +1149,9 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start=
+, u16 wid, u8 *buffer,
+ 		ret_size =3D 0;
+ 	}
+=20
+-	wilc->cfg_frame_in_use =3D 0;
+ 	wilc->cfg_frame_offset =3D 0;
+ 	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
+=20
+ 	return ret_size;
  }
-@@ -3760,21 +3709,15 @@ int wilc_set_tx_power(struct wilc_vif *vif, u8 tx_p=
-ower)
- int wilc_get_tx_power(struct wilc_vif *vif, u8 *tx_power)
- {
- 	int ret;
--	struct host_if_msg *msg;
-+	struct wid wid;
+@@ -1163,8 +1163,7 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start=
+, u16 wid, int commit,
+ 	int ret_size;
+ 	struct wilc *wilc =3D vif->wilc;
 =20
--	msg =3D wilc_alloc_work(vif, handle_get_tx_pwr, true);
--	if (IS_ERR(msg))
--		return PTR_ERR(msg);
-+	wid.id =3D WID_TX_POWER;
-+	wid.type =3D WID_CHAR;
-+	wid.val =3D tx_power;
-+	wid.size =3D sizeof(char);
+-	if (wilc->cfg_frame_in_use)
+-		return 0;
++	mutex_lock(&wilc->cfg_cmd_lock);
 =20
--	ret =3D wilc_enqueue_work(msg);
--	if (ret) {
--		netdev_err(vif->ndev, "%s: enqueue work failed\n", __func__);
--	} else {
--		wait_for_completion(&msg->work_comp);
--		*tx_power =3D msg->body.tx_power.tx_pwr;
--	}
-+	ret =3D wilc_send_config_pkt(vif, WILC_GET_CFG, &wid, 1,
-+				   wilc_get_vif_idx(vif));
+ 	if (start)
+ 		wilc->cfg_frame_offset =3D 0;
+@@ -1174,10 +1173,10 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int sta=
+rt, u16 wid, int commit,
+ 	offset +=3D ret_size;
+ 	wilc->cfg_frame_offset =3D offset;
 =20
--	/* free 'msg' after copying data */
--	kfree(msg);
- 	return ret;
+-	if (!commit)
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
+ 		return ret_size;
+-
+-	wilc->cfg_frame_in_use =3D 1;
++	}
+=20
+ 	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
+ 		ret_size =3D 0;
+@@ -1187,9 +1186,9 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start=
+, u16 wid, int commit,
+ 		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
+ 		ret_size =3D 0;
+ 	}
+-	wilc->cfg_frame_in_use =3D 0;
+ 	wilc->cfg_frame_offset =3D 0;
+ 	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
+=20
+ 	return ret_size;
  }
 --=20
 2.7.4
